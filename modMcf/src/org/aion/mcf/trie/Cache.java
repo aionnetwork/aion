@@ -1,7 +1,7 @@
 package org.aion.mcf.trie;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.rlp.Value.fromRlpEncoded;
+import static org.aion.types.ByteArrayWrapper.wrap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,12 +14,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.Value;
+import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /** Cache class */
@@ -27,12 +27,12 @@ public class Cache {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    private IByteArrayKeyValueStore dataSource;
+    private ByteArrayKeyValueStore dataSource;
     private Map<ByteArrayWrapper, Node> nodes = new LinkedHashMap<>();
     private Set<ByteArrayWrapper> removedNodes = new HashSet<>();
     private boolean isDirty;
 
-    public Cache(IByteArrayKeyValueStore dataSource) {
+    public Cache(ByteArrayKeyValueStore dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -152,7 +152,7 @@ public class Cache {
         return nodes;
     }
 
-    public synchronized IByteArrayKeyValueStore getDb() {
+    public synchronized ByteArrayKeyValueStore getDb() {
         return dataSource;
     }
 
@@ -174,7 +174,7 @@ public class Cache {
     //    }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public synchronized void setDB(IByteArrayKeyValueStore kvds) {
+    public synchronized void setDB(ByteArrayKeyValueStore kvds) {
         if (this.dataSource == kvds) {
             return;
         }

@@ -4,8 +4,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.trie.Trie;
@@ -14,7 +12,10 @@ import org.aion.mcf.types.AbstractBlock;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -277,6 +278,38 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         return transactionsList;
     }
 
+    // used to reduce the number of times we create equal wrapper objects
+    private ByteArrayWrapper hashWrapper = null;
+    private ByteArrayWrapper parentHashWrapper = null;
+
+    /**
+     * Returns a {@link ByteArrayWrapper} instance of the block's hash.
+     *
+     * @return a {@link ByteArrayWrapper} instance of the block's hash
+     * @implNote Not safe when the block is mutable. Use this only for sync where the block's hash
+     *     cannot change during execution.
+     */
+    public ByteArrayWrapper getHashWrapper() {
+        if (hashWrapper == null) {
+            hashWrapper = ByteArrayWrapper.wrap(getHash());
+        }
+        return hashWrapper;
+    }
+
+    /**
+     * Returns a {@link ByteArrayWrapper} instance of the block's parent hash.
+     *
+     * @return a {@link ByteArrayWrapper} instance of the block's parent hash
+     * @implNote Not safe when the block is mutable. Use this only for sync where the block's parent
+     *     hash cannot change during execution.
+     */
+    public ByteArrayWrapper getParentHashWrapper() {
+        if (parentHashWrapper == null) {
+            parentHashWrapper = ByteArrayWrapper.wrap(getParentHash());
+        }
+        return parentHashWrapper;
+    }
+
     /**
      * Facilitates the "finalization" of the block, after processing the necessary transactions.
      * This will be called during block creation and is considered the last step conducted by the
@@ -471,6 +504,44 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         }
 
         return block;
+    }
+
+    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+        RLPList params = RLP.decode2(rlpEncoded);
+
+        // ensuring the expected types list before type casting
+        if (params.get(0) instanceof RLPList) {
+            RLPList blockRLP = (RLPList) params.get(0);
+
+            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
+
+                // Parse Header
+                RLPList headerRLP = (RLPList) blockRLP.get(0);
+                A0BlockHeader header;
+                try {
+                    header = A0BlockHeader.fromRLP(headerRLP, isUnsafe);
+                } catch (Exception e) {
+                    return null;
+                }
+                if (header == null) {
+                    return null;
+                }
+
+                AionBlock block = new AionBlock();
+                block.header = header;
+                block.parsed = true;
+
+                // Parse Transactions
+                RLPList transactions = (RLPList) blockRLP.get(1);
+                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+                    return null;
+                }
+
+                return block;
+            }
+        }
+        // not an AionBlock encoding
+        return null;
     }
 
     public void setCumulativeDifficulty(BigInteger _td) {

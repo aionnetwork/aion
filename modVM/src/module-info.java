@@ -1,5 +1,4 @@
 module aion.vm {
-    requires aion.base;
     requires aion.mcf;
     requires transitive slf4j.api;
     requires aion.zero;
@@ -10,6 +9,8 @@ module aion.vm {
     requires org.aion.avm.core;
     requires aion.precompiled;
     requires com.google.common;
+    requires aion.crypto;
 
     exports org.aion.vm;
+    exports org.aion.vm.exception;
 }

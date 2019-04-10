@@ -2,11 +2,11 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.ITransaction;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.types.Address;
 
-public interface IPendingState<TX extends ITransaction> {
+public interface IPendingState<TX extends Transaction> {
 
     List<TxResponse> addPendingTransactions(List<TX> transactions);
 
@@ -14,7 +14,7 @@ public interface IPendingState<TX extends ITransaction> {
 
     boolean isValid(TX tx);
 
-    IRepositoryCache<?, ?> getRepository();
+    RepositoryCache<?, ?> getRepository();
 
     List<TX> getPendingTransactions();
 

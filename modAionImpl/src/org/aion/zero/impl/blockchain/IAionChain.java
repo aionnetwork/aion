@@ -2,10 +2,10 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.base.db.IRepository;
+import org.aion.interfaces.db.Repository;
 import org.aion.mcf.blockchain.IChainInstancePOW;
 import org.aion.mcf.blockchain.IPowChain;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.query.QueryInterface;
 import org.aion.zero.impl.types.AionBlock;
@@ -27,11 +27,11 @@ public interface IAionChain extends IChainInstancePOW, QueryInterface {
 
     AionTxReceipt callConstant(AionTransaction tx, IAionBlock block);
 
-    IRepository<?, ?> getRepository();
+    Repository<?, ?> getRepository();
 
-    IRepository<?, ?> getPendingState();
+    Repository<?, ?> getPendingState();
 
-    IRepository<?, ?> getSnapshotTo(byte[] root);
+    Repository<?, ?> getSnapshotTo(byte[] root);
 
     List<AionTransaction> getWireTransactions();
 

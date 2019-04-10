@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
@@ -13,10 +13,10 @@ import org.aion.p2p.Msg;
  * @author jin
  * @modified jay@Sep.2017
  */
-// public abstract class AbstractTxTask<TX extends ITransaction, CHANMGR extends
+// public abstract class AbstractTxTask<TX extends Transaction, CHANMGR extends
 // AbstractChanMgr, CHAN extends AbstractChannel> implements Callable<List<TX>>
 // {
-public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMgr>
+public abstract class AbstractTxTask<TX extends Transaction, P2P extends IP2pMgr>
         implements Callable<List<TX>> {
 
     protected final List<TX> tx;

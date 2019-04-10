@@ -13,8 +13,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
+import org.aion.util.others.Utils;
 
 /** @author chris */
 public class CfgDb {
@@ -26,6 +26,7 @@ public class CfgDb {
         public static final String INDEX = "index";
         public static final String PENDING_BLOCK = "pendingBlock";
 
+        public static final String CONTRACT_INDEX = "contractIndex";
         public static final String DETAILS = "details";
         public static final String STORAGE = "storage";
 

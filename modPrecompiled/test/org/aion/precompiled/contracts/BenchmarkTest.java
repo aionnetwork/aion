@@ -4,13 +4,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.type.PrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -25,7 +25,7 @@ public class BenchmarkTest {
     private byte[] txHash, callData;
     private Address origin, caller, blockCoinbase;
     private long blockNumber, blockTimestamp, blockNrgLimit, nrgLimit;
-    private DataWord blockDifficulty, nrgPrice, callValue;
+    private DataWordImpl blockDifficulty, nrgPrice, callValue;
     private int depth, kind, flags;
 
     private static int WARMUP = 2000;
@@ -51,17 +51,17 @@ public class BenchmarkTest {
         cf = new ContractFactory();
         CfgAion.inst();
         txHash = RandomUtils.nextBytes(32);
-        origin = AionAddress.wrap(RandomUtils.nextBytes(32));
+        origin = Address.wrap(RandomUtils.nextBytes(32));
         caller = origin;
-        blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
+        blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
         blockNumber = 2000001;
         blockTimestamp = System.currentTimeMillis() / 1000;
         blockNrgLimit = 5000000;
-        blockDifficulty = new DataWord(0x100000000L);
+        blockDifficulty = new DataWordImpl(0x100000000L);
 
-        nrgPrice = DataWord.ONE;
+        nrgPrice = DataWordImpl.ONE;
         nrgLimit = 20000;
-        callValue = DataWord.ZERO;
+        callValue = DataWordImpl.ZERO;
         callData = new byte[0];
 
         depth = 0;

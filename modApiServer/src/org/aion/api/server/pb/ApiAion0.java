@@ -1,7 +1,5 @@
 package org.aion.api.server.pb;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.math.BigInteger;
@@ -29,6 +27,8 @@ import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
+import org.aion.api.server.rpc.RpcError;
+import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.api.server.types.EvtContract;
@@ -39,15 +39,12 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.Hash256;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
-import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
-import org.aion.base.util.TypeConverter;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
+import org.aion.types.Address;
+
+import org.aion.types.ByteArrayWrapper;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -58,7 +55,10 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Hash256;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
+import org.aion.util.string.StringUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
@@ -72,6 +72,8 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
+
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
@@ -128,7 +130,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                             contractAddress,
                                                                             ByteUtil.toHexString(
                                                                                     lg))) {
-                                                                        IBlock<AionTransaction, ?>
+                                                                        Block<AionTransaction, ?>
                                                                                 blk =
                                                                                         (cbs)
                                                                                                 .getBlock();
@@ -177,7 +179,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         }
     }
 
-    protected void pendingTxReceived(ITransaction _tx) {
+    protected void pendingTxReceived(Transaction _tx) {
         installedFilters
                 .values()
                 .forEach(
@@ -188,7 +190,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         });
     }
 
-    protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+    protected void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state) {
         ByteArrayWrapper txHashW =
                 ByteArrayWrapper.wrap(
                         ((AionTxReceipt) _txRcpt).getTransaction().getTransactionHash());
@@ -246,8 +248,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         new TxWaitingMappingUpdate(
                                 txHashW, _state.getValue(), ((AionTxReceipt) _txRcpt)));
             } catch (InterruptedException e) {
-                LOG.error(
-                        "ApiAion0.onPendingTransactionUpdate txWait.put exception", e.getMessage());
+                LOG.error("ApiAion0.onPendingTransactionUpdate txWait.put exception", e);
             }
         }
     }
@@ -399,7 +400,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     .newBuilder()
                                     .setMinerAddr(
                                             ByteString.copyFrom(
-                                                    TypeConverter.StringHexToByteArray(cb)))
+                                                    StringUtils.StringHexToByteArray(cb)))
                                     .build();
 
                     byte[] retHeader =
@@ -429,7 +430,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        AionAddress.wrap(req.getFrom().toByteArray()),
+                                        Address.wrap(req.getFrom().toByteArray()),
                                         null,
                                         Hex.decode(new String(bytes).substring(2)),
                                         BigInteger.ZERO,
@@ -474,8 +475,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         }
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.ContractDeploy exception [{}] ", e.getMessage());
+                        LOG.error("ApiAion0.process.ContractDeploy exception [{}] ", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
@@ -493,7 +493,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     List<String> accounts = this.getAccounts();
                     ArrayList<ByteString> al = new ArrayList<>();
                     for (String s : accounts) {
-                        al.add(ByteString.copyFrom(TypeConverter.StringHexToByteArray(s)));
+                        al.add(ByteString.copyFrom(StringUtils.StringHexToByteArray(s)));
                     }
                     Message.rsp_accounts rsp =
                             Message.rsp_accounts.newBuilder().addAllAccout(al).build();
@@ -531,11 +531,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.req_unlockAccount req = Message.req_unlockAccount.parseFrom(data);
                         result =
                                 this.unlockAccount(
-                                        AionAddress.wrap(req.getAccount().toByteArray()),
+                                        Address.wrap(req.getAccount().toByteArray()),
                                         req.getPassword(),
                                         req.getDuration());
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.unlockAccount exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.unlockAccount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -558,11 +558,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         Message.req_getBalance req = Message.req_getBalance.parseFrom(data);
 
-                        Address addr = AionAddress.wrap(req.getAddress().toByteArray());
+                        Address addr = Address.wrap(req.getAddress().toByteArray());
 
                         balance = this.getBalance(addr);
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.getbalance exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getbalance exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -589,11 +589,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         Message.req_getNonce req = Message.req_getNonce.parseFrom(data);
 
-                        Address addr = AionAddress.wrap(req.getAddress().toByteArray());
+                        Address addr = Address.wrap(req.getAddress().toByteArray());
 
                         nonce = this.getNonce(addr);
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAionA0.process.getNonce exception: [{}]", e.getMessage());
+                        LOG.error("ApiAionA0.process.getNonce exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE);
                     }
@@ -626,8 +626,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getEnergyPrice exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getEnergyPrice exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -700,7 +699,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         }
 
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.compile exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.compile exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -776,7 +775,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         }
 
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.compile exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.compile exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -796,8 +795,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        AionAddress.wrap(req.getFrom().toByteArray()),
-                                        AionAddress.wrap(req.getTo().toByteArray()),
+                                        Address.wrap(req.getFrom().toByteArray()),
+                                        Address.wrap(req.getTo().toByteArray()),
                                         req.getData().toByteArray(),
                                         new BigInteger(req.getNonce().toByteArray()),
                                         new BigInteger(req.getValue().toByteArray()),
@@ -806,8 +805,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         result = this.sendTransaction(params);
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error(
-                                "ApiAion0.process.sendTransaction exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.sendTransaction exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
@@ -825,7 +823,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     Message.req_getCode req;
                     try {
                         req = Message.req_getCode.parseFrom(data);
-                        Address to = AionAddress.wrap(req.getAddress().toByteArray());
+                        Address to = Address.wrap(req.getAddress().toByteArray());
 
                         byte[] code = this.getCode(to);
                         if (code == null) {
@@ -843,7 +841,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.getCode exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getCode exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -876,8 +874,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            AionAddress.wrap(log.address)
-                                                                    .toBytes()))
+                                                            Address.wrap(log.address).toBytes()))
                                             .setData(
                                                     ByteString.copyFrom(
                                                             ByteUtil.hexStringToBytes(log.data)))
@@ -926,9 +923,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getTransactionReceipt exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getTransactionReceipt exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -946,8 +941,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_call.parseFrom(data);
 
-                        Address from = AionAddress.wrap(req.getFrom().toByteArray());
-                        Address to = AionAddress.wrap(req.getTo().toByteArray());
+                        Address from = Address.wrap(req.getFrom().toByteArray());
+                        Address to = Address.wrap(req.getTo().toByteArray());
 
                         BigInteger value = new BigInteger(req.getValue().toByteArray());
                         byte[] d = req.getData().toByteArray();
@@ -972,7 +967,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.call exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.call exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -994,9 +989,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         return createBlockMsg(blk);
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockByNumber exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockByNumber exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1023,8 +1016,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         AionBlock blk = this.getBlockByHash(hash);
                         return createBlockMsg(blk);
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockByHash exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockByHash exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1063,7 +1055,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     } catch (Exception e) {
                         LOG.error(
                                 "ApiAion0.process.getTransactionByBlockHashAndIndex exception: [{}]",
-                                e.getMessage());
+                                e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1102,7 +1094,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     } catch (Exception e) {
                         LOG.error(
                                 "ApiAion0.process.getTransactionByBlockNumberAndIndex exception: [{}]",
-                                e.getMessage());
+                                e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1144,7 +1136,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     } catch (Exception e) {
                         LOG.error(
                                 "ApiAion0.process.getBlockTransactionCountByNumber exception: [{}]",
-                                e.getMessage());
+                                e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1162,7 +1154,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_getTransactionCount.parseFrom(data);
                         long blkNr = req.getBlocknumber();
-                        Address addr = AionAddress.wrap(req.getAddress().toByteArray());
+                        Address addr = Address.wrap(req.getAddress().toByteArray());
 
                         if (blkNr < -1) {
                             return ApiUtil.toReturnHeader(
@@ -1186,9 +1178,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getTransactionCount exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getTransactionCount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1229,9 +1219,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getTransactionCount exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getTransactionCount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1268,9 +1256,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getTransactionCount exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getTransactionCount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1310,8 +1296,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getActiveNodes exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getActiveNodes exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1339,8 +1324,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getStaticNodes exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getStaticNodes exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1362,8 +1346,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getSolcVersion exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getSolcVersion exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1376,17 +1359,34 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     }
 
                     try {
+                        Optional<Long> localBestBlockNumber = this.ac.getLocalBestBlockNumber();
+                        Optional<Long> networkBestBlockNumber = this.ac.getNetworkBestBlockNumber();
+
+                        // Check that we actually have real values in our hands.
+                        if (!localBestBlockNumber.isPresent()) {
+                            LOG.error("Unable to determine the local node's best block number!");
+                            return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                        }
+                        if (!networkBestBlockNumber.isPresent()) {
+                            LOG.error("Unable to determine the network's best block number!");
+                            return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                        }
+
+                        SyncInfo syncInfo =
+                                this.getSyncInfo(
+                                        localBestBlockNumber.get(), networkBestBlockNumber.get());
+
                         Message.rsp_isSyncing rsp =
                                 Message.rsp_isSyncing
                                         .newBuilder()
-                                        .setSyncing(!this.getSync().done)
+                                        .setSyncing(!syncInfo.done)
                                         .build();
 
                         byte[] retHeader =
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.syncing exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.syncing exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1398,15 +1398,30 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_service_call_VALUE);
                     }
 
-                    SyncInfo sync = this.getSync();
+                    Optional<Long> localBestBlockNumber = this.ac.getLocalBestBlockNumber();
+                    Optional<Long> networkBestBlockNumber = this.ac.getNetworkBestBlockNumber();
+
+                    // Check that we actually have real values in our hands.
+                    if (!localBestBlockNumber.isPresent()) {
+                        LOG.error("Unable to determine the local node's best block number!");
+                        return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                    }
+                    if (!networkBestBlockNumber.isPresent()) {
+                        LOG.error("Unable to determine the network's best block number!");
+                        return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                    }
+
+                    SyncInfo syncInfo =
+                            this.getSyncInfo(
+                                    localBestBlockNumber.get(), networkBestBlockNumber.get());
 
                     try {
                         Message.rsp_syncInfo rsp =
                                 Message.rsp_syncInfo
                                         .newBuilder()
-                                        .setChainBestBlock(sync.chainBestBlkNumber)
-                                        .setNetworkBestBlock(sync.networkBestBlkNumber)
-                                        .setSyncing(!sync.done)
+                                        .setChainBestBlock(syncInfo.chainBestBlkNumber)
+                                        .setNetworkBestBlock(syncInfo.networkBestBlkNumber)
+                                        .setSyncing(!syncInfo.done)
                                         .setMaxImportBlocks(24)
                                         .build();
 
@@ -1414,7 +1429,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.syncInfo exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.syncInfo exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1449,7 +1464,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 pKeyList.add(ByteString.copyFrom(pKey));
                             }
 
-                            addressList.add(ByteString.copyFrom(AionAddress.wrap(addr).toBytes()));
+                            addressList.add(ByteString.copyFrom(Address.wrap(addr).toBytes()));
                         }
 
                         Message.rsp_accountCreate rsp =
@@ -1464,7 +1479,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.accountCreate exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.accountCreate exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1489,10 +1504,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.req_accountlock req = Message.req_accountlock.parseFrom(data);
                         result =
                                 this.lockAccount(
-                                        AionAddress.wrap(req.getAccount().toByteArray()),
+                                        Address.wrap(req.getAccount().toByteArray()),
                                         req.getPassword());
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.lockAccount exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.lockAccount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1542,8 +1557,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        AionAddress.wrap(req.getFrom().toByteArray()),
-                                        AionAddress.wrap(req.getTo().toByteArray()),
+                                        Address.wrap(req.getFrom().toByteArray()),
+                                        Address.wrap(req.getTo().toByteArray()),
                                         req.getData().toByteArray(),
                                         BigInteger.ZERO,
                                         new BigInteger(req.getValue().toByteArray()),
@@ -1552,7 +1567,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         result = this.estimateNrg(params);
                     } catch (InvalidProtocolBufferException e) {
-                        LOG.error("ApiAion0.process.estimateNrg exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.estimateNrg exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
@@ -1579,8 +1594,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_exportAccounts.parseFrom(data);
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.exportAccounts exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.exportAccounts exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1590,7 +1604,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             i < req.getKeyFileList().size() && i < ACCOUNT_CREATE_LIMIT;
                             i++) {
                         addrMap.put(
-                                AionAddress.wrap(req.getKeyFile(i).getAddress().toByteArray()),
+                                Address.wrap(req.getKeyFile(i).getAddress().toByteArray()),
                                 req.getKeyFile(i).getPassword());
                     }
 
@@ -1640,7 +1654,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_importAccounts.parseFrom(data);
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.importAccount exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.importAccount exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1694,8 +1708,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         result = this.sendTransaction(encodedTx);
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.rawTransaction exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.rawTransaction exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
@@ -1758,7 +1771,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.eventRegister exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.eventRegister exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1811,8 +1824,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.eventDeregister exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.eventDeregister exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1865,9 +1877,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                         }
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockDetailsByNumber exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockDetailsByNumber exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2081,9 +2091,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockDetailsByNumber exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockDetailsByNumber exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2305,9 +2313,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockDetailsByNumber exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockDetailsByNumber exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2360,9 +2366,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                         }
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockDetailsByLatest exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockDetailsByLatest exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2415,9 +2419,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                         }
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlocksByLatest exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlocksByLatest exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2446,8 +2448,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 a -> {
                                                     BigInteger b =
                                                             this.getBalance(
-                                                                    AionAddress.wrap(
-                                                                            a.toByteArray()));
+                                                                    Address.wrap(a.toByteArray()));
 
                                                     Message.t_AccountDetail.Builder builder =
                                                             Message.t_AccountDetail.newBuilder();
@@ -2479,9 +2480,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
 
                     } catch (Exception e) {
-                        LOG.error(
-                                "ApiAion0.process.getBlockDetailsByNumber exception: [{}]",
-                                e.getMessage());
+                        LOG.error("ApiAion0.process.getBlockDetailsByNumber exception: [{}]", e);
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -2654,7 +2653,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 log -> {
                                     List<String> topics = new ArrayList<>();
                                     for (int i = 0; i < log.getTopics().size(); i++) {
-                                        topics.add(TypeConverter.toJsonHex(log.getTopics().get(i)));
+                                        topics.add(StringUtils.toJsonHex(log.getTopics().get(i)));
                                     }
 
                                     return Message.t_LgEle
@@ -2675,7 +2674,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 Message.t_TxDetail
                         .newBuilder()
                         .setData(ByteString.copyFrom(t.getData()))
-                        .setTo(ByteString.copyFrom(t.getDestinationAddress().toBytes()))
+                        .setTo(
+                                ByteString.copyFrom(
+                                        t.getDestinationAddress() == null
+                                                ? EMPTY_BYTE_ARRAY
+                                                : t.getDestinationAddress().toBytes()))
                         .setFrom(ByteString.copyFrom(t.getSenderAddress().toBytes()))
                         .setNonce(ByteString.copyFrom(t.getNonce()))
                         .setValue(ByteString.copyFrom(t.getValue()))
@@ -2834,7 +2837,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(t.getSenderAddress().toBytes())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(t.getDestinationAddress().toBytes())
+                + ByteUtil.toHexString(
+                        t.getDestinationAddress() == null
+                                ? EMPTY_BYTE_ARRAY
+                                : t.getDestinationAddress().toBytes())
                 + "',"
                 + nrgConsumed
                 + ","
@@ -2925,7 +2931,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                             .size();
                                                                                             i++) {
                                                                                         topics.add(
-                                                                                                TypeConverter
+                                                                                                StringUtils
                                                                                                         .toJsonHex(
                                                                                                                 log.getTopics()
                                                                                                                         .get(
@@ -2963,8 +2969,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .getData()))
                                                                         .setTo(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getDestinationAddress()
-                                                                                                .toBytes()))
+                                                                                        tx
+                                                                                                                .getDestinationAddress()
+                                                                                                        == null
+                                                                                                ? EMPTY_BYTE_ARRAY
+                                                                                                : tx.getDestinationAddress()
+                                                                                                        .toBytes()))
                                                                         .setFrom(
                                                                                 ByteString.copyFrom(
                                                                                         tx.getSenderAddress()

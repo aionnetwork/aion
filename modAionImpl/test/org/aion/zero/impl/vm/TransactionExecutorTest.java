@@ -27,23 +27,32 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.Hex;
+import java.util.List;
+
+import org.aion.fastvm.FastVmResultCode;
+import org.aion.fastvm.FastVmTransactionResult;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.vm.api.interfaces.TransactionResult;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -74,7 +83,7 @@ public class TransactionExecutorTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new AionAddress(deployerKey.getAddress());
+        deployer = new Address(deployerKey.getAddress());
     }
 
     @After
@@ -84,8 +93,22 @@ public class TransactionExecutorTest {
         deployer = null;
     }
 
+    @Test(expected = VMException.class)
+    public void testExecutorFatal() throws VMException {
+        BulkExecutor be = mock(BulkExecutor.class);
+        TransactionResult rt = new FastVmTransactionResult(FastVmResultCode.VM_INTERNAL_ERROR, 0);
+        when(be.execute()).thenThrow(new VMException(rt.toString()));
+
+        try {
+            be.execute();
+        } catch (VMException e) {
+            System.out.println(e.toString());
+            throw e;
+        }
+    }
+
     @Test
-    public void testExecutor() throws IOException {
+    public void testExecutor() throws IOException, VMException {
         Address to = getNewRecipient(true);
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
@@ -104,7 +127,7 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
@@ -183,7 +206,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testDeployedCodeFunctionality() throws IOException {
+    public void testDeployedCodeFunctionality() throws IOException, VMException {
         Address contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(f_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
@@ -201,7 +224,7 @@ public class TransactionExecutorTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
@@ -259,9 +282,10 @@ public class TransactionExecutorTest {
         //        // I'm guessing: first data word is the number of bytes that follows. Then those
         // following
         //        // bytes denote the size of the output, which follows these last bytes.
-        //        int len = new DataWord(Arrays.copyOfRange(output, 0, DataWord.BYTES)).intValue();
+        //        int len = new DataWordImpl(Arrays.copyOfRange(output, 0,
+        // DataWordImpl.BYTES)).intValue();
         //        byte[] outputLen = new byte[len];
-        //        System.arraycopy(output, DataWord.BYTES, outputLen, 0, len);
+        //        System.arraycopy(output, DataWordImpl.BYTES, outputLen, 0, len);
         //        int outputSize = new BigInteger(outputLen).intValue();
         //
         //        byte[] expected = new byte[1024];
@@ -269,7 +293,7 @@ public class TransactionExecutorTest {
         //        expected[1023] = 'b';
         //
         //        byte[] out = new byte[outputSize];
-        //        System.arraycopy(output, DataWord.BYTES + len, out, 0, outputSize);
+        //        System.arraycopy(output, DataWordImpl.BYTES + len, out, 0, outputSize);
 
         byte[] expected = new byte[1024];
         expected[0] = 'a';
@@ -281,7 +305,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testGfunction() throws IOException {
+    public void testGfunction() throws IOException, VMException {
         Address contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(g_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
@@ -299,7 +323,7 @@ public class TransactionExecutorTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
 
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
@@ -349,19 +373,19 @@ public class TransactionExecutorTest {
     }
 
     private Address getNewRecipient(boolean isContractCreation) {
-        return (isContractCreation) ? null : new AionAddress(RandomUtils.nextBytes(Address.SIZE));
+        return (isContractCreation) ? null : new Address(RandomUtils.nextBytes(Address.SIZE));
     }
 
     private byte[] extractActualOutput(byte[] rawOutput) {
         // I'm guessing: first data word is the number of bytes that follows. Then those following
         // bytes denote the size of the output, which follows these last bytes.
-        int len = new DataWord(Arrays.copyOfRange(rawOutput, 0, DataWord.BYTES)).intValue();
+        int len = new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
         byte[] outputLen = new byte[len];
-        System.arraycopy(rawOutput, DataWord.BYTES, outputLen, 0, len);
+        System.arraycopy(rawOutput, DataWordImpl.BYTES, outputLen, 0, len);
         int outputSize = new BigInteger(outputLen).intValue();
 
         byte[] out = new byte[outputSize];
-        System.arraycopy(rawOutput, DataWord.BYTES + len, out, 0, outputSize);
+        System.arraycopy(rawOutput, DataWordImpl.BYTES + len, out, 0, outputSize);
         return out;
     }
 

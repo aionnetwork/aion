@@ -4,7 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static org.aion.base.util.BIUtil.toBI;
+import static org.aion.util.biginteger.BIUtil.toBI;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
@@ -16,21 +16,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.ITxExecSummary;
-import org.aion.base.type.ITxReceipt;
+import org.aion.interfaces.tx.TxExecSummary;
+import org.aion.interfaces.tx.TxReceipt;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
-public class AionTxExecSummary implements ITxExecSummary {
+public class AionTxExecSummary implements TxExecSummary {
 
     /**
      * The receipt associated with {@link AionTransaction} that indicates the results of the
@@ -42,7 +41,7 @@ public class AionTxExecSummary implements ITxExecSummary {
 
     private List<Address> deletedAccounts = emptyList();
     private List<InternalTransactionInterface> internalTransactions = emptyList();
-    private Map<DataWord, DataWord> storageDiff = emptyMap();
+    private Map<DataWordImpl, DataWordImpl> storageDiff = emptyMap();
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
     private byte[] result;
@@ -134,8 +133,8 @@ public class AionTxExecSummary implements ITxExecSummary {
         for (RLPElement entry : (RLPList) encoded) {
             RLPList asList = (RLPList) entry;
 
-            DataWord key = new DataWord(asList.get(0).getRLPData());
-            DataWord value = new DataWord(asList.get(1).getRLPData());
+            DataWordImpl key = new DataWordImpl(asList.get(0).getRLPData());
+            DataWordImpl value = new DataWordImpl(asList.get(1).getRLPData());
             byte[] changedBytes = asList.get(2).getRLPData();
             boolean changed = isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
 
@@ -163,10 +162,10 @@ public class AionTxExecSummary implements ITxExecSummary {
         return RLP.encodeList(result);
     }
 
-    private static byte[] encodeStorageDiff(Map<DataWord, DataWord> storageDiff) {
+    private static byte[] encodeStorageDiff(Map<DataWordImpl, DataWordImpl> storageDiff) {
         byte[][] result = new byte[storageDiff.size()][];
         int i = 0;
-        for (Map.Entry<DataWord, DataWord> entry : storageDiff.entrySet()) {
+        for (Map.Entry<DataWordImpl, DataWordImpl> entry : storageDiff.entrySet()) {
             byte[] key = RLP.encodeElement(entry.getKey().getData());
             byte[] value = RLP.encodeElement(entry.getValue().getData());
             result[i++] = RLP.encodeList(key, value);
@@ -174,11 +173,11 @@ public class AionTxExecSummary implements ITxExecSummary {
         return RLP.encodeList(result);
     }
 
-    private static Map<DataWord, DataWord> decodeStorageDiff(RLPList storageDiff) {
-        Map<DataWord, DataWord> result = new HashMap<>();
+    private static Map<DataWordImpl, DataWordImpl> decodeStorageDiff(RLPList storageDiff) {
+        Map<DataWordImpl, DataWordImpl> result = new HashMap<>();
         for (RLPElement entry : storageDiff) {
-            DataWord key = new DataWord(((RLPList) entry).get(0).getRLPData());
-            DataWord value = new DataWord(((RLPList) entry).get(1).getRLPData());
+            DataWordImpl key = new DataWordImpl(((RLPList) entry).get(0).getRLPData());
+            DataWordImpl value = new DataWordImpl(((RLPList) entry).get(1).getRLPData());
             result.put(key, value);
         }
         return result;
@@ -213,7 +212,7 @@ public class AionTxExecSummary implements ITxExecSummary {
     private static List<Address> decodeDeletedAccounts(RLPList deletedAccounts) {
         List<Address> result = new ArrayList<>();
         for (RLPElement deletedAccount : deletedAccounts) {
-            result.add(AionAddress.wrap(deletedAccount.getRLPData()));
+            result.add(Address.wrap(deletedAccount.getRLPData()));
         }
         return result;
     }
@@ -252,7 +251,7 @@ public class AionTxExecSummary implements ITxExecSummary {
 
     @Deprecated
     /* Use getTouchedStorage().getAll() instead */
-    public Map<DataWord, DataWord> getStorageDiff() {
+    public Map<DataWordImpl, DataWordImpl> getStorageDiff() {
         if (!parsed) {
             rlpParse();
         }
@@ -341,7 +340,7 @@ public class AionTxExecSummary implements ITxExecSummary {
     }
 
     @Override
-    public Object getBuilder(ITxReceipt receipt) {
+    public Object getBuilder(TxReceipt receipt) {
         return builderFor((AionTxReceipt) receipt);
     }
 
@@ -374,13 +373,13 @@ public class AionTxExecSummary implements ITxExecSummary {
             return this;
         }
 
-        public Builder storageDiff(Map<DataWord, DataWord> storageDiff) {
+        public Builder storageDiff(Map<DataWordImpl, DataWordImpl> storageDiff) {
             summary.storageDiff = unmodifiableMap(storageDiff);
             return this;
         }
 
         public Builder touchedStorage(
-                Map<DataWord, DataWord> touched, Map<DataWord, DataWord> changed) {
+                Map<DataWordImpl, DataWordImpl> touched, Map<DataWordImpl, DataWordImpl> changed) {
             summary.touchedStorage.addReading(touched);
             summary.touchedStorage.addWriting(changed);
             return this;

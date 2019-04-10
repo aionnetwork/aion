@@ -14,7 +14,9 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.TrieNodeWrapper;
 import org.aion.zero.impl.sync.msg.ResponseTrieData;
 import org.junit.Test;
@@ -28,6 +30,17 @@ import org.slf4j.Logger;
 public class ResponseTrieDataHandlerTest {
     private static final int peerId = Integer.MAX_VALUE;
     private static final String displayId = "abcdef";
+
+    @Test
+    public void testHeader() {
+        Logger log = mock(Logger.class);
+        BlockingQueue<TrieNodeWrapper> receivedQueue = mock(LinkedBlockingQueue.class);
+
+        ResponseTrieDataHandler handler = new ResponseTrieDataHandler(log, receivedQueue);
+        // check handler header
+        assertThat(handler.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(handler.getHeader().getAction()).isEqualTo(Act.RESPONSE_TRIE_DATA);
+    }
 
     @Test
     public void testReceive_nullMessage() {
@@ -84,7 +97,7 @@ public class ResponseTrieDataHandlerTest {
                 .error(
                         "<res-trie decode-error msg-bytes={} peer={}>",
                         outOfOderEncoding.length,
-                        peerId);
+                        displayId);
         verifyZeroInteractions(receivedQueue);
     }
 
@@ -115,7 +128,12 @@ public class ResponseTrieDataHandlerTest {
                 .trace(
                         "<res-trie decode-error for msg={} peer={}>",
                         Arrays.toString(outOfOderEncoding),
-                        peerId);
+                        displayId);
+        verify(log, times(1))
+                .error(
+                        "<res-trie decode-error msg-bytes={} peer={}>",
+                        outOfOderEncoding.length,
+                        displayId);
         verifyZeroInteractions(receivedQueue);
     }
 

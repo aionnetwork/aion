@@ -1,21 +1,21 @@
 package org.aion.mcf.vm.types;
 
 import java.math.BigInteger;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
-    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
+    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
     public KernelInterfaceForFastVM(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall) {
 
@@ -48,7 +48,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.repositoryCache.rollback();
     }
 
-    public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
+    public RepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
         return this.repositoryCache;
     }
 
@@ -70,6 +70,17 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     @Override
     public byte[] getCode(Address address) {
         return this.repositoryCache.getCode(address);
+    }
+
+    @Override
+    public void putObjectGraph(Address contract, byte[] graph) {
+        //Todo: implement it when avm is ready.
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        //Todo: implement it when avm is ready.
+        return new byte[0];
     }
 
     @Override
@@ -100,7 +111,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
             throw new IllegalStateException(
                     "A zero or empty value was retrieved from storage. Storing zeros is not allowed by the FVM. An incorrect put was previously performed instead of an explicit call to the delete method.");
         }
-        return (value == null) ? DataWord.ZERO.getData() : alignValueToWordSizeForGet(value);
+        return (value == null) ? DataWordImpl.ZERO.getData() : alignValueToWordSizeForGet(value);
     }
 
     @Override
@@ -180,7 +191,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        return address.toBytes()[0] != VirtualMachineSpecs.AVM_CREATE_CODE;
+        return TransactionTypeRule.isValidFVMContractDeployment(repositoryCache.getVMUsed(address));
     }
 
     /**
@@ -194,7 +205,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         if (value.length == DoubleDataWord.BYTES) {
             return new ByteArrayWrapper(new DoubleDataWord(value).getData());
         } else {
-            DataWord valueAsWord = new DataWord(value);
+            DataWordImpl valueAsWord = new DataWordImpl(value);
             return (valueAsWord.isZero())
                     ? valueAsWord.toWrapper()
                     : new ByteArrayWrapper(valueAsWord.getNoLeadZeroesData());
@@ -211,10 +222,10 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     private byte[] alignValueToWordSizeForGet(ByteArrayWrapper wrappedValue) {
         byte[] value = wrappedValue.getData();
 
-        if (value.length > DataWord.BYTES) {
+        if (value.length > DataWordImpl.BYTES) {
             return new DoubleDataWord(value).getData();
         } else {
-            return new DataWord(value).getData();
+            return new DataWordImpl(value).getData();
         }
     }
 
@@ -229,7 +240,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         if (data.length == DoubleDataWord.BYTES) {
             return new ByteArrayWrapper(new DoubleDataWord(data).getData());
         } else {
-            return new ByteArrayWrapper(new DataWord(data).getData());
+            return new ByteArrayWrapper(new DataWordImpl(data).getData());
         }
     }
 }

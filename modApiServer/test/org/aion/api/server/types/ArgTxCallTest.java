@@ -1,11 +1,12 @@
 package org.aion.api.server.types;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -18,8 +19,8 @@ public class ArgTxCallTest {
         JSONObject tx = new JSONObject();
         ArgTxCall txCall = ArgTxCall.fromJSON(tx, nrgPrice);
 
-        assertEquals(AionAddress.EMPTY_ADDRESS(), txCall.getFrom());
-        assertEquals(AionAddress.EMPTY_ADDRESS(), txCall.getTo());
+        assertNull(txCall.getFrom());
+        assertNull(txCall.getTo());
         assertEquals(0, txCall.getData().length);
         assertEquals(BigInteger.ZERO, txCall.getNonce());
         assertEquals(BigInteger.ZERO, txCall.getValue());
@@ -38,8 +39,8 @@ public class ArgTxCallTest {
         tx.put("to", toAddr);
         ArgTxCall txCall = ArgTxCall.fromJSON(tx, nrgPrice);
 
-        assertEquals(AionAddress.EMPTY_ADDRESS(), txCall.getFrom());
-        assertEquals(new AionAddress(toAddr), txCall.getTo());
+        assertNull(txCall.getFrom());
+        assertEquals(new Address(toAddr), txCall.getTo());
         assertEquals(0, txCall.getData().length);
         assertEquals(BigInteger.ZERO, txCall.getNonce());
         assertEquals(BigInteger.ZERO, txCall.getValue());

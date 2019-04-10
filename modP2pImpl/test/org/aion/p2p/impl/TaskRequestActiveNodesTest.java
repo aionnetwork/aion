@@ -39,7 +39,7 @@ public class TaskRequestActiveNodesTest {
         p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void TestRun() throws InterruptedException {
         when(mgr.getRandom()).thenReturn(node);
         when(node.getIdShort()).thenReturn("inode");

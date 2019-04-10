@@ -2,8 +2,8 @@ package org.aion.mcf.trie.scan;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.rlp.Value;
+import org.aion.types.ByteArrayWrapper;
 
 public class CollectFullSetOfNodes implements ScanAction {
     Set<ByteArrayWrapper> nodes = new HashSet<>();

@@ -10,7 +10,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 
 public class AionTransactionStoreSerializer {
     public static final Serializer<List<AionTxInfo>, byte[]> serializer =
-            new Serializer<List<AionTxInfo>, byte[]>() {
+            new Serializer<>() {
                 @Override
                 public byte[] serialize(List<AionTxInfo> object) {
                     byte[][] txsRlp = new byte[object.size()][];

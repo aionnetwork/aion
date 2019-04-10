@@ -4,18 +4,17 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.interfaces.Address;
-import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -49,7 +48,7 @@ public class AionGenesis extends AionBlock {
      * Corresponds to {@link AbstractBlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
-    protected static final Address GENESIS_COINBASE = AionAddress.ZERO_ADDRESS();
+    protected static final Address GENESIS_COINBASE = Address.ZERO_ADDRESS();
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getLogsBloom()} indicates the logsBloom of the
@@ -351,8 +350,8 @@ public class AionGenesis extends AionBlock {
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 // we assume there are no deletions in the genesis
                 networkBalanceStorage.put(
-                        new DataWord(entry.getKey()).toWrapper(),
-                        wrapValueForPut(new DataWord(entry.getValue())));
+                        new DataWordImpl(entry.getKey()).toWrapper(),
+                        wrapValueForPut(new DataWordImpl(entry.getValue())));
             }
             byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
 
@@ -370,9 +369,9 @@ public class AionGenesis extends AionBlock {
             return worldTrie.getRootHash();
         }
 
-        private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+        private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
             return (value.isZero())
-                    ? DataWord.ZERO.toWrapper()
+                    ? DataWordImpl.ZERO.toWrapper()
                     : new ByteArrayWrapper(value.getNoLeadZeroesData());
         }
 

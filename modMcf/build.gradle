@@ -4,16 +4,16 @@ test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
-    compile project(':modUtil')
-    compile project(':modAionBase')
-    compile project(':modLogger')
+    compile project(':aion_vm_api')
+    compile 'network.aion:util4j:0.4.0'
+    compile 'network.aion:log4j:0.4.0'
+    compile 'network.aion:rlp4j:0.4.0'
+    compile 'network.aion:crypto4j:0.4.0'
+
     compile project(':modP2p')
-    compile project(':modCrypto')
-    compile project(':modRlp')
     compile project(':modDbImpl')
     compile 'com.madgag.spongycastle:prov:1.58.0.0'
     compile 'com.madgag.spongycastle:core:1.58.0.0'
-    compile project(':aion_vm_api')
     compile files('../lib/libnsc.jar')
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'com.google.guava:guava:25.1-jre'
@@ -28,6 +28,8 @@ dependencies {
     testCompile group: 'commons-codec', name: 'commons-codec', version: '1.10'
     testCompile "org.mockito:mockito-core:2.23.0"
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+    testCompile 'network.aion:crypto4j:0.4.0'
+
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 

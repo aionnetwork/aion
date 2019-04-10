@@ -1,22 +1,21 @@
 package org.aion.zero.types;
 
-import static org.aion.base.util.ByteUtil.longToBytes;
-import static org.aion.base.util.ByteUtil.merge;
-import static org.aion.base.util.ByteUtil.oneByteToHexString;
-import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.util.bytes.ByteUtil.longToBytes;
+import static org.aion.util.bytes.ByteUtil.merge;
+import static org.aion.util.bytes.ByteUtil.oneByteToHexString;
+import static org.aion.util.bytes.ByteUtil.toHexString;
+import static org.aion.util.time.TimeUtils.longToDateTime;
 
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.IPowBlockHeader;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Utils;
+import org.aion.interfaces.block.PowBlockHeader;
+import org.aion.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
@@ -25,7 +24,7 @@ import org.json.JSONObject;
  *
  * @author Ross
  */
-public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeader {
+public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader {
 
     static final int RPL_BH_VERSION = 0,
             RPL_BH_NUMBER = 1,
@@ -84,10 +83,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         // CoinBase
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
-        this.coinbase =
-                (data == null)
-                        ? AionAddress.EMPTY_ADDRESS()
-                        : AionAddress.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
+        if (data == null || data.length != Address.SIZE) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        }
+        this.coinbase = Address.wrap(data);
 
         // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
@@ -157,7 +156,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         System.arraycopy(toCopy.getParentHash(), 0, this.parentHash, 0, this.parentHash.length);
 
         // Copy elements in coinbase
-        this.coinbase = toCopy.coinbase.clone();
+        if (toCopy.coinbase == null) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        } else {
+            this.coinbase = toCopy.coinbase.clone();
+        }
 
         // Copy stateroot
         this.stateRoot = new byte[toCopy.getStateRoot().length];
@@ -216,7 +219,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             byte[] nonce,
             byte[] solution) {
         this.version = version;
-        this.coinbase = (AionAddress) coinbase;
+        if (coinbase == null) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        } else {
+            this.coinbase = coinbase;
+        }
         this.parentHash = parentHash;
         this.logsBloom = logsBloom;
         this.difficulty = difficulty;
@@ -372,7 +379,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
                 .append("  timestamp=")
                 .append(timestamp)
                 .append(" (")
-                .append(Utils.longToDateTime(timestamp))
+                .append(longToDateTime(timestamp))
                 .append(")")
                 .append(suffix);
         toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
@@ -499,7 +506,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         builder.withParentHash(rlpHeader.get(RPL_BH_PARENTHASH).getRLPData());
 
         // Coinbase (miner)
-        builder.withCoinbase(new AionAddress(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
+        builder.withCoinbase(new Address(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
 
         // State root
         builder.withStateRoot(rlpHeader.get(RPL_BH_STATEROOT).getRLPData());
@@ -559,7 +566,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
          * Some constants for fallbacks, these are not rigorously defined this;
          * TODO: define these with explanations in the future
          */
-        protected Address EMPTY_ADDRESS = AionAddress.EMPTY_ADDRESS();
 
         protected byte version;
         protected byte[] parentHash;
@@ -864,7 +870,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
             this.version = this.version == 0 ? 1 : this.version;
             this.parentHash = this.parentHash == null ? HashUtil.EMPTY_DATA_HASH : this.parentHash;
-            this.coinbase = this.coinbase == null ? AionAddress.ZERO_ADDRESS() : this.coinbase;
+            this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase;
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot =

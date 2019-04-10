@@ -11,12 +11,14 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':modAionBase')
+    compile project(':aion_vm_api')
+    compile 'network.aion:util4j:0.4.0'
+    compile 'network.aion:log4j:0.4.0'
+    compile 'network.aion:rlp4j:0.4.0'
+    compile 'network.aion:crypto4j:0.4.0'
+
     compile project(':modAion')
-    compile project(':modRlp')
-    compile project(':modCrypto')
     compile project(':modMcf')
-    compile project(':modLogger')
     compile project(':modP2pImpl')
     compile project(':modP2p')
     compile project(':modEvtMgr')
@@ -24,20 +26,23 @@ dependencies {
     compile project(':modVM')
     compile project(':modTxPool')
     compile project(':aion_fastvm')
-    compile files('../lib/org-aion-avm-rt.jar')
-    //compile files('../lib/libJson.jar')
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:3.6.1'
 
     testCompile project(path: ':modTxPoolImpl')
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
 
-    compile group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
-    compile group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
-    compile group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
-    compile group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
-    compile group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
+ //   compile group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+ //   compile group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+ //   compile group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+ //   compile group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+ //   compile group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
 
+    testCompile files('../lib/org-aion-avm-rt.jar')
+    testCompile files('../lib/org-aion-avm-api.jar')
+    testCompile files('../lib/org-aion-avm-userlib.jar')
+
+    testCompile 'network.aion:crypto4j:0.4.0'
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

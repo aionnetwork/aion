@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.PeerState.State;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
@@ -87,7 +88,7 @@ final class TaskGetBodies implements Runnable {
                     new ReqBlocksBodies(
                             headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
-            stats.updateBodiesRequest(displayId, System.nanoTime());
+            stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
 
             headersWithBodiesRequested.put(idHash, hw);
 

@@ -1,6 +1,117 @@
 ext.moduleName = 'aion.util'
 
+// set the publish to true when the code ready to push the lib to the maven repo
+def publish = false;
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = "network.aion"
+archivesBaseName = "util4j"
+
+def getCommitHash = { ->
+    def hashStdOut = new ByteArrayOutputStream()
+    exec {
+        commandLine "sh", "-c", "git log --pretty=format:%h | head -1"
+        standardOutput = hashStdOut
+    }
+
+    return hashStdOut.toString().trim()
+}
+
 dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+    testCompile 'com.google.truth:truth:0.42'
+    testCompile 'com.madgag.spongycastle:core:1.58.0.0'
 }
+
+sourceSets {
+
+    if (publish) {
+        version = "0.4.0"
+    } else {
+        jar.baseName = 'util4j-' + getCommitHash()
+    }
+
+    main {
+        java.srcDirs = ['src/main/java']
+    }
+    test {
+        java.srcDirs = ['src/test/java']
+    }
+}
+
+signing {
+    sign configurations.archives
+}
+signArchives.enabled = publish
+
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+sourcesJar.enabled = publish
+
+javadoc {
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
+    options.tags = ["implSpec"]
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+javadocJar.enabled = publish
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'util4j'
+                packaging 'jar'
+                // optionally artifactId can be defined here 
+                description 'a util module for the aion java kernel.'
+                url 'https://github.com/aionnetwork/aion/tree/master-pre-merge/modUtil'
+
+                scm {
+                    connection 'scm:git:https://github.com/aionnetwork/aion.git'
+                    developerConnection 'git:https://github.com/aionnetwork/aion.git'
+                    url 'https://github.com/aionnetwork/aion/tree/master'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT'
+                        url 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'aion foundation dev'
+                        name 'aion foundation dev'
+                        email 'toengineering@aion.network'
+                    }
+                }
+            }
+        }
+    }
+}
+uploadArchives.enabled = publish
+
+
+

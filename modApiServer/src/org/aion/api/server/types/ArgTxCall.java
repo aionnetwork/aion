@@ -4,13 +4,13 @@ import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.TypeConverter;
-import org.aion.base.vm.VirtualMachineSpecs;
+
+import org.aion.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.string.StringUtils;
+import org.aion.mcf.tx.TransactionTypes;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -39,15 +39,7 @@ public final class ArgTxCall {
             final BigInteger _value,
             final long _nrg,
             final long _nrgPrice) {
-        this(
-                _from,
-                _to,
-                _data,
-                _nonce,
-                _value,
-                _nrg,
-                _nrgPrice,
-                VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE);
+        this(_from, _to, _data, _nonce, _value, _nrg, _nrgPrice, TransactionTypes.DEFAULT);
     }
 
     public ArgTxCall(
@@ -71,9 +63,13 @@ public final class ArgTxCall {
 
     public static ArgTxCall fromJSON(final JSONObject _jsonObj, long defaultNrgPrice) {
         try {
-            Address from =
-                    AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
-            Address to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
+
+            String fromStr = _jsonObj.optString("from", "");
+            Address from = fromStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(fromStr));
+
+            String toStr = _jsonObj.optString("to", "");
+            Address to = toStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(toStr));
+
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
             byte type = ByteUtil.hexStringToBytes(_jsonObj.optString("type", "0x1"))[0];
 
@@ -81,29 +77,29 @@ public final class ArgTxCall {
             String valueStr = _jsonObj.optString("value", "0x0");
             BigInteger nonce =
                     nonceStr.contains("0x")
-                            ? TypeConverter.StringHexToBigInteger(nonceStr)
-                            : TypeConverter.StringNumberAsBigInt(nonceStr);
+                            ? StringUtils.StringHexToBigInteger(nonceStr)
+                            : StringUtils.StringNumberAsBigInt(nonceStr);
             BigInteger value =
                     valueStr.contains("0x")
-                            ? TypeConverter.StringHexToBigInteger(valueStr)
-                            : TypeConverter.StringNumberAsBigInt(valueStr);
+                            ? StringUtils.StringHexToBigInteger(valueStr)
+                            : StringUtils.StringNumberAsBigInt(valueStr);
 
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
-            long nrg = to.isEmptyAddress() ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
+            long nrg = to == null ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
             if (nrgStr != null)
                 nrg =
                         nrgStr.contains("0x")
-                                ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
-                                : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
+                                ? StringUtils.StringHexToBigInteger(nrgStr).longValue()
+                                : StringUtils.StringNumberAsBigInt(nrgStr).longValue();
 
             long nrgPrice = defaultNrgPrice;
             if (nrgPriceStr != null)
                 nrgPrice =
                         nrgPriceStr.contains("0x")
-                                ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
-                                : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
+                                ? StringUtils.StringHexToBigInteger(nrgPriceStr).longValue()
+                                : StringUtils.StringNumberAsBigInt(nrgPriceStr).longValue();
 
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice, type);
         } catch (Exception e) {

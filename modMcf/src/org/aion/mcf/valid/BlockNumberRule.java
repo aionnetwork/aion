@@ -1,9 +1,9 @@
 package org.aion.mcf.valid;
 
 import java.util.List;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 
-public class BlockNumberRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
+public class BlockNumberRule<BH extends BlockHeader> extends DependentBlockHeaderRule<BH> {
 
     @Override
     public boolean validate(BH header, BH parent, List<RuleError> errors) {

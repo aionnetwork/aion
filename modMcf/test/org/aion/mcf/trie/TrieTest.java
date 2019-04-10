@@ -2,6 +2,7 @@ package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.util.bytes.ByteUtil.hexStringToBytes;
 import static org.aion.util.bytes.ByteUtil.intToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -18,7 +19,7 @@ import java.util.Random;
 import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.rlp.Value;
@@ -969,11 +970,11 @@ public class TrieTest {
         // removing two of the nodes from the trie
         Set<ByteArrayWrapper> expected = new HashSet<>();
         expected.add(
-                new ByteArrayWrapper(
-                        "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a"));
+                new ByteArrayWrapper(hexStringToBytes(
+                        "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
         expected.add(
-                new ByteArrayWrapper(
-                        "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab"));
+                new ByteArrayWrapper(hexStringToBytes(
+                        "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
             mockDB.delete(key.getData());

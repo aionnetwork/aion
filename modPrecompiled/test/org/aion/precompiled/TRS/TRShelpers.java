@@ -15,14 +15,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -30,7 +30,7 @@ import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -42,15 +42,15 @@ class TRShelpers {
     static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
     private IAionBlockchain blockchain = StandaloneBlockchain.inst();
     Address AION =
-            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
-    IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
+            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     List<Address> tempAddrs;
     ECKey senderKey;
     long COST = 21000L;
 
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
-        Address acct = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
+        Address acct = Address.wrap(ECKeyFac.inst().create().getAddress());
         acct.toBytes()[0] = (byte) 0xA0;
         repo.createAccount(acct);
         repo.addBalance(acct, balance);
@@ -89,7 +89,7 @@ class TRShelpers {
         if (!res.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
-        Address contract = new AionAddress(res.getReturnData());
+        Address contract = new Address(res.getReturnData());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
         repo.flush();
@@ -732,7 +732,7 @@ class TRShelpers {
 
     // Makes input for numBeneficiaries beneficiaries who each receive a deposit amount deposits.
     byte[] makeBulkDepositForInput(Address contract, int numBeneficiaries, BigInteger deposits) {
-        Address[] beneficiaries = new AionAddress[numBeneficiaries];
+        Address[] beneficiaries = new Address[numBeneficiaries];
         BigInteger[] amounts = new BigInteger[numBeneficiaries];
         for (int i = 0; i < numBeneficiaries; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -745,7 +745,7 @@ class TRShelpers {
     byte[] makeBulkDepositForInputwithSelf(
             Address contract, Address self, int numOthers, BigInteger deposits) {
 
-        Address[] beneficiaries = new AionAddress[numOthers + 1];
+        Address[] beneficiaries = new Address[numOthers + 1];
         BigInteger[] amounts = new BigInteger[numOthers + 1];
         for (int i = 0; i < numOthers; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -781,7 +781,7 @@ class TRShelpers {
             return null;
         }
         head[0] = (byte) 0xA0;
-        return new AionAddress(head);
+        return new Address(head);
     }
 
     // Returns the next account in the linked list after current, or null if no next.
@@ -792,7 +792,7 @@ class TRShelpers {
             return null;
         }
         next[0] = (byte) 0xA0;
-        return new AionAddress(next);
+        return new Address(next);
     }
 
     // Returns the previous account in the linked list prior to current, or null if no previous.
@@ -802,7 +802,7 @@ class TRShelpers {
             return null;
         }
         prev[0] = (byte) 0xA0;
-        return new AionAddress(prev);
+        return new Address(prev);
     }
 
     // Checks that each account is paid out correctly when they withdraw in a non-final period.
@@ -924,8 +924,8 @@ class TRShelpers {
 
     // Returns a new ByteArrayWrapper that wraps data. Here so we can switch types easy if needed.
     ByteArrayWrapper newDataWordStub(byte[] data) {
-        if (data.length == DataWord.BYTES) {
-            return new DataWord(data).toWrapper();
+        if (data.length == DataWordImpl.BYTES) {
+            return new DataWordImpl(data).toWrapper();
         } else if (data.length == DoubleDataWord.BYTES) {
             return new DoubleDataWord(data).toWrapper();
         } else {

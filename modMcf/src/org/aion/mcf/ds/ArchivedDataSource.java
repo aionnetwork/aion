@@ -4,19 +4,19 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IByteArrayKeyValueStore;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 
 /**
  * A data source with archived data that must no be deleted.
  *
  * @author Alexandra Roatis
  */
-public class ArchivedDataSource implements IByteArrayKeyValueStore {
+public class ArchivedDataSource implements ByteArrayKeyValueStore {
 
-    IByteArrayKeyValueDatabase data, archive;
+    ByteArrayKeyValueDatabase data, archive;
 
-    public ArchivedDataSource(IByteArrayKeyValueDatabase _db, IByteArrayKeyValueDatabase _archive) {
+    public ArchivedDataSource(ByteArrayKeyValueDatabase _db, ByteArrayKeyValueDatabase _archive) {
         this.data = _db;
         this.archive = _archive;
     }
@@ -99,7 +99,7 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
         archive.close();
     }
 
-    public IByteArrayKeyValueDatabase getArchiveDatabase() {
+    public ByteArrayKeyValueDatabase getArchiveDatabase() {
         return archive;
     }
 }

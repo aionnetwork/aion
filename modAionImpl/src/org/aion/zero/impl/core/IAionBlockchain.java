@@ -2,9 +2,9 @@ package org.aion.zero.impl.core;
 
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IRepository;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.IBlockchain;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
@@ -28,18 +28,34 @@ public interface IAionBlockchain
     AionBlock getBlockByNumber(long num);
 
     /**
+     * Returns a range of main chain blocks.
+     *
+     * @param first the height of the first block in the requested range; this block must exist in
+     *     the blockchain and be above the genesis to return a non-null output
+     * @param last the height of the last block in the requested range; when requesting blocks in
+     *     ascending order the last element will be substituted with the best block if its height is
+     *     above the best known block
+     * @return a list containing consecutive main chain blocks with heights ranging according to the
+     *     given parameters; or {@code null} in case of errors or illegal request
+     * @apiNote The blocks must be added to the list in the order that they are requested. If {@code
+     *     first > last} the blocks are returned in descending order of their height, otherwise when
+     *     {@code first < last} the blocks are returned in ascending order of their height.
+     */
+    List<AionBlock> getBlocksByRange(long first, long last);
+
+    /**
      * Recovery functionality for rebuilding the world state.
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverWorldState(IRepository repository, AionBlock block);
+    boolean recoverWorldState(Repository repository, AionBlock block);
 
     /**
      * Recovery functionality for recreating the block info in the index database.
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverIndexEntry(IRepository repository, AionBlock block);
+    boolean recoverIndexEntry(Repository repository, AionBlock block);
 
     /**
      * Heuristic for skipping the call to tryToConnect with very large or very small block number.

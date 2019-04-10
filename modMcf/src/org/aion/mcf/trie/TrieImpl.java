@@ -1,13 +1,13 @@
 package org.aion.mcf.trie;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.rlp.CompactEncoder.binToNibbles;
 import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
+import static org.aion.types.ByteArrayWrapper.wrap;
 import static org.aion.util.bytes.ByteUtil.matchingNibbleLength;
 import static org.spongycastle.util.Arrays.concatenate;
 
@@ -22,10 +22,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
 import org.aion.mcf.trie.scan.CollectMappings;
 import org.aion.mcf.trie.scan.CountNodes;
@@ -36,6 +35,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
 /**
@@ -75,11 +75,11 @@ public class TrieImpl implements Trie {
 
     private boolean pruningEnabled;
 
-    public TrieImpl(IByteArrayKeyValueStore db) {
+    public TrieImpl(ByteArrayKeyValueStore db) {
         this(db, "");
     }
 
-    public TrieImpl(IByteArrayKeyValueStore db, Object root) {
+    public TrieImpl(ByteArrayKeyValueStore db, Object root) {
         this(new Cache(db), root);
     }
 
@@ -179,9 +179,10 @@ public class TrieImpl implements Trie {
         if (value.length == 0) {
             throw new IllegalArgumentException("The value should not be empty.");
         }
-        synchronized (cache) {
-            byte[] k = binToNibbles(key);
 
+        byte[] k = binToNibbles(key);
+
+        synchronized (cache) {
             if (isEmptyNode(root)) {
                 cache.markRemoved(getRootHash());
             }
@@ -466,14 +467,14 @@ public class TrieImpl implements Trie {
         return this.cache.put(node);
     }
 
-    private boolean isEmptyNode(Object node) {
+    private static boolean isEmptyNode(Object node) {
         Value n = new Value(node);
         return (node == null
                 || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull()))
                 || n.length() == 0);
     }
 
-    private Object[] copyNode(Value currentNode) {
+    private static Object[] copyNode(Value currentNode) {
         Object[] itemList = emptyStringSlice(LIST_SIZE);
         for (int i = 0; i < LIST_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();
@@ -643,7 +644,7 @@ public class TrieImpl implements Trie {
      * @param db database containing keys that need not be explored
      */
     private void scanTreeDiffLoop(
-            byte[] hash, ScanAction scanAction, IByteArrayKeyValueDatabase db) {
+            byte[] hash, ScanAction scanAction, ByteArrayKeyValueDatabase db) {
 
         ArrayList<byte[]> hashes = new ArrayList<>();
         hashes.add(hash);
@@ -991,13 +992,13 @@ public class TrieImpl implements Trie {
     }
 
     @Override
-    public long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db) {
+    public long saveFullStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db) {
         ExtractToDatabase traceAction = new ExtractToDatabase(db);
         traceTrie(stateRoot, traceAction);
         return traceAction.count;
     }
 
-    private void traceDiffTrie(byte[] stateRoot, ScanAction action, IByteArrayKeyValueDatabase db) {
+    private void traceDiffTrie(byte[] stateRoot, ScanAction action, ByteArrayKeyValueDatabase db) {
         synchronized (cache) {
             Value value = new Value(stateRoot);
 
@@ -1010,7 +1011,7 @@ public class TrieImpl implements Trie {
     }
 
     @Override
-    public long saveDiffStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db) {
+    public long saveDiffStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db) {
         ExtractToDatabase traceAction = new ExtractToDatabase(db);
         traceDiffTrie(stateRoot, traceAction, db);
         return traceAction.count;

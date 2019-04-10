@@ -11,12 +11,12 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-import org.aion.vm.api.interfaces.Address;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -482,7 +482,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
-        Address head = new AionAddress(next.toBytes());
+        Address head = new Address(next.toBytes());
         Set<Address> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
             if (i == listSize - 1) {
@@ -542,7 +542,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
-        Address head = new AionAddress(next.toBytes());
+        Address head = new Address(next.toBytes());
         Address mid = null;
         Set<Address> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
@@ -553,7 +553,7 @@ public class TRSlinkedListTest extends TRShelpers {
                 assertNotNull(next);
                 assertFalse(addressesInList.contains(next));
                 addressesInList.add(next);
-                mid = new AionAddress(next.toBytes());
+                mid = new Address(next.toBytes());
             } else {
                 next = getLinkedListNext(trs, contract, next);
                 assertNotNull(next);

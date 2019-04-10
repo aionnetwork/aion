@@ -375,7 +375,7 @@ public class EquihashSolutionsGenerationTest210_9 {
         // use real method for mine call
         when(spy.mine(block, header.getNonce())).thenCallRealMethod();
 
-        Solution sol = spy.mine(block, block.getNonce());
+        AionPowSolution sol = spy.mine(block, block.getNonce());
 
         assertNotNull(sol);
         assertArrayEquals(header.getNonce(), sol.getNonce());

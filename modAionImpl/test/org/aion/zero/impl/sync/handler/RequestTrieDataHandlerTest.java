@@ -1,5 +1,6 @@
 package org.aion.zero.impl.sync.handler;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
 import static org.aion.zero.impl.sync.DatabaseType.STATE;
 import static org.aion.zero.impl.sync.msg.RequestTrieDataTest.nodeKey;
@@ -15,10 +16,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Ver;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.rlp.RLP;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResponseTrieData;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,6 +34,18 @@ import org.slf4j.Logger;
 public class RequestTrieDataHandlerTest {
     private static final int peerId = Integer.MAX_VALUE;
     private static final String displayId = "abcdef";
+
+    @Test
+    public void testHeader() {
+        Logger log = mock(Logger.class);
+        IAionBlockchain chain = mock(AionBlockchainImpl.class);
+        IP2pMgr p2p = mock(P2pMgr.class);
+
+        RequestTrieDataHandler handler = new RequestTrieDataHandler(log, chain, p2p);
+        // check handler header
+        assertThat(handler.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(handler.getHeader().getAction()).isEqualTo(Act.REQUEST_TRIE_DATA);
+    }
 
     @Test
     public void testReceive_nullMessage() {
@@ -86,7 +101,7 @@ public class RequestTrieDataHandlerTest {
                 .error(
                         "<req-trie decode-error msg-bytes={} peer={}>",
                         outOfOderEncoding.length,
-                        peerId);
+                        displayId);
         verifyZeroInteractions(chain);
         verifyZeroInteractions(p2p);
     }
@@ -110,10 +125,15 @@ public class RequestTrieDataHandlerTest {
         handler.receive(peerId, displayId, outOfOderEncoding);
 
         verify(log, times(1))
+                .error(
+                        "<req-trie decode-error msg-bytes={} peer={}>",
+                        outOfOderEncoding.length,
+                        displayId);
+        verify(log, times(1))
                 .trace(
                         "<req-trie decode-error for msg={} peer={}>",
                         Arrays.toString(outOfOderEncoding),
-                        peerId);
+                        displayId);
         verifyZeroInteractions(chain);
         verifyZeroInteractions(p2p);
     }

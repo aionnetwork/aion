@@ -8,12 +8,12 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -152,7 +152,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         null,
                         BigInteger.ZERO,
                         contractBytes,
@@ -172,7 +172,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         callBytes,
@@ -191,7 +191,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         callBytes,
@@ -202,7 +202,7 @@ public class FvmBulkTransactionTest {
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
-        return new DataWord(summary.getReceipts().get(0).getTransactionOutput()).intValue();
+        return new DataWordImpl(summary.getReceipts().get(0).getTransactionOutput()).intValue();
     }
 
     private AionTransaction newTransaction(
@@ -230,7 +230,7 @@ public class FvmBulkTransactionTest {
     }
 
     private BigInteger getNonce(ECKey address) {
-        return getNonce(AionAddress.wrap(address.getAddress()));
+        return getNonce(Address.wrap(address.getAddress()));
     }
 
     private BigInteger getBalance(Address address) {
@@ -238,6 +238,6 @@ public class FvmBulkTransactionTest {
     }
 
     private BigInteger getBalance(ECKey address) {
-        return getBalance(AionAddress.wrap(address.getAddress()));
+        return getBalance(Address.wrap(address.getAddress()));
     }
 }

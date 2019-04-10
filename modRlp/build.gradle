@@ -1,11 +1,26 @@
 ext.moduleName = 'aion.rlp'
 
+// set the publish to true when the code ready to push the lib to the maven repo
+def publish = false;
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = "network.aion"
+archivesBaseName = "rlp4j"
+
+def getCommitHash = { ->
+    def hashStdOut = new ByteArrayOutputStream()
+    exec {
+        commandLine "sh", "-c", "git log --pretty=format:%h | head -1"
+        standardOutput = hashStdOut
+    }
+
+    return hashStdOut.toString().trim()
+}
+
 dependencies {
-    compile project(':modUtil')
-    //compile files('../lib/libnsc.jar')
-    compile 'com.madgag.spongycastle:prov:1.58.0.0'
-    compile 'com.madgag.spongycastle:core:1.58.0.0'
-    compile 'com.google.guava:guava:25.1-jre'
+    compile 'network.aion:util4j:0.4.0'
 
     testCompile 'junit:junit:4.12' 
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
@@ -18,3 +33,92 @@ tasks.withType(JavaCompile) {
       println "Args for for $name are $options.allCompilerArgs"
    }
 } 
+
+sourceSets {
+    if (publish) {
+        version = "0.4.0"
+    } else {
+        jar.baseName = 'rlp4j-' + getCommitHash()
+    }
+
+    main {
+        java.srcDirs = ['src/main/java']
+    }
+    test {
+        java.srcDirs = ['src/test/java']
+    }
+}
+
+signing {
+    sign configurations.archives
+}
+signArchives.enabled = publish
+
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+sourcesJar.enabled = publish
+
+javadoc {
+  inputs.property("moduleName", moduleName)
+  doFirst {
+    options.addStringOption('-module-path', classpath.asPath)
+    options.tags = [ "implNote" ]   
+  }
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+javadocJar.enabled = publish
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        name 'rlp4j'
+        packaging 'jar'
+        // optionally artifactId can be defined here
+        description 'a rlp module for the aion java kernel.'
+        url 'https://github.com/aionnetwork/aion/tree/master-pre-merge/modRlp'
+
+        scm {
+          connection 'scm:git:https://github.com/aionnetwork/aion.git'
+          developerConnection 'git:https://github.com/aionnetwork/aion.git'
+          url 'https://github.com/aionnetwork/aion/tree/master'
+        }
+
+        licenses {
+          license {
+            name 'MIT'
+            url 'https://opensource.org/licenses/MIT'
+          }
+        }
+
+        developers {
+          developer {
+            id 'aion foundation dev'
+            name 'aion foundation dev'
+            email 'toengineering@aion.network'
+          }
+        }
+      }
+    }
+  }
+}
+uploadArchives.enabled = publish
+

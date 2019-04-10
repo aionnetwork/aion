@@ -15,14 +15,15 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.api.server.ApiUtil;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.TypeConverter;
+import org.aion.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.string.StringUtils;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -113,12 +114,15 @@ public class ApiAion0Test {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
         api.shutDown();
         rsp = null;
+
+        VirtualMachineProvider.shutdownAllVirtualMachines();
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
@@ -181,7 +185,7 @@ public class ApiAion0Test {
 
         Message.rsp_minerAddress ma = Message.rsp_minerAddress.parseFrom(stripHeader(rsp));
         assertEquals(
-                ByteString.copyFrom(TypeConverter.StringHexToByteArray(api.getCoinbase())),
+                ByteString.copyFrom(StringUtils.StringHexToByteArray(api.getCoinbase())),
                 ma.getMinerAddr());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_minerAddress_VALUE);
@@ -191,7 +195,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountsValue() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accounts_VALUE);
 
@@ -202,7 +206,7 @@ public class ApiAion0Test {
 
         assertEquals(
                 ByteString.copyFrom(
-                        TypeConverter.StringHexToByteArray((String) api.getAccounts().get(0))),
+                        StringUtils.StringHexToByteArray((String) api.getAccounts().get(0))),
                 accts.getAccout(0));
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accounts_VALUE);
@@ -226,7 +230,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessUnlockAccount() {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_unlockAccount reqBody =
@@ -256,7 +260,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetBalance() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -288,7 +292,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetNonce() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -397,7 +401,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetCode() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -433,9 +437,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -465,7 +469,7 @@ public class ApiAion0Test {
 
         Message.rsp_getTransactionReceipt rslt =
                 Message.rsp_getTransactionReceipt.parseFrom(stripHeader(rsp));
-        assertEquals(ByteString.copyFrom(AionAddress.ZERO_ADDRESS().toBytes()), rslt.getTo());
+        assertEquals(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()), rslt.getTo());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionReceipt_VALUE);
 
@@ -474,7 +478,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessCall() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -484,7 +488,7 @@ public class ApiAion0Test {
                         .setData(ByteString.copyFrom(msg))
                         .setFrom(ByteString.copyFrom(addr.toBytes()))
                         .setValue(ByteString.copyFrom("1234".getBytes()))
-                        .setTo(ByteString.copyFrom(AionAddress.ZERO_ADDRESS().toBytes()))
+                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
                         .build();
 
         rsp =
@@ -563,9 +567,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -617,9 +621,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -671,9 +675,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -723,9 +727,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -775,9 +779,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -818,8 +822,6 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxCount() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -827,9 +829,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -918,43 +920,6 @@ public class ApiAion0Test {
     }
 
     @Test
-    public void testProcessIsSyncing() throws Exception {
-        rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_isSyncing_VALUE);
-
-        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
-
-        Message.rsp_isSyncing rslt = Message.rsp_isSyncing.parseFrom(stripHeader(rsp));
-        assertNotEquals(AionImpl.inst().isSyncComplete(), rslt.getSyncing());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_isSyncing_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
-    public void testProcessSyncInfo() throws Exception {
-        setup();
-        AionImpl impl = AionImpl.inst();
-
-        rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_syncInfo_VALUE);
-
-        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
-
-        Message.rsp_syncInfo rslt = Message.rsp_syncInfo.parseFrom(stripHeader(rsp));
-        assertNotEquals(impl.isSyncComplete(), rslt.getSyncing());
-        assertEquals(
-                (long) impl.getLocalBestBlockNumber().orElse(0L), (long) rslt.getChainBestBlock());
-        assertEquals(
-                (long) impl.getNetworkBestBlockNumber().orElse(0L),
-                (long) rslt.getNetworkBestBlock());
-        assertEquals(24, rslt.getMaxImportBlocks());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_syncInfo_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
     public void testProcessAccountCreateAndLock() throws Exception {
         Message.req_accountCreate reqBody =
                 Message.req_accountCreate
@@ -978,13 +943,13 @@ public class ApiAion0Test {
         ByteString addr = rslt.getAddress(0);
         assertTrue(
                 api.unlockAccount(
-                        AionAddress.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
+                        Address.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
         assertTrue(
                 api.unlockAccount(
-                        AionAddress.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
+                        Address.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
         assertTrue(
                 api.unlockAccount(
-                        AionAddress.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
+                        Address.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accountCreate_VALUE);
 
@@ -1043,8 +1008,8 @@ public class ApiAion0Test {
         Message.req_estimateNrg reqBody =
                 Message.req_estimateNrg
                         .newBuilder()
-                        .setFrom(ByteString.copyFrom(AionAddress.ZERO_ADDRESS().toBytes()))
-                        .setTo(ByteString.copyFrom(AionAddress.ZERO_ADDRESS().toBytes()))
+                        .setFrom(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
                         .setNrg(1000)
                         .setNrgPrice(5000)
                         .setData(ByteString.copyFrom(msg))
@@ -1064,10 +1029,10 @@ public class ApiAion0Test {
         AionTransaction tx =
                 new AionTransaction(
                         AionRepositoryImpl.inst()
-                                .getNonce(AionAddress.ZERO_ADDRESS())
+                                .getNonce(Address.ZERO_ADDRESS())
                                 .toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         val,
                         msg,
                         1000,
@@ -1083,10 +1048,10 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessExportAccounts() throws Exception {
-        Address addr1 = new AionAddress(Keystore.create("testPwd1"));
+        Address addr1 = new Address(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
-        Address addr2 = new AionAddress(Keystore.create("testPwd2"));
+        Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_Key tkey1 =
@@ -1163,10 +1128,10 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessEventRegister() throws Exception {
-        Address addr1 = new AionAddress(Keystore.create("testPwd1"));
+        Address addr1 = new Address(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
-        Address addr2 = new AionAddress(Keystore.create("testPwd2"));
+        Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_FilterCt fil1 =
@@ -1368,14 +1333,14 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountDetails() throws Exception {
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getAccountDetailsByAddressList reqBody =
                 Message.req_getAccountDetailsByAddressList
                         .newBuilder()
                         .addAddresses(ByteString.copyFrom(addr.toBytes()))
-                        .addAddresses(ByteString.copyFrom(AionAddress.ZERO_ADDRESS().toBytes()))
+                        .addAddresses(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
                         .build();
 
         rsp =

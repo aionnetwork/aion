@@ -30,22 +30,23 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -83,7 +84,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testCallTransaction() throws IOException {
+    public void testCallTransaction() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -92,25 +93,25 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin; // deployer
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
-        byte[] txNonce = DataWord.ZERO.getData();
+        byte[] txNonce = DataWordImpl.ZERO.getData();
         Address from =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
         Address to =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
-        byte[] value = DataWord.ZERO.getData();
+        byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
-        long nrg = new DataWord(100000L).longValue();
-        long nrgPrice = DataWord.ONE.longValue();
+        long nrg = new DataWordImpl(100000L).longValue();
+        long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
 
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repo = blockchain.getRepository();
-        IRepositoryCache cache = repo.startTracking();
+        RepositoryCache cache = repo.startTracking();
         cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         cache.createAccount(to);
         cache.saveCode(to, Hex.decode(contract));
@@ -134,7 +135,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testCreateTransaction() throws IOException {
+    public void testCreateTransaction() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -143,13 +144,13 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin;
         System.out.println(deployer);
 
-        byte[] txNonce = DataWord.ZERO.getData();
+        byte[] txNonce = DataWordImpl.ZERO.getData();
         Address from =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to = AionAddress.EMPTY_ADDRESS();
-        byte[] value = DataWord.ZERO.getData();
+        Address to = null;
+        byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode(deployer);
         long nrg = 500_000L;
         long nrgPrice = 1;
@@ -158,7 +159,7 @@ public class OldTxExecutorTest {
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
+        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice().value()));
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
@@ -180,7 +181,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testPerformance() throws IOException {
+    public void testPerformance() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -189,26 +190,26 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin; // deployer
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
-        byte[] txNonce = DataWord.ZERO.getData();
+        byte[] txNonce = DataWordImpl.ZERO.getData();
         Address from =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
         Address to =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
-        byte[] value = DataWord.ZERO.getData();
+        byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
-        long nrg = new DataWord(100000L).longValue();
-        long nrgPrice = DataWord.ONE.longValue();
+        long nrg = new DataWordImpl(100000L).longValue();
+        long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
         tx.sign(ECKeyFac.inst().create());
 
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        IRepositoryCache repo = repoTop.startTracking();
+        RepositoryCache repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
@@ -234,26 +235,26 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testBasicTransactionCost() {
-        byte[] txNonce = DataWord.ZERO.getData();
+    public void testBasicTransactionCost() throws VMException {
+        byte[] txNonce = DataWordImpl.ZERO.getData();
         Address from =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
         Address to =
-                AionAddress.wrap(
+                Address.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
-        byte[] value = DataWord.ONE.getData();
+        byte[] value = DataWordImpl.ONE.getData();
         byte[] data = new byte[0];
-        long nrg = new DataWord(100000L).longValue();
-        long nrgPrice = DataWord.ONE.longValue();
+        long nrg = new DataWordImpl(100000L).longValue();
+        long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
 
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        IRepositoryCache repo = repoTop.startTracking();
+        RepositoryCache repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(1_000_000_000L));
         repo.flush();
 
@@ -277,7 +278,7 @@ public class OldTxExecutorTest {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
-        byte[] difficulty = new DataWord(0x1000000L).getData();
+        byte[] difficulty = new DataWordImpl(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
         byte[] extraData = new byte[0];
@@ -291,7 +292,7 @@ public class OldTxExecutorTest {
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
                 parentHash,
-                AionAddress.wrap(coinbase),
+                Address.wrap(coinbase),
                 logsBloom,
                 difficulty,
                 number,

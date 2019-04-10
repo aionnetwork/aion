@@ -1,14 +1,14 @@
 package org.aion.mcf.types;
 
-import static org.aion.base.util.TimeUtils.secondsToMillis;
+import static org.aion.util.time.TimeUtils.secondsToMillis;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.rlp.RLP;
 
 /** AbstractBlockWrapper */
-public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
+public abstract class AbstractBlockWrapper<BLK extends Block<?, ?>> {
 
     protected static final long SOLID_BLOCK_DURATION_THRESHOLD = secondsToMillis(60);
 

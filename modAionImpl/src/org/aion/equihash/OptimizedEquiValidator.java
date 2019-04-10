@@ -1,7 +1,7 @@
 package org.aion.equihash;
 
-import static org.aion.base.util.ByteUtil.intToBytesLE;
-import static org.aion.base.util.ByteUtil.merge;
+import static org.aion.util.bytes.ByteUtil.intToBytesLE;
+import static org.aion.util.bytes.ByteUtil.merge;
 
 import java.util.HashSet;
 import java.util.Set;

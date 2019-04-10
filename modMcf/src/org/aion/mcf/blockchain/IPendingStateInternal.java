@@ -1,8 +1,8 @@
 package org.aion.mcf.blockchain;
 
 import java.util.List;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
@@ -11,7 +11,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * @param <BLK>
  * @param <Tx>
  */
-public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITransaction>
+public interface IPendingStateInternal<BLK extends Block<?, ?>, Tx extends Transaction>
         extends IPendingState<Tx> {
 
     // called by onBest

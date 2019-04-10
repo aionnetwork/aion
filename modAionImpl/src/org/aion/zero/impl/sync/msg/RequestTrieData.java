@@ -7,9 +7,11 @@ import java.math.BigInteger;
 import java.util.Objects;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
+import org.aion.p2p.V1Constants;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.DatabaseType;
 
@@ -31,7 +33,8 @@ public final class RequestTrieData extends Msg {
      * @param limit the maximum number of key-value pairs to be retrieved by the search inside the
      *     trie for referenced nodes
      * @throws NullPointerException if either of the given parameters is {@code null}
-     * @throws IllegalArgumentException if the given limit is negative
+     * @throws IllegalArgumentException if the given limit is negative or the given node key is not
+     *     a valid hash
      */
     public RequestTrieData(final byte[] nodeKey, final DatabaseType dbType, final int limit) {
         super(Ver.V1, Ctrl.SYNC, Act.REQUEST_TRIE_DATA);
@@ -44,6 +47,14 @@ public final class RequestTrieData extends Msg {
         if (limit < 0) {
             throw new IllegalArgumentException(
                     "The RequestTrieData object must be built with a positive limit.");
+        }
+
+        // ensure hash has valid size
+        if (nodeKey.length != V1Constants.HASH_SIZE) {
+            throw new IllegalArgumentException(
+                    "The given value "
+                            + Hex.toHexString(nodeKey)
+                            + " is not a correct block hash.");
         }
 
         this.nodeKey = nodeKey;
@@ -63,7 +74,13 @@ public final class RequestTrieData extends Msg {
         if (message == null || message.length == 0) {
             return null;
         } else {
-            RLPList list = (RLPList) RLP.decode2(message).get(0);
+            RLPList list = RLP.decode2(message);
+            if (list.get(0) instanceof RLPList) {
+                list = (RLPList) list.get(0);
+            } else {
+                return null;
+            }
+
             if (list.size() != TRIE_DATA_REQUEST_COMPONENTS) {
                 return null;
             } else {

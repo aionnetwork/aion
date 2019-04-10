@@ -1,24 +1,23 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
-import org.aion.avm.core.NodeEnvironment;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForAVM implements KernelInterface {
-    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
+    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
     public KernelInterfaceForAVM(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall) {
 
@@ -31,8 +30,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
     }
 
     @Override
-    public KernelInterfaceForFastVM makeChildKernelInterface() {
-        return new KernelInterfaceForFastVM(
+    public KernelInterfaceForAVM makeChildKernelInterface() {
+        return new KernelInterfaceForAVM(
                 this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
     }
 
@@ -51,7 +50,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.repositoryCache.rollback();
     }
 
-    public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
+    public RepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
         return this.repositoryCache;
     }
 
@@ -73,6 +72,17 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public byte[] getCode(Address address) {
         return this.repositoryCache.getCode(address);
+    }
+
+    @Override
+    public void putObjectGraph(Address contract, byte[] graph) {
+        //Todo: implement it when avm is ready.
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        //Todo: implement it when avm is ready.
+        return new byte[0];
     }
 
     @Override
@@ -183,6 +193,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
         }
 
         // Otherwise, it must be an Avm contract address.
-        return address.toBytes()[0] == NodeEnvironment.CONTRACT_PREFIX;
+        return TransactionTypeRule.isValidAVMContractDeployment(repositoryCache.getVMUsed(address));
     }
 }

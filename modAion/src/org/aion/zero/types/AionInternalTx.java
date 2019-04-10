@@ -1,19 +1,18 @@
 package org.aion.zero.types;
 
-import static org.aion.base.util.ByteUtil.toHexString;
+import static org.aion.util.conversions.Hex.toHexString;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 /** aion internal transaction class. */
@@ -53,7 +52,7 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
     }
 
     // @TODO: check this functions used by whom
-    private static byte[] getData(DataWord nrgPrice) {
+    private static byte[] getData(DataWordImpl nrgPrice) {
         return (nrgPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : nrgPrice.getData();
     }
 
@@ -147,8 +146,8 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         int rlpIdx = 0;
         this.nonce = transaction.get(rlpIdx++).getRLPData();
         this.parentHash = transaction.get(rlpIdx++).getRLPData();
-        this.from = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
-        this.to = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.from = Address.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.to = Address.wrap(transaction.get(rlpIdx++).getRLPData());
         this.value = transaction.get(rlpIdx++).getRLPData();
 
         // TODO: check the order

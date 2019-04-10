@@ -32,10 +32,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ECKeyFac.ECKeyType;
@@ -44,11 +43,13 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
@@ -62,7 +63,7 @@ public class Benchmark {
 
     private static AionBlock block = createDummyBlock();
     private static AionRepositoryImpl db = AionRepositoryImpl.inst();
-    private static IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = db.startTracking();
+    private static RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = db.startTracking();
 
     private static ECKey key;
     private static Address owner;
@@ -78,23 +79,23 @@ public class Benchmark {
 
     private static Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.VM.name());
 
-    private static void prepare() throws IOException {
+    private static void prepare() throws IOException, VMException {
         long t1 = System.currentTimeMillis();
 
         // create owner account
         ECKeyFac.setType(ECKeyType.ED25519);
         key = ECKeyFac.inst().create();
-        owner = AionAddress.wrap(key.getAddress());
+        owner = Address.wrap(key.getAddress());
         repo.createAccount(owner);
         repo.addBalance(owner, BigInteger.valueOf(1_000_000_000L));
 
         // create transaction
         byte[] deployer =
                 ContractUtils.getContractDeployer("BenchmarkERC20.sol", "FixedSupplyToken");
-        byte[] nonce = DataWord.ZERO.getData();
+        byte[] nonce = DataWordImpl.ZERO.getData();
         Address from = owner;
         Address to = null;
-        byte[] value = DataWord.ZERO.getData();
+        byte[] value = DataWordImpl.ZERO.getData();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
         AionTransaction tx = new AionTransaction(nonce, from, to, value, deployer, nrg, nrgPrice);
@@ -131,15 +132,15 @@ public class Benchmark {
             recipients.add(recipient);
 
             // transfer token to random people
-            byte[] nonce = new DataWord(ownerNonce + i).getData();
+            byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
             Address from = owner;
             Address to = contract;
-            byte[] value = DataWord.ZERO.getData();
+            byte[] value = DataWordImpl.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
                             Hex.decode("fbb001d6" + "000000000000000000000000"),
                             recipient,
-                            DataWord.ONE.getData());
+                            DataWordImpl.ONE.getData());
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
             AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
@@ -179,7 +180,7 @@ public class Benchmark {
         return list;
     }
 
-    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs) {
+    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs) throws VMException {
         long t1 = System.currentTimeMillis();
         List<AionTxReceipt> list = new ArrayList<>();
 
@@ -216,14 +217,14 @@ public class Benchmark {
         timeFlush = t2 - t1;
     }
 
-    private static void verifyState(int num) {
+    private static void verifyState(int num) throws VMException {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < recipients.size(); i++) {
-            byte[] nonce = new DataWord(ownerNonce + i).getData();
+            byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
             Address from = owner;
             Address to = contract;
-            byte[] value = DataWord.ZERO.getData();
+            byte[] value = DataWordImpl.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
                             Hex.decode("70a08231" + "000000000000000000000000"), recipients.get(i));
@@ -244,11 +245,11 @@ public class Benchmark {
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
 
-            assertEquals(1, new DataWord(summary.getReceipt().getTransactionOutput()).longValue());
+            assertEquals(1, new DataWordImpl(summary.getReceipt().getTransactionOutput()).longValue());
         }
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException, VMException {
         int n = 10000;
         prepare();
         List<AionTransaction> list = signTransactions(n);
@@ -271,7 +272,7 @@ public class Benchmark {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
-        byte[] difficulty = new DataWord(0x1000000L).getData();
+        byte[] difficulty = new DataWordImpl(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
         byte[] extraData = new byte[0];
@@ -285,7 +286,7 @@ public class Benchmark {
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
                 parentHash,
-                AionAddress.wrap(coinbase),
+                Address.wrap(coinbase),
                 logsBloom,
                 difficulty,
                 number,

@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.evt.IListenerBase;
 
 public class TxPendingStatus {

@@ -7,21 +7,22 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.api.ABIDecoder;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.avm.userlib.abi.ABIDecoder;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.RandomUtils;
@@ -57,6 +58,7 @@ public class AvmBulkTransactionTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
+        TransactionTypeRule.allowAVMContractDeployment();
     }
 
     @After
@@ -133,9 +135,9 @@ public class AvmBulkTransactionTest {
 
         // Grab the address of the newly deployed contract.
         Address deployedContract =
-                AionAddress.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
+                Address.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
 
-        int numAvmCreateTransactions = 10;
+        int numAvmCreateTransactions = 2;
         int numAvmCallTransactions = 10;
         int numTransactions = numAvmCreateTransactions + numAvmCallTransactions;
 
@@ -178,7 +180,7 @@ public class AvmBulkTransactionTest {
             // The first batch are creates, so grab the new contract addresses.
             if (i < numAvmCreateTransactions) {
                 contracts.add(
-                        AionAddress.wrap(
+                        Address.wrap(
                                 blockSummary
                                         .getSummaries()
                                         .get(i)
@@ -210,13 +212,13 @@ public class AvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         null,
                         BigInteger.ZERO,
                         jar,
                         5_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -226,26 +228,26 @@ public class AvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         abiEncodeMethodCall("incrementCounter"),
                         2_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
 
     private AionTransaction makeValueTransferTransaction(
             ECKey sender, ECKey beneficiary, BigInteger value, BigInteger nonce) {
-        Address senderAddress = AionAddress.wrap(sender.getAddress());
+        Address senderAddress = Address.wrap(sender.getAddress());
 
         AionTransaction transaction =
                 newTransaction(
                         nonce,
                         senderAddress,
-                        AionAddress.wrap(beneficiary.getAddress()),
+                        Address.wrap(beneficiary.getAddress()),
                         value,
                         new byte[0],
                         2_000_000,
@@ -257,7 +259,7 @@ public class AvmBulkTransactionTest {
 
     private int getDeployedStatefulnessCountValue(
             ECKey sender, BigInteger nonce, Address contract) {
-        Address senderAddress = AionAddress.wrap(sender.getAddress());
+        Address senderAddress = Address.wrap(sender.getAddress());
 
         AionTransaction transaction =
                 newTransaction(
@@ -268,13 +270,13 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(sender);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
         return (int)
-                ABIDecoder.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
+                ABIUtil.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
     }
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
@@ -314,7 +316,7 @@ public class AvmBulkTransactionTest {
     }
 
     private BigInteger getNonce(ECKey address) {
-        return getNonce(AionAddress.wrap(address.getAddress()));
+        return getNonce(Address.wrap(address.getAddress()));
     }
 
     private BigInteger getBalance(Address address) {
@@ -322,7 +324,7 @@ public class AvmBulkTransactionTest {
     }
 
     private BigInteger getBalance(ECKey address) {
-        return getBalance(AionAddress.wrap(address.getAddress()));
+        return getBalance(Address.wrap(address.getAddress()));
     }
 
     private ECKey getRandomAccount() {
@@ -339,12 +341,13 @@ public class AvmBulkTransactionTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
+                        new byte[0])
                 .encodeToBytes();
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIEncoder.encodeMethodArguments(method, arguments);
+        return ABIUtil.encodeMethodArguments(method, arguments);
     }
 
     private List<BigInteger> getRandomValues(int num, int lowerBound, int upperBound) {

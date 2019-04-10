@@ -1,14 +1,14 @@
 package org.aion.api.server.types;
 
 import org.aion.api.server.types.Fltr.Type;
-import org.aion.base.type.ITransaction;
-import org.aion.base.util.TypeConverter;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.util.string.StringUtils;
 
 public class EvtTx extends Evt {
 
-    private final ITransaction tx;
+    private final Transaction tx;
 
-    public EvtTx(ITransaction tx) {
+    public EvtTx(Transaction tx) {
         this.tx = tx;
     }
 
@@ -19,6 +19,6 @@ public class EvtTx extends Evt {
 
     @Override
     public String toJSON() {
-        return TypeConverter.toJsonHex(tx.getTransactionHash());
+        return StringUtils.toJsonHex(tx.getTransactionHash());
     }
 }

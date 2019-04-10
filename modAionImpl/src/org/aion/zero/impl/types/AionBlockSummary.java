@@ -3,9 +3,9 @@ package org.aion.zero.impl.types;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.IBlockSummary;
+import org.aion.interfaces.block.BlockSummary;
 import org.aion.mcf.types.AbstractBlockSummary;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -18,7 +18,7 @@ import org.aion.zero.types.IAionBlock;
  */
 public class AionBlockSummary
         extends AbstractBlockSummary<IAionBlock, AionTransaction, AionTxReceipt, AionTxExecSummary>
-        implements IBlockSummary {
+        implements BlockSummary {
 
     public AionBlockSummary(
             IAionBlock block,

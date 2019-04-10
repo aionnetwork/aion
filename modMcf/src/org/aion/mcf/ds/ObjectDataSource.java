@@ -2,8 +2,8 @@ package org.aion.mcf.ds;
 
 import java.io.Closeable;
 import java.util.Optional;
-import org.aion.base.db.Flushable;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.Flushable;
 
 /**
  * Object Datasource.
@@ -12,10 +12,10 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
  */
 public class ObjectDataSource<V> implements Flushable, Closeable {
 
-    private IByteArrayKeyValueDatabase src;
-    Serializer<V, byte[]> serializer;
+    private ByteArrayKeyValueDatabase src;
+    private Serializer<V, byte[]> serializer;
 
-    public ObjectDataSource(IByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer) {
+    public ObjectDataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer) {
         this.src = src;
         this.serializer = serializer;
     }
@@ -62,7 +62,7 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
     }
 
     /** Returns the underlying cache source. */
-    protected IByteArrayKeyValueDatabase getSrc() {
+    protected ByteArrayKeyValueDatabase getSrc() {
         return src;
     }
 

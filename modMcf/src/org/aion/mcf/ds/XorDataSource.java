@@ -5,15 +5,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 
-public class XorDataSource implements IByteArrayKeyValueStore {
-    private final IByteArrayKeyValueStore source;
+public class XorDataSource implements ByteArrayKeyValueStore {
+    private final ByteArrayKeyValueStore source;
     private final byte[] subKey;
 
-    public XorDataSource(IByteArrayKeyValueStore source, byte[] subKey) {
+    public XorDataSource(ByteArrayKeyValueStore source, byte[] subKey) {
         this.source = source;
         this.subKey = subKey;
     }
@@ -92,7 +92,10 @@ public class XorDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
-        // TODO Auto-generated method stub
+        // NOTE: implementing this method will cause a break in consensus
+        // due to the fact that the serialized storage must have old roots
+        // to enable reverting to a different state for the account in case of a fork
+        // TODO remove this black magic :P
     }
 
     @Override

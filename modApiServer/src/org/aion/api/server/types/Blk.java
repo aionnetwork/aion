@@ -1,9 +1,12 @@
 package org.aion.api.server.types;
 
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.TypeConverter;
+
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.json.JSONArray;
@@ -23,29 +26,29 @@ public class Blk {
 
         JSONObject obj = new JSONObject();
         obj.put("number", block.getNumber());
-        obj.put("hash", TypeConverter.toJsonHex(block.getHash()));
-        obj.put("parentHash", TypeConverter.toJsonHex(block.getParentHash()));
-        obj.put("logsBloom", TypeConverter.toJsonHex(block.getLogBloom()));
-        obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
-        obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
+        obj.put("hash", StringUtils.toJsonHex(block.getHash()));
+        obj.put("parentHash", StringUtils.toJsonHex(block.getParentHash()));
+        obj.put("logsBloom", StringUtils.toJsonHex(block.getLogBloom()));
+        obj.put("transactionsRoot", StringUtils.toJsonHex(block.getTxTrieRoot()));
+        obj.put("stateRoot", StringUtils.toJsonHex(block.getStateRoot()));
         obj.put(
                 "receiptsRoot",
-                TypeConverter.toJsonHex(
+                StringUtils.toJsonHex(
                         block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
-        obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
-        obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
+        obj.put("difficulty", StringUtils.toJsonHex(block.getDifficulty()));
+        obj.put("totalDifficulty", StringUtils.toJsonHex(totalDifficulty));
 
         // TODO: this is coinbase, miner, or minerAddress?
-        obj.put("miner", TypeConverter.toJsonHex(block.getCoinbase().toString()));
-        obj.put("timestamp", TypeConverter.toJsonHex(block.getTimestamp()));
-        obj.put("nonce", TypeConverter.toJsonHex(block.getNonce()));
-        obj.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
-        obj.put("gasUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("gasLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
-        obj.put("nrgUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("miner", StringUtils.toJsonHex(block.getCoinbase().toString()));
+        obj.put("timestamp", StringUtils.toJsonHex(block.getTimestamp()));
+        obj.put("nonce", StringUtils.toJsonHex(block.getNonce()));
+        obj.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
+        obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("gasLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("nrgUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("nrgLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));
         //
-        obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
+        obj.put("extraData", StringUtils.toJsonHex(block.getExtraData()));
         obj.put("size", new NumericalValue(block.size()).toHexString());
 
         JSONArray jsonTxs = new JSONArray();
@@ -57,24 +60,29 @@ public class Blk {
                 jsonTx.put(
                         "contractAddress",
                         (tx.getContractAddress() != null)
-                                ? TypeConverter.toJsonHex(tx.getContractAddress().toString())
+                                ? StringUtils.toJsonHex(tx.getContractAddress().toString())
                                 : null);
-                jsonTx.put("hash", TypeConverter.toJsonHex(tx.getTransactionHash()));
+                jsonTx.put("hash", StringUtils.toJsonHex(tx.getTransactionHash()));
                 jsonTx.put("transactionIndex", i);
-                jsonTx.put("value", TypeConverter.toJsonHex(tx.getValue()));
+                jsonTx.put("value", StringUtils.toJsonHex(tx.getValue()));
                 jsonTx.put("nrg", tx.getEnergyLimit());
-                jsonTx.put("nrgPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+                jsonTx.put("nrgPrice", StringUtils.toJsonHex(tx.getEnergyPrice()));
                 jsonTx.put("gas", tx.getEnergyLimit());
-                jsonTx.put("gasPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+                jsonTx.put("gasPrice", StringUtils.toJsonHex(tx.getEnergyPrice()));
                 jsonTx.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
-                jsonTx.put("from", TypeConverter.toJsonHex(tx.getSenderAddress().toString()));
-                jsonTx.put("to", TypeConverter.toJsonHex(tx.getDestinationAddress().toString()));
+                jsonTx.put("from", StringUtils.toJsonHex(tx.getSenderAddress().toString()));
+                jsonTx.put(
+                        "to",
+                        StringUtils.toJsonHex(
+                                tx.getDestinationAddress() == null
+                                        ? EMPTY_BYTE_ARRAY
+                                        : tx.getDestinationAddress().toBytes()));
                 jsonTx.put("timestamp", block.getTimestamp());
-                jsonTx.put("input", TypeConverter.toJsonHex(tx.getData()));
+                jsonTx.put("input", StringUtils.toJsonHex(tx.getData()));
                 jsonTx.put("blockNumber", block.getNumber());
                 jsonTxs.put(jsonTx);
             } else {
-                jsonTxs.put(TypeConverter.toJsonHex(tx.getTransactionHash()));
+                jsonTxs.put(StringUtils.toJsonHex(tx.getTransactionHash()));
             }
         }
         obj.put("transactions", jsonTxs);
@@ -87,28 +95,28 @@ public class Blk {
 
         JSONObject obj = new JSONObject();
         obj.put("number", block.getNumber());
-        obj.put("hash", TypeConverter.toJsonHex(block.getHash()));
-        obj.put("parentHash", TypeConverter.toJsonHex(block.getParentHash()));
-        obj.put("logsBloom", TypeConverter.toJsonHex(block.getLogBloom()));
-        obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
-        obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
+        obj.put("hash", StringUtils.toJsonHex(block.getHash()));
+        obj.put("parentHash", StringUtils.toJsonHex(block.getParentHash()));
+        obj.put("logsBloom", StringUtils.toJsonHex(block.getLogBloom()));
+        obj.put("transactionsRoot", StringUtils.toJsonHex(block.getTxTrieRoot()));
+        obj.put("stateRoot", StringUtils.toJsonHex(block.getStateRoot()));
         obj.put(
                 "receiptsRoot",
-                TypeConverter.toJsonHex(
+                StringUtils.toJsonHex(
                         block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
-        obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
-        obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
+        obj.put("difficulty", StringUtils.toJsonHex(block.getDifficulty()));
+        obj.put("totalDifficulty", StringUtils.toJsonHex(totalDifficulty));
 
-        obj.put("miner", TypeConverter.toJsonHex(block.getCoinbase().toString()));
-        obj.put("timestamp", TypeConverter.toJsonHex(block.getTimestamp()));
-        obj.put("nonce", TypeConverter.toJsonHex(block.getNonce()));
-        obj.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
-        obj.put("gasUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("gasLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
-        obj.put("nrgUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("miner", StringUtils.toJsonHex(block.getCoinbase().toString()));
+        obj.put("timestamp", StringUtils.toJsonHex(block.getTimestamp()));
+        obj.put("nonce", StringUtils.toJsonHex(block.getNonce()));
+        obj.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
+        obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("gasLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("nrgUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("nrgLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));
 
-        obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
+        obj.put("extraData", StringUtils.toJsonHex(block.getExtraData()));
         obj.put("size", block.size());
         obj.put("numTransactions", block.getTransactionsList().size());
 

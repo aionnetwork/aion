@@ -18,13 +18,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
+import org.aion.util.conversions.Hex;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -521,7 +522,9 @@ public class Cli {
                 String parameter = options.isRedoImport();
 
                 if (parameter.isEmpty()) {
+                    VirtualMachineProvider.initializeAllVirtualMachines();
                     RecoveryUtils.redoMainChainImport(height);
+                    VirtualMachineProvider.shutdownAllVirtualMachines();
                     return EXIT;
                 } else {
                     try {
@@ -533,7 +536,10 @@ public class Cli {
                                         + "» cannot be converted to a number.");
                         return ERROR;
                     }
+
+                    VirtualMachineProvider.initializeAllVirtualMachines();
                     RecoveryUtils.redoMainChainImport(height);
+                    VirtualMachineProvider.shutdownAllVirtualMachines();
                     return EXIT;
                 }
             }

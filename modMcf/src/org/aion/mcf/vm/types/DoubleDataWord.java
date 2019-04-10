@@ -3,17 +3,18 @@ package org.aion.mcf.vm.types;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
+
+import org.aion.interfaces.vm.DataWord;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
 /**
- * DoubleDataWord is double the size of the basic unit data (DataWord) used by the VM. A
+ * DoubleDataWord is double the size of the basic unit data (DataWordImpl) used by the VM. A
  * DoubleDataWord is 256 bits. Its intended use is strictly within pre-compiled contracts, which
  * often have need of 32-byte storage keys.
  */
-public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
+public class DoubleDataWord implements Comparable<DoubleDataWord>, DataWord {
     public static final BigInteger MAX_VALUE =
             BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
 
@@ -114,7 +115,7 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     }
 
     @Override
-    public IDataWord copy() {
+    public DataWord copy() {
         byte[] bs = new byte[BYTES];
         System.arraycopy(data, 0, bs, 0, BYTES);
         return new DoubleDataWord(bs);

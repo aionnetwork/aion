@@ -5,21 +5,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
-import org.aion.avm.api.ABIEncoder;
-import org.aion.avm.core.NodeEnvironment;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.avm.userlib.abi.ABIEncoder;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
@@ -28,7 +28,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 // These tests are ignored for now because in order for them to pass we need the clock drift buffer
@@ -61,7 +60,8 @@ public class StatefulnessTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
-        this.deployer = AionAddress.wrap(this.deployerKey.getAddress());
+        this.deployer = Address.wrap(this.deployerKey.getAddress());
+        TransactionTypeRule.allowAVMContractDeployment();
     }
 
     @After
@@ -75,7 +75,7 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
     }
 
@@ -87,9 +87,9 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
-        Address contract = AionAddress.wrap(receipt.getTransactionOutput());
+        Address contract = Address.wrap(receipt.getTransactionOutput());
 
         BigInteger deployerBalanceAfterDeployment = getBalance(this.deployer);
         BigInteger deployerNonceAfterDeployment = getNonce(this.deployer);
@@ -113,9 +113,9 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
-        Address contract = AionAddress.wrap(receipt.getTransactionOutput());
+        Address contract = Address.wrap(receipt.getTransactionOutput());
 
         BigInteger deployerInitialNonce = getNonce(this.deployer);
         BigInteger contractInitialNonce = getNonce(contract);
@@ -142,7 +142,7 @@ public class StatefulnessTest {
         assertEquals(contractInitialNonce, getNonce(contract));
 
         // Generate a random beneficiary to transfer funds to via the contract.
-        Address beneficiary = randomAionAddress();
+        Address beneficiary = randomAddress();
         long valueForContractToSend = fundsToSendToContract.longValue() / 2;
 
         // Call the contract to send value using an internal call.
@@ -183,7 +183,7 @@ public class StatefulnessTest {
                         jar,
                         5_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
@@ -199,7 +199,7 @@ public class StatefulnessTest {
                         abiEncodeMethodCall(method, arguments),
                         2_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
@@ -237,12 +237,12 @@ public class StatefulnessTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class), new byte[0])
                 .encodeToBytes();
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIEncoder.encodeMethodArguments(method, arguments);
+        return ABIUtil.encodeMethodArguments(method, arguments);
     }
 
     private AionTransaction newTransaction(
@@ -273,9 +273,9 @@ public class StatefulnessTest {
         return this.blockchain.getRepository().getNonce(address);
     }
 
-    private Address randomAionAddress() {
+    private Address randomAddress() {
         byte[] bytes = RandomUtils.nextBytes(32);
         bytes[0] = (byte) 0xa0;
-        return AionAddress.wrap(bytes);
+        return Address.wrap(bytes);
     }
 }

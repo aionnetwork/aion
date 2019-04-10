@@ -2,6 +2,7 @@ package org.aion.zero.impl.sync;
 
 import java.util.List;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -38,7 +39,7 @@ final class TaskStorePendingBlocks implements Runnable {
         Thread.currentThread().setName("sync-save:" + first.getNumber());
 
         int stored = chain.storePendingBlockRange(batch);
-        this.syncStats.updatePeerStoredBlocks(displayId, stored);
+        this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
 
         // log operation
         if (log.isDebugEnabled()) {

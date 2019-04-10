@@ -1,45 +1,45 @@
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
+import static org.aion.types.ByteArrayWrapper.wrap;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.IBlockHeader;
-import org.aion.base.type.ITransaction;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.block.BlockHeader;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 
 /** Detail data storage , */
 public class DetailsDataStore<
-        BLK extends AbstractBlock<BH, ? extends ITransaction>, BH extends IBlockHeader> {
+        BLK extends AbstractBlock<BH, ? extends Transaction>, BH extends BlockHeader> {
 
     private JournalPruneDataSource storageDSPrune;
-    private IRepositoryConfig repoConfig;
+    private RepositoryConfig repoConfig;
 
-    private IByteArrayKeyValueDatabase detailsSrc;
-    private IByteArrayKeyValueDatabase storageSrc;
+    private ByteArrayKeyValueDatabase detailsSrc;
+    private ByteArrayKeyValueDatabase storageSrc;
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public DetailsDataStore() {}
 
     public DetailsDataStore(
-            IByteArrayKeyValueDatabase detailsCache,
-            IByteArrayKeyValueDatabase storageCache,
-            IRepositoryConfig repoConfig) {
+            ByteArrayKeyValueDatabase detailsCache,
+            ByteArrayKeyValueDatabase storageCache,
+            RepositoryConfig repoConfig) {
 
         this.repoConfig = repoConfig;
         withDb(detailsCache, storageCache);
     }
 
     public DetailsDataStore<BLK, BH> withDb(
-            IByteArrayKeyValueDatabase detailsSrc, IByteArrayKeyValueDatabase storageSrc) {
+            ByteArrayKeyValueDatabase detailsSrc, ByteArrayKeyValueDatabase storageSrc) {
         this.detailsSrc = detailsSrc;
         this.storageSrc = storageSrc;
         this.storageDSPrune = new JournalPruneDataSource(storageSrc);
@@ -52,7 +52,7 @@ public class DetailsDataStore<
      * @param key
      * @return
      */
-    public synchronized IContractDetails get(byte[] key) {
+    public synchronized ContractDetails get(byte[] key) {
 
         ByteArrayWrapper wrappedKey = wrap(key);
         Optional<byte[]> rawDetails = detailsSrc.get(key);
@@ -67,7 +67,7 @@ public class DetailsDataStore<
         }
 
         // Found something from cache or database, return it by decoding it.
-        IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
+        ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
         detailsImpl.setDataSource(storageDSPrune);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
@@ -75,7 +75,7 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(Address key, IContractDetails contractDetails) {
+    public synchronized void update(Address key, ContractDetails contractDetails) {
 
         contractDetails.setAddress(key);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
@@ -139,12 +139,12 @@ public class DetailsDataStore<
             }
 
             // Decode the details.
-            IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
+            ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
             detailsImpl.decode(rawDetails.get(), true);
             // We can safely get as we checked if it is present.
 
-            // IContractDetails details = entry.getValue();
+            // ContractDetails details = entry.getValue();
             detailsImpl.syncStorage();
         }
     }
@@ -155,6 +155,15 @@ public class DetailsDataStore<
 
     public synchronized Iterator<ByteArrayWrapper> keys() {
         return new DetailsIteratorWrapper(detailsSrc.keys());
+    }
+
+    public synchronized void close() {
+        try {
+            detailsSrc.close();
+            storageSrc.close();
+        } catch (Exception e) {
+            throw new RuntimeException("error closing db");
+        }
     }
 
     /**
@@ -182,15 +191,6 @@ public class DetailsDataStore<
         @Override
         public ByteArrayWrapper next() {
             return wrap(sourceIterator.next());
-        }
-    }
-
-    public synchronized void close() {
-        try {
-            detailsSrc.close();
-            storageSrc.close();
-        } catch (Exception e) {
-            throw new RuntimeException("error closing db");
         }
     }
 }

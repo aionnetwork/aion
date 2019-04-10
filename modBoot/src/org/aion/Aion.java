@@ -196,11 +196,7 @@ public class Aion {
         }
 
         // show enabled VMs
-        String vmStr = "using FVM";
-        if (cfg.getVm().isAvmEnabled()) {
-            vmStr += " & AVM";
-        }
-        logo = appendLogo(logo, vmStr);
+        logo = appendLogo(logo, "using FVM & AVM");
 
         genLog.info(path);
         genLog.info(logo);
@@ -414,7 +410,7 @@ public class Aion {
     }
 
     private static boolean existZmqSecKeyFile(final Path path) {
-        List<File> files = org.aion.base.io.File.getFiles(path);
+        List<File> files = org.aion.util.file.File.getFiles(path);
 
         for (File file : files) {
             if (file.getName().contains("zmqCurveSeckey")) {

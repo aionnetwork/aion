@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;

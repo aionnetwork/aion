@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync.handler;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
@@ -15,6 +15,7 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncStats;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
@@ -118,7 +119,7 @@ public class BlockPropagationHandler {
     }
 
     public PropStatus processIncomingBlock(
-            final int nodeId, final String _displayId, final AionBlock block) {
+            final int nodeId, final String displayId, final AionBlock block) {
         if (block == null) return PropStatus.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
@@ -146,7 +147,7 @@ public class BlockPropagationHandler {
             if (log.isInfoEnabled()) {
                 log.info(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
-                        _displayId,
+                        displayId,
                         block.getShortHash(),
                         block.getNumber(),
                         block.getTransactionsList().size(),
@@ -154,7 +155,7 @@ public class BlockPropagationHandler {
             } else if (log.isDebugEnabled()) {
                 log.debug(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = NOT_IN_RANGE>",
-                        _displayId,
+                        displayId,
                         block.getShortHash(),
                         block.getNumber(),
                         block.getTransactionsList().size(),
@@ -163,8 +164,7 @@ public class BlockPropagationHandler {
             }
             boolean stored = blockchain.storePendingStatusBlock(block);
             if (stored) {
-                this.syncStats.updatePeerStoredBlocks(_displayId, 1);
-                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.STORED);
             }
 
             if (log.isDebugEnabled()) {
@@ -180,14 +180,13 @@ public class BlockPropagationHandler {
 
             long t2 = System.currentTimeMillis();
             if (result.isStored()) {
-                this.syncStats.updatePeerImportedBlocks(_displayId, 1);
-                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.IMPORTED);
             }
 
             if (log.isInfoEnabled()) {
                 log.info(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        _displayId,
+                        displayId,
                         block.getShortHash(),
                         block.getNumber(),
                         block.getTransactionsList().size(),
@@ -196,7 +195,7 @@ public class BlockPropagationHandler {
             } else if (log.isDebugEnabled()) {
                 log.debug(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
-                        _displayId,
+                        displayId,
                         block.getShortHash(),
                         block.getNumber(),
                         block.getTransactionsList().size(),

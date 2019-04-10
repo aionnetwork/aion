@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.fastvm.ExecutionContext;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.ArrayUtils;
@@ -64,7 +63,7 @@ public final class ExecutionBatch {
      * @param stop The index of the last transaction in the slice, exclusive.
      * @return The sliced version of this BlockDetails object.
      */
-    public ExecutionBatch slice(int start, int stop) {
+    ExecutionBatch slice(int start, int stop) {
         List<AionTransaction> transactions = this.transactions.subList(start, stop);
         List<KernelTransactionContext> contexts = this.contexts.subList(start, stop);
         return new ExecutionBatch(this.block, transactions, contexts);
@@ -93,7 +92,7 @@ public final class ExecutionBatch {
      *
      * @return The contexts.
      */
-    public KernelTransactionContext[] getExecutionContexts() {
+    KernelTransactionContext[] getExecutionContexts() {
         KernelTransactionContext[] contextsAsArray =
                 new KernelTransactionContext[this.contexts.size()];
         this.contexts.toArray(contextsAsArray);
@@ -104,7 +103,7 @@ public final class ExecutionBatch {
         return this.transactions.size();
     }
 
-    private List<KernelTransactionContext> constructTransactionContexts(
+    private static List<KernelTransactionContext> constructTransactionContexts(
             List<AionTransaction> transactions, IAionBlock block) {
         List<KernelTransactionContext> contexts = new ArrayList<>();
         for (AionTransaction transaction : transactions) {
@@ -113,7 +112,7 @@ public final class ExecutionBatch {
         return contexts;
     }
 
-    private KernelTransactionContext constructTransactionContext(
+    private static KernelTransactionContext constructTransactionContext(
             AionTransaction transaction, IAionBlock block) {
         byte[] txHash = transaction.getTransactionHash();
         Address address =
@@ -123,10 +122,9 @@ public final class ExecutionBatch {
         Address origin = transaction.getSenderAddress();
         Address caller = transaction.getSenderAddress();
 
-        DataWord nrgPrice = transaction.nrgPrice();
-        long energyLimit = transaction.nrgLimit();
+        DataWordImpl nrgPrice = transaction.nrgPrice();
         long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
-        DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(transaction.getValue()));
+        DataWordImpl callValue = new DataWordImpl(ArrayUtils.nullToEmpty(transaction.getValue()));
         byte[] callData = ArrayUtils.nullToEmpty(transaction.getData());
 
         int depth = 0;
@@ -146,7 +144,7 @@ public final class ExecutionBatch {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
-        DataWord blockDifficulty = new DataWord(diff);
+        DataWordImpl blockDifficulty = new DataWordImpl(diff);
 
         return new KernelTransactionContext(
                 transaction,

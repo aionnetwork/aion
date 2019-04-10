@@ -3,15 +3,15 @@ package org.aion.mcf.trie;
 import static org.aion.crypto.HashUtil.h256;
 
 import java.util.Arrays;
-import org.aion.base.db.IByteArrayKeyValueStore;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 
 public class SecureTrie extends TrieImpl implements Trie {
 
-    public SecureTrie(IByteArrayKeyValueStore db) {
+    public SecureTrie(ByteArrayKeyValueStore db) {
         this(db, "");
     }
 
-    public SecureTrie(IByteArrayKeyValueStore db, Object root) {
+    public SecureTrie(ByteArrayKeyValueStore db, Object root) {
         super(db, root);
     }
 
@@ -38,7 +38,7 @@ public class SecureTrie extends TrieImpl implements Trie {
      * Returns a copy of this trie.
      *
      * <p>The {@link Cache} object returned will be a copy of this object's cache, but the two will
-     * share the same references to their data sources ({@link IByteArrayKeyValueStore} objects) and
+     * share the same references to their data sources ({@link ByteArrayKeyValueStore} objects) and
      * each {@link Node} will retain the same references as the original node's {@link
      * org.aion.rlp.Value} objects.
      *

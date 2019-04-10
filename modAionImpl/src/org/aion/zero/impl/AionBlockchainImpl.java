@@ -1,16 +1,16 @@
 package org.aion.zero.impl;
 
-import static java.lang.Math.max;
+import static java.lang.Long.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
-import static org.aion.base.util.BIUtil.isMoreThan;
-import static org.aion.base.util.Hex.toHexString;
 import static org.aion.mcf.core.ImportResult.EXIST;
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
 import static org.aion.mcf.core.ImportResult.NO_PARENT;
+import static org.aion.util.biginteger.BIUtil.isMoreThan;
+import static org.aion.util.conversions.Hex.toHexString;
 
 import java.math.BigInteger;
 import java.util.ArrayDeque;
@@ -22,24 +22,21 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.Hash256;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -47,16 +44,24 @@ import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.types.BlockIdentifier;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.types.BlockIdentifierImpl;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.types.Hash256;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IBloomFilter;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -108,7 +113,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long exitOn = Long.MAX_VALUE;
 
     private AionRepositoryImpl repository;
-    private IRepositoryCache track;
+    private RepositoryCache track;
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo>
             transactionStore;
     private AionBlock bestBlock;
@@ -132,8 +137,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private AtomicReference<BlockIdentifier> bestKnownBlock =
-            new AtomicReference<BlockIdentifier>();
+    private AtomicReference<BlockIdentifierImpl> bestKnownBlock =
+            new AtomicReference<BlockIdentifierImpl>();
 
     private boolean fork = false;
 
@@ -180,7 +185,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public Address getMinerCoinbase() {
-                return AionAddress.wrap(cfgAion.getConsensus().getMinerAddress());
+                return Address.wrap(cfgAion.getConsensus().getMinerAddress());
             }
 
             // TODO: hook up to configuration file
@@ -199,7 +204,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public boolean isAvmEnabled() {
-                return cfgAion.getVm().isAvmEnabled();
+                // TODO: temporarily hack the TransactionTypeRule by the network name. Once avm
+                // ready for the production, this check should be removed.
+                if (cfgAion.getNetwork().equals("avmtestnet")) {
+                    TransactionTypeRule.allowAVMContractDeployment();
+                }
+
+                return true;
             }
         };
     }
@@ -232,8 +243,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.transactionStore = this.repository.getTransactionStore();
 
         this.minerCoinbase = this.config.getMinerCoinbase();
-
-        if (minerCoinbase.isEmptyAddress()) {
+        if (minerCoinbase == null) {
             LOG.warn("No miner Coinbase!");
         }
 
@@ -317,6 +327,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public AionBlock getBlockByNumber(long blockNr) {
         return getBlockStore().getChainBlockByNumber(blockNr);
+    }
+
+    @Override
+    public List<AionBlock> getBlocksByRange(long first, long last) {
+        return getBlockStore().getBlocksByRange(first, last);
     }
 
     @Override
@@ -555,6 +570,89 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
     }
 
+    /**
+     * Import block without validity checks and creating the state. Cannot be used for storing the
+     * pivot which will not have a parent present in the database.
+     *
+     * @param block the block to be imported
+     * @return a result describing the status of the attempted import
+     */
+    public synchronized FastImportResult tryFastImport(final AionBlock block) {
+        if (block == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Fast sync import attempted with null block or header.");
+            }
+            return FastImportResult.INVALID_BLOCK;
+        }
+        if (block.getTimestamp()
+                > (System.currentTimeMillis() / THOUSAND_MS
+                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Block {} invalid due to timestamp {}.",
+                        block.getShortHash(),
+                        block.getTimestamp());
+            }
+            return FastImportResult.INVALID_BLOCK;
+        }
+
+        // check that the block is not already known
+        AionBlock known = getBlockStore().getBlockByHash(block.getHash());
+        if (known != null && known.getNumber() == block.getNumber()) {
+            return FastImportResult.KNOWN;
+        }
+
+        // a child must be present to import the parent
+        AionBlock child = getBlockStore().getChainBlockByNumber(block.getNumber() + 1);
+        if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
+            return FastImportResult.NO_CHILD;
+        } else {
+            // the total difficulty will be updated after the chain is complete
+            getBlockStore().saveBlock(block, ZERO, true);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Fast sync block saved: number: {}, hash: {}, child: {}",
+                        block.getNumber(),
+                        block.getShortHash(),
+                        child.getShortHash());
+            }
+            return FastImportResult.IMPORTED;
+        }
+    }
+
+    /**
+     * Walks though the ancestor blocks starting with the given hash to determine if there is an
+     * ancestor missing from storage. Returns the ancestor's hash if one is found missing or {@code
+     * null} when the history is complete, i.e. no missing ancestors exist.
+     *
+     * @param block the first block to be checked if present in the repository
+     * @return the ancestor's hash and height if one is found missing or {@code null} when the
+     *     history is complete
+     * @throws NullPointerException when given a null block as input
+     */
+    public Pair<ByteArrayWrapper, Long> findMissingAncestor(AionBlock block) {
+        Objects.requireNonNull(block);
+
+        // initialize with given parameter
+        byte[] currentHash = block.getHash();
+        long currentNumber = block.getNumber();
+
+        AionBlock known = getBlockStore().getBlockByHash(currentHash);
+
+        while (known != null && known.getNumber() > 0) {
+            currentHash = known.getParentHash();
+            currentNumber--;
+            known = getBlockStore().getBlockByHash(currentHash);
+        }
+
+        if (known == null) {
+            return Pair.of(ByteArrayWrapper.wrap(currentHash), currentNumber);
+        } else {
+            return null;
+        }
+    }
+
     public synchronized ImportResult tryToConnect(final AionBlock block) {
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
@@ -645,14 +743,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (ret.isSuccessful()) {
             if (this.evtMgr != null) {
 
+                List<IEvent> evts = new ArrayList<>();
                 IEvent evtOnBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
                 evtOnBlock.setFuncArgs(Collections.singletonList(summary));
-                this.evtMgr.newEvent(evtOnBlock);
+                evts.add(evtOnBlock);
 
                 IEvent evtTrace = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
                 String str = String.format("Block chain size: [ %d ]", this.getSizeInternal());
                 evtTrace.setFuncArgs(Collections.singletonList(str));
-                this.evtMgr.newEvent(evtTrace);
+                evts.add(evtTrace);
 
                 if (ret == IMPORTED_BEST) {
                     if (LOG.isTraceEnabled()) {
@@ -660,23 +759,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     }
                     IEvent evtOnBest = new EventBlock(EventBlock.CALLBACK.ONBEST0);
                     evtOnBest.setFuncArgs(Arrays.asList(block, summary.getReceipts()));
-                    this.evtMgr.newEvent(evtOnBest);
+                    evts.add(evtOnBest);
                 }
+
+                this.evtMgr.newEvents(evts);
             }
         }
 
         if (ret == IMPORTED_BEST) {
             if (TX_LOG.isDebugEnabled()) {
-                if (summary != null) {
-                    for (AionTxReceipt receipt : summary.getReceipts()) {
-                        if (receipt != null) {
-                            byte[] transactionHash = receipt.getTransaction().getTransactionHash();
-                            TX_LOG.debug(
-                                    "Transaction: "
-                                            + Hex.toHexString(transactionHash)
-                                            + " was sealed into block #"
-                                            + block.getNumber());
-                        }
+                for (AionTxReceipt receipt : summary.getReceipts()) {
+                    if (receipt != null) {
+                        byte[] transactionHash = receipt.getTransaction().getTransactionHash();
+                        TX_LOG.debug(
+                                "Transaction: "
+                                        + Hex.toHexString(transactionHash)
+                                        + " was sealed into block #"
+                                        + block.getNumber());
                     }
                 }
             }
@@ -909,6 +1008,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update corresponding account with the new balance
         track.flush();
 
+        // save contract creation data to index database
+        for (AionTxReceipt receipt : receipts) {
+            AionTransaction tx = receipt.getTransaction();
+            if (tx.isContractCreationTransaction() && receipt.isSuccessful()) {
+                repository.saveIndexedContractInformation(
+                        tx.getContractAddress(),
+                        block.getNumber(),
+                        TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
+                                ? TransactionTypes.AVM_CREATE_CODE
+                                : TransactionTypes.FVM_CREATE_CODE,
+                        true);
+            }
+        }
+
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {
                 transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));
@@ -946,26 +1059,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
-        Trie receiptsTrie = new TrieImpl(null);
-
         if (receipts == null || receipts.isEmpty()) {
             return HashUtil.EMPTY_TRIE_HASH;
         }
 
+        Trie receiptsTrie = new TrieImpl(null);
         for (int i = 0; i < receipts.size(); i++) {
             receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
         }
         return receiptsTrie.getRootHash();
     }
 
-    private byte[] calcLogBloom(List<AionTxReceipt> receipts) {
-
-        Bloom retBloomFilter = new Bloom();
-
+    private static byte[] calcLogBloom(List<AionTxReceipt> receipts) {
         if (receipts == null || receipts.isEmpty()) {
-            return retBloomFilter.getBloomFilterBytes();
+            return new byte[IBloomFilter.SIZE];
         }
 
+        Bloom retBloomFilter = new Bloom();
         for (AionTxReceipt receipt : receipts) {
             retBloomFilter.or(receipt.getBloomFilter());
         }
@@ -1034,7 +1144,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             if (txs != null && !txs.isEmpty()) {
-                IRepository parentRepo = repository;
+                Repository parentRepo = repository;
                 if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
                     parentRepo =
                             repository.getSnapshotTo(
@@ -1117,10 +1227,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return applyBlock(block);
         } else {
             return new AionBlockSummary(
-                    block,
-                    new HashMap<Address, BigInteger>(),
-                    new ArrayList<AionTxReceipt>(),
-                    new ArrayList<AionTxExecSummary>());
+                    block, new HashMap<>(), new ArrayList<>(), new ArrayList<>());
         }
     }
 
@@ -1138,28 +1245,37 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
         List<AionTransaction> transactions = new ArrayList<>();
 
-        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-        BulkExecutor executor =
-                new BulkExecutor(
-                        batch,
-                        repository,
-                        track,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWorkForGeneratePreBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+        if (!block.getTransactionsList().isEmpty()) {
+            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            batch,
+                            repository,
+                            track,
+                            false,
+                            true,
+                            block.getNrgLimit(),
+                            LOGGER_VM,
+                            getPostExecutionWorkForGeneratePreBlock());
 
-        for (AionTxExecSummary summary : executionSummaries) {
-            if (!summary.isRejected()) {
-                transactions.add(summary.getTransaction());
-                receipts.add(summary.getReceipt());
-                summaries.add(summary);
+            List<AionTxExecSummary> executionSummaries = null;
+            try {
+                executionSummaries = executor.execute();
+            } catch (VMException e) {
+                LOG.error("Shutdown due to a VM fatal error.", e);
+                System.exit(-1);
+            }
+
+            for (AionTxExecSummary summary : executionSummaries) {
+                if (!summary.isRejected()) {
+                    transactions.add(summary.getTransaction());
+                    receipts.add(summary.getReceipt());
+                    summaries.add(summary);
+                }
             }
         }
 
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block);
 
         track.flush();
 
@@ -1202,24 +1318,33 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxReceipt> receipts = new ArrayList<>();
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
-        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-        BulkExecutor executor =
-                new BulkExecutor(
-                        batch,
-                        repository,
-                        track,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWorkForApplyBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+        if (!block.getTransactionsList().isEmpty()) {
+            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            batch,
+                            repository,
+                            track,
+                            false,
+                            true,
+                            block.getNrgLimit(),
+                            LOGGER_VM,
+                            getPostExecutionWorkForApplyBlock());
 
-        for (AionTxExecSummary summary : executionSummaries) {
-            receipts.add(summary.getReceipt());
-            summaries.add(summary);
+            List<AionTxExecSummary> executionSummaries = null;
+            try {
+                executionSummaries = executor.execute();
+            } catch (VMException e) {
+                LOG.error("Shutdown due to a VM fatal error.", e);
+                System.exit(-1);
+            }
+
+            for (AionTxExecSummary summary : executionSummaries) {
+                receipts.add(summary.getReceipt());
+                summaries.add(summary);
+            }
         }
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1252,8 +1377,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<Address, BigInteger> addReward(
-            IAionBlock block, List<AionTxExecSummary> summaries) {
+    private Map<Address, BigInteger> addReward(IAionBlock block) {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
@@ -1297,14 +1421,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         repository.commitBlock(block.getHeader());
 
-        if (LOG.isDebugEnabled())
+        if (LOG.isDebugEnabled()) {
             LOG.debug(
                     "Block saved: number: {}, hash: {}, TD: {}",
                     block.getNumber(),
                     block.getShortHash(),
                     totalDifficulty);
 
-        if (LOG.isDebugEnabled()) {
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
         }
 
@@ -1525,7 +1648,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //     * @return {@link A0BlockHeader}'s list or empty list if none found
     //     */
     //    @Override
-    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip,
+    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int
+    // skip,
     // int limit,
     //            boolean reverse) {
     //
@@ -1696,7 +1820,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void updateBestKnownBlock(A0BlockHeader header) {
         if (bestKnownBlock.get() == null || header.getNumber() > bestKnownBlock.get().getNumber()) {
-            bestKnownBlock.set(new BlockIdentifier(header.getHash(), header.getNumber()));
+            bestKnownBlock.set(new BlockIdentifierImpl(header.getHash(), header.getNumber()));
         }
     }
 
@@ -1705,7 +1829,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverWorldState(IRepository repository, AionBlock block) {
+    public synchronized boolean recoverWorldState(Repository repository, AionBlock block) {
         if (block == null) {
             LOG.error("World state recovery attempted with null block.");
             return false;
@@ -1788,7 +1912,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverIndexEntry(IRepository repository, AionBlock block) {
+    public synchronized boolean recoverIndexEntry(Repository repository, AionBlock block) {
         if (block == null) {
             LOG.error("Index recovery attempted with null block.");
             return false;

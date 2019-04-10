@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
@@ -19,7 +19,6 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 public class AionHubTest {
 
     private void checkHubNullity(AionHub hub) {
@@ -155,7 +154,7 @@ public class AionHubTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         repo.flush();
         for (byte[] key : statesToDelete) {

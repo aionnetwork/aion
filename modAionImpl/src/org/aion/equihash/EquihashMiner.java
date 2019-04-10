@@ -1,6 +1,7 @@
 package org.aion.equihash;
 
-import static org.aion.base.util.Hex.toHexString;
+
+import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +13,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.util.MAF;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -20,7 +20,9 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
+import org.aion.interfaces.block.Solution;
 import org.aion.mcf.mine.AbstractMineRunner;
+import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;

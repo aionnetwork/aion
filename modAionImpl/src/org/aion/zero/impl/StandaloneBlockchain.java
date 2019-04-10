@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.Hash256;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -24,9 +24,8 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Hash256;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -51,20 +50,20 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public AionGenesis genesis;
 
-    private static IRepositoryConfig repoConfig =
-            new IRepositoryConfig() {
+    private static RepositoryConfig repoConfig =
+            new RepositoryConfig() {
                 @Override
                 public String getDbPath() {
                     return "";
                 }
 
                 @Override
-                public IPruneConfig getPruneConfig() {
+                public PruneConfig getPruneConfig() {
                     return new CfgPrune(false);
                 }
 
                 @Override
-                public IContractDetails contractDetailsImpl() {
+                public ContractDetails contractDetailsImpl() {
                     return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                 }
 
@@ -84,7 +83,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     protected StandaloneBlockchain(
             final A0BCConfig config,
             final ChainConfiguration chainConfig,
-            IRepositoryConfig repoConfig) {
+            RepositoryConfig repoConfig) {
         super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
     }
 
@@ -123,7 +122,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private List<ECKey> defaultKeys = new ArrayList<>();
         private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
 
-        private IRepositoryConfig repoConfig;
+        private RepositoryConfig repoConfig;
 
         public static final int INITIAL_ACC_LEN = 10;
         public static final BigInteger DEFAULT_BALANCE =
@@ -164,7 +163,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        public Builder withRepoConfig(IRepositoryConfig config) {
+        public Builder withRepoConfig(RepositoryConfig config) {
             this.repoConfig = config;
             return this;
         }
@@ -193,20 +192,20 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        private IRepositoryConfig generateRepositoryConfig() {
-            return new IRepositoryConfig() {
+        private RepositoryConfig generateRepositoryConfig() {
+            return new RepositoryConfig() {
                 @Override
                 public String getDbPath() {
                     return "";
                 }
 
                 @Override
-                public IPruneConfig getPruneConfig() {
+                public PruneConfig getPruneConfig() {
                     return new CfgPrune(false);
                 }
 
                 @Override
-                public IContractDetails contractDetailsImpl() {
+                public ContractDetails contractDetailsImpl() {
                     return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                 }
 
@@ -226,7 +225,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             ? new A0BCConfig() {
                                 @Override
                                 public Address getCoinbase() {
-                                    return AionAddress.ZERO_ADDRESS();
+                                    return Address.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -241,7 +240,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                                 @Override
                                 public Address getMinerCoinbase() {
-                                    return AionAddress.ZERO_ADDRESS();
+                                    return Address.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -309,7 +308,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
-                genesisBuilder.addPreminedAccount(AionAddress.wrap(acc.getKey()), acc.getValue());
+                genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
             }
 
             AionGenesis genesis;
@@ -320,15 +319,15 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
             bc.genesis = genesis;
 
-            IRepositoryCache track = bc.getRepository().startTracking();
+            RepositoryCache track = bc.getRepository().startTracking();
             track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 // assumes only additions can be made in the genesis
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
-                        new DataWord(key.getKey()).toWrapper(),
-                        new ByteArrayWrapper(new DataWord(key.getValue()).getNoLeadZeroesData()));
+                        new DataWordImpl(key.getKey()).toWrapper(),
+                        new ByteArrayWrapper(new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
             }
 
             for (Address key : genesis.getPremine().keySet()) {

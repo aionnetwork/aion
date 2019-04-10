@@ -5,7 +5,7 @@ import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -102,13 +102,14 @@ public final class RequestTrieDataHandler extends Handler {
                 this.p2p.send(peerId, displayId, response);
             }
         } else {
-            this.log.error("<req-trie decode-error msg-bytes={} peer={}>", message.length, peerId);
+            this.log.error(
+                    "<req-trie decode-error msg-bytes={} peer={}>", message.length, displayId);
 
             if (log.isTraceEnabled()) {
                 this.log.trace(
                         "<req-trie decode-error for msg={} peer={}>",
                         Arrays.toString(message),
-                        peerId);
+                        displayId);
             }
         }
     }

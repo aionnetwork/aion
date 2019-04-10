@@ -11,11 +11,11 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.IBlockHeader;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.BlockHeader;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
@@ -31,17 +31,17 @@ import org.slf4j.Logger;
 
 /** Abstract Repository class. */
 public abstract class AbstractRepository<
-                BLK extends AbstractBlock<BH, ? extends ITransaction>,
-                BH extends IBlockHeader,
+                BLK extends AbstractBlock<BH, ? extends Transaction>,
+                BH extends BlockHeader,
                 BSB extends IBlockStoreBase<?, ?>>
-        implements IRepository<AccountState, BSB> {
+        implements Repository<AccountState, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     protected static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
     // Configuration parameter
-    protected IRepositoryConfig cfg;
+    protected RepositoryConfig cfg;
 
     /** ********* Database Name Constants ********** */
     protected static final String TRANSACTION_DB = Names.TRANSACTION;
@@ -49,6 +49,7 @@ public abstract class AbstractRepository<
     protected static final String INDEX_DB = Names.INDEX;
     protected static final String BLOCK_DB = Names.BLOCK;
     protected static final String PENDING_BLOCK_DB = Names.PENDING_BLOCK;
+    protected static final String CONTRACT_INDEX_DB = Names.CONTRACT_INDEX;
     protected static final String DETAILS_DB = Names.DETAILS;
     protected static final String STORAGE_DB = Names.STORAGE;
     protected static final String STATE_DB = Names.STATE;
@@ -64,18 +65,19 @@ public abstract class AbstractRepository<
     // File(System.getProperty("user.dir"), "database").getAbsolutePath();
 
     /** ******** Database and Cache parameters ************* */
-    protected IByteArrayKeyValueDatabase transactionDatabase;
+    protected ByteArrayKeyValueDatabase transactionDatabase;
 
-    protected IByteArrayKeyValueDatabase detailsDatabase;
-    protected IByteArrayKeyValueDatabase storageDatabase;
-    protected IByteArrayKeyValueDatabase indexDatabase;
-    protected IByteArrayKeyValueDatabase blockDatabase;
-    protected IByteArrayKeyValueDatabase stateDatabase;
-    protected IByteArrayKeyValueDatabase stateArchiveDatabase;
-    protected IByteArrayKeyValueDatabase txPoolDatabase;
-    protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
+    protected ByteArrayKeyValueDatabase contractIndexDatabase;
+    protected ByteArrayKeyValueDatabase detailsDatabase;
+    protected ByteArrayKeyValueDatabase storageDatabase;
+    protected ByteArrayKeyValueDatabase indexDatabase;
+    protected ByteArrayKeyValueDatabase blockDatabase;
+    protected ByteArrayKeyValueDatabase stateDatabase;
+    protected ByteArrayKeyValueDatabase stateArchiveDatabase;
+    protected ByteArrayKeyValueDatabase txPoolDatabase;
+    protected ByteArrayKeyValueDatabase pendingTxCacheDatabase;
 
-    protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
+    protected Collection<ByteArrayKeyValueDatabase> databaseGroup;
 
     protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
@@ -183,6 +185,17 @@ public abstract class AbstractRepository<
                 throw newException(TRANSACTION_DB, sharedProps);
             }
             databaseGroup.add(transactionDatabase);
+
+            // getting details specific properties
+            sharedProps = cfg.getDatabaseConfig(CONTRACT_INDEX_DB);
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+            sharedProps.setProperty(Props.DB_NAME, CONTRACT_INDEX_DB);
+            this.contractIndexDatabase = connectAndOpen(sharedProps, LOG);
+            if (contractIndexDatabase == null || contractIndexDatabase.isClosed()) {
+                throw newException(CONTRACT_INDEX_DB, sharedProps);
+            }
+            databaseGroup.add(contractIndexDatabase);
 
             // getting details specific properties
             sharedProps = cfg.getDatabaseConfig(DETAILS_DB);

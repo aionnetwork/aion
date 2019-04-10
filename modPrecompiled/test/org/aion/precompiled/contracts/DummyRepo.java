@@ -6,18 +6,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
 
-public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
+
+public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
     private Map<Address, AccountState> accounts = new HashMap<>();
     private Map<Address, byte[]> contracts = new HashMap<>();
     private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
@@ -85,7 +86,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     }
 
     @Override
-    public IContractDetails getContractDetails(Address addr) {
+    public ContractDetails getContractDetails(Address addr) {
         throw new UnsupportedOperationException();
     }
 
@@ -131,8 +132,8 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
             if (res == null) {
                 return null;
             }
-            if (res.length <= DataWord.BYTES) {
-                return new DataWord(res).toWrapper();
+            if (res.length <= DataWordImpl.BYTES) {
+                return new DataWordImpl(res).toWrapper();
             } else if (res.length == DoubleDataWord.BYTES) {
                 return new DoubleDataWord(res).toWrapper();
             }
@@ -161,7 +162,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     }
 
     @Override
-    public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> startTracking() {
+    public RepositoryCache<AccountState, IBlockStoreBase<?, ?>> startTracking() {
         return new DummyRepo(this);
     }
 
@@ -169,7 +170,10 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     public void flush() {}
 
     @Override
-    public void flushTo(IRepository repo, boolean clearStateAfterFlush) {}
+    public void flushTo(Repository repo, boolean clearStateAfterFlush) {}
+
+    @Override
+    public void flushCopiesTo(Repository repo, boolean clearStateAfterFlush) {}
 
     @Override
     public void rollback() {}
@@ -193,7 +197,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     @Override
     public void updateBatch(
             Map<Address, AccountState> accountStates,
-            Map<Address, IContractDetails> contractDetailes) {
+            Map<Address, ContractDetails> contractDetailes) {
         throw new UnsupportedOperationException();
     }
 
@@ -206,12 +210,12 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     public void loadAccountState(
             Address addr,
             Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails> cacheDetails) {
+            Map<Address, ContractDetails> cacheDetails) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IRepository<AccountState, IBlockStoreBase<?, ?>> getSnapshotTo(byte[] root) {
+    public Repository<AccountState, IBlockStoreBase<?, ?>> getSnapshotTo(byte[] root) {
         throw new UnsupportedOperationException();
     }
 
@@ -225,6 +229,11 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
 
     @Override
     public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {}
+
+    @Override
+    public byte getVMUsed(Address contract) {
+        return 0x01;
+    }
 
     @Override
     public void compact() {

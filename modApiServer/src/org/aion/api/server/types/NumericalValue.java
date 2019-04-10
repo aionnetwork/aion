@@ -2,7 +2,7 @@ package org.aion.api.server.types;
 
 import java.math.BigInteger;
 import java.util.regex.Pattern;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 /** Base type for a numerical value derived from some JSON string, or vice versa */
 public class NumericalValue {

@@ -1,0 +1,65 @@
+properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
+			[$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+			]])
+			
+node {
+	def appName = 'aion'
+	def deployName
+	def endPoint
+
+    // docker tags
+    def k8sTag = "k8s-${env.BUILD_NUMBER}"
+    def k8sImageName = "aionkuberacr.azurecr.io/aion:${k8sTag}"
+    def k8sImageNameLatest = "aionkuberacr.azurecr.io/aion:latest"
+    def distImageName = "aionnetwork/aion-staging:ci-${env.BUILD_NUMBER}"
+
+    stage('Clone repository') {
+        checkout scm
+        sh "git submodule update --init --recursive"
+    }
+
+	stage('Create dist and k8s Docker images from source') {
+		sh "./gradlew packDocker packK8sDocker " +
+            "-Pdist_image_tag=${distImageName} " +
+            "-Pk8s_image_tag=${k8sImageName} "
+	}
+
+	stage('Push k8s image to Azure private registry') {
+        docker.withRegistry('https://aionkuberacr.azurecr.io', 'acr') {
+            sh("docker push ${k8sImageName}")
+            sh("docker push ${k8sImageNameLatest}")
+        }
+	}
+
+	stage("Deploy Image to Kubernetes") {
+		// Refresh kubectl (Python can have some issues refreshing)
+		sh('kubectl get nodes')
+
+        withPythonEnv('python3') {
+            sh 'pip install -r DockerAutomation/k8s/requirements.txt'
+            deployName = sh(script: "python DockerAutomation/k8s/deploy.py ${k8sTag}", 
+                returnStdout: true)
+        }
+    }
+
+	stage("Fetch Deployment Endpoint") {
+		withPythonEnv('python3') {
+			endPoint = sh(script: "python DockerAutomation/k8s/find_endpoint.py ${deployName}",
+                returnStdout: true)
+		}
+	}
+
+	stage("Run 'Test'") {
+        // TODO perform actual verification
+		sh("echo " + endPoint)
+	}
+
+    // The rest of this pipeline should only execute when the tests in CI pass
+    // However, we don't have testing against it right now, so it always "passes"
+    
+    stage("Push dist image to DockerHub aion-staging") {
+        docker.withRegistry('', 'DockerHub') {
+            sh("docker push ${distImageName}")
+        }
+    }
+}

@@ -16,18 +16,18 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.aion.base.type.ITransaction;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.TimeInstant;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.time.TimeInstant;
 
 @SuppressWarnings("unchecked")
-public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
+public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
 
     public TxPoolA0() {
         super();
@@ -120,7 +120,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 if (LOG.isWarnEnabled()) {
                     LOG.warn(
                             "The tx hash existed in the pool! [{}]",
-                            ByteUtils.toHexString(bw.getData()));
+                            ByteUtil.toHexString(bw.getData()));
                 }
                 continue;
             }
@@ -128,7 +128,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
                         "Put tx into mainMap: hash:[{}] tx:[{}]",
-                        ByteUtils.toHexString(bw.getData()),
+                        ByteUtil.toHexString(bw.getData()),
                         tx.toString());
             }
 
@@ -242,7 +242,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 .forEach(
                         bw -> {
                             if (this.getMainMap().get(bw) != null) {
-                                ITransaction tx = this.getMainMap().get(bw).getTx().clone();
+                                Transaction tx = this.getMainMap().get(bw).getTx().clone();
                                 removedTxl.add((TX) tx);
 
                                 long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
@@ -300,7 +300,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
                         "TxPoolA0.remove:[{}] nonce:[{}]",
-                        ByteUtils.toHexString(tx.getTransactionHash()),
+                        ByteUtil.toHexString(tx.getTransactionHash()),
                         tx.getNonceBI().toString());
             }
 
@@ -477,7 +477,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 if (dependTx == null || snapshotSet.contains(dependTx)) {
                     boolean firstTx = true;
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
-                        ITransaction itx = this.getMainMap().get(bw).getTx();
+                        Transaction itx = this.getMainMap().get(bw).getTx();
 
                         cnt_txSz += itx.getEncoded().length;
                         cnt_nrg += itx.getNrgConsume();
@@ -524,7 +524,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         firstTx = true;
                         for (ByteArrayWrapper bw :
                                 nonPickedTx.get(ancestor).getValue().getTxList()) {
-                            ITransaction itx = this.getMainMap().get(bw).getTx();
+                            Transaction itx = this.getMainMap().get(bw).getTx();
 
                             cnt_txSz += itx.getEncoded().length;
                             cnt_nrg += itx.getNrgConsume();

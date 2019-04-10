@@ -8,7 +8,7 @@ import org.aion.vm.api.interfaces.IBloomFilter;
 /** Utility class for creating/operating bloom. */
 public class Bloom implements IBloomFilter {
 
-    public byte[] data = new byte[256];
+    public byte[] data = new byte[IBloomFilter.SIZE];
 
     public Bloom() {}
 
@@ -24,7 +24,7 @@ public class Bloom implements IBloomFilter {
         int mov3 = (((toBloom[4] & 0xff) & 7) << 8) + ((toBloom[5]) & 0xff);
 
         // # bits: 8 * 256 = 2048
-        byte[] data = new byte[256];
+        byte[] data = new byte[IBloomFilter.SIZE];
         Bloom bloom = new Bloom(data);
 
         ByteUtil.setBit(data, mov1, 1);

@@ -3,7 +3,6 @@ package org.aion.zero.impl.sync;
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
-import static org.aion.p2p.P2pConstant.MIN_NORMAL_PEERS;
 import static org.aion.zero.impl.sync.PeerState.Mode.BACKWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.FORWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.LIGHTNING;
@@ -23,12 +22,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.P2pConstant;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.sync.PeerState.Mode;
+import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -257,7 +257,7 @@ final class TaskImportBlocks implements Runnable {
 
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
-                    this.syncStats.updatePeerImportedBlocks(displayId, 1);
+                    this.syncStats.updatePeerBlocks(displayId, 1, BlockType.IMPORTED);
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
@@ -280,7 +280,8 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
+                    executors.submit(
+                            new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(
@@ -313,13 +314,9 @@ final class TaskImportBlocks implements Runnable {
                             }
                         case NORMAL:
                             {
-                                // requiring a minimum number of normal states
-                                if (countStates(getBestBlockNumber(), NORMAL, peerStates.values())
-                                        > MIN_NORMAL_PEERS) {
-                                    // switch to backward mode
-                                    state.setMode(BACKWARD);
-                                    state.setBase(b.getNumber());
-                                }
+                                // switch to backward mode
+                                state.setMode(BACKWARD);
+                                state.setBase(b.getNumber());
                                 break;
                             }
                         case BACKWARD:
@@ -455,12 +452,10 @@ final class TaskImportBlocks implements Runnable {
                     countStates(best, NORMAL, states) + countStates(best, THUNDER, states);
             long fastStates = countStates(best, LIGHTNING, states);
 
-            // requiring a minimum number of normal states
-            if (normalStates > MIN_NORMAL_PEERS
-                    // the fast vs normal states balance depends on the give coefficient
-                    && (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
-                            // with a maximum number of normal states
-                            || normalStates > MAX_NORMAL_PEERS)) {
+            // the fast vs normal states balance depends on the give coefficient
+            if (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
+                    // with a maximum number of normal states
+                    || normalStates > MAX_NORMAL_PEERS) {
 
                 // select the base to be used
                 long nextBase = selectBase(best, state.getLastBestBlock(), baseSet, chain);
@@ -581,7 +576,7 @@ final class TaskImportBlocks implements Runnable {
                 log.info("Compacting state database due to slow IO time.");
             }
             t1 = System.currentTimeMillis();
-            //this.chain.compactState();
+            this.chain.compactState();
             t2 = System.currentTimeMillis();
             if (log.isInfoEnabled()) {
                 log.info("Compacting state completed in {} ms.", t2 - t1);

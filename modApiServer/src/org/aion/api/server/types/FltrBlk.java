@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.base.type.IBlockSummary;
+import org.aion.interfaces.block.BlockSummary;
 
 public class FltrBlk extends Fltr {
 
@@ -9,7 +9,7 @@ public class FltrBlk extends Fltr {
     }
 
     @Override
-    public boolean onBlock(IBlockSummary b) {
+    public boolean onBlock(BlockSummary b) {
         add(new EvtBlk(b.getBlock()));
         return true;
     }

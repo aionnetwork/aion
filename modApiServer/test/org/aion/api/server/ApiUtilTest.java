@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 

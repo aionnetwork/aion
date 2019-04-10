@@ -1,10 +1,10 @@
 package org.aion.mcf.valid;
 
 import java.util.List;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 
-public abstract class GrandParentDependantBlockHeaderRule<BH extends IBlockHeader>
+public abstract class GrandParentDependantBlockHeaderRule<BH extends BlockHeader>
         extends AbstractValidRule {
 
     /**

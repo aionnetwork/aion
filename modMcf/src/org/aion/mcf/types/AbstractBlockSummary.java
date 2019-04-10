@@ -5,25 +5,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
-import org.aion.base.type.ITxExecSummary;
-import org.aion.base.util.Functional;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.functional.Functional;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxExecSummary;
+import org.aion.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 /** AbstractBlockSummary */
 public class AbstractBlockSummary<
-        BLK extends IBlock<?, ?>,
-        TX extends ITransaction,
+        BLK extends Block<?, ?>,
+        TX extends Transaction,
         TXR extends AbstractTxReceipt<TX>,
-        TXES extends ITxExecSummary> {
+        TXES extends TxExecSummary> {
 
     protected BLK block;
     protected Map<Address, BigInteger> rewards;
@@ -68,7 +67,7 @@ public class AbstractBlockSummary<
                 new Functional.Function<byte[], Address>() {
                     @Override
                     public Address apply(byte[] bytes) {
-                        return AionAddress.wrap(bytes);
+                        return Address.wrap(bytes);
                     }
                 },
                 new Functional.Function<byte[], BigInteger>() {

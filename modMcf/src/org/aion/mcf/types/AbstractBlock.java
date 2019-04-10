@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.rlp.RLP;
 
 /** Abstract Block class. */
-public abstract class AbstractBlock<BH extends IBlockHeader, TX extends AbstractTransaction>
-        implements IBlock<TX, BH> {
+public abstract class AbstractBlock<BH extends BlockHeader, TX extends AbstractTransaction>
+        implements Block<TX, BH> {
 
     protected BH header;
 
     protected List<TX> transactionsList = new CopyOnWriteArrayList<>();
 
     @Override
-    public boolean isEqual(IBlock<TX, BH> block) {
+    public boolean isEqual(Block<TX, BH> block) {
         return Arrays.equals(this.getHash(), block.getHash());
     }
 
@@ -31,7 +31,7 @@ public abstract class AbstractBlock<BH extends IBlockHeader, TX extends Abstract
      * @param block - possible a son of this
      * @return - true if this block is parent of param block
      */
-    public boolean isParentOf(IBlock<TX, BH> block) {
+    public boolean isParentOf(Block<TX, BH> block) {
         return Arrays.equals(this.getHash(), block.getParentHash());
     }
 

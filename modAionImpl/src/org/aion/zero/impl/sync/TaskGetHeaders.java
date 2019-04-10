@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.slf4j.Logger;
 
 /** @author chris */
@@ -172,7 +173,7 @@ final class TaskGetHeaders implements Runnable {
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
         this.p2p.send(node.getIdHash(), node.getIdShort(), rbh);
         stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
-        stats.updateHeadersRequest(node.getIdShort(), System.nanoTime());
+        stats.updateRequestTime(node.getIdShort(), System.nanoTime(), RequestType.HEADERS);
 
         // update timestamp
         state.setLastHeaderRequest(now);

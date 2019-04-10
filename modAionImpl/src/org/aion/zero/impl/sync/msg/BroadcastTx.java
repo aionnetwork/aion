@@ -2,7 +2,7 @@ package org.aion.zero.impl.sync.msg;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -14,9 +14,9 @@ import org.aion.zero.impl.sync.Act;
 /** @author chris */
 public final class BroadcastTx extends Msg {
 
-    private final List<? extends ITransaction> txl;
+    private final List<? extends Transaction> txl;
 
-    public BroadcastTx(final List<? extends ITransaction> _txl) {
+    public BroadcastTx(final List<? extends Transaction> _txl) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.txl = _txl;
     }
@@ -27,7 +27,7 @@ public final class BroadcastTx extends Msg {
     @Override
     public byte[] encode() {
         List<byte[]> encodedTx = new ArrayList<>();
-        for (ITransaction tx : txl) {
+        for (Transaction tx : txl) {
             encodedTx.add(tx.getEncoded());
         }
 

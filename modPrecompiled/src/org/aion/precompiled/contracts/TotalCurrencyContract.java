@@ -1,19 +1,18 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.BIUtil;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.biginteger.BIUtil;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
@@ -31,7 +30,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * @param ownerAddress
      */
     public TotalCurrencyContract(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address address,
             Address ownerAddress) {
         super(track);
@@ -97,7 +96,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         ByteArrayWrapper balanceData =
-                this.track.getStorageValue(this.address, new DataWord(input).toWrapper());
+                this.track.getStorageValue(this.address, new DataWordImpl(input).toWrapper());
         return new PrecompiledTransactionResult(
                 PrecompiledResultCode.SUCCESS, nrg - COST, balanceData.getData());
     }
@@ -114,7 +113,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
         // process input data
         int offset = 0;
-        DataWord chainId = new DataWord(input[0]);
+        DataWordImpl chainId = new DataWordImpl(input[0]);
         offset++;
 
         byte signum = input[1];
@@ -142,7 +141,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         // verify public key matches owner
-        if (!this.ownerAddress.equals(AionAddress.wrap(sig.getAddress()))) {
+        if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
@@ -173,11 +172,11 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         this.track.addStorageRow(
                 this.address,
                 chainId.toWrapper(),
-                wrapValueForPut(new DataWord(finalValue.toByteArray())));
+                wrapValueForPut(new DataWordImpl(finalValue.toByteArray())));
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
     }
 
-    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+    private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
         return (value.isZero()) ? value.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 }

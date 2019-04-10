@@ -33,20 +33,22 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -76,7 +78,7 @@ public class OpcodeIntegTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new AionAddress(deployerKey.getAddress());
+        deployer = new Address(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
     }
 
@@ -91,14 +93,14 @@ public class OpcodeIntegTest {
     // ====================== test repo & track flushing over multiple levels ======================
 
     @Test
-    public void testNoRevert() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testNoRevert() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("f854bb89"), new DataWord(6).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("f854bb89"), new DataWordImpl(6).getData());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -121,29 +123,29 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(12, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWord(6).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWord(3).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(7).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(8).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(9).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(10).getData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(11).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(8).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(9).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(10).getData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(11).getData());
     }
 
     @Test
-    public void testRevertAtBottomLevel() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testRevertAtBottomLevel() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("8256cff3"), new DataWord(5).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("8256cff3"), new DataWordImpl(5).getData());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -166,25 +168,25 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWord(3).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(7).getData());
     }
 
     @Test
-    public void testRevertAtMidLevel() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testRevertAtMidLevel() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("10462fd0"), new DataWord(7).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("10462fd0"), new DataWordImpl(7).getData());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -207,21 +209,21 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWord(7).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWord(6).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWordImpl(7).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(7).getData());
     }
 
     // ======================================= test CALLCODE =======================================
 
     @Test
-    public void testCallcodeStorage() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testCallcodeStorage() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger n = new BigInteger("7638523");
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -232,7 +234,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
         byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -300,8 +302,8 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testCallcodeActors() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testCallcodeActors() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
 
@@ -312,7 +314,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
         byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWord(0).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -342,8 +344,8 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testCallcodeValueTransfer() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testCallcodeValueTransfer() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
 
@@ -357,7 +359,7 @@ public class OpcodeIntegTest {
         BigInteger value = new BigInteger("2387653");
         BigInteger nonce = BigInteger.TWO;
         byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWord(0).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -385,8 +387,8 @@ public class OpcodeIntegTest {
     // ===================================== test DELEGATECALL =====================================
 
     @Test
-    public void testDelegateCallStorage() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testDelegateCallStorage() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
@@ -398,7 +400,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -460,8 +462,8 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testDelegateCallActors() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testDelegateCallActors() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
@@ -473,7 +475,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -499,8 +501,8 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testDelegateCallValueTransfer() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testDelegateCallValueTransfer() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
@@ -516,7 +518,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 new AionTransaction(
@@ -544,8 +546,8 @@ public class OpcodeIntegTest {
     // ============================= test CALL, CALLCODE, DELEGATECALL =============================
 
     @Test
-    public void testOpcodesActors() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testOpcodesActors() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         Address callerContract = deployContract(repo, "Caller", "Opcodes.sol", BigInteger.ZERO);
         Address calleeContract = deployContract(repo, "Callee", "Opcodes.sol", BigInteger.ZERO);
 
@@ -591,10 +593,10 @@ public class OpcodeIntegTest {
     // ======================================= test SUICIDE ========================================
 
     @Test
-    public void testSuicideRecipientExists() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testSuicideRecipientExists() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
-        Address recipient = new AionAddress(RandomUtils.nextBytes(Address.SIZE));
+        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
         repo.createAccount(recipient);
 
         Address contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
@@ -638,10 +640,10 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testSuicideRecipientNewlyCreated() throws IOException {
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+    public void testSuicideRecipientNewlyCreated() throws IOException, VMException {
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
-        Address recipient = new AionAddress(RandomUtils.nextBytes(Address.SIZE));
+        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
 
         Address contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
         repo.addBalance(contract, balance);
@@ -691,8 +693,8 @@ public class OpcodeIntegTest {
      * Deploys the contract named contractName in the file named contractFilename with value value.
      */
     private Address deployContract(
-            IRepositoryCache repo, String contractName, String contractFilename, BigInteger value)
-            throws IOException {
+            RepositoryCache repo, String contractName, String contractFilename, BigInteger value)
+            throws IOException, VMException {
 
         byte[] deployCode = ContractUtils.getContractDeployer(contractFilename, contractName);
         long nrg = 1_000_000;
@@ -715,7 +717,7 @@ public class OpcodeIntegTest {
      * <p>Returns the address of the newly deployed contract.
      */
     private Address deployContract(
-            IRepositoryCache repo,
+            RepositoryCache repo,
             AionTransaction tx,
             String contractName,
             String contractFilename,
@@ -723,7 +725,7 @@ public class OpcodeIntegTest {
             long nrg,
             long nrgPrice,
             BigInteger expectedNonce)
-            throws IOException {
+            throws IOException, VMException {
 
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
@@ -758,7 +760,7 @@ public class OpcodeIntegTest {
      * equal to whatever value was transferred to it when deployed.
      */
     private void checkStateOfNewContract(
-            IRepositoryCache repo,
+            RepositoryCache repo,
             String contractName,
             String contractFilename,
             Address contractAddr,
@@ -777,7 +779,7 @@ public class OpcodeIntegTest {
      * the prior balance minus the tx cost and the value transferred.
      */
     private void checkStateOfDeployer(
-            IRepositoryCache repo,
+            RepositoryCache repo,
             BigInteger priorBalance,
             long nrgUsed,
             long nrgPrice,
@@ -801,12 +803,12 @@ public class OpcodeIntegTest {
         assertArrayEquals(
                 Arrays.copyOfRange(data, Address.SIZE * 2, Address.SIZE * 3), origin.toBytes());
         assertArrayEquals(
-                Arrays.copyOfRange(data, data.length - DataWord.BYTES, data.length),
-                DataWord.ZERO.getData());
+                Arrays.copyOfRange(data, data.length - DataWordImpl.BYTES, data.length),
+                DataWordImpl.ZERO.getData());
     }
 
     private BulkExecutor getNewExecutor(
-            AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
+            AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutor(
                 details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());

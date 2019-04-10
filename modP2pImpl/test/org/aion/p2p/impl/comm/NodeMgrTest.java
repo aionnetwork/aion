@@ -111,7 +111,7 @@ public class NodeMgrTest {
         assertNotNull(nMgr.getInboundNode(channel.hashCode()));
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testTempNode() throws InterruptedException {
         nMgr.addTempNode(node);
         assertEquals(1, nMgr.tempNodesSize());
@@ -127,7 +127,7 @@ public class NodeMgrTest {
         assertEquals(2, nMgr.tempNodesSize());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTempNodeMax_128() throws InterruptedException {
 
         String[] nodes_max = new String[130];
@@ -148,7 +148,7 @@ public class NodeMgrTest {
         assertEquals(128, nMgr.tempNodesSize());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTempNodesTake() throws InterruptedException {
 
         int port2 = 30305;
@@ -179,7 +179,7 @@ public class NodeMgrTest {
         assertEquals(0, mgr.tempNodesSize());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTempNodeMax_Any() throws InterruptedException {
 
         NodeMgr mgr = new NodeMgr(p2p, 512, 512, LOGGER);
@@ -211,7 +211,7 @@ public class NodeMgrTest {
         assertEquals(512, mgr.tempNodesSize());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testAddInOutBoundNode() {
 
         INode node = nMgr.allocNode(ip1, 1);
@@ -227,7 +227,7 @@ public class NodeMgrTest {
         assertEquals(ip1, oNode.getIpStr());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testGetActiveNodesList() {
 
         NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
@@ -250,7 +250,7 @@ public class NodeMgrTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testDropActive() {
         INode node = nMgr.allocNode(ip2, 1);
 
@@ -272,7 +272,7 @@ public class NodeMgrTest {
         assertEquals(0, nMgr.activeNodesSize());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testBan() {
         INode node = nMgr.allocNode(ip2, 1);
 
@@ -291,7 +291,7 @@ public class NodeMgrTest {
         assertFalse(node.getPeerMetric().notBan());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTimeoutInbound() {
 
         INode node = nMgr.allocNode(ip2, 1);
@@ -308,7 +308,7 @@ public class NodeMgrTest {
         assertNull(nMgr.getInboundNode(channel.hashCode()));
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTimeoutOutbound() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
@@ -324,7 +324,7 @@ public class NodeMgrTest {
         assertNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testAllocate() {
         INode node = nMgr.allocNode(ip2, 1);
         assertNotNull(node);
@@ -336,7 +336,7 @@ public class NodeMgrTest {
         assertTrue(node.getIfFromBootList());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testGetOutBoundNode() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
@@ -352,7 +352,7 @@ public class NodeMgrTest {
         assertNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testMoveOutboundToActive() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
@@ -365,7 +365,7 @@ public class NodeMgrTest {
         assertEquals(node, activeNode);
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testMoveInboundToActive() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoInbound(node, UUID.fromString(nodeId1));
@@ -378,7 +378,7 @@ public class NodeMgrTest {
         assertEquals(node, activeNode);
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testTimeoutActive() throws InterruptedException {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoInbound(node, UUID.fromString(nodeId1));
@@ -394,7 +394,7 @@ public class NodeMgrTest {
         assertNull(nMgr.getActiveNode(node.getIdHash()));
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testGetActiveNodesMap() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoInbound(node, UUID.fromString(nodeId1));
@@ -406,7 +406,7 @@ public class NodeMgrTest {
         assertEquals(1, activeMap.size());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testNotAtOutBoundList() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
@@ -416,7 +416,7 @@ public class NodeMgrTest {
         assertTrue(nMgr.notAtOutboundList(node.getIdHash()));
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testGetRandom() {
         assertNull(nMgr.getRandom());
 
@@ -429,7 +429,7 @@ public class NodeMgrTest {
         assertEquals(node, nodeRandom);
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testMovePeerToActive() {
         INode node = nMgr.allocNode(ip2, 1);
         node.setChannel(channel);
@@ -437,7 +437,7 @@ public class NodeMgrTest {
         assertTrue(nMgr.getActiveNodesMap().isEmpty());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testMovePeerToActive2() {
         nMgr = new NodeMgr(p2p, 2, 2, LOGGER);
         INode node = nMgr.allocNode(ip2, 1);
@@ -456,7 +456,7 @@ public class NodeMgrTest {
         assertEquals(2, nMgr.getActiveNodesMap().size());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testMovePeerToActive3() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
@@ -467,7 +467,7 @@ public class NodeMgrTest {
         assertTrue(nMgr.getActiveNodesMap().isEmpty());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testShutDown() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.randomUUID());
@@ -486,7 +486,7 @@ public class NodeMgrTest {
         assertTrue(nMgr.getActiveNodesMap().isEmpty());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testDumpNodeInfo() {
         String dump = nMgr.dumpNodeInfo("testId", false);
         assertNotNull(dump);
@@ -502,7 +502,7 @@ public class NodeMgrTest {
         assertTrue(dump3.length() > dump2.length());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testDumpNodeInfo2() {
         String dump = nMgr.dumpNodeInfo("testId", false);
         assertNotNull(dump);
@@ -529,7 +529,7 @@ public class NodeMgrTest {
         assertEquals(dump3.length(), dump2.length());
     }
 
-    @Test
+    @Test(timeout = 30_000)
     public void testDumpNodeInfo3() {
         String dump = nMgr.dumpNodeInfo("testId", false);
         assertNotNull(dump);
@@ -542,9 +542,9 @@ public class NodeMgrTest {
         assertTrue(dump2.length() > dump.length());
     }
 
-    @Test
+    @Test(timeout = 60_000)
     public void testConcurrency() throws InterruptedException {
-        AtomicInteger count = new AtomicInteger(1000);
+        AtomicInteger count = new AtomicInteger(100);
 
         AtomicBoolean start = new AtomicBoolean(false);
 
@@ -562,7 +562,7 @@ public class NodeMgrTest {
                                 e.printStackTrace();
                             }
                             try {
-                                Thread.sleep(r.nextInt(5) + 5);
+                                Thread.sleep(r.nextInt(5) + 20);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -598,7 +598,7 @@ public class NodeMgrTest {
                         () -> {
                             while (start.get()) {
                                 try {
-                                    Thread.sleep(15);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -623,7 +623,7 @@ public class NodeMgrTest {
                         () -> {
                             while (start.get()) {
                                 try {
-                                    Thread.sleep(15);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -670,7 +670,7 @@ public class NodeMgrTest {
                                 count.getAndDecrement();
 
                                 try {
-                                    Thread.sleep(8);
+                                    Thread.sleep(15);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }

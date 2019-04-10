@@ -3,18 +3,18 @@ package org.aion.mcf.core;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.util.Functional;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.interfaces.functional.Functional;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.keyvalue.AbstractKeyValue;
 
 public class TxTouchedStorage {
 
-    public static class Entry extends AbstractKeyValue<DataWord, DataWord> {
+    public static class Entry extends AbstractKeyValue<DataWordImpl, DataWordImpl> {
 
         private boolean changed;
 
-        public Entry(DataWord key, DataWord value, boolean changed) {
+        public Entry(DataWordImpl key, DataWordImpl value, boolean changed) {
             super(key, value);
             this.changed = changed;
         }
@@ -24,12 +24,12 @@ public class TxTouchedStorage {
         }
 
         @Override
-        protected DataWord setKey(DataWord key) {
+        protected DataWordImpl setKey(DataWordImpl key) {
             return super.setKey(key);
         }
 
         @Override
-        protected DataWord setValue(DataWord value) {
+        protected DataWordImpl setValue(DataWordImpl value) {
             return super.setValue(value);
         }
 
@@ -42,7 +42,7 @@ public class TxTouchedStorage {
         }
     }
 
-    private Map<DataWord, Entry> entries = new HashMap<>();
+    private Map<DataWordImpl, Entry> entries = new HashMap<>();
 
     public TxTouchedStorage() {}
 
@@ -60,28 +60,28 @@ public class TxTouchedStorage {
         return entries.put(entry.getKey(), entry);
     }
 
-    private Entry add(Map.Entry<DataWord, DataWord> entry, boolean changed) {
+    private Entry add(Map.Entry<DataWordImpl, DataWordImpl> entry, boolean changed) {
         return add(new Entry(entry.getKey(), entry.getValue(), changed));
     }
 
-    public void addReading(Map<DataWord, DataWord> entries) {
+    public void addReading(Map<DataWordImpl, DataWordImpl> entries) {
         if (MapUtils.isEmpty(entries)) return;
 
-        for (Map.Entry<DataWord, DataWord> entry : entries.entrySet()) {
+        for (Map.Entry<DataWordImpl, DataWordImpl> entry : entries.entrySet()) {
             if (!this.entries.containsKey(entry.getKey())) add(entry, false);
         }
     }
 
-    public void addWriting(Map<DataWord, DataWord> entries) {
+    public void addWriting(Map<DataWordImpl, DataWordImpl> entries) {
         if (MapUtils.isEmpty(entries)) return;
 
-        for (Map.Entry<DataWord, DataWord> entry : entries.entrySet()) {
+        for (Map.Entry<DataWordImpl, DataWordImpl> entry : entries.entrySet()) {
             add(entry, true);
         }
     }
 
-    private Map<DataWord, DataWord> keyValues(Functional.Function<Entry, Boolean> filter) {
-        Map<DataWord, DataWord> result = new HashMap<>();
+    private Map<DataWordImpl, DataWordImpl> keyValues(Functional.Function<Entry, Boolean> filter) {
+        Map<DataWordImpl, DataWordImpl> result = new HashMap<>();
         for (Entry entry : getEntries()) {
             if (filter == null || filter.apply(entry)) {
                 result.put(entry.getKey(), entry.getValue());
@@ -90,7 +90,7 @@ public class TxTouchedStorage {
         return result;
     }
 
-    public Map<DataWord, DataWord> getChanged() {
+    public Map<DataWordImpl, DataWordImpl> getChanged() {
         return keyValues(
                 new Functional.Function<Entry, Boolean>() {
                     @Override
@@ -100,7 +100,7 @@ public class TxTouchedStorage {
                 });
     }
 
-    public Map<DataWord, DataWord> getReadOnly() {
+    public Map<DataWordImpl, DataWordImpl> getReadOnly() {
         return keyValues(
                 new Functional.Function<Entry, Boolean>() {
                     @Override
@@ -110,7 +110,7 @@ public class TxTouchedStorage {
                 });
     }
 
-    public Map<DataWord, DataWord> getAll() {
+    public Map<DataWordImpl, DataWordImpl> getAll() {
         return keyValues(null);
     }
 

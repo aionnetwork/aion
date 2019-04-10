@@ -1,12 +1,12 @@
 package org.aion.mcf.types;
 
 import java.util.Arrays;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.util.conversions.Hex;
 
 /** AbstractBlockHeaderWrapper */
-public abstract class AbstractBlockHeaderWrapper<BH extends IBlockHeader> {
+public abstract class AbstractBlockHeaderWrapper<BH extends BlockHeader> {
 
     protected BH header;
 

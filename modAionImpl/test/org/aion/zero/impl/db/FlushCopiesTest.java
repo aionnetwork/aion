@@ -5,15 +5,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepository;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.Repository;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.interfaces.Address;
-import org.aion.zero.db.AionRepositoryCache;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -21,11 +20,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests the {@link org.aion.zero.db.AionRepositoryCache#flushCopiesTo(IRepository, boolean)}
+ * Tests the {@link AionRepositoryCache#flushCopiesTo(Repository, boolean)}
  * method.
  */
 public class FlushCopiesTest {
-    private IRepository repository;
+    private Repository repository;
 
     @Before
     public void setup() {
@@ -45,7 +44,7 @@ public class FlushCopiesTest {
     public void testAccountStateObjectReference() {
         AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAionAddress();
+        Address account = randomAddress();
         BigInteger nonce = BigInteger.TEN;
         BigInteger balance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -79,7 +78,7 @@ public class FlushCopiesTest {
     public void testContractDetailsObjectReference() {
         AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAionAddress();
+        Address account = randomAddress();
         BigInteger nonce = BigInteger.TEN;
         BigInteger balance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -88,7 +87,7 @@ public class FlushCopiesTest {
 
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
-        ByteArrayWrapper key = new DataWord(5).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(5).toWrapper();
         ByteArrayWrapper value = new DoubleDataWord(13429765314L).toWrapper();
 
         repositoryChild.createAccount(account);
@@ -99,8 +98,8 @@ public class FlushCopiesTest {
         repositoryChild.flushCopiesTo(this.repository, false);
 
         // Compare object references.
-        IContractDetails detailsInChild = repositoryChild.getContractDetails(account);
-        IContractDetails detailsInParent = this.repository.getContractDetails(account);
+        ContractDetails detailsInChild = repositoryChild.getContractDetails(account);
+        ContractDetails detailsInParent = this.repository.getContractDetails(account);
 
         // These references must be different.
         assertNotSame(detailsInChild, detailsInParent);
@@ -115,7 +114,7 @@ public class FlushCopiesTest {
     public void testSiblingStateModificationsAreIndependentOfOneAnother() {
         AionRepositoryCache firstChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAionAddress();
+        Address account = randomAddress();
         BigInteger firstNonce = BigInteger.TEN;
         BigInteger firstBalance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -126,7 +125,7 @@ public class FlushCopiesTest {
 
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
-        ByteArrayWrapper firstKey = new DataWord(5).toWrapper();
+        ByteArrayWrapper firstKey = new DataWordImpl(5).toWrapper();
         ByteArrayWrapper firstValue = new DoubleDataWord(13429765314L).toWrapper();
 
         firstChild.createAccount(account);
@@ -143,7 +142,7 @@ public class FlushCopiesTest {
 
         BigInteger secondNonce = firstNonce.multiply(BigInteger.TWO);
         ByteArrayWrapper secondKey = new DoubleDataWord(289356).toWrapper();
-        ByteArrayWrapper secondValue = new DataWord(23674).toWrapper();
+        ByteArrayWrapper secondValue = new DataWordImpl(23674).toWrapper();
 
         secondChild.setNonce(account, secondNonce);
         secondChild.addBalance(account, firstBalance);
@@ -156,9 +155,9 @@ public class FlushCopiesTest {
         assertArrayEquals(firstStorageHash, firstChild.getContractDetails(account).getStorageHash());
     }
 
-    private Address randomAionAddress() {
+    private Address randomAddress() {
         byte[] bytes = RandomUtils.nextBytes(Address.SIZE);
         bytes[0] = (byte) 0xa0;
-        return new AionAddress(bytes);
+        return new Address(bytes);
     }
 }
