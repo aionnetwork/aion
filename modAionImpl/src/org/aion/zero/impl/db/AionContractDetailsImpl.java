@@ -349,9 +349,15 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
             byte[] rlpAddress = RLP.encodeElement(address.toBytes());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-            byte[] rlpStorageRoot =
-                    RLP.encodeElement(
-                            externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
+            byte[] rlpStorageRoot;
+            // encoding for AVM
+            if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+                rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
+            } else {
+                rlpStorageRoot =
+                        RLP.encodeElement(
+                                externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
+            }
             byte[] rlpStorage =
                     RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
             byte[][] codes = new byte[getCodes().size()][];
