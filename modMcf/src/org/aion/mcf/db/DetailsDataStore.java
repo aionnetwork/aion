@@ -81,7 +81,7 @@ public class DetailsDataStore<
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
 
         // Put into cache.
-        byte[] rawDetails = contractDetails == null ? null : contractDetails.getEncoded();
+        byte[] rawDetails = contractDetails.getEncoded();
         detailsSrc.put(key.toBytes(), rawDetails);
 
         contractDetails.syncStorage();

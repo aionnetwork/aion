@@ -52,6 +52,9 @@ public class AionRepositoryImpl
     // inferred contract information not used for consensus
     private ObjectDataSource<ContractInformation> contractInfoSource;
 
+    // inferred the contract executing code not used for consensus.
+    private ByteArrayKeyValueDatabase contractTransformedCode;
+
     /**
      * used by getSnapShotTo
      *
@@ -89,6 +92,8 @@ public class AionRepositoryImpl
             this.contractInfoSource =
                     new ObjectDataSource<>(
                             contractIndexDatabase, ContractInformation.RLP_SERIALIZER);
+
+            this.contractTransformedCode = contractPerformCodeDatabase;
 
             // Setup world trie.
             worldState = createStateTrie();
@@ -208,6 +213,24 @@ public class AionRepositoryImpl
             final Address address, final ContractDetails contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
+
+        //TODO: add vmtype check after merge PR867
+        if (contractPerformCodeDatabase != null) {
+            Optional<byte[]> code = contractPerformCodeDatabase.get(address.toBytes());
+            byte[] tc = contractDetails.getTransformedCode();
+            if (code.isPresent()) {
+                if (tc == null) {
+                    contractPerformCodeDatabase.delete(address.toBytes());
+                }
+            } else {
+                if (tc != null) {
+                    contractPerformCodeDatabase.put(
+                        address.toBytes(), contractDetails.getTransformedCode());
+                }
+            }
+        }
+
+
     }
 
     @Override
@@ -377,6 +400,18 @@ public class AionRepositoryImpl
     }
 
     @Override
+    public byte[] getTransformedCode(Address address) {
+        AccountState accountState = getAccountState(address);
+
+        if (accountState == null) {
+            return null;
+        }
+
+        ContractDetails details = getContractDetails(address);
+        return (details == null) ? null : details.getTransformedCode();
+    }
+
+    @Override
     public BigInteger getNonce(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
@@ -415,7 +450,12 @@ public class AionRepositoryImpl
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot);
+                Optional<byte[]> code = contractTransformedCode.get(address.toBytes());
+                if (code.isPresent()) {
+                    details.setTransformedCode(code.get());
+                }
             }
+
             return details;
         } finally {
             rwLock.readLock().unlock();
@@ -482,7 +522,10 @@ public class AionRepositoryImpl
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
-        // details.setAddress(addr);
+        Optional<byte[]> code = contractTransformedCode.get(address.toBytes());
+        if (code.isPresent()) {
+            details.setTransformedCode(code.get());
+        }
 
         cacheAccounts.put(address, account);
         cacheDetails.put(address, details);
@@ -570,6 +613,7 @@ public class AionRepositoryImpl
             AionRepositoryImpl repo = new AionRepositoryImpl();
             repo.blockStore = blockStore;
             repo.contractInfoSource = contractInfoSource;
+            repo.contractTransformedCode = contractTransformedCode;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
@@ -728,6 +772,17 @@ public class AionRepositoryImpl
             } catch (Exception e) {
                 LOGGEN.error(
                         "Exception occurred while closing the pendingTxCacheDatabase store.", e);
+            }
+
+            try {
+                if (contractTransformedCode != null) {
+                    contractTransformedCode.close();
+                    LOGGEN.info("contractTransformedCode store closed.");
+                    contractTransformedCode = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error(
+                        "Exception occurred while closing the contractTransformedCode store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -942,6 +997,20 @@ public class AionRepositoryImpl
             return TransactionTypes.FVM_CREATE_CODE;
         } else {
             return ci.getVmUsed();
+        }
+    }
+
+    @Override
+    public void setTransformedCode(Address contractAddr, byte[] code) {
+        AccountState accountState = getAccountState(contractAddr);
+
+        if (accountState == null) {
+            return;
+        }
+
+        ContractDetails details = getContractDetails(contractAddr);
+        if (details != null) {
+            details.setTransformedCode(code);
         }
     }
 

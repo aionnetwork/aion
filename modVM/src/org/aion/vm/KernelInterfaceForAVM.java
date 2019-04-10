@@ -6,7 +6,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -72,6 +71,16 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public byte[] getCode(Address address) {
         return this.repositoryCache.getCode(address);
+    }
+
+    @Override
+    public byte[] getTransformedCode(Address address) {
+        return this.repositoryCache.getTransformedCode(address);
+    }
+
+    @Override
+    public void setTransformedCode(Address address, byte[] transformedCode) {
+        this.repositoryCache.setTransformedCode(address, transformedCode);
     }
 
     @Override
@@ -162,22 +171,22 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public boolean accountNonceEquals(Address address, BigInteger nonce) {
-        return (this.isLocalCall) ? true : getNonce(address).equals(nonce);
+        return (this.isLocalCall) || getNonce(address).equals(nonce);
     }
 
     @Override
     public boolean accountBalanceIsAtLeast(Address address, BigInteger amount) {
-        return (this.isLocalCall) ? true : getBalance(address).compareTo(amount) >= 0;
+        return (this.isLocalCall) || getBalance(address).compareTo(amount) >= 0;
     }
 
     @Override
     public boolean isValidEnergyLimitForCreate(long energyLimit) {
-        return (this.isLocalCall) ? true : TxNrgRule.isValidNrgContractCreate(energyLimit);
+        return (this.isLocalCall) || TxNrgRule.isValidNrgContractCreate(energyLimit);
     }
 
     @Override
     public boolean isValidEnergyLimitForNonCreate(long energyLimit) {
-        return (this.isLocalCall) ? true : TxNrgRule.isValidNrgTx(energyLimit);
+        return (this.isLocalCall) || TxNrgRule.isValidNrgTx(energyLimit);
     }
 
     @Override

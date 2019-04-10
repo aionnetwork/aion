@@ -86,6 +86,18 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
+    public byte[] getTransformedCode(Address address) {
+        //Todo:implement it for fvm later.
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setTransformedCode(Address address, byte[] code) {
+        //Todo:implement it for fvm later.
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void putObjectGraph(Address contract, byte[] graph) {
         //Todo: implement it when avm is ready.
     }

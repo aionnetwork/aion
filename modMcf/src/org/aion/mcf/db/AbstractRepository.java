@@ -56,6 +56,8 @@ public abstract class AbstractRepository<
     protected static final String STATE_ARCHIVE_DB = Names.STATE_ARCHIVE;
     protected static final String PENDING_TX_POOL_DB = Names.TX_POOL;
     protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
+    protected static final String CONTRACT_PERFORM_CODE_DB = Names.CONTRACT_PERFORM_CODE;
+
 
     // State trie.
     protected Trie worldState;
@@ -76,6 +78,8 @@ public abstract class AbstractRepository<
     protected ByteArrayKeyValueDatabase stateArchiveDatabase;
     protected ByteArrayKeyValueDatabase txPoolDatabase;
     protected ByteArrayKeyValueDatabase pendingTxCacheDatabase;
+    protected ByteArrayKeyValueDatabase contractPerformCodeDatabase;
+
 
     protected Collection<ByteArrayKeyValueDatabase> databaseGroup;
 
@@ -196,6 +200,17 @@ public abstract class AbstractRepository<
                 throw newException(CONTRACT_INDEX_DB, sharedProps);
             }
             databaseGroup.add(contractIndexDatabase);
+
+            // getting contract perform code specific properties
+            sharedProps = cfg.getDatabaseConfig(CONTRACT_PERFORM_CODE_DB);
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+            sharedProps.setProperty(Props.DB_NAME, CONTRACT_PERFORM_CODE_DB);
+            this.contractPerformCodeDatabase = connectAndOpen(sharedProps, LOG);
+            if (contractPerformCodeDatabase == null || contractPerformCodeDatabase.isClosed()) {
+                throw newException(CONTRACT_PERFORM_CODE_DB, sharedProps);
+            }
+            databaseGroup.add(contractPerformCodeDatabase);
 
             // getting details specific properties
             sharedProps = cfg.getDatabaseConfig(DETAILS_DB);

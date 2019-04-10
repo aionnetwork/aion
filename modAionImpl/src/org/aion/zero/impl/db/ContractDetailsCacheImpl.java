@@ -26,6 +26,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             } else {
                 setCode(origContract.getCode());
             }
+            this.origContract.setTransformedCode(origContract.getTransformedCode());
         }
     }
 
@@ -38,6 +39,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         copy.setDeleted(cache.isDeleted());
         copy.prune = cache.prune;
         copy.detailsInMemoryStorageLimit = cache.detailsInMemoryStorageLimit;
+        if (cache.getTransformedCode() != null) {
+            copy.setTransformedCode(cache.getTransformedCode().clone());
+        }
         return copy;
     }
 
@@ -188,6 +192,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         } else {
             origContract.setCode(getCode());
         }
+
+        origContract.setTransformedCode(getTransformedCode());
         origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
@@ -239,6 +245,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         copy.setCodes(getDeepCopyOfCodes());
         copy.setDirty(this.isDirty());
         copy.setDeleted(this.isDeleted());
+        if (this.getTransformedCode() != null) {
+            copy.setTransformedCode(this.getTransformedCode().clone());
+        }
         return copy;
     }
 
