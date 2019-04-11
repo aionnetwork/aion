@@ -61,6 +61,7 @@ pipeline {
         always {
             sh('([ -d FunctionalTests ] && cp -r FunctionalTests/report/FunctionalTests report/) || true')
             junit "report/**/*.xml"
+            cleanWs()
     }
 
     success {
