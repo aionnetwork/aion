@@ -1,9 +1,11 @@
 package org.aion.zero.impl.db;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
@@ -23,6 +26,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.ds.ObjectDataSource;
+import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -30,8 +34,12 @@ import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.p2p.V1Constants;
 import org.aion.precompiled.ContractFactory;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.RLPList;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
@@ -803,8 +811,7 @@ public class AionRepositoryImpl
     }
 
     /**
-     * Retrieves the underlying state database that sits below all caches. This is usually provided
-     * by {@link org.aion.db.impl.leveldb.LevelDB} or {@link org.aion.db.impl.leveldb.LevelDB}.
+     * Retrieves the underlying state database that sits below all caches.
      *
      * <p>Note that referencing the state database directly is unsafe, and should only be used for
      * debugging and testing purposes.
@@ -820,8 +827,7 @@ public class AionRepositoryImpl
     }
 
     /**
-     * Retrieves the underlying details database that sits below all caches. This is usually
-     * provided by {@link org.aion.db.impl.mockdb.MockDB} or {@link org.aion.db.impl.mockdb.MockDB}.
+     * Retrieves the underlying details database that sits below all caches.
      *
      * <p>Note that referencing the state database directly is unsafe, and should only be used for
      * debugging and testing purposes.
@@ -934,6 +940,69 @@ public class AionRepositoryImpl
             Trie trie = new TrieImpl(db);
             return trie.getReferencedTrieNodes(value, limit);
         }
+    }
+
+    @VisibleForTesting
+    public byte[] dumpImportableState(byte[] root, int limit, DatabaseType dbType) {
+        Map<ByteArrayWrapper, byte[]> refs = getReferencedTrieNodes(root, limit, dbType);
+
+        byte[][] elements = new byte[refs.size()][];
+        int i = 0;
+        for (ByteArrayWrapper ref : refs.keySet()) {
+            elements[i] =
+                    RLP.encodeList(
+                            RLP.encodeElement(ref.getData()),
+                            RLP.encodeElement(getTrieNode(ref.getData(), dbType)));
+            i++;
+        }
+        return RLP.encodeList(elements);
+    }
+
+    @VisibleForTesting
+    public void loadImportableState(byte[] fullState, DatabaseType dbType) {
+        RLPList data = RLP.decode2(fullState);
+        RLPList elements = (RLPList) data.get(0);
+        for (RLPElement element : elements) {
+            data = (RLPList) element;
+            importTrieNode(data.get(0).getRLPData(), data.get(1).getRLPData(), dbType);
+        }
+    }
+
+    @VisibleForTesting
+    public List<byte[]> getReferencedStorageNodes(byte[] value, int limit, Address contract) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        } else {
+            byte[] subKey = h256(("details-storage/" + contract.toString()).getBytes());
+
+            ByteArrayKeyValueStore db =
+                    new XorDataSource(selectDatabase(DatabaseType.STORAGE), subKey);
+
+            Trie trie = new SecureTrie(db);
+            Map<ByteArrayWrapper, byte[]> refs = trie.getReferencedTrieNodes(value, limit);
+            List<byte[]> converted = new ArrayList<>();
+            for (ByteArrayWrapper key : refs.keySet()) {
+                converted.add(ByteUtil.xorAlignRight(key.getData(), subKey));
+            }
+            return converted;
+        }
+    }
+
+    @VisibleForTesting
+    public byte[] dumpImportableStorage(byte[] root, int limit, Address contract) {
+        List<byte[]> refs = getReferencedStorageNodes(root, limit, contract);
+
+        byte[][] elements = new byte[refs.size()][];
+        int i = 0;
+        for (byte[] ref : refs) {
+            System.out.println("dump-key:" + Hex.toHexString(ref));
+            elements[i] =
+                    RLP.encodeList(
+                            RLP.encodeElement(ref),
+                            RLP.encodeElement(getTrieNode(ref, DatabaseType.STORAGE)));
+            i++;
+        }
+        return RLP.encodeList(elements);
     }
 
     /**

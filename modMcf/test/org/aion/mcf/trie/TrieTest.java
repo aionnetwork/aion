@@ -2,7 +2,6 @@ package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.util.bytes.ByteUtil.hexStringToBytes;
 import static org.aion.util.bytes.ByteUtil.intToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -19,10 +18,10 @@ import java.util.Random;
 import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.rlp.Value;
+import org.aion.types.ByteArrayWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -954,6 +953,24 @@ public class TrieTest {
     }
 
     @Test
+    public void testGetMissingNodes_wCompleteTrie_wStartFromValue() {
+        MockDB mockDB = new MockDB("temp");
+        mockDB.open();
+        TrieImpl trie = new TrieImpl(mockDB);
+
+        for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
+            trie.update(e.getKey().getData(), e.getValue());
+        }
+        trie.getCache().commit(true);
+
+        byte[] root = trie.getRootHash();
+        byte[] value = mockDB.get(root).get();
+
+        trie = new TrieImpl(mockDB);
+        assertThat(trie.getMissingNodes(value)).isEmpty();
+    }
+
+    @Test
     public void testGetMissingNodes_wIncompleteTrie() {
         MockDB mockDB = new MockDB("temp");
         mockDB.open();
@@ -965,16 +982,18 @@ public class TrieTest {
         trie.getCache().commit(true);
 
         byte[] root = trie.getRootHash();
-        System.out.println(trie.getTrieDump(root));
+        // System.out.println(trie.getTrieDump(root));
 
         // removing two of the nodes from the trie
         Set<ByteArrayWrapper> expected = new HashSet<>();
         expected.add(
-                new ByteArrayWrapper(hexStringToBytes(
-                        "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
+                new ByteArrayWrapper(
+                        Hex.decode(
+                                "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
         expected.add(
-                new ByteArrayWrapper(hexStringToBytes(
-                        "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
+                new ByteArrayWrapper(
+                        Hex.decode(
+                                "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
             mockDB.delete(key.getData());
@@ -983,6 +1002,43 @@ public class TrieTest {
         trie = new TrieImpl(mockDB);
 
         Set<ByteArrayWrapper> missing = trie.getMissingNodes(root);
+        assertThat(missing).hasSize(2);
+        assertThat(missing).isEqualTo(expected);
+    }
+
+    @Test
+    public void testGetMissingNodes_wIncompleteTrie_wStartFromValue() {
+        MockDB mockDB = new MockDB("temp");
+        mockDB.open();
+        TrieImpl trie = new TrieImpl(mockDB);
+
+        for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
+            trie.update(e.getKey().getData(), e.getValue());
+        }
+        trie.getCache().commit(true);
+
+        byte[] root = trie.getRootHash();
+        // System.out.println(trie.getTrieDump(root));
+        byte[] value = mockDB.get(root).get();
+
+        // removing two of the nodes from the trie
+        Set<ByteArrayWrapper> expected = new HashSet<>();
+        expected.add(
+                new ByteArrayWrapper(
+                        Hex.decode(
+                                "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
+        expected.add(
+                new ByteArrayWrapper(
+                        Hex.decode(
+                                "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
+
+        for (ByteArrayWrapper key : expected) {
+            mockDB.delete(key.getData());
+        }
+
+        trie = new TrieImpl(mockDB);
+
+        Set<ByteArrayWrapper> missing = trie.getMissingNodes(value);
         assertThat(missing).hasSize(2);
         assertThat(missing).isEqualTo(expected);
     }
@@ -1038,21 +1094,27 @@ public class TrieTest {
             v = Value.fromRlpEncoded(value);
 
             // empty for limit <= 0
+            assertThat(trie.getReferencedTrieNodes(key.getData(), -2)).isEmpty();
             assertThat(trie.getReferencedTrieNodes(value, -2)).isEmpty();
+            assertThat(trie.getReferencedTrieNodes(key.getData(), 0)).isEmpty();
             assertThat(trie.getReferencedTrieNodes(value, 0)).isEmpty();
 
             // partial size = 1 for non-leafs and 0 for leafs
             assertThat(trie.getReferencedTrieNodes(value, 1).size()).isAtMost(1);
+            assertThat(trie.getReferencedTrieNodes(key.getData(), 1).size()).isAtMost(1);
 
             if (v.isList() && v.asList().size() > 2) {
                 // partial size = 4 for branch node
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isEqualTo(4);
+                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isEqualTo(5);
             } else if (v.isList()) {
                 // at most whole list
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isAtMost(5);
+                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isAtMost(6);
             } else {
                 // partial size = 0 for leafs
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isAtMost(0);
+                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isAtMost(0);
             }
         }
     }
