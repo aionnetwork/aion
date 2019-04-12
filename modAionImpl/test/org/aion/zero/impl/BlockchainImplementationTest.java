@@ -6,10 +6,13 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChainWithoutT
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
@@ -23,6 +26,7 @@ import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -35,6 +39,13 @@ public class BlockchainImplementationTest {
 
     private static final List<ECKey> accounts = BlockchainTestUtils.generateAccounts(10);
     private static final int MAX_TX_PER_BLOCK = 30;
+
+    @BeforeClass
+    public static void beforeClass() {
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("ROOT", "ERROR");
+        AionLoggerFactory.init(cfg);
+    }
 
     @Before
     public void setup() {

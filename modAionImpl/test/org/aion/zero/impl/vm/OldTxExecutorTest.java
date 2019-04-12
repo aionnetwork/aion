@@ -30,7 +30,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.aion.crypto.ECKeyFac;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
@@ -57,6 +59,7 @@ import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -68,6 +71,13 @@ import org.slf4j.Logger;
 public class OldTxExecutorTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private StandaloneBlockchain blockchain;
+
+    @BeforeClass
+    public static void beforeClass() {
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("ROOT", "ERROR");
+        AionLoggerFactory.init(cfg);
+    }
 
     @Before
     public void setup() {
