@@ -2,14 +2,6 @@ package org.aion.precompiled;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import org.aion.types.Address;
-import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.api.interfaces.TransactionResult;
@@ -21,6 +13,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
     private PrecompiledResultCode code;
     private byte[] output;
     private long energyRemaining;
+    private PrecompiledSideEffects sideEffects;
 
     /**
      * Constructs a new {@code TransactionResult} with no side-effects, with zero energy remaining,
@@ -31,6 +24,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
         this.output = new byte[0];
         this.energyRemaining = 0;
         this.kernel = null;
+        this.sideEffects = new PrecompiledSideEffects();
     }
 
     /**
@@ -45,6 +39,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
         this.kernel = null;
+        this.sideEffects = new PrecompiledSideEffects();
     }
 
     /**
@@ -60,6 +55,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
         this.kernel = null;
+        this.sideEffects = new PrecompiledSideEffects();
     }
 
     /**
@@ -163,83 +159,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
 
     @Override
     public TransactionSideEffects getSideEffects() {
-        return new TransactionSideEffects() {
-
-            private Set<Address> deleteAccounts = new HashSet<>();
-            private List<InternalTransactionInterface> internalTxs = new ArrayList<>();
-            private List<IExecutionLog> logs = new ArrayList<>();
-
-            @Override
-            public void merge(TransactionSideEffects other) {
-                addInternalTransactions(other.getInternalTransactions());
-                addAllToDeletedAddresses(other.getAddressesToBeDeleted());
-                addLogs(other.getExecutionLogs());
-            }
-
-            @Override
-            public void markAllInternalTransactionsAsRejected() {
-                for (InternalTransactionInterface tx : getInternalTransactions()) {
-                    tx.markAsRejected();
-                }
-            }
-
-            @Override
-            public void addInternalTransaction(InternalTransactionInterface tx) {
-                internalTxs.add(tx);
-            }
-
-            @Override
-            public void addInternalTransactions(List<InternalTransactionInterface> txs) {
-                for (InternalTransactionInterface tx : txs) {
-                    if (tx != null) {
-                        this.internalTxs.add(tx);
-                    }
-                }
-            }
-
-            @Override
-            public void addToDeletedAddresses(Address address) {
-                deleteAccounts.add(address);
-            }
-
-            @Override
-            public void addAllToDeletedAddresses(Collection<Address> addresses) {
-                for (Address addr : addresses) {
-                    if (addr != null) {
-                        deleteAccounts.add(addr);
-                    }
-                }
-            }
-
-            @Override
-            public void addLog(IExecutionLog log) {
-                logs.add(log);
-            }
-
-            @Override
-            public void addLogs(Collection<IExecutionLog> logs) {
-                for (IExecutionLog log : logs) {
-                    if (log != null) {
-                        this.logs.add(log);
-                    }
-                }
-            }
-
-            @Override
-            public List<InternalTransactionInterface> getInternalTransactions() {
-                return internalTxs;
-            }
-
-            @Override
-            public List<Address> getAddressesToBeDeleted() {
-                return new ArrayList<>(deleteAccounts);
-            }
-
-            @Override
-            public List<IExecutionLog> getExecutionLogs() {
-                return logs;
-            }
-        };
+        return sideEffects;
     }
 
     @Override
