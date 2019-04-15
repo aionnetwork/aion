@@ -6,7 +6,7 @@ import java.util.Set;
 public class TransactionTypes {
     public static final byte DEFAULT = 0x00;
     public static final byte FVM_CREATE_CODE = 0x01;
-    public static final byte AVM_CREATE_CODE = 0x0f;
+    public static final byte AVM_CREATE_CODE = 0x02;
 
     /** Set of transaction types allowed by any of the Virtual Machine implementations. */
     public static final Set<Byte> ALL = Set.of(DEFAULT, FVM_CREATE_CODE, AVM_CREATE_CODE);
@@ -16,4 +16,7 @@ public class TransactionTypes {
 
     /** Set of transaction types allowed by the Aion Virtual Machine implementation. */
     public static final Set<Byte> AVM = Set.of(DEFAULT, AVM_CREATE_CODE);
+
+    /** Set of transaction types allowed when deploying a contract. */
+    public static final Set<Byte> CREATE = Set.of(FVM_CREATE_CODE, AVM_CREATE_CODE);
 }

@@ -1,5 +1,6 @@
 package org.aion.zero.impl.consensus;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -8,15 +9,18 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.StandaloneBlockchain.Bundle;
-import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,6 +67,90 @@ public class BalanceTransferConsensusTest {
         if (VirtualMachineProvider.isMachinesAreLive()) {
             VirtualMachineProvider.shutdownAllVirtualMachines();
         }
+    }
+
+    @Test
+    public void testTransactionTypeBeforeTheFork() {
+        // ensure that the fork was not triggered
+        TransactionTypeRule.disallowAVMContractTransaction();
+
+        BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
+        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
+        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+
+        // get contract address from precompiled factory
+        Address to =
+                Address.wrap("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+
+        // Make balance transfer transaction to precompiled contract.
+        ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
+        AionTransaction transaction =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        to,
+                        amount.toByteArray(),
+                        new byte[0],
+                        2_000_000,
+                        ENERGY_PRICE,
+                        (byte) 11); // legal type before the fork
+        transaction.sign(key);
+
+        // check that the transaction is valid
+        assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
+
+        // Process the transaction.
+        Pair<ImportResult, AionBlockSummary> results = processTransactions(transaction, 1);
+
+        // ensure transaction and block were valid
+        AionBlockSummary blockSummary = results.getRight();
+        AionTxReceipt receipt = blockSummary.getSummaries().get(0).getReceipt();
+        assertThat(receipt.isSuccessful()).isTrue();
+        assertThat(receipt.getEnergyUsed()).isEqualTo(21000);
+    }
+
+    @Test
+    public void testTransactionTypeAfterTheFork() {
+        // triggering fork changes
+        TransactionTypeRule.allowAVMContractTransaction();
+
+        BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
+        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
+        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+
+        // get contract address from precompiled factory
+        Address to =
+                Address.wrap("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+
+        // Make balance transfer transaction to precompiled contract.
+        ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
+        AionTransaction transaction =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        to,
+                        amount.toByteArray(),
+                        new byte[0],
+                        2_000_000,
+                        ENERGY_PRICE,
+                        (byte) 11); // illegal type after the fork
+        transaction.sign(key);
+
+        // check that the transaction is not valid
+        assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
+
+        // Process the transaction.
+        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        AionBlock block =
+                this.blockchain.createNewBlock(
+                        parentBlock, Collections.singletonList(transaction), false);
+        Pair<ImportResult, AionBlockSummary> results =
+                this.blockchain.tryToConnectAndFetchSummary(block);
+
+        assertThat(results.getLeft()).isEqualTo(ImportResult.INVALID_BLOCK);
+
+        // cleaning up for future tests
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     private static final String RECIPIENT1 =

@@ -54,8 +54,12 @@ public abstract class AbstractTransaction implements Transaction {
         this.to = receiveAddress;
         this.value = value;
         this.data = data;
-        // default type 0x01; reserve date for multi-type transaction
-        this.type = TransactionTypes.DEFAULT;
+        // setting the default type depending on use case
+        if (to == null) {
+            this.type = TransactionTypes.FVM_CREATE_CODE;
+        } else {
+            this.type = TransactionTypes.DEFAULT;
+        }
     }
 
     public AbstractTransaction(
@@ -80,11 +84,6 @@ public abstract class AbstractTransaction implements Transaction {
             byte type)
             throws Exception {
         this(nonce, receiveAddress, value, data, nrg, nrgPrice);
-
-        if (type == 0x00) {
-            throw new Exception("Incorrect tx type!");
-        }
-
         this.type = type;
     }
 

@@ -256,7 +256,7 @@ public class AvmBulkTransactionTest {
                         new byte[0],
                         2_000_000,
                         this.energyPrice,
-                        (byte) 0x1);
+                        TransactionTypes.DEFAULT);
         transaction.sign(sender);
         return transaction;
     }
