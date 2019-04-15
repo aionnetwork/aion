@@ -16,4 +16,7 @@ public class TransactionTypes {
 
     /** Set of transaction types allowed by the Aion Virtual Machine implementation. */
     public static final Set<Byte> AVM = Set.of(DEFAULT, AVM_CREATE_CODE);
+
+    /** Set of transaction types allowed when deploying a contract. */
+    public static final Set<Byte> CREATE = Set.of(FVM_CREATE_CODE, AVM_CREATE_CODE);
 }

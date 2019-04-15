@@ -21,9 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.interfaces.block.Constant;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -31,6 +28,9 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.interfaces.block.Constant;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
@@ -441,7 +441,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     public boolean isValid(AionTransaction tx) {
-        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx.getTargetVM());
+        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx);
     }
 
     /**

@@ -8,17 +8,16 @@ import java.util.Arrays;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -220,7 +219,7 @@ public class StatefulnessTest {
                         new byte[0],
                         2_000_000,
                         this.energyPrice,
-                        (byte) 0x1);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
@@ -242,7 +241,8 @@ public class StatefulnessTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
+                        new byte[0])
                 .encodeToBytes();
     }
 

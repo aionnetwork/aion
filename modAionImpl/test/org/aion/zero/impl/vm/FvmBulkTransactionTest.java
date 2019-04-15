@@ -8,12 +8,12 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
-
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -158,7 +158,7 @@ public class FvmBulkTransactionTest {
                         contractBytes,
                         5_000_000,
                         this.energyPrice,
-                        (byte) 0x01);
+                        TransactionTypes.FVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -178,7 +178,7 @@ public class FvmBulkTransactionTest {
                         callBytes,
                         2_000_000,
                         this.energyPrice,
-                        (byte) 0x01);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -197,7 +197,7 @@ public class FvmBulkTransactionTest {
                         callBytes,
                         2_000_000,
                         this.energyPrice,
-                        (byte) 0x01);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         AionBlockSummary summary =

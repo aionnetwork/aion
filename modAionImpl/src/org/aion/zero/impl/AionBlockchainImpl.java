@@ -37,8 +37,8 @@ import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -1170,8 +1170,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         .anyMatch(
                                 tx ->
                                         !TXValidator.isValid(tx)
-                                                || !TransactionTypeValidator.isValid(
-                                                        tx.getTargetVM()))) {
+                                                || !TransactionTypeValidator.isValid(tx))) {
                     LOG.error("Some transactions in the block are invalid");
                     if (TX_LOG.isDebugEnabled()) {
                         for (AionTransaction tx : txs) {
@@ -1179,7 +1178,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                     "Tx valid ["
                                             + TXValidator.isValid(tx)
                                             + "]. Type valid ["
-                                            + TransactionTypeValidator.isValid(tx.getTargetVM())
+                                            + TransactionTypeValidator.isValid(tx)
                                             + "]\n"
                                             + tx.toString());
                         }

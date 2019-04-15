@@ -4,12 +4,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.mongodb.client.model.Collation;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -64,14 +63,18 @@ public class InvalidBlockTest {
 
     @Test
     public void test() {
-        BigInteger nonce = this.blockchain.getRepository().getNonce(Address.wrap(this.deployerKey.getAddress()));
+        BigInteger nonce =
+                this.blockchain
+                        .getRepository()
+                        .getNonce(Address.wrap(this.deployerKey.getAddress()));
         List<AionTransaction> transactions = makeTransactions(10, nonce);
         Collections.shuffle(transactions);
 
         AionBlock parent = this.blockchain.getBestBlock();
         AionBlock block = this.blockchain.createNewBlock(parent, transactions, false);
 
-        Pair<ImportResult, AionBlockSummary> res = this.blockchain.tryToConnectAndFetchSummary(block);
+        Pair<ImportResult, AionBlockSummary> res =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         System.out.println(res.getLeft());
         System.out.println(res.getRight().getReceipts());
     }
@@ -79,20 +82,25 @@ public class InvalidBlockTest {
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
         List<AionTransaction> transactions = new ArrayList<>();
 
-        byte[] jar = new CodeAndArguments(JarBuilder.buildJarForMainAndClassesAndUserlib(Contract.class), new byte[0]).encodeToBytes();
+        byte[] jar =
+                new CodeAndArguments(
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(Contract.class),
+                                new byte[0])
+                        .encodeToBytes();
         BigInteger nonce = initialNonce;
 
         for (int i = 0; i < num; i++) {
 
-            AionTransaction transaction = new AionTransaction(
-                    nonce.toByteArray(),
-                    Address.wrap(this.deployerKey.getAddress()),
-                    null,
-                    BigInteger.ZERO.toByteArray(),
-                    jar,
-                    5_000_000L,
-                    10_000_000_000L,
-                    (byte) 0x0f);
+            AionTransaction transaction =
+                    new AionTransaction(
+                            nonce.toByteArray(),
+                            Address.wrap(this.deployerKey.getAddress()),
+                            null,
+                            BigInteger.ZERO.toByteArray(),
+                            jar,
+                            5_000_000L,
+                            10_000_000_000L,
+                            TransactionTypes.AVM_CREATE_CODE);
             transaction.sign(this.deployerKey);
 
             transactions.add(transaction);
@@ -101,5 +109,4 @@ public class InvalidBlockTest {
 
         return transactions;
     }
-
 }

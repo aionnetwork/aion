@@ -97,7 +97,7 @@ public class BalanceTransferConsensusTest {
         transaction.sign(key);
 
         // check that the transaction is valid
-        assertThat(TransactionTypeValidator.isValid(transaction.getTargetVM())).isTrue();
+        assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransactions(transaction, 1);
@@ -137,7 +137,7 @@ public class BalanceTransferConsensusTest {
         transaction.sign(key);
 
         // check that the transaction is not valid
-        assertThat(TransactionTypeValidator.isValid(transaction.getTargetVM())).isFalse();
+        assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
 
         // Process the transaction.
         AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
