@@ -4,7 +4,6 @@ import static org.aion.mcf.tx.TransactionTypes.ALL;
 import static org.aion.mcf.tx.TransactionTypes.AVM;
 import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
 import static org.aion.mcf.tx.TransactionTypes.FVM;
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
 /**
  * Rules for validating transactions based on allowed types.
@@ -23,7 +22,13 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid transaction type, {@code false} otherwise
      */
     public static boolean isValidTransactionType(byte type) {
-        return ALL.contains(type);
+        if (AVM_CONTRACT_TRANSACTION_ALLOWED) {
+            // transaction types are validated after the fork
+            return ALL.contains(type);
+        } else {
+            // transaction types are not checked before the fork
+            return true;
+        }
     }
 
     /**

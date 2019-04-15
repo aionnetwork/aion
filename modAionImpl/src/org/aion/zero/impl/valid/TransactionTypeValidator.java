@@ -13,17 +13,7 @@ import static org.aion.mcf.valid.TransactionTypeRule.isValidTransactionType;
  */
 public class TransactionTypeValidator {
 
-    private static boolean avmEnabled;
-
-    public static void enableAvmCheck(boolean enableAVM) {
-        avmEnabled = enableAVM;
-    }
-
     public static boolean isValid(byte type) {
-        return true;
-    }
-
-    public static boolean isValidAfterFork(byte type) {
         return isValidTransactionType(type);
     }
 }
