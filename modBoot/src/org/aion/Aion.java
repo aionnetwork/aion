@@ -201,6 +201,7 @@ public class Aion {
         genLog.info(path);
         genLog.info(logo);
 
+        VirtualMachineProvider.initializeAllVirtualMachines();
         IAionChain ac = AionFactory.create();
 
         IMineRunner nm = null;
@@ -237,7 +238,6 @@ public class Aion {
         /*
          * Start Threads.
          */
-        VirtualMachineProvider.initializeAllVirtualMachines();
         Thread zmqThread = null;
         ProtocolProcessor processor = null;
         if (cfg.getApi().getZmq().getActive()) {
