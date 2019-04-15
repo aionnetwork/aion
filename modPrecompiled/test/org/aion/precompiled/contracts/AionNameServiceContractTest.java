@@ -9,8 +9,15 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
@@ -26,6 +33,9 @@ import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.db.AionRepositoryCache;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.After;
@@ -219,9 +229,9 @@ public class AionNameServiceContractTest {
     @Test(expected = IllegalArgumentException.class)
     public void testConstructorInvalidDomainAddress() {
         ECKey k = ECKeyFac.inst().create();
-        DummyRepo repo = populateRepo();
+        RepositoryCache repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
-        repo.addContract(newAddress1, new byte[100]);
+        repo.saveCode(newAddress1, new byte[100]);
 
         //  domain addresses must have aion prefix: 0xa0(66char) or a0(64char)
         AionNameServiceContract ansc =
@@ -233,7 +243,7 @@ public class AionNameServiceContractTest {
     @Test(expected = IllegalArgumentException.class)
     public void testConstructorInvalidDomainOwnerAddress() {
         ECKey k = ECKeyFac.inst().create();
-        DummyRepo repo = populateRepo();
+        RepositoryCache repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
         // The owner address need to exist in the given repoistory, as an account or smart contract
@@ -245,7 +255,7 @@ public class AionNameServiceContractTest {
     @Test(expected = IllegalArgumentException.class)
     public void testConflictOwnerAddress() {
         ECKey k = ECKeyFac.inst().create();
-        DummyRepo repo = populateRepo();
+        RepositoryCache repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
         // check that the given owner address is the same as the owner address in the repository.
@@ -725,26 +735,19 @@ public class AionNameServiceContractTest {
 
         byte[] combined =
                 setupInputs(
-                        "cion.bion.aion",
-                        Address.wrap(k.getAddress()),
-                        amount.toByteArray(),
-                        k);
+                        "cion.bion.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
         Address addr = Address.wrap(result.getReturnData());
 
         byte[] combined2 =
-                setupInputs(
-                        "aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs("aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, DEFAULT_INPUT_NRG);
 
         byte[] combined3 =
                 setupInputs(
-                        "bbbb.aaaa.aion",
-                        Address.wrap(k2.getAddress()),
-                        amount3.toByteArray(),
-                        k2);
+                        "bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, DEFAULT_INPUT_NRG);
 
@@ -773,19 +776,13 @@ public class AionNameServiceContractTest {
 
         byte[] combined4 =
                 setupInputs(
-                        "cccc.aaaa.aion",
-                        Address.wrap(k.getAddress()),
-                        amount3.toByteArray(),
-                        k);
+                        "cccc.aaaa.aion", Address.wrap(k.getAddress()), amount3.toByteArray(), k);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, DEFAULT_INPUT_NRG);
 
         byte[] combined5 =
                 setupInputs(
-                        "cccc.aaaa.aion",
-                        Address.wrap(k2.getAddress()),
-                        amount2.toByteArray(),
-                        k2);
+                        "cccc.aaaa.aion", Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
         aac5.execute(combined5, DEFAULT_INPUT_NRG);
 
@@ -893,9 +890,34 @@ public class AionNameServiceContractTest {
 
     // put some data into the database for testing
 
-    private DummyRepo populateRepo() {
-        DummyRepo repo = new DummyRepo();
+    private RepositoryCache populateRepo() {
+        RepositoryConfig repoConfig =
+                new RepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
 
+                    @Override
+                    public PruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
+
+                    @Override
+                    public ContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
+
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
+        RepositoryCache repo =
+                new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         byte[] resolverHash1 = blake128(RESOLVER_HASH.getBytes());
         byte[] resolverHash2 = blake128(resolverHash1);
 
@@ -917,7 +939,11 @@ public class AionNameServiceContractTest {
     }
 
     private void storeValueToRepo(
-            DummyRepo repo, Address domainAddress, byte[] hash1, byte[] hash2, Address value) {
+            RepositoryCache repo,
+            Address domainAddress,
+            byte[] hash1,
+            byte[] hash2,
+            Address value) {
         byte[] combined = value.toBytes();
         byte[] value1 = new byte[16];
         byte[] value2 = new byte[16];
@@ -927,19 +953,23 @@ public class AionNameServiceContractTest {
     }
 
     private void storeValueToRepo(
-            DummyRepo repo,
+            RepositoryCache repo,
             Address domainAddress,
             byte[] hash1,
             byte[] hash2,
             byte[] value1,
             byte[] value2) {
         repo.addStorageRow(
-                domainAddress, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(value1).toWrapper());
+                domainAddress,
+                new DataWordImpl(hash1).toWrapper(),
+                new DataWordImpl(value1).toWrapper());
         repo.addStorageRow(
-                domainAddress, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(value2).toWrapper());
+                domainAddress,
+                new DataWordImpl(hash2).toWrapper(),
+                new DataWordImpl(value2).toWrapper());
     }
 
-    private void createAccounts(DummyRepo repository, ECKey[] accountList) {
+    private void createAccounts(RepositoryCache repository, ECKey[] accountList) {
         for (ECKey key : accountList) repository.createAccount(Address.wrap(key.getAddress()));
     }
 
