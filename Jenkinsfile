@@ -9,6 +9,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building branch: ${env.BRANCH_NAME}"
+                sh "git lfs install"
                 sh "./gradlew pack" 
             }
         }
