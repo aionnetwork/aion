@@ -147,6 +147,14 @@ public class Arguments {
     private String dumpStateCount = null;
 
     @Option(
+            names = {"--dump-for-test"},
+            arity = "1..*",
+            paramLabel = "<block_to_import> [skip-state] [<contr_1>]  [<contr_2>] ",
+            description =
+                    "retrieves block and multiple contract data from the blockchain to be used for consensus unit tests; the skip-state option can be used to retrieve the data only for contracts")
+    private String[] dumpForTest = null;
+
+    @Option(
             names = {"--db-compact"},
             description = "if using leveldb, it triggers its database compaction processes")
     private boolean dbCompact;
@@ -261,6 +269,10 @@ public class Arguments {
 
     public String getDumpStateCount() {
         return dumpStateCount;
+    }
+
+    public String[] getDumpForTest() {
+        return dumpForTest;
     }
 
     public boolean isDbCompact() {

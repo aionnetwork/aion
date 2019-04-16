@@ -79,6 +79,7 @@ public class Cli {
         PRUNE_STATE,
         DUMP_STATE_SIZE,
         DUMP_STATE,
+        DUMP_STATE_TEST,
         DUMP_BLOCKS,
         DB_COMPACT,
         REDO_IMPORT
@@ -479,6 +480,34 @@ public class Cli {
                                 "Retrieving state for main chain block at level " + level + "...");
                     }
                     RecoveryUtils.printStateTrieDump(level);
+                    return EXIT;
+                }
+            }
+
+            if (options.getDumpForTest() != null) {
+                long level;
+                String[] parameters = options.getDumpForTest();
+
+                try {
+                    level = Long.parseLong(parameters[0]);
+                } catch (NumberFormatException e) {
+                    System.out.println(
+                            "The given argument «"
+                                    + parameters[0]
+                                    + "» cannot be converted to a number.");
+                    return ERROR;
+                }
+                if (level < 2) { // requires a parent and grandparent
+                    System.out.println(
+                            "Negative block values are not legal input values for this functionality.");
+                    return ERROR;
+                } else {
+                    System.out.println(
+                            "Retrieving consensus data for unit tests for the main chain block at level "
+                                    + level
+                                    + "...");
+
+                    RecoveryUtils.dumpTestData(level, parameters);
                     return EXIT;
                 }
             }
@@ -935,6 +964,9 @@ public class Cli {
         if (options.getDumpStateCount() != null) {
             return TaskPriority.DUMP_STATE;
         }
+        if (options.getDumpForTest() != null) {
+            return TaskPriority.DUMP_STATE_TEST;
+        }
         if (options.getDumpBlocksCount() != null) {
             return TaskPriority.DUMP_BLOCKS;
         }
@@ -1015,6 +1047,10 @@ public class Cli {
         if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
                 && options.getDumpStateCount() != null) {
             skippedTasks.add("--dump-state");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_TEST) < 0
+                && options.getDumpForTest() != null) {
+            skippedTasks.add("--dump-for-test");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
                 && options.getDumpBlocksCount() != null) {
