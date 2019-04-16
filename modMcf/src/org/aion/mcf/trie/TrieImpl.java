@@ -884,25 +884,19 @@ public class TrieImpl implements Trie {
     //    }
 
     @Override
-    public Set<ByteArrayWrapper> getMissingNodes(byte[] nodeKey) {
-        CollectFullSetOfNodes traceAction = new CollectFullSetOfNodes();
-        Value value = new Value(nodeKey);
-
-        if (value.isHashCode()) {
-            scanTreeForMissingNodes(nodeKey, traceAction);
-        }
-        return traceAction.getCollectedHashes();
-    }
-
-    private void scanTreeForMissingNodes(byte[] hash, ScanAction scanAction) {
+    public Set<ByteArrayWrapper> getMissingNodes(byte[] keyOrValue) {
+        CollectFullSetOfNodes scanAction = new CollectFullSetOfNodes();
         ArrayList<byte[]> hashes = new ArrayList<>();
-        hashes.add(hash);
+        Value node;
 
         synchronized (cache) {
+            appendHashes(keyOrValue, hashes);
+
             int items = hashes.size();
             for (int i = 0; i < items; i++) {
                 byte[] myHash = hashes.get(i);
-                Value node = this.getCache().get(myHash);
+
+                node = this.getCache().get(myHash);
                 if (node == null) {
                     // performs action for missing nodes
                     scanAction.doOnNode(myHash, null);
@@ -928,16 +922,18 @@ public class TrieImpl implements Trie {
                 }
             }
         }
+
+        return scanAction.getCollectedHashes();
     }
 
     @Override
-    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit) {
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] keyOrValue, int limit) {
         CollectMappings collect = new CollectMappings();
         ArrayList<byte[]> hashes = new ArrayList<>();
-        Value node = Value.fromRlpEncoded(value);
+        Value node;
 
         synchronized (cache) {
-            appendHashes(node, hashes);
+            appendHashes(keyOrValue, hashes);
 
             int items = hashes.size();
             for (int i = 0; (i < items) && (collect.getSize() < limit); i++) {
@@ -970,7 +966,20 @@ public class TrieImpl implements Trie {
         return collect.getNodes();
     }
 
-    private void appendHashes(Value node, ArrayList<byte[]> hashes) {
+    private void appendHashes(byte[] bytes, ArrayList<byte[]> hashes) {
+        Value node;
+
+        if (bytes.length == 32) {
+            // it's considered a hashCode/key according to Value.isHashCode()
+            node = new Value(bytes);
+        } else {
+            node = Value.fromRlpEncoded(bytes);
+        }
+
+        if (node == null) {
+            return;
+        }
+
         if (node.isHashCode()) {
             hashes.add(node.asBytes());
         } else if (node.isList()) {

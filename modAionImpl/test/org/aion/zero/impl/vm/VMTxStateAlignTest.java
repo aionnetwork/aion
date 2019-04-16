@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
@@ -38,6 +39,7 @@ public class VMTxStateAlignTest {
             return;
         }
         VirtualMachineProvider.initializeAllVirtualMachines();
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @AfterClass

@@ -33,8 +33,10 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
+import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
@@ -195,6 +197,47 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
+        private AionBlock best = null, parentBest = null;
+        private byte[] trieData = null;
+        private BigInteger totalDiff = null, totalDiffParent = null;
+
+        /**
+         * @param serializedTrieBestBlock data obtained by calling {@link
+         *     AionRepositoryImpl#dumpImportableState(byte[], int, DatabaseType)}
+         */
+        public Builder withState(
+                AionBlock parentBestBlock,
+                BigInteger totalDiffParent,
+                AionBlock bestBlock,
+                BigInteger totalDiffBest,
+                byte[] serializedTrieBestBlock) {
+            this.parentBest = parentBestBlock;
+            this.totalDiffParent = totalDiffParent;
+            this.best = bestBlock;
+            this.totalDiff = totalDiffBest;
+            this.trieData = serializedTrieBestBlock;
+            return this;
+        }
+
+        private Map<Address, byte[]> contractDetails = new HashMap<>();
+
+        /** @param encodedDetails data obtained from {@link AionContractDetailsImpl#getEncoded()} */
+        public Builder withDetails(Address contract, byte[] encodedDetails) {
+            this.contractDetails.put(contract, encodedDetails);
+            return this;
+        }
+
+        private Map<Address, byte[]> contractStorage = new HashMap<>();
+
+        /**
+         * @param serializedContractTrie data obtained from {@link
+         *     AionRepositoryImpl#dumpImportableStorage(byte[], int, Address)}
+         */
+        public Builder withStorage(Address contract, byte[] serializedContractTrie) {
+            this.contractStorage.put(contract, serializedContractTrie);
+            return this;
+        }
+
         private RepositoryConfig generateRepositoryConfig() {
             return new RepositoryConfig() {
                 @Override
@@ -345,6 +388,40 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
             }
 
+            // set specific block and state
+            if (best != null
+                    && totalDiff != null
+                    && trieData != null
+                    && totalDiff != null
+                    && parentBest != null
+                    && totalDiffParent != null) {
+                bc.getRepository().getBlockStore().saveBlock(parentBest, totalDiffParent, true);
+                bc.getRepository().getBlockStore().saveBlock(best, totalDiff, true);
+                bc.setBestBlock(best);
+                bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
+                bc.getRepository().getWorldState().setRoot(best.getStateRoot());
+                bc.getRepository().getWorldState().sync(false);
+            }
+
+            // set contract details
+            if (!contractDetails.isEmpty()) {
+                for (Address contract : contractDetails.keySet()) {
+                    bc.getRepository()
+                            .importTrieNode(
+                                    contract.toBytes(),
+                                    contractDetails.get(contract),
+                                    DatabaseType.DETAILS);
+                }
+            }
+
+            // set contract storage
+            if (!contractStorage.isEmpty()) {
+                for (Address contract : contractStorage.keySet()) {
+                    bc.getRepository()
+                            .loadImportableState(
+                                    contractStorage.get(contract), DatabaseType.STORAGE);
+                }
+            }
             return new Bundle(this.defaultKeys, bc);
         }
     }

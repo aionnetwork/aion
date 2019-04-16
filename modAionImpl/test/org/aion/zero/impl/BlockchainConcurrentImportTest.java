@@ -20,15 +20,14 @@ import java.util.concurrent.TimeUnit;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Hash256;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -49,6 +48,8 @@ public class BlockchainConcurrentImportTest {
 
     @BeforeClass
     public static void setup() {
+        TransactionTypeRule.disallowAVMContractTransaction();
+
         Map<String, String> cfg = new HashMap<>();
         cfg.put("DB", "ERROR");
 
