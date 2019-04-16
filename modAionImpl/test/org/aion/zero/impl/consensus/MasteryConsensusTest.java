@@ -40,7 +40,6 @@ public class MasteryConsensusTest {
         AionLoggerFactory.init(cfg);
 
         VirtualMachineProvider.initializeAllVirtualMachines();
-        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @AfterClass
@@ -54,6 +53,8 @@ public class MasteryConsensusTest {
      */
     @Test
     public void testImportBlock255652() {
+        TransactionTypeRule.disallowAVMContractTransaction();
+
         // data extracted from the mastery network
         AionBlock block255650 =
                 new AionBlock(
@@ -131,6 +132,8 @@ public class MasteryConsensusTest {
     /** Tests importing block <a href="https://mastery.aion.network/#/block/365432">365432</a>. */
     @Test
     public void testImportBlock365432() {
+        TransactionTypeRule.disallowAVMContractTransaction();
+
         // data extracted from the mastery network
         AionBlock block365430 =
                 new AionBlock(
@@ -196,6 +199,8 @@ public class MasteryConsensusTest {
     /** Tests importing block <a href="https://mastery.aion.network/#/block/1016685">1016685</a>. */
     @Test
     public void testImportBlock1016685() {
+        TransactionTypeRule.disallowAVMContractTransaction();
+
         // data extracted from the mastery network
         AionBlock block1016683 =
                 new AionBlock(
