@@ -1,7 +1,6 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -19,6 +18,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -92,7 +92,7 @@ public class AionRepositoryImplTest {
 
         byte[] originalRoot = repository.getRoot();
         track.saveCode(defaultAccount, defaultAccount.toBytes());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
 
         track.flush();
 
@@ -120,7 +120,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
 
         track.flush();
 
@@ -152,7 +152,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
 
         // does not call parent's flush
         track.flush();
@@ -194,7 +194,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        repoTrack.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        repoTrack.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
 
         ByteArrayWrapper retrievedStorageValue =
                 repoTrack.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper());

@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 
@@ -106,19 +106,19 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     public void setVmType(byte vmType) {
-        if (this.vmType != vmType) {
-            this.vmType = vmType;
+        if (this.vmType.getCode() != vmType) {
+            this.vmType = InternalVmType.getInstance(vmType);
 
             setDirty(true);
         }
     }
 
     public byte getVmType() {
-        if (vmType == TransactionTypes.DEFAULT && origContract != null) {
+        if (vmType == InternalVmType.EITHER && origContract != null) {
             // not necessary to set as dirty
-            vmType = origContract.getVmType();
+            vmType = InternalVmType.getInstance(origContract.getVmType());
         }
-        return vmType;
+        return vmType.getCode();
     }
 
     @Override
@@ -212,8 +212,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         }
 
         // passing on the vm type
-        if (vmType != TransactionTypes.DEFAULT) {
-            origContract.setVmType(vmType);
+        if (vmType != InternalVmType.EITHER) {
+            origContract.setVmType(vmType.getCode());
         }
 
         // passing on the object graph

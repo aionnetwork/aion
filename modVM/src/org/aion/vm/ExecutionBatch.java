@@ -124,9 +124,10 @@ public final class ExecutionBatch {
         Address caller = transaction.getSenderAddress();
 
         DataWordImpl nrgPrice = transaction.nrgPrice();
+        // TODO: is this correct pre-fork?
         long nrg =
                 transaction.nrgLimit()
-                        - (TransactionTypes.FVM.contains(transaction.getTargetVM())
+                        - ((transaction.getTargetVM() == TransactionTypes.DEFAULT)
                                 ? transaction.transactionCost(block.getNumber())
                                 : 0);
         DataWordImpl callValue = new DataWordImpl(ArrayUtils.nullToEmpty(transaction.getValue()));

@@ -1,7 +1,5 @@
 package org.aion.zero.impl;
 
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +20,7 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
@@ -361,7 +360,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             RepositoryCache track = bc.getRepository().startTracking();
             track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
-            track.saveVmType(ContractFactory.getTotalCurrencyContractAddress(), FVM_CREATE_CODE);
+            track.saveVmType(
+                    ContractFactory.getTotalCurrencyContractAddress(),
+                    InternalVmType.FVM.getCode());
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 // assumes only additions can be made in the genesis

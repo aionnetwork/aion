@@ -3,7 +3,6 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.aion.types.ByteArrayWrapper.wrap;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -18,7 +17,7 @@ import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -119,14 +118,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     public void setVmType(byte vmType) {
-        this.vmType = vmType;
+        this.vmType = InternalVmType.getInstance(vmType);
 
         setDirty(true);
         rlpEncoded = null;
     }
 
     public byte getVmType() {
-        return vmType;
+        return vmType.getCode();
     }
 
     @Override
@@ -171,7 +170,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public byte[] getStorageHash() {
-        if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+        if (vmType == InternalVmType.AVM) {
             return computeAvmStorageHash();
         } else {
             return storageTrie.getRootHash();
@@ -219,7 +218,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
         if (rlpList.size() == 5) {
             // only FVM contracts used the old encoding
-            vmType = FVM_CREATE_CODE;
+            vmType = InternalVmType.FVM;
 
             // force a save with new encoding
             this.rlpEncoded = null;
@@ -231,7 +230,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             if (vm == null || vm.getRLPData() == null || vm.getRLPData().length == 0) {
                 throw new IllegalArgumentException("rlp decode error: invalid vm code");
             } else {
-                this.vmType = vm.getRLPData()[0];
+                vmType = InternalVmType.getInstance(vm.getRLPData()[0]);
             }
 
             // keep encoding when compatible with new style
@@ -290,7 +289,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public void decodeStorage(RLPElement root, RLPElement storage, boolean keepStorageInMem) {
         // different values based on the VM used
         byte[] storageRootHash;
-        if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+        if (vmType == InternalVmType.AVM) {
             // points to the storage hash and the object graph hash
             concatenatedStorageHash = root.getRLPData();
 
@@ -351,7 +350,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
             byte[] rlpStorageRoot;
             // encoding for AVM
-            if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+            if (vmType == InternalVmType.AVM) {
                 rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
             } else {
                 rlpStorageRoot =
@@ -367,9 +366,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             }
             byte[] rlpCode = RLP.encodeList(codes);
 
-            if (vmType != TransactionTypes.DEFAULT) {
+            if (vmType != InternalVmType.EITHER) {
                 // vm type was not added
-                byte[] rlpVmType = RLP.encodeByte(vmType);
+                byte[] rlpVmType = RLP.encodeByte(vmType.getCode());
 
                 this.rlpEncoded =
                         RLP.encodeList(
@@ -413,7 +412,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
         this.address = address;
         if (ContractFactory.isPrecompiledContract(address)) {
-            setVmType(FVM_CREATE_CODE);
+            setVmType(InternalVmType.FVM.getCode());
         }
         this.rlpEncoded = null;
     }
@@ -421,7 +420,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
-        if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+        if (vmType == InternalVmType.AVM) {
             // if (objectGraph == null || Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)) {
             //     throw new IllegalStateException(
             //             "The AVM object graph must be set before pushing data to disk.");
@@ -524,7 +523,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
         SecureTrie snapStorage;
         AionContractDetailsImpl details;
-        if (vmType == TransactionTypes.AVM_CREATE_CODE) {
+        if (vmType == InternalVmType.AVM) {
             byte[] storageRootHash, graphHash;
             // get the concatenated storage hash from storage
             Optional<byte[]> concatenatedData =

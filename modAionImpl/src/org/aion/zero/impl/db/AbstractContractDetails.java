@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
@@ -28,7 +28,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected byte[] objectGraph = null;
 
     // using the default transaction type to specify undefined VM
-    protected byte vmType = TransactionTypes.DEFAULT;
+    protected InternalVmType vmType = InternalVmType.EITHER;
 
     protected AbstractContractDetails() {
         this(0, 64 * 1024);

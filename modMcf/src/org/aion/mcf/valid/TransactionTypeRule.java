@@ -1,9 +1,7 @@
 package org.aion.mcf.valid;
 
-import static org.aion.mcf.tx.TransactionTypes.AVM;
+import static org.aion.mcf.tx.TransactionTypes.ALL;
 import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
-import static org.aion.mcf.tx.TransactionTypes.CREATE;
-import static org.aion.mcf.tx.TransactionTypes.FVM;
 
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.tx.TransactionTypes;
@@ -27,7 +25,7 @@ public class TransactionTypeRule {
      *   <li>Only the transaction types listed in {@link org.aion.mcf.tx.TransactionTypes#ALL} are
      *       valid after the fork.
      *   <li>Contract deployments must have the transaction types from the set {@link
-     *       org.aion.mcf.tx.TransactionTypes#CREATE}.
+     *       org.aion.mcf.tx.TransactionTypes#ALL}.
      *   <li>Transactions that are not contract deployments must have the transaction type {@link
      *       org.aion.mcf.tx.TransactionTypes#DEFAULT}
      * </ol>
@@ -41,7 +39,7 @@ public class TransactionTypeRule {
             // transaction types are validated after the fork
             if (transaction.getDestinationAddress() == null) {
                 // checks for valid contract deployments
-                return CREATE.contains(transaction.getTargetVM());
+                return ALL.contains(transaction.getTargetVM());
             } else {
                 // other transactions must have default type
                 return transaction.getTargetVM() == TransactionTypes.DEFAULT;
@@ -50,26 +48,6 @@ public class TransactionTypeRule {
             // transaction types are not checked before the fork
             return true;
         }
-    }
-
-    /**
-     * Compares the given transaction type with all the transaction types allowed by the FastVM.
-     *
-     * @param type the type of a transaction applicable on the FastVM
-     * @return {@code true} is this is an FastVM transaction, {@code false} otherwise
-     */
-    public static boolean isValidFVMCode(byte type) {
-        return FVM.contains(type);
-    }
-
-    /**
-     * Compares the given transaction type with all the transaction types allowed by the AVM.
-     *
-     * @param type the type of a transaction applicable on the AVM
-     * @return {@code true} is this is an AVM transaction, {@code false} otherwise
-     */
-    public static boolean isValidAVMCode(byte type) {
-        return AVM.contains(type);
     }
 
     /**

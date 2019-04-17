@@ -22,7 +22,6 @@
  */
 package org.aion.zero.impl.vm;
 
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -34,6 +33,7 @@ import java.util.List;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
@@ -119,7 +119,7 @@ public class SolidityTypeTest {
                 tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
-        track.saveVmType(tx.getDestinationAddress(), FVM_CREATE_CODE);
+        track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM.getCode());
         track.flush();
         return track;
     }
