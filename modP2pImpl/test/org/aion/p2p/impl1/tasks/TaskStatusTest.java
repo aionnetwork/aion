@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
@@ -38,7 +39,9 @@ public class TaskStatusTest {
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
 
-        TaskStatus ts = new TaskStatus(nodeMgr, "1", msgOutQue, msgInQue);
+        final AtomicBoolean ab = new AtomicBoolean(true);
+
+        TaskStatus ts = new TaskStatus(ab, nodeMgr, "1", msgOutQue, msgInQue);
         assertNotNull(ts);
         when(nodeMgr.dumpNodeInfo(anyString(), anyBoolean())).thenReturn("get Status");
 
@@ -46,6 +49,7 @@ public class TaskStatusTest {
         t.start();
         assertTrue(t.isAlive());
 
+        ab.set(false);
         while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
