@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.api.server.ApiUtil;
+import org.aion.api.server.pb.Message.Funcs;
 import org.aion.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
@@ -293,6 +294,40 @@ public class ApiAion0Test {
                         Message.Servs.s_hb_VALUE,
                         Message.Funcs.f_getBalance_VALUE,
                         reqBody.toByteArray());
+
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
+    }
+
+    @Test
+    public void testProcessGetBlockReward() throws Exception {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        Message.req_getBlockReward reqBody =
+            Message.req_getBlockReward
+                .newBuilder()
+                .setBlockNumber(1000000L)
+                .build();
+
+        rsp =
+            sendRequest(
+                Message.Servs.s_chain_VALUE,
+                Funcs.f_getBlockReward_VALUE,
+                reqBody.toByteArray());
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        Message.rsp_getBlockReward rslt = Message.rsp_getBlockReward.parseFrom(stripHeader(rsp));
+        // number obtained from BlockConstants.java
+        BigInteger expectedReward = new BigInteger("1497989283243310185");
+        assertEquals(expectedReward, new BigInteger(rslt.getReward().toByteArray()));
+
+        rsp =
+            sendRequest(
+                Message.Servs.s_hb_VALUE,
+                Funcs.f_getBlockReward_VALUE,
+                reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }

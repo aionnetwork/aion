@@ -433,6 +433,10 @@ public final class Message {
      * <code>f_peerCount = 60;</code>
      */
     f_peerCount(60),
+    /**
+     * <code>f_getBlockReward = 61;</code>
+     */
+    f_getBlockReward(61),
     UNRECOGNIZED(-1),
     ;
 
@@ -680,6 +684,10 @@ public final class Message {
      * <code>f_peerCount = 60;</code>
      */
     public static final int f_peerCount_VALUE = 60;
+    /**
+     * <code>f_getBlockReward = 61;</code>
+     */
+    public static final int f_getBlockReward_VALUE = 61;
 
 
     public final int getNumber() {
@@ -761,6 +769,7 @@ public final class Message {
         case 58: return f_getBlockDetailsByHash;
         case 59: return f_listening;
         case 60: return f_peerCount;
+        case 61: return f_getBlockReward;
         default: return null;
       }
     }
@@ -70748,6 +70757,890 @@ public final class Message {
 
   }
 
+  public interface req_getBlockRewardOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockReward)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>uint64 blockNumber = 1;</code>
+     */
+    long getBlockNumber();
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.req_getBlockReward}
+   */
+  public  static final class req_getBlockReward extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.req_getBlockReward)
+      req_getBlockRewardOrBuilder {
+    // Use req_getBlockReward.newBuilder() to construct.
+    private req_getBlockReward(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private req_getBlockReward() {
+      blockNumber_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private req_getBlockReward(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              blockNumber_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockReward_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.req_getBlockReward.class, org.aion.api.server.pb.Message.req_getBlockReward.Builder.class);
+    }
+
+    public static final int BLOCKNUMBER_FIELD_NUMBER = 1;
+    private long blockNumber_;
+    /**
+     * <code>uint64 blockNumber = 1;</code>
+     */
+    public long getBlockNumber() {
+      return blockNumber_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (blockNumber_ != 0L) {
+        output.writeUInt64(1, blockNumber_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (blockNumber_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, blockNumber_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.req_getBlockReward)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.req_getBlockReward other = (org.aion.api.server.pb.Message.req_getBlockReward) obj;
+
+      boolean result = true;
+      result = result && (getBlockNumber()
+          == other.getBlockNumber());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + BLOCKNUMBER_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBlockNumber());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockReward parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.req_getBlockReward prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.req_getBlockReward}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.req_getBlockReward)
+        org.aion.api.server.pb.Message.req_getBlockRewardOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockReward_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.req_getBlockReward.class, org.aion.api.server.pb.Message.req_getBlockReward.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.req_getBlockReward.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        blockNumber_ = 0L;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockReward getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.req_getBlockReward.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockReward build() {
+        org.aion.api.server.pb.Message.req_getBlockReward result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockReward buildPartial() {
+        org.aion.api.server.pb.Message.req_getBlockReward result = new org.aion.api.server.pb.Message.req_getBlockReward(this);
+        result.blockNumber_ = blockNumber_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.req_getBlockReward) {
+          return mergeFrom((org.aion.api.server.pb.Message.req_getBlockReward)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.req_getBlockReward other) {
+        if (other == org.aion.api.server.pb.Message.req_getBlockReward.getDefaultInstance()) return this;
+        if (other.getBlockNumber() != 0L) {
+          setBlockNumber(other.getBlockNumber());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.req_getBlockReward parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.req_getBlockReward) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private long blockNumber_ ;
+      /**
+       * <code>uint64 blockNumber = 1;</code>
+       */
+      public long getBlockNumber() {
+        return blockNumber_;
+      }
+      /**
+       * <code>uint64 blockNumber = 1;</code>
+       */
+      public Builder setBlockNumber(long value) {
+        
+        blockNumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>uint64 blockNumber = 1;</code>
+       */
+      public Builder clearBlockNumber() {
+        
+        blockNumber_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.req_getBlockReward)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.req_getBlockReward)
+    private static final org.aion.api.server.pb.Message.req_getBlockReward DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.req_getBlockReward();
+    }
+
+    public static org.aion.api.server.pb.Message.req_getBlockReward getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<req_getBlockReward>
+        PARSER = new com.google.protobuf.AbstractParser<req_getBlockReward>() {
+      public req_getBlockReward parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new req_getBlockReward(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<req_getBlockReward> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<req_getBlockReward> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.req_getBlockReward getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface rsp_getBlockRewardOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockReward)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>bytes reward = 1;</code>
+     */
+    com.google.protobuf.ByteString getReward();
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.rsp_getBlockReward}
+   */
+  public  static final class rsp_getBlockReward extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.rsp_getBlockReward)
+      rsp_getBlockRewardOrBuilder {
+    // Use rsp_getBlockReward.newBuilder() to construct.
+    private rsp_getBlockReward(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private rsp_getBlockReward() {
+      reward_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private rsp_getBlockReward(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+
+              reward_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockReward_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.rsp_getBlockReward.class, org.aion.api.server.pb.Message.rsp_getBlockReward.Builder.class);
+    }
+
+    public static final int REWARD_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString reward_;
+    /**
+     * <code>bytes reward = 1;</code>
+     */
+    public com.google.protobuf.ByteString getReward() {
+      return reward_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!reward_.isEmpty()) {
+        output.writeBytes(1, reward_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!reward_.isEmpty()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, reward_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.rsp_getBlockReward)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.rsp_getBlockReward other = (org.aion.api.server.pb.Message.rsp_getBlockReward) obj;
+
+      boolean result = true;
+      result = result && getReward()
+          .equals(other.getReward());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + REWARD_FIELD_NUMBER;
+      hash = (53 * hash) + getReward().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.rsp_getBlockReward prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.rsp_getBlockReward}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.rsp_getBlockReward)
+        org.aion.api.server.pb.Message.rsp_getBlockRewardOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockReward_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.rsp_getBlockReward.class, org.aion.api.server.pb.Message.rsp_getBlockReward.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.rsp_getBlockReward.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        reward_ = com.google.protobuf.ByteString.EMPTY;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockReward getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.rsp_getBlockReward.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockReward build() {
+        org.aion.api.server.pb.Message.rsp_getBlockReward result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockReward buildPartial() {
+        org.aion.api.server.pb.Message.rsp_getBlockReward result = new org.aion.api.server.pb.Message.rsp_getBlockReward(this);
+        result.reward_ = reward_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.rsp_getBlockReward) {
+          return mergeFrom((org.aion.api.server.pb.Message.rsp_getBlockReward)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.rsp_getBlockReward other) {
+        if (other == org.aion.api.server.pb.Message.rsp_getBlockReward.getDefaultInstance()) return this;
+        if (other.getReward() != com.google.protobuf.ByteString.EMPTY) {
+          setReward(other.getReward());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.rsp_getBlockReward parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.rsp_getBlockReward) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private com.google.protobuf.ByteString reward_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>bytes reward = 1;</code>
+       */
+      public com.google.protobuf.ByteString getReward() {
+        return reward_;
+      }
+      /**
+       * <code>bytes reward = 1;</code>
+       */
+      public Builder setReward(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        reward_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>bytes reward = 1;</code>
+       */
+      public Builder clearReward() {
+        
+        reward_ = getDefaultInstance().getReward();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.rsp_getBlockReward)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.rsp_getBlockReward)
+    private static final org.aion.api.server.pb.Message.rsp_getBlockReward DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.rsp_getBlockReward();
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getBlockReward getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<rsp_getBlockReward>
+        PARSER = new com.google.protobuf.AbstractParser<rsp_getBlockReward>() {
+      public rsp_getBlockReward parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new rsp_getBlockReward(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<rsp_getBlockReward> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<rsp_getBlockReward> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.rsp_getBlockReward getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_aion_api_server_pb_t_Contract_descriptor;
   private static final 
@@ -71283,6 +72176,16 @@ public final class Message {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_aion_api_server_pb_rsp_peerCount_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_req_getBlockReward_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_rsp_getBlockReward_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -71504,70 +72407,72 @@ public final class Message {
       "\n\031rsp_getBlockDetailsByHash\0229\n\nblkDetail",
       "s\030\001 \001(\0132%.org.aion.api.server.pb.t_Block" +
       "Detail\"$\n\rrsp_listening\022\023\n\013isListening\030\001" +
-      " \001(\010\"\036\n\rrsp_peerCount\022\r\n\005peers\030\001 \001(\r*\204\001\n" +
-      "\005Servs\022\010\n\004s_hb\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain" +
-      "\020\002\022\r\n\ts_account\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n" +
-      "\n\006s_mine\020\006\022\017\n\013s_privilege\020\007\022\014\n\010s_wallet\020" +
-      "\010\022\010\n\004s_NA\020\t*\212\013\n\005Funcs\022\025\n\021f_protocolVersi" +
-      "on\020\000\022\022\n\016f_minerAddress\020\001\022\016\n\nf_accounts\020\002" +
-      "\022\021\n\rf_blockNumber\020\003\022\020\n\014f_getBalance\020\004\022\022\n" +
-      "\016f_getStorageAt\020\005\022\023\n\017f_unlockAccount\020\006\022\025",
-      "\n\021f_sendTransaction\020\007\022\032\n\026f_getTransactio" +
-      "nByHash\020\010\022\r\n\tf_compile\020\t\022\024\n\020f_contractDe" +
-      "ploy\020\n\022\031\n\025f_getTransactionCount\020\013\022$\n f_g" +
-      "etBlockTransactionCountByHash\020\014\022&\n\"f_get" +
-      "BlockTransactionCountByNumber\020\r\022\r\n\tf_get" +
-      "Code\020\016\022\n\n\006f_call\020\017\022\024\n\020f_getBlockByHash\020\020" +
-      "\022\026\n\022f_getBlockByNumber\020\021\022\'\n#f_getTransac" +
-      "tionByBlockHashAndIndex\020\022\022)\n%f_getTransa" +
-      "ctionByBlockNumberAndIndex\020\023\022\033\n\027f_getTra" +
-      "nsactionReceipt\020\024\022\022\n\016f_getCompilers\020\025\022\030\n",
-      "\024f_compileSolidityZip\020\026\022\r\n\tf_getWork\020\027\022\020" +
-      "\n\014f_submitWork\020\030\022\035\n\031f_fetchQueuedTransac" +
-      "tions\020\031\022\027\n\023f_signedTransaction\020\032\022\024\n\020f_ra" +
-      "wTransaction\020\033\022\021\n\rf_estimateNrg\020\034\022\014\n\010f_m" +
-      "ining\020\035\022\016\n\nf_hashrate\020\036\022\024\n\020f_getActiveNo" +
-      "des\020\037\022\024\n\020f_getSolcVersion\020 \022\017\n\013f_isSynci" +
-      "ng\020!\022\016\n\nf_syncInfo\020\"\022\023\n\017f_getSystemInfo\020" +
-      "#\022\023\n\017f_eventRegister\020$\022\025\n\021f_eventDeregis" +
-      "ter\020%\022\023\n\017f_accountCreate\020&\022\021\n\rf_accountL" +
-      "ock\020\'\022\023\n\017f_userPrivilege\020(\022\020\n\014f_eventQue",
-      "ry\020)\022\024\n\020f_importAccounts\020*\022\024\n\020f_exportAc" +
-      "counts\020+\022\034\n\030f_getBlockHeaderByNumber\020,\022\032" +
-      "\n\026f_getBlockHeaderByHash\020-\022\037\n\033f_getCurre" +
-      "ntTotalDifficulty\020.\022\024\n\020f_getStaticNodes\020" +
-      "/\022\035\n\031f_getBlockDetailsByNumber\0200\022\035\n\031f_ge" +
-      "tBlockDetailsByLatest\0201\022\027\n\023f_getBlocksBy" +
-      "Latest\0202\022$\n f_getAccountDetailsByAddress" +
-      "List\0203\022\024\n\020f_backupAccounts\0204\022\010\n\004f_NA\0205\022\030" +
-      "\n\024f_getBlockSqlByRange\0206\022\034\n\030f_getBlockDe" +
-      "tailsByRange\0207\022\016\n\nf_getNonce\0208\022\021\n\rf_getN",
-      "rgPrice\0209\022\033\n\027f_getBlockDetailsByHash\020:\022\017" +
-      "\n\013f_listening\020;\022\017\n\013f_peerCount\020<*\241\007\n\007Ret" +
-      "code\022\n\n\006r_fail\020\000\022\r\n\tr_success\020\001\022\023\n\017r_wal" +
-      "let_nullcb\020\002\022\025\n\021r_heartbeatReturn\020\003\022\025\n\021r" +
-      "_privilegeReturn\020\004\022\r\n\tr_tx_Init\020d\022\017\n\013r_t" +
-      "x_Recved\020e\022\020\n\014r_tx_Dropped\020f\022\023\n\017r_tx_New" +
-      "Pending\020g\022\020\n\014r_tx_Pending\020h\022\021\n\rr_tx_Incl" +
-      "uded\020i\022\020\n\014r_tx_eventCb\020j\022\010\n\004r_NA\020k\022\036\n\021r_" +
-      "fail_header_len\020\377\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_ser" +
-      "vice_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_function_",
-      "call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_function_excep" +
-      "tion\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_api_version\020\373\377" +
-      "\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_bytecode\020\372\377\377\377\377\377\377\377\377" +
-      "\001\022\034\n\017r_fail_null_rsp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_fai" +
-      "l_invalid_addr\020\370\377\377\377\377\377\377\377\377\001\022\'\n\032r_fail_null" +
-      "_compile_source\020\367\377\377\377\377\377\377\377\377\001\022$\n\027r_fail_com" +
-      "pile_contract\020\366\377\377\377\377\377\377\377\377\001\022#\n\026r_fail_sendT" +
-      "x_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021r_fail_getcode_" +
-      "to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_getTxReceipt_nul" +
-      "l_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_zmqHandler_e",
-      "xception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_hit_pendin" +
-      "g_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030r_fail_txqueue_" +
-      "exception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_function_" +
-      "arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_unsupport" +
-      "_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail_unknown\020\355\377\377\377\377\377" +
-      "\377\377\377\001b\006proto3"
+      " \001(\010\"\036\n\rrsp_peerCount\022\r\n\005peers\030\001 \001(\r\")\n\022" +
+      "req_getBlockReward\022\023\n\013blockNumber\030\001 \001(\004\"" +
+      "$\n\022rsp_getBlockReward\022\016\n\006reward\030\001 \001(\014*\204\001" +
+      "\n\005Servs\022\010\n\004s_hb\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chai" +
+      "n\020\002\022\r\n\ts_account\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022" +
+      "\n\n\006s_mine\020\006\022\017\n\013s_privilege\020\007\022\014\n\010s_wallet" +
+      "\020\010\022\010\n\004s_NA\020\t*\240\013\n\005Funcs\022\025\n\021f_protocolVers" +
+      "ion\020\000\022\022\n\016f_minerAddress\020\001\022\016\n\nf_accounts\020",
+      "\002\022\021\n\rf_blockNumber\020\003\022\020\n\014f_getBalance\020\004\022\022" +
+      "\n\016f_getStorageAt\020\005\022\023\n\017f_unlockAccount\020\006\022" +
+      "\025\n\021f_sendTransaction\020\007\022\032\n\026f_getTransacti" +
+      "onByHash\020\010\022\r\n\tf_compile\020\t\022\024\n\020f_contractD" +
+      "eploy\020\n\022\031\n\025f_getTransactionCount\020\013\022$\n f_" +
+      "getBlockTransactionCountByHash\020\014\022&\n\"f_ge" +
+      "tBlockTransactionCountByNumber\020\r\022\r\n\tf_ge" +
+      "tCode\020\016\022\n\n\006f_call\020\017\022\024\n\020f_getBlockByHash\020" +
+      "\020\022\026\n\022f_getBlockByNumber\020\021\022\'\n#f_getTransa" +
+      "ctionByBlockHashAndIndex\020\022\022)\n%f_getTrans",
+      "actionByBlockNumberAndIndex\020\023\022\033\n\027f_getTr" +
+      "ansactionReceipt\020\024\022\022\n\016f_getCompilers\020\025\022\030" +
+      "\n\024f_compileSolidityZip\020\026\022\r\n\tf_getWork\020\027\022" +
+      "\020\n\014f_submitWork\020\030\022\035\n\031f_fetchQueuedTransa" +
+      "ctions\020\031\022\027\n\023f_signedTransaction\020\032\022\024\n\020f_r" +
+      "awTransaction\020\033\022\021\n\rf_estimateNrg\020\034\022\014\n\010f_" +
+      "mining\020\035\022\016\n\nf_hashrate\020\036\022\024\n\020f_getActiveN" +
+      "odes\020\037\022\024\n\020f_getSolcVersion\020 \022\017\n\013f_isSync" +
+      "ing\020!\022\016\n\nf_syncInfo\020\"\022\023\n\017f_getSystemInfo" +
+      "\020#\022\023\n\017f_eventRegister\020$\022\025\n\021f_eventDeregi",
+      "ster\020%\022\023\n\017f_accountCreate\020&\022\021\n\rf_account" +
+      "Lock\020\'\022\023\n\017f_userPrivilege\020(\022\020\n\014f_eventQu" +
+      "ery\020)\022\024\n\020f_importAccounts\020*\022\024\n\020f_exportA" +
+      "ccounts\020+\022\034\n\030f_getBlockHeaderByNumber\020,\022" +
+      "\032\n\026f_getBlockHeaderByHash\020-\022\037\n\033f_getCurr" +
+      "entTotalDifficulty\020.\022\024\n\020f_getStaticNodes" +
+      "\020/\022\035\n\031f_getBlockDetailsByNumber\0200\022\035\n\031f_g" +
+      "etBlockDetailsByLatest\0201\022\027\n\023f_getBlocksB" +
+      "yLatest\0202\022$\n f_getAccountDetailsByAddres" +
+      "sList\0203\022\024\n\020f_backupAccounts\0204\022\010\n\004f_NA\0205\022",
+      "\030\n\024f_getBlockSqlByRange\0206\022\034\n\030f_getBlockD" +
+      "etailsByRange\0207\022\016\n\nf_getNonce\0208\022\021\n\rf_get" +
+      "NrgPrice\0209\022\033\n\027f_getBlockDetailsByHash\020:\022" +
+      "\017\n\013f_listening\020;\022\017\n\013f_peerCount\020<\022\024\n\020f_g" +
+      "etBlockReward\020=*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022" +
+      "\r\n\tr_success\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r" +
+      "_heartbeatReturn\020\003\022\025\n\021r_privilegeReturn\020" +
+      "\004\022\r\n\tr_tx_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_t" +
+      "x_Dropped\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx" +
+      "_Pending\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_ev",
+      "entCb\020j\022\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377" +
+      "\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377" +
+      "\377\377\001\022!\n\024r_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&" +
+      "\n\031r_fail_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037" +
+      "\n\022r_fail_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fai" +
+      "l_ct_bytecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_" +
+      "rsp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377" +
+      "\377\377\377\377\377\377\377\001\022\'\n\032r_fail_null_compile_source\020\367" +
+      "\377\377\377\377\377\377\377\377\001\022$\n\027r_fail_compile_contract\020\366\377\377" +
+      "\377\377\377\377\377\377\001\022#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377",
+      "\377\377\377\001\022\036\n\021r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035" +
+      "r_fail_getTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001" +
+      "\022(\n\033r_fail_zmqHandler_exception\020\362\377\377\377\377\377\377\377" +
+      "\377\001\022(\n\033r_fail_hit_pending_tx_limit\020\361\377\377\377\377\377" +
+      "\377\377\377\001\022%\n\030r_fail_txqueue_exception\020\360\377\377\377\377\377\377" +
+      "\377\377\001\022&\n\031r_fail_function_arguments\020\357\377\377\377\377\377\377" +
+      "\377\377\001\022!\n\024r_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033" +
+      "\n\016r_fail_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -72223,6 +73128,18 @@ public final class Message {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_peerCount_descriptor,
         new java.lang.String[] { "Peers", });
+    internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor =
+      getDescriptor().getMessageTypes().get(106);
+    internal_static_org_aion_api_server_pb_req_getBlockReward_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_req_getBlockReward_descriptor,
+        new java.lang.String[] { "BlockNumber", });
+    internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor =
+      getDescriptor().getMessageTypes().get(107);
+    internal_static_org_aion_api_server_pb_rsp_getBlockReward_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_rsp_getBlockReward_descriptor,
+        new java.lang.String[] { "Reward", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
