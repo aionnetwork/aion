@@ -21,6 +21,9 @@
 			<oracle-enabled>false</oracle-enabled>
 		</nrg-recommendation>
 	</api>
+	<vm>
+                <avm-enabled>true</avm-enabled>
+        </vm>
 	<net>
 		<id>31</id>
 		<nodes>
