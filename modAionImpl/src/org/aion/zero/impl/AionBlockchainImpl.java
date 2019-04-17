@@ -1369,18 +1369,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             for (AionTxExecSummary summary : executionSummaries) {
                 receipts.add(summary.getReceipt());
                 summaries.add(summary);
-
-                // save contract creation data to contract details
-                AionTxReceipt receipt = summary.getReceipt();
-                AionTransaction tx = receipt.getTransaction();
-                if (tx.isContractCreationTransaction() && receipt.isSuccessful()) {
-                    track.saveVmType(
-                            tx.getContractAddress(),
-                            TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
-                                    ? InternalVmType.AVM.getCode()
-                                    // FVM contracts do not always have the correct type
-                                    : InternalVmType.FVM.getCode());
-                }
             }
         }
         Map<Address, BigInteger> rewards = addReward(block);
