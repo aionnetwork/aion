@@ -23,7 +23,6 @@
 
 package org.aion.zero.impl.vm;
 
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -39,6 +38,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
@@ -134,7 +134,7 @@ public class OldTxExecutorTest {
         cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         cache.createAccount(to);
         cache.saveCode(to, Hex.decode(contract));
-        cache.saveVmType(to, FVM_CREATE_CODE);
+        cache.saveVmType(to, InternalVmType.FVM.getCode());
 
         cache.flush();
 
@@ -234,7 +234,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
-        repo.saveVmType(to, FVM_CREATE_CODE);
+        repo.saveVmType(to, InternalVmType.FVM.getCode());
         repo.flush();
 
         long t1 = System.nanoTime();

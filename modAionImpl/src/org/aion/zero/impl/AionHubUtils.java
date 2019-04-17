@@ -1,10 +1,9 @@
 package org.aion.zero.impl;
 
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
-
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
@@ -21,7 +20,7 @@ public class AionHubUtils {
         Address networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
         track.createAccount(networkBalanceAddress);
         // saving FVM type for networkBalance contract
-        track.saveVmType(networkBalanceAddress, FVM_CREATE_CODE);
+        track.saveVmType(networkBalanceAddress, InternalVmType.FVM.getCode());
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
             // assumes only additions are performed in the genesis

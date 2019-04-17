@@ -15,7 +15,7 @@ import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
@@ -496,12 +496,12 @@ public class BulkExecutor {
     private byte getVmType(Address destination) {
         if (ContractFactory.isPrecompiledContract(destination)) {
             // skip the call to disk
-            return TransactionTypes.FVM_CREATE_CODE;
+            return InternalVmType.FVM.getCode();
         } else {
             byte storedVmType = repositoryChild.getVMUsed(destination);
 
             // DEFAULT is returned when there was no contract information stored
-            if (storedVmType == TransactionTypes.DEFAULT) {
+            if (storedVmType == InternalVmType.UNKNOWN.getCode()) {
                 // will load contract into memory otherwise leading to consensus issues
                 RepositoryCache track = repositoryChild.startTracking();
                 return track.getVmType(destination);

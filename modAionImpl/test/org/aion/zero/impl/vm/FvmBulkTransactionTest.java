@@ -158,7 +158,7 @@ public class FvmBulkTransactionTest {
                         contractBytes,
                         5_000_000,
                         this.energyPrice,
-                        TransactionTypes.FVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
         return transaction;
     }

@@ -31,7 +31,7 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.p2p.V1Constants;
 import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
@@ -151,7 +151,7 @@ public class AionRepositoryImpl
                 } else {
 
                     if (!contractDetails.isDirty()
-                            || (contractDetails.getVmType() == TransactionTypes.DEFAULT
+                            || (contractDetails.getVmType() == InternalVmType.EITHER.getCode()
                                     && !ContractFactory.isPrecompiledContract(address))) {
                         // code added because contract details are not reliably
                         // marked as dirty at present
@@ -423,7 +423,7 @@ public class AionRepositoryImpl
     @Override
     public byte getVmType(Address contract) {
         ContractDetails details = getContractDetails(contract);
-        return (details == null) ? TransactionTypes.DEFAULT : details.getVmType();
+        return (details == null) ? InternalVmType.EITHER.getCode() : details.getVmType();
     }
 
     @Override
@@ -1076,7 +1076,7 @@ public class AionRepositoryImpl
         ContractInformation ci = getIndexedContractInformation(contract);
         if (ci == null) {
             // signals that the value is not set
-            return TransactionTypes.DEFAULT;
+            return InternalVmType.UNKNOWN.getCode();
         } else {
             return ci.getVmUsed();
         }

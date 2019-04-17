@@ -46,7 +46,7 @@ import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.types.BlockIdentifierImpl;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
@@ -1029,8 +1029,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         tx.getContractAddress(),
                         block.getNumber(),
                         TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
-                                ? TransactionTypes.AVM_CREATE_CODE
-                                : TransactionTypes.FVM_CREATE_CODE,
+                                ? InternalVmType.AVM.getCode()
+                                : InternalVmType.FVM.getCode(),
                         true);
             }
         }
@@ -1377,9 +1377,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     track.saveVmType(
                             tx.getContractAddress(),
                             TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
-                                    ? TransactionTypes.AVM_CREATE_CODE
+                                    ? InternalVmType.AVM.getCode()
                                     // FVM contracts do not always have the correct type
-                                    : TransactionTypes.FVM_CREATE_CODE);
+                                    : InternalVmType.FVM.getCode());
                 }
             }
         }
