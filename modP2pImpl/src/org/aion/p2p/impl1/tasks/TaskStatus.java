@@ -31,23 +31,27 @@ public class TaskStatus implements Runnable {
 
     @Override
     public void run() {
+        p2pLOG.debug("P2p taskStatus start running.");
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_STATUS);
-                String status = this.nodeMgr.dumpNodeInfo(this.selfShortId, p2pLOG.isDebugEnabled());
+                String status = nodeMgr.dumpNodeInfo(selfShortId, p2pLOG.isDebugEnabled());
 
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug(status);
                     p2pLOG.debug(
-                        "recv queue[{}] send queue[{}]",
-                        this.receiveMsgQue.size(),
-                        this.sendMsgQue.size());
+                            "recv queue[{}] send queue[{}]",
+                            receiveMsgQue.size(),
+                            sendMsgQue.size());
                 } else if (p2pLOG.isInfoEnabled()) {
                     p2pLOG.info(status);
                 }
+            } catch (InterruptedException e) {
+                p2pLOG.warn("P2p taskStatus InterruptedException! ", e);
             } catch (Exception e) {
                 p2pLOG.warn("P2p taskStatus exception! ", e);
             }
         }
+        p2pLOG.info("P2p taskStatus has been shut down.");
     }
 }
