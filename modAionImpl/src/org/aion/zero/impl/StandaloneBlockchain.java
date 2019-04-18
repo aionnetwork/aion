@@ -30,7 +30,6 @@ import org.aion.types.ByteArrayWrapper;
 import org.aion.types.Hash256;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
@@ -398,6 +397,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 bc.getRepository().getBlockStore().saveBlock(parentBest, totalDiffParent, true);
                 bc.getRepository().getBlockStore().saveBlock(best, totalDiff, true);
                 bc.setBestBlock(best);
+                bc.setTotalDifficulty(totalDiff);
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
                 bc.getRepository().getWorldState().setRoot(best.getStateRoot());
                 bc.getRepository().getWorldState().sync(false);
