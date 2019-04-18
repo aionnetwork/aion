@@ -27,8 +27,6 @@ import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
-import org.aion.api.server.rpc.RpcError;
-import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.api.server.types.EvtContract;
@@ -993,6 +991,41 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
+                }
+            case Message.Funcs.f_getBlockReward_VALUE:
+                {
+                    if (service != Message.Servs.s_chain_VALUE) {
+                        return ApiUtil.toReturnHeader(
+                                getApiVersion(), Retcode.r_fail_service_call_VALUE);
+                    }
+
+                    byte[] data = parseMsgReq(request, msgHash);
+                    Message.req_getBlockReward req;
+
+                    BigInteger reward;
+                    try {
+                        req = Message.req_getBlockReward.parseFrom(data);
+                        long num = req.getBlockNumber();
+                        reward =
+                                ((AionBlockchainImpl) ac.getBlockchain())
+                                        .getChainConfiguration()
+                                        .getRewardsCalculator()
+                                        .calculateReward(num);
+                    } catch (Exception e) {
+                        LOG.error("ApiAion0.process.getBlockReward exception: [{}]", e);
+                        return ApiUtil.toReturnHeader(
+                                getApiVersion(), Retcode.r_fail_function_exception_VALUE);
+                    }
+
+                    Message.rsp_getBlockReward rsp =
+                            Message.rsp_getBlockReward
+                                    .newBuilder()
+                                    .setReward(ByteString.copyFrom(reward.toByteArray()))
+                                    .build();
+
+                    byte[] retHeader =
+                            ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
+                    return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                 }
             case Message.Funcs.f_getBlockByHash_VALUE:
                 {
