@@ -953,6 +953,63 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public String dumpPastBlocksForConsensusTest(long firstBlock, String reportsFolder)
+            throws IOException {
+        lock.readLock().lock();
+
+        try {
+            if (firstBlock < 0) {
+                return null;
+            }
+
+            // the 1st block will be imported by the test
+            // its total difficulty, state root and receipt hash can be used for validation
+            // the 2nd block will be used to setup the blockchain world state before import
+            // the 3rd block is also part of the setup as it is required for header validation
+            long lastBlock = firstBlock - 3;
+
+            File file =
+                    new File(
+                            reportsFolder,
+                            System.currentTimeMillis() + "-blocks-for-consensus-test.out");
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+            while (firstBlock > lastBlock && firstBlock >= 0) {
+                List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
+
+                for (BlockInfo bi : levelBlocks) {
+                    if (bi.mainChain) {
+                        writer.append(
+                                "\nBlock hash from index database: "
+                                        + Hex.toHexString(bi.getHash())
+                                        + "\nTotal Difficulty: "
+                                        + bi.getCummDifficulty()
+                                        + "\nBlock on main chain: "
+                                        + String.valueOf(bi.isMainChain()).toUpperCase());
+                        writer.newLine();
+                        AionBlock blk = getBlockByHash(bi.getHash());
+                        if (blk != null) {
+                            writer.append("\nFull block data:\n");
+                            writer.append(blk.toString());
+                            writer.newLine();
+                        } else {
+                            writer.append("Retrieved block data is null.");
+                        }
+                    }
+                }
+                writer.newLine();
+
+                firstBlock--;
+            }
+
+            writer.close();
+            return file.getName();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
         lock.readLock().lock();
 

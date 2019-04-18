@@ -1,19 +1,26 @@
 package org.aion.zero.impl.db;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.interfaces.block.Block;
+import org.aion.interfaces.db.ContractDetails;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.types.Address;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHubUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.apache.commons.lang3.tuple.Pair;
@@ -142,6 +149,124 @@ public class RecoveryUtils {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        repository.close();
+    }
+
+    /** Used by the CLI call. */
+    public static void dumpTestData(long blockNumber, String[] otherParameters) {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        cfg.getDb().setHeapCacheEnabled(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+        cfgLog.put("GEN", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+        // print 3 blocks: to import; parent; and grandparent
+        AionBlockStore store = repository.getBlockStore();
+        try {
+            String file = store.dumpPastBlocksForConsensusTest(blockNumber, cfg.getBasePath());
+            if (file == null) {
+                System.out.println("Illegal arguments. Cannot print block information.");
+            } else {
+                System.out.println("Block information stored in " + file);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int paramIndex = 1;
+        // print state for parent block
+        AionBlock parent = store.getChainBlockByNumber(blockNumber - 1);
+        if (parent == null) {
+            System.out.println("Illegal arguments. Parent block is null.");
+        } else {
+            if (otherParameters.length > paramIndex
+                    && otherParameters[paramIndex].equals("skip-state")) {
+                System.out.println("Parent state information is not retrieved.");
+                paramIndex++;
+            } else {
+                try {
+                    repository.syncToRoot(parent.getStateRoot());
+
+                    File file =
+                            new File(
+                                    cfg.getBasePath(),
+                                    System.currentTimeMillis()
+                                            + "-state-for-parent-block-"
+                                            + parent.getNumber()
+                                            + ".out");
+
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    writer.append(
+                            Hex.toHexString(
+                                    repository.dumpImportableState(
+                                            parent.getStateRoot(),
+                                            Integer.MAX_VALUE,
+                                            DatabaseType.STATE)));
+                    writer.newLine();
+
+                    writer.close();
+                    System.out.println("Parent state information stored in " + file.getName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // print details and storage for the given contracts
+            if (otherParameters.length > paramIndex) {
+                try {
+                    repository.syncToRoot(parent.getStateRoot());
+                    File file =
+                            new File(
+                                    cfg.getBasePath(),
+                                    System.currentTimeMillis() + "-state-contracts.out");
+
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    // iterate through contracts
+                    for (int i = paramIndex; i < otherParameters.length; i++) {
+
+                        writer.append("Contract: " + Address.wrap(otherParameters[i]));
+                        writer.newLine();
+
+                        ContractDetails details =
+                                repository.getContractDetails(Address.wrap(otherParameters[i]));
+
+                        if (details != null) {
+                            writer.append("Details: " + Hex.toHexString(details.getEncoded()));
+                            writer.newLine();
+
+                            writer.append(
+                                    "Storage: "
+                                            + Hex.toHexString(
+                                                    repository.dumpImportableStorage(
+                                                            details.getStorageHash(),
+                                                            Integer.MAX_VALUE,
+                                                            Address.wrap(otherParameters[i]))));
+                            writer.newLine();
+                        }
+                        writer.newLine();
+                    }
+
+                    writer.close();
+                    System.out.println(
+                            "Contract details and storage information stored in " + file.getName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         repository.close();
