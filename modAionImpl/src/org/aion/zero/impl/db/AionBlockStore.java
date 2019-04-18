@@ -961,6 +961,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             if (firstBlock < 0) {
                 return null;
             }
+
+            // the 1st block will be imported by the test
+            // its total difficulty, state root and receipt hash can be used for validation
+            // the 2nd block will be used to setup the blockchain world state before import
+            // the 3rd block is also part of the setup as it is required for header validation
             long lastBlock = firstBlock - 3;
 
             File file =

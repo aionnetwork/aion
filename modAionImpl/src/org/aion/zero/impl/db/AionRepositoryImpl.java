@@ -995,7 +995,6 @@ public class AionRepositoryImpl
         byte[][] elements = new byte[refs.size()][];
         int i = 0;
         for (byte[] ref : refs) {
-            System.out.println("dump-key:" + Hex.toHexString(ref));
             elements[i] =
                     RLP.encodeList(
                             RLP.encodeElement(ref),
