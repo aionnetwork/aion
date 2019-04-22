@@ -118,10 +118,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     public void setVmType(byte vmType) {
-        this.vmType = InternalVmType.getInstance(vmType);
+        if (this.vmType.getCode() != vmType && vmType != InternalVmType.EITHER.getCode()) {
+            this.vmType = InternalVmType.getInstance(vmType);
 
-        setDirty(true);
-        rlpEncoded = null;
+            setDirty(true);
+            rlpEncoded = null;
+        }
     }
 
     public byte getVmType() {

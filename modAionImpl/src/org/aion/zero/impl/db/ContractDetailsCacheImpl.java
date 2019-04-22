@@ -106,7 +106,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     public void setVmType(byte vmType) {
-        if (this.vmType.getCode() != vmType) {
+        if (this.vmType.getCode() != vmType && vmType != InternalVmType.EITHER.getCode()) {
             this.vmType = InternalVmType.getInstance(vmType);
 
             setDirty(true);

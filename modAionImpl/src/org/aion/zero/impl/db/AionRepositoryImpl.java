@@ -1072,12 +1072,17 @@ public class AionRepositoryImpl
     }
 
     public byte getVMUsed(Address contract) {
-        ContractInformation ci = getIndexedContractInformation(contract);
-        if (ci == null) {
-            // signals that the value is not set
-            return InternalVmType.UNKNOWN.getCode();
+        if (ContractFactory.isPrecompiledContract(contract)) {
+            // skip the call to disk
+            return InternalVmType.FVM.getCode();
         } else {
-            return ci.getVmUsed();
+            ContractInformation ci = getIndexedContractInformation(contract);
+            if (ci == null) {
+                // signals that the value is not set
+                return InternalVmType.UNKNOWN.getCode();
+            } else {
+                return ci.getVmUsed();
+            }
         }
     }
 

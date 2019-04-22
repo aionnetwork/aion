@@ -121,8 +121,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     @Override
     public void putCode(Address address, byte[] code) {
         // ensure the vm type is set as soon as the account becomes a contract
-        this.repositoryCache.saveVmType(address, FVM_CONTRACT_CODE);
         this.repositoryCache.saveCode(address, code);
+        setVmType(address);
     }
 
     @Override
@@ -163,18 +163,14 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         }
 
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
-        if (this.repositoryCache.getVmType(address) != FVM_CONTRACT_CODE) {
-            this.repositoryCache.saveVmType(address, FVM_CONTRACT_CODE);
-        }
+        setVmType(address);
     }
 
     @Override
     public void removeStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         this.repositoryCache.removeStorageRow(address, storageKey);
-        if (this.repositoryCache.getVmType(address) != FVM_CONTRACT_CODE) {
-            this.repositoryCache.saveVmType(address, FVM_CONTRACT_CODE);
-        }
+        setVmType(address);
     }
 
     @Override

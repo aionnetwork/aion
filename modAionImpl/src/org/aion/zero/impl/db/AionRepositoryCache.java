@@ -20,6 +20,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.tx.InternalVmType;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -336,6 +338,10 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     /** IMPORTNAT: a new cache must be created before calling this method */
     @Override
     public byte getVmType(Address contract) {
+        if (ContractFactory.isPrecompiledContract(contract)) {
+            // skip the call to disk
+            return InternalVmType.FVM.getCode();
+        }
         // retrieving the VM type involves updating the contract details values
         // this requires loading the account and details
         fullyWriteLock();
@@ -709,7 +715,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
             cd.setTransformedCode(code);
             cd.setDirty(true);
-        } finally{
+        } finally {
             fullyWriteUnlock();
         }
     }
