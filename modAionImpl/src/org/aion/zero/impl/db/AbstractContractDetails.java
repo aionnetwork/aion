@@ -5,6 +5,7 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,8 +61,11 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     @Override
     public void setTransformedCode(byte[] transformedCode) {
-        performCode = transformedCode;
-        setDirty(true);
+        // ensures that the object is not set to dirty when copied
+        if (!Arrays.equals(performCode, transformedCode)) {
+            performCode = transformedCode;
+            setDirty(true);
+        }
     }
 
     @Override
@@ -113,16 +117,18 @@ public abstract class AbstractContractDetails implements ContractDetails {
     @Override
     public String toString() {
         String ret;
+        ret = "VM: " + vmType.toString();
+        ret += " dirty: " + isDirty();
 
         if (codes != null) {
-            ret =
+            ret +=
                     "  Code: "
                             + (codes.size() < 2
                                     ? Hex.toHexString(getCode())
                                     : codes.size() + " versions")
                             + "\n";
         } else {
-            ret = "  Code: null\n";
+            ret += "  Code: null\n";
         }
 
         byte[] storage = getStorageHash();
