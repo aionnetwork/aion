@@ -86,6 +86,10 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.repositoryCache.createAccount(address);
     }
 
+    public void setVmType(Address address) {
+        this.repositoryCache.saveVmType(address, AVM_CONTRACT_CODE);
+    }
+
     @Override
     public boolean hasAccountState(Address address) {
         return this.repositoryCache.hasAccountState(address);
@@ -93,9 +97,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public void putCode(Address address, byte[] code) {
-        // ensure the vm type is set as soon as the account becomes a contract
-        this.repositoryCache.saveVmType(address, AVM_CONTRACT_CODE);
         this.repositoryCache.saveCode(address, code);
+        setVmType(address);
     }
 
     @Override
@@ -111,14 +114,13 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public void setTransformedCode(Address address, byte[] transformedCode) {
         this.repositoryCache.setTransformedCode(address, transformedCode);
+        setVmType(address);
     }
 
     @Override
     public void putObjectGraph(Address contract, byte[] graph) {
         this.repositoryCache.saveObjectGraph(contract, graph);
-        if (this.repositoryCache.getVmType(contract) != AVM_CONTRACT_CODE) {
-            this.repositoryCache.saveVmType(contract, AVM_CONTRACT_CODE);
-        }
+        setVmType(contract);
     }
 
     @Override
@@ -131,18 +133,14 @@ public class KernelInterfaceForAVM implements KernelInterface {
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
         ByteArrayWrapper storageValue = new ByteArrayWrapper(value);
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
-        if (this.repositoryCache.getVmType(address) != AVM_CONTRACT_CODE) {
-            this.repositoryCache.saveVmType(address, AVM_CONTRACT_CODE);
-        }
+        setVmType(address);
     }
 
     @Override
     public void removeStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
         this.repositoryCache.addStorageRow(address, storageKey, ByteArrayWrapper.ZERO);
-        if (this.repositoryCache.getVmType(address) != AVM_CONTRACT_CODE) {
-            this.repositoryCache.saveVmType(address, AVM_CONTRACT_CODE);
-        }
+        setVmType(address);
     }
 
     @Override
