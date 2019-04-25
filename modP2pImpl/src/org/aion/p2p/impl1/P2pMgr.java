@@ -226,8 +226,9 @@ public final class P2pMgr implements IP2pMgr {
             }
 
             if (p2pLOG.isInfoEnabled()) {
-                scheduledWorkers.scheduleWithFixedDelay(
-                        getStatusInstance(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
+                Thread threadStatus = new Thread(getStatusInstance(), "p2p-ts");
+                threadStatus.setPriority(Thread.NORM_PRIORITY);
+                threadStatus.start();
             }
 
             if (!syncSeedsOnly) {
@@ -461,19 +462,19 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskSend getSendInstance(int i) {
-        return new TaskSend(this, i, this.sendMsgQue, this.start, this.nodeMgr, this.selector);
+        return new TaskSend(this, i, sendMsgQue, start, nodeMgr, selector);
     }
 
     private TaskReceive getReceiveInstance() {
-        return new TaskReceive(this.start, this.receiveMsgQue, this.handlers);
+        return new TaskReceive(start, receiveMsgQue, handlers);
     }
 
     private TaskStatus getStatusInstance() {
-        return new TaskStatus(this.nodeMgr, this.selfShortId, this.sendMsgQue, this.receiveMsgQue);
+        return new TaskStatus(start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
     }
 
     private TaskClear getClearInstance() {
-        return new TaskClear(this.nodeMgr, this.start);
+        return new TaskClear(nodeMgr, start);
     }
 
     private TaskConnectPeers getConnectPeersInstance() {

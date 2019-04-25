@@ -23,6 +23,7 @@ public final class TaskRequestActiveNodes implements Runnable {
     public void run() {
         INode node = mgr.getRandom();
         if (node != null) {
+            Thread.currentThread().setName("p2p-reqNodes");
             if (p2pLOG.isTraceEnabled()) {
                 p2pLOG.trace("TaskRequestActiveNodes: {}", node.toString());
             }
