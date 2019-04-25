@@ -50,6 +50,8 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 
 public class InternalTransactionTest {
@@ -363,8 +365,6 @@ public class InternalTransactionTest {
     public void teardown() {}
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
-            return 0L;
-        };
+        return (r, c, s, t, b) -> 0L;
     }
 }

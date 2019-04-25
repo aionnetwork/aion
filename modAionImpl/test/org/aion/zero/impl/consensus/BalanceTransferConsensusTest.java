@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
@@ -27,8 +28,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /** Consensus tests on balance transfers to regular accounts (not contracts). */
+@RunWith(Parameterized.class)
 public class BalanceTransferConsensusTest {
     private static final byte[] SENDER_KEY =
             org.aion.util.conversions.Hex.decode(
@@ -42,6 +47,17 @@ public class BalanceTransferConsensusTest {
     private static final long ENERGY_PRICE = 10_123_456_789L;
 
     private StandaloneBlockchain blockchain;
+
+    private static byte txType;
+
+    @Parameters
+    public static Object[] data() {
+        return new Object[] {TransactionTypes.DEFAULT, TransactionTypes.AVM_CREATE_CODE};
+    }
+
+    public BalanceTransferConsensusTest(byte _txType) {
+        txType = _txType;
+    }
 
     @Before
     public void setup() {
@@ -148,6 +164,55 @@ public class BalanceTransferConsensusTest {
                 this.blockchain.tryToConnectAndFetchSummary(block);
 
         assertThat(results.getLeft()).isEqualTo(ImportResult.INVALID_BLOCK);
+
+        // Make balance transfer transaction to precompiled contract with AVM_CREATE_CODE
+        transaction =
+                new AionTransaction(
+                        BigInteger.ONE.toByteArray(),
+                        to,
+                        amount.toByteArray(),
+                        new byte[0],
+                        2_000_000,
+                        ENERGY_PRICE,
+                        TransactionTypes.AVM_CREATE_CODE); // illegal type for the balance transfer after the fork
+        transaction.sign(key);
+
+        // check that the transaction is not valid
+        assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
+
+        // Process the transaction.
+        parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        block =
+                this.blockchain.createNewBlock(
+                        parentBlock, Collections.singletonList(transaction), false);
+        assertTrue(block.getTransactionsList().isEmpty());
+        results = this.blockchain.tryToConnectAndFetchSummary(block);
+
+        assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Make balance transfer transaction to precompiled contract with DEFAULT type
+        transaction =
+            new AionTransaction(
+                BigInteger.ONE.toByteArray(),
+                to,
+                amount.toByteArray(),
+                new byte[0],
+                2_000_000,
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT); // the only valid type after the fork
+        transaction.sign(key);
+
+        // check that the transaction is not valid
+        assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
+
+        // Process the transaction.
+        parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        block =
+            this.blockchain.createNewBlock(
+                parentBlock, Collections.singletonList(transaction), false);
+        results = this.blockchain.tryToConnectAndFetchSummary(block);
+
+        assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // cleaning up for future tests
         TransactionTypeRule.disallowAVMContractTransaction();
@@ -320,7 +385,8 @@ public class BalanceTransferConsensusTest {
                         amount.toByteArray(),
                         new byte[] {0x1, 0x2, 0x3},
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        txType);
         transaction.sign(key);
         return transaction;
     }

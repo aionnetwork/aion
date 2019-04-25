@@ -10,6 +10,7 @@ import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
@@ -28,16 +29,30 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 // These tests are ignored for now because in order for them to pass we need the clock drift buffer
 // time to be set to 2 seconds instead of 1. We still have to figure out how we are going to handle
 // this... You can make this change locally to verify these tests pass.
-
+@RunWith(Parameterized.class)
 public class StatefulnessTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private Address deployer;
     private long energyPrice = 1;
+
+    private byte txType;
+
+    @Parameters
+    public static Object[] data() {
+        return new Object[] {TransactionTypes.DEFAULT, TransactionTypes.AVM_CREATE_CODE};
+    }
+
+    public StatefulnessTest(byte _txType) {
+        txType = _txType;
+    }
 
     @BeforeClass
     public static void setupAvm() {
@@ -78,9 +93,17 @@ public class StatefulnessTest {
     public void testDeployContract() {
         AionTxReceipt receipt = deployContract();
 
-        // Check the contract has the Avm prefix, and deployment succeeded.
-        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
-        assertTrue(receipt.isSuccessful());
+        if (txType == TransactionTypes.AVM_CREATE_CODE) {
+            // Check the contract has the Avm prefix, and deployment succeeded.
+
+            assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
+            assertTrue(receipt.isSuccessful());
+
+        } else if (txType == TransactionTypes.DEFAULT) {
+            assertEquals(0, receipt.getTransactionOutput().length);
+            // FIXME: is the FVM behavior correct?
+            assertTrue(receipt.isSuccessful());
+        }
     }
 
     @Test
@@ -91,14 +114,18 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
-        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
+        BigInteger contractBalance = BigInteger.ZERO;
+        BigInteger contractNonce = BigInteger.ZERO;
+        if (txType == TransactionTypes.AVM_CREATE_CODE) {
+            assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
+            Address contract = Address.wrap(receipt.getTransactionOutput());
+            contractBalance = getBalance(contract);
+            contractNonce = this.blockchain.getRepository().getNonce(contract);
+        }
         assertTrue(receipt.isSuccessful());
-        Address contract = Address.wrap(receipt.getTransactionOutput());
 
         BigInteger deployerBalanceAfterDeployment = getBalance(this.deployer);
         BigInteger deployerNonceAfterDeployment = getNonce(this.deployer);
-        BigInteger contractBalance = getBalance(contract);
-        BigInteger contractNonce = this.blockchain.getRepository().getNonce(contract);
 
         BigInteger deploymentEnergyCost =
                 BigInteger.valueOf(receipt.getEnergyUsed())
@@ -114,6 +141,11 @@ public class StatefulnessTest {
 
     @Test
     public void testUsingCallInContract() {
+        if (txType == TransactionTypes.DEFAULT) {
+            // skip this test cause the contract can't deploy successfully in the FVM.
+            return;
+        }
+
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
@@ -187,7 +219,7 @@ public class StatefulnessTest {
                         jar,
                         5_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        txType);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
