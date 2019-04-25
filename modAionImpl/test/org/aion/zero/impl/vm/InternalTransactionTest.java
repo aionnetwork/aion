@@ -50,8 +50,6 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 
 public class InternalTransactionTest {
@@ -269,7 +267,8 @@ public class InternalTransactionTest {
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
-                                ByteUtil.hexStringToBytes("0xec779964"), new DataWordImpl(2).getData()),
+                                ByteUtil.hexStringToBytes("0xec779964"),
+                                new DataWordImpl(2).getData()),
                         1_000_000L,
                         1L);
         tx2.sign(deployerAccount);
