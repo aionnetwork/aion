@@ -10,6 +10,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
@@ -18,7 +19,6 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -92,7 +92,7 @@ public class AionRepositoryImplTest {
 
         byte[] originalRoot = repository.getRoot();
         track.saveCode(defaultAccount, defaultAccount.toBytes());
-        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         track.flush();
 
@@ -120,7 +120,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         track.flush();
 
@@ -152,7 +152,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         // does not call parent's flush
         track.flush();
@@ -194,7 +194,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        repoTrack.saveVmType(defaultAccount, InternalVmType.FVM.getCode());
+        repoTrack.saveVmType(defaultAccount, InternalVmType.FVM);
 
         ByteArrayWrapper retrievedStorageValue =
                 repoTrack.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper());

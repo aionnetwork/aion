@@ -33,6 +33,7 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
@@ -46,7 +47,6 @@ import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.types.BlockIdentifierImpl;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
@@ -1029,8 +1029,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         tx.getContractAddress(),
                         block.getNumber(),
                         TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
-                                ? InternalVmType.AVM.getCode()
-                                : InternalVmType.FVM.getCode(),
+                                ? InternalVmType.AVM
+                                : InternalVmType.FVM,
                         true);
             }
         }

@@ -7,9 +7,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.VirtualMachineProvider;
@@ -278,7 +278,7 @@ public class BlockchainIntegrationTest {
                         .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
         assertThat(ci).isNotNull();
         assertThat(ci.getInceptionBlock()).isEqualTo(block.getNumber());
-        assertThat(ci.getVmUsed()).isEqualTo(InternalVmType.FVM.getCode());
+        assertThat(ci.getVmUsed()).isEqualTo(InternalVmType.FVM);
         assertThat(ci.isComplete()).isEqualTo(true);
     }
 

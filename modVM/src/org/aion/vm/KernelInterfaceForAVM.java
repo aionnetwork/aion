@@ -1,11 +1,11 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
@@ -23,8 +23,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
     private long blockTimestamp;
     private long blockNrgLimit;
     private Address blockCoinbase;
-
-    private byte AVM_CONTRACT_CODE = InternalVmType.AVM.getCode();
 
     public KernelInterfaceForAVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
@@ -87,7 +85,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
     }
 
     public void setVmType(Address address) {
-        this.repositoryCache.saveVmType(address, AVM_CONTRACT_CODE);
+        this.repositoryCache.saveVmType(address, InternalVmType.AVM);
     }
 
     @Override
@@ -238,14 +236,14 @@ public class KernelInterfaceForAVM implements KernelInterface {
         }
 
         // Otherwise, it must be an Avm contract address.
-        return getVmType(address) != InternalVmType.FVM.getCode();
+        return getVmType(address) != InternalVmType.FVM;
     }
 
-    private byte getVmType(Address destination) {
-        byte storedVmType = repositoryCache.getVMUsed(destination);
+    private InternalVmType getVmType(Address destination) {
+        InternalVmType storedVmType = repositoryCache.getVMUsed(destination);
 
         // DEFAULT is returned when there was no contract information stored
-        if (storedVmType == InternalVmType.UNKNOWN.getCode()) {
+        if (storedVmType == InternalVmType.UNKNOWN) {
             // will load contract into memory otherwise leading to consensus issues
             RepositoryCache track = repositoryCache.startTracking();
             return track.getVmType(destination);

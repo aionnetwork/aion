@@ -14,13 +14,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -326,7 +326,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void saveVmType(Address contract, byte vmType) {
+    public void saveVmType(Address contract, InternalVmType vmType) {
         fullyWriteLock();
         try {
             getContractDetails(contract).setVmType(vmType);
@@ -337,10 +337,10 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
     /** IMPORTNAT: a new cache must be created before calling this method */
     @Override
-    public byte getVmType(Address contract) {
+    public InternalVmType getVmType(Address contract) {
         if (ContractFactory.isPrecompiledContract(contract)) {
             // skip the call to disk
-            return InternalVmType.FVM.getCode();
+            return InternalVmType.FVM;
         }
         // retrieving the VM type involves updating the contract details values
         // this requires loading the account and details
@@ -690,7 +690,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
                 "getCachelTx should be called on the tracked repository.");
     }
 
-    public byte getVMUsed(Address contract) {
+    public InternalVmType getVMUsed(Address contract) {
         return repository.getVMUsed(contract);
     }
 

@@ -33,12 +33,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.crypto.ECKeyFac;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
@@ -134,7 +134,7 @@ public class OldTxExecutorTest {
         cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         cache.createAccount(to);
         cache.saveCode(to, Hex.decode(contract));
-        cache.saveVmType(to, InternalVmType.FVM.getCode());
+        cache.saveVmType(to, InternalVmType.FVM);
 
         cache.flush();
 
@@ -234,7 +234,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
-        repo.saveVmType(to, InternalVmType.FVM.getCode());
+        repo.saveVmType(to, InternalVmType.FVM);
         repo.flush();
 
         long t1 = System.nanoTime();

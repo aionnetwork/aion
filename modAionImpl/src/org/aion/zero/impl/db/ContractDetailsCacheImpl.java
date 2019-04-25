@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.tx.InternalVmType;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 
@@ -105,20 +105,20 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         return value;
     }
 
-    public void setVmType(byte vmType) {
-        if (this.vmType.getCode() != vmType && vmType != InternalVmType.EITHER.getCode()) {
-            this.vmType = InternalVmType.getInstance(vmType);
+    public void setVmType(InternalVmType vmType) {
+        if (this.vmType != vmType && vmType != InternalVmType.EITHER) {
+            this.vmType = vmType;
 
             setDirty(true);
         }
     }
 
-    public byte getVmType() {
+    public InternalVmType getVmType() {
         if (vmType == InternalVmType.EITHER && origContract != null) {
             // not necessary to set as dirty
-            vmType = InternalVmType.getInstance(origContract.getVmType());
+            vmType = origContract.getVmType();
         }
-        return vmType.getCode();
+        return vmType;
     }
 
     @Override
@@ -213,7 +213,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
         // passing on the vm type
         if (vmType != InternalVmType.EITHER) {
-            origContract.setVmType(vmType.getCode());
+            origContract.setVmType(vmType);
         }
 
         // passing on the object graph

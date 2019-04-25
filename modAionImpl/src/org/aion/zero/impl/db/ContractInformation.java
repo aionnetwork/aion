@@ -1,6 +1,7 @@
 package org.aion.zero.impl.db;
 
 import java.math.BigInteger;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -18,12 +19,12 @@ import org.aion.rlp.RLPList;
  */
 public class ContractInformation {
     private long inceptionBlock;
-    private byte vmUsed;
+    private InternalVmType vmUsed;
     private boolean complete;
 
     private ContractInformation() {}
 
-    public ContractInformation(long inceptionBlock, byte vmUsed, boolean complete) {
+    public ContractInformation(long inceptionBlock, InternalVmType vmUsed, boolean complete) {
         this.inceptionBlock = inceptionBlock;
         this.vmUsed = vmUsed;
         this.complete = complete;
@@ -41,7 +42,7 @@ public class ContractInformation {
                 public byte[] serialize(ContractInformation info) {
                     // NOTE: not using encodeLong because of the non-standard RLP
                     byte[] rlpBlockNumber = RLP.encode(info.inceptionBlock);
-                    byte[] rlpVmUsed = RLP.encodeByte(info.vmUsed);
+                    byte[] rlpVmUsed = RLP.encodeByte(info.vmUsed.getCode());
                     byte[] rlpIsComplete = RLP.encodeByte((byte) (info.complete ? 1 : 0));
 
                     return RLP.encodeList(rlpBlockNumber, rlpVmUsed, rlpIsComplete);
@@ -76,7 +77,7 @@ public class ContractInformation {
                             if (array.length != 1) {
                                 return null;
                             } else {
-                                info.vmUsed = array[0];
+                                info.vmUsed = InternalVmType.getInstance(array[0]);
                             }
 
                             // decode the completeness status
@@ -97,7 +98,7 @@ public class ContractInformation {
         return inceptionBlock;
     }
 
-    public byte getVmUsed() {
+    public InternalVmType getVmUsed() {
         return vmUsed;
     }
 

@@ -14,13 +14,13 @@ import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
@@ -360,9 +360,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             RepositoryCache track = bc.getRepository().startTracking();
             track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
-            track.saveVmType(
-                    ContractFactory.getTotalCurrencyContractAddress(),
-                    InternalVmType.FVM.getCode());
+            track.saveVmType(ContractFactory.getTotalCurrencyContractAddress(), InternalVmType.FVM);
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 // assumes only additions can be made in the genesis

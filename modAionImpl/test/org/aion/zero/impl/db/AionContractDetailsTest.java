@@ -14,6 +14,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.log.AionLoggerFactory;
@@ -21,8 +22,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.tx.InternalVmType;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -91,7 +90,7 @@ public class AionContractDetailsTest {
                         1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
                         );
         contractDetails.setCode(code);
-        contractDetails.setVmType(InternalVmType.FVM.getCode());
+        contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
                 new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
         contractDetails.put(
@@ -169,7 +168,7 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
         contractDetails.setCode(code);
-        contractDetails.setVmType(InternalVmType.FVM.getCode());
+        contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.setAddress(address);
         contractDetails.put(
                 new DataWordImpl(key_0).toWrapper(), new DataWordImpl(val_0).toWrapper());
@@ -280,7 +279,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM.getCode());
+        original.setVmType(InternalVmType.FVM);
         original.externalStorage = true;
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
@@ -335,7 +334,7 @@ public class AionContractDetailsTest {
         original.setDataSource(jpd);
         original.setAddress(address);
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM.getCode());
+        original.setVmType(InternalVmType.FVM);
 
         // the first 2 insertion use memory storage
         for (int i = 0; i < 2; i++) {
@@ -395,7 +394,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM.getCode());
+        original.setVmType(InternalVmType.FVM);
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
             DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
@@ -462,7 +461,7 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM.getCode());
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
 
         // check that the encoding has been updated
         byte[] newEncoding =
@@ -482,6 +481,7 @@ public class AionContractDetailsTest {
         byte[] code = RandomUtils.nextBytes(512);
 
         // create old encoding
+
         byte[] rlpAddress = RLP.encodeElement(address.toBytes());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
         byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
@@ -496,7 +496,7 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM.getCode());
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
 
         // check that the encoding has been updated
         byte[] newEncoding =
@@ -529,13 +529,13 @@ public class AionContractDetailsTest {
                         rlpStorageRoot,
                         rlpStorage,
                         rlpCode,
-                        RLP.encodeByte(TransactionTypes.AVM_CREATE_CODE));
+                        RLP.encodeByte(InternalVmType.AVM.getCode()));
 
         // create object using encoding
         AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(TransactionTypes.AVM_CREATE_CODE);
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.AVM);
     }
 
     @Test
@@ -550,14 +550,14 @@ public class AionContractDetailsTest {
         details.setExternalStorageDataSource(externalStorage);
         details.setAddress(address);
         details.setCode(code);
-        details.setVmType(InternalVmType.FVM.getCode());
+        details.setVmType(InternalVmType.FVM);
 
         // ensure correct size after VM type is set
         RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
         assertThat(data.size()).isEqualTo(6);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM.getCode());
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
     }
 
     @Test(expected = IllegalStateException.class)

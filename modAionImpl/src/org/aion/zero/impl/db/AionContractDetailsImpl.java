@@ -15,9 +15,9 @@ import java.util.Objects;
 import java.util.Optional;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -117,17 +117,17 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
                 : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
     }
 
-    public void setVmType(byte vmType) {
-        if (this.vmType.getCode() != vmType && vmType != InternalVmType.EITHER.getCode()) {
-            this.vmType = InternalVmType.getInstance(vmType);
+    public void setVmType(InternalVmType vmType) {
+        if (this.vmType != vmType && vmType != InternalVmType.EITHER) {
+            this.vmType = vmType;
 
             setDirty(true);
             rlpEncoded = null;
         }
     }
 
-    public byte getVmType() {
-        return vmType.getCode();
+    public InternalVmType getVmType() {
+        return vmType;
     }
 
     @Override
@@ -219,8 +219,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         boolean keepStorageInMem = decodeEncodingWithoutVmType(rlpList, fastCheck);
 
         if (rlpList.size() == 5) {
-            // only FVM contracts used the old encoding
-            vmType = InternalVmType.FVM;
+            // the old encoding is used by FVM contracts
+            // or by accounts accidentally mislabeled as contracts (issue in the repository cache)
+            vmType = InternalVmType.UNKNOWN;
 
             // force a save with new encoding
             this.rlpEncoded = null;
@@ -239,8 +240,31 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             this.rlpEncoded = rlpCode;
         }
 
+        // both sides of the if above can return the UNKNOWN type
+        // UNKNOWN type + code  =>  FVM contract
+        if (vmType == InternalVmType.UNKNOWN) {
+            byte[] code = getCode();
+            if (code != null && code.length > 0) {
+                vmType = InternalVmType.FVM;
+                // force a save with new encoding
+                this.rlpEncoded = null;
+            }
+        }
+
         if (!fastCheck || externalStorage || !keepStorageInMem) { // it was not a fast check
             decodeStorage(rlpList.get(2), rlpList.get(3), keepStorageInMem);
+
+            if (vmType == InternalVmType.UNKNOWN) {
+                if (!Arrays.equals(storageTrie.getRootHash(), EMPTY_TRIE_HASH)) {
+                    // old encoding of FVM contract without code
+                    vmType = InternalVmType.FVM;
+                } else {
+                    // no code & no storage => account mislabeled as contract
+                    vmType = InternalVmType.EITHER;
+                }
+                // force a save with new encoding
+                this.rlpEncoded = null;
+            }
         }
     }
 
@@ -414,7 +438,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
         this.address = address;
         if (ContractFactory.isPrecompiledContract(address)) {
-            setVmType(InternalVmType.FVM.getCode());
+            setVmType(InternalVmType.FVM);
         }
         this.rlpEncoded = null;
     }

@@ -9,6 +9,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
@@ -16,7 +17,6 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.types.Address;
@@ -110,7 +110,7 @@ public class DoubleDataWordTest {
                 addr,
                 new DoubleDataWord(doubleKeyLast).toWrapper(),
                 new DoubleDataWord(doubleValLast).toWrapper());
-        track.saveVmType(addr, InternalVmType.FVM.getCode());
+        track.saveVmType(addr, InternalVmType.FVM);
 
         track.flush();
 
@@ -141,7 +141,7 @@ public class DoubleDataWordTest {
         singVal[0] = (byte) 0xAC;
         track.addStorageRow(
                 addr, new DataWordImpl(singKey).toWrapper(), new DataWordImpl(singVal).toWrapper());
-        track.saveVmType(addr, InternalVmType.FVM.getCode());
+        track.saveVmType(addr, InternalVmType.FVM);
 
         track.flush();
 

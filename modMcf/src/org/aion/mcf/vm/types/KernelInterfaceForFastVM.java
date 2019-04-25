@@ -2,11 +2,11 @@ package org.aion.mcf.vm.types;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -16,7 +16,6 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
     private boolean fork040Enable;
-    private byte FVM_CONTRACT_CODE = InternalVmType.FVM.getCode();
 
     @VisibleForTesting
     public KernelInterfaceForFastVM(
@@ -110,7 +109,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     public void setVmType(Address address) {
-        this.repositoryCache.saveVmType(address, FVM_CONTRACT_CODE);
+        this.repositoryCache.saveVmType(address, InternalVmType.FVM);
     }
 
     @Override
@@ -262,14 +261,14 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        return getVmType(address) != InternalVmType.AVM.getCode();
+        return getVmType(address) != InternalVmType.AVM;
     }
 
-    private byte getVmType(Address destination) {
-        byte storedVmType = repositoryCache.getVMUsed(destination);
+    private InternalVmType getVmType(Address destination) {
+        InternalVmType storedVmType = repositoryCache.getVMUsed(destination);
 
         // DEFAULT is returned when there was no contract information stored
-        if (storedVmType == InternalVmType.UNKNOWN.getCode()) {
+        if (storedVmType == InternalVmType.UNKNOWN) {
             // will load contract into memory otherwise leading to consensus issues
             RepositoryCache track = repositoryCache.startTracking();
             return track.getVmType(destination);

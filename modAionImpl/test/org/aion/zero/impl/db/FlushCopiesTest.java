@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.tx.InternalVmType;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.types.Address;
@@ -55,7 +55,7 @@ public class FlushCopiesTest {
         repositoryChild.setNonce(account, nonce);
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
-        repositoryChild.saveVmType(account, InternalVmType.FVM.getCode());
+        repositoryChild.saveVmType(account, InternalVmType.FVM);
         repositoryChild.flushCopiesTo(this.repository, false);
 
         // Compare object references.
@@ -94,7 +94,7 @@ public class FlushCopiesTest {
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
         repositoryChild.addStorageRow(account, key, value);
-        repositoryChild.saveVmType(account, InternalVmType.FVM.getCode());
+        repositoryChild.saveVmType(account, InternalVmType.FVM);
         repositoryChild.flushCopiesTo(this.repository, false);
 
         // Compare object references.
@@ -133,7 +133,7 @@ public class FlushCopiesTest {
         firstChild.addBalance(account, firstBalance);
         firstChild.saveCode(account, code);
         firstChild.addStorageRow(account, firstKey, firstValue);
-        firstChild.saveVmType(account, InternalVmType.FVM.getCode());
+        firstChild.saveVmType(account, InternalVmType.FVM);
         firstChild.flushCopiesTo(this.repository, false);
 
         byte[] firstStorageHash = firstChild.getContractDetails(account).getStorageHash();
