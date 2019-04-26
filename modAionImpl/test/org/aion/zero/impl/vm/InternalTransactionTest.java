@@ -267,7 +267,8 @@ public class InternalTransactionTest {
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
-                                ByteUtil.hexStringToBytes("0xec779964"), new DataWordImpl(2).getData()),
+                                ByteUtil.hexStringToBytes("0xec779964"),
+                                new DataWordImpl(2).getData()),
                         1_000_000L,
                         1L);
         tx2.sign(deployerAccount);
@@ -363,8 +364,6 @@ public class InternalTransactionTest {
     public void teardown() {}
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
-            return 0L;
-        };
+        return (r, c, s, t, b) -> 0L;
     }
 }
