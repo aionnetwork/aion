@@ -1,7 +1,6 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -11,6 +10,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
@@ -92,7 +92,7 @@ public class AionRepositoryImplTest {
 
         byte[] originalRoot = repository.getRoot();
         track.saveCode(defaultAccount, defaultAccount.toBytes());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         track.flush();
 
@@ -120,7 +120,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         track.flush();
 
@@ -152,7 +152,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         // does not call parent's flush
         track.flush();
@@ -194,7 +194,7 @@ public class AionRepositoryImplTest {
                 defaultAccount,
                 new DataWordImpl(key).toWrapper(),
                 new DataWordImpl(value).toWrapper());
-        repoTrack.saveVmType(defaultAccount, FVM_CREATE_CODE);
+        repoTrack.saveVmType(defaultAccount, InternalVmType.FVM);
 
         ByteArrayWrapper retrievedStorageValue =
                 repoTrack.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper());

@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 
@@ -105,16 +105,16 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         return value;
     }
 
-    public void setVmType(byte vmType) {
-        if (this.vmType != vmType) {
+    public void setVmType(InternalVmType vmType) {
+        if (this.vmType != vmType && vmType != InternalVmType.EITHER) {
             this.vmType = vmType;
 
             setDirty(true);
         }
     }
 
-    public byte getVmType() {
-        if (vmType == TransactionTypes.DEFAULT && origContract != null) {
+    public InternalVmType getVmType() {
+        if (vmType == InternalVmType.EITHER && origContract != null) {
             // not necessary to set as dirty
             vmType = origContract.getVmType();
         }
@@ -212,7 +212,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         }
 
         // passing on the vm type
-        if (vmType != TransactionTypes.DEFAULT) {
+        if (vmType != InternalVmType.EITHER) {
             origContract.setVmType(vmType);
         }
 

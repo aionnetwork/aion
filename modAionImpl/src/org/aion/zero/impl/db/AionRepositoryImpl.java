@@ -19,6 +19,7 @@ import java.util.Set;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
@@ -31,7 +32,6 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.p2p.V1Constants;
 import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
@@ -151,7 +151,7 @@ public class AionRepositoryImpl
                 } else {
 
                     if (!contractDetails.isDirty()
-                            || (contractDetails.getVmType() == TransactionTypes.DEFAULT
+                            || (contractDetails.getVmType() == InternalVmType.EITHER
                                     && !ContractFactory.isPrecompiledContract(address))) {
                         // code added because contract details are not reliably
                         // marked as dirty at present
@@ -421,9 +421,9 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public byte getVmType(Address contract) {
+    public InternalVmType getVmType(Address contract) {
         ContractDetails details = getContractDetails(contract);
-        return (details == null) ? TransactionTypes.DEFAULT : details.getVmType();
+        return (details == null) ? InternalVmType.EITHER : details.getVmType();
     }
 
     @Override
@@ -1064,20 +1064,25 @@ public class AionRepositoryImpl
     }
 
     public void saveIndexedContractInformation(
-            Address contract, long inceptionBlock, byte vmUsed, boolean complete) {
+            Address contract, long inceptionBlock, InternalVmType vmUsed, boolean complete) {
         if (contract != null) {
             contractInfoSource.put(
                     contract.toBytes(), new ContractInformation(inceptionBlock, vmUsed, complete));
         }
     }
 
-    public byte getVMUsed(Address contract) {
-        ContractInformation ci = getIndexedContractInformation(contract);
-        if (ci == null) {
-            // signals that the value is not set
-            return TransactionTypes.DEFAULT;
+    public InternalVmType getVMUsed(Address contract) {
+        if (ContractFactory.isPrecompiledContract(contract)) {
+            // skip the call to disk
+            return InternalVmType.FVM;
         } else {
-            return ci.getVmUsed();
+            ContractInformation ci = getIndexedContractInformation(contract);
+            if (ci == null) {
+                // signals that the value is not set
+                return InternalVmType.UNKNOWN;
+            } else {
+                return ci.getVmUsed();
+            }
         }
     }
 

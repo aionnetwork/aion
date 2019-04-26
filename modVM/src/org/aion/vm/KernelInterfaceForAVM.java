@@ -1,14 +1,11 @@
 package org.aion.vm;
 
-import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
-
 import java.math.BigInteger;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.TransactionTypes;
-import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
@@ -87,6 +84,10 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.repositoryCache.createAccount(address);
     }
 
+    public void setVmType(Address address) {
+        this.repositoryCache.saveVmType(address, InternalVmType.AVM);
+    }
+
     @Override
     public boolean hasAccountState(Address address) {
         return this.repositoryCache.hasAccountState(address);
@@ -94,9 +95,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public void putCode(Address address, byte[] code) {
-        // ensure the vm type is set as soon as the account becomes a contract
-        this.repositoryCache.saveVmType(address, AVM_CREATE_CODE);
         this.repositoryCache.saveCode(address, code);
+        setVmType(address);
     }
 
     @Override
@@ -112,14 +112,13 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public void setTransformedCode(Address address, byte[] transformedCode) {
         this.repositoryCache.setTransformedCode(address, transformedCode);
+        setVmType(address);
     }
 
     @Override
     public void putObjectGraph(Address contract, byte[] graph) {
         this.repositoryCache.saveObjectGraph(contract, graph);
-        if (this.repositoryCache.getVmType(contract) != AVM_CREATE_CODE) {
-            this.repositoryCache.saveVmType(contract, AVM_CREATE_CODE);
-        }
+        setVmType(contract);
     }
 
     @Override
@@ -132,18 +131,14 @@ public class KernelInterfaceForAVM implements KernelInterface {
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
         ByteArrayWrapper storageValue = new ByteArrayWrapper(value);
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
-        if (this.repositoryCache.getVmType(address) != AVM_CREATE_CODE) {
-            this.repositoryCache.saveVmType(address, AVM_CREATE_CODE);
-        }
+        setVmType(address);
     }
 
     @Override
     public void removeStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
         this.repositoryCache.addStorageRow(address, storageKey, ByteArrayWrapper.ZERO);
-        if (this.repositoryCache.getVmType(address) != AVM_CREATE_CODE) {
-            this.repositoryCache.saveVmType(address, AVM_CREATE_CODE);
-        }
+        setVmType(address);
     }
 
     @Override
@@ -241,14 +236,14 @@ public class KernelInterfaceForAVM implements KernelInterface {
         }
 
         // Otherwise, it must be an Avm contract address.
-        return TransactionTypeRule.isValidAVMCode(getVmType(address));
+        return getVmType(address) != InternalVmType.FVM;
     }
 
-    private byte getVmType(Address destination) {
-        byte storedVmType = repositoryCache.getVMUsed(destination);
+    private InternalVmType getVmType(Address destination) {
+        InternalVmType storedVmType = repositoryCache.getVMUsed(destination);
 
         // DEFAULT is returned when there was no contract information stored
-        if (storedVmType == TransactionTypes.DEFAULT) {
+        if (storedVmType == InternalVmType.UNKNOWN) {
             // will load contract into memory otherwise leading to consensus issues
             RepositoryCache track = repositoryCache.startTracking();
             return track.getVmType(destination);

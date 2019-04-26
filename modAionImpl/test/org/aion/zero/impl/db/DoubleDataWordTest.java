@@ -1,6 +1,5 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 
@@ -10,6 +9,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
@@ -110,7 +110,7 @@ public class DoubleDataWordTest {
                 addr,
                 new DoubleDataWord(doubleKeyLast).toWrapper(),
                 new DoubleDataWord(doubleValLast).toWrapper());
-        track.saveVmType(addr, FVM_CREATE_CODE);
+        track.saveVmType(addr, InternalVmType.FVM);
 
         track.flush();
 
@@ -141,7 +141,7 @@ public class DoubleDataWordTest {
         singVal[0] = (byte) 0xAC;
         track.addStorageRow(
                 addr, new DataWordImpl(singKey).toWrapper(), new DataWordImpl(singVal).toWrapper());
-        track.saveVmType(addr, FVM_CREATE_CODE);
+        track.saveVmType(addr, InternalVmType.FVM);
 
         track.flush();
 

@@ -54,12 +54,7 @@ public abstract class AbstractTransaction implements Transaction {
         this.to = receiveAddress;
         this.value = value;
         this.data = data;
-        // setting the default type depending on use case
-        if (to == null) {
-            this.type = TransactionTypes.FVM_CREATE_CODE;
-        } else {
-            this.type = TransactionTypes.DEFAULT;
-        }
+        this.type = TransactionTypes.DEFAULT;
     }
 
     public AbstractTransaction(

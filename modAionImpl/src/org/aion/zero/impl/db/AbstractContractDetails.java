@@ -5,11 +5,12 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
@@ -28,7 +29,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected byte[] objectGraph = null;
 
     // using the default transaction type to specify undefined VM
-    protected byte vmType = TransactionTypes.DEFAULT;
+    protected InternalVmType vmType = InternalVmType.EITHER;
 
     protected AbstractContractDetails() {
         this(0, 64 * 1024);
@@ -60,8 +61,11 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     @Override
     public void setTransformedCode(byte[] transformedCode) {
-        performCode = transformedCode;
-        setDirty(true);
+        // ensures that the object is not set to dirty when copied
+        if (!Arrays.equals(performCode, transformedCode)) {
+            performCode = transformedCode;
+            setDirty(true);
+        }
     }
 
     @Override
@@ -113,16 +117,18 @@ public abstract class AbstractContractDetails implements ContractDetails {
     @Override
     public String toString() {
         String ret;
+        ret = "VM: " + vmType.toString();
+        ret += " dirty: " + isDirty();
 
         if (codes != null) {
-            ret =
+            ret +=
                     "  Code: "
                             + (codes.size() < 2
                                     ? Hex.toHexString(getCode())
                                     : codes.size() + " versions")
                             + "\n";
         } else {
-            ret = "  Code: null\n";
+            ret += "  Code: null\n";
         }
 
         byte[] storage = getStorageHash();

@@ -1,5 +1,6 @@
 package org.aion.vm;
 
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMContractDeployment;
 
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
+import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.Transaction;
@@ -15,7 +17,6 @@ import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
@@ -477,8 +478,7 @@ public class BulkExecutor {
             return isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
             Address destination = transaction.getDestinationAddress();
-            return isValidAVMContractDeployment(getVmType(destination))
-                    || !isContractAddress(destination);
+            return !isContractAddress(destination) || isAllowedByAVM(destination);
         }
     }
 
@@ -489,26 +489,32 @@ public class BulkExecutor {
         } else {
             RepositoryCache cache = this.repositoryChild.startTracking();
             byte[] code = cache.getCode(address);
-            return (code != null) && (code.length > 0);
+            // some contracts may have storage before they have code
+            // TODO: need unit tests for both cases
+            byte[] storage = ((AccountState) cache.getAccountState(address)).getStateRoot();
+            return ((code != null) && (code.length > 0)
+                    || (!Arrays.equals(storage, EMPTY_TRIE_HASH)));
         }
     }
 
-    private byte getVmType(Address destination) {
+    private boolean isAllowedByAVM(Address destination) {
+        InternalVmType vm;
         if (ContractFactory.isPrecompiledContract(destination)) {
             // skip the call to disk
-            return TransactionTypes.FVM_CREATE_CODE;
+            vm = InternalVmType.FVM;
         } else {
-            byte storedVmType = repositoryChild.getVMUsed(destination);
+            InternalVmType storedVmType = repositoryChild.getVMUsed(destination);
 
             // DEFAULT is returned when there was no contract information stored
-            if (storedVmType == TransactionTypes.DEFAULT) {
+            if (storedVmType == InternalVmType.UNKNOWN) {
                 // will load contract into memory otherwise leading to consensus issues
                 RepositoryCache track = repositoryChild.startTracking();
-                return track.getVmType(destination);
+                vm = track.getVmType(destination);
             } else {
-                return storedVmType;
+                vm = storedVmType;
             }
         }
+        return vm != InternalVmType.FVM;
     }
 
     private DataWord getDifficultyAsDataWord(IAionBlock block) {
