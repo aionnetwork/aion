@@ -35,8 +35,10 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Assert;
+import org.junit.Ignore;
 
 /** A class exposing all helper methods and some variables for TRS-related testing. */
+@Ignore
 class TRShelpers {
     private static final byte[] OUT = new byte[1];
     static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;

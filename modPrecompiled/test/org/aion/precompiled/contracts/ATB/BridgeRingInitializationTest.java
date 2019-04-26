@@ -3,10 +3,20 @@ package org.aion.precompiled.contracts.ATB;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
+import java.util.Properties;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.types.Address;
 import org.aion.crypto.HashUtil;
-import org.aion.precompiled.contracts.DummyRepo;
 
+import org.aion.zero.impl.db.AionRepositoryCache;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,12 +26,37 @@ public class BridgeRingInitializationTest {
     private BridgeController controller;
     private static final Address CONTRACT_ADDR =
             new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR =
-            new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
-        DummyRepo repo = new DummyRepo();
+        RepositoryConfig repoConfig =
+                new RepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
+
+                    @Override
+                    public PruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
+
+                    @Override
+                    public ContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
+
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
+        RepositoryCache repo =
+                new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller =
                 new BridgeController(
