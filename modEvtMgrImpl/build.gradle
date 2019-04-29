@@ -1,7 +1,8 @@
 ext.moduleName = 'aion.evtmgr.impl'
 
 dependencies {
-    compile 'network.aion:log4j:0.4.0'
+    //compile 'network.aion:log4j:0.4.0'
+    compile project(':modLogger')
 
     compile project(':modEvtMgr')
     compile 'com.google.guava:guava:25.1-jre'

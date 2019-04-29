@@ -30,7 +30,7 @@ sourceSets {
     if (publish) {
         version = "0.4.0"
     } else {
-        jar.baseName = 'crypto4j-' + getCommitHash()
+        jar.baseName = 'log4j-' + getCommitHash()
     }
 
     main {
