@@ -77,11 +77,10 @@ public class AionTxExecSummary implements TxExecSummary {
         this.receipt = new AionTxReceipt(summary.get(0).getRLPData());
         this.value = decodeBigInteger(summary.get(1).getRLPData());
         this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(2));
-        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(3));
-        this.touchedStorage = decodeTouchedStorage(summary.get(4));
-        this.result = summary.get(5).getRLPData();
-        this.logs = decodeLogs((RLPList) summary.get(6));
-        byte[] failed = summary.get(7).getRLPData();
+        this.touchedStorage = decodeTouchedStorage(summary.get(3));
+        this.result = summary.get(4).getRLPData();
+        this.logs = decodeLogs((RLPList) summary.get(5));
+        byte[] failed = summary.get(6).getRLPData();
         int value = RLP.decodeInt(failed, 0);
         this.failed = TransactionStatus.getStatus(value);
 
@@ -97,12 +96,13 @@ public class AionTxExecSummary implements TxExecSummary {
             return rlpEncoded;
         }
 
+        // Note that the returned encoding does not have any information about internal transactions
+        // TODO: Figure out whether we should remove internal txs from this entirely class entirely
         this.rlpEncoded =
                 RLP.encodeList(
                         this.receipt.getEncoded(),
                         RLP.encodeBigInteger(this.value),
                         encodeDeletedAccounts(this.deletedAccounts),
-                        encodeInternalTransactions(this.internalTransactions),
                         encodeTouchedStorage(this.touchedStorage),
                         RLP.encodeElement(this.result),
                         encodeLogs(this.logs),
@@ -181,16 +181,6 @@ public class AionTxExecSummary implements TxExecSummary {
             result.put(key, value);
         }
         return result;
-    }
-
-    private static byte[] encodeInternalTransactions(List<InternalTransactionInterface> internalTransactions) {
-        byte[][] result = new byte[internalTransactions.size()][];
-        for (int i = 0; i < internalTransactions.size(); i++) {
-            InternalTransactionInterface transaction = internalTransactions.get(i);
-            result[i] = transaction.getEncoded();
-        }
-
-        return RLP.encodeList(result);
     }
 
     private static List<InternalTransactionInterface> decodeInternalTransactions(RLPList internalTransactions) {
