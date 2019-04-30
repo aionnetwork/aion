@@ -100,7 +100,6 @@ public class AvmInternalTxTest {
 
         byte[] call = ABIUtil.encodeMethodArguments("recursivelyGetValue");
         makeCall(BigInteger.ONE, contract, call);
-        makeCall(BigInteger.TWO, contract, call);
     }
 
     private byte[] getJarBytes() {
