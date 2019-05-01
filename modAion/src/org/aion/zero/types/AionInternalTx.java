@@ -61,7 +61,6 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         this.rejected = true;
     }
 
-    @Override
     public int getStackDepth() {
         if (!parsed) {
             rlpParse();
@@ -69,7 +68,6 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         return deep;
     }
 
-    @Override
     public int getIndexOfInternalTransaction() {
         if (!parsed) {
             rlpParse();
@@ -99,7 +97,6 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         return from;
     }
 
-    @Override
     public byte[] getParentTransactionHash() {
         if (!parsed) {
             rlpParse();

@@ -287,18 +287,6 @@ public class InternalTransactionTest {
         AionTxExecSummary summary = exec.execute().get(0);
 
         assertEquals(2, summary.getInternalTransactions().size());
-
-        assertArrayEquals(
-                tx2.getTransactionHash(),
-                summary.getInternalTransactions().get(0).getParentTransactionHash());
-        assertEquals(0, summary.getInternalTransactions().get(0).getStackDepth());
-        assertEquals(0, summary.getInternalTransactions().get(0).getIndexOfInternalTransaction());
-
-        assertArrayEquals(
-                summary.getInternalTransactions().get(0).getTransactionHash(),
-                summary.getInternalTransactions().get(1).getParentTransactionHash());
-        assertEquals(1, summary.getInternalTransactions().get(1).getStackDepth());
-        assertEquals(0, summary.getInternalTransactions().get(1).getIndexOfInternalTransaction());
     }
 
     /*
