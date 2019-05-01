@@ -272,6 +272,7 @@ public class OldTxExecutorTest {
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(ECKeyFac.inst().create());
 
         AionBlock block = createDummyBlock();
 

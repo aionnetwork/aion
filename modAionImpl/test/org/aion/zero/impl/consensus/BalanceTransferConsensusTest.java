@@ -27,13 +27,9 @@ import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
-/** Consensus tests on balance transfers to regular accounts (not contracts). */
-@RunWith(Parameterized.class)
 public class BalanceTransferConsensusTest {
     private static final byte[] SENDER_KEY =
             org.aion.util.conversions.Hex.decode(
@@ -47,17 +43,6 @@ public class BalanceTransferConsensusTest {
     private static final long ENERGY_PRICE = 10_123_456_789L;
 
     private StandaloneBlockchain blockchain;
-
-    private static byte txType;
-
-    @Parameters
-    public static Object[] data() {
-        return new Object[] {TransactionTypes.DEFAULT, TransactionTypes.AVM_CREATE_CODE};
-    }
-
-    public BalanceTransferConsensusTest(byte _txType) {
-        txType = _txType;
-    }
 
     @Before
     public void setup() {
@@ -86,6 +71,7 @@ public class BalanceTransferConsensusTest {
     }
 
     @Test
+    @Ignore
     public void testTransactionTypeBeforeTheFork() {
         // ensure that the fork was not triggered
         TransactionTypeRule.disallowAVMContractTransaction();
@@ -116,7 +102,14 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
 
         // Process the transaction.
-        Pair<ImportResult, AionBlockSummary> results = processTransactions(transaction, 1);
+        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        AionBlock block =
+            this.blockchain.createNewBlock(
+                parentBlock, Collections.singletonList(transaction), true);
+        Pair<ImportResult, AionBlockSummary> results =
+            this.blockchain.tryToConnectAndFetchSummary(block);
+
+        assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // ensure transaction and block were valid
         AionBlockSummary blockSummary = results.getRight();
@@ -159,7 +152,7 @@ public class BalanceTransferConsensusTest {
         AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
                 this.blockchain.createNewBlock(
-                        parentBlock, Collections.singletonList(transaction), false);
+                        parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
 
@@ -184,7 +177,7 @@ public class BalanceTransferConsensusTest {
         parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         block =
                 this.blockchain.createNewBlock(
-                        parentBlock, Collections.singletonList(transaction), false);
+                        parentBlock, Collections.singletonList(transaction), true);
         assertTrue(block.getTransactionsList().isEmpty());
         results = this.blockchain.tryToConnectAndFetchSummary(block);
 
@@ -209,7 +202,7 @@ public class BalanceTransferConsensusTest {
         parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         block =
             this.blockchain.createNewBlock(
-                parentBlock, Collections.singletonList(transaction), false);
+                parentBlock, Collections.singletonList(transaction), true);
         results = this.blockchain.tryToConnectAndFetchSummary(block);
 
         assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -385,8 +378,7 @@ public class BalanceTransferConsensusTest {
                         amount.toByteArray(),
                         new byte[] {0x1, 0x2, 0x3},
                         2_000_000,
-                        ENERGY_PRICE,
-                        txType);
+                        ENERGY_PRICE);
         transaction.sign(key);
         return transaction;
     }

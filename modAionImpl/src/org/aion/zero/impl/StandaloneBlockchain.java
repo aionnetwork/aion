@@ -1,6 +1,7 @@
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
@@ -470,6 +472,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             List<AionTransaction> txs,
             boolean waitUntilBlockTime,
             long currTimeSeconds) {
+
+        for (AionTransaction tx : txs) {
+            if (!TXValidator.isValid(tx)) {
+                throw new InvalidParameterException("invalid transaction input! " + tx.toString());
+            }
+        }
 
         return createNewBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
     }
