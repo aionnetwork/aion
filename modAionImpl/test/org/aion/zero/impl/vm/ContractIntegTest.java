@@ -1441,6 +1441,7 @@ public class ContractIntegTest {
             return;
         }
 
+        blockchain.set040ForkNumber(1000);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger value = BigInteger.ONE;

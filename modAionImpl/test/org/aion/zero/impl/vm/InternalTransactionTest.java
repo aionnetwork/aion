@@ -24,13 +24,15 @@
 package org.aion.zero.impl.vm;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
@@ -40,15 +42,19 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -209,6 +215,7 @@ public class InternalTransactionTest {
         System.out.println(info.getReceipt());
         assertEquals(1, info.getReceipt().getLogInfoList().size());
         Thread.sleep(1000);
+        bc.close();
     }
 
     /*
@@ -287,6 +294,7 @@ public class InternalTransactionTest {
         AionTxExecSummary summary = exec.execute().get(0);
 
         assertEquals(2, summary.getInternalTransactions().size());
+        bc.close();
     }
 
     /*
@@ -303,7 +311,7 @@ public class InternalTransactionTest {
     }
          */
     @Test
-    public void testNestedCreate() throws InterruptedException, VMException {
+    public void testNestedCreate() throws VMException {
         String contractA =
                 "0x60506040523415600f5760006000fd5b5b60166048565b604051809103906000f0801582151615602f5760006000fd5b60006000508282909180600101839055555050505b6057565b604051605a8061009f83390190565b603a806100656000396000f30060506040526008565b60006000fd00a165627a7a72305820c0eea40d4778b01848164e58898e9e8c8ab068ed5ee36ed6f0582d119ecbbede002960506040523415600f5760006000fd5b6013565b603a8060206000396000f30060506040526008565b60006000fd00a165627a7a723058208c13bc92baf844f8574632dca44c49776516cb6cd537b10ed700bf61392b6ae80029";
 
@@ -346,10 +354,142 @@ public class InternalTransactionTest {
         for (InternalTransactionInterface tx : summary.getInternalTransactions()) {
             System.out.println(tx);
         }
+        bc.close();
+    }
+
+    @Test
+    public void testNestedCreateWithExistedAccount() throws VMException {
+        String contractA =
+                "0x60506040523415600f5760006000fd5b5b60166048565b604051809103906000f0801582151615602f5760006000fd5b60006000508282909180600101839055555050505b6057565b604051605a8061009f83390190565b603a806100656000396000f30060506040526008565b60006000fd00a165627a7a72305820c0eea40d4778b01848164e58898e9e8c8ab068ed5ee36ed6f0582d119ecbbede002960506040523415600f5760006000fd5b6013565b603a8060206000396000f30060506040526008565b60006000fd00a165627a7a723058208c13bc92baf844f8574632dca44c49776516cb6cd537b10ed700bf61392b6ae80029";
+
+        StandaloneBlockchain.Bundle bundle =
+                (new StandaloneBlockchain.Builder())
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts()
+                        .build();
+        StandaloneBlockchain bc = bundle.bc;
+        ECKey deployerAccount = bundle.privateKeys.get(0);
+
+        Address firstContractAddr =
+                Address.wrap(
+                        HashUtil.calcNewAddr(
+                                deployerAccount.getAddress(), BigInteger.ONE.toByteArray()));
+
+        Address internalContractAddress =
+                Address.wrap(
+                        HashUtil.calcNewAddr(
+                                firstContractAddr.toBytes(), BigInteger.ZERO.toByteArray()));
+
+        BigInteger nonce = BigInteger.ZERO;
+
+        // ======================
+        // Transfer balance to the internal contract address
+        // ======================
+        AionTransaction tx =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        internalContractAddress,
+                        BigInteger.ONE.toByteArray(),
+                        new byte[0],
+                        1_000_000L,
+                        1L);
+        tx.sign(deployerAccount);
+
+        AionBlock parentBlock = bc.getBestBlock();
+
+        AionBlock newBlock =
+                bc.createBlock(
+                        parentBlock,
+                        Collections.singletonList(tx),
+                        false,
+                        parentBlock.getTimestamp());
+        Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(newBlock);
+        assertTrue(result.getLeft().isSuccessful());
+        nonce = nonce.add(BigInteger.ONE);
+
+        bc.set040ForkNumber(1000);
+
+        // ======================
+        // DEPLOY Failed
+        // ======================
+        tx =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        null,
+                        new byte[0],
+                        ByteUtil.hexStringToBytes(contractA),
+                        1_000_000L,
+                        1L);
+        tx.sign(deployerAccount);
+
+        parentBlock = bc.getBestBlock();
+        newBlock =
+                bc.createBlock(
+                        parentBlock,
+                        Collections.singletonList(tx),
+                        false,
+                        parentBlock.getTimestamp());
+        result = bc.tryToConnectAndFetchSummary(newBlock);
+        assertTrue(result.getLeft().isSuccessful());
+        assertEquals("REVERT", result.getRight().getReceipts().get(0).getError());
+        nonce = nonce.add(BigInteger.ONE);
+
+        bc.set040ForkNumber(0);
+        // ======================
+        // DEPLOY
+        // ======================
+        tx =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        null,
+                        new byte[0],
+                        ByteUtil.hexStringToBytes(contractA),
+                        1_000_000L,
+                        1L);
+        tx.sign(deployerAccount);
+
+        System.out.println("contractaddr: " + tx.getContractAddress());
+
+        RepositoryCache repo = bc.getRepository().startTracking();
+        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        BulkExecutor exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
+        AionTxExecSummary summary = exec.execute().get(0);
+
+        System.out.println(summary.getReceipt());
+        boolean firstItx = true;
+        for (InternalTransactionInterface itx : summary.getInternalTransactions()) {
+            System.out.println(itx);
+            if (firstItx) {
+                assertEquals(
+                        Address.wrap(
+                                HashUtil.calcNewAddr(
+                                        tx.getContractAddress().toBytes(),
+                                        BigInteger.ZERO.toByteArray())),
+                        itx.getDestinationAddress());
+                firstItx = false;
+            }
+        }
+        bc.close();
+    }
+
+    @Before
+    public void setup() {
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
-    public void teardown() {}
+    public void teardown() {
+        VirtualMachineProvider.shutdownAllVirtualMachines();
+    }
 
     private PostExecutionWork getPostExecutionWork() {
         return (r, c, s, t, b) -> 0L;
