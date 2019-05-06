@@ -17,7 +17,7 @@ public final class Contract {
 
     public static void output() {
         Blockchain.println("Owner is: " + owner);
-        Blockchain.log(owner.unwrap(), "message".getBytes());
+        Blockchain.log(owner.toByteArray(), "message".getBytes());
     }
 
     public static byte[] main() {
