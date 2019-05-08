@@ -2721,6 +2721,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setTxIndex(txIndex)
                         .setTimestamp(ByteUtil.byteArrayToLong(t.getTimeStamp()))
                         .setError(error)
+                        .setType(ByteString.copyFrom(new byte[] {t.getTargetVM()}))
                         .addAllLogs(tles);
 
         if (contract != null) {
@@ -3030,6 +3031,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                         tx
                                                                                                 .getTransactionHash()))
                                                                         .setTxIndex(ti.getIndex())
+                                                                        .setType(
+                                                                                ByteString.copyFrom(
+                                                                                        new byte[] {
+                                                                                            tx
+                                                                                                    .getTargetVM()
+                                                                                        }))
                                                                         .addAllLogs(tles);
 
                                                         return tdBuilder.build();
