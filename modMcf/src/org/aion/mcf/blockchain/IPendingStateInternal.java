@@ -26,4 +26,6 @@ public interface IPendingStateInternal<BLK extends Block<?, ?>, Tx extends Trans
     void DumpPool();
 
     void loadPendingTx();
+
+    void checkAvmFlag();
 }

@@ -128,6 +128,8 @@ public class AionHub {
 
         loadBlockchain();
 
+        this.mempool.checkAvmFlag();
+
         this.startingBlock = this.blockchain.getBestBlock();
         if (!cfg.getConsensus().isSeed()) {
             this.mempool.updateBest();

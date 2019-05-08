@@ -38,6 +38,7 @@ import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
@@ -1199,6 +1200,16 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         recoverPool();
         recoverCache();
         loadPendingTx = false;
+    }
+
+    @Override
+    public void checkAvmFlag() {
+
+        long bestBlockNumber = getBestBlock().getNumber();
+
+        if (fork040Block != -1 && bestBlockNumber >= fork040Block) {
+            TransactionTypeRule.allowAVMContractTransaction();
+        }
     }
 
     public void setP2pMgr(final IP2pMgr p2pMgr) {
