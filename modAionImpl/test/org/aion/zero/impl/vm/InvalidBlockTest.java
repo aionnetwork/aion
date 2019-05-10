@@ -1,8 +1,11 @@
 package org.aion.zero.impl.vm;
 
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
@@ -67,16 +70,15 @@ public class InvalidBlockTest {
                 this.blockchain
                         .getRepository()
                         .getNonce(Address.wrap(this.deployerKey.getAddress()));
-        List<AionTransaction> transactions = makeTransactions(10, nonce);
-        Collections.shuffle(transactions);
+        List<AionTransaction> transactions = makeTransactions(5, nonce);
 
         AionBlock parent = this.blockchain.getBestBlock();
         AionBlock block = this.blockchain.createNewBlock(parent, transactions, false);
 
         Pair<ImportResult, AionBlockSummary> res =
                 this.blockchain.tryToConnectAndFetchSummary(block);
-        System.out.println(res.getLeft());
-        System.out.println(res.getRight().getReceipts());
+
+        assertEquals(ImportResult.INVALID_BLOCK, res.getLeft());
     }
 
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
