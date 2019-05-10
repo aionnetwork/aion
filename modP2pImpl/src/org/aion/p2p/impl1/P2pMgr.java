@@ -1,8 +1,6 @@
 package org.aion.p2p.impl1;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SelectionKey;
@@ -88,8 +86,6 @@ public final class P2pMgr implements IP2pMgr {
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
 
-    private String outGoingIP;
-
     public enum Dest {
         INBOUND,
         OUTBOUND,
@@ -132,8 +128,6 @@ public final class P2pMgr implements IP2pMgr {
         this.errTolerance = _errorTolerance;
 
         nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes, p2pLOG);
-
-        outGoingIP = checkOutGoingIP();
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -435,11 +429,6 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public String getOutGoingIP() {
-        return outGoingIP;
-    }
-
-    @Override
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
@@ -496,25 +485,5 @@ public final class P2pMgr implements IP2pMgr {
                 this.selfPort,
                 this.selfRevision.getBytes(),
                 versions);
-    }
-
-    private String checkOutGoingIP() {
-        StringBuilder output = new StringBuilder();
-        Runtime rt = Runtime.getRuntime();
-        Process pr;
-        try {
-            pr = rt.exec("wget -qO- icanhazip.com");
-            pr.waitFor();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-            }
-        } catch (IOException | InterruptedException e) {
-            p2pLOG.error("get outGoingIP exception.", e);
-        }
-
-        return output.toString();
     }
 }
