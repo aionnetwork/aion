@@ -283,11 +283,6 @@ public class BlockPropagationTest {
         public int getAvgLatency() {
             return 0;
         }
-
-        @Override
-        public String getOutGoingIP() {
-            throw new IllegalStateException("not implemented.");
-        }
     }
 
     private static List<ECKey> generateDefaultAccounts() {

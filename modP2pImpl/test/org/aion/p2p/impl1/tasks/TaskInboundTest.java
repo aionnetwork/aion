@@ -281,7 +281,6 @@ public class TaskInboundTest {
         when(ia.getHostAddress()).thenReturn("0.0.0.0");
         when(p2pMgr.isSyncSeedsOnly()).thenReturn(true);
         when(nodeMgr.isSeedIp(anyString())).thenReturn(false);
-        when(p2pMgr.getOutGoingIP()).thenReturn("0.0.0.0");
 
         when(selector.selectNow()).thenReturn(1);
 
@@ -317,7 +316,6 @@ public class TaskInboundTest {
         when(ia.getHostAddress()).thenReturn("0.0.0.0");
         when(p2pMgr.isSyncSeedsOnly()).thenReturn(true);
         when(nodeMgr.isSeedIp(anyString())).thenReturn(false);
-        when(p2pMgr.getOutGoingIP()).thenReturn("1.1.1.1");
         when(s.getPort()).thenReturn(0);
         when(nodeMgr.allocNode(anyString(), anyInt())).thenReturn(node);
 
