@@ -2,6 +2,7 @@ package org.aion.zero.types;
 
 import static org.aion.util.bytes.ByteUtil.ZERO_BYTE_ARRAY;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -339,6 +340,14 @@ public class AionTransaction extends AbstractTransaction {
 
     public void sign(ECKey key) throws MissingPrivateKeyException {
         this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        this.signature = key.sign(this.getRawHash());
+        this.rlpEncoded = null;
+    }
+
+
+    @VisibleForTesting
+    public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {
+        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochSec() * 1_000_000L);
         this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }

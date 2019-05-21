@@ -464,7 +464,8 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
             for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair :
                     e.getValue().entrySet()) {
                 BigInteger ts = pair.getValue().getTimeStamp();
-                while (timeTxDep.get(ts.add(BigInteger.ONE)) != null) {
+                // If timestamp has collision, increase 1 for getting a new slot to put the transaction pair.
+                while (timeTxDep.get(ts) != null) {
                     ts = ts.add(BigInteger.ONE);
                 }
                 timeTxDep.put(ts, pair);
