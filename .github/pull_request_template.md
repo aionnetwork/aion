@@ -1,6 +1,6 @@
 ## Notice
 
-It is not allowed to submit your PR to the master branch directly, please submit your PR to the master-pre-merge branch.
+It is not allowed to submit your PR to the 'master' branch directly, please submit your PR to the 'master-pre-merge' branch and rebase your PR to 'master-pre-merge' branch.
 
 ## Description
 
@@ -26,12 +26,3 @@ Please describe the tests you used to validate this pull request. Provide any re
 
 -
 
-## Verification
-
-Insert **x** into the following checkboxes to confirm (eg. [x]):
-- [ ] I have self-reviewed my own code and conformed to the style guidelines of this project.
-- [ ] New and existing tests pass locally with my changes.
-- [ ] I have added tests for my fix or feature.
-- [ ] I have made appropriate changes to the corresponding documentation.
-- [ ] My code generates no new warnings.
-- [ ] Any dependent changes have been made.
