@@ -333,9 +333,11 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     public void init(final AionBlockchainImpl blockchain, boolean test) {
+
+        this.blockchain = blockchain;
+        this.best = new AtomicReference<>();
+
         if (!this.isSeed) {
-            this.blockchain = blockchain;
-            this.best = new AtomicReference<>();
             this.transactionStore = blockchain.getTransactionStore();
 
             this.evtMgr = blockchain.getEventMgr();

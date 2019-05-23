@@ -1,5 +1,6 @@
 package org.aion.zero.impl.config;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -156,5 +157,10 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     public boolean isSeed() {
         return seed;
+    }
+
+    @VisibleForTesting
+    public void setSeed(final boolean value) {
+        seed = value;
     }
 }

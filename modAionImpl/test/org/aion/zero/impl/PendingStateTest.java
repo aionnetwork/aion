@@ -216,4 +216,22 @@ public class PendingStateTest {
 
         assertEquals(hub.getPendingState().addPendingTransaction(transaction), TxResponse.SUCCESS);
     }
+
+    @Test
+    public void testAionPendingStateInit() {
+        StandaloneBlockchain.Bundle bundle =
+            new StandaloneBlockchain.Builder()
+                .withDefaultAccounts()
+                .withValidatorConfiguration("simple")
+                .withAvmEnabled()
+                .build();
+        StandaloneBlockchain blockchain = bundle.bc;
+        CfgAion.inst().setGenesis(blockchain.getGenesis());
+        CfgAion.inst().getConsensus().setSeed(true);
+
+        // NullPointerException should not happens
+        AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository());
+
+        CfgAion.inst().getConsensus().setSeed(false);
+    }
 }
