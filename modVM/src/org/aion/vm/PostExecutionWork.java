@@ -8,40 +8,25 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 
 /**
- * A functional interface that specifies post-execution "work" or logic that is to be applied
- * immediately after a transaction has been executed. Or, if the transaction is being executed in
- * bulk, then it is to be applied in such a manner that it appears to be logically applied immediately
- * after the execution of the transaction so that from the perspective of the caller there is no
- * difference between running the transactions in bulk or sequentially.
+ * An abstract notion of work that is to be applied after a transaction has been executed.
  */
-@FunctionalInterface
-public interface PostExecutionWork {
+public final class PostExecutionWork {
+    private final Repository repository;
+    private final PostExecutionLogic postExecutionLogic;
+
+    public PostExecutionWork(Repository repository, PostExecutionLogic logic) {
+        if (logic == null) {
+            throw new NullPointerException("Cannot create PostExecutionWork with null logic!");
+        }
+        this.repository = repository;
+        this.postExecutionLogic = logic;
+    }
 
     /**
-     * Performs the specified post-execution work that is to be done immediately after a transaction
-     * has been executed.
-     *
-     * <p>This work may do whatever it needs to the provided inputs.
-     *
-     * <p>The work must return the amount of energy that this transaction will use in its block so
-     * that the remaining block energy may be updated correctly.
-     *
-     * Note that this value may not always be relevant to the component of the kernel that wants
-     * this work done, in which case that component should define this method to return zero (0) so
-     * that no block energy usage deductions are made.
-     *
-     * @param repository The top-most level of the repository.
-     * @param repositoryChild The child repository of repository.
-     * @param summary The transaction execution summary.
-     * @param transaction The transaction.
-     * @param blockEnergyRemaining The amount of energy remaining in the block <b>prior</b> to
-     *     execution.
-     * @return The amount of energy that this transaction uses in its block.
+     * Performs the work and returns the amount of energy remaining in the block after executing
+     * the specified transaction.
      */
-    long doPostExecutionWork(
-            Repository repository,
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
-            AionTxExecSummary summary,
-            AionTransaction transaction,
-            long blockEnergyRemaining);
+    public long doWork(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache, AionTxExecSummary summary, AionTransaction transaction, long blockEnergyRemaining) {
+        return this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction, blockEnergyRemaining);
+    }
 }

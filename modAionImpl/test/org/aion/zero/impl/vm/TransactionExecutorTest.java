@@ -34,12 +34,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
@@ -49,8 +47,9 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionWork;
+import org.aion.vm.PostExecutionLogic;
 
+import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -390,8 +389,8 @@ public class TransactionExecutorTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
+        return new PostExecutionWork(null, (r, c, s, t, b) -> {
             return 0L;
-        };
+        });
     }
 }

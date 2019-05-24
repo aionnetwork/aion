@@ -10,7 +10,6 @@ import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.InternalVmType;
-import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxExecSummary;
@@ -51,19 +50,10 @@ import org.slf4j.Logger;
  * adhered to, so that it always appears as if the transaction at index 0 was executed first, then
  * the post-execution work is applied to it, then the transaction at index 1 following by the
  * post-execution work, and so on.
- *
- * @implNote The repository and repositoryChild pairing given to the constructor of this class will
- *     be provided to the {@link PostExecutionWork} class to run the post-execution logic. If no
- *     top-level repository is required for the {@link PostExecutionWork} (that is, the repository
- *     field can safely be set null) then a second constructor with this field missing is provided,
- *     and only a repositoryChild is set. A repositoryChild is required for the actual
- *     BulkExecutor's logic, whereas repository is only used by the post-execution logic.
- *     <p>The {@code execute()} method is thread-safe.
  */
 public class BulkExecutor {
     private static final Object LOCK = new Object();
-    private Repository repository;
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
+    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository;
     private PostExecutionWork postExecutionWork;
     private ExecutionBatch executionBatch;
     private Logger logger;
@@ -79,11 +69,8 @@ public class BulkExecutor {
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
-     * <p>ASSUMPTION: the parent of repositoryChild is repository.
-     *
      * @param executionBatch The batch of transactions to execute.
-     * @param repository The top-level repository.
-     * @param repositoryChild The child of the top-level repository.
+     * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
@@ -93,8 +80,7 @@ public class BulkExecutor {
      */
     public BulkExecutor(
             ExecutionBatch executionBatch,
-            Repository repository,
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
@@ -104,7 +90,6 @@ public class BulkExecutor {
 
         this.executionBatch = executionBatch;
         this.repository = repository;
-        this.repositoryChild = repositoryChild;
         this.isLocalCall = isLocalCall;
         this.allowNonceIncrement = allowNonceIncrement;
         this.blockRemainingEnergy = blockRemainingEnergy;
@@ -121,7 +106,7 @@ public class BulkExecutor {
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
      * @param executionBatch The batch of transactions to execute.
-     * @param repositoryChild The repository.
+     * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
@@ -130,7 +115,7 @@ public class BulkExecutor {
      */
     public BulkExecutor(
             ExecutionBatch executionBatch,
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
@@ -139,33 +124,11 @@ public class BulkExecutor {
 
         this(
                 executionBatch,
-                repositoryChild,
+                repository,
                 isLocalCall,
                 allowNonceIncrement,
                 blockRemainingEnergy,
                 false,
-                logger,
-                work);
-    }
-
-    public BulkExecutor(
-            ExecutionBatch executionBatch,
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
-            boolean isLocalCall,
-            boolean allowNonceIncrement,
-            long blockRemainingEnergy,
-            boolean fork040enable,
-            Logger logger,
-            PostExecutionWork work) {
-
-        this(
-                executionBatch,
-                null,
-                repositoryChild,
-                isLocalCall,
-                allowNonceIncrement,
-                blockRemainingEnergy,
-                fork040enable,
                 logger,
                 work);
     }
@@ -188,7 +151,7 @@ public class BulkExecutor {
                 if (transactionIsForAionVirtualMachine(firstTransactionInNextBatch)) {
                     vmKernel =
                             new KernelInterfaceForAVM(
-                                    this.repositoryChild.startTracking(),
+                                    this.repository.startTracking(),
                                     this.allowNonceIncrement,
                                     this.isLocalCall,
                                     getDifficultyAsDataWord(block),
@@ -204,7 +167,7 @@ public class BulkExecutor {
                 } else {
                     vmKernel =
                             new KernelInterfaceForFastVM(
-                                    this.repositoryChild.startTracking(),
+                                    this.repository.startTracking(),
                                     this.allowNonceIncrement,
                                     this.isLocalCall,
                                     fork040enable,
@@ -269,9 +232,8 @@ public class BulkExecutor {
                 AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
 
                 // 3. Do any post execution work and update the remaining block energy.
-                this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
+                this.blockRemainingEnergy -= this.postExecutionWork.doWork(
                     this.repository,
-                    this.repositoryChild,
                     summary,
                     transaction,
                     this.blockRemainingEnergy);
@@ -322,9 +284,8 @@ public class BulkExecutor {
             AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForFvmTransaction(transaction, kernelFromVM, result);
 
             // 3. Do any post execution work and update the remaining block energy.
-            this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
+            this.blockRemainingEnergy -= this.postExecutionWork.doWork(
                 this.repository,
-                this.repositoryChild,
                 summary,
                 transaction,
                 this.blockRemainingEnergy);
@@ -365,7 +326,7 @@ public class BulkExecutor {
 
         kernelFromVM.commitTo(
             new KernelInterfaceForAVM(
-                this.repositoryChild,
+                this.repository,
                 this.allowNonceIncrement,
                 this.isLocalCall,
                 getDifficultyAsDataWord(block),
@@ -410,7 +371,7 @@ public class BulkExecutor {
 
         kernelFromVM.commitTo(
             new KernelInterfaceForFastVM(
-                this.repositoryChild,
+                this.repository,
                 this.allowNonceIncrement,
                 this.isLocalCall,
                 this.fork040enable,
@@ -451,7 +412,7 @@ public class BulkExecutor {
 
     private void updateRepositoryForFvm(TxExecSummary summary, AionTransaction tx, Address coinbase, List<Address> deleteAccounts, TransactionResult result) {
         if (!isLocalCall && !summary.isRejected()) {
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track = this.repositoryChild.startTracking();
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track = this.repository.startTracking();
 
             tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
 
@@ -560,7 +521,7 @@ public class BulkExecutor {
         if (ContractFactory.isPrecompiledContract(address)) {
             return true;
         } else {
-            RepositoryCache cache = this.repositoryChild.startTracking();
+            RepositoryCache cache = this.repository.startTracking();
             byte[] code = cache.getCode(address);
             // some contracts may have storage before they have code
             // TODO: need unit tests for both cases
@@ -576,12 +537,12 @@ public class BulkExecutor {
             // skip the call to disk
             vm = InternalVmType.FVM;
         } else {
-            InternalVmType storedVmType = repositoryChild.getVMUsed(destination);
+            InternalVmType storedVmType = repository.getVMUsed(destination);
 
             // DEFAULT is returned when there was no contract information stored
             if (storedVmType == InternalVmType.UNKNOWN) {
                 // will load contract into memory otherwise leading to consensus issues
-                RepositoryCache track = repositoryChild.startTracking();
+                RepositoryCache track = repository.startTracking();
                 vm = track.getVmType(destination);
             } else {
                 vm = storedVmType;

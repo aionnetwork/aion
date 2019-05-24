@@ -61,6 +61,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.exception.VMException;
@@ -331,15 +332,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will
+     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will
      * run the provided logic defined in this method. This work is to be applied after each
      * transaction has been run.
      *
      * <p>This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(IAionBlock)}
      * method.
      */
-    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock() {
-        return (topRepository,
+    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock(Repository repository) {
+        PostExecutionLogic logic = (topRepository,
                 childRepository,
                 transactionSummary,
                 transaction,
@@ -356,17 +357,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return 0;
             }
         };
+
+        return new PostExecutionWork(repository, logic);
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will
+     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will
      * run the provided logic defined in this method. This work is to be applied after each
      * transaction has been run.
      *
      * <p>This "work" is specific to the {@link AionBlockchainImpl#applyBlock(IAionBlock)} method.
      */
-    private static PostExecutionWork getPostExecutionWorkForApplyBlock() {
-        return (topRepository,
+    private static PostExecutionWork getPostExecutionWorkForApplyBlock(Repository repository) {
+        PostExecutionLogic logic = (topRepository,
                 childRepository,
                 transactionSummary,
                 transaction,
@@ -376,6 +379,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             receipt.setPostTxState(topRepository.getRoot());
             return 0;
         };
+
+        return new PostExecutionWork(repository, logic);
     }
 
     private static boolean checkFork040(long blkNum) {
@@ -1307,14 +1312,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             BulkExecutor executor =
                     new BulkExecutor(
                             batch,
-                            repository,
                             track,
                             false,
                             true,
                             block.getNrgLimit(),
                             fork040Enable,
                             LOGGER_VM,
-                            getPostExecutionWorkForGeneratePreBlock());
+                            getPostExecutionWorkForGeneratePreBlock(repository));
 
             List<AionTxExecSummary> executionSummaries = null;
             try {
@@ -1360,14 +1364,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             BulkExecutor executor =
                     new BulkExecutor(
                             batch,
-                            repository,
                             track,
                             false,
                             true,
                             block.getNrgLimit(),
                             fork040Enable,
                             LOGGER_VM,
-                            getPostExecutionWorkForApplyBlock());
+                            getPostExecutionWorkForApplyBlock(repository));
 
             List<AionTxExecSummary> executionSummaries = null;
             try {

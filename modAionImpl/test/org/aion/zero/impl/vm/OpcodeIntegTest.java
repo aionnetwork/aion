@@ -45,8 +45,9 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
-import org.aion.vm.PostExecutionWork;
+import org.aion.vm.PostExecutionLogic;
 
+import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
@@ -819,8 +820,8 @@ public class OpcodeIntegTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
+        return new PostExecutionWork(null, (r, c, s, t, b) -> {
             return 0L;
-        };
+        });
     }
 }

@@ -21,6 +21,7 @@ import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
@@ -70,7 +71,7 @@ public class AionImpl implements IAionChain {
      * the specs, we return zero since we have no meaningful value to return here.
      */
     private static PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> 0;
+        return new PostExecutionWork(null, (r, c, s, t, b) -> { return 0; });
     }
 
     @Override

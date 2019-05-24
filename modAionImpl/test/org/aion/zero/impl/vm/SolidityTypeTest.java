@@ -53,6 +53,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -450,8 +451,8 @@ public class SolidityTypeTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
+        return new PostExecutionWork(null, (r, c, s, t, b) -> {
             return 0L;
-        };
+        });
     }
 }

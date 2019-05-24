@@ -48,6 +48,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -1111,9 +1112,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * different methods in this class expect to have done when they call into the executor.
      */
     private static PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
-            return 0L;
-        };
+        return new PostExecutionWork(null, (r, c, s, t, b) -> { return 0; });
     }
 
     @Override
