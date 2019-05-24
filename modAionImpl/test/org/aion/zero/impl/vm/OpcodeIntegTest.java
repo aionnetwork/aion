@@ -43,6 +43,7 @@ import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -812,7 +813,14 @@ public class OpcodeIntegTest {
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                details, repo, false, true, block.getNrgLimit(), false, false, LOGGER_VM);
+        return new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo)
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
     }
 }

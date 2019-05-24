@@ -58,6 +58,7 @@ import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.ResultCode;
@@ -170,16 +171,15 @@ public class ContractIntegTest {
         RepositoryCache repo = blockchain.getRepository().startTracking();
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        BulkExecutor exec =
-                BulkExecutor.newExecutorWithNoPostExecutionWork(
-                        details,
-                        repo,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        false,
-                        false,
-                        LOGGER_VM);
+        BulkExecutor exec = new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo)
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
         AionTxExecSummary summary = exec.execute().get(0);
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
@@ -227,7 +227,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -279,7 +279,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -332,7 +332,7 @@ public class ContractIntegTest {
         if (txType == TransactionTypes.DEFAULT) {
             AionBlock block = makeBlock(tx);
             RepositoryCache repo = blockchain.getRepository().startTracking();
-            BulkExecutor exec = getNewExecutor(tx, block, repo);
+            BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
             AionTxExecSummary summary = exec.execute().get(0);
 
             assertEquals("", summary.getReceipt().getError());
@@ -349,7 +349,7 @@ public class ContractIntegTest {
             blockchain.set040ForkNumber(0);
             AionBlock block = makeBlock(tx);
             RepositoryCache repo = blockchain.getRepository().startTracking();
-            BulkExecutor exec = getNewExecutor(tx, block, repo);
+            BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
             AionTxExecSummary summary = exec.execute().get(0);
 
             assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
@@ -383,7 +383,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         if (txType == TransactionTypes.DEFAULT) {
 
@@ -435,7 +435,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -489,7 +489,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -554,7 +554,7 @@ public class ContractIntegTest {
             assertFalse(tx.isContractCreationTransaction());
 
             AionBlock block = makeBlock(tx);
-            BulkExecutor exec = getNewExecutor(tx, block, repo);
+            BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
             AionTxExecSummary summary = exec.execute().get(0);
             assertEquals("", summary.getReceipt().getError());
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -612,7 +612,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -639,7 +639,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
-        exec = getNewExecutor(tx, block, repo);
+        exec = getNewExecutorWithForkEnabled(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -697,7 +697,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("REVERT", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -754,7 +754,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -815,7 +815,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -877,7 +877,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -957,7 +957,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -990,7 +990,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
-        exec = getNewExecutor(tx, block, repo);
+        exec = getNewExecutorWithForkEnabled(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1048,7 +1048,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1081,7 +1081,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
-        exec = getNewExecutor(tx, block, repo);
+        exec = getNewExecutorWithForkEnabled(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("REVERT", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1173,7 +1173,7 @@ public class ContractIntegTest {
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -1234,7 +1234,7 @@ public class ContractIntegTest {
         BigInteger senderBalance = repo.getBalance(deployer);
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1273,7 +1273,7 @@ public class ContractIntegTest {
         repo = blockchain.getRepository().startTracking();
 
         block = makeBlock(tx);
-        exec = getNewExecutor(tx, block, repo);
+        exec = getNewExecutorWithForkEnabled(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1418,7 +1418,7 @@ public class ContractIntegTest {
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         // The evmjit only return the the transaction success or failed when performing the function
         // call.
@@ -1793,7 +1793,7 @@ public class ContractIntegTest {
         assertEquals(deployerNonce, repo.getNonce(deployer));
 
         AionBlock block = makeBlock(tx);
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
+        BulkExecutor exec = getNewExecutorWithForkEnabled(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
 
         if (!summary.getReceipt().getError().equals("")) {
@@ -1949,18 +1949,18 @@ public class ContractIntegTest {
         return output;
     }
 
-    private BulkExecutor getNewExecutor(
+    private BulkExecutor getNewExecutorWithForkEnabled(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                details,
-                repo,
-                false,
-                true,
-                block.getNrgLimit(),
-                true,
-                false,
-                LOGGER_VM);
+        return new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo)
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(true)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
     }
 
     private AionBlock makeBlock(AionTransaction tx) {

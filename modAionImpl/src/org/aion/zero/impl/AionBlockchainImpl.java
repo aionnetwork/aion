@@ -60,6 +60,7 @@ import org.aion.types.Hash256;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
@@ -1302,17 +1303,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-            BulkExecutor executor =
-                    BulkExecutor.newExecutor(
-                            batch,
-                            track,
-                            false,
-                            true,
-                            block.getNrgLimit(),
-                            fork040Enable,
-                            true,
-                            LOGGER_VM,
-                            getPostExecutionWorkForGeneratePreBlock(repository));
+            BulkExecutor executor = new BulkExecutorBuilder()
+                .transactionBatchToExecute(batch)
+                .repository(track)
+                .isLocalCall(false)
+                .allowNonceIncrement(true)
+                .isFork040enabled(fork040Enable)
+                .checkBlockEnergyLimit(true)
+                .logger(LOGGER_VM)
+                .postExecutionWork(getPostExecutionWorkForGeneratePreBlock(repository))
+                .build();
 
             List<AionTxExecSummary> executionSummaries = null;
             try {
@@ -1355,17 +1355,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-            BulkExecutor executor =
-                    BulkExecutor.newExecutor(
-                            batch,
-                            track,
-                            false,
-                            true,
-                            block.getNrgLimit(),
-                            fork040Enable,
-                            false,
-                            LOGGER_VM,
-                            getPostExecutionWorkForApplyBlock(repository));
+            BulkExecutor executor = new BulkExecutorBuilder()
+                .transactionBatchToExecute(batch)
+                .repository(track)
+                .isLocalCall(false)
+                .allowNonceIncrement(true)
+                .isFork040enabled(fork040Enable)
+                .checkBlockEnergyLimit(false)
+                .logger(LOGGER_VM)
+                .postExecutionWork(getPostExecutionWorkForApplyBlock(repository))
+                .build();
 
             List<AionTxExecSummary> executionSummaries = null;
             try {

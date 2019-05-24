@@ -52,6 +52,7 @@ import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -410,8 +411,15 @@ public class SolidityTypeTest {
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                details, repo, false, true, block.getNrgLimit(), false, false, LOGGER_VM);
+        return new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo)
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
     }
 
     private static AionBlock createDummyBlock() {

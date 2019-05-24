@@ -46,6 +46,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -103,16 +104,15 @@ public class Benchmark {
 
         // deploy contract
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        BulkExecutor exec =
-                BulkExecutor.newExecutorWithNoPostExecutionWork(
-                        details,
-                        repo,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        false,
-                        false,
-                        LOGGER);
+        BulkExecutor exec = new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo)
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER)
+            .build();
         AionTxExecSummary summary = exec.execute().get(0);
         assertFalse(summary.isFailed());
 
@@ -185,16 +185,15 @@ public class Benchmark {
 
         for (AionTransaction tx : txs) {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-            BulkExecutor exec =
-                    BulkExecutor.newExecutorWithNoPostExecutionWork(
-                            details,
-                            repo,
-                            false,
-                            true,
-                            block.getNrgLimit(),
-                            false,
-                            false,
-                            LOGGER);
+            BulkExecutor exec = new BulkExecutorBuilder()
+                .transactionBatchToExecute(details)
+                .repository(repo)
+                .isLocalCall(false)
+                .allowNonceIncrement(true)
+                .isFork040enabled(false)
+                .checkBlockEnergyLimit(false)
+                .logger(LOGGER)
+                .build();
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
 
@@ -233,16 +232,15 @@ public class Benchmark {
             AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
 
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-            BulkExecutor exec =
-                    BulkExecutor.newExecutorWithNoPostExecutionWork(
-                            details,
-                            repo,
-                            false,
-                            true,
-                            block.getNrgLimit(),
-                            false,
-                            false,
-                            LOGGER);
+            BulkExecutor exec = new BulkExecutorBuilder()
+                .transactionBatchToExecute(details)
+                .repository(repo)
+                .isLocalCall(false)
+                .allowNonceIncrement(true)
+                .isFork040enabled(false)
+                .checkBlockEnergyLimit(false)
+                .logger(LOGGER)
+                .build();
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
 
