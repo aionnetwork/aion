@@ -53,8 +53,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -412,8 +410,8 @@ public class SolidityTypeTest {
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return new BulkExecutor(
-                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        return BulkExecutor.newExecutorWithNoPostExecutionWork(
+                details, repo, false, true, block.getNrgLimit(), false, LOGGER_VM);
     }
 
     private static AionBlock createDummyBlock() {
@@ -448,11 +446,5 @@ public class SolidityTypeTest {
                 solutions,
                 0,
                 5000000);
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
     }
 }

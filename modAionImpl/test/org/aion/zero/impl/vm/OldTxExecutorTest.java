@@ -48,8 +48,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -136,14 +134,14 @@ public class OldTxExecutorTest {
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo.startTracking(),
                         false,
                         true,
                         block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -181,14 +179,14 @@ public class OldTxExecutorTest {
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo.startTracking(),
                         false,
                         true,
                         block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -238,14 +236,14 @@ public class OldTxExecutorTest {
         for (int i = 0; i < repeat; i++) {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutorWithNoPostExecutionWork(
                             details,
                             repo.startTracking(),
                             false,
                             true,
                             block.getNrgLimit(),
-                            LOGGER_VM,
-                            getPostExecutionWork());
+                            false,
+                            LOGGER_VM);
             exec.execute();
         }
         long t2 = System.nanoTime();
@@ -279,14 +277,14 @@ public class OldTxExecutorTest {
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo.startTracking(),
                         false,
                         true,
                         block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -325,11 +323,5 @@ public class OldTxExecutorTest {
                 solutions,
                 0,
                 5000000);
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
     }
 }

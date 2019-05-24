@@ -15,6 +15,9 @@ public final class PostExecutionWork {
     private final PostExecutionLogic postExecutionLogic;
 
     public PostExecutionWork(Repository repository, PostExecutionLogic logic) {
+        if (repository == null) {
+            throw new NullPointerException("Cannot create PostExecutionWork with null repository!");
+        }
         if (logic == null) {
             throw new NullPointerException("Cannot create PostExecutionWork with null logic!");
         }

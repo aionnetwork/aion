@@ -45,9 +45,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
-import org.aion.vm.PostExecutionLogic;
-
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
@@ -815,13 +812,7 @@ public class OpcodeIntegTest {
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return new BulkExecutor(
-                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
+        return BulkExecutor.newExecutorWithNoPostExecutionWork(
+                details, repo, false, true, block.getNrgLimit(), false, LOGGER_VM);
     }
 }

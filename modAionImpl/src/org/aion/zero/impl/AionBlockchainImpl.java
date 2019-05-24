@@ -1310,7 +1310,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutor(
                             batch,
                             track,
                             false,
@@ -1362,7 +1362,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutor(
                             batch,
                             track,
                             false,

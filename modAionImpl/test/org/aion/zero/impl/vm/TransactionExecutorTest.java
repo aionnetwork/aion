@@ -47,9 +47,6 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionLogic;
-
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -129,14 +126,14 @@ public class TransactionExecutorTest {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         BigInteger refund = summary.getRefund();
 
@@ -226,14 +223,14 @@ public class TransactionExecutorTest {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         System.out.println(Hex.toHexString(summary.getResult()));
@@ -265,14 +262,14 @@ public class TransactionExecutorTest {
 
         details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         summary = exec.execute().get(0);
 
         System.out.println(Hex.toHexString(summary.getResult()));
@@ -326,14 +323,14 @@ public class TransactionExecutorTest {
 
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         System.out.println(summary.getReceipt());
 
@@ -386,11 +383,5 @@ public class TransactionExecutorTest {
         byte[] out = new byte[outputSize];
         System.arraycopy(rawOutput, DataWordImpl.BYTES + len, out, 0, outputSize);
         return out;
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
     }
 }

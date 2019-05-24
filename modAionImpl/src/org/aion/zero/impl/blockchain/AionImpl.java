@@ -21,8 +21,6 @@ import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -64,14 +62,6 @@ public class AionImpl implements IAionChain {
 
     public static AionImpl inst() {
         return Holder.INSTANCE;
-    }
-
-    /**
-     * There is no post-execution work to do for any calls in this class to do. In accordance with
-     * the specs, we return zero since we have no meaningful value to return here.
-     */
-    private static PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> { return 0; });
     }
 
     @Override
@@ -143,14 +133,14 @@ public class AionImpl implements IAionChain {
         try {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutorWithNoPostExecutionWork(
                             details,
                             repository,
                             true,
                             true,
                             block.getNrgLimit(),
-                            LOG_VM,
-                            getPostExecutionWork());
+                            false,
+                            LOG_VM);
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
@@ -174,14 +164,14 @@ public class AionImpl implements IAionChain {
         try {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutorWithNoPostExecutionWork(
                             details,
                             repository,
                             true,
                             true,
                             block.getNrgLimit(),
-                            LOG_VM,
-                            getPostExecutionWork());
+                            false,
+                            LOG_VM);
             return executor.execute().get(0).getReceipt();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);

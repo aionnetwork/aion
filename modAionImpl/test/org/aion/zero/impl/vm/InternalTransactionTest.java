@@ -42,8 +42,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -284,14 +282,14 @@ public class InternalTransactionTest {
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx2));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         bc.getRepository().startTracking(),
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
 
         assertEquals(2, summary.getInternalTransactions().size());
@@ -341,14 +339,14 @@ public class InternalTransactionTest {
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx1));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         bc.getRepository().startTracking(),
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
 
         System.out.println(summary.getReceipt());
@@ -455,14 +453,14 @@ public class InternalTransactionTest {
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         context.block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
 
         System.out.println(summary.getReceipt());
@@ -490,9 +488,5 @@ public class InternalTransactionTest {
     @After
     public void teardown() {
         LongLivedAvm.destroy();
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> 0L);
     }
 }

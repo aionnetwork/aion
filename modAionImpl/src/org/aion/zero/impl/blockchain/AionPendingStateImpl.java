@@ -48,8 +48,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -1084,15 +1082,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         ExecutionBatch details = new ExecutionBatch(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         pendingState,
                         false,
                         !inPool,
                         bestBlk.getNrgLimit(),
                         fork040Enable,
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        LOGGER_VM);
         try {
             return txExe.execute().get(0);
         } catch (VMException e) {
@@ -1100,19 +1097,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             System.exit(-1);
             return null;
         }
-    }
-
-    /**
-     * Currently there is no post-execution work to do because this class actually uses the {@link
-     * BulkExecutor} to execute transactions sequentially instead of in bulk.
-     *
-     * <p>In the future we may choose to be more ambitious and to use the {@link BulkExecutor}
-     * properly, in which case we will have to give this method real functionality. Likely, we will
-     * need several methods that will capture the different post-execution work logic that the
-     * different methods in this class expect to have done when they call into the executor.
-     */
-    private static PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> { return 0; });
     }
 
     @Override

@@ -47,9 +47,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
-import org.aion.vm.PostExecutionLogic;
-
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -107,14 +104,14 @@ public class Benchmark {
         // deploy contract
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         block.getNrgLimit(),
-                        LOGGER,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER);
         AionTxExecSummary summary = exec.execute().get(0);
         assertFalse(summary.isFailed());
 
@@ -188,14 +185,14 @@ public class Benchmark {
         for (AionTransaction tx : txs) {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutorWithNoPostExecutionWork(
                             details,
                             repo,
                             false,
                             true,
                             block.getNrgLimit(),
-                            LOGGER,
-                            getPostExecutionWork());
+                            false,
+                            LOGGER);
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
 
@@ -235,14 +232,14 @@ public class Benchmark {
 
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec =
-                    new BulkExecutor(
+                    BulkExecutor.newExecutorWithNoPostExecutionWork(
                             details,
                             repo,
                             false,
                             true,
                             block.getNrgLimit(),
-                            LOGGER,
-                            getPostExecutionWork());
+                            false,
+                            LOGGER);
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
 
@@ -301,11 +298,5 @@ public class Benchmark {
                 solutions,
                 0,
                 5000000);
-    }
-
-    private static PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
     }
 }

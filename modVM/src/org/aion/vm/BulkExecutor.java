@@ -62,23 +62,7 @@ public class BulkExecutor {
     private long blockRemainingEnergy;
     private boolean fork040enable;
 
-    /**
-     * Constructs a new bulk executor that will execute the transactions contained in the provided
-     * {@code executionBatch}.
-     *
-     * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
-     * validation checks will be performed. Otherwise a transaction is run as normal.
-     *
-     * @param executionBatch The batch of transactions to execute.
-     * @param repository The repository.
-     * @param isLocalCall Whether or not the call is a network or local call.
-     * @param allowNonceIncrement Whether or not to increment the sender's nonce.
-     * @param blockRemainingEnergy The amount of energy remaining in the block.
-     * @param fork040Enable the fork logic affect the fvm behavior.
-     * @param logger The logger.
-     * @param work The post-execution work to apply after each transaction is run.
-     */
-    public BulkExecutor(
+    private BulkExecutor(
             ExecutionBatch executionBatch,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
@@ -110,27 +94,58 @@ public class BulkExecutor {
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
+     * @param fork040Enable the fork logic affect the fvm behavior.
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
-    public BulkExecutor(
+    public static BulkExecutor newExecutor(
+        ExecutionBatch executionBatch,
+        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+        boolean isLocalCall,
+        boolean allowNonceIncrement,
+        long blockRemainingEnergy,
+        boolean fork040Enable,
+        Logger logger,
+        PostExecutionWork work) {
+
+        if (work == null) {
+            throw new NullPointerException("Cannot construct a BulkExecutor will null post-execution work!");
+        }
+        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, logger, work);
+    }
+
+    /**
+     * Constructs a new bulk executor that will execute the transactions contained in the provided
+     * {@code executionBatch}.
+     *
+     * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
+     * validation checks will be performed. Otherwise a transaction is run as normal.
+     *
+     * @param executionBatch The batch of transactions to execute.
+     * @param repository The repository.
+     * @param isLocalCall Whether or not the call is a network or local call.
+     * @param allowNonceIncrement Whether or not to increment the sender's nonce.
+     * @param blockRemainingEnergy The amount of energy remaining in the block.
+     * @param logger The logger.
+     */
+    public static BulkExecutor newExecutorWithNoPostExecutionWork(
             ExecutionBatch executionBatch,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
-            Logger logger,
-            PostExecutionWork work) {
+            boolean fork040Enable,
+            Logger logger) {
 
-        this(
+        return new BulkExecutor(
                 executionBatch,
                 repository,
                 isLocalCall,
                 allowNonceIncrement,
                 blockRemainingEnergy,
-                false,
+                fork040Enable,
                 logger,
-                work);
+                null);
     }
 
     public List<AionTxExecSummary> execute() throws VMException {
@@ -232,11 +247,13 @@ public class BulkExecutor {
                 AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
 
                 // 3. Do any post execution work and update the remaining block energy.
-                this.blockRemainingEnergy -= this.postExecutionWork.doWork(
-                    this.repository,
-                    summary,
-                    transaction,
-                    this.blockRemainingEnergy);
+                if (this.postExecutionWork != null) {
+                    this.blockRemainingEnergy -= this.postExecutionWork.doWork(
+                        this.repository,
+                        summary,
+                        transaction,
+                        this.blockRemainingEnergy);
+                }
 
                 summaries.add(summary);
             }
@@ -284,11 +301,13 @@ public class BulkExecutor {
             AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForFvmTransaction(transaction, kernelFromVM, result);
 
             // 3. Do any post execution work and update the remaining block energy.
-            this.blockRemainingEnergy -= this.postExecutionWork.doWork(
-                this.repository,
-                summary,
-                transaction,
-                this.blockRemainingEnergy);
+            if (this.postExecutionWork != null) {
+                this.blockRemainingEnergy -= this.postExecutionWork.doWork(
+                    this.repository,
+                    summary,
+                    transaction,
+                    this.blockRemainingEnergy);
+            }
 
             summaries.add(summary);
         }

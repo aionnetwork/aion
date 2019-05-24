@@ -60,8 +60,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
-import org.aion.vm.PostExecutionLogic;
-import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -173,14 +171,14 @@ public class ContractIntegTest {
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
-                new BulkExecutor(
+                BulkExecutor.newExecutorWithNoPostExecutionWork(
                         details,
                         repo,
                         false,
                         true,
                         block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWork());
+                        false,
+                        LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
@@ -1953,21 +1951,14 @@ public class ContractIntegTest {
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return new BulkExecutor(
+        return BulkExecutor.newExecutorWithNoPostExecutionWork(
                 details,
                 repo,
                 false,
                 true,
                 block.getNrgLimit(),
                 true,
-                LOGGER_VM,
-                getPostExecutionWork());
-    }
-
-    private PostExecutionWork getPostExecutionWork() {
-        return new PostExecutionWork(null, (r, c, s, t, b) -> {
-            return 0L;
-        });
+                LOGGER_VM);
     }
 
     private AionBlock makeBlock(AionTransaction tx) {
