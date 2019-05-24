@@ -26,7 +26,6 @@ public class DetailsDataStore<
     private ByteArrayKeyValueDatabase detailsSrc;
     private ByteArrayKeyValueDatabase storageSrc;
     private ByteArrayKeyValueDatabase graphSrc;
-    private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public DetailsDataStore() {}
 
@@ -64,10 +63,6 @@ public class DetailsDataStore<
 
         // If it doesn't exist in cache or database.
         if (!rawDetails.isPresent()) {
-
-            // Check to see if we have to remove it.
-            // If it isn't in removes set, we add it to removes set.
-            removes.add(wrappedKey);
             return null;
         }
 
@@ -92,16 +87,11 @@ public class DetailsDataStore<
         detailsSrc.put(key.toBytes(), rawDetails);
 
         contractDetails.syncStorage();
-
-        // Remove from the remove set.
-        removes.remove(wrappedKey);
     }
 
     public synchronized void remove(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
         detailsSrc.delete(key);
-
-        removes.add(wrappedKey);
     }
 
     public synchronized void flush() {
