@@ -200,6 +200,9 @@ public class BulkExecutor {
                             VirtualMachineProvider.getVirtualMachineInstance(VM.AVM, vmKernel);
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
+
+                    summaries.addAll(executeTransactionsUsingAvm(virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
+                    currentIndex += nextBatchToExecute.size();
                 } else {
                     vmKernel =
                             new KernelInterfaceForFastVM(
@@ -217,28 +220,24 @@ public class BulkExecutor {
                             VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, vmKernel);
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
-                }
 
-                // Execute the next batch of transactions using the specified virtual machine.
-                summaries.addAll(
-                        executeTransactions(
-                                virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
-                currentIndex += nextBatchToExecute.size();
+                    summaries.addAll(
+                        executeTransactionsUsingFvm(
+                            virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
+                    currentIndex += nextBatchToExecute.size();
+                }
             }
 
             return summaries;
         }
     }
 
-    private List<AionTxExecSummary> executeTransactions(
-            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel)
-            throws VMException {
+    private List<AionTxExecSummary> executeTransactionsUsingAvm(VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
         Transaction[] txArray = new Transaction[details.size()];
-        SimpleFuture<TransactionResult>[] resultsAsFutures =
-                virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
+        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
 
         // Process the results of the transactions.
         List<AionTransaction> transactions = details.getTransactions();
@@ -260,27 +259,20 @@ public class BulkExecutor {
             if (energyUsed > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
                 result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-
-                if (transactionIsForAionVirtualMachine(transaction)) {
-                    ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
-                } else {
-                    result.setEnergyRemaining(0);
-                }
+                ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
             }
 
             // 2. build the transaction summary and update the repository (the one backing
             // this kernel) with the contents of kernelFromVM accordingly.
-            AionTxExecSummary summary =
-                    buildSummaryAndUpdateRepository(transaction, kernelFromVM, result);
+            AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
 
             // 3. Do any post execution work and update the remaining block energy.
-            this.blockRemainingEnergy -=
-                    this.postExecutionWork.doPostExecutionWork(
-                            this.repository,
-                            this.repositoryChild,
-                            summary,
-                            transaction,
-                            this.blockRemainingEnergy);
+            this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
+                this.repository,
+                this.repositoryChild,
+                summary,
+                transaction,
+                this.blockRemainingEnergy);
 
             summaries.add(summary);
         }
@@ -288,9 +280,55 @@ public class BulkExecutor {
         return summaries;
     }
 
-    private AionTxExecSummary buildSummaryAndUpdateRepository(
-            AionTransaction transaction, KernelInterface kernelFromVM, TransactionResult result) {
+    private List<AionTxExecSummary> executeTransactionsUsingFvm(VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
+        List<AionTxExecSummary> summaries = new ArrayList<>();
 
+        // Run the transactions.
+        Transaction[] txArray = new Transaction[details.size()];
+        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
+
+        // Process the results of the transactions.
+        List<AionTransaction> transactions = details.getTransactions();
+
+        int length = resultsAsFutures.length;
+        for (int i = 0; i < length; i++) {
+            TransactionResult result = resultsAsFutures[i].get();
+
+            if (result.getResultCode().isFatal()) {
+                throw new VMException(result.toString());
+            }
+
+            KernelInterface kernelFromVM = result.getKernelInterface();
+
+            AionTransaction transaction = transactions.get(i);
+
+            // 1. Check the block energy limit & reject if necessary.
+            long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
+            if (energyUsed > this.blockRemainingEnergy) {
+                result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+                result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
+                result.setEnergyRemaining(0);
+            }
+
+            // 2. build the transaction summary and update the repository (the one backing
+            // this kernel) with the contents of kernelFromVM accordingly.
+            AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForFvmTransaction(transaction, kernelFromVM, result);
+
+            // 3. Do any post execution work and update the remaining block energy.
+            this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
+                this.repository,
+                this.repositoryChild,
+                summary,
+                transaction,
+                this.blockRemainingEnergy);
+
+            summaries.add(summary);
+        }
+
+        return summaries;
+    }
+
+    private AionTxExecSummary buildSummaryAndUpdateRepositoryForAvmTransaction(AionTransaction transaction, KernelInterface kernelFromVM, TransactionResult result) {
         // TODO: should Avm assure us that this is always non-null like the fvm does? But in Avm
         // TODO: a null return value is actually meaningful. Need to figure this out.
         if (result.getReturnData() == null) {
@@ -306,48 +344,28 @@ public class BulkExecutor {
 
         // We have to do this for now, because the kernel uses the log serialization, which is not
         // implemented in the Avm, and this type may become a POD type anyway..
-        List<IExecutionLog> logs;
-        if (transactionIsForAionVirtualMachine(transaction)) {
-            logs = transferAvmLogsToKernel(sideEffects.getExecutionLogs());
-        } else {
-            logs = sideEffects.getExecutionLogs();
-        }
+        List<IExecutionLog> logs = transferAvmLogsToKernel(sideEffects.getExecutionLogs());
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
-                        .logs(logs)
-                        .deletedAccounts(sideEffects.getAddressesToBeDeleted())
-                        .internalTransactions(sideEffects.getInternalTransactions())
-                        .result(result.getReturnData());
+            AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
+                .logs(logs)
+                .deletedAccounts(sideEffects.getAddressesToBeDeleted())
+                .internalTransactions(sideEffects.getInternalTransactions())
+                .result(result.getReturnData());
 
         ResultCode resultCode = result.getResultCode();
         IAionBlock block = executionBatch.getBlock();
 
-        if (transactionIsForAionVirtualMachine(transaction)) {
-            kernelFromVM.commitTo(
-                    new KernelInterfaceForAVM(
-                            this.repositoryChild,
-                            this.allowNonceIncrement,
-                            this.isLocalCall,
-                            getDifficultyAsDataWord(block),
-                            block.getNumber(),
-                            block.getTimestamp(),
-                            block.getNrgLimit(),
-                            block.getCoinbase()));
-
-        } else {
-            kernelFromVM.commitTo(
-                    new KernelInterfaceForFastVM(
-                            this.repositoryChild,
-                            this.allowNonceIncrement,
-                            this.isLocalCall,
-                            this.fork040enable,
-                            getDifficultyAsDataWord(block),
-                            block.getNumber(),
-                            block.getTimestamp(),
-                            block.getNrgLimit(),
-                            block.getCoinbase()));
-        }
+        kernelFromVM.commitTo(
+            new KernelInterfaceForAVM(
+                this.repositoryChild,
+                this.allowNonceIncrement,
+                this.isLocalCall,
+                getDifficultyAsDataWord(block),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase()));
 
         if (resultCode.isRejected()) {
             builder.markAsRejected();
@@ -357,14 +375,100 @@ public class BulkExecutor {
 
         AionTxExecSummary summary = builder.build();
 
-        updateRepository(
-                summary,
-                transaction,
-                this.executionBatch.getBlock().getCoinbase(),
-                sideEffects.getAddressesToBeDeleted(),
-                result);
+        updateRepositoryForAvm(summary, transaction, result);
 
         return summary;
+    }
+
+    private AionTxExecSummary buildSummaryAndUpdateRepositoryForFvmTransaction(AionTransaction transaction, KernelInterface kernelFromVM, TransactionResult result) {
+        SideEffects sideEffects = new SideEffects();
+        if (result.getResultCode().isSuccess()) {
+            sideEffects.merge(result.getSideEffects());
+        } else {
+            sideEffects.addInternalTransactions(result.getSideEffects().getInternalTransactions());
+        }
+
+        // We have to do this for now, because the kernel uses the log serialization, which is not
+        // implemented in the Avm, and this type may become a POD type anyway..
+        List<IExecutionLog> logs = sideEffects.getExecutionLogs();
+
+        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
+            .logs(logs)
+            .deletedAccounts(sideEffects.getAddressesToBeDeleted())
+            .internalTransactions(sideEffects.getInternalTransactions())
+            .result(result.getReturnData());
+
+        ResultCode resultCode = result.getResultCode();
+        IAionBlock block = executionBatch.getBlock();
+
+        kernelFromVM.commitTo(
+            new KernelInterfaceForFastVM(
+                this.repositoryChild,
+                this.allowNonceIncrement,
+                this.isLocalCall,
+                this.fork040enable,
+                getDifficultyAsDataWord(block),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase()));
+
+        if (resultCode.isRejected()) {
+            builder.markAsRejected();
+        } else if (resultCode.isFailed()) {
+            builder.markAsFailed();
+        }
+
+        AionTxExecSummary summary = builder.build();
+
+        updateRepositoryForFvm(
+            summary,
+            transaction,
+            this.executionBatch.getBlock().getCoinbase(),
+            sideEffects.getAddressesToBeDeleted(),
+            result);
+
+        return summary;
+    }
+
+    private void updateRepositoryForAvm(TxExecSummary summary, AionTransaction tx, TransactionResult result) {
+        if (!isLocalCall && !summary.isRejected()) {
+            tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
+        }
+
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Transaction receipt: {}", summary.getReceipt());
+            this.logger.debug("Transaction logs: {}", summary.getLogs());
+        }
+    }
+
+    private void updateRepositoryForFvm(TxExecSummary summary, AionTransaction tx, Address coinbase, List<Address> deleteAccounts, TransactionResult result) {
+        if (!isLocalCall && !summary.isRejected()) {
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track = this.repositoryChild.startTracking();
+
+            tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
+
+            // Refund energy if transaction was successfully or reverted.
+            if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
+                track.addBalance(tx.getSenderAddress(), summary.getRefund());
+            }
+
+            // Pay the miner.
+            track.addBalance(coinbase, summary.getFee());
+
+            // Delete any accounts marked for deletion.
+            if (result.getResultCode().isSuccess()) {
+                for (Address addr : deleteAccounts) {
+                    track.deleteAccount(addr);
+                }
+            }
+            track.flush();
+        }
+
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Transaction receipt: {}", summary.getReceipt());
+            this.logger.debug("Transaction logs: {}", summary.getLogs());
+        }
     }
 
     private static List<IExecutionLog> transferAvmLogsToKernel(List<IExecutionLog> avmLogs) {
@@ -376,7 +480,7 @@ public class BulkExecutor {
     }
 
     private static AionTxReceipt makeReceipt(
-            AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result) {
+        AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
@@ -385,44 +489,6 @@ public class BulkExecutor {
         receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
 
         return receipt;
-    }
-
-    private void updateRepository(
-            TxExecSummary summary,
-            AionTransaction tx,
-            Address coinbase,
-            List<Address> deleteAccounts,
-            TransactionResult result) {
-
-        if (!isLocalCall && !summary.isRejected()) {
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
-                    this.repositoryChild.startTracking();
-
-            tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
-
-            // Refund energy if transaction was successfully or reverted.
-            if (!transactionIsForAionVirtualMachine(tx)) {
-                if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
-                    track.addBalance(tx.getSenderAddress(), summary.getRefund());
-                }
-
-                // Pay the miner.
-                track.addBalance(coinbase, summary.getFee());
-
-                // Delete any accounts marked for deletion.
-                if (result.getResultCode().isSuccess()) {
-                    for (Address addr : deleteAccounts) {
-                        track.deleteAccount(addr);
-                    }
-                }
-                track.flush();
-            }
-        }
-
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Transaction receipt: {}", summary.getReceipt());
-            this.logger.debug("Transaction logs: {}", summary.getLogs());
-        }
     }
 
     private static long computeEnergyUsed(long limit, TransactionResult result) {
