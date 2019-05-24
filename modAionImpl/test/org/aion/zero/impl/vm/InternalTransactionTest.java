@@ -289,6 +289,7 @@ public class InternalTransactionTest {
                         true,
                         context.block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
 
@@ -345,6 +346,7 @@ public class InternalTransactionTest {
                         false,
                         true,
                         context.block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
@@ -459,6 +461,7 @@ public class InternalTransactionTest {
                         false,
                         true,
                         context.block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);

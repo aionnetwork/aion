@@ -26,10 +26,9 @@ public final class PostExecutionWork {
     }
 
     /**
-     * Performs the work and returns the amount of energy remaining in the block after executing
-     * the specified transaction.
+     * Performs some work.
      */
-    public long doWork(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache, AionTxExecSummary summary, AionTransaction transaction, long blockEnergyRemaining) {
-        return this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction, blockEnergyRemaining);
+    public void doWork(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache, AionTxExecSummary summary, AionTransaction transaction) {
+        this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction);
     }
 }

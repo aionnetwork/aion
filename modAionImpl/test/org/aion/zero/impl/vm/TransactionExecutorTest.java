@@ -133,6 +133,7 @@ public class TransactionExecutorTest {
                         true,
                         context.block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         BigInteger refund = summary.getRefund();
@@ -230,6 +231,7 @@ public class TransactionExecutorTest {
                         true,
                         context.block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
@@ -268,6 +270,7 @@ public class TransactionExecutorTest {
                         false,
                         true,
                         context.block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         summary = exec.execute().get(0);
@@ -329,6 +332,7 @@ public class TransactionExecutorTest {
                         false,
                         true,
                         context.block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);

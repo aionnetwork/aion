@@ -23,25 +23,14 @@ public interface PostExecutionLogic {
      *
      * <p>This logic may do whatever it needs to the provided inputs.
      *
-     * <p>The logic must return the amount of energy that this transaction will use in its block so
-     * that the remaining block energy may be updated correctly.
-     *
-     * Note that this value may not always be relevant to the component of the kernel that wants
-     * this work done, in which case that component should define this method to return zero (0) so
-     * that no block energy usage deductions are made.
-     *
      * @param repository The top-most level of the repository.
      * @param repositoryChild The child repository of repository.
      * @param summary The transaction execution summary.
      * @param transaction The transaction.
-     * @param blockEnergyRemaining The amount of energy remaining in the block <b>prior</b> to
-     *     execution.
-     * @return The amount of energy that this transaction uses in its block.
      */
-    long apply(
+    void apply(
             Repository repository,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             AionTxExecSummary summary,
-            AionTransaction transaction,
-            long blockEnergyRemaining);
+            AionTransaction transaction);
 }

@@ -411,7 +411,7 @@ public class SolidityTypeTest {
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                details, repo, false, true, block.getNrgLimit(), false, LOGGER_VM);
+                details, repo, false, true, block.getNrgLimit(), false, false, LOGGER_VM);
     }
 
     private static AionBlock createDummyBlock() {

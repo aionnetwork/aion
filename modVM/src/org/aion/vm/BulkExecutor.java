@@ -61,6 +61,7 @@ public class BulkExecutor {
     private boolean allowNonceIncrement;
     private long blockRemainingEnergy;
     private boolean fork040enable;
+    private boolean checkBlockEnergyLimit;
 
     private BulkExecutor(
             ExecutionBatch executionBatch,
@@ -69,6 +70,7 @@ public class BulkExecutor {
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
             boolean fork040Enable,
+            boolean checkBlockEnergyLimit,
             Logger logger,
             PostExecutionWork work) {
 
@@ -80,6 +82,7 @@ public class BulkExecutor {
         this.logger = logger;
         this.postExecutionWork = work;
         this.fork040enable = fork040Enable;
+        this.checkBlockEnergyLimit = checkBlockEnergyLimit;
     }
 
     /**
@@ -95,6 +98,7 @@ public class BulkExecutor {
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
      * @param fork040Enable the fork logic affect the fvm behavior.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
@@ -105,13 +109,14 @@ public class BulkExecutor {
         boolean allowNonceIncrement,
         long blockRemainingEnergy,
         boolean fork040Enable,
+        boolean checkBlockEnergyLimit,
         Logger logger,
         PostExecutionWork work) {
 
         if (work == null) {
             throw new NullPointerException("Cannot construct a BulkExecutor will null post-execution work!");
         }
-        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, logger, work);
+        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
     }
 
     /**
@@ -127,6 +132,7 @@ public class BulkExecutor {
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
      * @param logger The logger.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
      */
     public static BulkExecutor newExecutorWithNoPostExecutionWork(
             ExecutionBatch executionBatch,
@@ -135,6 +141,7 @@ public class BulkExecutor {
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
             boolean fork040Enable,
+            boolean checkBlockEnergyLimit,
             Logger logger) {
 
         return new BulkExecutor(
@@ -144,6 +151,7 @@ public class BulkExecutor {
                 allowNonceIncrement,
                 blockRemainingEnergy,
                 fork040Enable,
+                checkBlockEnergyLimit,
                 logger,
                 null);
     }
@@ -246,13 +254,17 @@ public class BulkExecutor {
                 // this kernel) with the contents of kernelFromVM accordingly.
                 AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
 
-                // 3. Do any post execution work and update the remaining block energy.
+                // 3. Do any post execution work.
                 if (this.postExecutionWork != null) {
-                    this.blockRemainingEnergy -= this.postExecutionWork.doWork(
+                    this.postExecutionWork.doWork(
                         this.repository,
                         summary,
-                        transaction,
-                        this.blockRemainingEnergy);
+                        transaction);
+                }
+
+                // 4.  Update the remaining block energy.
+                if (!result.getResultCode().isRejected()) {
+                    this.blockRemainingEnergy -= ((this.checkBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
                 }
 
                 summaries.add(summary);
@@ -300,13 +312,17 @@ public class BulkExecutor {
             // this kernel) with the contents of kernelFromVM accordingly.
             AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForFvmTransaction(transaction, kernelFromVM, result);
 
-            // 3. Do any post execution work and update the remaining block energy.
+            // 3. Do any post execution work.
             if (this.postExecutionWork != null) {
-                this.blockRemainingEnergy -= this.postExecutionWork.doWork(
+                this.postExecutionWork.doWork(
                     this.repository,
                     summary,
-                    transaction,
-                    this.blockRemainingEnergy);
+                    transaction);
+            }
+
+            // 4.  Update the remaining block energy.
+            if (!result.getResultCode().isRejected()) {
+                this.blockRemainingEnergy -= ((this.checkBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
             }
 
             summaries.add(summary);

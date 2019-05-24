@@ -111,6 +111,7 @@ public class Benchmark {
                         true,
                         block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER);
         AionTxExecSummary summary = exec.execute().get(0);
         assertFalse(summary.isFailed());
@@ -192,6 +193,7 @@ public class Benchmark {
                             true,
                             block.getNrgLimit(),
                             false,
+                            false,
                             LOGGER);
             AionTxExecSummary summary = exec.execute().get(0);
             assertFalse(summary.isFailed());
@@ -238,6 +240,7 @@ public class Benchmark {
                             false,
                             true,
                             block.getNrgLimit(),
+                            false,
                             false,
                             LOGGER);
             AionTxExecSummary summary = exec.execute().get(0);

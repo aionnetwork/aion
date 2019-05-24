@@ -343,18 +343,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         PostExecutionLogic logic = (topRepository,
                 childRepository,
                 transactionSummary,
-                transaction,
-                blockEnergyLeft) -> {
+                transaction) -> {
             if (!transactionSummary.isRejected()) {
                 childRepository.flush();
 
                 AionTxReceipt receipt = transactionSummary.getReceipt();
                 receipt.setPostTxState(topRepository.getRoot());
                 receipt.setTransaction(transaction);
-
-                return receipt.getEnergyUsed();
-            } else {
-                return 0;
             }
         };
 
@@ -372,12 +367,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         PostExecutionLogic logic = (topRepository,
                 childRepository,
                 transactionSummary,
-                transaction,
-                blockEnergyLeft) -> {
+                transaction) -> {
             childRepository.flush();
             AionTxReceipt receipt = transactionSummary.getReceipt();
             receipt.setPostTxState(topRepository.getRoot());
-            return 0;
         };
 
         return new PostExecutionWork(repository, logic);
@@ -1317,6 +1310,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             block.getNrgLimit(),
                             fork040Enable,
+                            true,
                             LOGGER_VM,
                             getPostExecutionWorkForGeneratePreBlock(repository));
 
@@ -1369,6 +1363,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             block.getNrgLimit(),
                             fork040Enable,
+                            false,
                             LOGGER_VM,
                             getPostExecutionWorkForApplyBlock(repository));
 

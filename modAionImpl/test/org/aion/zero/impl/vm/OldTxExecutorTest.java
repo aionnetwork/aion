@@ -141,6 +141,7 @@ public class OldTxExecutorTest {
                         true,
                         block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
@@ -185,6 +186,7 @@ public class OldTxExecutorTest {
                         false,
                         true,
                         block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
@@ -243,6 +245,7 @@ public class OldTxExecutorTest {
                             true,
                             block.getNrgLimit(),
                             false,
+                            false,
                             LOGGER_VM);
             exec.execute();
         }
@@ -283,6 +286,7 @@ public class OldTxExecutorTest {
                         false,
                         true,
                         block.getNrgLimit(),
+                        false,
                         false,
                         LOGGER_VM);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();

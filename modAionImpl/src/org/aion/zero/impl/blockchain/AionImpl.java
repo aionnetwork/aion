@@ -140,6 +140,7 @@ public class AionImpl implements IAionChain {
                             true,
                             block.getNrgLimit(),
                             false,
+                            false,
                             LOG_VM);
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } catch (VMException e) {
@@ -170,6 +171,7 @@ public class AionImpl implements IAionChain {
                             true,
                             true,
                             block.getNrgLimit(),
+                            false,
                             false,
                             LOG_VM);
             return executor.execute().get(0).getReceipt();

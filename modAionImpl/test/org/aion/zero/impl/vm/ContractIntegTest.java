@@ -178,6 +178,7 @@ public class ContractIntegTest {
                         true,
                         block.getNrgLimit(),
                         false,
+                        false,
                         LOGGER_VM);
         AionTxExecSummary summary = exec.execute().get(0);
         if (txType == TransactionTypes.DEFAULT) {
@@ -1958,6 +1959,7 @@ public class ContractIntegTest {
                 true,
                 block.getNrgLimit(),
                 true,
+                false,
                 LOGGER_VM);
     }
 
