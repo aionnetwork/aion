@@ -6,6 +6,7 @@ import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMContractDeploymen
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.InternalVmType;
@@ -216,8 +217,7 @@ public class BulkExecutor {
                                     block.getNrgLimit(),
                                     block.getCoinbase());
 
-                    virtualMachineForNextBatch =
-                            VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, vmKernel);
+                    virtualMachineForNextBatch = new FastVirtualMachine();
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
 

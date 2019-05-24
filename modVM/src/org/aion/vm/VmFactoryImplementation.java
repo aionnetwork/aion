@@ -9,9 +9,9 @@ import org.aion.vm.api.interfaces.VirtualMachine;
 
 /**
  * A Singleton factory class that is responsible for:
- *   1. Initializing the state of all the supported virtual machines.
- *   2. Returning any requested instances of any supported virtual machines.
- *   3. Shutting down all the supported virtual machines.
+ *   1. Initializing the state of all the supported long-lived virtual machines.
+ *   2. Returning any requested instances of any supported long-lived virtual machines.
+ *   3. Shutting down all the supported long-lived virtual machines.
  */
 public final class VmFactoryImplementation implements VirtualMachineManager {
     private static final VmFactoryImplementation SINGLETON = new VmFactoryImplementation();
@@ -38,7 +38,6 @@ public final class VmFactoryImplementation implements VirtualMachineManager {
 
     /** The list of all virtual machines that the kernel currently supports. */
     public enum VM {
-        FVM(MachineLifeCycle.NOT_LONG_LIVED),
         AVM(MachineLifeCycle.LONG_LIVED);
 
         private MachineLifeCycle lifeCycle;
@@ -95,8 +94,6 @@ public final class VmFactoryImplementation implements VirtualMachineManager {
         }
 
         switch (request) {
-            case FVM:
-                return new FastVirtualMachine();
             case AVM:
                 return this.aionVirtualMachine;
             default:
