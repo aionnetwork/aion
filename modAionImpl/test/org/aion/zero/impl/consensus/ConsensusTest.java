@@ -14,7 +14,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.StandaloneBlockchain.Bundle;
@@ -168,17 +168,12 @@ public class ConsensusTest {
 
     @Before
     public void setup() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
     @Test
     public void testConsensus() {

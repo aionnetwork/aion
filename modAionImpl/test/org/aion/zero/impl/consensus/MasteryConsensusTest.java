@@ -15,7 +15,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.types.AionBlock;
@@ -40,12 +40,12 @@ public class MasteryConsensusTest {
 
         AionLoggerFactory.init(cfg);
 
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        LongLivedAvm.destroy();
     }
 
     /** Tests importing block <a href="https://mastery.aion.network/#/block/250718">250718</a>. */

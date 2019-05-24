@@ -28,7 +28,7 @@ import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.TxResponse;
 
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -131,17 +131,12 @@ public class ApiAionTest {
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void tearDown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);

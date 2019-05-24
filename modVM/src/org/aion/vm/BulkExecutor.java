@@ -24,7 +24,6 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.VmFactoryImplementation.VM;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
@@ -197,12 +196,10 @@ public class BulkExecutor {
                                     block.getTimestamp(),
                                     block.getNrgLimit(),
                                     block.getCoinbase());
-                    virtualMachineForNextBatch =
-                            VirtualMachineProvider.getVirtualMachineInstance(VM.AVM, vmKernel);
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
 
-                    summaries.addAll(executeTransactionsUsingAvm(virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
+                    summaries.addAll(executeTransactionsUsingAvm(nextBatchToExecute, vmKernel));
                     currentIndex += nextBatchToExecute.size();
                 } else {
                     vmKernel =
@@ -232,49 +229,59 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactionsUsingAvm(VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
+    private List<AionTxExecSummary> executeTransactionsUsingAvm(ExecutionBatch details, KernelInterface kernel) throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
-        // Run the transactions.
+        AionVirtualMachine virtualMachine = LongLivedAvm.singleton();
+
         Transaction[] txArray = new Transaction[details.size()];
-        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
 
-        // Process the results of the transactions.
-        List<AionTransaction> transactions = details.getTransactions();
+        // Acquire the avm lock and then run the transactions.
+        try {
+            virtualMachine.acquireAvmLock();
+            SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
 
-        int length = resultsAsFutures.length;
-        for (int i = 0; i < length; i++) {
-            TransactionResult result = resultsAsFutures[i].get();
+            // Process the results of the transactions.
+            List<AionTransaction> transactions = details.getTransactions();
 
-            if (result.getResultCode().isFatal()) {
-                throw new VMException(result.toString());
+            int length = resultsAsFutures.length;
+            for (int i = 0; i < length; i++) {
+                TransactionResult result = resultsAsFutures[i].get();
+
+                if (result.getResultCode().isFatal()) {
+                    throw new VMException(result.toString());
+                }
+
+                KernelInterface kernelFromVM = result.getKernelInterface();
+
+                AionTransaction transaction = transactions.get(i);
+
+                // 1. Check the block energy limit & reject if necessary.
+                long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
+                if (energyUsed > this.blockRemainingEnergy) {
+                    result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+                    result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
+                    ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
+                }
+
+                // 2. build the transaction summary and update the repository (the one backing
+                // this kernel) with the contents of kernelFromVM accordingly.
+                AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
+
+                // 3. Do any post execution work and update the remaining block energy.
+                this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
+                    this.repository,
+                    this.repositoryChild,
+                    summary,
+                    transaction,
+                    this.blockRemainingEnergy);
+
+                summaries.add(summary);
             }
-
-            KernelInterface kernelFromVM = result.getKernelInterface();
-
-            AionTransaction transaction = transactions.get(i);
-
-            // 1. Check the block energy limit & reject if necessary.
-            long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
-            if (energyUsed > this.blockRemainingEnergy) {
-                result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
-                result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-                ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
-            }
-
-            // 2. build the transaction summary and update the repository (the one backing
-            // this kernel) with the contents of kernelFromVM accordingly.
-            AionTxExecSummary summary = buildSummaryAndUpdateRepositoryForAvmTransaction(transaction, kernelFromVM, result);
-
-            // 3. Do any post execution work and update the remaining block energy.
-            this.blockRemainingEnergy -= this.postExecutionWork.doPostExecutionWork(
-                this.repository,
-                this.repositoryChild,
-                summary,
-                transaction,
-                this.blockRemainingEnergy);
-
-            summaries.add(summary);
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            virtualMachine.releaseAvmLock();
         }
 
         return summaries;

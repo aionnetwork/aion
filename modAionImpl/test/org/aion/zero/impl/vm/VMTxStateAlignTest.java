@@ -12,7 +12,7 @@ import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -35,18 +35,13 @@ public class VMTxStateAlignTest {
 
     @BeforeClass
     public static void setupVM() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
         TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @AfterClass
     public static void tearDownVM() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     @Before

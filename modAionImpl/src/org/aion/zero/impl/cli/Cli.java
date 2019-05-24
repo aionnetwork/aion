@@ -25,7 +25,7 @@ import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -551,9 +551,9 @@ public class Cli {
                 String parameter = options.isRedoImport();
 
                 if (parameter.isEmpty()) {
-                    VirtualMachineProvider.initializeAllVirtualMachines();
+                    LongLivedAvm.createAndStartLongLivedAvm();
                     RecoveryUtils.redoMainChainImport(height);
-                    VirtualMachineProvider.shutdownAllVirtualMachines();
+                    LongLivedAvm.destroy();
                     return EXIT;
                 } else {
                     try {
@@ -566,9 +566,9 @@ public class Cli {
                         return ERROR;
                     }
 
-                    VirtualMachineProvider.initializeAllVirtualMachines();
+                    LongLivedAvm.createAndStartLongLivedAvm();
                     RecoveryUtils.redoMainChainImport(height);
-                    VirtualMachineProvider.shutdownAllVirtualMachines();
+                    LongLivedAvm.destroy();
                     return EXIT;
                 }
             }

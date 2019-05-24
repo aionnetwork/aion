@@ -41,8 +41,8 @@ import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.LongLivedAvm;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -483,12 +483,12 @@ public class InternalTransactionTest {
 
     @Before
     public void setup() {
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void teardown() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        LongLivedAvm.destroy();
     }
 
     private PostExecutionWork getPostExecutionWork() {

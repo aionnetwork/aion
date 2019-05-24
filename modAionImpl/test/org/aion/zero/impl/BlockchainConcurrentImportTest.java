@@ -22,7 +22,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Hash256;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -69,10 +69,7 @@ public class BlockchainConcurrentImportTest {
                         .build()
                         .bc;
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
         generateBlocks();
     }
 
@@ -134,9 +131,7 @@ public class BlockchainConcurrentImportTest {
         testChain.close();
         sourceChain.close();
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     /**

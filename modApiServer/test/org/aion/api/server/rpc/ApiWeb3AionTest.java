@@ -9,7 +9,7 @@ import org.aion.types.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.json.JSONArray;
@@ -27,12 +27,12 @@ public class ApiWeb3AionTest {
     public void setup() {
         impl = AionImpl.inst();
         web3Api = new ApiWeb3Aion(impl);
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void tearDown() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        LongLivedAvm.destroy();
     }
 
     @Test

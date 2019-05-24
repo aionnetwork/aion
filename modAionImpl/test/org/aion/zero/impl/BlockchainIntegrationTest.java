@@ -12,7 +12,7 @@ import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
@@ -37,17 +37,12 @@ public class BlockchainIntegrationTest {
 
     @Before
     public void setup() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     /**

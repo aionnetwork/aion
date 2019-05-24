@@ -17,7 +17,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.ByteArrayWrapper;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -49,17 +49,12 @@ public class BlockchainImplementationTest {
 
     @Before
     public void setup() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     /**

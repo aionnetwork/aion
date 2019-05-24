@@ -44,9 +44,9 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.LongLivedAvm;
 import org.aion.vm.PostExecutionWork;
 
-import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
@@ -82,10 +82,7 @@ public class OpcodeIntegTest {
         deployer = new Address(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
@@ -94,9 +91,7 @@ public class OpcodeIntegTest {
         deployerKey = null;
         deployer = null;
         deployerBalance = null;
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     // ====================== test repo & track flushing over multiple levels ======================

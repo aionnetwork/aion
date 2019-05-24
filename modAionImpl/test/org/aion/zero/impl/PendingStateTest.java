@@ -14,7 +14,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -30,18 +30,12 @@ public class PendingStateTest {
 
     @Before
     public void setup() {
-
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     @Test

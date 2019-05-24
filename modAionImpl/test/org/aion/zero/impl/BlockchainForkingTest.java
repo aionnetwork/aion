@@ -15,7 +15,7 @@ import org.aion.types.ByteArrayWrapper;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -30,16 +30,12 @@ public class BlockchainForkingTest {
 
     @Before
     public void setup() {
-        if (!VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.initializeAllVirtualMachines();
-        }
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
     /*-
      * Tests the case where multiple threads submit a single block (content) but

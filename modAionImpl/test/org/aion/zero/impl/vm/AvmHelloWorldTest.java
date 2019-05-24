@@ -14,7 +14,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -35,17 +35,12 @@ public class AvmHelloWorldTest {
 
     @BeforeClass
     public static void setupAvm() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
         TransactionTypeRule.disallowAVMContractTransaction();
     }
 

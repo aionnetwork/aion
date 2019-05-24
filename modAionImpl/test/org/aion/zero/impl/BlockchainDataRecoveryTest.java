@@ -14,10 +14,11 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -38,10 +39,12 @@ public class BlockchainDataRecoveryTest {
 
         AionLoggerFactory.init(cfg);
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
+    }
+
+    @AfterClass
+    public static void teardown() {
+        LongLivedAvm.destroy();
     }
 
     /** Test the recovery of the world state with start from the state of an ancestor block. */

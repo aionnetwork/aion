@@ -24,7 +24,7 @@ import org.aion.mcf.account.Keystore;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -116,17 +116,12 @@ public class ApiAion0Test {
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void tearDown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
 
         api.shutDown();
         rsp = null;

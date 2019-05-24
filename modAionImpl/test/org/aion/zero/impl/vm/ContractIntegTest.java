@@ -59,8 +59,8 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
+import org.aion.vm.LongLivedAvm;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -124,10 +124,7 @@ public class ContractIntegTest {
         senderBalance = Builder.DEFAULT_BALANCE;
         senderNonce = BigInteger.ZERO;
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
@@ -142,9 +139,7 @@ public class ContractIntegTest {
         senderKey = null;
         senderNonce = null;
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     @Test

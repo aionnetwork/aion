@@ -15,7 +15,7 @@ import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.StandaloneBlockchain.Bundle;
@@ -56,18 +56,13 @@ public class BalanceTransferConsensusTest {
                         .build();
         this.blockchain = bundle.bc;
 
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void tearDown() {
         this.blockchain = null;
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     @Test

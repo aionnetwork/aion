@@ -46,7 +46,7 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.ByteArrayWrapper;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -66,17 +66,12 @@ public class TaskImportBlocksTest {
 
     @Before
     public void setup() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            return;
-        }
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void shutdown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        LongLivedAvm.destroy();
     }
 
     /** @return parameters for {@link #testCountStates(long, long, Mode, Collection)} */

@@ -45,7 +45,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
-import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
@@ -201,7 +201,7 @@ public class Aion {
         genLog.info(path);
         genLog.info(logo);
 
-        VirtualMachineProvider.initializeAllVirtualMachines();
+        LongLivedAvm.createAndStartLongLivedAvm();
         IAionChain ac = AionFactory.create();
 
         IMineRunner nm = null;
@@ -377,7 +377,7 @@ public class Aion {
                                     ac.getAionHub().close();
 
                                     genLog.info("Shutting down the virtual machines...");
-                                    VirtualMachineProvider.shutdownAllVirtualMachines();
+                                    LongLivedAvm.destroy();
 
                                     genLog.info("---------------------------------------------");
                                     genLog.info("| Aion kernel graceful shutdown successful! |");
