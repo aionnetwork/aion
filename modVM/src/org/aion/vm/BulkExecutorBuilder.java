@@ -1,8 +1,10 @@
 package org.aion.vm;
 
+import java.util.List;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
@@ -13,7 +15,7 @@ public final class BulkExecutorBuilder {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository = null;
     private PostExecutionWork postExecutionWork = null;
     private IAionBlock block = null;
-    private ExecutionBatch executionBatch = null;
+    private List<AionTransaction> transactions = null;
     private Logger logger = null;
     private Boolean isLocalCall = null;
     private Boolean allowNonceIncrement = null;
@@ -30,13 +32,14 @@ public final class BulkExecutorBuilder {
         return this;
     }
 
-    public BulkExecutorBuilder transactionBatchToExecute(ExecutionBatch executionBatch) {
-        this.executionBatch = executionBatch;
+    public BulkExecutorBuilder blockToExecute(IAionBlock block) {
+        this.block = block;
         return this;
     }
 
-    public BulkExecutorBuilder blockToExecute(IAionBlock block) {
+    public BulkExecutorBuilder transactionsToExecute(IAionBlock block, List<AionTransaction> transactions) {
         this.block = block;
+        this.transactions = transactions;
         return this;
     }
 
@@ -69,8 +72,8 @@ public final class BulkExecutorBuilder {
         if (this.repository == null) {
             throw new NullPointerException("Cannot build BulkExecutor with null repository!");
         }
-        if (this.executionBatch == null && this.block == null) {
-            throw new NullPointerException("Cannot build BulkExecutor with null executionBatch and block!");
+        if (this.block == null) {
+            throw new NullPointerException("Cannot build BulkExecutor with null block!");
         }
         if (this.logger == null) {
             throw new NullPointerException("Cannot build BulkExecutor with null logger!");
@@ -87,34 +90,35 @@ public final class BulkExecutorBuilder {
         if (this.checkBlockEnergyLimit == null) {
             throw new NullPointerException("Cannot build BulkExecutor without specifying checkBlockEnergyLimit!");
         }
-        if (this.executionBatch != null && this.block != null) {
-            throw new NullPointerException("Cannot build BulkExecutor without specifying executionBatch or block!");
-        }
 
-        if (this.executionBatch != null) {
+        if (this.transactions != null) {
+            // This means that only a subset of the transactions in the block are to be run.
             if (this.postExecutionWork == null) {
                 return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                    this.executionBatch,
+                    this.block,
+                    this.transactions,
                     this.repository,
                     this.isLocalCall,
                     this.allowNonceIncrement,
-                    this.executionBatch.getBlock().getNrgLimit(),
+                    this.block.getNrgLimit(),
                     this.fork040enable,
                     this.checkBlockEnergyLimit,
                     this.logger);
             } else {
                 return BulkExecutor.newExecutor(
-                    this.executionBatch,
+                    this.block,
+                    this.transactions,
                     this.repository,
                     this.isLocalCall,
                     this.allowNonceIncrement,
-                    this.executionBatch.getBlock().getNrgLimit(),
+                    this.block.getNrgLimit(),
                     this.fork040enable,
                     this.checkBlockEnergyLimit,
                     this.logger,
                     this.postExecutionWork);
             }
         } else {
+            // This means that every transaction in the block is to be run.
             if (this.postExecutionWork == null) {
                 return BulkExecutor.newExecutorForBlockWithNoPostExecutionWork(
                     this.block,

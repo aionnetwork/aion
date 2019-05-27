@@ -48,7 +48,6 @@ import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -293,9 +292,8 @@ public class OldTxExecutorTest {
     }
 
     private BulkExecutor newBulkExecutor(Repository repo, IAionBlock block, AionTransaction transaction) {
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(transaction));
         BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(block, Collections.singletonList(transaction))
             .repository(repo.startTracking())
             .isLocalCall(false)
             .allowNonceIncrement(true)

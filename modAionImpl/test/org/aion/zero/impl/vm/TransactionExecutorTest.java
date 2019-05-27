@@ -37,7 +37,6 @@ import java.util.Collections;
 
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
-import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
@@ -48,7 +47,6 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -352,9 +350,8 @@ public class TransactionExecutorTest {
     }
 
     private BulkExecutor newBulkExecutor(RepositoryCache repo, BlockContext context, AionTransaction transaction) {
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(transaction));
-        BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+        return new BulkExecutorBuilder()
+            .transactionsToExecute(context.block, Collections.singletonList(transaction))
             .repository(repo)
             .isLocalCall(false)
             .allowNonceIncrement(true)
@@ -362,6 +359,5 @@ public class TransactionExecutorTest {
             .checkBlockEnergyLimit(false)
             .logger(LOGGER_VM)
             .build();
-        return executor;
     }
 }

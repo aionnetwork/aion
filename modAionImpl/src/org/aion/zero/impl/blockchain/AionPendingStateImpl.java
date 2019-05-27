@@ -48,7 +48,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -1081,9 +1080,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             fork040Enable = bestBlk.getNumber() >= fork040Block;
         }
 
-        ExecutionBatch details = new ExecutionBatch(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(bestBlk, Collections.singletonList(tx))
             .repository(pendingState)
             .isLocalCall(false)
             .allowNonceIncrement(!inPool)

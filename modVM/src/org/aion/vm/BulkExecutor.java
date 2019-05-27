@@ -37,8 +37,7 @@ import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /**
- * The BulkExecutor receives a batch of transactions with the following assumption: all transactions
- * in the provided {@link ExecutionBatch} belong to the same block.
+ * The BulkExecutor receives a block of transactions.
  *
  * <p>The BulkExecutor will send the transactions off (in as large a contiguous bundle as possible)
  * to the appropriate {@link VirtualMachine} to be executed and will return the results of these
@@ -46,7 +45,7 @@ import org.slf4j.Logger;
  *
  * <p>The BulkExecutor makes the following promise to its caller:
  *
- * <p>The logical ordering of the transactions in the provided {@link ExecutionBatch} will be
+ * <p>The logical ordering of the transactions in the provided block will be
  * adhered to, so that it always appears as if the transaction at index 0 was executed first, then
  * the post-execution work is applied to it, then the transaction at index 1 following by the
  * post-execution work, and so on.
@@ -55,7 +54,8 @@ public class BulkExecutor {
     private static final Object LOCK = new Object();
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository;
     private PostExecutionWork postExecutionWork;
-    private ExecutionBatch executionBatch;
+    private IAionBlock block;
+    private List<AionTransaction> transactions;
     private Logger logger;
     private boolean isLocalCall;
     private boolean allowNonceIncrement;
@@ -64,7 +64,8 @@ public class BulkExecutor {
     private boolean checkBlockEnergyLimit;
 
     private BulkExecutor(
-            ExecutionBatch executionBatch,
+            IAionBlock block,
+            List<AionTransaction> transactions,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean allowNonceIncrement,
@@ -74,7 +75,8 @@ public class BulkExecutor {
             Logger logger,
             PostExecutionWork work) {
 
-        this.executionBatch = executionBatch;
+        this.block = block;
+        this.transactions = transactions;
         this.repository = repository;
         this.isLocalCall = isLocalCall;
         this.allowNonceIncrement = allowNonceIncrement;
@@ -86,13 +88,14 @@ public class BulkExecutor {
     }
 
     /**
-     * Constructs a new bulk executor that will execute the transactions contained in the provided
-     * {@code executionBatch}.
+     * Constructs a new bulk executor that will execute the specified transactions. These transactions
+     * should constitute a subset of the transactions in the provided block.
      *
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
-     * @param executionBatch The batch of transactions to execute.
+     * @param block The block containing the specified transactions.
+     * @param transactions The transactions to execute.
      * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
@@ -103,7 +106,8 @@ public class BulkExecutor {
      * @param work The post-execution work to apply after each transaction is run.
      */
     public static BulkExecutor newExecutor(
-        ExecutionBatch executionBatch,
+        IAionBlock block,
+        List<AionTransaction> transactions,
         RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
         boolean isLocalCall,
         boolean allowNonceIncrement,
@@ -116,7 +120,7 @@ public class BulkExecutor {
         if (work == null) {
             throw new NullPointerException("Cannot construct a BulkExecutor will null post-execution work!");
         }
-        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
+        return new BulkExecutor(block, transactions, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
     }
 
     /**
@@ -153,18 +157,18 @@ public class BulkExecutor {
         if (work == null) {
             throw new NullPointerException("Cannot construct a BulkExecutor will null post-execution work!");
         }
-        ExecutionBatch executionBatch = new ExecutionBatch(block, block.getTransactionsList());
-        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
+        return new BulkExecutor(block, block.getTransactionsList(), repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
     }
 
     /**
-     * Constructs a new bulk executor that will execute the transactions contained in the provided
-     * {@code executionBatch}.
+     * Constructs a new bulk executor that will execute the specified transactions. These transactions
+     * should be a subset of the transactions in the provided block.
      *
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
-     * @param executionBatch The batch of transactions to execute.
+     * @param block The block containing the specified transactions.
+     * @param transactions The transactions to execute.
      * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
@@ -173,7 +177,8 @@ public class BulkExecutor {
      * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
      */
     public static BulkExecutor newExecutorWithNoPostExecutionWork(
-            ExecutionBatch executionBatch,
+            IAionBlock block,
+            List<AionTransaction> transactions,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean allowNonceIncrement,
@@ -183,7 +188,8 @@ public class BulkExecutor {
             Logger logger) {
 
         return new BulkExecutor(
-                executionBatch,
+                block,
+                transactions,
                 repository,
                 isLocalCall,
                 allowNonceIncrement,
@@ -219,9 +225,9 @@ public class BulkExecutor {
         boolean checkBlockEnergyLimit,
         Logger logger) {
 
-        ExecutionBatch executionBatch = new ExecutionBatch(block, block.getTransactionsList());
         return new BulkExecutor(
-            executionBatch,
+            block,
+            block.getTransactionsList(),
             repository,
             isLocalCall,
             allowNonceIncrement,
@@ -237,15 +243,14 @@ public class BulkExecutor {
             List<AionTxExecSummary> summaries = new ArrayList<>();
 
             VirtualMachine virtualMachineForNextBatch;
-            ExecutionBatch nextBatchToExecute;
+            List<AionTransaction> nextBatchToExecute;
 
             int currentIndex = 0;
-            while (currentIndex < this.executionBatch.size()) {
+            while (currentIndex < this.transactions.size()) {
                 AionTransaction firstTransactionInNextBatch =
-                        this.executionBatch.getTransactions().get(currentIndex);
+                        this.transactions.get(currentIndex);
 
                 KernelInterface vmKernel;
-                IAionBlock block = executionBatch.getBlock();
 
                 if (transactionIsForAionVirtualMachine(firstTransactionInNextBatch)) {
                     vmKernel =
@@ -253,11 +258,11 @@ public class BulkExecutor {
                                     this.repository.startTracking(),
                                     this.allowNonceIncrement,
                                     this.isLocalCall,
-                                    getDifficultyAsDataWord(block),
-                                    block.getNumber(),
-                                    block.getTimestamp(),
-                                    block.getNrgLimit(),
-                                    block.getCoinbase());
+                                    getDifficultyAsDataWord(this.block),
+                                    this.block.getNumber(),
+                                    this.block.getTimestamp(),
+                                    this.block.getNrgLimit(),
+                                    this.block.getCoinbase());
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
 
@@ -291,20 +296,17 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactionsUsingAvm(ExecutionBatch details, KernelInterface kernel) throws VMException {
+    private List<AionTxExecSummary> executeTransactionsUsingAvm(List<AionTransaction> transactions, KernelInterface kernel) throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         AionVirtualMachine virtualMachine = LongLivedAvm.singleton();
 
-        Transaction[] txArray = new Transaction[details.size()];
+        Transaction[] txArray = new Transaction[transactions.size()];
 
         // Acquire the avm lock and then run the transactions.
         try {
             virtualMachine.acquireAvmLock();
-            SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
-
-            // Process the results of the transactions.
-            List<AionTransaction> transactions = details.getTransactions();
+            SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, transactions.toArray(txArray));
 
             int length = resultsAsFutures.length;
             for (int i = 0; i < length; i++) {
@@ -354,15 +356,14 @@ public class BulkExecutor {
         return summaries;
     }
 
-    private List<AionTxExecSummary> executeTransactionsUsingFvm(VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
+    private List<AionTxExecSummary> executeTransactionsUsingFvm(VirtualMachine virtualMachine, List<AionTransaction> transactions, KernelInterface kernel) throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
-        Transaction[] txArray = new Transaction[details.size()];
-        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, details.getTransactions().toArray(txArray));
+        Transaction[] txArray = new Transaction[transactions.size()];
+        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(kernel, transactions.toArray(txArray));
 
         // Process the results of the transactions.
-        List<AionTransaction> transactions = details.getTransactions();
 
         int length = resultsAsFutures.length;
         for (int i = 0; i < length; i++) {
@@ -433,18 +434,17 @@ public class BulkExecutor {
                 .result(result.getReturnData());
 
         ResultCode resultCode = result.getResultCode();
-        IAionBlock block = executionBatch.getBlock();
 
         kernelFromVM.commitTo(
             new KernelInterfaceForAVM(
                 this.repository,
                 this.allowNonceIncrement,
                 this.isLocalCall,
-                getDifficultyAsDataWord(block),
-                block.getNumber(),
-                block.getTimestamp(),
-                block.getNrgLimit(),
-                block.getCoinbase()));
+                getDifficultyAsDataWord(this.block),
+                this.block.getNumber(),
+                this.block.getTimestamp(),
+                this.block.getNrgLimit(),
+                this.block.getCoinbase()));
 
         if (resultCode.isRejected()) {
             builder.markAsRejected();
@@ -478,7 +478,6 @@ public class BulkExecutor {
             .result(result.getReturnData());
 
         ResultCode resultCode = result.getResultCode();
-        IAionBlock block = executionBatch.getBlock();
 
         kernelFromVM.commitTo(
             new KernelInterfaceForFastVM(
@@ -486,11 +485,11 @@ public class BulkExecutor {
                 this.allowNonceIncrement,
                 this.isLocalCall,
                 this.fork040enable,
-                getDifficultyAsDataWord(block),
-                block.getNumber(),
-                block.getTimestamp(),
-                block.getNrgLimit(),
-                block.getCoinbase()));
+                getDifficultyAsDataWord(this.block),
+                this.block.getNumber(),
+                this.block.getTimestamp(),
+                this.block.getNrgLimit(),
+                this.block.getCoinbase()));
 
         if (resultCode.isRejected()) {
             builder.markAsRejected();
@@ -503,7 +502,7 @@ public class BulkExecutor {
         updateRepositoryForFvm(
             summary,
             transaction,
-            this.executionBatch.getBlock().getCoinbase(),
+            this.block.getCoinbase(),
             sideEffects.getAddressesToBeDeleted(),
             result);
 
@@ -579,17 +578,15 @@ public class BulkExecutor {
      * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
      * subsequent FVM-bound transactions.
      */
-    private ExecutionBatch fetchNextBatchOfTransactionsForFastVirtualMachine(int startIndex) {
-        List<AionTransaction> transactions = this.executionBatch.getTransactions();
-
-        for (int i = startIndex; i < this.executionBatch.size(); i++) {
+    private List<AionTransaction> fetchNextBatchOfTransactionsForFastVirtualMachine(int startIndex) {
+        for (int i = startIndex; i < this.transactions.size(); i++) {
             // Find the index of the next transaction that is not fvm-bound, that is where we stop.
-            if (transactionIsForAionVirtualMachine(transactions.get(i))) {
-                return this.executionBatch.slice(startIndex, i);
+            if (transactionIsForAionVirtualMachine(this.transactions.get(i))) {
+                return this.transactions.subList(startIndex, i);
             }
         }
 
-        return this.executionBatch.slice(startIndex, this.executionBatch.size());
+        return this.transactions.subList(startIndex, this.transactions.size());
     }
 
     /**
@@ -597,17 +594,15 @@ public class BulkExecutor {
      * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
      * subsequent AVM-bound transactions.
      */
-    private ExecutionBatch fetchNextBatchOfTransactionsForAionVirtualMachine(int startIndex) {
-        List<AionTransaction> transactions = this.executionBatch.getTransactions();
-
-        for (int i = startIndex; i < this.executionBatch.size(); i++) {
+    private List<AionTransaction> fetchNextBatchOfTransactionsForAionVirtualMachine(int startIndex) {
+        for (int i = startIndex; i < this.transactions.size(); i++) {
             // Find the index of the next transaction that is not avm-bound, that is where we stop.
-            if (!transactionIsForAionVirtualMachine(transactions.get(i))) {
-                return this.executionBatch.slice(startIndex, i);
+            if (!transactionIsForAionVirtualMachine(this.transactions.get(i))) {
+                return this.transactions.subList(startIndex, i);
             }
         }
 
-        return this.executionBatch.slice(startIndex, this.executionBatch.size());
+        return this.transactions.subList(startIndex, this.transactions.size());
     }
 
     /**

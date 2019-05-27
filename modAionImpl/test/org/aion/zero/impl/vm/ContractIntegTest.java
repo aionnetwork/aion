@@ -59,7 +59,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
@@ -170,9 +169,8 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
 
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(block, Collections.singletonList(tx))
             .repository(repo)
             .isLocalCall(false)
             .allowNonceIncrement(true)
@@ -1951,9 +1949,8 @@ public class ContractIntegTest {
 
     private BulkExecutor getNewExecutorWithForkEnabled(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(block, Collections.singletonList(tx))
             .repository(repo)
             .isLocalCall(false)
             .allowNonceIncrement(true)

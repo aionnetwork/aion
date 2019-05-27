@@ -44,7 +44,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
@@ -812,9 +811,8 @@ public class OpcodeIntegTest {
 
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(block, Collections.singletonList(tx))
             .repository(repo)
             .isLocalCall(false)
             .allowNonceIncrement(true)

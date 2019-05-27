@@ -47,7 +47,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -275,9 +274,8 @@ public class Benchmark {
     }
 
     private static BulkExecutor newBulkExecutor(AionTransaction transaction) {
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(transaction));
         BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(block, Collections.singletonList(transaction))
             .repository(repo)
             .isLocalCall(false)
             .allowNonceIncrement(true)

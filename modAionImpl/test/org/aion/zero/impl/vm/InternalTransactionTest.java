@@ -41,7 +41,6 @@ import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
@@ -329,7 +328,6 @@ public class InternalTransactionTest {
         tx1.sign(deployerAccount);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx1));
         BulkExecutor exec = newBulkExecutor(bc, context, tx1);
         AionTxExecSummary summary = exec.execute().get(0);
 
@@ -466,9 +464,8 @@ public class InternalTransactionTest {
     }
 
     private BulkExecutor newBulkExecutor(StandaloneBlockchain bc, BlockContext context, AionTransaction transaction) {
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(transaction));
         BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
+            .transactionsToExecute(context.block, Collections.singletonList(transaction))
             .repository(bc.getRepository().startTracking())
             .isLocalCall(false)
             .allowNonceIncrement(true)
