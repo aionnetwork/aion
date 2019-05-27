@@ -61,7 +61,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IBloomFilter;
@@ -1302,9 +1301,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 TransactionTypeRule.allowAVMContractTransaction();
             }
 
-            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor = new BulkExecutorBuilder()
-                .transactionBatchToExecute(batch)
+                .blockToExecute(block)
                 .repository(track)
                 .isLocalCall(false)
                 .allowNonceIncrement(true)
@@ -1354,9 +1352,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 TransactionTypeRule.allowAVMContractTransaction();
             }
 
-            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor = new BulkExecutorBuilder()
-                .transactionBatchToExecute(batch)
+                .blockToExecute(block)
                 .repository(track)
                 .isLocalCall(false)
                 .allowNonceIncrement(true)

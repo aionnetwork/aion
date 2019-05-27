@@ -3,6 +3,7 @@ package org.aion.vm;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 public final class BulkExecutorBuilder {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository = null;
     private PostExecutionWork postExecutionWork = null;
+    private IAionBlock block = null;
     private ExecutionBatch executionBatch = null;
     private Logger logger = null;
     private Boolean isLocalCall = null;
@@ -30,6 +32,11 @@ public final class BulkExecutorBuilder {
 
     public BulkExecutorBuilder transactionBatchToExecute(ExecutionBatch executionBatch) {
         this.executionBatch = executionBatch;
+        return this;
+    }
+
+    public BulkExecutorBuilder blockToExecute(IAionBlock block) {
+        this.block = block;
         return this;
     }
 
@@ -62,8 +69,8 @@ public final class BulkExecutorBuilder {
         if (this.repository == null) {
             throw new NullPointerException("Cannot build BulkExecutor with null repository!");
         }
-        if (this.executionBatch == null) {
-            throw new NullPointerException("Cannot build BulkExecutor with null executionBatch!");
+        if (this.executionBatch == null && this.block == null) {
+            throw new NullPointerException("Cannot build BulkExecutor with null executionBatch and block!");
         }
         if (this.logger == null) {
             throw new NullPointerException("Cannot build BulkExecutor with null logger!");
@@ -80,28 +87,56 @@ public final class BulkExecutorBuilder {
         if (this.checkBlockEnergyLimit == null) {
             throw new NullPointerException("Cannot build BulkExecutor without specifying checkBlockEnergyLimit!");
         }
+        if (this.executionBatch != null && this.block != null) {
+            throw new NullPointerException("Cannot build BulkExecutor without specifying executionBatch or block!");
+        }
 
-        if (this.postExecutionWork == null) {
-            return BulkExecutor.newExecutorWithNoPostExecutionWork(
-                this.executionBatch,
-                this.repository,
-                this.isLocalCall,
-                this.allowNonceIncrement,
-                this.executionBatch.getBlock().getNrgLimit(),
-                this.fork040enable,
-                this.checkBlockEnergyLimit,
-                this.logger);
+        if (this.executionBatch != null) {
+            if (this.postExecutionWork == null) {
+                return BulkExecutor.newExecutorWithNoPostExecutionWork(
+                    this.executionBatch,
+                    this.repository,
+                    this.isLocalCall,
+                    this.allowNonceIncrement,
+                    this.executionBatch.getBlock().getNrgLimit(),
+                    this.fork040enable,
+                    this.checkBlockEnergyLimit,
+                    this.logger);
+            } else {
+                return BulkExecutor.newExecutor(
+                    this.executionBatch,
+                    this.repository,
+                    this.isLocalCall,
+                    this.allowNonceIncrement,
+                    this.executionBatch.getBlock().getNrgLimit(),
+                    this.fork040enable,
+                    this.checkBlockEnergyLimit,
+                    this.logger,
+                    this.postExecutionWork);
+            }
         } else {
-            return BulkExecutor.newExecutor(
-                this.executionBatch,
-                this.repository,
-                this.isLocalCall,
-                this.allowNonceIncrement,
-                this.executionBatch.getBlock().getNrgLimit(),
-                this.fork040enable,
-                this.checkBlockEnergyLimit,
-                this.logger,
-                this.postExecutionWork);
+            if (this.postExecutionWork == null) {
+                return BulkExecutor.newExecutorForBlockWithNoPostExecutionWork(
+                    this.block,
+                    this.repository,
+                    this.isLocalCall,
+                    this.allowNonceIncrement,
+                    this.block.getNrgLimit(),
+                    this.fork040enable,
+                    this.checkBlockEnergyLimit,
+                    this.logger);
+            } else {
+                return BulkExecutor.newExecutorForBlock(
+                    this.block,
+                    this.repository,
+                    this.isLocalCall,
+                    this.allowNonceIncrement,
+                    this.block.getNrgLimit(),
+                    this.fork040enable,
+                    this.checkBlockEnergyLimit,
+                    this.logger,
+                    this.postExecutionWork);
+            }
         }
     }
 }

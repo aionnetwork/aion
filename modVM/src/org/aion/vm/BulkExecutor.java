@@ -121,6 +121,44 @@ public class BulkExecutor {
 
     /**
      * Constructs a new bulk executor that will execute the transactions contained in the provided
+     * block.
+     *
+     * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
+     * validation checks will be performed. Otherwise a transaction is run as normal.
+     *
+     * @param block The block of transactions to execute.
+     * @param repository The repository.
+     * @param isLocalCall Whether or not the call is a network or local call.
+     * @param allowNonceIncrement Whether or not to increment the sender's nonce.
+     * @param blockRemainingEnergy The amount of energy remaining in the block.
+     * @param fork040Enable the fork logic affect the fvm behavior.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
+     * @param logger The logger.
+     * @param work The post-execution work to apply after each transaction is run.
+     */
+    public static BulkExecutor newExecutorForBlock(
+        IAionBlock block,
+        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+        boolean isLocalCall,
+        boolean allowNonceIncrement,
+        long blockRemainingEnergy,
+        boolean fork040Enable,
+        boolean checkBlockEnergyLimit,
+        Logger logger,
+        PostExecutionWork work) {
+
+        if (block == null) {
+            throw new NullPointerException("Cannot construct a BulkExecutor with null block!");
+        }
+        if (work == null) {
+            throw new NullPointerException("Cannot construct a BulkExecutor will null post-execution work!");
+        }
+        ExecutionBatch executionBatch = new ExecutionBatch(block, block.getTransactionsList());
+        return new BulkExecutor(executionBatch, repository, isLocalCall, allowNonceIncrement, blockRemainingEnergy, fork040Enable, checkBlockEnergyLimit, logger, work);
+    }
+
+    /**
+     * Constructs a new bulk executor that will execute the transactions contained in the provided
      * {@code executionBatch}.
      *
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
@@ -154,6 +192,44 @@ public class BulkExecutor {
                 checkBlockEnergyLimit,
                 logger,
                 null);
+    }
+
+    /**
+     * Constructs a new bulk executor that will execute the transactions contained in the provided
+     * block.
+     *
+     * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
+     * validation checks will be performed. Otherwise a transaction is run as normal.
+     *
+     * @param block The block of transactions to execute.
+     * @param repository The repository.
+     * @param isLocalCall Whether or not the call is a network or local call.
+     * @param allowNonceIncrement Whether or not to increment the sender's nonce.
+     * @param blockRemainingEnergy The amount of energy remaining in the block.
+     * @param logger The logger.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
+     */
+    public static BulkExecutor newExecutorForBlockWithNoPostExecutionWork(
+        IAionBlock block,
+        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+        boolean isLocalCall,
+        boolean allowNonceIncrement,
+        long blockRemainingEnergy,
+        boolean fork040Enable,
+        boolean checkBlockEnergyLimit,
+        Logger logger) {
+
+        ExecutionBatch executionBatch = new ExecutionBatch(block, block.getTransactionsList());
+        return new BulkExecutor(
+            executionBatch,
+            repository,
+            isLocalCall,
+            allowNonceIncrement,
+            blockRemainingEnergy,
+            fork040Enable,
+            checkBlockEnergyLimit,
+            logger,
+            null);
     }
 
     public List<AionTxExecSummary> execute() throws VMException {
