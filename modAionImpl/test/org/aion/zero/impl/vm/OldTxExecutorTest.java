@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.crypto.ECKeyFac;
 import org.aion.interfaces.db.InternalVmType;
+import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -56,6 +57,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -133,16 +135,7 @@ public class OldTxExecutorTest {
 
         cache.flush();
 
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(repo.startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(repo, block, tx);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -178,16 +171,7 @@ public class OldTxExecutorTest {
         RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice().value()));
 
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(repo.startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(repo, block, tx);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -235,16 +219,7 @@ public class OldTxExecutorTest {
         long t1 = System.nanoTime();
         long repeat = 1000;
         for (int i = 0; i < repeat; i++) {
-            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-            BulkExecutor exec = new BulkExecutorBuilder()
-                .transactionBatchToExecute(details)
-                .repository(repo.startTracking())
-                .isLocalCall(false)
-                .allowNonceIncrement(true)
-                .isFork040enabled(false)
-                .checkBlockEnergyLimit(false)
-                .logger(LOGGER_VM)
-                .build();
+            BulkExecutor exec = newBulkExecutor(repo, block, tx);
             exec.execute();
         }
         long t2 = System.nanoTime();
@@ -276,16 +251,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(1_000_000_000L));
         repo.flush();
 
-        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(repo.startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(repo, block, tx);
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
 
@@ -324,5 +290,19 @@ public class OldTxExecutorTest {
                 solutions,
                 0,
                 5000000);
+    }
+
+    private BulkExecutor newBulkExecutor(Repository repo, IAionBlock block, AionTransaction transaction) {
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(transaction));
+        BulkExecutor executor = new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(repo.startTracking())
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
+        return executor;
     }
 }

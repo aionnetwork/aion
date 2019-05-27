@@ -281,16 +281,7 @@ public class InternalTransactionTest {
         tx2.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx2));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(bc.getRepository().startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(bc, context, tx2);
         AionTxExecSummary summary = exec.execute().get(0);
 
         assertEquals(2, summary.getInternalTransactions().size());
@@ -339,15 +330,7 @@ public class InternalTransactionTest {
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx1));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(bc.getRepository().startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(bc, context, tx1);
         AionTxExecSummary summary = exec.execute().get(0);
 
         System.out.println(summary.getReceipt());
@@ -452,16 +435,7 @@ public class InternalTransactionTest {
 
         RepositoryCache repo = bc.getRepository().startTracking();
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutorBuilder()
-            .transactionBatchToExecute(details)
-            .repository(repo)
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+        BulkExecutor exec = newBulkExecutor(bc, context, tx);
         AionTxExecSummary summary = exec.execute().get(0);
 
         System.out.println(summary.getReceipt());
@@ -489,5 +463,19 @@ public class InternalTransactionTest {
     @After
     public void teardown() {
         LongLivedAvm.destroy();
+    }
+
+    private BulkExecutor newBulkExecutor(StandaloneBlockchain bc, BlockContext context, AionTransaction transaction) {
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(transaction));
+        BulkExecutor executor = new BulkExecutorBuilder()
+            .transactionBatchToExecute(details)
+            .repository(bc.getRepository().startTracking())
+            .isLocalCall(false)
+            .allowNonceIncrement(true)
+            .isFork040enabled(false)
+            .checkBlockEnergyLimit(false)
+            .logger(LOGGER_VM)
+            .build();
+        return executor;
     }
 }
