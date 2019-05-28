@@ -442,6 +442,7 @@ public abstract class ApiAion extends Api {
         AionTransaction tx =
                 new AionTransaction(
                         _params.getNonce().toByteArray(),
+                        _params.getFrom() == null ? Address.ZERO_ADDRESS() : _params.getFrom(),
                         _params.getTo(),
                         _params.getValue().toByteArray(),
                         _params.getData(),

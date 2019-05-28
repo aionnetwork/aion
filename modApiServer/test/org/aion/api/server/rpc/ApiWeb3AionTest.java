@@ -9,10 +9,12 @@ import org.aion.types.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,6 +27,12 @@ public class ApiWeb3AionTest {
     public void setup() {
         impl = AionImpl.inst();
         web3Api = new ApiWeb3Aion(impl);
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void tearDown() {
+        VirtualMachineProvider.shutdownAllVirtualMachines();
     }
 
     @Test
@@ -205,5 +213,22 @@ public class ApiWeb3AionTest {
 
         RpcMsg rsp = web3Api.eth_getTransactionByBlockNumberAndIndex(req);
         assertEquals(JSONObject.NULL, rsp.getResult());
+    }
+
+    @Test
+    public void testEth_call() {
+        Address from = new Address("a000000000000000000000000000000000000000000000000000000000000001");
+        Address to = new Address("a000000000000000000000000000000000000000000000000000000000000002");
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", from.toString());
+        tx.put("to", to.toString());
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+
+        RpcMsg rsp = web3Api.eth_call(jsonArray);
+
+        assertEquals(JSONObject.wrap("0x"), rsp.getResult());
     }
 }

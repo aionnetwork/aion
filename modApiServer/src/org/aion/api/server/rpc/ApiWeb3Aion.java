@@ -808,9 +808,15 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionBlock b = getBlockByBN(bn);
 
+        Address sender = txParams.getFrom();
+        if (sender == null) {
+            sender = Address.ZERO_ADDRESS();
+        }
+
         AionTransaction tx =
                 new AionTransaction(
                         txParams.getNonce().toByteArray(),
+                        sender,
                         txParams.getTo(),
                         txParams.getValue().toByteArray(),
                         txParams.getData(),
