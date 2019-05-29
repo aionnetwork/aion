@@ -137,7 +137,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public void removeStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
-        this.repositoryCache.addStorageRow(address, storageKey, ByteArrayWrapper.ZERO);
+        this.repositoryCache.removeStorageRow(address, storageKey);
         setVmType(address);
     }
 
