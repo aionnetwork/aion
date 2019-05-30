@@ -43,7 +43,6 @@ import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
@@ -116,8 +115,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
@@ -161,8 +159,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
@@ -202,8 +199,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
@@ -253,8 +249,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
         nonce = nonce.add(BigInteger.ONE);
@@ -276,8 +271,7 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
-        BigInteger inStore = new BigInteger(exec.execute().get(0).getResult());
+        BigInteger inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         System.err.println("Found in D's storage for n: " + inStore);
         assertEquals(n, inStore);
         nonce = nonce.add(BigInteger.ONE);
@@ -298,8 +292,7 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
-        inStore = new BigInteger(exec.execute().get(0).getResult());
+        inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(BigInteger.ZERO, inStore);
     }
 
@@ -333,8 +326,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -373,8 +365,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -414,8 +405,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
         nonce = nonce.add(BigInteger.ONE);
@@ -437,8 +427,7 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
-        BigInteger inStore = new BigInteger(exec.execute().get(0).getResult());
+        BigInteger inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(n, inStore);
         nonce = nonce.add(BigInteger.ONE);
 
@@ -458,8 +447,7 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
-        inStore = new BigInteger(exec.execute().get(0).getResult());
+        inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(BigInteger.ZERO, inStore);
     }
 
@@ -489,8 +477,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -532,8 +519,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -574,8 +560,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -625,8 +610,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -671,8 +655,7 @@ public class OpcodeIntegTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
@@ -738,8 +721,7 @@ public class OpcodeIntegTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
@@ -809,16 +791,16 @@ public class OpcodeIntegTest {
                 DataWordImpl.ZERO.getData());
     }
 
-    private BulkExecutor getNewExecutor(
-            AionTransaction tx, IAionBlock block, RepositoryCache repo) {
-        return new BulkExecutorBuilder()
-            .transactionsToExecute(block, Collections.singletonList(tx))
-            .repository(repo)
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+    private AionTxExecSummary executeTransaction(
+            AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
+        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+            block,
+            tx,
+            repo,
+            false,
+            true,
+            false,
+            false,
+            LOGGER_VM);
     }
 }

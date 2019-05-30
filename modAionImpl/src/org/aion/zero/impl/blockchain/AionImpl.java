@@ -20,7 +20,6 @@ import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -131,16 +130,21 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BulkExecutor executor = new BulkExecutorBuilder()
-                .transactionsToExecute(block, Collections.singletonList(tx))
-                .repository(repository)
-                .isLocalCall(true)
-                .allowNonceIncrement(true)
-                .isFork040enabled(false)
-                .checkBlockEnergyLimit(false)
-                .logger(LOG_VM)
-                .build();
-            return executor.execute().get(0).getReceipt().getEnergyUsed();
+            // Booleans moved out here so their meaning is explicit.
+            boolean isLocalCall = true;
+            boolean incrementSenderNonce = true;
+            boolean fork040enabled = false;
+            boolean checkBlockEnergyLimit = false;
+
+            return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                block,
+                tx,
+                repository,
+                isLocalCall,
+                incrementSenderNonce,
+                fork040enabled,
+                checkBlockEnergyLimit,
+                LOG_VM).getReceipt().getEnergyUsed();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
@@ -161,16 +165,21 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BulkExecutor executor = new BulkExecutorBuilder()
-                .transactionsToExecute(block, Collections.singletonList(tx))
-                .repository(repository)
-                .isLocalCall(true)
-                .allowNonceIncrement(true)
-                .isFork040enabled(false)
-                .checkBlockEnergyLimit(false)
-                .logger(LOG_VM)
-                .build();
-            return executor.execute().get(0).getReceipt();
+            // Booleans moved out here so their meaning is explicit.
+            boolean isLocalCall = true;
+            boolean incrementSenderNonce = true;
+            boolean fork040enabled = false;
+            boolean checkBlockEnergyLimit = false;
+
+            return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                block,
+                tx,
+                repository,
+                isLocalCall,
+                incrementSenderNonce,
+                fork040enabled,
+                checkBlockEnergyLimit,
+                LOG_VM).getReceipt();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);

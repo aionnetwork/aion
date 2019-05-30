@@ -47,7 +47,6 @@ import org.aion.solidity.Compiler.Options;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -55,6 +54,7 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
@@ -134,8 +134,7 @@ public class OldTxExecutorTest {
 
         cache.flush();
 
-        BulkExecutor exec = newBulkExecutor(repo, block, tx);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(
@@ -170,8 +169,7 @@ public class OldTxExecutorTest {
         RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice().value()));
 
-        BulkExecutor exec = newBulkExecutor(repo, block, tx);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(
@@ -218,8 +216,7 @@ public class OldTxExecutorTest {
         long t1 = System.nanoTime();
         long repeat = 1000;
         for (int i = 0; i < repeat; i++) {
-            BulkExecutor exec = newBulkExecutor(repo, block, tx);
-            exec.execute();
+            executeTransaction(repo, block, tx);
         }
         long t2 = System.nanoTime();
         System.out.println((t2 - t1) / repeat);
@@ -250,8 +247,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(1_000_000_000L));
         repo.flush();
 
-        BulkExecutor exec = newBulkExecutor(repo, block, tx);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
 
         assertEquals(tx.transactionCost(block.getNumber()), receipt.getEnergyUsed());
@@ -291,16 +287,15 @@ public class OldTxExecutorTest {
                 5000000);
     }
 
-    private BulkExecutor newBulkExecutor(Repository repo, IAionBlock block, AionTransaction transaction) {
-        BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionsToExecute(block, Collections.singletonList(transaction))
-            .repository(repo.startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
-        return executor;
+    private AionTxExecSummary executeTransaction(Repository repo, IAionBlock block, AionTransaction transaction) throws VMException {
+        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+            block,
+            transaction,
+            repo.startTracking(),
+            false,
+            true,
+            false,
+            false,
+            LOGGER_VM);
     }
 }

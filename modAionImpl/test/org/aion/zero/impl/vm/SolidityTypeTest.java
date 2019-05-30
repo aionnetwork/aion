@@ -52,13 +52,13 @@ import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
@@ -132,8 +132,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -150,8 +149,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(
@@ -169,8 +167,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -188,8 +185,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -207,8 +203,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -227,8 +222,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -247,8 +241,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -267,8 +260,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -289,8 +281,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -312,8 +303,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -339,8 +329,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -367,8 +356,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -395,8 +383,7 @@ public class SolidityTypeTest {
         AionBlock block = createDummyBlock();
         RepositoryCache repo = createRepository(tx);
 
-        BulkExecutor exec = getNewExecutor(tx, block, repo);
-        AionTxReceipt receipt = exec.execute().get(0).getReceipt();
+        AionTxReceipt receipt = executeTransaction(tx, block, repo).getReceipt();
         System.out.println(receipt);
 
         assertArrayEquals(params, receipt.getTransactionOutput());
@@ -407,17 +394,17 @@ public class SolidityTypeTest {
         }
     }
 
-    private BulkExecutor getNewExecutor(
-            AionTransaction tx, IAionBlock block, RepositoryCache repo) {
-        return new BulkExecutorBuilder()
-            .transactionsToExecute(block, Collections.singletonList(tx))
-            .repository(repo)
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+    private AionTxExecSummary executeTransaction(
+            AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
+        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+            block,
+            tx,
+            repo,
+            false,
+            true,
+            false,
+            false,
+            LOGGER_VM);
     }
 
     private static AionBlock createDummyBlock() {

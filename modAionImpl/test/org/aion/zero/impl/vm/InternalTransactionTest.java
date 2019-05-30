@@ -40,7 +40,6 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
@@ -280,8 +279,7 @@ public class InternalTransactionTest {
         tx2.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
-        BulkExecutor exec = newBulkExecutor(bc, context, tx2);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(bc, context, tx2);
 
         assertEquals(2, summary.getInternalTransactions().size());
         bc.close();
@@ -328,8 +326,7 @@ public class InternalTransactionTest {
         tx1.sign(deployerAccount);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
-        BulkExecutor exec = newBulkExecutor(bc, context, tx1);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(bc, context, tx1);
 
         System.out.println(summary.getReceipt());
         for (InternalTransactionInterface tx : summary.getInternalTransactions()) {
@@ -433,8 +430,7 @@ public class InternalTransactionTest {
 
         RepositoryCache repo = bc.getRepository().startTracking();
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
-        BulkExecutor exec = newBulkExecutor(bc, context, tx);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(bc, context, tx);
 
         System.out.println(summary.getReceipt());
         boolean firstItx = true;
@@ -463,16 +459,15 @@ public class InternalTransactionTest {
         LongLivedAvm.destroy();
     }
 
-    private BulkExecutor newBulkExecutor(StandaloneBlockchain bc, BlockContext context, AionTransaction transaction) {
-        BulkExecutor executor = new BulkExecutorBuilder()
-            .transactionsToExecute(context.block, Collections.singletonList(transaction))
-            .repository(bc.getRepository().startTracking())
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
-        return executor;
+    private AionTxExecSummary executeTransaction(StandaloneBlockchain bc, BlockContext context, AionTransaction transaction) throws VMException {
+        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+            context.block,
+            transaction,
+            bc.getRepository().startTracking(),
+            false,
+            true,
+            false,
+            false,
+            LOGGER_VM);
     }
 }

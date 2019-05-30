@@ -27,16 +27,11 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-
-import org.aion.fastvm.FastVmResultCode;
-import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
@@ -46,8 +41,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
-import org.aion.vm.BulkExecutorBuilder;
-import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -89,20 +82,6 @@ public class TransactionExecutorTest {
         deployer = null;
     }
 
-    @Test(expected = VMException.class)
-    public void testExecutorFatal() throws VMException {
-        BulkExecutor be = mock(BulkExecutor.class);
-        TransactionResult rt = new FastVmTransactionResult(FastVmResultCode.VM_INTERNAL_ERROR, 0);
-        when(be.execute()).thenThrow(new VMException(rt.toString()));
-
-        try {
-            be.execute();
-        } catch (VMException e) {
-            System.out.println(e.toString());
-            throw e;
-        }
-    }
-
     @Test
     public void testExecutor() throws IOException, VMException {
         Address to = getNewRecipient(true);
@@ -124,8 +103,7 @@ public class TransactionExecutorTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = newBulkExecutor(repo, context, tx);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(repo, context, tx);
         BigInteger refund = summary.getRefund();
 
         // We expect that there is a new account created, the contract, with 0 balance and 0 nonce
@@ -212,8 +190,7 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = newBulkExecutor(repo, context, tx);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(repo, context, tx);
         assertEquals("", summary.getReceipt().getError());
         System.out.println(Hex.toHexString(summary.getResult()));
 
@@ -242,8 +219,7 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
-        exec = newBulkExecutor(repo, context, tx);
-        summary = exec.execute().get(0);
+        summary = executeTransaction(repo, context, tx);
 
         System.out.println(Hex.toHexString(summary.getResult()));
         System.out.println(summary.getResult().length);
@@ -294,8 +270,7 @@ public class TransactionExecutorTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         RepositoryCache repo = blockchain.getRepository().startTracking();
 
-        BulkExecutor exec = newBulkExecutor(repo, context, tx);
-        AionTxExecSummary summary = exec.execute().get(0);
+        AionTxExecSummary summary = executeTransaction(repo, context, tx);
         System.out.println(summary.getReceipt());
 
         //        System.out.println(Hex.toHexString(res.getOutput()));
@@ -349,15 +324,15 @@ public class TransactionExecutorTest {
         return out;
     }
 
-    private BulkExecutor newBulkExecutor(RepositoryCache repo, BlockContext context, AionTransaction transaction) {
-        return new BulkExecutorBuilder()
-            .transactionsToExecute(context.block, Collections.singletonList(transaction))
-            .repository(repo)
-            .isLocalCall(false)
-            .allowNonceIncrement(true)
-            .isFork040enabled(false)
-            .checkBlockEnergyLimit(false)
-            .logger(LOGGER_VM)
-            .build();
+    private AionTxExecSummary executeTransaction(RepositoryCache repo, BlockContext context, AionTransaction transaction) throws VMException {
+        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
+            context.block,
+            transaction,
+            repo,
+            false,
+            true,
+            false,
+            false,
+            LOGGER_VM);
     }
 }
