@@ -442,9 +442,10 @@ public class AionHub {
             }
 
             genLOG.info(
-                    "loaded block <num={}, root={}>",
+                    "loaded block <num={}, root={}, td={}>",
                     blockchain.getBestBlock().getNumber(),
-                    LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
+                    LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()),
+                    blockchain.getTotalDifficulty());
         }
 
         byte[] genesisHash = cfg.getGenesis().getHash();

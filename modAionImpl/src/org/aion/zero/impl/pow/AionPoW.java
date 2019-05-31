@@ -221,18 +221,19 @@ public class AionPoW {
             if (importResult.isSuccessful()) {
                 if (importResult == IMPORTED_BEST) {
                     LOG.info(
-                            "block sealed <num={}, hash={}, diff={}, tx={}>",
+                            "block sealed <num={}, hash={}, diff={}, td={}, tx={}>",
                             block.getNumber(),
                             block.getShortHash(),
-                            // LogUtil.toHexF8(newBlock.getHash()),
                             block.getHeader().getDifficultyBI().toString(),
+                            blockchain.getTotalDifficulty(),
                             block.getTransactionsList().size());
                 } else {
                     LOG.debug(
-                            "block sealed <num={}, hash={}, diff={}, tx={}, result={}>",
+                            "block sealed <num={}, hash={}, diff={}, td={}, tx={}, result={}>",
                             block.getNumber(),
-                            block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            block.getShortHash(),
                             block.getHeader().getDifficultyBI().toString(),
+                            blockchain.getTotalDifficulty(),
                             block.getTransactionsList().size(),
                             importResult);
                 }
