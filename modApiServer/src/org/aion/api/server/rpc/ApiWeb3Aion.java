@@ -789,7 +789,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
+        ArgTxCall txParams = ArgTxCall.fromJSONforCall(_tx, getRecommendedNrgPrice());
 
         if (txParams == null) {
             return new RpcMsg(
@@ -832,7 +832,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
+        ArgTxCall txParams = ArgTxCall.fromJSONforCall(_tx, getRecommendedNrgPrice());
 
         NumericalValue estimate = new NumericalValue(estimateNrg(txParams));
 

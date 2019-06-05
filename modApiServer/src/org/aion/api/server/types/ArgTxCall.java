@@ -62,10 +62,20 @@ public final class ArgTxCall {
     }
 
     public static ArgTxCall fromJSON(final JSONObject _jsonObj, long defaultNrgPrice) {
+        return fromJSON(_jsonObj, defaultNrgPrice, false);
+    }
+
+    public static ArgTxCall fromJSONforCall(final JSONObject _jsonObj, long defaultNrgPrice) {
+        return fromJSON(_jsonObj, defaultNrgPrice, true);
+    }
+
+    private static ArgTxCall fromJSON(
+        final JSONObject _jsonObj, long defaultNrgPrice, boolean forCall) {
         try {
 
             String fromStr = _jsonObj.optString("from", "");
-            Address from = fromStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(fromStr));
+            Address from =
+                    fromStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(fromStr));
 
             String toStr = _jsonObj.optString("to", "");
             Address to = toStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(toStr));
@@ -87,12 +97,19 @@ public final class ArgTxCall {
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
-            long nrg = to == null ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
-            if (nrgStr != null)
+            long nrg;
+            if (nrgStr != null) {
                 nrg =
                         nrgStr.contains("0x")
                                 ? StringUtils.StringHexToBigInteger(nrgStr).longValue()
                                 : StringUtils.StringNumberAsBigInt(nrgStr).longValue();
+            } else {
+                if (forCall) {
+                    nrg = Long.MAX_VALUE;
+                } else {
+                    nrg = to == null ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
+                }
+            }
 
             long nrgPrice = defaultNrgPrice;
             if (nrgPriceStr != null)
