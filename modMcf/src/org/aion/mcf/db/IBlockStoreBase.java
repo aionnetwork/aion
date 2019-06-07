@@ -43,4 +43,6 @@ public interface IBlockStoreBase<BLK extends Block<?, ?>, BH extends AbstractBlo
     void load();
 
     void close();
+
+    void rollback(long blockNumber);
 }

@@ -22,10 +22,7 @@ public class BlockInfoTest {
 
     @Test
     public void testBlockInfoSerialization() {
-        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo();
-        info.setMainChain(true);
-        info.setCummDifficulty(BigInteger.ONE);
-        info.setHash(DEFAULT_HASH);
+        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(info));
@@ -44,15 +41,8 @@ public class BlockInfoTest {
 
     @Test
     public void testBlockInfoMultipleSerialization() {
-        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo();
-        info.setMainChain(true);
-        info.setCummDifficulty(BigInteger.ONE);
-        info.setHash(DEFAULT_HASH);
-
-        AionBlockStore.BlockInfo info2 = new AionBlockStore.BlockInfo();
-        info2.setMainChain(false);
-        info2.setCummDifficulty(BigInteger.TWO);
-        info2.setHash(HashUtil.h256(DEFAULT_HASH));
+        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
+        AionBlockStore.BlockInfo info2 = new AionBlockStore.BlockInfo(HashUtil.h256(DEFAULT_HASH), BigInteger.TWO, false);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Arrays.asList(info, info2));

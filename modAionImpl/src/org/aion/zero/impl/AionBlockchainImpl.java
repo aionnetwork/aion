@@ -12,6 +12,7 @@ import static org.aion.mcf.core.ImportResult.NO_PARENT;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -1900,10 +1901,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getNumber(),
                     other.getTransactionsList().size());
 
-            if (bestBlock == null) {
-                bestBlock = getBlockStore().getBestBlock();
-            }
-
             this.add(other, true);
         }
 
@@ -1964,7 +1961,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             maxNumber = bestBlock.getNumber();
         }
         if (block.getNumber() > maxNumber) {
-            maxNumber = bestBlock.getNumber();
+            maxNumber = block.getNumber();
         }
         getBlockStore().correctSize(maxNumber, LOG);
 
@@ -2050,5 +2047,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionRepositoryImpl savedRepo = repository;
         AionBlock savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
+    }
+
+    /**
+     * @implNote this method only can be called by the aionhub for data recovery purpose.
+     * @param blk the best block after database recovered or revered.
+     */
+    void resetPubBestBlock(AionBlock blk) {
+        pubBestBlock = blk;
     }
 }

@@ -544,7 +544,7 @@ final class TaskImportBlocks implements Runnable {
         if (log.isDebugEnabled()) {
             // printing sync mode only when debug is enabled
             log.debug(
-                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
+                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms, td = {}>",
                     displayId,
                     (state != null ? state.getMode() : NORMAL),
                     b.getShortHash(),
@@ -552,20 +552,22 @@ final class TaskImportBlocks implements Runnable {
                     b.getTransactionsList().size(),
                     b.getTimestamp(),
                     importResult,
-                    t2 - t1);
+                    t2 - t1,
+                    chain.getTotalDifficulty());
         } else {
             // not printing this message when the state is in fast mode with no parent result
             // a different message will be printed to indicate the storage of blocks
             if (log.isInfoEnabled()
                     && (!state.isInFastMode() || importResult != ImportResult.NO_PARENT)) {
                 log.info(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms, td = {}>",
                         displayId,
                         b.getShortHash(),
                         b.getNumber(),
                         b.getTransactionsList().size(),
                         importResult,
-                        t2 - t1);
+                        t2 - t1,
+                        chain.getTotalDifficulty());
             }
         }
         // trigger compact when IO is slow

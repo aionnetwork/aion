@@ -5,4 +5,6 @@ public class SystemExitCodes {
 
     public static final int NORMAL = 0;
     public static final int OUT_OF_DISK_SPACE = 1;
+    public static final int DATABASE_CORRUPTION = 2;
+
 }

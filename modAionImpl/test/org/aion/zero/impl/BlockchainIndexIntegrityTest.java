@@ -104,7 +104,7 @@ public class BlockchainIndexIntegrityTest {
 
         chain.getRepository().flush();
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // deleting the level 2 index

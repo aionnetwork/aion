@@ -114,10 +114,10 @@ public class AionHub {
 
         // load event manager before init blockchain instance
         loadEventMgr(forTest);
+        registerBlockEvents();
 
-        AionBlockchainImpl blockchain = _blockchain;
-        blockchain.setEventManager(this.eventMgr);
-        this.blockchain = blockchain;
+        _blockchain.setEventManager(this.eventMgr);
+        this.blockchain = _blockchain;
 
         this.repository = _repository;
 
@@ -126,7 +126,12 @@ public class AionHub {
                         ? AionPendingStateImpl.createForTesting(_cfgAion, _blockchain, _repository)
                         : AionPendingStateImpl.inst();
 
-        loadBlockchain();
+        try {
+            loadBlockchain();
+        } catch (IllegalStateException e) {
+            genLOG.error("Found database corruption, please re-import your database!", e);
+            System.exit(SystemExitCodes.DATABASE_CORRUPTION);
+        }
 
         this.mempool.checkAvmFlag();
 
@@ -164,7 +169,7 @@ public class AionHub {
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(
-                blockchain,
+                _blockchain,
                 p2pMgr,
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
@@ -197,7 +202,7 @@ public class AionHub {
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
 
         this.pow = new AionPoW();
-        this.pow.init(blockchain, mempool, eventMgr);
+        this.pow.init(_blockchain, mempool, eventMgr);
     }
 
     static AionHub createForTesting(
@@ -295,11 +300,8 @@ public class AionHub {
             System.exit(INIT_ERROR_EXIT_CODE);
         }
 
+        // Note: if block DB corruption, the bestBlock may not match with the indexDB.
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
-        if (bestBlock != null) {
-            bestBlock.setCumulativeDifficulty(
-                    repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
-        }
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -343,11 +345,17 @@ public class AionHub {
 
             recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
 
+            if (recovered && !repository.isIndexed(bestBlock.getHash(), bestBlock.getNumber())) {
+                // correct the index for this block
+                recovered = blockchain.recoverIndexEntry(this.repository, bestBlock);
+            }
+
+            long blockNumber = bestBlock.getNumber();
             if (!this.repository.isValidRoot(bestBlock.getStateRoot())) {
                 // reverting back one block
                 genLOG.info("Rebuild state FAILED. Reverting to previous block.");
 
-                long blockNumber = bestBlock.getNumber() - 1;
+                --blockNumber;
                 RecoveryUtils.Status status = RecoveryUtils.revertTo(this.blockchain, blockNumber);
 
                 recovered =
@@ -360,25 +368,32 @@ public class AionHub {
             }
 
             if (recovered) {
+                // reverting block & index DB
+                blockchain.getBlockStore().rollback(blockNumber);
+
+                // new best block after recovery
                 bestBlock = this.repository.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
                     bestBlock.setCumulativeDifficulty(
                             repository
                                     .getBlockStore()
                                     .getTotalDifficultyForHash(bestBlock.getHash()));
+
+                    startingBlock = bestBlock;
+                    // TODO: The publicbestblock is a weird settings, should consider to remove it.
+                    ((AionBlockchainImpl) blockchain).resetPubBestBlock(bestBlock);
+                } else {
+                    genLOG.error(
+                            "Recovery failed! please re-import your database by ./aion.sh -n <network> --redo-import, it will take a while.");
+                    throw new IllegalStateException("Recovery failed due to database corruption.");
                 }
 
                 // checking is the best block has changed since attempting recovery
-                if (bestBlock == null) {
-                    bestBlockShifted = true;
-                } else {
-                    bestBlockShifted =
-                            !(bestBlockNumber == bestBlock.getNumber())
-                                    || // block number changed
-                                    !(Arrays.equals(
-                                            bestBlockRoot,
-                                            bestBlock.getStateRoot())); // root hash changed
-                }
+                bestBlockShifted =
+                        !(bestBlockNumber == bestBlock.getNumber()) // block number changed
+                                || !(Arrays.equals(
+                                        bestBlockRoot,
+                                        bestBlock.getStateRoot())); // root hash changed
 
                 if (bestBlockShifted) {
                     genLOG.info(
@@ -415,24 +430,12 @@ public class AionHub {
                 genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
             }
 
-            if (this.eventMgr != null) {
-                List<IEvent> evts = new ArrayList<>();
-                evts.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
-                evts.add(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
-
-                this.eventMgr.registerEvent(evts);
-            } else {
-                genLOG.error("Event manager is null !!!");
-                System.exit(INIT_ERROR_EXIT_CODE);
-            }
-
             genLOG.info(
                     "loaded genesis block <num={}, root={}>",
                     0,
                     ByteUtil.toHexString(genesis.getStateRoot()));
 
         } else {
-
             blockchain.setBestBlock(bestBlock);
             blockchain.setTotalDifficulty(this.repository.getBlockStore().getTotalDifficulty());
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
@@ -480,8 +483,6 @@ public class AionHub {
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
-
-        //        this.repository.getBlockStore().load();
     }
 
     public void close() {
@@ -541,5 +542,18 @@ public class AionHub {
 
     public static byte getApiVersion() {
         return apiVersion;
+    }
+
+    private void registerBlockEvents() {
+        if (this.eventMgr != null) {
+            List<IEvent> evts = new ArrayList<>();
+            evts.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
+            evts.add(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
+
+            this.eventMgr.registerEvent(evts);
+        } else {
+            genLOG.error("Event manager is null!");
+            System.exit(INIT_ERROR_EXIT_CODE);
+        }
     }
 }

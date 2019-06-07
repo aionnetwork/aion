@@ -159,8 +159,6 @@ public class AionBlockStoreTest {
         when(store.getBlockByHash(last.getParentHash())).thenReturn(null);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
-        // the returned list is null due to missing block in range
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
     }
 
     @Test
@@ -171,6 +169,7 @@ public class AionBlockStoreTest {
         AionBlock last = consecutiveBlocks.get(3);
 
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
+
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
         when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
         when(store.getBestBlock()).thenReturn(best);
@@ -209,9 +208,8 @@ public class AionBlockStoreTest {
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
         when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
         when(store.getBestBlock()).thenReturn(best);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         // the returned list is null due to corrupt kernel
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
+        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
     }
 }
