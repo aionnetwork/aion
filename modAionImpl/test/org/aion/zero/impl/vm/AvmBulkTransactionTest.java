@@ -6,16 +6,19 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import org.aion.types.AionAddress;
+import java.util.Map;
 import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.tooling.ABIUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -23,6 +26,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
+import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -38,6 +42,19 @@ public class AvmBulkTransactionTest {
 
     @BeforeClass
     public static void setupAvm() {
+        // reduce default logging levels
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("API", "ERROR");
+        cfg.put("CONS", "ERROR");
+        cfg.put("DB", "ERROR");
+        cfg.put("GEM", "ERROR");
+        cfg.put("P2P", "ERROR");
+        cfg.put("ROOT", "ERROR");
+        cfg.put("SYNC", "ERROR");
+        cfg.put("TX", "ERROR");
+        cfg.put("VM", "ERROR");
+        AionLoggerFactory.init(cfg);
+
         LongLivedAvm.createAndStartLongLivedAvm();
     }
 
@@ -64,6 +81,41 @@ public class AvmBulkTransactionTest {
         this.blockchain = null;
         this.deployerKey = null;
         TransactionTypeRule.disallowAVMContractTransaction();
+    }
+
+    /** Ensures that contracts with empty jars cannot be deployed on the AVM. */
+    @Test
+    public void deployEmptyContract() {
+        AionTransaction deployEmptyContractTx =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        null,
+                        BigInteger.ZERO.toByteArray(),
+                        new byte[0],
+                        5_000_000L,
+                        10_123_456_789L,
+                        TransactionTypes.AVM_CREATE_CODE);
+
+        deployEmptyContractTx.sign(deployerKey);
+
+        AionBlock parentBlock = blockchain.getBestBlock();
+        AionBlock block =
+                blockchain.createBlock(
+                        parentBlock,
+                        List.of(deployEmptyContractTx),
+                        false,
+                        parentBlock.getTimestamp());
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                blockchain.tryToConnectAndFetchSummary(block);
+
+        // ensure block was imported
+        assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+
+        // ensure the tx failed
+        AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
+        System.out.println(receipt);
+        assertEquals(receipt.isSuccessful(), false);
     }
 
     @Test
