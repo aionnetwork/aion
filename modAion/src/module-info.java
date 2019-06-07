@@ -8,6 +8,7 @@ module aion.zero {
     requires org.json;
     requires commons.lang3;
     requires com.google.common;
+    requires aion.types;
 
     exports org.aion.zero.api;
     exports org.aion.zero.types;

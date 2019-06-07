@@ -7,9 +7,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
@@ -43,7 +43,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private final Address caller;
+    private final AionAddress caller;
 
     public static final int MAX_OWNERS = 10;
     public static final int MIN_OWNERS = 2;
@@ -58,7 +58,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @throws IllegalArgumentException if track or caller are null.
      */
     public MultiSignatureContract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track, Address caller) {
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track, AionAddress caller) {
 
         super(track);
         if (caller == null) {
@@ -76,15 +76,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param owners The proposed owners of the new multi-sig wallet.
      * @return a byte array for executing a create-wallet operation.
      */
-    public static byte[] constructCreateWalletInput(long threshold, List<Address> owners) {
-        int len = 1 + Long.BYTES + (owners.size() * Address.SIZE);
+    public static byte[] constructCreateWalletInput(long threshold, List<AionAddress> owners) {
+        int len = 1 + Long.BYTES + (owners.size() * AionAddress.LENGTH);
         byte[] input = new byte[len];
 
         ByteBuffer buffer = ByteBuffer.allocate(len);
         buffer.put(new byte[] {(byte) 0x0});
         buffer.putLong(threshold);
-        for (Address addr : owners) {
-            buffer.put(addr.toBytes());
+        for (AionAddress addr : owners) {
+            buffer.put(addr.toByteArray());
         }
 
         buffer.flip();
@@ -105,20 +105,20 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return a byte array for executing a send-transaction operation.
      */
     public static byte[] constructSendTxInput(
-            Address wallet,
+            AionAddress wallet,
             List<ISignature> signatures,
             BigInteger amount,
             long nrgPrice,
-            Address to) {
+            AionAddress to) {
 
-        int len = 1 + (Address.SIZE * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
+        int len = 1 + (AionAddress.LENGTH * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
         byte[] input = new byte[len];
 
         int index = 0;
         input[index] = (byte) 0x1;
         index++;
-        System.arraycopy(wallet.toBytes(), 0, input, index, Address.SIZE);
-        index += Address.SIZE;
+        System.arraycopy(wallet.toByteArray(), 0, input, index, AionAddress.LENGTH);
+        index += AionAddress.LENGTH;
 
         for (ISignature sig : signatures) {
             byte[] sigBytes = sig.toBytes();
@@ -145,7 +145,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         System.arraycopy(nrg, 0, input, index, Long.BYTES);
         index += Long.BYTES;
 
-        System.arraycopy(to.toBytes(), 0, input, index, Address.SIZE);
+        System.arraycopy(to.toByteArray(), 0, input, index, AionAddress.LENGTH);
         return input;
     }
 
@@ -165,17 +165,17 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the transaction message that was signed.
      */
     public static byte[] constructMsg(
-            Address walletId, BigInteger nonce, Address to, BigInteger amount, long nrgPrice) {
+            AionAddress walletId, BigInteger nonce, AionAddress to, BigInteger amount, long nrgPrice) {
 
         byte[] nonceBytes = nonce.toByteArray();
-        byte[] toBytes = to.toBytes();
+        byte[] toBytes = to.toByteArray();
         byte[] amountBytes = amount.toByteArray();
         int len =
-                Address.SIZE + nonceBytes.length + toBytes.length + amountBytes.length + Long.BYTES;
+                AionAddress.LENGTH + nonceBytes.length + toBytes.length + amountBytes.length + Long.BYTES;
 
         byte[] msg = new byte[len];
         ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(walletId.toBytes());
+        buffer.put(walletId.toByteArray());
         buffer.put(nonceBytes);
         buffer.put(toBytes);
         buffer.put(amountBytes);
@@ -260,7 +260,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         thresh.put(Arrays.copyOfRange(input, 1, 1 + Long.BYTES));
         thresh.flip();
         long threshold = thresh.getLong();
-        Set<Address> owners =
+        Set<AionAddress> owners =
                 extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
         if (!isValidTxNrg(nrg)) {
@@ -277,10 +277,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address wallet = initNewWallet(owners, threshold);
+        AionAddress wallet = initNewWallet(owners, threshold);
         track.flush();
         return new PrecompiledTransactionResult(
-                PrecompiledResultCode.SUCCESS, nrg - COST, wallet.toBytes());
+                PrecompiledResultCode.SUCCESS, nrg - COST, wallet.toByteArray());
     }
 
     /**
@@ -307,10 +307,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address wallet = new Address(Arrays.copyOfRange(input, walletStart, sigsStart));
+        AionAddress wallet = new AionAddress(Arrays.copyOfRange(input, walletStart, sigsStart));
         List<byte[]> sigs = extractSignatures(Arrays.copyOfRange(input, sigsStart, amountStart));
         BigInteger amount = new BigInteger(Arrays.copyOfRange(input, amountStart, nrgStart));
-        Address recipient = new Address(Arrays.copyOfRange(input, recipientStart, length));
+        AionAddress recipient = new AionAddress(Arrays.copyOfRange(input, recipientStart, length));
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(input, nrgStart, recipientStart));
@@ -361,7 +361,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param addresses A byte array of consecutive addresses.
      * @return The addresses extracted from the byte array.
      */
-    private Set<Address> extractAddresses(byte[] addresses) {
+    private Set<AionAddress> extractAddresses(byte[] addresses) {
         int length = addresses.length;
         int numAddrs = length / ADDR_LEN;
 
@@ -369,11 +369,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return null;
         }
 
-        Set<Address> result = new HashSet<>(numAddrs);
-        Address addr;
+        Set<AionAddress> result = new HashSet<>(numAddrs);
+        AionAddress addr;
         boolean addressIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
-            addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
+            addr = new AionAddress(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
             if (result.contains(addr)) {
                 return null;
             }
@@ -426,11 +426,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param threshold The minimum number of signatures required per transaction.
      * @return the address of the newly created wallet.
      */
-    private Address initNewWallet(Set<Address> owners, long threshold) {
+    private AionAddress initNewWallet(Set<AionAddress> owners, long threshold) {
         List<byte[]> ownerAddrs = new ArrayList<>();
         List<byte[]> ownerNonces = new ArrayList<>();
-        for (Address owner : owners) {
-            ownerAddrs.add(owner.toBytes());
+        for (AionAddress owner : owners) {
+            ownerAddrs.add(owner.toByteArray());
             ownerNonces.add(track.getNonce(owner).toByteArray());
         }
 
@@ -453,7 +453,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] hash = HashUtil.keccak256(content);
         hash[0] = AION_PREFIX;
 
-        Address walletId = new Address(hash);
+        AionAddress walletId = new AionAddress(hash);
         track.createAccount(walletId);
         saveWalletMetaData(walletId, threshold, owners.size());
         saveWalletOwners(walletId, owners);
@@ -475,7 +475,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param threshold The minimum number of signatures required.
      * @param numOwners The number of owners for this wallet.
      */
-    private void saveWalletMetaData(Address walletId, long threshold, long numOwners) {
+    private void saveWalletMetaData(AionAddress walletId, long threshold, long numOwners) {
         byte[] metaKey = getMetaDataKey();
         byte[] metaValue = new byte[DataWordImpl.BYTES];
 
@@ -505,19 +505,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param walletId The address of the multi-sig wallet.
      * @param owners The owners of the multi-sig wallet.
      */
-    private void saveWalletOwners(Address walletId, Set<Address> owners) {
+    private void saveWalletOwners(AionAddress walletId, Set<AionAddress> owners) {
         byte[] firstKey, firstValue, secondKey, secondValue;
         long count = 0;
 
-        for (Address owner : owners) {
+        for (AionAddress owner : owners) {
             firstKey = getOwnerDataKey(true, count);
             secondKey = getOwnerDataKey(false, count);
 
             // set the two values for this owner.
             firstValue = new byte[DataWordImpl.BYTES];
             secondValue = new byte[DataWordImpl.BYTES];
-            System.arraycopy(owner.toBytes(), 0, firstValue, 0, DataWordImpl.BYTES);
-            System.arraycopy(owner.toBytes(), DataWordImpl.BYTES, secondValue, 0, DataWordImpl.BYTES);
+            System.arraycopy(owner.toByteArray(), 0, firstValue, 0, DataWordImpl.BYTES);
+            System.arraycopy(owner.toByteArray(), DataWordImpl.BYTES, secondValue, 0, DataWordImpl.BYTES);
 
             track.addStorageRow(
                     walletId,
@@ -545,19 +545,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param msg The byte array form of the transaction that each signee had to sign.
      * @return true only if the signatures are valid for this wallet.
      */
-    private boolean areValidSignatures(Address wallet, List<byte[]> signatures, byte[] msg) {
-        Set<Address> owners = getOwners(wallet);
+    private boolean areValidSignatures(AionAddress wallet, List<byte[]> signatures, byte[] msg) {
+        Set<AionAddress> owners = getOwners(wallet);
         if (!owners.contains(this.caller)) {
             return false;
         }
 
-        Set<Address> txSigners = new HashSet<>();
-        Address signer;
+        Set<AionAddress> txSigners = new HashSet<>();
+        AionAddress signer;
         for (byte[] sig : signatures) {
             if (!signatureIsCorrect(sig, msg)) {
                 return false;
             }
-            signer = new Address(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
+            signer = new AionAddress(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
             if (txSigners.contains(signer)) {
                 return false;
             }
@@ -598,8 +598,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param walletId The address of the multi-sig wallet.
      * @return the set of owners.
      */
-    private Set<Address> getOwners(Address walletId) {
-        Set<Address> owners = new HashSet<>();
+    private Set<AionAddress> getOwners(AionAddress walletId) {
+        Set<AionAddress> owners = new HashSet<>();
 
         ByteArrayWrapper metaValue =
                 track.getStorageValue(walletId, new DataWordImpl(getMetaDataKey()).toWrapper());
@@ -625,7 +625,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param ownerId The owner id.
      * @return the address of the owner.
      */
-    private Address getOwner(Address walletId, long ownerId) {
+    private AionAddress getOwner(AionAddress walletId, long ownerId) {
         byte[] address = new byte[ADDR_LEN];
 
         byte[] ownerDataKey1 = getOwnerDataKey(true, ownerId);
@@ -637,7 +637,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         addrPortion = track.getStorageValue(walletId, new DataWordImpl(ownerDataKey2).toWrapper());
         System.arraycopy(addrPortion.getData(), 0, address, DataWordImpl.BYTES, DataWordImpl.BYTES);
 
-        return new Address(address);
+        return new AionAddress(address);
     }
 
     /**

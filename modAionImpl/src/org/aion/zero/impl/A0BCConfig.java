@@ -1,6 +1,5 @@
 package org.aion.zero.impl;
-
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 
 public interface A0BCConfig {
@@ -11,7 +10,7 @@ public interface A0BCConfig {
      *
      * @return {@code coinbase} a 32-bytes address
      */
-    Address getCoinbase();
+    AionAddress getCoinbase();
 
     /**
      * Retrieve the currently set extra data for this particular node, blocks mined with this node
@@ -28,7 +27,7 @@ public interface A0BCConfig {
      */
     boolean getExitOnBlockConflict();
 
-    Address getMinerCoinbase();
+    AionAddress getMinerCoinbase();
 
     /** Retrieves the number indicating how many blocks between each flush */
     int getFlushInterval();

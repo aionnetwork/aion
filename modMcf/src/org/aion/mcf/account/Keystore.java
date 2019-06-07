@@ -22,9 +22,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
@@ -32,6 +31,7 @@ import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.string.StringUtils;
+import org.aion.util.types.AddressUtils;
 import org.slf4j.Logger;
 
 /** key store class. */
@@ -97,13 +97,13 @@ public class Keystore {
         }
     }
 
-    public static Map<Address, ByteArrayWrapper> exportAccount(Map<Address, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> exportAccount(Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
 
-        Map<Address, ByteArrayWrapper> res = new HashMap<>();
-        for (Map.Entry<Address, String> entry : account.entrySet()) {
+        Map<AionAddress, ByteArrayWrapper> res = new HashMap<>();
+        for (Map.Entry<AionAddress, String> entry : account.entrySet()) {
             ECKey eckey = Keystore.getKey(entry.getKey().toString(), entry.getValue());
             if (eckey != null) {
                 res.put(entry.getKey(), ByteArrayWrapper.wrap(eckey.getPrivKeyBytes()));
@@ -113,7 +113,7 @@ public class Keystore {
         return res;
     }
 
-    public static Map<Address, ByteArrayWrapper> backupAccount(Map<Address, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> backupAccount(Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
@@ -140,13 +140,13 @@ public class Keystore {
                                                                                         .toString())))
                         .collect(Collectors.toList());
 
-        Map<Address, ByteArrayWrapper> res = new HashMap<>();
+        Map<AionAddress, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
             try {
                 String[] frags = file.getName().split("--");
                 if (frags.length == 3) {
                     if (frags[2].startsWith(AION_PREFIX)) {
-                        Address addr = Address.wrap(frags[2]);
+                        AionAddress addr = AddressUtils.wrapAddress(frags[2]);
                         byte[] content = Files.readAllBytes(file.toPath());
 
                         String pw = account.get(addr);

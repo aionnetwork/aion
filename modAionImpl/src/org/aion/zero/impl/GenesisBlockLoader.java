@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
-import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.AccountState;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,7 +50,7 @@ public class GenesisBlockLoader {
                 }
 
                 if (mapper.has("coinbase")) {
-                    genesisBuilder.withCoinbase(Address.wrap(mapper.getString("coinbase")));
+                    genesisBuilder.withCoinbase(AddressUtils.wrapAddress(mapper.getString("coinbase")));
                 }
 
                 if (mapper.has("difficulty")) {
@@ -130,7 +130,7 @@ public class GenesisBlockLoader {
                                 new BigInteger(
                                         accountAllocs.getJSONObject(key).getString("balance"));
                         AccountState acctState = new AccountState(BigInteger.ZERO, balance);
-                        genesisBuilder.addPreminedAccount(Address.wrap(key), acctState);
+                        genesisBuilder.addPreminedAccount(AddressUtils.wrapAddress(key), acctState);
                     }
                 }
 

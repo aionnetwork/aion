@@ -1,9 +1,9 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
@@ -19,8 +19,8 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 21000L;
 
-    private Address address;
-    private Address ownerAddress;
+    private AionAddress address;
+    private AionAddress ownerAddress;
 
     /**
      * Constructs a new TotalCurrencyContract.
@@ -31,8 +31,8 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      */
     public TotalCurrencyContract(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            Address address,
-            Address ownerAddress) {
+            AionAddress address,
+            AionAddress ownerAddress) {
         super(track);
         this.address = address;
         this.ownerAddress = ownerAddress;
@@ -141,7 +141,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         // verify public key matches owner
-        if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
+        if (!this.ownerAddress.equals(new AionAddress(sig.getAddress()))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 import java.util.Random;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -19,7 +20,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.types.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class DoubleDataWordTest {
     private Repository repo;
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private Random rand;
-    private Address addr;
+    private AionAddress addr;
 
     @Before
     public void setup() {
@@ -63,7 +63,7 @@ public class DoubleDataWordTest {
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
         this.rand = new Random();
-        this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+        this.addr = new AionAddress(ECKeyFac.inst().create().getAddress());
     }
 
     @After

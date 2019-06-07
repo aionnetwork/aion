@@ -1,8 +1,7 @@
 package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
-
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -36,7 +35,7 @@ public class A0BlockHeaderTest {
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         // partial build
-        builder.withCoinbase(Address.wrap(COINBASE))
+        builder.withCoinbase(new AionAddress(COINBASE))
                 .withStateRoot(STATE_ROOT)
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
@@ -51,7 +50,7 @@ public class A0BlockHeaderTest {
 
         A0BlockHeader header = builder.build();
 
-        assertThat(header.getCoinbase().toBytes()).isEqualTo(COINBASE);
+        assertThat(header.getCoinbase().toByteArray()).isEqualTo(COINBASE);
         assertThat(header.getStateRoot()).isEqualTo(STATE_ROOT);
         assertThat(header.getTxTrieRoot()).isEqualTo(TRIE_ROOT);
         assertThat(header.getExtraData()).isEqualTo(EXTRA_DATA);
@@ -73,7 +72,7 @@ public class A0BlockHeaderTest {
         // partial build
         builder.fromUnsafeSource()
                 .withStateRoot(STATE_ROOT)
-                .withCoinbase(Address.wrap(COINBASE))
+                .withCoinbase(new AionAddress(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
                 .withReceiptTrieRoot(RECEIPT_ROOT)
@@ -87,7 +86,7 @@ public class A0BlockHeaderTest {
         A0BlockHeader header = builder.build();
 
         assertThat(header.getStateRoot()).isEqualTo(STATE_ROOT);
-        assertThat(header.getCoinbase().toBytes()).isEqualTo(COINBASE);
+        assertThat(header.getCoinbase().toByteArray()).isEqualTo(COINBASE);
         assertThat(header.getTxTrieRoot()).isEqualTo(TRIE_ROOT);
         assertThat(header.getExtraData()).isEqualTo(EXTRA_DATA);
         assertThat(header.getReceiptsRoot()).isEqualTo(RECEIPT_ROOT);
@@ -109,7 +108,7 @@ public class A0BlockHeaderTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
 
         builder.fromUnsafeSource()
-                .withCoinbase(Address.wrap(COINBASE))
+                .withCoinbase(new AionAddress(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
                 .withReceiptTrieRoot(RECEIPT_ROOT)

@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
@@ -12,7 +13,6 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -68,7 +68,7 @@ public class AvmInternalTxTest {
         AionTransaction transaction =
                 newTransaction(
                         BigInteger.ZERO,
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         jar,
                         5_000_000,
@@ -89,7 +89,7 @@ public class AvmInternalTxTest {
         assertThat(receipt.getTransactionOutput()[0]).isEqualTo(AddressSpecs.A0_IDENTIFIER);
         assertThat(receipt.isSuccessful()).isTrue();
 
-        Address contract = Address.wrap(receipt.getTransactionOutput());
+        AionAddress contract = new AionAddress(receipt.getTransactionOutput());
         // verify that the output is indeed the contract address
         assertThat(transaction.getContractAddress()).isEqualTo(contract);
 
@@ -106,8 +106,8 @@ public class AvmInternalTxTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-            Address sender,
-            Address destination,
+            AionAddress sender,
+            AionAddress destination,
             byte[] data,
             long energyLimit,
             byte type) {
@@ -122,11 +122,11 @@ public class AvmInternalTxTest {
                 type);
     }
 
-    private void makeCall(BigInteger nonce, Address contract, byte[] call) {
+    private void makeCall(BigInteger nonce, AionAddress contract, byte[] call) {
         AionTransaction transaction =
             newTransaction(
                 nonce,
-                Address.wrap(deployerKey.getAddress()),
+                new AionAddress(deployerKey.getAddress()),
                 contract,
                 call,
                 2_000_000,

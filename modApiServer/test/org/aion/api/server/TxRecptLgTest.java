@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.BlockContext;
@@ -88,9 +88,9 @@ public class TxRecptLgTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        Address addressA = tx1.getContractAddress();
+        AionAddress addressA = tx1.getContractAddress();
         System.out.println("contract A address = " + addressA);
-        Address addressB = tx2.getContractAddress();
+        AionAddress addressB = tx2.getContractAddress();
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 
@@ -105,7 +105,7 @@ public class TxRecptLgTest {
                         nonce.toByteArray(),
                         addressA,
                         new byte[0],
-                        ByteUtil.merge(functionAA, addressB.toBytes()),
+                        ByteUtil.merge(functionAA, addressB.toByteArray()),
                         1_000_000L,
                         1L);
         tx3.sign(deployerAccount);

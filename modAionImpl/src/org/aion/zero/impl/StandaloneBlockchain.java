@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -25,9 +26,9 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.api.types.Hash256;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -219,21 +220,21 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        private Map<Address, byte[]> contractDetails = new HashMap<>();
+        private Map<AionAddress, byte[]> contractDetails = new HashMap<>();
 
         /** @param encodedDetails data obtained from {@link AionContractDetailsImpl#getEncoded()} */
-        public Builder withDetails(Address contract, byte[] encodedDetails) {
+        public Builder withDetails(AionAddress contract, byte[] encodedDetails) {
             this.contractDetails.put(contract, encodedDetails);
             return this;
         }
 
-        private Map<Address, byte[]> contractStorage = new HashMap<>();
+        private Map<AionAddress, byte[]> contractStorage = new HashMap<>();
 
         /**
          * @param serializedContractTrie data obtained from {@link
-         *     AionRepositoryImpl#dumpImportableStorage(byte[], int, Address)}
+         *     AionRepositoryImpl#dumpImportableStorage(byte[], int, AionAddress)}
          */
-        public Builder withStorage(Address contract, byte[] serializedContractTrie) {
+        public Builder withStorage(AionAddress contract, byte[] serializedContractTrie) {
             this.contractStorage.put(contract, serializedContractTrie);
             return this;
         }
@@ -270,8 +271,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     this.a0Config == null
                             ? new A0BCConfig() {
                                 @Override
-                                public Address getCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                public AionAddress getCoinbase() {
+                                    return AddressUtils.ZERO_ADDRESS;
                                 }
 
                                 @Override
@@ -285,8 +286,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 }
 
                                 @Override
-                                public Address getMinerCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                public AionAddress getMinerCoinbase() {
+                                    return AddressUtils.ZERO_ADDRESS;
                                 }
 
                                 @Override
@@ -349,7 +350,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
-                genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
+                genesisBuilder.addPreminedAccount(new AionAddress(acc.getKey().getData()), acc.getValue());
             }
 
             AionGenesis genesis;
@@ -373,7 +374,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
             }
 
-            for (Address key : genesis.getPremine().keySet()) {
+            for (AionAddress key : genesis.getPremine().keySet()) {
                 track.createAccount(key);
                 track.addBalance(key, genesis.getPremine().get(key).getBalance());
             }
@@ -406,10 +407,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             // set contract details
             if (!contractDetails.isEmpty()) {
-                for (Address contract : contractDetails.keySet()) {
+                for (AionAddress contract : contractDetails.keySet()) {
                     bc.getRepository()
                             .importTrieNode(
-                                    contract.toBytes(),
+                                    contract.toByteArray(),
                                     contractDetails.get(contract),
                                     DatabaseType.DETAILS);
                 }
@@ -417,7 +418,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             // set contract storage
             if (!contractStorage.isEmpty()) {
-                for (Address contract : contractStorage.keySet()) {
+                for (AionAddress contract : contractStorage.keySet()) {
                     bc.getRepository()
                             .loadImportableState(
                                     contractStorage.get(contract), DatabaseType.STORAGE);

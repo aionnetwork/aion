@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
@@ -13,7 +14,6 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -39,7 +39,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class StatefulnessTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private Address deployer;
+    private AionAddress deployer;
     private long energyPrice = 1;
 
     private byte txType;
@@ -73,7 +73,7 @@ public class StatefulnessTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
-        this.deployer = Address.wrap(this.deployerKey.getAddress());
+        this.deployer = new AionAddress(this.deployerKey.getAddress());
         TransactionTypeRule.allowAVMContractTransaction();
     }
 
@@ -112,7 +112,7 @@ public class StatefulnessTest {
         BigInteger contractNonce = BigInteger.ZERO;
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
-            Address contract = Address.wrap(receipt.getTransactionOutput());
+            AionAddress contract = new AionAddress(receipt.getTransactionOutput());
             contractBalance = getBalance(contract);
             contractNonce = this.blockchain.getRepository().getNonce(contract);
         }
@@ -145,7 +145,7 @@ public class StatefulnessTest {
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
         assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
-        Address contract = Address.wrap(receipt.getTransactionOutput());
+        AionAddress contract = new AionAddress(receipt.getTransactionOutput());
 
         BigInteger deployerInitialNonce = getNonce(this.deployer);
         BigInteger contractInitialNonce = getNonce(contract);
@@ -172,13 +172,13 @@ public class StatefulnessTest {
         assertEquals(contractInitialNonce, getNonce(contract));
 
         // Generate a random beneficiary to transfer funds to via the contract.
-        Address beneficiary = randomAddress();
+        AionAddress beneficiary = randomAddress();
         long valueForContractToSend = fundsToSendToContract.longValue() / 2;
 
         // Call the contract to send value using an internal call.
         receipt =
                 callContract(
-                        contract, "transferValue", beneficiary.toBytes(), valueForContractToSend);
+                        contract, "transferValue", beneficiary.toByteArray(), valueForContractToSend);
         assertTrue(receipt.isSuccessful());
 
         // Verify the accounts have the expected state.
@@ -219,7 +219,7 @@ public class StatefulnessTest {
         return sendTransactions(transaction);
     }
 
-    private AionTxReceipt callContract(Address contract, String method, Object... arguments) {
+    private AionTxReceipt callContract(AionAddress contract, String method, Object... arguments) {
         AionTransaction transaction =
                 newTransaction(
                         getNonce(this.deployer),
@@ -235,7 +235,7 @@ public class StatefulnessTest {
         return sendTransactions(transaction);
     }
 
-    private AionTxReceipt transferValueTo(Address beneficiary, BigInteger value) {
+    private AionTxReceipt transferValueTo(AionAddress beneficiary, BigInteger value) {
         AionTransaction transaction =
                 newTransaction(
                         getNonce(this.deployer),
@@ -278,8 +278,8 @@ public class StatefulnessTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-            Address sender,
-            Address destination,
+            AionAddress sender,
+            AionAddress destination,
             BigInteger value,
             byte[] data,
             long energyLimit,
@@ -296,17 +296,17 @@ public class StatefulnessTest {
                 vm);
     }
 
-    private BigInteger getBalance(Address address) {
+    private BigInteger getBalance(AionAddress address) {
         return this.blockchain.getRepository().getBalance(address);
     }
 
-    private BigInteger getNonce(Address address) {
+    private BigInteger getNonce(AionAddress address) {
         return this.blockchain.getRepository().getNonce(address);
     }
 
-    private Address randomAddress() {
+    private AionAddress randomAddress() {
         byte[] bytes = RandomUtils.nextBytes(32);
         bytes[0] = (byte) 0xa0;
-        return Address.wrap(bytes);
+        return new AionAddress(bytes);
     }
 }

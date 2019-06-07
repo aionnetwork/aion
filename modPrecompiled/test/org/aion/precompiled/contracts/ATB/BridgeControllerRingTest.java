@@ -4,13 +4,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -25,9 +25,9 @@ public class BridgeControllerRingTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress CONTRACT_ADDR =
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -88,7 +88,7 @@ public class BridgeControllerRingTest {
             memberList[i] = members[i].getAddress();
         }
         // setup initial ring structure
-        this.controller.ringInitialize(OWNER_ADDR.toBytes(), memberList);
+        this.controller.ringInitialize(OWNER_ADDR.toByteArray(), memberList);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class BridgeControllerRingTest {
     @Test
     public void testRingReinitialization() {
         ErrCode code =
-                this.controller.ringInitialize(OWNER_ADDR.toBytes(), getMemberAddress(members));
+                this.controller.ringInitialize(OWNER_ADDR.toByteArray(), getMemberAddress(members));
         assertThat(code).isEqualTo(ErrCode.RING_LOCKED);
     }
 
@@ -109,45 +109,45 @@ public class BridgeControllerRingTest {
 
     @Test
     public void testRingAddMember() {
-        ErrCode code = this.controller.ringAddMember(OWNER_ADDR.toBytes(), memberAddress);
+        ErrCode code = this.controller.ringAddMember(OWNER_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
     }
 
     @Test
     public void testRingAddMemberNotOwner() {
-        ErrCode code = this.controller.ringAddMember(CONTRACT_ADDR.toBytes(), memberAddress);
+        ErrCode code = this.controller.ringAddMember(CONTRACT_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.NOT_OWNER);
     }
 
     @Test
     public void testRingAddExistingMember() {
         // add member twice
-        this.controller.ringAddMember(OWNER_ADDR.toBytes(), memberAddress);
-        ErrCode code = this.controller.ringAddMember(OWNER_ADDR.toBytes(), memberAddress);
+        this.controller.ringAddMember(OWNER_ADDR.toByteArray(), memberAddress);
+        ErrCode code = this.controller.ringAddMember(OWNER_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.RING_MEMBER_EXISTS);
     }
 
     @Test
     public void testRingRemoveMember() {
         ErrCode code;
-        code = this.controller.ringAddMember(OWNER_ADDR.toBytes(), memberAddress);
+        code = this.controller.ringAddMember(OWNER_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.connector.getActiveMember(memberAddress)).isTrue();
 
-        code = this.controller.ringRemoveMember(OWNER_ADDR.toBytes(), memberAddress);
+        code = this.controller.ringRemoveMember(OWNER_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.connector.getActiveMember(memberAddress)).isFalse();
     }
 
     @Test
     public void testRingRemoveMemberNotOwner() {
-        ErrCode code = this.controller.ringRemoveMember(CONTRACT_ADDR.toBytes(), memberAddress);
+        ErrCode code = this.controller.ringRemoveMember(CONTRACT_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.NOT_OWNER);
     }
 
     @Test
     public void testRingRemoveNonExistingMember() {
-        ErrCode code = this.controller.ringRemoveMember(OWNER_ADDR.toBytes(), memberAddress);
+        ErrCode code = this.controller.ringRemoveMember(OWNER_ADDR.toByteArray(), memberAddress);
         assertThat(code).isEqualTo(ErrCode.RING_MEMBER_NOT_EXISTS);
     }
 }

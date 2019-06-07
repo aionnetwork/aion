@@ -2,9 +2,9 @@ package org.aion.txpool;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.types.AionAddress;
 import java.util.Map;
 import org.aion.interfaces.tx.Transaction;
-import org.aion.vm.api.types.Address;
 
 /**
  * Aion pending state should be the only user of transaction pool.
@@ -26,7 +26,7 @@ public interface ITxPool<TX extends Transaction> {
 
     List<TX> remove(List<TX> tx);
 
-    List<TX> remove(Map<Address, BigInteger> accNonce);
+    List<TX> remove(Map<AionAddress, BigInteger> accNonce);
 
     int size();
 
@@ -36,7 +36,7 @@ public interface ITxPool<TX extends Transaction> {
 
     long getOutDateTime();
 
-    BigInteger bestPoolNonce(Address addr);
+    BigInteger bestPoolNonce(AionAddress addr);
 
     void updateBlkNrgLimit(long nrg);
 
@@ -45,5 +45,5 @@ public interface ITxPool<TX extends Transaction> {
 
     List<TX> snapshotAll();
 
-    TX getPoolTx(Address from, BigInteger txNonce);
+    TX getPoolTx(AionAddress from, BigInteger txNonce);
 }

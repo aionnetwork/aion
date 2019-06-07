@@ -3,9 +3,9 @@ package org.aion.precompiled.contracts.ATB;
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
@@ -67,11 +67,11 @@ public class BridgeStorageConnector {
     }
 
     private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
-    private final Address contractAddress;
+    private final AionAddress contractAddress;
 
     public BridgeStorageConnector(
             @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            @Nonnull final Address contractAddress) {
+            @Nonnull final AionAddress contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
     }

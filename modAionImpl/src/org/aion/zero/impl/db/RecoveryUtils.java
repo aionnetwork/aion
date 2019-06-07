@@ -13,8 +13,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHubUtils;
@@ -238,11 +238,11 @@ public class RecoveryUtils {
                     // iterate through contracts
                     for (int i = paramIndex; i < otherParameters.length; i++) {
 
-                        writer.append("Contract: " + Address.wrap(otherParameters[i]));
+                        writer.append("Contract: " + AddressUtils.wrapAddress(otherParameters[i]));
                         writer.newLine();
 
                         ContractDetails details =
-                                repository.getContractDetails(Address.wrap(otherParameters[i]));
+                                repository.getContractDetails(AddressUtils.wrapAddress(otherParameters[i]));
 
                         if (details != null) {
                             writer.append("Details: " + Hex.toHexString(details.getEncoded()));
@@ -254,7 +254,7 @@ public class RecoveryUtils {
                                                     repository.dumpImportableStorage(
                                                             details.getStorageHash(),
                                                             Integer.MAX_VALUE,
-                                                            Address.wrap(otherParameters[i]))));
+                                                            AddressUtils.wrapAddress(otherParameters[i]))));
                             writer.newLine();
                         }
                         writer.newLine();

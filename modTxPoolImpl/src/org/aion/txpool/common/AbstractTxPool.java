@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
@@ -70,16 +70,16 @@ public abstract class AbstractTxPool<TX extends Transaction> {
      * accountView : Map<ByteArrayWrapper, AccountState> @ByteArrayWrapper account
      * address @AccountState
      */
-    private final Map<Address, AccountState> accountView = new ConcurrentHashMap<>();
+    private final Map<AionAddress, AccountState> accountView = new ConcurrentHashMap<>();
     /**
      * poolStateView : Map<ByteArrayWrapper, List<PoolState>> @ByteArrayWrapper account
      * address @PoolState continuous transaction state including starting nonce
      */
-    private final Map<Address, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
+    private final Map<AionAddress, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
 
     private final List<TX> outDated = new ArrayList<>();
 
-    private final Map<Address, BigInteger> bestNonce = new ConcurrentHashMap<>();
+    private final Map<AionAddress, BigInteger> bestNonce = new ConcurrentHashMap<>();
 
     protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -102,17 +102,17 @@ public abstract class AbstractTxPool<TX extends Transaction> {
         return this.feeView;
     }
 
-    protected AccountState getAccView(Address acc) {
+    protected AccountState getAccView(AionAddress acc) {
 
         this.accountView.computeIfAbsent(acc, k -> new AccountState());
         return this.accountView.get(acc);
     }
 
-    protected Map<Address, AccountState> getFullAcc() {
+    protected Map<AionAddress, AccountState> getFullAcc() {
         return this.accountView;
     }
 
-    protected List<PoolState> getPoolStateView(Address acc) {
+    protected List<PoolState> getPoolStateView(AionAddress acc) {
 
         if (this.accountView.get(acc) == null) {
             this.poolStateView.put(acc, new LinkedList<>());
@@ -142,7 +142,7 @@ public abstract class AbstractTxPool<TX extends Transaction> {
 
     protected void sortTxn() {
 
-        Map<Address, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap =
+        Map<AionAddress, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap =
                 new ConcurrentHashMap<>();
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap =
                 Collections.synchronizedSortedMap(new TreeMap<>());
@@ -307,8 +307,8 @@ public abstract class AbstractTxPool<TX extends Transaction> {
     protected void updateAccPoolState() {
 
         // iterate tx by account
-        List<Address> clearAddr = new ArrayList<>();
-        for (Entry<Address, AccountState> e : this.accountView.entrySet()) {
+        List<AionAddress> clearAddr = new ArrayList<>();
+        for (Entry<AionAddress, AccountState> e : this.accountView.entrySet()) {
             AccountState as = e.getValue();
             if (as.isDirty()) {
 
@@ -504,7 +504,7 @@ public abstract class AbstractTxPool<TX extends Transaction> {
     }
 
     protected void updateFeeMap() {
-        for (Entry<Address, List<PoolState>> e : this.poolStateView.entrySet()) {
+        for (Entry<AionAddress, List<PoolState>> e : this.poolStateView.entrySet()) {
             ByteArrayWrapper dependTx = null;
             for (PoolState ps : e.getValue()) {
 
@@ -577,7 +577,7 @@ public abstract class AbstractTxPool<TX extends Transaction> {
         }
     }
 
-    protected void setBestNonce(Address addr, BigInteger bn) {
+    protected void setBestNonce(AionAddress addr, BigInteger bn) {
         if (addr == null || bn == null) {
             throw new NullPointerException();
         }
@@ -595,7 +595,7 @@ public abstract class AbstractTxPool<TX extends Transaction> {
         }
     }
 
-    protected BigInteger getBestNonce(Address addr) {
+    protected BigInteger getBestNonce(AionAddress addr) {
         if (addr == null || bestNonce.get(addr) == null) {
             return BigInteger.ONE.negate();
         }

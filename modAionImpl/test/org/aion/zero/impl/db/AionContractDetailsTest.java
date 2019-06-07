@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
@@ -25,9 +26,9 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ public class AionContractDetailsTest {
                 new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
         contractDetails.put(
                 new DataWordImpl(key_2).toWrapper(), new DataWordImpl(val_2).toWrapper());
-        contractDetails.setAddress(Address.ZERO_ADDRESS());
+        contractDetails.setAddress(AddressUtils.ZERO_ADDRESS);
 
         byte[] data = contractDetails.getEncoded();
 
@@ -124,7 +125,7 @@ public class AionContractDetailsTest {
         byte[] code =
                 ByteUtil.hexStringToBytes(
                         "7c0100000000000000000000000000000000000000000000000000000000600035046333d546748114610065578063430fe5f01461007c5780634d432c1d1461008d578063501385b2146100b857806357eb3b30146100e9578063dbc7df61146100fb57005b6100766004356024356044356102f0565b60006000f35b61008760043561039e565b60006000f35b610098600435610178565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100c96004356024356044356101a0565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100f1610171565b8060005260206000f35b610106600435610133565b8360005282602052816040528073ffffffffffffffffffffffffffffffffffffffff1660605260806000f35b5b60006020819052908152604090208054600182015460028301546003909301549192909173ffffffffffffffffffffffffffffffffffffffff1684565b5b60015481565b5b60026020526000908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b73ffffffffffffffffffffffffffffffffffffffff831660009081526020819052604081206002015481908302341080156101fe575073ffffffffffffffffffffffffffffffffffffffff8516600090815260208190526040812054145b8015610232575073ffffffffffffffffffffffffffffffffffffffff85166000908152602081905260409020600101548390105b61023b57610243565b3391506102e8565b6101966103ca60003973ffffffffffffffffffffffffffffffffffffffff3381166101965285166101b68190526000908152602081905260408120600201546101d6526101f68490526102169080f073ffffffffffffffffffffffffffffffffffffffff8616600090815260208190526040902060030180547fffffffffffffffffffffffff0000000000000000000000000000000000000000168217905591508190505b509392505050565b73ffffffffffffffffffffffffffffffffffffffff33166000908152602081905260408120548190821461032357610364565b60018054808201909155600090815260026020526040902080547fffffffffffffffffffffffff000000000000000000000000000000000000000016331790555b50503373ffffffffffffffffffffffffffffffffffffffff1660009081526020819052604090209081556001810192909255600290910155565b3373ffffffffffffffffffffffffffffffffffffffff166000908152602081905260409020600201555600608061019660043960048051602451604451606451600080547fffffffffffffffffffffffff0000000000000000000000000000000000000000908116909517815560018054909516909317909355600355915561013390819061006390396000f3007c0100000000000000000000000000000000000000000000000000000000600035046347810fe381146100445780637e4a1aa81461005557806383d2421b1461006957005b61004f6004356100ab565b60006000f35b6100636004356024356100fc565b60006000f35b61007460043561007a565b60006000f35b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146100a2576100a8565b60078190555b50565b73ffffffffffffffffffffffffffffffffffffffff8116600090815260026020526040902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016600117905550565b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146101245761012f565b600582905560068190555b505056");
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
         byte[] key_0 = ByteUtil.hexStringToBytes("18d63b70aa690ad37cb50908746c9a55");
         byte[] val_0 = ByteUtil.hexStringToBytes("00000000000000000000000000000064");
@@ -267,7 +268,7 @@ public class AionContractDetailsTest {
 
     @Test
     public void testExternalStorageSerialization() {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
         Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
 
@@ -316,7 +317,7 @@ public class AionContractDetailsTest {
 
     @Test
     public void testContractStorageSwitch() {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
         Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
 
@@ -383,7 +384,7 @@ public class AionContractDetailsTest {
 
     @Test
     public void testExternalStorageTransition() {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
         Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
 
@@ -443,11 +444,11 @@ public class AionContractDetailsTest {
 
     @Test
     public void testEncodingSwitchWithTrie() throws Exception {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
         // create old encoding
-        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 0);
         byte[] rlpStorageRoot = RLP.encodeElement(EMPTY_BYTE_ARRAY);
         byte[] rlpStorage = RLP.encodeElement(new SecureTrie(null).serialize());
@@ -477,12 +478,12 @@ public class AionContractDetailsTest {
 
     @Test
     public void testEncodingSwitchWithRoot() throws Exception {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
         // create old encoding
 
-        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
         byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
         byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
@@ -512,11 +513,11 @@ public class AionContractDetailsTest {
 
     @Test
     public void testEncodingWithAVM() throws Exception {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
         // create old encoding
-        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
         byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
         byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
@@ -540,7 +541,7 @@ public class AionContractDetailsTest {
 
     @Test
     public void testEncodingSize() {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
@@ -562,7 +563,7 @@ public class AionContractDetailsTest {
 
     @Test(expected = IllegalStateException.class)
     public void testEncodingWithoutVM() {
-        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);

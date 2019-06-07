@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
@@ -23,7 +24,6 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class AionContractDetailsImpl extends AbstractContractDetails {
@@ -32,7 +32,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     private byte[] rlpEncoded;
 
-    private Address address;
+    private AionAddress address;
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -50,7 +50,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     private AionContractDetailsImpl(
-            Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+            AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
@@ -295,10 +295,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
         if (address == null
                 || address.getRLPData() == null
-                || address.getRLPData().length != Address.SIZE) {
+                || address.getRLPData().length != AionAddress.LENGTH) {
             throw new IllegalArgumentException("rlp decode error: invalid contract address");
         } else {
-            this.address = Address.wrap(address.getRLPData());
+            this.address = new AionAddress(address.getRLPData());
         }
 
         if (code instanceof RLPList) {
@@ -372,7 +372,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+            byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
             byte[] rlpStorageRoot;
             // encoding for AVM
@@ -422,7 +422,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * @return the associated address.
      */
     @Override
-    public Address getAddress() {
+    public AionAddress getAddress() {
         return address;
     }
 
@@ -432,7 +432,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * @param address The address to set.
      */
     @Override
-    public void setAddress(Address address) {
+    public void setAddress(AionAddress address) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         }
@@ -658,7 +658,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.setDirty(this.isDirty());
         aionContractDetailsCopy.setDeleted(this.isDeleted());
-        aionContractDetailsCopy.address = new Address(this.address.toBytes());
+        aionContractDetailsCopy.address = this.address;
         aionContractDetailsCopy.rlpEncoded =
                 (this.rlpEncoded == null)
                         ? null

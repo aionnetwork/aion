@@ -2,11 +2,11 @@ package org.aion.zero.impl;
 
 import java.math.BigInteger;
 import java.util.Map;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 
@@ -17,7 +17,7 @@ public class AionHubUtils {
         // initialization section for network balance contract
         RepositoryCache track = repository.startTracking();
 
-        Address networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
+        AionAddress networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
         track.createAccount(networkBalanceAddress);
         // saving FVM type for networkBalance contract
         track.saveVmType(networkBalanceAddress, InternalVmType.FVM);
@@ -30,7 +30,7 @@ public class AionHubUtils {
                     wrapValueForPut(new DataWordImpl(addr.getValue())));
         }
 
-        for (Address addr : genesis.getPremine().keySet()) {
+        for (AionAddress addr : genesis.getPremine().keySet()) {
             track.createAccount(addr);
             track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
         }

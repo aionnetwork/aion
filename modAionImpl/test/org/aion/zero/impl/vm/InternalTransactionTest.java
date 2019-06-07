@@ -30,6 +30,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.interfaces.db.RepositoryCache;
@@ -37,7 +38,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
@@ -132,9 +132,9 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Address addressA = tx1.getContractAddress();
+        AionAddress addressA = tx1.getContractAddress();
         System.out.println("contract A = " + addressA);
-        Address addressB = tx2.getContractAddress();
+        AionAddress addressB = tx2.getContractAddress();
         System.out.println("contract B = " + addressB);
         Thread.sleep(1000);
 
@@ -172,7 +172,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
-                                addressB.toBytes(),
+                                addressB.toByteArray(),
                                 new DataWordImpl(80_000).getData()),
                         1_000_000L,
                         1L);
@@ -199,7 +199,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
-                                addressB.toBytes(),
+                                addressB.toByteArray(),
                                 new DataWordImpl(20_000).getData()),
                         1_000_000L,
                         1L);
@@ -258,7 +258,7 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Address addressA = tx1.getContractAddress();
+        AionAddress addressA = tx1.getContractAddress();
         System.out.println("contract A = " + addressA);
         Thread.sleep(1000);
 
@@ -348,15 +348,15 @@ public class InternalTransactionTest {
         StandaloneBlockchain bc = bundle.bc;
         ECKey deployerAccount = bundle.privateKeys.get(0);
 
-        Address firstContractAddr =
-                Address.wrap(
+        AionAddress firstContractAddr =
+                new AionAddress(
                         HashUtil.calcNewAddr(
                                 deployerAccount.getAddress(), BigInteger.ONE.toByteArray()));
 
-        Address internalContractAddress =
-                Address.wrap(
+        AionAddress internalContractAddress =
+                new AionAddress(
                         HashUtil.calcNewAddr(
-                                firstContractAddr.toBytes(), BigInteger.ZERO.toByteArray()));
+                                firstContractAddr.toByteArray(), BigInteger.ZERO.toByteArray()));
 
         BigInteger nonce = BigInteger.ZERO;
 
@@ -438,9 +438,9 @@ public class InternalTransactionTest {
             System.out.println(itx);
             if (firstItx) {
                 assertEquals(
-                        Address.wrap(
+                        new AionAddress(
                                 HashUtil.calcNewAddr(
-                                        tx.getContractAddress().toBytes(),
+                                        tx.getContractAddress().toByteArray(),
                                         BigInteger.ZERO.toByteArray())),
                         itx.getDestinationAddress());
                 firstItx = false;

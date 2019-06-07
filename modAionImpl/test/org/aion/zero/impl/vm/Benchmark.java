@@ -32,9 +32,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ECKeyFac.ECKeyType;
@@ -63,8 +63,8 @@ public class Benchmark {
     private static RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = db.startTracking();
 
     private static ECKey key;
-    private static Address owner;
-    private static Address contract;
+    private static AionAddress owner;
+    private static AionAddress contract;
 
     private static List<byte[]> recipients = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class Benchmark {
         // create owner account
         ECKeyFac.setType(ECKeyType.ED25519);
         key = ECKeyFac.inst().create();
-        owner = Address.wrap(key.getAddress());
+        owner = new AionAddress(key.getAddress());
         repo.createAccount(owner);
         repo.addBalance(owner, BigInteger.valueOf(1_000_000_000L));
 
@@ -90,8 +90,8 @@ public class Benchmark {
         byte[] deployer =
                 ContractUtils.getContractDeployer("BenchmarkERC20.sol", "FixedSupplyToken");
         byte[] nonce = DataWordImpl.ZERO.getData();
-        Address from = owner;
-        Address to = null;
+        AionAddress from = owner;
+        AionAddress to = null;
         byte[] value = DataWordImpl.ZERO.getData();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
@@ -120,8 +120,8 @@ public class Benchmark {
 
             // transfer token to random people
             byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
-            Address from = owner;
-            Address to = contract;
+            AionAddress from = owner;
+            AionAddress to = contract;
             byte[] value = DataWordImpl.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
@@ -199,8 +199,8 @@ public class Benchmark {
 
         for (int i = 0; i < recipients.size(); i++) {
             byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
-            Address from = owner;
-            Address to = contract;
+            AionAddress from = owner;
+            AionAddress to = contract;
             byte[] value = DataWordImpl.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
@@ -237,7 +237,7 @@ public class Benchmark {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWordImpl(0x1000000L).getData();
         long number = 1;
@@ -253,7 +253,7 @@ public class Benchmark {
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
                 parentHash,
-                Address.wrap(coinbase),
+                new AionAddress(coinbase),
                 logsBloom,
                 difficulty,
                 number,

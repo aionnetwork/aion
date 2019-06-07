@@ -6,9 +6,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -46,8 +47,8 @@ public class BlockchainEnergyTest {
     @Test
     public void testEnergyUsageRecorded() {
         final int DEFAULT_TX_AMOUNT = 21000;
-        final Address RECEIPT_ADDR =
-                Address.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+        final AionAddress RECEIPT_ADDR =
+                AddressUtils.wrapAddress("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 new StandaloneBlockchain.Builder()

@@ -53,7 +53,7 @@ public class Tx {
                 StringUtils.toJsonHex(
                         tx.getDestinationAddress() == null
                                 ? EMPTY_BYTE_ARRAY
-                                : tx.getDestinationAddress().toBytes()));
+                                : tx.getDestinationAddress().toByteArray()));
         json.put("timestamp", b.getTimestamp());
         json.put("input", StringUtils.toJsonHex(tx.getData()));
         json.put("blockNumber", StringUtils.toJsonHex(b.getNumber()));

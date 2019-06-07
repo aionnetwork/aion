@@ -9,9 +9,8 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
-
+import org.aion.types.AionAddress;
 /**
  * Blockchain interface.
  *
@@ -114,7 +113,7 @@ public interface IBlockchain<
 
     void setExitOn(long exitOn);
 
-    Address getMinerCoinbase();
+    AionAddress getMinerCoinbase();
 
     boolean isBlockExist(byte[] hash);
 

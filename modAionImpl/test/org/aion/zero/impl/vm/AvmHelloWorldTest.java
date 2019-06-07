@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
@@ -13,7 +14,6 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -69,7 +69,7 @@ public class AvmHelloWorldTest {
         AionTransaction transaction =
                 newTransaction(
                         BigInteger.ZERO,
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         jar,
                         5_000_000,
@@ -92,7 +92,7 @@ public class AvmHelloWorldTest {
         assertThat(receipt.isSuccessful()).isTrue();
 
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toBytes())
+        assertThat(transaction.getContractAddress().toByteArray())
                 .isEqualTo(receipt.getTransactionOutput());
     }
 
@@ -104,7 +104,7 @@ public class AvmHelloWorldTest {
         AionTransaction transaction =
                 newTransaction(
                         BigInteger.ZERO,
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         jar,
                         5_000_000,
@@ -125,14 +125,14 @@ public class AvmHelloWorldTest {
         assertThat(receipt.getTransactionOutput()[0]).isEqualTo(AddressSpecs.A0_IDENTIFIER);
         assertThat(receipt.isSuccessful()).isTrue();
 
-        Address contract = Address.wrap(receipt.getTransactionOutput());
+        AionAddress contract = new AionAddress(receipt.getTransactionOutput());
         // verify that the output is indeed the contract address
         assertThat(transaction.getContractAddress()).isEqualTo(contract);
         byte[] call = getCallArguments();
         transaction =
                 newTransaction(
                         BigInteger.ONE,
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         call,
                         2_000_000,
@@ -160,7 +160,7 @@ public class AvmHelloWorldTest {
         AionTransaction transaction =
             newTransaction(
                 BigInteger.ZERO,
-                Address.wrap(deployerKey.getAddress()),
+                new AionAddress(deployerKey.getAddress()),
                 null,
                 jar,
                 5_000_000,
@@ -174,7 +174,7 @@ public class AvmHelloWorldTest {
         AionTransaction transaction2 =
             newTransaction(
                 BigInteger.ONE,
-                Address.wrap(deployerKey.getAddress()),
+                new AionAddress(deployerKey.getAddress()),
                 transaction.getContractAddress(),
                 call,
                 2_000_000,
@@ -218,8 +218,8 @@ public class AvmHelloWorldTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-            Address sender,
-            Address destination,
+            AionAddress sender,
+            AionAddress destination,
             byte[] data,
             long energyLimit,
             byte type) {

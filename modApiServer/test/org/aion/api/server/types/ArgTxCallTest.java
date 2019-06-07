@@ -8,7 +8,7 @@ import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_MAX;
 
 import java.math.BigInteger;
-import org.aion.vm.api.types.Address;
+import org.aion.util.types.AddressUtils;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class ArgTxCallTest {
         ArgTxCall txCall = ArgTxCall.fromJSON(tx, nrgPrice);
 
         assertNull(txCall.getFrom());
-        assertEquals(new Address(toAddr), txCall.getTo());
+        assertEquals(AddressUtils.wrapAddress(toAddr), txCall.getTo());
         assertEquals(0, txCall.getData().length);
         assertEquals(BigInteger.ZERO, txCall.getNonce());
         assertEquals(BigInteger.ZERO, txCall.getValue());
@@ -61,7 +61,7 @@ public class ArgTxCallTest {
         ArgTxCall txCall = ArgTxCall.fromJSONforCall(tx, nrgPrice);
 
         assertNull(txCall.getFrom());
-        assertEquals(new Address(toAddr), txCall.getTo());
+        assertEquals(AddressUtils.wrapAddress(toAddr), txCall.getTo());
         assertEquals(0, txCall.getData().length);
         assertEquals(BigInteger.ZERO, txCall.getNonce());
         assertEquals(BigInteger.ZERO, txCall.getValue());

@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 /** Contract details cache implementation. */
@@ -175,7 +175,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      * @return the associated address.
      */
     @Override
-    public Address getAddress() {
+    public AionAddress getAddress() {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
@@ -185,7 +185,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      * @param address The address to set.
      */
     @Override
-    public void setAddress(Address address) {
+    public void setAddress(AionAddress address) {
         if (origContract != null) {
             origContract.setAddress(address);
         }

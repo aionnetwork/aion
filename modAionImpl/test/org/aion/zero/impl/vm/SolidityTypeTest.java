@@ -30,6 +30,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
@@ -48,7 +49,6 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
@@ -88,12 +88,12 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        Address from =
-                Address.wrap(
+        AionAddress from =
+                new AionAddress(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to =
-                Address.wrap(
+        AionAddress to =
+                new AionAddress(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
         byte[] value = DataWordImpl.ZERO.getData();
@@ -409,7 +409,7 @@ public class SolidityTypeTest {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWordImpl(0x1000000L).getData();
         long number = 1;
@@ -425,7 +425,7 @@ public class SolidityTypeTest {
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
                 parentHash,
-                Address.wrap(coinbase),
+                new AionAddress(coinbase),
                 logsBloom,
                 difficulty,
                 number,

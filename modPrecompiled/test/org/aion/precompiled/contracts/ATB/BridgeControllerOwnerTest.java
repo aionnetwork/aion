@@ -5,13 +5,13 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.fastvm.ExecutionContext;
 
@@ -30,9 +30,9 @@ public class BridgeControllerOwnerTest {
     private BridgeController controller;
     private TransactionSideEffects result;
 
-    private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress CONTRACT_ADDR =
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
@@ -73,7 +73,7 @@ public class BridgeControllerOwnerTest {
     @Test
     public void testInitialize() {
         this.controller.initialize();
-        assertThat(this.connector.getOwner()).isEqualTo(OWNER_ADDR.toBytes());
+        assertThat(this.connector.getOwner()).isEqualTo(OWNER_ADDR.toByteArray());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class BridgeControllerOwnerTest {
         byte[] transferOwnership = HashUtil.keccak256("ChangedOwner(address)".getBytes());
         byte[] newOwner = HashUtil.h256("newOwner".getBytes());
         this.controller.initialize();
-        this.controller.setNewOwner(OWNER_ADDR.toBytes(), newOwner);
+        this.controller.setNewOwner(OWNER_ADDR.toByteArray(), newOwner);
 
         // sanity check
         assertThat(this.connector.getNewOwner()).isEqualTo(newOwner);

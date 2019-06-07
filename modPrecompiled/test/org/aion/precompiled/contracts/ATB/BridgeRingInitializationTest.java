@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -11,7 +12,6 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 
 import org.aion.zero.impl.db.AionRepositoryCache;
@@ -24,9 +24,9 @@ public class BridgeRingInitializationTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress CONTRACT_ADDR =
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
@@ -66,7 +66,7 @@ public class BridgeRingInitializationTest {
 
     @Test
     public void testRingEmptyInitialization() {
-        ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toBytes(), new byte[][] {});
+        ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toByteArray(), new byte[][] {});
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.connector.getMemberCount()).isEqualTo(0);
         assertThat(this.connector.getMinThresh()).isEqualTo(1);
@@ -76,7 +76,7 @@ public class BridgeRingInitializationTest {
     public void testRingSingleMemberInitialization() {
         ErrCode code =
                 this.controller.ringInitialize(
-                        OWNER_ADDR.toBytes(), new byte[][] {OWNER_ADDR.toBytes()});
+                        OWNER_ADDR.toByteArray(), new byte[][] {OWNER_ADDR.toByteArray()});
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.connector.getMemberCount()).isEqualTo(1);
         assertThat(this.connector.getMinThresh()).isEqualTo(1);
@@ -92,7 +92,7 @@ public class BridgeRingInitializationTest {
                     HashUtil.h256("member4".getBytes()),
                     HashUtil.h256("member5".getBytes())
                 };
-        ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toBytes(), members);
+        ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.connector.getMemberCount()).isEqualTo(5);
         assertThat(this.connector.getMinThresh()).isEqualTo(3);

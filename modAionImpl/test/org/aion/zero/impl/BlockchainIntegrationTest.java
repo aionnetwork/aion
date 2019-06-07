@@ -5,13 +5,14 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.ImportResult;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
@@ -70,7 +71,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain.Bundle b =
                 (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         for (ECKey k : b.privateKeys) {
-            assertThat(b.bc.getRepository().getBalance(Address.wrap(k.getAddress())))
+            assertThat(b.bc.getRepository().getBalance(new AionAddress(k.getAddress())))
                     .isNotEqualTo(BigInteger.ZERO);
         }
         assertThat(b.privateKeys.size()).isEqualTo(10);
@@ -88,10 +89,9 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleFailedTransactionInsufficientBalance() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
-                        ByteUtil.hexStringToBytes(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
+        final AionAddress receiverAddress =
+                AddressUtils.wrapAddress(
+                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder())
@@ -123,10 +123,9 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleOneTokenBalanceTransfer() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
-                        ByteUtil.hexStringToBytes(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
+        final AionAddress receiverAddress =
+                AddressUtils.wrapAddress(
+                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder())
@@ -137,7 +136,7 @@ public class BlockchainIntegrationTest {
 
         final ECKey sender = bundle.privateKeys.get(0);
         final BigInteger senderInitialBalance =
-                bc.getRepository().getBalance(Address.wrap(sender.getAddress()));
+                bc.getRepository().getBalance(new AionAddress(sender.getAddress()));
 
         AionTransaction tx =
                 new AionTransaction(
@@ -161,7 +160,7 @@ public class BlockchainIntegrationTest {
         Repository repo = bc.getRepository();
 
         assertThat(repo.getBalance(receiverAddress)).isEqualTo(BigInteger.valueOf(100));
-        assertThat(repo.getBalance(Address.wrap(sender.getAddress())))
+        assertThat(repo.getBalance(new AionAddress(sender.getAddress())))
                 .isEqualTo(
                         senderInitialBalance
                                 .subtract(BigInteger.valueOf(21000))
@@ -189,10 +188,9 @@ public class BlockchainIntegrationTest {
     @Test
     public void testPruningEnabledBalanceTransfer() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
-                        ByteUtil.hexStringToBytes(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
+        final AionAddress receiverAddress =
+                AddressUtils.wrapAddress(
+                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         // generate bc bundle with pruning enabled
         StandaloneBlockchain.Bundle bundle =
@@ -341,7 +339,7 @@ public class BlockchainIntegrationTest {
 
         // no transaction so fee should be zero
         assertThat(context.transactionFee).isEqualTo(BigInteger.ZERO);
-        Address beneficiary = context.block.getCoinbase();
+        AionAddress beneficiary = context.block.getCoinbase();
 
         ImportResult result = bc.tryToConnect(context.block);
         // check that the correct amount was stored

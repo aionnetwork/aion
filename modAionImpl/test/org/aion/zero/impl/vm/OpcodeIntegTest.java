@@ -34,9 +34,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -64,7 +64,7 @@ public class OpcodeIntegTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private Address deployer;
+    private AionAddress deployer;
     private BigInteger deployerBalance;
 
     @Before
@@ -76,7 +76,7 @@ public class OpcodeIntegTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new Address(deployerKey.getAddress());
+        deployer = new AionAddress(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
 
         LongLivedAvm.createAndStartLongLivedAvm();
@@ -96,7 +96,7 @@ public class OpcodeIntegTest {
     @Test
     public void testNoRevert() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
@@ -140,7 +140,7 @@ public class OpcodeIntegTest {
     @Test
     public void testRevertAtBottomLevel() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
@@ -180,7 +180,7 @@ public class OpcodeIntegTest {
     @Test
     public void testRevertAtMidLevel() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
@@ -223,15 +223,15 @@ public class OpcodeIntegTest {
     public void testCallcodeStorage() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger n = new BigInteger("7638523");
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
 
         // Deployer calls contract D which performs CALLCODE to call contract E. We expect that the
         // storage in contract D is modified by the code that is called in contract E.
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
+        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -299,8 +299,8 @@ public class OpcodeIntegTest {
     @Test
     public void testCallcodeActors() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
 
         // Deployer calls contract D which performs CALLCODE to call contract E. From the
         // perspective
@@ -308,7 +308,7 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
+        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -340,8 +340,8 @@ public class OpcodeIntegTest {
     @Test
     public void testCallcodeValueTransfer() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
 
         BigInteger balanceDeployer = repo.getBalance(deployer);
         BigInteger balanceD = repo.getBalance(D);
@@ -352,7 +352,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger value = new BigInteger("2387653");
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toBytes()); // use CALLCODE on E.
+        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -382,8 +382,8 @@ public class OpcodeIntegTest {
     @Test
     public void testDelegateCallStorage() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
 
         // Deployer calls contract D which performs DELEGATECALL to call contract E.
@@ -392,7 +392,7 @@ public class OpcodeIntegTest {
         BigInteger value = new BigInteger("4364463");
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
-                ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
+                ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
         input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -454,8 +454,8 @@ public class OpcodeIntegTest {
     @Test
     public void testDelegateCallActors() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
 
         // Deployer calls contract D which performs DELEGATECALL to call contract E.
@@ -464,7 +464,7 @@ public class OpcodeIntegTest {
         BigInteger value = new BigInteger("4364463");
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
-                ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
+                ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
         input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -492,8 +492,8 @@ public class OpcodeIntegTest {
     @Test
     public void testDelegateCallValueTransfer() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
-        Address E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
+        AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
+        AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
         BigInteger n = new BigInteger("23786523");
 
         BigInteger balanceDeployer = repo.getBalance(deployer);
@@ -506,7 +506,7 @@ public class OpcodeIntegTest {
         BigInteger value = new BigInteger("4364463");
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
-                ByteUtil.merge(Hex.decode("32817e1d"), E.toBytes()); // use DELEGATECALL on E.
+                ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
         input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -536,8 +536,8 @@ public class OpcodeIntegTest {
     @Test
     public void testOpcodesActors() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
-        Address callerContract = deployContract(repo, "Caller", "Opcodes.sol", BigInteger.ZERO);
-        Address calleeContract = deployContract(repo, "Callee", "Opcodes.sol", BigInteger.ZERO);
+        AionAddress callerContract = deployContract(repo, "Caller", "Opcodes.sol", BigInteger.ZERO);
+        AionAddress calleeContract = deployContract(repo, "Callee", "Opcodes.sol", BigInteger.ZERO);
 
         System.err.println("Deployer: " + deployer);
         System.err.println("Caller: " + callerContract);
@@ -546,7 +546,7 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), calleeContract.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), calleeContract.toByteArray());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -583,10 +583,10 @@ public class OpcodeIntegTest {
     public void testSuicideRecipientExists() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
-        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         repo.createAccount(recipient);
 
-        Address contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
+        AionAddress contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
         repo.addBalance(contract, balance);
 
         BigInteger balanceDeployer = repo.getBalance(deployer);
@@ -596,7 +596,7 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
-        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), recipient.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), recipient.toByteArray());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -629,9 +629,9 @@ public class OpcodeIntegTest {
     public void testSuicideRecipientNewlyCreated() throws IOException, VMException {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
-        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
-        Address contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
+        AionAddress contract = deployContract(repo, "Suicide", "Suicide.sol", BigInteger.ZERO);
         repo.addBalance(contract, balance);
 
         BigInteger balanceDeployer = repo.getBalance(deployer);
@@ -641,7 +641,7 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
-        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), recipient.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("fc68521a"), recipient.toByteArray());
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -677,7 +677,7 @@ public class OpcodeIntegTest {
     /**
      * Deploys the contract named contractName in the file named contractFilename with value value.
      */
-    private Address deployContract(
+    private AionAddress deployContract(
             RepositoryCache repo, String contractName, String contractFilename, BigInteger value)
             throws IOException, VMException {
 
@@ -688,7 +688,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
-        Address contract =
+        AionAddress contract =
                 deployContract(
                         repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce);
         deployerBalance = repo.getBalance(deployer);
@@ -701,7 +701,7 @@ public class OpcodeIntegTest {
      *
      * <p>Returns the address of the newly deployed contract.
      */
-    private Address deployContract(
+    private AionAddress deployContract(
             RepositoryCache repo,
             AionTransaction tx,
             String contractName,
@@ -726,7 +726,7 @@ public class OpcodeIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        Address contract = tx.getContractAddress();
+        AionAddress contract = tx.getContractAddress();
         checkStateOfNewContract(repo, contractName, contractFilename, contract, value);
         checkStateOfDeployer(
                 repo,
@@ -747,7 +747,7 @@ public class OpcodeIntegTest {
             RepositoryCache repo,
             String contractName,
             String contractFilename,
-            Address contractAddr,
+        AionAddress contractAddr,
             BigInteger valueTransferred)
             throws IOException {
 
@@ -780,12 +780,12 @@ public class OpcodeIntegTest {
      * byte array consisting of the bytes of owner then caller then origin then finally 16 zero
      * bytes.
      */
-    private void verifyLogData(byte[] data, Address owner, Address caller, Address origin) {
-        assertArrayEquals(Arrays.copyOfRange(data, 0, Address.SIZE), owner.toBytes());
+    private void verifyLogData(byte[] data, AionAddress owner, AionAddress caller, AionAddress origin) {
+        assertArrayEquals(Arrays.copyOfRange(data, 0, AionAddress.LENGTH), owner.toByteArray());
         assertArrayEquals(
-                Arrays.copyOfRange(data, Address.SIZE, Address.SIZE * 2), caller.toBytes());
+                Arrays.copyOfRange(data, AionAddress.LENGTH, AionAddress.LENGTH * 2), caller.toByteArray());
         assertArrayEquals(
-                Arrays.copyOfRange(data, Address.SIZE * 2, Address.SIZE * 3), origin.toBytes());
+                Arrays.copyOfRange(data, AionAddress.LENGTH * 2, AionAddress.LENGTH * 3), origin.toByteArray());
         assertArrayEquals(
                 Arrays.copyOfRange(data, data.length - DataWordImpl.BYTES, data.length),
                 DataWordImpl.ZERO.getData());

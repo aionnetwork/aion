@@ -12,7 +12,7 @@ import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -201,13 +201,13 @@ public final class BulkExecutor {
         if (transaction.isContractCreationTransaction()) {
             return isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
-            Address destination = transaction.getDestinationAddress();
+            AionAddress destination = transaction.getDestinationAddress();
             return !isContractAddress(repository, destination) || isAllowedByAVM(repository, destination);
         }
     }
 
     /** Returns true only if address is a contract. */
-    private static boolean isContractAddress(RepositoryCache repository, Address address) {
+    private static boolean isContractAddress(RepositoryCache repository, AionAddress address) {
         if (ContractFactory.isPrecompiledContract(address)) {
             return true;
         } else {
@@ -221,7 +221,7 @@ public final class BulkExecutor {
         }
     }
 
-    private static boolean isAllowedByAVM(RepositoryCache repository, Address destination) {
+    private static boolean isAllowedByAVM(RepositoryCache repository, AionAddress destination) {
         InternalVmType vm;
         if (ContractFactory.isPrecompiledContract(destination)) {
             // skip the call to disk

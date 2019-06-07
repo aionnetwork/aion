@@ -1,18 +1,16 @@
 package org.aion.zero.impl.vm;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -64,7 +62,7 @@ public class InvalidBlockTest {
         BigInteger nonce =
                 this.blockchain
                         .getRepository()
-                        .getNonce(Address.wrap(this.deployerKey.getAddress()));
+                        .getNonce(new AionAddress(this.deployerKey.getAddress()));
         List<AionTransaction> transactions = makeTransactions(5, nonce);
 
         AionBlock parent = this.blockchain.getBestBlock();
@@ -91,7 +89,7 @@ public class InvalidBlockTest {
             AionTransaction transaction =
                     new AionTransaction(
                             nonce.toByteArray(),
-                            Address.wrap(this.deployerKey.getAddress()),
+                            new AionAddress(this.deployerKey.getAddress()),
                             null,
                             BigInteger.ZERO.toByteArray(),
                             jar,

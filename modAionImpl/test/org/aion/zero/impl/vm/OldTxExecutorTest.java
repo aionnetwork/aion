@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKeyFac;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
@@ -44,8 +45,8 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
@@ -109,14 +110,12 @@ public class OldTxExecutorTest {
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        Address from =
-                Address.wrap(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to =
-                Address.wrap(
-                        Hex.decode(
-                                "2222222222222222222222222222222222222222222222222222222222222222"));
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                    "1111111111111111111111111111111111111111111111111111111111111111");
+        AionAddress to =
+                AddressUtils.wrapAddress(
+                    "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
@@ -152,11 +151,10 @@ public class OldTxExecutorTest {
         System.out.println(deployer);
 
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        Address from =
-                Address.wrap(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to = null;
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                    "1111111111111111111111111111111111111111111111111111111111111111");
+        AionAddress to = null;
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode(deployer);
         long nrg = 500_000L;
@@ -188,14 +186,12 @@ public class OldTxExecutorTest {
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        Address from =
-                Address.wrap(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to =
-                Address.wrap(
-                        Hex.decode(
-                                "2222222222222222222222222222222222222222222222222222222222222222"));
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                    "1111111111111111111111111111111111111111111111111111111111111111");
+        AionAddress to =
+                AddressUtils.wrapAddress(
+                    "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
@@ -225,14 +221,12 @@ public class OldTxExecutorTest {
     @Test
     public void testBasicTransactionCost() throws VMException {
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        Address from =
-                Address.wrap(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
-        Address to =
-                Address.wrap(
-                        Hex.decode(
-                                "2222222222222222222222222222222222222222222222222222222222222222"));
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                    "1111111111111111111111111111111111111111111111111111111111111111");
+        AionAddress to =
+                AddressUtils.wrapAddress(
+                    "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ONE.getData();
         byte[] data = new byte[0];
         long nrg = new DataWordImpl(100000L).longValue();
@@ -255,7 +249,7 @@ public class OldTxExecutorTest {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWordImpl(0x1000000L).getData();
         long number = 1;
@@ -271,7 +265,7 @@ public class OldTxExecutorTest {
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
                 parentHash,
-                Address.wrap(coinbase),
+                new AionAddress(coinbase),
                 logsBloom,
                 difficulty,
                 number,

@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
@@ -54,9 +55,9 @@ import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.Constants;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.api.interfaces.ResultCode;
@@ -93,7 +94,7 @@ public class ContractIntegTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey, senderKey;
-    private Address deployer, sender;
+    private AionAddress deployer, sender;
     private BigInteger deployerBalance, deployerNonce, senderBalance, senderNonce;
     private byte txType;
 
@@ -113,12 +114,12 @@ public class ContractIntegTest {
         TransactionTypeRule.allowAVMContractTransaction();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new Address(deployerKey.getAddress());
+        deployer = new AionAddress(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
         deployerNonce = BigInteger.ZERO;
 
         senderKey = bundle.privateKeys.get(1);
-        sender = new Address(senderKey.getAddress());
+        sender = new AionAddress(senderKey.getAddress());
         senderBalance = Builder.DEFAULT_BALANCE;
         senderNonce = BigInteger.ZERO;
 
@@ -179,7 +180,7 @@ public class ContractIntegTest {
             LOGGER_VM);
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -229,7 +230,7 @@ public class ContractIntegTest {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -281,7 +282,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertEquals(nrg, tx.getNrgConsume());
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -332,7 +333,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
 
             checkStateOfDeployer(
                     repo, summary, nrgPrice, BigInteger.ZERO, nonce.add(BigInteger.ONE));
@@ -382,7 +383,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -433,7 +434,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -485,7 +486,7 @@ public class ContractIntegTest {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
             assertEquals(0, tx.getNrgConsume());
 
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -524,7 +525,7 @@ public class ContractIntegTest {
 
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -575,7 +576,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -656,7 +657,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -714,7 +715,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -769,7 +770,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -780,11 +781,11 @@ public class ContractIntegTest {
         BigInteger deployerBalance = repo.getBalance(deployer);
 
         // Create a new account to be our fund recipient.
-        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         repo.createAccount(recipient);
 
         // Contract has 2^13 coins, let's withdraw them.
-        byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         tx =
                 new AionTransaction(
@@ -831,7 +832,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -842,10 +843,10 @@ public class ContractIntegTest {
         BigInteger deployerBalance = repo.getBalance(deployer);
 
         // Create a new account to be our fund recipient.
-        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
         // Contract has 2^13 coins, let's withdraw them.
-        byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         tx =
                 new AionTransaction(
@@ -893,7 +894,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address multiFeatureContract =
+        AionAddress multiFeatureContract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -918,14 +919,14 @@ public class ContractIntegTest {
                         nrgPrice,
                         txType);
         nonce = nonce.add(BigInteger.ONE);
-        Address callerContract =
+        AionAddress callerContract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
-        Address recipient = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         deployerBalance = repo.getBalance(deployer);
         deployerNonce = repo.getNonce(deployer);
 
         // Set the MultiFeatureCaller to call the deployed MultiFeatureContract.
-        byte[] input = ByteUtil.merge(Hex.decode("8c30ffe6"), multiFeatureContract.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("8c30ffe6"), multiFeatureContract.toByteArray());
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -955,7 +956,7 @@ public class ContractIntegTest {
         assertEquals(BigInteger.ZERO, repo.getBalance(recipient));
 
         value = BigInteger.TWO.pow(20);
-        input = ByteUtil.merge(Hex.decode("57a60e6b"), recipient.toBytes());
+        input = ByteUtil.merge(Hex.decode("57a60e6b"), recipient.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
@@ -1000,7 +1001,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
@@ -1013,7 +1014,7 @@ public class ContractIntegTest {
 
         // First recurse 1 time less than the max and verify this is ok.
         int numRecurses = Constants.MAX_CALL_DEPTH - 1;
-        byte[] input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toBytes());
+        byte[] input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         tx =
                 new AionTransaction(
@@ -1044,7 +1045,7 @@ public class ContractIntegTest {
 
         // Now recurse the max amount of times and ensure we fail.
         numRecurses = Constants.MAX_CALL_DEPTH;
-        input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toBytes());
+        input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
@@ -1137,10 +1138,10 @@ public class ContractIntegTest {
 
         // Mock up the repo so that the contract address already exists.
         AionRepositoryCache repo = mock(AionRepositoryCache.class);
-        when(repo.hasAccountState(Mockito.any(Address.class))).thenReturn(true);
-        when(repo.getNonce(Mockito.any(Address.class))).thenReturn(nonce);
-        when(repo.getBalance(Mockito.any(Address.class))).thenReturn(Builder.DEFAULT_BALANCE);
-        when(repo.getCode(Mockito.any(Address.class))).thenReturn(new byte[1]);
+        when(repo.hasAccountState(Mockito.any(AionAddress.class))).thenReturn(true);
+        when(repo.getNonce(Mockito.any(AionAddress.class))).thenReturn(nonce);
+        when(repo.getBalance(Mockito.any(AionAddress.class))).thenReturn(Builder.DEFAULT_BALANCE);
+        when(repo.getCode(Mockito.any(AionAddress.class))).thenReturn(new byte[1]);
 
         when(repo.startTracking()).thenReturn(repo);
 
@@ -1187,7 +1188,7 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce, true);
         assertNotNull(contract);
 
@@ -1230,9 +1231,9 @@ public class ContractIntegTest {
         input =
                 Arrays.copyOfRange(
                         HashUtil.keccak256("callBalanceTransfer(address)".getBytes()), 0, 4);
-        Address receiver =
-                new Address("0x000000000000000000000000000000000000000000000000000000000000000a");
-        input = ByteUtil.merge(input, receiver.toBytes());
+        AionAddress receiver =
+                AddressUtils.wrapAddress("0x000000000000000000000000000000000000000000000000000000000000000a");
+        input = ByteUtil.merge(input, receiver.toByteArray());
         nonce = nonce.add(BigInteger.ONE);
         tx =
                 new AionTransaction(
@@ -1368,18 +1369,18 @@ public class ContractIntegTest {
                         txType);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
-        Address contract =
+        AionAddress contract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce, true);
 
         assertNotNull(contract);
         repo = blockchain.getRepository().startTracking();
 
-        Address avmAddress = deployAvmContract(nonce);
+        AionAddress avmAddress = deployAvmContract(nonce);
         assertNotNull(avmAddress);
 
         nonce = nonce.add(BigInteger.ONE);
         byte[] input = Arrays.copyOfRange(HashUtil.keccak256("callAVM(address)".getBytes()), 0, 4);
-        input = ByteUtil.merge(input, avmAddress.toBytes());
+        input = ByteUtil.merge(input, avmAddress.toByteArray());
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -1415,8 +1416,8 @@ public class ContractIntegTest {
         long nrgPrice = 1;
         BigInteger value = BigInteger.ONE;
 
-        Address destinationAddr =
-                Address.wrap(HashUtil.calcNewAddr(deployer.toBytes(), deployerNonce.toByteArray()));
+        AionAddress destinationAddr =
+                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1499,8 +1500,8 @@ public class ContractIntegTest {
         long nrgPrice = 1;
         BigInteger value = BigInteger.ONE;
 
-        Address destinationAddr =
-                Address.wrap(HashUtil.calcNewAddr(deployer.toBytes(), deployerNonce.toByteArray()));
+        AionAddress destinationAddr =
+                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1565,7 +1566,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            Address contract = tx.getContractAddress();
+            AionAddress contract = tx.getContractAddress();
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -1590,8 +1591,8 @@ public class ContractIntegTest {
         long nrgPrice = 1;
         BigInteger value = BigInteger.ONE;
 
-        Address avmAddress =
-                Address.wrap(HashUtil.calcNewAddr(deployer.toBytes(), deployerNonce.toByteArray()));
+        AionAddress avmAddress =
+                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1625,7 +1626,7 @@ public class ContractIntegTest {
 
         senderNonce = senderNonce.add(BigInteger.ONE);
 
-        Address avmDeployedAddress = deployAvmContract(deployerNonce);
+        AionAddress avmDeployedAddress = deployAvmContract(deployerNonce);
         assertNotNull(avmAddress);
         assertEquals(avmAddress, avmDeployedAddress);
 
@@ -1733,7 +1734,7 @@ public class ContractIntegTest {
      * Deploys a contract named contractName and checks the state of the deployed contract and the
      * contract deployer and returns the address of the contract once finished.
      */
-    private Address deployContract(
+    private AionAddress deployContract(
             RepositoryCache repo,
             AionTransaction tx,
             String contractName,
@@ -1748,7 +1749,7 @@ public class ContractIntegTest {
                 repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce, false);
     }
 
-    private Address deployContract(
+    private AionAddress deployContract(
             RepositoryCache repo,
             AionTransaction tx,
             String contractName,
@@ -1775,7 +1776,7 @@ public class ContractIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        Address contract = tx.getContractAddress();
+        AionAddress contract = tx.getContractAddress();
         if (contractFilename == null) {
             checkStateOfNewContract(
                     repo,
@@ -1829,7 +1830,7 @@ public class ContractIntegTest {
     private void checkStateOfNewContract(
             RepositoryCache repo,
             String contractName,
-            Address contractAddr,
+            AionAddress contractAddr,
             byte[] output,
             ResultCode result,
             BigInteger value)
@@ -1856,7 +1857,7 @@ public class ContractIntegTest {
             RepositoryCache repo,
             String contractName,
             String contractFilename,
-            Address contractAddr,
+            AionAddress contractAddr,
             byte[] output,
             FastVmResultCode result,
             BigInteger value)
@@ -1952,7 +1953,7 @@ public class ContractIntegTest {
                 .encodeToBytes();
     }
 
-    private Address deployAvmContract(BigInteger nonce) {
+    private AionAddress deployAvmContract(BigInteger nonce) {
         byte[] jar = getJarBytes();
         AionTransaction transaction =
                 new AionTransaction(
@@ -1981,7 +1982,7 @@ public class ContractIntegTest {
         assertThat(receipt.isSuccessful()).isTrue();
 
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toBytes())
+        assertThat(transaction.getContractAddress().toByteArray())
                 .isEqualTo(receipt.getTransactionOutput());
 
         return transaction.getContractAddress();

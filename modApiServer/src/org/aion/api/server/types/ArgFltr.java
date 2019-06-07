@@ -2,8 +2,8 @@ package org.aion.api.server.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -39,10 +39,10 @@ public class ArgFltr {
                 if (addressList == null) {
                     // let the address constructor do the validation on the string
                     // it will throw if user passes invalid address
-                    address.add((new Address(json.optString("address", null))).toBytes());
+                    address.add((AddressUtils.wrapAddress(json.optString("address", null))).toByteArray());
                 } else {
                     for (int i = 0; i < addressList.length(); i++) {
-                        address.add((new Address(addressList.optString(i, null))).toBytes());
+                        address.add((AddressUtils.wrapAddress(addressList.optString(i, null))).toByteArray());
                     }
                 }
             }

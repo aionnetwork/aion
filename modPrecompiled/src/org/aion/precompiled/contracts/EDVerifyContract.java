@@ -1,10 +1,10 @@
 package org.aion.precompiled.contracts;
 
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.util.types.AddressUtils;
 
 public class EDVerifyContract implements PrecompiledContract {
 
@@ -43,7 +43,7 @@ public class EDVerifyContract implements PrecompiledContract {
             return new PrecompiledTransactionResult(
                     PrecompiledResultCode.SUCCESS,
                     nrgLimit - COST,
-                    verify ? pubKey : Address.ZERO_ADDRESS().toBytes());
+                    verify ? pubKey : AddressUtils.ZERO_ADDRESS.toByteArray());
         } catch (Exception e) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }

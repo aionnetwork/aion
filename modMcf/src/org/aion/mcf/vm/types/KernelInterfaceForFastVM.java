@@ -8,8 +8,8 @@ import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
@@ -26,7 +26,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
-            Address blockCoinbase) {
+            AionAddress blockCoinbase) {
         this(
                 repositoryCache,
                 allowNonceIncrement,
@@ -43,7 +43,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     private long blockNumber;
     private long blockTimestamp;
     private long blockNrgLimit;
-    private Address blockCoinbase;
+    private AionAddress blockCoinbase;
 
     public KernelInterfaceForFastVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
@@ -54,7 +54,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
-            Address blockCoinbase) {
+            AionAddress blockCoinbase) {
 
         if (repositoryCache == null) {
             throw new NullPointerException("Cannot set null repositoryCache!");
@@ -104,55 +104,55 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public void createAccount(Address address) {
+    public void createAccount(AionAddress address) {
         this.repositoryCache.createAccount(address);
     }
 
-    public void setVmType(Address address) {
+    public void setVmType(AionAddress address) {
         this.repositoryCache.saveVmType(address, InternalVmType.FVM);
     }
 
     @Override
-    public boolean hasAccountState(Address address) {
+    public boolean hasAccountState(AionAddress address) {
         return this.repositoryCache.hasAccountState(address);
     }
 
     @Override
-    public void putCode(Address address, byte[] code) {
+    public void putCode(AionAddress address, byte[] code) {
         // ensure the vm type is set as soon as the account becomes a contract
         this.repositoryCache.saveCode(address, code);
         setVmType(address);
     }
 
     @Override
-    public byte[] getCode(Address address) {
+    public byte[] getCode(AionAddress address) {
         return this.repositoryCache.getCode(address);
     }
 
     @Override
-    public byte[] getTransformedCode(Address address) {
+    public byte[] getTransformedCode(AionAddress address) {
         // Todo:implement it for fvm later.
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setTransformedCode(Address address, byte[] code) {
+    public void setTransformedCode(AionAddress address, byte[] code) {
         // Todo:implement it for fvm later.
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void putObjectGraph(Address contract, byte[] graph) {
+    public void putObjectGraph(AionAddress contract, byte[] graph) {
         throw new UnsupportedOperationException("The FVM does not use an object graph.");
     }
 
     @Override
-    public byte[] getObjectGraph(Address contract) {
+    public byte[] getObjectGraph(AionAddress contract) {
         throw new UnsupportedOperationException("The FVM does not use an object graph.");
     }
 
     @Override
-    public void putStorage(Address address, byte[] key, byte[] value) {
+    public void putStorage(AionAddress address, byte[] key, byte[] value) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper storageValue = alignValueToWordSizeForPut(value);
         if (value == null || value.length == 0 || storageValue.isZero()) {
@@ -166,14 +166,14 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public void removeStorage(Address address, byte[] key) {
+    public void removeStorage(AionAddress address, byte[] key) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         this.repositoryCache.removeStorageRow(address, storageKey);
         setVmType(address);
     }
 
     @Override
-    public byte[] getStorage(Address address, byte[] key) {
+    public byte[] getStorage(AionAddress address, byte[] key) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
         if (value != null && (value.isZero() || value.isEmpty())) {
@@ -185,19 +185,19 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public void deleteAccount(Address address) {
+    public void deleteAccount(AionAddress address) {
         if (!this.isLocalCall) {
             this.repositoryCache.deleteAccount(address);
         }
     }
 
     @Override
-    public BigInteger getBalance(Address address) {
+    public BigInteger getBalance(AionAddress address) {
         return this.repositoryCache.getBalance(address);
     }
 
     @Override
-    public void adjustBalance(Address address, BigInteger delta) {
+    public void adjustBalance(AionAddress address, BigInteger delta) {
         this.repositoryCache.addBalance(address, delta);
     }
 
@@ -207,45 +207,45 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public BigInteger getNonce(Address address) {
+    public BigInteger getNonce(AionAddress address) {
         return this.repositoryCache.getNonce(address);
     }
 
     @Override
-    public void incrementNonce(Address address) {
+    public void incrementNonce(AionAddress address) {
         if (!this.isLocalCall && this.allowNonceIncrement) {
             this.repositoryCache.incrementNonce(address);
         }
     }
 
     @Override
-    public void deductEnergyCost(Address address, BigInteger energyCost) {
+    public void deductEnergyCost(AionAddress address, BigInteger energyCost) {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(address, energyCost.negate());
         }
     }
 
     @Override
-    public void refundAccount(Address address, BigInteger amount) {
+    public void refundAccount(AionAddress address, BigInteger amount) {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(address, amount);
         }
     }
 
     @Override
-    public void payMiningFee(Address miner, BigInteger fee) {
+    public void payMiningFee(AionAddress miner, BigInteger fee) {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(miner, fee);
         }
     }
 
     @Override
-    public boolean accountNonceEquals(Address address, BigInteger nonce) {
+    public boolean accountNonceEquals(AionAddress address, BigInteger nonce) {
         return (this.isLocalCall) ? true : getNonce(address).equals(nonce);
     }
 
     @Override
-    public boolean accountBalanceIsAtLeast(Address address, BigInteger amount) {
+    public boolean accountBalanceIsAtLeast(AionAddress address, BigInteger amount) {
         return (this.isLocalCall) ? true : getBalance(address).compareTo(amount) >= 0;
     }
 
@@ -260,11 +260,11 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public boolean destinationAddressIsSafeForThisVM(Address address) {
+    public boolean destinationAddressIsSafeForThisVM(AionAddress address) {
         return getVmType(address) != InternalVmType.AVM;
     }
 
-    private InternalVmType getVmType(Address destination) {
+    private InternalVmType getVmType(AionAddress destination) {
         InternalVmType storedVmType = repositoryCache.getVMUsed(destination);
 
         // DEFAULT is returned when there was no contract information stored
@@ -356,7 +356,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public Address getMinerAddress() {
+    public AionAddress getMinerAddress() {
         return blockCoinbase;
     }
 }

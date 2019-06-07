@@ -1,12 +1,11 @@
 package org.aion.precompiled.contracts.TRS;
 
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.types.Address;
-
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
  * Foundation, for the foundation to lock its funds away over a number of months, ensuring continued
@@ -20,7 +19,7 @@ import org.aion.vm.api.types.Address;
  * in that the latter calls this contract to perform any supported operations it needs.
  */
 public final class PrivateTRScontract extends StatefulPrecompiledContract {
-    private final Address caller;
+    private final AionAddress caller;
 
     /**
      * Constructs a new PrivateTRScontract that will use repo as the database cache to update its
@@ -30,7 +29,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @param caller The calling address.
      */
     public PrivateTRScontract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo, Address caller) {
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo, AionAddress caller) {
 
         super(repo);
         this.caller = caller;

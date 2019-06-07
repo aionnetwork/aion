@@ -1,10 +1,10 @@
 package org.aion.zero.api;
 
 import java.math.BigInteger;
+import org.aion.types.AionAddress;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.vm.api.types.Address;
-
+import org.aion.util.types.AddressUtils;
 public class BlockConstants implements IBlockConstants {
 
     /** Number of bytes that is allowed in {@link AbstractBlockHeader#extraData} field */
@@ -186,8 +186,8 @@ public class BlockConstants implements IBlockConstants {
      *
      * @return {@code address} of the sk owning this pair. Also referred to as the owner's address.
      */
-    public Address getTokenBridgingAddress() {
-        return Address.ZERO_ADDRESS();
+    public AionAddress getTokenBridgingAddress() {
+        return AddressUtils.ZERO_ADDRESS;
     }
 
     @Override

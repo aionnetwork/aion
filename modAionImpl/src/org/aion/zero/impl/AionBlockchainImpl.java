@@ -55,11 +55,12 @@ import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.api.types.Hash256;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
@@ -144,7 +145,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifierImpl> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
-    private Address minerCoinbase;
+    private AionAddress minerCoinbase;
     private byte[] minerExtraData;
     private Stack<State> stateStack = new Stack<>();
     private IEventMgr evtMgr = null;
@@ -220,7 +221,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
         return new A0BCConfig() {
             @Override
-            public Address getCoinbase() {
+            public AionAddress getCoinbase() {
                 return cfgAion.getGenesis().getCoinbase();
             }
 
@@ -236,8 +237,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             @Override
-            public Address getMinerCoinbase() {
-                return Address.wrap(cfgAion.getConsensus().getMinerAddress());
+            public AionAddress getMinerCoinbase() {
+                return AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress());
             }
 
             // TODO: hook up to configuration file
@@ -1219,7 +1220,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                     getBlockByHash(block.getParentHash()).getStateRoot());
                 }
 
-                Map<Address, BigInteger> nonceCache = new HashMap<>();
+                Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
 
                 if (txs.parallelStream()
                         .anyMatch(
@@ -1242,7 +1243,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
 
                 for (AionTransaction tx : txs) {
-                    Address txSender = tx.getSenderAddress();
+                    AionAddress txSender = tx.getSenderAddress();
 
                     BigInteger expectedNonce = nonceCache.get(txSender);
 
@@ -1330,7 +1331,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        Map<Address, BigInteger> rewards = addReward(block);
+        Map<AionAddress, BigInteger> rewards = addReward(block);
 
         track.flush();
 
@@ -1378,7 +1379,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 System.exit(-1);
             }
         }
-        Map<Address, BigInteger> rewards = addReward(block);
+        Map<AionAddress, BigInteger> rewards = addReward(block);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1391,9 +1392,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<Address, BigInteger> addReward(IAionBlock block) {
+    private Map<AionAddress, BigInteger> addReward(IAionBlock block) {
 
-        Map<Address, BigInteger> rewards = new HashMap<>();
+        Map<AionAddress, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
                 this.chainConfiguration
                         .getRewardsCalculator()
@@ -1564,7 +1565,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public Address getMinerCoinbase() {
+    public AionAddress getMinerCoinbase() {
         return minerCoinbase;
     }
 

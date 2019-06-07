@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
+import org.aion.types.AionAddress;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.types.ArgFltr;
@@ -45,7 +46,6 @@ import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -69,6 +69,7 @@ import org.aion.p2p.INode;
 import org.aion.vm.api.types.Hash256;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
@@ -250,9 +251,9 @@ public class ApiWeb3Aion extends ApiAion {
                         .build(
                                 new CacheLoader<>() {
                                     public MinerStatsView load(String key) { // no checked exception
-                                        Address miner = new Address(key);
+                                        AionAddress miner = AddressUtils.wrapAddress(key);
                                         return new MinerStatsView(
-                                                        STRATUM_RECENT_BLK_COUNT, miner.toBytes())
+                                                        STRATUM_RECENT_BLK_COUNT, miner.toByteArray())
                                                 .update();
                                     }
 
@@ -432,7 +433,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = AddressUtils.wrapAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -471,7 +472,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = AddressUtils.wrapAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -522,7 +523,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = AddressUtils.wrapAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -609,7 +610,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = AddressUtils.wrapAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -645,7 +646,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = Address.wrap(_address);
+        AionAddress address = AddressUtils.wrapAddress(_address);
         ECKey key = getAccountKey(address.toString());
         if (key == null) {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
@@ -700,7 +701,7 @@ public class ApiWeb3Aion extends ApiAion {
                     StringUtils.toJsonHex(
                             tx.getDestinationAddress() == null
                                     ? EMPTY_BYTE_ARRAY
-                                    : tx.getDestinationAddress().toBytes()));
+                                    : tx.getDestinationAddress().toByteArray()));
             txObj.put("value", StringUtils.toJsonHex(tx.getValue()));
             txObj.put("input", StringUtils.toJsonHex(tx.getData()));
             txObj.put("hash", StringUtils.toJsonHex(tx.getTransactionHash()));
@@ -808,9 +809,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionBlock b = getBlockByBN(bn);
 
-        Address sender = txParams.getFrom();
+        AionAddress sender = txParams.getFrom();
         if (sender == null) {
-            sender = Address.ZERO_ADDRESS();
+            sender = AddressUtils.ZERO_ADDRESS;
         }
 
         AionTransaction tx =
@@ -1351,7 +1352,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        return new RpcMsg(lockAccount(Address.wrap(_account), _password));
+        return new RpcMsg(lockAccount(AddressUtils.wrapAddress(_account), _password));
     }
 
     public RpcMsg personal_newAccount(Object _params) {
@@ -1852,10 +1853,10 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address;
+        AionAddress address;
 
         try {
-            address = new Address(_address);
+            address = AddressUtils.wrapAddress(_address);
         } catch (Exception e) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
         }
@@ -2201,13 +2202,13 @@ public class ApiWeb3Aion extends ApiAion {
         result.put("blockNumber", block.getNumber());
         result.put("blockHash", StringUtils.toJsonHex(block.getHash()));
         result.put("nonce", StringUtils.toJsonHex(tx.getNonce()));
-        result.put("fromAddr", StringUtils.toJsonHex(tx.getSenderAddress().toBytes()));
+        result.put("fromAddr", StringUtils.toJsonHex(tx.getSenderAddress().toByteArray()));
         result.put(
                 "toAddr",
                 StringUtils.toJsonHex(
                         tx.getDestinationAddress() == null
                                 ? EMPTY_BYTE_ARRAY
-                                : tx.getDestinationAddress().toBytes()));
+                                : tx.getDestinationAddress().toByteArray()));
         result.put("value", StringUtils.toJsonHex(tx.getValue()));
         result.put("nrgPrice", tx.getEnergyPrice());
         result.put("nrgConsumed", txInfo.getReceipt().getEnergyUsed());
@@ -2294,7 +2295,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         blk.put("blockHash", StringUtils.toJsonHex(block.getHash()));
         blk.put("parentHash", StringUtils.toJsonHex(block.getParentHash()));
-        blk.put("minerAddress", StringUtils.toJsonHex(block.getCoinbase().toBytes()));
+        blk.put("minerAddress", StringUtils.toJsonHex(block.getCoinbase().toByteArray()));
 
         blk.put("receiptTxRoot", StringUtils.toJsonHex(block.getReceiptsRoot()));
         blk.put("txTrieRoot", StringUtils.toJsonHex(block.getTxTrieRoot()));
@@ -2322,12 +2323,12 @@ public class ApiWeb3Aion extends ApiAion {
                 // transactionHash, fromAddr, toAddr, value, timestampVal, blockNumber, blockHash
                 JSONArray t = new JSONArray();
                 t.put(StringUtils.toJsonHex(tx.getTransactionHash()));
-                t.put(StringUtils.toJsonHex(tx.getSenderAddress().toBytes()));
+                t.put(StringUtils.toJsonHex(tx.getSenderAddress().toByteArray()));
                 t.put(
                         StringUtils.toJsonHex(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
-                                        : tx.getDestinationAddress().toBytes()));
+                                        : tx.getDestinationAddress().toByteArray()));
                 t.put(StringUtils.toJsonHex(tx.getValue()));
                 t.put(block.getTimestamp());
                 t.put(block.getNumber());
@@ -2746,7 +2747,7 @@ public class ApiWeb3Aion extends ApiAion {
                         lastBlkTimestamp = b.getTimestamp();
                     }
 
-                    if (Arrays.equals(b.getCoinbase().toBytes(), miner)) {
+                    if (Arrays.equals(b.getCoinbase().toByteArray(), miner)) {
                         minedByMiner++;
                     }
 

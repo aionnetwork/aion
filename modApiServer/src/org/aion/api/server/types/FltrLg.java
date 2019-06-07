@@ -53,7 +53,7 @@ public final class FltrLg extends Fltr {
             for (AionTxReceipt receipt : receipts) {
                 Transaction tx = receipt.getTransaction();
                 if (tx.getDestinationAddress() != null
-                        && matchesContractAddress(tx.getDestinationAddress().toBytes())) {
+                        && matchesContractAddress(tx.getDestinationAddress().toByteArray())) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (IExecutionLog logInfo : receipt.getLogInfoList()) {
@@ -88,7 +88,7 @@ public final class FltrLg extends Fltr {
             int txIndex = 0;
             for (Transaction txn : blk.getTransactionsList()) {
                 if (txn.getDestinationAddress() != null
-                        && matchesContractAddress(txn.getDestinationAddress().toBytes())) {
+                        && matchesContractAddress(txn.getDestinationAddress().toByteArray())) {
                     // now that we know that our filter might match with some logs in this
                     // transaction, go ahead
                     // and retrieve the txReceipt from the chain
@@ -162,7 +162,7 @@ public final class FltrLg extends Fltr {
 
     public boolean matchesExactly(IExecutionLog logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getSourceAddress().toBytes())) return false;
+        if (!matchesContractAddress(logInfo.getSourceAddress().toByteArray())) return false;
         List<byte[]> logTopics = logInfo.getTopics();
         for (int i = 0; i < this.topics.size(); i++) {
             if (i >= logTopics.size()) return false;

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
@@ -22,7 +23,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -35,11 +35,11 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     protected Repository<AccountState, IBlockStoreBase<?, ?>> repository;
 
     /** local accounts cache */
-    protected Map<Address, AccountState> cachedAccounts;
+    protected Map<AionAddress, AccountState> cachedAccounts;
 
     protected ReadWriteLock lockAccounts = new ReentrantReadWriteLock();
     /** local contract details cache */
-    protected Map<Address, ContractDetails> cachedDetails;
+    protected Map<AionAddress, ContractDetails> cachedDetails;
 
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
@@ -55,7 +55,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public AccountState createAccount(Address address) {
+    public AccountState createAccount(AionAddress address) {
         fullyWriteLock();
         try {
             AccountState accountState = new AccountState();
@@ -82,7 +82,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
      * @implNote If there is no account associated with the given address, it will create it.
      */
     @Override
-    public AccountState getAccountState(Address address) {
+    public AccountState getAccountState(AionAddress address) {
         lockAccounts.readLock().lock();
 
         try {
@@ -108,7 +108,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
         }
     }
 
-    public boolean hasAccountState(Address address) {
+    public boolean hasAccountState(AionAddress address) {
         lockAccounts.readLock().lock();
         try {
             AccountState accountState = cachedAccounts.get(address);
@@ -127,7 +127,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public ContractDetails getContractDetails(Address address) {
+    public ContractDetails getContractDetails(AionAddress address) {
         lockDetails.readLock().lock();
 
         try {
@@ -154,7 +154,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public boolean hasContractDetails(Address address) {
+    public boolean hasContractDetails(AionAddress address) {
         lockDetails.readLock().lock();
 
         try {
@@ -178,9 +178,9 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
      */
     @Override
     public void loadAccountState(
-            Address address,
-            Map<Address, AccountState> accounts,
-            Map<Address, ContractDetails> details) {
+            AionAddress address,
+            Map<AionAddress, AccountState> accounts,
+            Map<AionAddress, ContractDetails> details) {
         fullyReadLock();
 
         try {
@@ -211,7 +211,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
      *     calling this method.
      * @apiNote If the account was never stored this call will create it.
      */
-    private void loadAccountState(Address address) {
+    private void loadAccountState(AionAddress address) {
         fullyWriteLock();
         try {
             repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
@@ -221,7 +221,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void deleteAccount(Address address) {
+    public void deleteAccount(AionAddress address) {
         fullyWriteLock();
         try {
             getAccountState(address).delete();
@@ -236,7 +236,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public BigInteger incrementNonce(Address address) {
+    public BigInteger incrementNonce(AionAddress address) {
         lockAccounts.writeLock().lock();
         try {
             return getAccountState(address).incrementNonce();
@@ -246,7 +246,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public BigInteger setNonce(Address address, BigInteger newNonce) {
+    public BigInteger setNonce(AionAddress address, BigInteger newNonce) {
         lockAccounts.writeLock().lock();
         try {
             return getAccountState(address).setNonce(newNonce);
@@ -256,7 +256,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public BigInteger getNonce(Address address) {
+    public BigInteger getNonce(AionAddress address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
         return (accountState.isEmpty() || accountState.isDeleted())
@@ -265,7 +265,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public BigInteger getBalance(Address address) {
+    public BigInteger getBalance(AionAddress address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
         return (accountState.isEmpty() || accountState.isDeleted())
@@ -274,7 +274,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public BigInteger addBalance(Address address, BigInteger value) {
+    public BigInteger addBalance(AionAddress address, BigInteger value) {
         lockAccounts.writeLock().lock();
         try {
             // TODO: where do we ensure that this does not result in a negative value?
@@ -286,7 +286,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void saveCode(Address address, byte[] code) {
+    public void saveCode(AionAddress address, byte[] code) {
         fullyWriteLock();
         try {
             // save the code
@@ -305,7 +305,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public byte[] getCode(Address address) {
+    public byte[] getCode(AionAddress address) {
         if (!hasAccountState(address)) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -317,7 +317,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public byte[] getTransformedCode(Address address) {
+    public byte[] getTransformedCode(AionAddress address) {
         if (!hasAccountState(address)) {
             return null;
         }
@@ -326,7 +326,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void saveVmType(Address contract, InternalVmType vmType) {
+    public void saveVmType(AionAddress contract, InternalVmType vmType) {
         fullyWriteLock();
         try {
             getContractDetails(contract).setVmType(vmType);
@@ -337,7 +337,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
     /** IMPORTNAT: a new cache must be created before calling this method */
     @Override
-    public InternalVmType getVmType(Address contract) {
+    public InternalVmType getVmType(AionAddress contract) {
         if (ContractFactory.isPrecompiledContract(contract)) {
             // skip the call to disk
             return InternalVmType.FVM;
@@ -353,7 +353,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void saveObjectGraph(Address contract, byte[] graph) {
+    public void saveObjectGraph(AionAddress contract, byte[] graph) {
         // TODO: unsure about impl
         fullyWriteLock();
         try {
@@ -369,7 +369,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public byte[] getObjectGraph(Address contract) {
+    public byte[] getObjectGraph(AionAddress contract) {
         fullyWriteLock();
         try {
             return getContractDetails(contract).getObjectGraph();
@@ -379,7 +379,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value) {
+    public void addStorageRow(AionAddress address, ByteArrayWrapper key, ByteArrayWrapper value) {
         lockDetails.writeLock().lock();
         try {
             getContractDetails(address).put(key, value);
@@ -389,7 +389,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public void removeStorageRow(Address address, ByteArrayWrapper key) {
+    public void removeStorageRow(AionAddress address, ByteArrayWrapper key) {
         lockDetails.writeLock().lock();
         try {
             getContractDetails(address).delete(key);
@@ -399,13 +399,13 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
+    public ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key) {
         return getContractDetails(address).get(key);
     }
 
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
-            Address address, Collection<ByteArrayWrapper> keys) {
+            AionAddress address, Collection<ByteArrayWrapper> keys) {
         ContractDetails details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
@@ -489,18 +489,18 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
         fullyWriteLock();
         try {
             // determine which accounts should get stored
-            HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
-            for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
+            HashMap<AionAddress, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<AionAddress, AccountState> entry : cachedAccounts.entrySet()) {
                 AccountState account = entry.getValue().copy();
                 if (account != null && account.isDirty() && account.isEmpty()) {
                     // ignore contract state for empty accounts at storage
                     cachedDetails.remove(entry.getKey());
                 } else {
-                    cleanedCacheAccounts.put(new Address(entry.getKey().toBytes()), account);
+                    cleanedCacheAccounts.put(entry.getKey(), account);
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, ContractDetails> entry : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetails> entry : cachedDetails.entrySet()) {
                 ContractDetails ctd = entry.getValue().copy();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
@@ -538,8 +538,8 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
         fullyWriteLock();
         try {
             // determine which accounts should get stored
-            HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
-            for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
+            HashMap<AionAddress, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<AionAddress, AccountState> entry : cachedAccounts.entrySet()) {
                 AccountState account = entry.getValue();
                 if (account != null && account.isDirty() && account.isEmpty()) {
                     // ignore contract state for empty accounts at storage
@@ -549,7 +549,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, ContractDetails> entry : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetails> entry : cachedDetails.entrySet()) {
                 ContractDetails ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
@@ -594,15 +594,15 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> accounts, final Map<Address, ContractDetails> details) {
+            Map<AionAddress, AccountState> accounts, final Map<AionAddress, ContractDetails> details) {
         fullyWriteLock();
         try {
 
-            for (Map.Entry<Address, AccountState> accEntry : accounts.entrySet()) {
+            for (Map.Entry<AionAddress, AccountState> accEntry : accounts.entrySet()) {
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<Address, ContractDetails> ctdEntry : details.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetails> ctdEntry : details.entrySet()) {
                 ContractDetailsCacheImpl contractDetailsCache =
                         (ContractDetailsCacheImpl) ctdEntry.getValue().copy();
                 if (contractDetailsCache.origContract != null
@@ -690,12 +690,12 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
                 "getCachelTx should be called on the tracked repository.");
     }
 
-    public InternalVmType getVMUsed(Address contract) {
+    public InternalVmType getVMUsed(AionAddress contract) {
         return repository.getVMUsed(contract);
     }
 
     @Override
-    public void setTransformedCode(Address contractAddr, byte[] code) {
+    public void setTransformedCode(AionAddress contractAddr, byte[] code) {
         if (contractAddr == null || code == null) {
             throw new NullPointerException();
         }

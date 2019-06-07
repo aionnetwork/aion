@@ -11,9 +11,8 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
-
+import org.aion.types.AionAddress;
 /** Detail data storage , */
 public class DetailsDataStore<
         BLK extends AbstractBlock<BH, ? extends Transaction>, BH extends BlockHeader> {
@@ -74,15 +73,15 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(Address key, ContractDetails contractDetails) {
+    public synchronized void update(AionAddress key, ContractDetails contractDetails) {
 
         contractDetails.setAddress(key);
         contractDetails.setObjectGraphSource(graphSrc);
-        ByteArrayWrapper wrappedKey = wrap(key.toBytes());
+        ByteArrayWrapper wrappedKey = wrap(key.toByteArray());
 
         // Put into cache.
         byte[] rawDetails = contractDetails.getEncoded();
-        detailsSrc.put(key.toBytes(), rawDetails);
+        detailsSrc.put(key.toByteArray(), rawDetails);
 
         contractDetails.syncStorage();
     }

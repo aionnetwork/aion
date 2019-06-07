@@ -5,8 +5,8 @@ import static org.aion.util.bytes.ByteUtil.ZERO_BYTE_ARRAY;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.types.AionAddress;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;
@@ -18,6 +18,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
+import org.aion.util.types.AddressUtils;
 
 /** Aion transaction class. */
 public class AionTransaction extends AbstractTransaction {
@@ -40,7 +41,7 @@ public class AionTransaction extends AbstractTransaction {
 
     private byte[] rlpRaw;
 
-    protected Address from;
+    protected AionAddress from;
 
     /** These four members doesn't include into the RLP encode data */
     private long txIndexInBlock = 0;
@@ -60,14 +61,14 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     public AionTransaction(
-            byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice) {
+            byte[] nonce, AionAddress to, byte[] value, byte[] data, long nrg, long nrgPrice) {
         super(nonce, to, value, data, nrg, nrgPrice);
         parsed = true;
     }
 
     public AionTransaction(
             byte[] nonce,
-            Address to,
+            AionAddress to,
             byte[] value,
             byte[] data,
             long nrg,
@@ -81,8 +82,8 @@ public class AionTransaction extends AbstractTransaction {
     // constructor for create nrgEstimate transaction
     public AionTransaction(
             byte[] nonce,
-            Address from,
-            Address to,
+            AionAddress from,
+            AionAddress to,
             byte[] value,
             byte[] data,
             long nrg,
@@ -95,8 +96,8 @@ public class AionTransaction extends AbstractTransaction {
     // constructor for explicitly setting a transaction type.
     public AionTransaction(
             byte[] nonce,
-            Address from,
-            Address to,
+            AionAddress from,
+            AionAddress to,
             byte[] value,
             byte[] data,
             long nrg,
@@ -110,7 +111,7 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     // For InternalTx constructor
-    public AionTransaction(byte[] nonce, Address to, byte[] value, byte[] data) {
+    public AionTransaction(byte[] nonce, AionAddress to, byte[] value, byte[] data) {
         super(nonce, to, value, data, 0L, 0L);
         parsed = true;
     }
@@ -142,7 +143,7 @@ public class AionTransaction extends AbstractTransaction {
         if (rlpTo == null || rlpTo.length == 0) {
             this.to = null;
         } else {
-            this.to = Address.wrap(tx.get(RLP_TX_TO).getRLPData());
+            this.to = new AionAddress(tx.get(RLP_TX_TO).getRLPData());
         }
 
         this.timeStamp = tx.get(RLP_TX_TIMESTAMP).getRLPData();
@@ -256,7 +257,7 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     @Override
-    public Address getDestinationAddress() {
+    public AionAddress getDestinationAddress() {
         if (!parsed) {
             rlpParse();
         }
@@ -286,19 +287,19 @@ public class AionTransaction extends AbstractTransaction {
         return signature;
     }
 
-    public Address getContractAddress() {
+    public AionAddress getContractAddress() {
         if (!this.isContractCreationTransaction()) {
             return null;
         }
 
-        Address from = this.getSenderAddress();
+        AionAddress from = this.getSenderAddress();
 
         if (from == null) {
             return null;
         }
 
         try {
-            return Address.wrap(HashUtil.calcNewAddr(from.toBytes(), this.getNonce()));
+            return new AionAddress(HashUtil.calcNewAddr(from.toByteArray(), this.getNonce()));
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             return null;
@@ -315,7 +316,7 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     @Override
-    public synchronized Address getSenderAddress() {
+    public synchronized AionAddress getSenderAddress() {
         if (from != null) {
             return this.from;
         }
@@ -330,7 +331,7 @@ public class AionTransaction extends AbstractTransaction {
         }
 
         try {
-            from = Address.wrap(this.signature.getAddress());
+            from = new AionAddress(this.signature.getAddress());
             return from;
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
@@ -414,7 +415,7 @@ public class AionTransaction extends AbstractTransaction {
         if (this.to == null) {
             to = RLP.encodeElement(null);
         } else {
-            to = RLP.encodeElement(this.to.toBytes());
+            to = RLP.encodeElement(this.to.toByteArray());
         }
 
         byte[] value = RLP.encodeElement(this.value);
@@ -440,7 +441,7 @@ public class AionTransaction extends AbstractTransaction {
         if (this.to == null) {
             to = RLP.encodeElement(null);
         } else {
-            to = RLP.encodeElement(this.to.toBytes());
+            to = RLP.encodeElement(this.to.toByteArray());
         }
 
         byte[] value = RLP.encodeElement(this.value);
@@ -500,7 +501,7 @@ public class AionTransaction extends AbstractTransaction {
             throws Exception {
         return new AionTransaction(
                 nonce.toByteArray(),
-                Address.wrap(to),
+                AddressUtils.wrapAddress(to),
                 amount.toByteArray(),
                 null,
                 nrg,

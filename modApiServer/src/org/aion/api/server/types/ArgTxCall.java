@@ -4,21 +4,21 @@ import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
-
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.mcf.tx.TransactionTypes;
+import org.aion.util.types.AddressUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
 /** @author chris */
 public final class ArgTxCall {
 
-    private final Address from;
-    private final Address to;
+    private final AionAddress from;
+    private final AionAddress to;
     private final byte[] data;
     private final byte type;
     private final BigInteger nonce;
@@ -32,8 +32,8 @@ public final class ArgTxCall {
     // TODO: create a builder class for create this class
 
     public ArgTxCall(
-            final Address _from,
-            final Address _to,
+            final AionAddress _from,
+            final AionAddress _to,
             final byte[] _data,
             final BigInteger _nonce,
             final BigInteger _value,
@@ -43,8 +43,8 @@ public final class ArgTxCall {
     }
 
     public ArgTxCall(
-            final Address _from,
-            final Address _to,
+            final AionAddress _from,
+            final AionAddress _to,
             final byte[] _data,
             final BigInteger _nonce,
             final BigInteger _value,
@@ -74,11 +74,11 @@ public final class ArgTxCall {
         try {
 
             String fromStr = _jsonObj.optString("from", "");
-            Address from =
-                    fromStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(fromStr));
+            AionAddress from =
+                    fromStr.equals("") ? null : new AionAddress(ByteUtil.hexStringToBytes(fromStr));
 
             String toStr = _jsonObj.optString("to", "");
-            Address to = toStr.equals("") ? null : Address.wrap(ByteUtil.hexStringToBytes(toStr));
+            AionAddress to = toStr.equals("") ? null : AddressUtils.wrapAddress(toStr);
 
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
             byte type = ByteUtil.hexStringToBytes(_jsonObj.optString("type", "0x1"))[0];
@@ -125,11 +125,11 @@ public final class ArgTxCall {
         }
     }
 
-    public Address getFrom() {
+    public AionAddress getFrom() {
         return this.from;
     }
 
-    public Address getTo() {
+    public AionAddress getTo() {
         return this.to;
     }
 

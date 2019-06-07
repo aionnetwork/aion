@@ -2,7 +2,7 @@ package org.aion.mcf.vm.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -15,7 +15,7 @@ import org.aion.vm.api.interfaces.IExecutionLog;
 /** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
 public class Log implements IExecutionLog {
 
-    private Address addr;
+    private AionAddress addr;
     private List<byte[]> topics = new ArrayList<>();
     private byte[] data;
 
@@ -27,7 +27,7 @@ public class Log implements IExecutionLog {
         RLPList topics = (RLPList) logInfo.get(1);
         RLPItem data = (RLPItem) logInfo.get(2);
 
-        this.addr = address.getRLPData() != null ? Address.wrap(address.getRLPData()) : null;
+        this.addr = address.getRLPData() != null ? new AionAddress(address.getRLPData()) : null;
         this.data = data.getRLPData() != null ? data.getRLPData() : new byte[] {};
 
         for (RLPElement topic1 : topics) {
@@ -36,14 +36,14 @@ public class Log implements IExecutionLog {
         }
     }
 
-    public Log(Address address, List<byte[]> topics, byte[] data) {
+    public Log(AionAddress address, List<byte[]> topics, byte[] data) {
         this.addr = address;
         this.topics = (topics != null) ? topics : new ArrayList<>();
         this.data = (data != null) ? data : new byte[] {};
     }
 
     @Override
-    public Address getSourceAddress() {
+    public AionAddress getSourceAddress() {
         return addr;
     }
 
@@ -65,7 +65,7 @@ public class Log implements IExecutionLog {
         if (this.addr == null) {
             addressEncoded = RLP.encodeElement(null);
         } else {
-            addressEncoded = RLP.encodeElement(this.addr.toBytes());
+            addressEncoded = RLP.encodeElement(this.addr.toByteArray());
         }
 
         byte[][] topicsEncoded = null;
@@ -84,7 +84,7 @@ public class Log implements IExecutionLog {
 
     @Override
     public IBloomFilter getBloomFilterForLog() {
-        Bloom ret = Bloom.create(HashUtil.h256(this.addr.toBytes()));
+        Bloom ret = Bloom.create(HashUtil.h256(this.addr.toByteArray()));
         for (byte[] topic : topics) {
             ret.or(Bloom.create(HashUtil.h256(topic)));
         }

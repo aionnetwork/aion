@@ -10,11 +10,12 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.StandaloneBlockchain.Bundle;
@@ -63,13 +64,13 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferToPrecompiledContract() {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // ensure bridge is viewed as precompiled contract
-        Address bridge =
-                Address.wrap("0000000000000000000000000000000000000000000000000000000000000200");
+        AionAddress bridge =
+                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000200");
         assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -109,7 +110,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999999786407407137135");
-        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+        assertThat(getBalance(new AionAddress(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(bridge);
@@ -117,18 +118,18 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749210123854045163");
-        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+        assertThat(getBalance(new AionAddress(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     @Test
     public void testCallToPrecompiledContract() {
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // ensure bridge is viewed as precompiled contract
-        Address bridge =
-                Address.wrap("0000000000000000000000000000000000000000000000000000000000000200");
+        AionAddress bridge =
+                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000200");
         assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
 
         // Make call transaction to precompiled contract.
@@ -169,7 +170,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999999764082962989144");
-        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+        assertThat(getBalance(new AionAddress(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(bridge);
@@ -177,18 +178,18 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749233448298487019");
-        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+        assertThat(getBalance(new AionAddress(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     @Test
     public void testTransferToPrecompiledBlake2bContractWithoutData() {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        Address blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -228,7 +229,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999979753086422000000");
-        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+        assertThat(getBalance(new AionAddress(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(blake2b);
@@ -236,7 +237,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749210225088613053");
-        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+        assertThat(getBalance(new AionAddress(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     @Test
@@ -248,12 +249,12 @@ public class FvmBalanceTransferConsensusTest {
         cfg.getFork().setProperties(properties);
 
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        Address blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -297,7 +298,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999999781082468866121");
-        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+        assertThat(getBalance(new AionAddress(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(blake2b);
@@ -305,7 +306,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749215448792316177");
-        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+        assertThat(getBalance(new AionAddress(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     @Test
@@ -316,12 +317,12 @@ public class FvmBalanceTransferConsensusTest {
         CfgAion cfg = CfgAion.inst();
         cfg.getFork().setProperties(properties);
 
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        Address blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make call transaction to precompiled contract.
@@ -365,7 +366,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999999782082469159986");
-        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+        assertThat(getBalance(new AionAddress(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(blake2b);
@@ -373,7 +374,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749215448792316177");
-        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+        assertThat(getBalance(new AionAddress(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     private static final String CONTRACT =
@@ -388,14 +389,14 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferUponCreationToNonPayableConstructor() {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create & transfer transaction.
         AionTransaction transaction =
                 makeCreateAndTransferToFvmNonpayableConstructorContractTx(amount);
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -416,7 +417,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999997708454321241960");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(transaction.getContractAddress());
@@ -424,7 +425,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("751289076940234203");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private BigInteger getEnergyCost(AionTxReceipt receipt) {
@@ -442,14 +443,14 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferUponCreationToPayableConstructor() {
         BigInteger amount = BigInteger.TEN.pow(11).add(BigInteger.valueOf(1_234_578));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create & transfer transaction.
         AionTransaction transaction =
                 makeCreateAndTransferToFvmPayableConstructorContractTx(amount);
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -469,7 +470,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE2), receiptTrieEncoded);
 
         BigInteger expectedBalance = new BigInteger("999999997714155060747479");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(transaction.getContractAddress());
@@ -477,7 +478,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("751283276199494106");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static final String STATE_ROOT3 =
@@ -496,13 +497,13 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferAfterCreatingContractToNonPayableFunction() {
         BigInteger amount = BigInteger.TEN.pow(9).add(BigInteger.valueOf(3_124_587));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -522,7 +523,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE3), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        Address contract = transaction.getContractAddress();
+        AionAddress contract = transaction.getContractAddress();
         transaction = makeCallNonpayableFunctionTx(contract, amount);
 
         // Process the transaction.
@@ -544,14 +545,14 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("999999997458455555837605");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         assertEquals(BigInteger.ZERO, getBalance(contract));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500539496606935792");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static final String STATE_ROOT5 =
@@ -564,13 +565,13 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferAfterCreatingContractToPayableFunction() {
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(38_193));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -590,7 +591,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE3), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        Address contract = transaction.getContractAddress();
+        AionAddress contract = transaction.getContractAddress();
         transaction = makeCallPayableFunctionTx(contract, amount);
 
         // Process the transaction.
@@ -612,14 +613,14 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("999999897458394815058678");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         assertEquals(amount, getBalance(contract));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500539557347676526");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static final String STATE_ROOT6 =
@@ -638,13 +639,13 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferAfterCreatingToNonPayableFallbackFunction() {
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(38_193));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create transaction.
         AionTransaction transaction = makeCreateNonpayableFallbackContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -664,7 +665,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE6), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        Address contract = transaction.getContractAddress();
+        AionAddress contract = transaction.getContractAddress();
         transaction = makeCallFallbackFunctionTx(contract, amount);
 
         // Process the transaction.
@@ -686,14 +687,14 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("999999997488350123735522");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         assertEquals(BigInteger.ZERO, getBalance(contract));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500509602039037875");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static final String STATE_ROOT8 =
@@ -712,13 +713,13 @@ public class FvmBalanceTransferConsensusTest {
     @Test
     public void testTransferAfterCreatingToPayableFallbackFunction() {
         BigInteger amount = BigInteger.TEN.pow(17).add(BigInteger.valueOf(38_193));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableFallbackContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toBytes());
+        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -738,7 +739,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE8), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        Address contract = transaction.getContractAddress();
+        AionAddress contract = transaction.getContractAddress();
         transaction = makeCallFallbackFunctionTx(contract, amount);
 
         // Process the transaction.
@@ -760,14 +761,14 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("999999897494333086659628");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
         assertEquals(amount, getBalance(contract));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500503619076075576");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static AionTransaction makeCreateAndTransferToFvmNonpayableConstructorContractTx(
@@ -843,7 +844,7 @@ public class FvmBalanceTransferConsensusTest {
     }
 
     private static AionTransaction makeCallNonpayableFunctionTx(
-            Address contract, BigInteger amount) {
+            AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
@@ -857,7 +858,7 @@ public class FvmBalanceTransferConsensusTest {
         return transaction;
     }
 
-    private static AionTransaction makeCallFallbackFunctionTx(Address contract, BigInteger amount) {
+    private static AionTransaction makeCallFallbackFunctionTx(AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
@@ -871,7 +872,7 @@ public class FvmBalanceTransferConsensusTest {
         return transaction;
     }
 
-    private static AionTransaction makeCallPayableFunctionTx(Address contract, BigInteger amount) {
+    private static AionTransaction makeCallPayableFunctionTx(AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
@@ -897,7 +898,7 @@ public class FvmBalanceTransferConsensusTest {
         return results;
     }
 
-    private BigInteger getBalance(Address address) {
+    private BigInteger getBalance(AionAddress address) {
         return this.blockchain.getRepository().getBalance(address);
     }
 

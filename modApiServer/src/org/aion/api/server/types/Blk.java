@@ -76,7 +76,7 @@ public class Blk {
                         StringUtils.toJsonHex(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
-                                        : tx.getDestinationAddress().toBytes()));
+                                        : tx.getDestinationAddress().toByteArray()));
                 jsonTx.put("timestamp", block.getTimestamp());
                 jsonTx.put("input", StringUtils.toJsonHex(tx.getData()));
                 jsonTx.put("blockNumber", block.getNumber());

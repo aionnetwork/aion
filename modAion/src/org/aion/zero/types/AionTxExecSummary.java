@@ -16,10 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.vm.types.Log;
@@ -39,7 +39,7 @@ public class AionTxExecSummary implements TxExecSummary {
 
     private BigInteger value = BigInteger.ZERO;
 
-    private List<Address> deletedAccounts = emptyList();
+    private List<AionAddress> deletedAccounts = emptyList();
     private List<InternalTransactionInterface> internalTransactions = emptyList();
     private Map<DataWordImpl, DataWordImpl> storageDiff = emptyMap();
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
@@ -191,18 +191,18 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    private static byte[] encodeDeletedAccounts(List<Address> deletedAccounts) {
+    private static byte[] encodeDeletedAccounts(List<AionAddress> deletedAccounts) {
         byte[][] result = new byte[deletedAccounts.size()][];
         for (int i = 0; i < deletedAccounts.size(); i++) {
-            result[i] = RLP.encodeElement(deletedAccounts.get(i).toBytes());
+            result[i] = RLP.encodeElement(deletedAccounts.get(i).toByteArray());
         }
         return RLP.encodeList(result);
     }
 
-    private static List<Address> decodeDeletedAccounts(RLPList deletedAccounts) {
-        List<Address> result = new ArrayList<>();
+    private static List<AionAddress> decodeDeletedAccounts(RLPList deletedAccounts) {
+        List<AionAddress> result = new ArrayList<>();
         for (RLPElement deletedAccount : deletedAccounts) {
-            result.add(Address.wrap(deletedAccount.getRLPData()));
+            result.add(new AionAddress(deletedAccount.getRLPData()));
         }
         return result;
     }
@@ -225,7 +225,7 @@ public class AionTxExecSummary implements TxExecSummary {
         return value;
     }
 
-    public List<Address> getDeletedAccounts() {
+    public List<AionAddress> getDeletedAccounts() {
         if (!parsed) {
             rlpParse();
         }
@@ -357,7 +357,7 @@ public class AionTxExecSummary implements TxExecSummary {
             return this;
         }
 
-        public Builder deletedAccounts(List<Address> list) {
+        public Builder deletedAccounts(List<AionAddress> list) {
             summary.deletedAccounts = new ArrayList<>();
             summary.deletedAccounts.addAll(list);
             return this;

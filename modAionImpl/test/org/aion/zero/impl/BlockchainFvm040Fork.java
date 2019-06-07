@@ -7,10 +7,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.mcf.core.ImportResult;
-import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
@@ -180,7 +180,7 @@ public class BlockchainFvm040Fork {
         bc.set040ForkNumber(3L);
 
         ECKey key = bundle.privateKeys.get(0);
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
 
         // deploy
         AionTransaction deployTx =
@@ -198,7 +198,7 @@ public class BlockchainFvm040Fork {
 
         Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(block1);
         assertTrue(result.getLeft().isSuccessful());
-        Address contractAddr =
+        AionAddress contractAddr =
                 result.getRight().getReceipts().get(0).getTransaction().getContractAddress();
         assertNotNull(contractAddr);
 

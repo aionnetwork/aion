@@ -7,11 +7,11 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
@@ -33,8 +33,8 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
             int deep,
             int index,
             byte[] nonce,
-            Address sendAddress,
-            Address receiveAddress,
+            AionAddress sendAddress,
+            AionAddress receiveAddress,
             byte[] value,
             byte[] data,
             String note) {
@@ -90,7 +90,7 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
     }
 
     @Override
-    public Address getSenderAddress() {
+    public AionAddress getSenderAddress() {
         if (!parsed) {
             rlpParse();
         }
@@ -109,7 +109,7 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         if (rlpEncoded == null) {
 
             byte[] to = (this.getDestinationAddress() == null) ? new byte[0] : this
-                .getDestinationAddress().toBytes();
+                .getDestinationAddress().toByteArray();
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
@@ -117,7 +117,7 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
                     RLP.encodeList(
                             RLP.encodeElement(isEmptyNonce ? null : nonce),
                             RLP.encodeElement(this.parentHash),
-                            RLP.encodeElement(this.getSenderAddress().toBytes()),
+                            RLP.encodeElement(this.getSenderAddress().toByteArray()),
                             RLP.encodeElement(to),
                             RLP.encodeElement(getValue()),
                             RLP.encodeElement(getData()),
@@ -143,8 +143,8 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
         int rlpIdx = 0;
         this.nonce = transaction.get(rlpIdx++).getRLPData();
         this.parentHash = transaction.get(rlpIdx++).getRLPData();
-        this.from = Address.wrap(transaction.get(rlpIdx++).getRLPData());
-        this.to = Address.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.from = new AionAddress(transaction.get(rlpIdx++).getRLPData());
+        this.to = new AionAddress(transaction.get(rlpIdx++).getRLPData());
         this.value = transaction.get(rlpIdx++).getRLPData();
 
         // TODO: check the order

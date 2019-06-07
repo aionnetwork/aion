@@ -1,12 +1,12 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ISignature;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.tx.TransactionTypes;
-import org.aion.vm.api.types.Address;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements Transaction {
@@ -28,7 +28,7 @@ public abstract class AbstractTransaction implements Transaction {
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    protected Address to;
+    protected AionAddress to;
 
     /* a counter used to make sure each transaction can only be processed once */
     protected byte[] nonce;
@@ -49,7 +49,7 @@ public abstract class AbstractTransaction implements Transaction {
 
     public AbstractTransaction() {}
 
-    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data) {
+    public AbstractTransaction(byte[] nonce, AionAddress receiveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;
         this.to = receiveAddress;
         this.value = value;
@@ -59,7 +59,7 @@ public abstract class AbstractTransaction implements Transaction {
 
     public AbstractTransaction(
             byte[] nonce,
-            Address receiveAddress,
+            AionAddress receiveAddress,
             byte[] value,
             byte[] data,
             long nrg,
@@ -71,7 +71,7 @@ public abstract class AbstractTransaction implements Transaction {
 
     public AbstractTransaction(
             byte[] nonce,
-            Address receiveAddress,
+            AionAddress receiveAddress,
             byte[] value,
             byte[] data,
             long nrg,
@@ -84,15 +84,15 @@ public abstract class AbstractTransaction implements Transaction {
 
     public abstract byte[] getEncoded();
 
-    public abstract Address getSenderAddress();
+    public abstract AionAddress getSenderAddress();
 
-    public abstract Address getDestinationAddress();
+    public abstract AionAddress getDestinationAddress();
 
     public abstract byte[] getNonce();
 
     public abstract byte[] getTimeStamp();
 
-    public abstract Address getContractAddress();
+    public abstract AionAddress getContractAddress();
 
     public abstract AbstractTransaction clone();
 

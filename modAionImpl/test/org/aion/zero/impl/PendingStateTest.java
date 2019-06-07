@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
@@ -13,7 +14,6 @@ import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -52,7 +52,7 @@ public class PendingStateTest {
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), bc, bc.getRepository());
 
-        Address to = new Address(bundle.privateKeys.get(0).getAddress());
+        AionAddress to = new AionAddress(bundle.privateKeys.get(0).getAddress());
         ECKey signer = bundle.privateKeys.get(1);
 
         // Successful transaction
@@ -85,7 +85,7 @@ public class PendingStateTest {
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), bc, bc.getRepository());
 
-        Address to = new Address(bundle.privateKeys.get(0).getAddress());
+        AionAddress to = new AionAddress(bundle.privateKeys.get(0).getAddress());
         ECKey signer = bundle.privateKeys.get(1);
 
         // Invalid Nrg Price transaction
@@ -131,7 +131,7 @@ public class PendingStateTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         jar,
@@ -167,7 +167,7 @@ public class PendingStateTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         jar,
@@ -186,19 +186,19 @@ public class PendingStateTest {
         // Check the block was imported, the contract has the Avm prefix, and deployment succeeded.
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toBytes())
+        assertThat(transaction.getContractAddress().toByteArray())
                 .isEqualTo(receipt.getTransactionOutput());
 
         AionHub hub =
                 AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository());
 
-        Address contract = Address.wrap(receipt.getTransactionOutput());
+        AionAddress contract = new AionAddress(receipt.getTransactionOutput());
 
         byte[] call = ABIEncoder.encodeOneString("sayHello");
         transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
-                        Address.wrap(deployerKey.getAddress()),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         call,

@@ -11,6 +11,7 @@ module aion.mcf {
     requires commons.collections4;
     requires aion.vm.api;
     requires core;
+    requires aion.types;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;

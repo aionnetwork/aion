@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -23,7 +23,7 @@ public class BenchmarkTest {
     private ExecutionContext ctx;
 
     private byte[] txHash, callData;
-    private Address origin, caller, blockCoinbase;
+    private AionAddress origin, caller, blockCoinbase;
     private long blockNumber, blockTimestamp, blockNrgLimit, nrgLimit;
     private DataWordImpl blockDifficulty, nrgPrice, callValue;
     private int depth, kind, flags;
@@ -51,9 +51,9 @@ public class BenchmarkTest {
         cf = new ContractFactory();
         CfgAion.inst();
         txHash = RandomUtils.nextBytes(32);
-        origin = Address.wrap(RandomUtils.nextBytes(32));
+        origin = new AionAddress(RandomUtils.nextBytes(32));
         caller = origin;
-        blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
+        blockCoinbase = new AionAddress(RandomUtils.nextBytes(32));
         blockNumber = 2000001;
         blockTimestamp = System.currentTimeMillis() / 1000;
         blockNrgLimit = 5000000;

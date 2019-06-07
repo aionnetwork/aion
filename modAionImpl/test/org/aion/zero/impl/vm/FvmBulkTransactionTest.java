@@ -8,11 +8,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -60,7 +60,7 @@ public class FvmBulkTransactionTest {
         expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
 
         // Grab the address of the newly deployed contract.
-        Address deployedContract =
+        AionAddress deployedContract =
                 initialSummary.getReceipts().get(0).getTransaction().getContractAddress();
 
         int numFvmCreateTransactions = 10;
@@ -95,7 +95,7 @@ public class FvmBulkTransactionTest {
             assertTrue(transactionSummary.getReceipt().isSuccessful());
         }
 
-        List<Address> contracts = new ArrayList<>();
+        List<AionAddress> contracts = new ArrayList<>();
         BigInteger expectedDeployerBalance = initialBalanceDeployer;
         for (int i = 0; i < numTransactions; i++) {
             BigInteger energyUsed =
@@ -152,7 +152,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         null,
                         BigInteger.ZERO,
                         contractBytes,
@@ -164,7 +164,7 @@ public class FvmBulkTransactionTest {
     }
 
     private AionTransaction makeFvmContractCallTransaction(
-            ECKey sender, BigInteger nonce, Address contract) {
+            ECKey sender, BigInteger nonce, AionAddress contract) {
         // This hash will call the 'ticking' function of the deployed contract (this increments a
         // counter).
         byte[] callBytes = Hex.decode("dae29f29");
@@ -172,7 +172,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         callBytes,
@@ -183,7 +183,7 @@ public class FvmBulkTransactionTest {
         return transaction;
     }
 
-    private int getDeployedTickerCountValue(ECKey sender, BigInteger nonce, Address contract) {
+    private int getDeployedTickerCountValue(ECKey sender, BigInteger nonce, AionAddress contract) {
         // This hash will call the 'getTicker' function of the deployed contract (giving us the
         // count).
         byte[] callBytes = Hex.decode("c0004213");
@@ -191,7 +191,7 @@ public class FvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         callBytes,
@@ -207,8 +207,8 @@ public class FvmBulkTransactionTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-            Address sender,
-            Address destination,
+        AionAddress sender,
+            AionAddress destination,
             BigInteger value,
             byte[] data,
             long energyLimit,
@@ -225,19 +225,19 @@ public class FvmBulkTransactionTest {
                 vm);
     }
 
-    private BigInteger getNonce(Address address) {
+    private BigInteger getNonce(AionAddress address) {
         return this.blockchain.getRepository().getNonce(address);
     }
 
     private BigInteger getNonce(ECKey address) {
-        return getNonce(Address.wrap(address.getAddress()));
+        return getNonce(new AionAddress(address.getAddress()));
     }
 
-    private BigInteger getBalance(Address address) {
+    private BigInteger getBalance(AionAddress address) {
         return this.blockchain.getRepository().getBalance(address);
     }
 
     private BigInteger getBalance(ECKey address) {
-        return getBalance(Address.wrap(address.getAddress()));
+        return getBalance(new AionAddress(address.getAddress()));
     }
 }

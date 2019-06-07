@@ -9,12 +9,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -72,13 +73,13 @@ public class BalanceTransferConsensusTest {
         TransactionTypeRule.disallowAVMContractTransaction();
 
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        Address to =
-                Address.wrap("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+        AionAddress to =
+                AddressUtils.wrapAddress("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -119,13 +120,13 @@ public class BalanceTransferConsensusTest {
         TransactionTypeRule.allowAVMContractTransaction();
 
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
-        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+        assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        Address to =
-                Address.wrap("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+        AionAddress to =
+                AddressUtils.wrapAddress("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -218,11 +219,11 @@ public class BalanceTransferConsensusTest {
     @Test
     public void testBalanceTransfer() {
         BigInteger amount = BigInteger.TEN.pow(23).add(BigInteger.valueOf(13_897_651));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
-        Address address = Address.wrap(Hex.decode(RECIPIENT1));
+        AionAddress address = new AionAddress(Hex.decode(RECIPIENT1));
         assertEquals(BigInteger.ZERO, getBalance(address));
 
         AionTransaction transaction = makeBalanceTransferTransaction(address, amount);
@@ -246,14 +247,14 @@ public class BalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("899999999785463689829861");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the recipient's balance is as expected.
         assertEquals(amount, getBalance(address));
 
         // Verify that the miner's balance is as expected.
         BigInteger expectedMinerBalance = new BigInteger("749212067557748651");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
     private static final String RECIPIENT2 =
@@ -274,13 +275,13 @@ public class BalanceTransferConsensusTest {
     @Test
     public void testBalanceTransfers() {
         BigInteger amount = BigInteger.TEN.pow(22).add(BigInteger.valueOf(123_987_156));
-        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toByteArray());
 
         // Get the recipients.
-        List<Address> recipients = produceRecipients();
-        for (Address recipient : recipients) {
+        List<AionAddress> recipients = produceRecipients();
+        for (AionAddress recipient : recipients) {
             assertEquals(BigInteger.ZERO, getBalance(recipient));
         }
 
@@ -306,25 +307,25 @@ public class BalanceTransferConsensusTest {
 
         // Verify the sender's balance is as expected.
         BigInteger expectedBalance = new BigInteger("949999998927317898701780");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the recipients' balances are as expected.
-        for (Address recipient : recipients) {
+        for (AionAddress recipient : recipients) {
             assertEquals(amount, getBalance(recipient));
         }
 
         // Verify that the miner's balance is as expected.
         BigInteger expectedMinerBalance = new BigInteger("750070212742838603");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertEquals(expectedMinerBalance, getBalance(new AionAddress(MINER)));
     }
 
-    private List<Address> produceRecipients() {
-        List<Address> addresses = new ArrayList<>();
-        addresses.add(Address.wrap(Hex.decode(RECIPIENT1)));
-        addresses.add(Address.wrap(Hex.decode(RECIPIENT2)));
-        addresses.add(Address.wrap(Hex.decode(RECIPIENT3)));
-        addresses.add(Address.wrap(Hex.decode(RECIPIENT4)));
-        addresses.add(Address.wrap(Hex.decode(RECIPIENT5)));
+    private List<AionAddress> produceRecipients() {
+        List<AionAddress> addresses = new ArrayList<>();
+        addresses.add(new AionAddress(Hex.decode(RECIPIENT1)));
+        addresses.add(new AionAddress(Hex.decode(RECIPIENT2)));
+        addresses.add(new AionAddress(Hex.decode(RECIPIENT3)));
+        addresses.add(new AionAddress(Hex.decode(RECIPIENT4)));
+        addresses.add(new AionAddress(Hex.decode(RECIPIENT5)));
         return addresses;
     }
 
@@ -346,11 +347,11 @@ public class BalanceTransferConsensusTest {
     }
 
     private static List<AionTransaction> makeBalanceTransferTransactions(
-            List<Address> recipients, BigInteger amount) {
+            List<AionAddress> recipients, BigInteger amount) {
         List<AionTransaction> transactions = new ArrayList<>();
 
         BigInteger nonce = BigInteger.ZERO;
-        for (Address recipient : recipients) {
+        for (AionAddress recipient : recipients) {
             transactions.add(makeBalanceTransferTransaction(recipient, amount, nonce));
             nonce = nonce.add(BigInteger.ONE);
         }
@@ -359,12 +360,12 @@ public class BalanceTransferConsensusTest {
     }
 
     private static AionTransaction makeBalanceTransferTransaction(
-            Address recipient, BigInteger amount) {
+        AionAddress recipient, BigInteger amount) {
         return makeBalanceTransferTransaction(recipient, amount, BigInteger.ZERO);
     }
 
     private static AionTransaction makeBalanceTransferTransaction(
-            Address recipient, BigInteger amount, BigInteger nonce) {
+            AionAddress recipient, BigInteger amount, BigInteger nonce) {
         org.aion.crypto.ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
@@ -378,7 +379,7 @@ public class BalanceTransferConsensusTest {
         return transaction;
     }
 
-    private BigInteger getBalance(Address address) {
+    private BigInteger getBalance(AionAddress address) {
         return this.blockchain.getRepository().getBalance(address);
     }
 }

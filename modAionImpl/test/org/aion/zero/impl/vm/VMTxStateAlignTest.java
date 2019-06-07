@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -30,7 +30,7 @@ public class VMTxStateAlignTest {
 
     private List<ECKey> deployerKeys;
     private int deployerNum = 5;
-    private List<Address> deployers;
+    private List<AionAddress> deployers;
     private long energyPrice = 1;
 
     @BeforeClass
@@ -56,7 +56,7 @@ public class VMTxStateAlignTest {
 
         deployers = new ArrayList<>();
         for (int i = 0; i < deployerNum && i < deployerKeys.size(); i++) {
-            Address deployerAddr = Address.wrap(this.deployerKeys.get(i).getAddress());
+            AionAddress deployerAddr = new AionAddress(this.deployerKeys.get(i).getAddress());
             deployers.add(deployerAddr);
         }
     }
@@ -71,7 +71,7 @@ public class VMTxStateAlignTest {
     @Test
     public void testDeployAndCallContractStatesAlign() throws IOException {
         List<AionTransaction> txList = new ArrayList<>();
-        List<Address> deployAddr = new ArrayList<>();
+        List<AionAddress> deployAddr = new ArrayList<>();
 
         for (int i = 0; i < this.deployerKeys.size() && i < deployerNum; i++) {
             ECKey senderKey = this.deployerKeys.get(i);
@@ -114,7 +114,7 @@ public class VMTxStateAlignTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         ContractFactory.getBlake2bHashContractAddress(),
                         BigInteger.ONE,
                         new byte[10],
@@ -133,7 +133,7 @@ public class VMTxStateAlignTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         null,
                         BigInteger.ZERO,
                         contractBytes,
@@ -145,7 +145,7 @@ public class VMTxStateAlignTest {
     }
 
     private AionTransaction makeFvmContractCallTransaction(
-            ECKey sender, BigInteger nonce, Address contract) {
+            ECKey sender, BigInteger nonce, AionAddress contract) {
         // This hash will call the 'ticking' function of the deployed contract (this increments a
         // counter).
         byte[] callBytes = Hex.decode("dae29f29");
@@ -153,7 +153,7 @@ public class VMTxStateAlignTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        Address.wrap(sender.getAddress()),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         callBytes,
@@ -166,8 +166,8 @@ public class VMTxStateAlignTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-            Address sender,
-            Address destination,
+            AionAddress sender,
+            AionAddress destination,
             BigInteger value,
             byte[] data,
             long energyLimit,

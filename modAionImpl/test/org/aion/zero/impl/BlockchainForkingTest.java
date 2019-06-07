@@ -8,9 +8,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
@@ -452,7 +452,7 @@ public class BlockchainForkingTest {
         assertThat(testChain.getRepository().getRoot())
                 .isEqualTo(sourceChain.getRepository().getRoot());
 
-        Address contract = receipt.getTransaction().getContractAddress();
+        AionAddress contract = receipt.getTransaction().getContractAddress();
         // add a block with transactions to both
         List<AionTransaction> txs = generateTransactions(20, accounts, sourceChain.getRepository());
 
@@ -622,7 +622,7 @@ public class BlockchainForkingTest {
     }
 
     private AionTransaction callSetValue(
-            ECKey sender, Address contract, int digit, BigInteger nonce) {
+            ECKey sender, AionAddress contract, int digit, BigInteger nonce) {
         // calls setValue(digit)
         if (digit < 0 || digit > 9) {
             return null; // should actually be a digit
@@ -645,7 +645,7 @@ public class BlockchainForkingTest {
     }
 
     private AionTransaction callSetValue2(
-            ECKey sender, Address contract, int digit1, int digit2, BigInteger nonce) {
+            ECKey sender, AionAddress contract, int digit1, int digit2, BigInteger nonce) {
         // calls setValue2(digit, digit)
         if (digit1 < 0 || digit1 > 9 || digit2 < 0 || digit2 > 9) {
             return null; // should actually be a digit

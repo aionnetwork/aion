@@ -7,13 +7,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -42,12 +43,12 @@ import org.junit.Test;
  * block of transactions.
  */
 public class ConsensusTest {
-    private static final Address CONTRACT =
-            Address.wrap("a04272bb5f935fb170baf2998cb25dd15cc5794e7c5bac7241bec00c4971c7f8");
-    private static final Address OWNER =
-            Address.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1679");
-    private static final Address OTHER =
-            Address.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1678");
+    private static final AionAddress CONTRACT =
+            AddressUtils.wrapAddress("a04272bb5f935fb170baf2998cb25dd15cc5794e7c5bac7241bec00c4971c7f8");
+    private static final AionAddress OWNER =
+            AddressUtils.wrapAddress("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1679");
+    private static final AionAddress OTHER =
+            AddressUtils.wrapAddress("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1678");
     private static final byte[] PRIVATE_KEY =
             Hex.decode(
                     "81e071e5bf2c155f641641d88b5956af52c768fbb90968979b20858d65d71f32aa935b67ac46480caaefcdd56dd31862e578694a99083e9fad88cb6df89fc7cb");
@@ -371,7 +372,7 @@ public class ConsensusTest {
     /** Calls the function: addOwner(Address) in Wallet.sol */
     private static AionTransaction getTransactionThatCallsAddOwner() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
-        byte[] callData = ByteUtil.merge(Hex.decode("7065cb48"), OWNER.toBytes());
+        byte[] callData = ByteUtil.merge(Hex.decode("7065cb48"), OWNER.toByteArray());
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
@@ -389,9 +390,9 @@ public class ConsensusTest {
      *
      * <p>The Address that is being queried is 'owner'.
      */
-    private static AionTransaction getTransactionThatCallsIsOwner(Address owner, int nonce) {
+    private static AionTransaction getTransactionThatCallsIsOwner(AionAddress owner, int nonce) {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
-        byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), owner.toBytes());
+        byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), owner.toByteArray());
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(nonce).toByteArray(),
@@ -412,7 +413,7 @@ public class ConsensusTest {
      */
     private static AionTransaction getTransactionThatCallsIsOwnerAndRunOutOfEnergy() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
-        byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), OWNER.toBytes());
+        byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), OWNER.toByteArray());
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(4).toByteArray(),

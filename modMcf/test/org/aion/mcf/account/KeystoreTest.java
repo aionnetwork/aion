@@ -13,12 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.util.bytes.ByteUtil;
 
+import org.aion.util.types.AddressUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -129,12 +130,12 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        Map<AionAddress, String> arg = new HashMap<>();
+        arg.put(AddressUtils.wrapAddress(addr), password);
 
-        Map<Address, ByteArrayWrapper> export = Keystore.exportAccount(arg);
+        Map<AionAddress, ByteArrayWrapper> export = Keystore.exportAccount(arg);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AddressUtils.wrapAddress(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
         filesToRemove.add(addr);
     }
@@ -148,17 +149,17 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        Map<AionAddress, String> arg = new HashMap<>();
+        arg.put(AddressUtils.wrapAddress(addr), password);
 
-        Map<Address, ByteArrayWrapper> export = Keystore.backupAccount(arg);
+        Map<AionAddress, ByteArrayWrapper> export = Keystore.backupAccount(arg);
 
         assertNotNull(export);
 
         File f = Keystore.getAccountFile(addr.substring(2), password);
         assertNotNull(f);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AddressUtils.wrapAddress(addr)));
         try {
             assertTrue(export.containsValue(ByteArrayWrapper.wrap(Files.readAllBytes(f.toPath()))));
         } catch (IOException e) {

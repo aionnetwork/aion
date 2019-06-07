@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class StandaloneBlockchainTest {
         assertThat(bundle.privateKeys.size()).isEqualTo(10);
 
         for (ECKey k : bundle.privateKeys) {
-            assertThat(bundle.bc.getRepository().getBalance(new Address(k.getAddress())))
+            assertThat(bundle.bc.getRepository().getBalance(new AionAddress(k.getAddress())))
                     .isGreaterThan(BigInteger.ZERO);
         }
     }

@@ -5,13 +5,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
@@ -42,7 +42,7 @@ public class FlushCopiesTest {
     public void testAccountStateObjectReference() {
         AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAddress();
+        AionAddress account = randomAddress();
         BigInteger nonce = BigInteger.TEN;
         BigInteger balance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -77,7 +77,7 @@ public class FlushCopiesTest {
     public void testContractDetailsObjectReference() {
         AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAddress();
+        AionAddress account = randomAddress();
         BigInteger nonce = BigInteger.TEN;
         BigInteger balance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -114,7 +114,7 @@ public class FlushCopiesTest {
     public void testSiblingStateModificationsAreIndependentOfOneAnother() {
         AionRepositoryCache firstChild = (AionRepositoryCache) this.repository.startTracking();
 
-        Address account = randomAddress();
+        AionAddress account = randomAddress();
         BigInteger firstNonce = BigInteger.TEN;
         BigInteger firstBalance = BigInteger.valueOf(11223344);
         byte[] code = new byte[100];
@@ -157,9 +157,9 @@ public class FlushCopiesTest {
                 firstStorageHash, firstChild.getContractDetails(account).getStorageHash());
     }
 
-    private Address randomAddress() {
-        byte[] bytes = RandomUtils.nextBytes(Address.SIZE);
+    private AionAddress randomAddress() {
+        byte[] bytes = RandomUtils.nextBytes(AionAddress.LENGTH);
         bytes[0] = (byte) 0xa0;
-        return new Address(bytes);
+        return new AionAddress(bytes);
     }
 }

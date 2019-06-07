@@ -2,9 +2,9 @@ package org.aion.api.server.types;
 
 import static org.aion.util.string.StringUtils.toJsonHex;
 
+import org.aion.types.AionAddress;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.block.BlockHeader;
-import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
@@ -53,9 +53,9 @@ public final class TxRecpt {
     /** pb abi */
     public byte[] txRoot;
 
-    public Address fromAddr;
+    public AionAddress fromAddr;
 
-    public Address toAddr;
+    public AionAddress toAddr;
 
     public long txTimeStamp;
 
@@ -113,9 +113,9 @@ public final class TxRecpt {
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
-                                : this.fromAddr.toBytes());
+                                : this.fromAddr.toByteArray());
         this.toAddr = receipt.getTransaction().getDestinationAddress();
-        this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
+        this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toByteArray());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(receipt.getTransaction().getTimeStamp());
         this.txValue = StringUtils.toJsonHex(txInfo.getReceipt().getTransaction().getValue());
@@ -165,9 +165,9 @@ public final class TxRecpt {
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
-                                : this.fromAddr.toBytes());
+                                : this.fromAddr.toByteArray());
         this.toAddr = tx.getDestinationAddress();
-        this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
+        this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toByteArray());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(tx.getTimeStamp());
         this.txValue = toJsonHex(tx.getValue());

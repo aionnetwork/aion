@@ -13,7 +13,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
-import org.aion.vm.api.types.Address;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -182,7 +182,7 @@ public final class FvmTransactionExecutor {
 
     private static void deleteAccountsMarkedForDeletion(RepositoryCache repository, SideEffects sideEffects, TransactionResult result) {
         if (result.getResultCode().isSuccess()) {
-            for (Address addr : sideEffects.getAddressesToBeDeleted()) {
+            for (AionAddress addr : sideEffects.getAddressesToBeDeleted()) {
                 repository.deleteAccount(addr);
             }
         }

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
@@ -37,7 +38,6 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -129,24 +129,24 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> stateCache, Map<Address, ContractDetails> detailsCache) {
+            Map<AionAddress, AccountState> stateCache, Map<AionAddress, ContractDetails> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
-            for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
-                Address address = entry.getKey();
+            for (Map.Entry<AionAddress, AccountState> entry : stateCache.entrySet()) {
+                AionAddress address = entry.getKey();
                 AccountState accountState = entry.getValue();
                 ContractDetails contractDetails = detailsCache.get(address);
 
                 if (accountState.isDeleted()) {
                     // TODO-A: batch operations here
                     try {
-                        worldState.delete(address.toBytes());
+                        worldState.delete(address.toByteArray());
                     } catch (Exception e) {
                         LOG.error("key deleted exception [{}]", e.toString());
                     }
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                        LOG.debug("key deleted <key={}>", Hex.toHexString(address.toByteArray()));
                     }
                 } else {
 
@@ -163,7 +163,7 @@ public class AionRepositoryImpl
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                        Hex.toHexString(address.toBytes()),
+                                        Hex.toHexString(address.toByteArray()),
                                         accountState.getNonce(),
                                         accountState.getBalance(),
                                         Hex.toHexString(contractDetails.getStorageHash()));
@@ -201,7 +201,7 @@ public class AionRepositoryImpl
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(
                                 "update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                Hex.toHexString(address.toBytes()),
+                                Hex.toHexString(address.toByteArray()),
                                 accountState.getNonce(),
                                 accountState.getBalance(),
                                 Hex.toHexString(contractDetails.getStorageHash()));
@@ -221,22 +221,22 @@ public class AionRepositoryImpl
 
     /** @implNote The method calling this method must handle the locking. */
     private void updateContractDetails(
-            final Address address, final ContractDetails contractDetails) {
+            final AionAddress address, final ContractDetails contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
 
         // TODO: add vmtype check after merge PR867
         if (contractPerformCodeDatabase != null) {
-            Optional<byte[]> code = contractPerformCodeDatabase.get(address.toBytes());
+            Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
             byte[] tc = contractDetails.getTransformedCode();
             if (code.isPresent()) {
                 if (tc == null) {
-                    contractPerformCodeDatabase.delete(address.toBytes());
+                    contractPerformCodeDatabase.delete(address.toByteArray());
                 }
             } else {
                 if (tc != null) {
                     contractPerformCodeDatabase.put(
-                            address.toBytes(), contractDetails.getTransformedCode());
+                            address.toByteArray(), contractDetails.getTransformedCode());
                 }
             }
         }
@@ -336,13 +336,13 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public BigInteger getBalance(Address address) {
+    public BigInteger getBalance(AionAddress address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
 
     @Override
-    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
+    public ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key) {
         ContractDetails details = getContractDetails(address);
         return (details == null) ? null : details.get(key);
     }
@@ -389,13 +389,13 @@ public class AionRepositoryImpl
 
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
-            Address address, Collection<ByteArrayWrapper> keys) {
+            AionAddress address, Collection<ByteArrayWrapper> keys) {
         ContractDetails details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
     @Override
-    public byte[] getCode(Address address) {
+    public byte[] getCode(AionAddress address) {
         AccountState accountState = getAccountState(address);
 
         if (accountState == null) {
@@ -409,7 +409,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public byte[] getTransformedCode(Address address) {
+    public byte[] getTransformedCode(AionAddress address) {
         AccountState accountState = getAccountState(address);
 
         if (accountState == null) {
@@ -421,27 +421,27 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public InternalVmType getVmType(Address contract) {
+    public InternalVmType getVmType(AionAddress contract) {
         ContractDetails details = getContractDetails(contract);
         return (details == null) ? InternalVmType.EITHER : details.getVmType();
     }
 
     @Override
-    public byte[] getObjectGraph(Address contract) {
+    public byte[] getObjectGraph(AionAddress contract) {
         ContractDetails details = getContractDetails(contract);
         return (details == null) ? EMPTY_BYTE_ARRAY : details.getObjectGraph();
     }
 
     @Override
-    public BigInteger getNonce(Address address) {
+    public BigInteger getNonce(AionAddress address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private void updateAccountState(Address address, AccountState accountState) {
+    private void updateAccountState(AionAddress address, AccountState accountState) {
         // locked by calling method
-        worldState.update(address.toBytes(), accountState.getEncoded());
+        worldState.update(address.toByteArray(), accountState.getEncoded());
     }
 
     /**
@@ -452,7 +452,7 @@ public class AionRepositoryImpl
      *     or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public ContractDetails getContractDetails(Address address) {
+    public ContractDetails getContractDetails(AionAddress address) {
         rwLock.readLock().lock();
 
         try {
@@ -467,11 +467,11 @@ public class AionRepositoryImpl
                 storageRoot = getAccountState(address).getStateRoot();
             }
 
-            details = detailsDS.get(address.toBytes());
+            details = detailsDS.get(address.toByteArray());
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot);
-                Optional<byte[]> code = contractTransformedCode.get(address.toBytes());
+                Optional<byte[]> code = contractTransformedCode.get(address.toByteArray());
                 if (code.isPresent()) {
                     details.setTransformedCode(code.get());
                 }
@@ -484,10 +484,10 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public boolean hasContractDetails(Address address) {
+    public boolean hasContractDetails(AionAddress address) {
         rwLock.readLock().lock();
         try {
-            return detailsDS.get(address.toBytes()) != null;
+            return detailsDS.get(address.toByteArray()) != null;
         } finally {
             rwLock.readLock().unlock();
         }
@@ -500,13 +500,13 @@ public class AionRepositoryImpl
      *     <b>may not need to be locked or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public AccountState getAccountState(Address address) {
+    public AccountState getAccountState(AionAddress address) {
         rwLock.readLock().lock();
 
         AccountState result = null;
 
         try {
-            byte[] accountData = worldState.get(address.toBytes());
+            byte[] accountData = worldState.get(address.toByteArray());
 
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
@@ -524,7 +524,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public boolean hasAccountState(Address address) {
+    public boolean hasAccountState(AionAddress address) {
         return getAccountState(address) != null;
     }
 
@@ -534,16 +534,16 @@ public class AionRepositoryImpl
      */
     @Override
     public void loadAccountState(
-            Address address,
-            Map<Address, AccountState> cacheAccounts,
-            Map<Address, ContractDetails> cacheDetails) {
+            AionAddress address,
+            Map<AionAddress, AccountState> cacheAccounts,
+            Map<AionAddress, ContractDetails> cacheDetails) {
 
         AccountState account = getAccountState(address);
         ContractDetails details = getContractDetails(address);
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
-        Optional<byte[]> code = contractTransformedCode.get(address.toBytes());
+        Optional<byte[]> code = contractTransformedCode.get(address.toByteArray());
         if (code.isPresent()) {
             details.setTransformedCode(code.get());
         }
@@ -969,7 +969,7 @@ public class AionRepositoryImpl
     }
 
     @VisibleForTesting
-    public List<byte[]> getReferencedStorageNodes(byte[] value, int limit, Address contract) {
+    public List<byte[]> getReferencedStorageNodes(byte[] value, int limit, AionAddress contract) {
         if (limit <= 0) {
             return Collections.emptyList();
         } else {
@@ -989,7 +989,7 @@ public class AionRepositoryImpl
     }
 
     @VisibleForTesting
-    public byte[] dumpImportableStorage(byte[] root, int limit, Address contract) {
+    public byte[] dumpImportableStorage(byte[] root, int limit, AionAddress contract) {
         List<byte[]> refs = getReferencedStorageNodes(root, limit, contract);
 
         byte[][] elements = new byte[refs.size()][];
@@ -1059,19 +1059,19 @@ public class AionRepositoryImpl
      *
      * @return the {@link ContractInformation} stored for the given contract
      */
-    public ContractInformation getIndexedContractInformation(Address contract) {
-        return contract == null ? null : contractInfoSource.get(contract.toBytes());
+    public ContractInformation getIndexedContractInformation(AionAddress contract) {
+        return contract == null ? null : contractInfoSource.get(contract.toByteArray());
     }
 
     public void saveIndexedContractInformation(
-            Address contract, long inceptionBlock, InternalVmType vmUsed, boolean complete) {
+            AionAddress contract, long inceptionBlock, InternalVmType vmUsed, boolean complete) {
         if (contract != null) {
             contractInfoSource.put(
-                    contract.toBytes(), new ContractInformation(inceptionBlock, vmUsed, complete));
+                    contract.toByteArray(), new ContractInformation(inceptionBlock, vmUsed, complete));
         }
     }
 
-    public InternalVmType getVMUsed(Address contract) {
+    public InternalVmType getVMUsed(AionAddress contract) {
         if (ContractFactory.isPrecompiledContract(contract)) {
             // skip the call to disk
             return InternalVmType.FVM;
@@ -1087,7 +1087,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public void setTransformedCode(Address contractAddr, byte[] code) {
+    public void setTransformedCode(AionAddress contractAddr, byte[] code) {
         AccountState accountState = getAccountState(contractAddr);
 
         if (accountState == null) {

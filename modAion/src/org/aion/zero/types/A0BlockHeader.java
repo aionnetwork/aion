@@ -9,13 +9,14 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 
 import java.math.BigInteger;
 import java.util.Objects;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.block.PowBlockHeader;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
@@ -50,7 +51,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
         obj.putOpt("version", oneByteToHexString(this.version));
         obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("parentHash", toHexString(this.parentHash));
-        obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
+        obj.putOpt("coinBase", toHexString(this.coinbase.toByteArray()));
         obj.putOpt("stateRoot", toHexString(this.stateRoot));
         obj.putOpt("txTrieRoot", toHexString(this.txTrieRoot));
         obj.putOpt("receiptTrieRoot", toHexString(this.receiptTrieRoot));
@@ -83,10 +84,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
 
         // CoinBase
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
-        if (data == null || data.length != Address.SIZE) {
+        if (data == null || data.length != AionAddress.LENGTH) {
             throw new IllegalArgumentException("Coinbase can not be null!");
         }
-        this.coinbase = Address.wrap(data);
+        this.coinbase = new AionAddress(data);
 
         // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
@@ -159,7 +160,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
         if (toCopy.coinbase == null) {
             throw new IllegalArgumentException("Coinbase can not be null!");
         } else {
-            this.coinbase = toCopy.coinbase.clone();
+            this.coinbase = toCopy.coinbase;
         }
 
         // Copy stateroot
@@ -209,7 +210,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
             byte version,
             long number,
             byte[] parentHash,
-            Address coinbase,
+            AionAddress coinbase,
             byte[] logsBloom,
             byte[] difficulty,
             byte[] extraData,
@@ -259,7 +260,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
         byte[] RLPversion = RLP.encodeElement(versionBytes);
         byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
         byte[] parentHash = RLP.encodeElement(this.parentHash);
-        byte[] coinbase = RLP.encodeElement(this.coinbase.toBytes());
+        byte[] coinbase = RLP.encodeElement(this.coinbase.toByteArray());
         byte[] stateRoot = RLP.encodeElement(this.stateRoot);
 
         if (txTrieRoot == null) {
@@ -346,7 +347,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
                 .append("  coinbase=")
                 .append(coinbase.toString())
                 .append("  coinBase: ")
-                .append(coinbase.toBytes().length)
+                .append(coinbase.toByteArray().length)
                 .append(suffix);
         toStringBuff
                 .append("  stateRoot=")
@@ -431,7 +432,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
                             new byte[] {this.version},
                             longToBytes(this.number),
                             this.parentHash,
-                            this.coinbase.toBytes(),
+                            this.coinbase.toByteArray(),
                             this.stateRoot,
                             this.txTrieRoot,
                             this.receiptTrieRoot,
@@ -447,7 +448,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
                             new byte[] {this.version},
                             longToBytes(this.number),
                             this.parentHash,
-                            this.coinbase.toBytes(),
+                            this.coinbase.toByteArray(),
                             this.stateRoot,
                             this.txTrieRoot,
                             this.receiptTrieRoot,
@@ -506,7 +507,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
         builder.withParentHash(rlpHeader.get(RPL_BH_PARENTHASH).getRLPData());
 
         // Coinbase (miner)
-        builder.withCoinbase(new Address(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
+        builder.withCoinbase(new AionAddress(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
 
         // State root
         builder.withStateRoot(rlpHeader.get(RPL_BH_STATEROOT).getRLPData());
@@ -569,7 +570,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
 
         protected byte version;
         protected byte[] parentHash;
-        protected Address coinbase;
+        protected AionAddress coinbase;
         protected byte[] stateRoot;
         protected byte[] txTrieRoot;
         protected byte[] receiptTrieRoot;
@@ -627,7 +628,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
             return this;
         }
 
-        public Builder withCoinbase(Address coinbase) throws HeaderStructureException {
+        public Builder withCoinbase(AionAddress coinbase) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (coinbase == null)
                     throw new HeaderStructureException(
@@ -870,7 +871,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
 
             this.version = this.version == 0 ? 1 : this.version;
             this.parentHash = this.parentHash == null ? HashUtil.EMPTY_DATA_HASH : this.parentHash;
-            this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase;
+            this.coinbase = this.coinbase == null ? AddressUtils.ZERO_ADDRESS : this.coinbase;
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot =

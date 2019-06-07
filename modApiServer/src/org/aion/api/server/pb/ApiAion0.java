@@ -20,6 +20,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import org.aion.types.AionAddress;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
@@ -40,8 +41,6 @@ import org.aion.api.server.types.TxRecptLg;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxReceipt;
-import org.aion.vm.api.types.Address;
-
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -57,6 +56,7 @@ import org.aion.vm.api.types.Hash256;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.string.StringUtils;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
@@ -113,7 +113,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     for (AionTxReceipt txr : txrs) {
                         AionTransaction tx = txr.getTransaction();
-                        Address contractAddress =
+                        AionAddress contractAddress =
                                 Optional.ofNullable(tx.getDestinationAddress())
                                         .orElse(tx.getContractAddress());
 
@@ -152,7 +152,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                         EvtContract ec =
                                                                                 new EvtContract(
                                                                                         bi.getSourceAddress()
-                                                                                                .toBytes(),
+                                                                                                .toByteArray(),
                                                                                         bi
                                                                                                 .getData(),
                                                                                         blk
@@ -428,7 +428,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        Address.wrap(req.getFrom().toByteArray()),
+                                        new AionAddress(req.getFrom().toByteArray()),
                                         null,
                                         Hex.decode(new String(bytes).substring(2)),
                                         BigInteger.ZERO,
@@ -460,7 +460,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setContractAddress(
                                                     ByteString.copyFrom(
-                                                            result.getContractAddress().toBytes()))
+                                                            result.getContractAddress().toByteArray()))
                                             .setTxHash(ByteString.copyFrom(result.getTxHash()))
                                             .build();
 
@@ -529,7 +529,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.req_unlockAccount req = Message.req_unlockAccount.parseFrom(data);
                         result =
                                 this.unlockAccount(
-                                        Address.wrap(req.getAccount().toByteArray()),
+                                        new AionAddress(req.getAccount().toByteArray()),
                                         req.getPassword(),
                                         req.getDuration());
                     } catch (InvalidProtocolBufferException e) {
@@ -556,7 +556,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         Message.req_getBalance req = Message.req_getBalance.parseFrom(data);
 
-                        Address addr = Address.wrap(req.getAddress().toByteArray());
+                        AionAddress addr = new AionAddress(req.getAddress().toByteArray());
 
                         balance = this.getBalance(addr);
                     } catch (InvalidProtocolBufferException e) {
@@ -587,7 +587,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         Message.req_getNonce req = Message.req_getNonce.parseFrom(data);
 
-                        Address addr = Address.wrap(req.getAddress().toByteArray());
+                        AionAddress addr = new AionAddress(req.getAddress().toByteArray());
 
                         nonce = this.getNonce(addr);
                     } catch (InvalidProtocolBufferException e) {
@@ -793,8 +793,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        Address.wrap(req.getFrom().toByteArray()),
-                                        Address.wrap(req.getTo().toByteArray()),
+                                        new AionAddress(req.getFrom().toByteArray()),
+                                        new AionAddress(req.getTo().toByteArray()),
                                         req.getData().toByteArray(),
                                         new BigInteger(req.getNonce().toByteArray()),
                                         new BigInteger(req.getValue().toByteArray()),
@@ -821,7 +821,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     Message.req_getCode req;
                     try {
                         req = Message.req_getCode.parseFrom(data);
-                        Address to = Address.wrap(req.getAddress().toByteArray());
+                        AionAddress to = new AionAddress(req.getAddress().toByteArray());
 
                         byte[] code = this.getCode(to);
                         if (code == null) {
@@ -872,7 +872,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            Address.wrap(log.address).toBytes()))
+                                                            AddressUtils.wrapAddress(log.address).toByteArray()))
                                             .setData(
                                                     ByteString.copyFrom(
                                                             ByteUtil.hexStringToBytes(log.data)))
@@ -885,7 +885,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.rsp_getTransactionReceipt rsp =
                                 Message.rsp_getTransactionReceipt
                                         .newBuilder()
-                                        .setFrom(ByteString.copyFrom(result.fromAddr.toBytes()))
+                                        .setFrom(ByteString.copyFrom(result.fromAddr.toByteArray()))
                                         .setBlockNumber(result.blockNumber)
                                         .setBlockHash(
                                                 ByteString.copyFrom(
@@ -910,7 +910,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 ByteString.copyFrom(
                                                         result.toAddr == null
                                                                 ? EMPTY_BYTE_ARRAY
-                                                                : result.toAddr.toBytes()))
+                                                                : result.toAddr.toByteArray()))
                                         .setNrgConsumed(result.nrgUsed)
                                         .setCumulativeNrgUsed(result.cumulativeNrgUsed)
                                         .addAllLogs(logs)
@@ -939,8 +939,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_call.parseFrom(data);
 
-                        Address from = Address.wrap(req.getFrom().toByteArray());
-                        Address to = Address.wrap(req.getTo().toByteArray());
+                        AionAddress from = new AionAddress(req.getFrom().toByteArray());
+                        AionAddress to = new AionAddress(req.getTo().toByteArray());
 
                         BigInteger value = new BigInteger(req.getValue().toByteArray());
                         byte[] d = req.getData().toByteArray();
@@ -1187,7 +1187,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_getTransactionCount.parseFrom(data);
                         long blkNr = req.getBlocknumber();
-                        Address addr = Address.wrap(req.getAddress().toByteArray());
+                        AionAddress addr = new AionAddress(req.getAddress().toByteArray());
 
                         if (blkNr < -1) {
                             return ApiUtil.toReturnHeader(
@@ -1497,7 +1497,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 pKeyList.add(ByteString.copyFrom(pKey));
                             }
 
-                            addressList.add(ByteString.copyFrom(Address.wrap(addr).toBytes()));
+                            addressList.add(ByteString.copyFrom(AddressUtils.wrapAddress(addr).toByteArray()));
                         }
 
                         Message.rsp_accountCreate rsp =
@@ -1537,7 +1537,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.req_accountlock req = Message.req_accountlock.parseFrom(data);
                         result =
                                 this.lockAccount(
-                                        Address.wrap(req.getAccount().toByteArray()),
+                                        new AionAddress(req.getAccount().toByteArray()),
                                         req.getPassword());
                     } catch (InvalidProtocolBufferException e) {
                         LOG.error("ApiAion0.process.lockAccount exception: [{}]", e);
@@ -1590,8 +1590,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         ArgTxCall params =
                                 new ArgTxCall(
-                                        Address.wrap(req.getFrom().toByteArray()),
-                                        Address.wrap(req.getTo().toByteArray()),
+                                        new AionAddress(req.getFrom().toByteArray()),
+                                        new AionAddress(req.getTo().toByteArray()),
                                         req.getData().toByteArray(),
                                         BigInteger.ZERO,
                                         new BigInteger(req.getValue().toByteArray()),
@@ -1632,16 +1632,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
 
-                    Map<Address, String> addrMap = new HashMap<>();
+                    Map<AionAddress, String> addrMap = new HashMap<>();
                     for (int i = 0;
                             i < req.getKeyFileList().size() && i < ACCOUNT_CREATE_LIMIT;
                             i++) {
                         addrMap.put(
-                                Address.wrap(req.getKeyFile(i).getAddress().toByteArray()),
+                                new AionAddress(req.getKeyFile(i).getAddress().toByteArray()),
                                 req.getKeyFile(i).getPassword());
                     }
 
-                    Map<Address, ByteArrayWrapper> res =
+                    Map<AionAddress, ByteArrayWrapper> res =
                             ((short) request[2] == Message.Funcs.f_exportAccounts_VALUE)
                                     ? Keystore.exportAccount(addrMap)
                                     : Keystore.backupAccount(addrMap);
@@ -1654,7 +1654,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                     res.keySet()
                                                             .parallelStream()
                                                             .noneMatch(ad -> ad.equals(addr)))
-                                    .map(match -> ByteString.copyFrom(match.toBytes()))
+                                    .map(match -> ByteString.copyFrom(match.toByteArray()))
                                     .collect(Collectors.toList());
 
                     List<ByteString> keyBins =
@@ -2481,7 +2481,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 a -> {
                                                     BigInteger b =
                                                             this.getBalance(
-                                                                    Address.wrap(a.toByteArray()));
+                                                                    new AionAddress(a.toByteArray()));
 
                                                     Message.t_AccountDetail.Builder builder =
                                                             Message.t_AccountDetail.newBuilder();
@@ -2572,7 +2572,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .newBuilder()
                 .setBlockhash(ByteString.copyFrom(tx.getBlockHash()))
                 .setBlocknumber(tx.getBlockNumber())
-                .setFrom(ByteString.copyFrom(tx.getSenderAddress().toBytes()))
+                .setFrom(ByteString.copyFrom(tx.getSenderAddress().toByteArray()))
                 .setNrgConsume(tx.getNrgConsume())
                 .setNrgPrice(tx.getEnergyPrice())
                 .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
@@ -2583,7 +2583,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         ByteString.copyFrom(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
-                                        : tx.getDestinationAddress().toBytes()))
+                                        : tx.getDestinationAddress().toByteArray()))
                 .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int) tx.getTxIndexInBlock())
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimeStamp()))
@@ -2595,7 +2595,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return Message.rsp_getBlock
                 .newBuilder()
                 .setParentHash(ByteString.copyFrom(blk.getParentHash()))
-                .setMinerAddress(ByteString.copyFrom(blk.getCoinbase().toBytes()))
+                .setMinerAddress(ByteString.copyFrom(blk.getCoinbase().toByteArray()))
                 .setStateRoot(ByteString.copyFrom(blk.getStateRoot()))
                 .setTxTrieRoot(ByteString.copyFrom(blk.getTxTrieRoot()))
                 .setDifficulty(ByteString.copyFrom(blk.getDifficulty()))
@@ -2630,7 +2630,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     .setExtraData(ByteString.copyFrom(b.getExtraData()))
                                     .setHash(ByteString.copyFrom(b.getHash()))
                                     .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
-                                    .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toBytes()))
+                                    .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
                                     .setNonce(ByteString.copyFrom(b.getNonce()))
                                     .setNrgConsumed(b.getNrgConsumed())
                                     .setNrgLimit(b.getNrgLimit())
@@ -2658,7 +2658,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setExtraData(ByteString.copyFrom(b.getExtraData()))
                 .setHash(ByteString.copyFrom(b.getHash()))
                 .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
-                .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toBytes()))
+                .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
                 .setNonce(ByteString.copyFrom(b.getNonce()))
                 .setNrgConsumed(b.getNrgConsumed())
                 .setNrgLimit(b.getNrgLimit())
@@ -2694,14 +2694,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .setData(ByteString.copyFrom(log.getData()))
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            log.getSourceAddress().toBytes()))
+                                                            log.getSourceAddress().toByteArray()))
                                             .addAllTopics(topics)
                                             .build();
                                 })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
 
-        Address contract = t.getContractAddress();
+        AionAddress contract = t.getContractAddress();
 
         Message.t_TxDetail.Builder tdBuilder =
                 Message.t_TxDetail
@@ -2711,8 +2711,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ByteString.copyFrom(
                                         t.getDestinationAddress() == null
                                                 ? EMPTY_BYTE_ARRAY
-                                                : t.getDestinationAddress().toBytes()))
-                        .setFrom(ByteString.copyFrom(t.getSenderAddress().toBytes()))
+                                                : t.getDestinationAddress().toByteArray()))
+                        .setFrom(ByteString.copyFrom(t.getSenderAddress().toByteArray()))
                         .setNonce(ByteString.copyFrom(t.getNonce()))
                         .setValue(ByteString.copyFrom(t.getValue()))
                         .setNrgConsumed(nrgConsumed)
@@ -2725,7 +2725,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .addAllLogs(tles);
 
         if (contract != null) {
-            tdBuilder.setContract(ByteString.copyFrom(contract.toBytes()));
+            tdBuilder.setContract(ByteString.copyFrom(contract.toByteArray()));
         }
 
         return tdBuilder.build();
@@ -2767,7 +2767,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(b.getHash())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(b.getCoinbase().toBytes())
+                + ByteUtil.toHexString(b.getCoinbase().toByteArray())
                 + "',"
                 + "'"
                 + ByteUtil.toHexString(b.getParentHash())
@@ -2868,13 +2868,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + txIndex
                 + ","
                 + "'"
-                + ByteUtil.toHexString(t.getSenderAddress().toBytes())
+                + ByteUtil.toHexString(t.getSenderAddress().toByteArray())
                 + "',"
                 + "'"
                 + ByteUtil.toHexString(
                         t.getDestinationAddress() == null
                                 ? EMPTY_BYTE_ARRAY
-                                : t.getDestinationAddress().toBytes())
+                                : t.getDestinationAddress().toByteArray())
                 + "',"
                 + nrgConsumed
                 + ","
@@ -2915,7 +2915,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .setHash(ByteString.copyFrom(b.getHash()))
                                             .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
                                             .setMinerAddress(
-                                                    ByteString.copyFrom(b.getCoinbase().toBytes()))
+                                                    ByteString.copyFrom(b.getCoinbase().toByteArray()))
                                             .setNonce(ByteString.copyFrom(b.getNonce()))
                                             .setNrgConsumed(b.getNrgConsumed())
                                             .setNrgLimit(b.getNrgLimit())
@@ -2984,7 +2984,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                     ByteString
                                                                                                             .copyFrom(
                                                                                                                     log.getSourceAddress()
-                                                                                                                            .toBytes()))
+                                                                                                                            .toByteArray()))
                                                                                             .addAllTopics(
                                                                                                     topics)
                                                                                             .build();
@@ -3008,11 +3008,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                         == null
                                                                                                 ? EMPTY_BYTE_ARRAY
                                                                                                 : tx.getDestinationAddress()
-                                                                                                        .toBytes()))
+                                                                                                        .toByteArray()))
                                                                         .setFrom(
                                                                                 ByteString.copyFrom(
                                                                                         tx.getSenderAddress()
-                                                                                                .toBytes()))
+                                                                                                .toByteArray()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
                                                                                         tx

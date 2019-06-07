@@ -8,13 +8,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -137,7 +137,7 @@ public class AlternatingVmBlockTest {
         byte[] jar = getJarBytes();
         AionTransaction transaction = newTransaction(
             nonce,
-            Address.wrap(sender.getAddress()),
+            new AionAddress(sender.getAddress()),
             null,
             BigInteger.ZERO,
             jar,
@@ -157,7 +157,7 @@ public class AlternatingVmBlockTest {
         AionTransaction transaction =
             newTransaction(
                 nonce,
-                Address.wrap(sender.getAddress()),
+                new AionAddress(sender.getAddress()),
                 null,
                 BigInteger.ZERO,
                 contractBytes,
@@ -186,7 +186,7 @@ public class AlternatingVmBlockTest {
         return connectResult.getRight().getReceipts().get(0).getEnergyUsed();
     }
 
-    private AionTransaction newTransaction(BigInteger nonce, Address sender, Address destination, BigInteger value, byte[] data, long energyLimit, long energyPrice, byte vm) {
+    private AionTransaction newTransaction(BigInteger nonce, AionAddress sender, AionAddress destination, BigInteger value, byte[] data, long energyLimit, long energyPrice, byte vm) {
         return new AionTransaction(nonce.toByteArray(), sender, destination, value.toByteArray(), data, energyLimit, energyPrice, vm);
     }
 }

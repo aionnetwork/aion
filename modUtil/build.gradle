@@ -20,6 +20,7 @@ def getCommitHash = { ->
 }
 
 dependencies {
+    compile files("${rootProject.projectDir}/lib/aion-types-e367876.jar")
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'com.google.truth:truth:0.42'
@@ -58,6 +59,7 @@ javadoc {
     source = sourceSets.main.allJava
     classpath = configurations.compile
     options.tags = ["implSpec"]
+    options.addStringOption('-module-path', classpath.asPath)
 }
 
 task javadocJar(type: Jar) {

@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Properties;
+import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -14,7 +15,6 @@ import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.precompiled.ContractFactory;
@@ -31,7 +31,7 @@ import org.junit.Test;
 
 @Ignore
 public class TotalCurrencyContractTest {
-    private static final Address ADDR = ContractFactory.getTotalCurrencyContractAddress();
+    private static final AionAddress ADDR = ContractFactory.getTotalCurrencyContractAddress();
     private static final long COST = 21000L;
     private static final BigInteger AMT = BigInteger.valueOf(1000);
     private TotalCurrencyContract tcc;
@@ -68,7 +68,7 @@ public class TotalCurrencyContractTest {
         repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
         ownerKey = ECKeyFac.inst().create();
-        tcc = new TotalCurrencyContract(repo, ADDR, Address.wrap(ownerKey.getAddress()));
+        tcc = new TotalCurrencyContract(repo, ADDR, new AionAddress(ownerKey.getAddress()));
     }
 
     @After
@@ -153,7 +153,7 @@ public class TotalCurrencyContractTest {
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getEnergyRemaining());
 
-        tcc = new TotalCurrencyContract(repo, ADDR, Address.wrap(ownerKey.getAddress()));
+        tcc = new TotalCurrencyContract(repo, ADDR, new AionAddress(ownerKey.getAddress()));
         input = new byte[] {(byte) 0x0};
         res = tcc.execute(input, COST);
 
@@ -222,7 +222,7 @@ public class TotalCurrencyContractTest {
                 new TotalCurrencyContract(
                         repo,
                         ADDR,
-                        Address.wrap(ECKeyFac.inst().create().getAddress())); // diff owner.
+                        new AionAddress(ECKeyFac.inst().create().getAddress())); // diff owner.
 
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = contract.execute(input, COST);
