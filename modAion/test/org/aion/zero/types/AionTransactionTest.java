@@ -1,11 +1,11 @@
-package org.aion.types;
+package org.aion.zero.types;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.zero.types.AionTransaction;
+import org.aion.types.Address;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 
