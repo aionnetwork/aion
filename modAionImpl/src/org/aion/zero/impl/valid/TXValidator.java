@@ -21,7 +21,7 @@ public class TXValidator {
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
 
     private static final Map<ByteArrayWrapper, Boolean> cache =
-            Collections.synchronizedMap(new LRUMap<>(128 * 1024));
+            Collections.synchronizedMap(new LRUMap<>(16 * 1024));
 
     public static boolean isValid(AionTransaction tx) {
         Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));

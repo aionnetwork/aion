@@ -30,9 +30,6 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     /* Private */
     private byte[] rlpEncoded;
     private volatile boolean parsed = false;
-
-    private Trie txsState;
-
     private BigInteger td = null;
 
     /* Constructors */
@@ -345,7 +342,6 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         this.getHeader().setEnergyConsumed(energyUsed);
 
         this.transactionsList = txs;
-        this.txsState = null; // wipe the txsState after setting
     }
 
     @Override
@@ -392,20 +388,21 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         return toStringBuff.toString();
     }
 
-    private void parseTxs(RLPList txTransactions) {
+    private byte[] parseTxs(RLPList txTransactions) {
 
-        this.txsState = new TrieImpl(null);
+        Trie txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
             this.transactionsList.add(new AionTransaction(transactionRaw.getRLPData()));
-            this.txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
+            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
+        return txsState.getRootHash().clone();
     }
 
     private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
 
-        parseTxs(txTransactions);
-        String calculatedRoot = Hex.toHexString(txsState.getRootHash());
+        byte[] txStateRoot = parseTxs(txTransactions);
+        String calculatedRoot = Hex.toHexString(txStateRoot);
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
             LOG.debug(
                     "Transactions trie root validation failed for block #{}",
