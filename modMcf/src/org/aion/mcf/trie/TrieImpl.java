@@ -7,7 +7,7 @@ import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
-import static org.aion.types.ByteArrayWrapper.wrap;
+import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
 import static org.aion.util.bytes.ByteUtil.matchingNibbleLength;
 import static org.spongycastle.util.Arrays.concatenate;
 
@@ -35,7 +35,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
 /**

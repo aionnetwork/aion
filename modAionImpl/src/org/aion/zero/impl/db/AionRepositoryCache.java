@@ -22,8 +22,8 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractFactory;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase<?, ?>> {

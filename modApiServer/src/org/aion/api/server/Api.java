@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;

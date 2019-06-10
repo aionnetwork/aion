@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 

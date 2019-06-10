@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
 /** Abstract contract details. */

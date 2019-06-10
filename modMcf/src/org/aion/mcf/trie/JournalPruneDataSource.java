@@ -18,7 +18,7 @@ import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.ds.ArchivedDataSource;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**

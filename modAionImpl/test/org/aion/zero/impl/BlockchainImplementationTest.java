@@ -16,7 +16,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;

@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.aion.interfaces.db.PersistenceMethod;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**
  * Provides the same behavior as {@link MockDB} with the addition that data is read from a file on

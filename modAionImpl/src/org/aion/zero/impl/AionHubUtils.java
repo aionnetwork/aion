@@ -6,8 +6,8 @@ import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 
 /** {@link AionHub} functionality where a full instantiation of the class is not desirable. */

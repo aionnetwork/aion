@@ -12,7 +12,7 @@ import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;

@@ -5,7 +5,7 @@ import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
 
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;

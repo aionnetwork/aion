@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;

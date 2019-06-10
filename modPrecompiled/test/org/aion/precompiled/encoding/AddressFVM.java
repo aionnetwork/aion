@@ -3,7 +3,7 @@ package org.aion.precompiled.encoding;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class AddressFVM extends BaseTypeFVM {
 

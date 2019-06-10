@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import org.aion.interfaces.tx.Transaction;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 
 /**
  * Aion pending state should be the only user of transaction pool.

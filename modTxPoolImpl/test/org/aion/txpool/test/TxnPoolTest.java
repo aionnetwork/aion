@@ -14,13 +14,12 @@ import java.util.Properties;
 import java.util.Random;
 
 import org.aion.interfaces.tx.Transaction;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
-import org.aion.types.ByteArrayWrapper;
-import org.aion.types.Hash256;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;

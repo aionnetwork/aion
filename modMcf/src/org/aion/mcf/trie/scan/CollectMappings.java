@@ -3,7 +3,7 @@ package org.aion.mcf.trie.scan;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.rlp.Value;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /** @author Alexandra Roatis */
 public class CollectMappings implements ScanAction {

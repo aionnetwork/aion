@@ -12,7 +12,7 @@ import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
 import org.apache.commons.lang3.RandomUtils;

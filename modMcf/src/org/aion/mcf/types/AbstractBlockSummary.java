@@ -9,7 +9,7 @@ import org.aion.interfaces.block.Block;
 import org.aion.interfaces.functional.Functional;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxExecSummary;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;

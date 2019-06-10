@@ -13,7 +13,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;

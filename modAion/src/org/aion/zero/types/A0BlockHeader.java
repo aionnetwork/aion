@@ -10,7 +10,7 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 import java.math.BigInteger;
 import java.util.Objects;
 import org.aion.interfaces.block.PowBlockHeader;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;

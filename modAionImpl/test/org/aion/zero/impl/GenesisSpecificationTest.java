@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 

@@ -1,11 +1,9 @@
 package org.aion.mcf.db;
 
-import static org.aion.types.ByteArrayWrapper.wrap;
+import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 import org.aion.interfaces.block.BlockHeader;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
@@ -13,8 +11,8 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /** Detail data storage , */
 public class DetailsDataStore<

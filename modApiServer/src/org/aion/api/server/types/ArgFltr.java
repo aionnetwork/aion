@@ -2,7 +2,7 @@ package org.aion.api.server.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;

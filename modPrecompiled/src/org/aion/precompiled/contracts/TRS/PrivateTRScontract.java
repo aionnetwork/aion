@@ -5,7 +5,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion

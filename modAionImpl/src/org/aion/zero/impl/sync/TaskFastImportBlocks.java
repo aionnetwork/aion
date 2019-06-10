@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.aion.mcf.core.FastImportResult;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionBlock;

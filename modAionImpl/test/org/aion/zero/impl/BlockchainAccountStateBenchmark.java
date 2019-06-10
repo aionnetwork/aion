@@ -14,7 +14,7 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;

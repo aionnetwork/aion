@@ -12,7 +12,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;

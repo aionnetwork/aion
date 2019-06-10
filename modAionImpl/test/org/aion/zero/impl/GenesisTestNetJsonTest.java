@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.AccountState;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;

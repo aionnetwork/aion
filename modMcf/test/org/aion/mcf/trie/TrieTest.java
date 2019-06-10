@@ -21,7 +21,7 @@ import junitparams.Parameters;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.rlp.Value;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

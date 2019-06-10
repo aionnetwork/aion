@@ -13,7 +13,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.BlockContext;

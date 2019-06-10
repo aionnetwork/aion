@@ -2,7 +2,7 @@ package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;

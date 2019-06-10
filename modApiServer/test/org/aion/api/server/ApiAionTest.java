@@ -19,7 +19,7 @@ import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxReceipt;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;

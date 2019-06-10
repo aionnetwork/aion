@@ -1,7 +1,7 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.spongycastle.util.BigIntegers;
 

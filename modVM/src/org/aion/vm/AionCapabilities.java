@@ -2,7 +2,7 @@ package org.aion.vm;
 
 import org.aion.avm.core.IExternalCapabilities;
 import org.aion.crypto.HashUtil;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.vm.api.interfaces.TransactionInterface;
 
 public class AionCapabilities implements IExternalCapabilities {

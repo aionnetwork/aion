@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.IBlockchain;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;

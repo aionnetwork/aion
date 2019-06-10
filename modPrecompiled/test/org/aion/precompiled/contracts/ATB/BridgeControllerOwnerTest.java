@@ -11,7 +11,7 @@ import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.fastvm.ExecutionContext;
 

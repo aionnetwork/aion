@@ -44,7 +44,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;

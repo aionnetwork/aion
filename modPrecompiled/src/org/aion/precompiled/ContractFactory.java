@@ -1,6 +1,6 @@
 package org.aion.precompiled;
 
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;

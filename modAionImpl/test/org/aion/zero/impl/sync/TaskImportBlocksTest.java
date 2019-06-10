@@ -45,7 +45,7 @@ import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.core.ImportResult;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.StandaloneBlockchain;

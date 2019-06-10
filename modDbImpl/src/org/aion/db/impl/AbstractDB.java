@@ -12,7 +12,7 @@ import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**

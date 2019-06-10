@@ -1,7 +1,7 @@
 package org.aion.mcf.trie;
 
 import static org.aion.rlp.Value.fromRlpEncoded;
-import static org.aion.types.ByteArrayWrapper.wrap;
+import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +19,7 @@ import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.Value;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /** Cache class */

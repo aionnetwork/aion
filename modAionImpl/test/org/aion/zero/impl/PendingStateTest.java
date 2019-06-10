@@ -13,7 +13,7 @@ import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;

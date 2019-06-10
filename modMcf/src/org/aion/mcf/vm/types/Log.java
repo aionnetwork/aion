@@ -2,7 +2,7 @@ package org.aion.mcf.vm.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;

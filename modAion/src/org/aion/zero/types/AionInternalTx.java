@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;

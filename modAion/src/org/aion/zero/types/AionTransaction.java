@@ -6,7 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;

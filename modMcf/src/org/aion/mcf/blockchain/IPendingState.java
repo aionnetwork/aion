@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.Transaction;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 
 public interface IPendingState<TX extends Transaction> {
 

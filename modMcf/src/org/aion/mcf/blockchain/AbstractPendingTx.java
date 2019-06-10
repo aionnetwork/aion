@@ -2,7 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import org.aion.interfaces.tx.Transaction;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 
 /**

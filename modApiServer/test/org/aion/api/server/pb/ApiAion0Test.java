@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.pb.Message.Funcs;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;

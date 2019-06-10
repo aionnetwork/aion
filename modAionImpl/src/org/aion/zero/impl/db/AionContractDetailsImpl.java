@@ -3,7 +3,7 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
-import static org.aion.types.ByteArrayWrapper.wrap;
+import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -23,8 +23,8 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class AionContractDetailsImpl extends AbstractContractDetails {
     private ByteArrayKeyValueStore dataSource;

@@ -3,7 +3,7 @@ package org.aion.precompiled.contracts.TRS;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;

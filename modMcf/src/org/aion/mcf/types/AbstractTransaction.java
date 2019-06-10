@@ -6,7 +6,7 @@ import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.tx.TransactionTypes;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements Transaction {

@@ -2,7 +2,7 @@ package org.aion.zero.impl.sync;
 
 import java.util.Map;
 import java.util.Objects;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.msg.ResponseTrieData;
 
 /**

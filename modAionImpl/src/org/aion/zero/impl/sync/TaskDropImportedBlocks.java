@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;

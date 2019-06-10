@@ -10,8 +10,8 @@ import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForAVM implements KernelInterface {

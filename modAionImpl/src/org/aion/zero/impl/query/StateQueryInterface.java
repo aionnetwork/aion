@@ -2,8 +2,8 @@ package org.aion.zero.impl.query;
 
 import java.util.Optional;
 import org.aion.mcf.core.AccountState;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Address;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 public interface StateQueryInterface {
     Optional<AccountState> getAccountState(Address address, long blockNumber);

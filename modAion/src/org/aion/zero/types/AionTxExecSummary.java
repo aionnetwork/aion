@@ -19,7 +19,7 @@ import java.util.Objects;
 import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.vm.types.Log;

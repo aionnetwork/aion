@@ -1,7 +1,7 @@
 package org.aion.precompiled.contracts.ATB;
 
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.fastvm.ExecutionContext;

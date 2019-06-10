@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;

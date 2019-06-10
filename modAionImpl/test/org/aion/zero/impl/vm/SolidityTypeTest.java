@@ -48,7 +48,7 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;

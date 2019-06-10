@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;

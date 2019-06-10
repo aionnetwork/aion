@@ -4,7 +4,7 @@ import static org.aion.util.string.StringUtils.toJsonHex;
 
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.block.BlockHeader;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;

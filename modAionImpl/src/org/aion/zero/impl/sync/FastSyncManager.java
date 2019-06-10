@@ -21,7 +21,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;

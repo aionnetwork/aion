@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.aion.interfaces.db.PersistenceMethod;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 
 public class MockDB extends AbstractDB {

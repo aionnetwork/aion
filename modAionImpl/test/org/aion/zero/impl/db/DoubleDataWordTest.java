@@ -19,7 +19,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

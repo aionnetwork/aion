@@ -8,7 +8,7 @@ import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_MAX;
 
 import java.math.BigInteger;
-import org.aion.types.Address;
+import org.aion.vm.api.types.Address;
 import org.json.JSONObject;
 import org.junit.Test;
 

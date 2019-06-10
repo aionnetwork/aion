@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class AccountState {
     private final SortedMap<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>

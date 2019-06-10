@@ -19,7 +19,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.Test;
