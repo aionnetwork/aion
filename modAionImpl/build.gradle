@@ -43,7 +43,7 @@ dependencies {
  //   compile group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
  //   compile group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
 
-    testCompile files('../lib/org-aion-avm-rt.jar')
+    testCompile files('../lib/org-aion-avm-tooling.jar')
     testCompile files('../lib/org-aion-avm-api.jar')
     testCompile files('../lib/org-aion-avm-userlib.jar')
 

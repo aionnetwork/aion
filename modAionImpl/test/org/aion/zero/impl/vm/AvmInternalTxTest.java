@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.core.util.ABIUtil;
+import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
