@@ -97,8 +97,8 @@ final class TaskFastImportBlocks implements Runnable {
                             long t1 = System.currentTimeMillis();
                             importResult = this.chain.tryFastImport(b);
                             long t2 = System.currentTimeMillis();
-                            if (log.isInfoEnabled()) {
-                                log.info(
+                            if (log.isDebugEnabled()) {
+                                log.debug(
                                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms, td = {}>",
                                         bw.getDisplayId(),
                                         b.getShortHash(),

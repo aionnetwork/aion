@@ -6,9 +6,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigInteger;
 import java.util.List;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.types.Address;
 import org.aion.util.TestResources;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.After;
@@ -159,6 +161,8 @@ public class AionBlockStoreTest {
         when(store.getBlockByHash(last.getParentHash())).thenReturn(null);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
+        // the returned list is null due to missing block in range
+        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
     }
 
     @Test
@@ -210,6 +214,55 @@ public class AionBlockStoreTest {
         when(store.getBestBlock()).thenReturn(best);
 
         // the returned list is null due to corrupt kernel
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
+        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
+    }
+
+    @Test
+    public void testRollback() {
+
+        AionBlock blk1 =
+                new AionBlock(
+                        new byte[0],
+                        Address.ZERO_ADDRESS(),
+                        new byte[0],
+                        BigInteger.TEN.toByteArray(),
+                        1,
+                        1,
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        null,
+                        new byte[0],
+                        1,
+                        1);
+        AionBlock blk2 =
+                new AionBlock(
+                        new byte[0],
+                        Address.ZERO_ADDRESS(),
+                        new byte[0],
+                        BigInteger.TWO.toByteArray(),
+                        2,
+                        2,
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        new byte[0],
+                        null,
+                        new byte[0],
+                        1,
+                        1);
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+
+        store.saveBlock(blk1, BigInteger.TEN, true);
+        store.saveBlock(blk2, BigInteger.TEN.add(BigInteger.ONE), true);
+
+        store.rollback(1);
+
+        AionBlock storedBlk = store.getBestBlock();
+        assertThat(storedBlk.getNumber() == 1);
+        assertThat(storedBlk.getDifficulty().equals(BigInteger.TEN.toByteArray()));
     }
 }

@@ -194,10 +194,11 @@ public class BlockPropagationHandler {
                         t2 - t1);
             } else if (log.isDebugEnabled()) {
                 log.debug(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
+                        "<import-status: node = {}, hash = {}, number = {}, td = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
                         displayId,
                         block.getShortHash(),
                         block.getNumber(),
+                        blockchain.getTotalDifficulty(),
                         block.getTransactionsList().size(),
                         block.getTimestamp(),
                         result,

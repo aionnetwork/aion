@@ -12,7 +12,6 @@ import static org.aion.mcf.core.ImportResult.NO_PARENT;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -1130,7 +1129,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         "Block rebuilt: number: {}, hash: {}, TD: {}",
                         block.getNumber(),
                         block.getShortHash(),
-                        getBlockStore().getTotalDifficulty());
+                        getTotalDifficulty());
         }
 
         return summary;
@@ -1215,6 +1214,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             if (txs != null && !txs.isEmpty()) {
                 Repository parentRepo = repository;
+
                 if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
                     parentRepo =
                             repository.getSnapshotTo(

@@ -129,7 +129,7 @@ public class AionHub {
         try {
             loadBlockchain();
         } catch (IllegalStateException e) {
-            genLOG.error("Found database corruption, please re-import your database!", e);
+            genLOG.error("Found database corruption, please re-import your database by using ./aion.sh -n <network> --redo-import", e);
             System.exit(SystemExitCodes.DATABASE_CORRUPTION);
         }
 
