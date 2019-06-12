@@ -1161,20 +1161,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        // save contract creation data to index database
-        for (AionTxReceipt receipt : receipts) {
-            AionTransaction tx = receipt.getTransaction();
-            if (tx.isContractCreationTransaction() && receipt.isSuccessful()) {
-                repository.saveIndexedContractInformation(
-                        tx.getContractAddress(),
-                        block.getNumber(),
-                        TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
-                                ? InternalVmType.AVM
-                                : InternalVmType.FVM,
-                        true);
-            }
-        }
-
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {
                 transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));
@@ -1189,6 +1175,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNumber(),
                         block.getShortHash(),
                         getTotalDifficulty());
+        }
+
+        if (summary != null) {
+            // save contract creation data to index database
+            for (AionTxReceipt receipt : receipts) {
+                AionTransaction tx = receipt.getTransaction();
+                if (tx.isContractCreationTransaction() && receipt.isSuccessful()) {
+                    AccountState accountState = track.getAccountState(tx.getContractAddress());
+                    if (accountState == null) {
+                        // technically this cannot occur
+                        // if it does occur, the code below will throw and NPE
+                        LOG.error(
+                                "Kernel corruption: The account state of a newly added contract cannot be null.");
+                    }
+                    repository.saveIndexedContractInformation(
+                            tx.getContractAddress(),
+                            ByteArrayWrapper.wrap(accountState.getCodeHash()),
+                            block.getHashWrapper(),
+                            TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
+                                    ? InternalVmType.AVM
+                                    : InternalVmType.FVM,
+                            true);
+                }
+            }
         }
 
         return Pair.of(summary, null);

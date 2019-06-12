@@ -1059,11 +1059,24 @@ public class AionRepositoryImpl
     }
 
     public void saveIndexedContractInformation(
-            AionAddress contract, long inceptionBlock, InternalVmType vmUsed, boolean complete) {
+            AionAddress contract,
+            ByteArrayWrapper codeHash,
+            ByteArrayWrapper inceptionBlock,
+            InternalVmType vmUsed,
+            boolean complete) {
         if (contract != null) {
-            contractInfoSource.put(
-                    contract.toByteArray(),
-                    new ContractInformation(inceptionBlock, vmUsed, complete));
+            ContractInformation ci = getIndexedContractInformation(contract);
+            if (ci == null) {
+                contractInfoSource.put(
+                        contract.toByteArray(),
+                        new ContractInformation(codeHash, vmUsed, inceptionBlock, complete));
+            } else {
+                // update the existing entry to add new information
+                ci.append(codeHash, vmUsed, inceptionBlock, complete);
+
+                // overwrites entry with new value
+                contractInfoSource.put(contract.toByteArray(), ci);
+            }
         }
     }
 
@@ -1077,7 +1090,8 @@ public class AionRepositoryImpl
                 // signals that the value is not set
                 return InternalVmType.UNKNOWN;
             } else {
-                return ci.getVmUsed();
+                AccountState accountState = getAccountState(contract);
+                return ci.getVmUsed(accountState.getCodeHash());
             }
         }
     }

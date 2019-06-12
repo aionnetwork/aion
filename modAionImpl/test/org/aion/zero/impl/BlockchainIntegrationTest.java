@@ -5,9 +5,12 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
@@ -38,6 +41,19 @@ public class BlockchainIntegrationTest {
 
     @Before
     public void setup() {
+        // reduce default logging levels
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("API", "ERROR");
+        cfg.put("CONS", "ERROR");
+        cfg.put("DB", "ERROR");
+        cfg.put("GEM", "ERROR");
+        cfg.put("P2P", "ERROR");
+        cfg.put("ROOT", "ERROR");
+        cfg.put("SYNC", "ERROR");
+        cfg.put("TX", "ERROR");
+        cfg.put("VM", "ERROR");
+        AionLoggerFactory.init(cfg);
+
         LongLivedAvm.createAndStartLongLivedAvm();
     }
 
@@ -270,9 +286,14 @@ public class BlockchainIntegrationTest {
                         .getRepository()
                         .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
         assertThat(ci).isNotNull();
-        assertThat(ci.getInceptionBlock()).isEqualTo(block.getNumber());
-        assertThat(ci.getVmUsed()).isEqualTo(InternalVmType.FVM);
-        assertThat(ci.isComplete()).isEqualTo(true);
+        byte[] codeHash =
+                blockchain
+                        .getRepository()
+                        .getAccountState(contractDeploymentTx.getContractAddress())
+                        .getCodeHash();
+        assertThat(ci.getInceptionBlocks(codeHash)).contains(block.getHashWrapper());
+        assertThat(ci.getVmUsed(codeHash)).isEqualTo(InternalVmType.FVM);
+        assertThat(ci.isComplete(codeHash, block.getHash())).isEqualTo(true);
     }
 
     /**
