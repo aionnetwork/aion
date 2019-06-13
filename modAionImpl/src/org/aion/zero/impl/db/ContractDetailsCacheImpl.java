@@ -142,6 +142,14 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         setDirty(true);
     }
 
+    @Override
+    public byte[] getTransformedCode() {
+        if (performCode == null && this.origContract != null) {
+            performCode = origContract.getTransformedCode();
+        }
+        return performCode;
+    }
+
     /**
      * Returns the storage hash.
      *

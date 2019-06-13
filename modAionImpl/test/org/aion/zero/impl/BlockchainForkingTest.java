@@ -5,13 +5,24 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.BlockchainTestUtils.generateTransactions;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.tooling.ABIUtil;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
@@ -20,8 +31,11 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.BlockCachingContext;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -32,6 +46,19 @@ public class BlockchainForkingTest {
 
     @Before
     public void setup() {
+        // reduce default logging levels
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("API", "ERROR");
+        cfg.put("CONS", "WARN");
+        cfg.put("DB", "ERROR");
+        cfg.put("GEM", "ERROR");
+        cfg.put("P2P", "ERROR");
+        cfg.put("ROOT", "ERROR");
+        cfg.put("SYNC", "ERROR");
+        cfg.put("TX", "DEBUG");
+        cfg.put("VM", "DEBUG");
+        AionLoggerFactory.init(cfg);
+
         LongLivedAvm.createAndStartLongLivedAvm();
     }
 
@@ -647,18 +674,14 @@ public class BlockchainForkingTest {
         // contract source code for reference
         /*
         pragma solidity ^0.4.15;
-
         contract Storage {
             uint128 value;
-
             mapping(uint128 => uint128) private userPrivilege;
-
             struct Entry {
                 uint128 id;
                 uint128 value;
             }
             Entry value2;
-
             function Storage(){
             value = 10;
             userPrivilege[value] = value;
@@ -666,18 +689,15 @@ public class BlockchainForkingTest {
             value2.value = 200;
             userPrivilege[value2.id] = value2.value;
             }
-
             function setValue(uint128 newValue)  {
             value = newValue;
             userPrivilege[newValue] = newValue+1;
             }
-
             function setValue2(uint128 v1, uint128 v2)  {
             value2.id = v1;
             value2.value = v2;
             userPrivilege[v1] = v1+v2;
             }
-
             function getValue() returns(uint)  {
             return value;
             }
@@ -752,7 +772,278 @@ public class BlockchainForkingTest {
         return contractCallTx;
     }
 
-    /*
-     * Tests VM update behaviour from an external perspective
+    /**
+     * Ensures that if a side-chain block is imported after a main-chain block creating the same
+     * contract address X but using different VMs, then each chain will operate on the correct VM.
      */
+    @Test
+    public void testVmTypeRetrieval_ForkWithConflictingContractVM() {
+        // blocks to be built
+        AionBlock block, fastBlock, slowBlock, lowBlock, highBlock;
+
+        // transactions used in blocks
+        AionTransaction deployOnAVM, deployOnFVM, callTxOnFVM;
+
+        // for processing block results
+        Pair<ImportResult, AionBlockSummary> connectResult;
+        ImportResult result;
+        AionTxReceipt receipt;
+
+        // build a blockchain
+        TransactionTypeRule.allowAVMContractTransaction();
+        List<ECKey> accounts = generateAccounts(10);
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain sourceChain =
+                builder.withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build()
+                        .bc;
+        StandaloneBlockchain testChain =
+                builder.withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build()
+                        .bc;
+        ECKey sender = accounts.remove(0);
+
+        assertThat(testChain).isNotEqualTo(sourceChain);
+        assertThat(testChain.genesis).isEqualTo(sourceChain.genesis);
+
+        long time = System.currentTimeMillis();
+
+        // add a block to both chains
+        block =
+                sourceChain.createNewBlockInternal(
+                                sourceChain.getBestBlock(),
+                                Collections.emptyList(),
+                                true,
+                                time / 10_000L)
+                        .block;
+        assertThat(sourceChain.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(testChain.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // ****** setup side chain ******
+
+        // deploy contracts on different VMs for the two chains
+        deployOnAVM = deployStatefulnessAVMContract(sender);
+        fastBlock =
+                sourceChain.createNewBlockInternal(
+                                sourceChain.getBestBlock(),
+                                Arrays.asList(deployOnAVM),
+                                true,
+                                time / 10_000L)
+                        .block;
+
+        deployOnFVM = deployContract(sender);
+        slowBlock =
+                new AionBlock(
+                        sourceChain.createNewBlockInternal(
+                                        sourceChain.getBestBlock(),
+                                        Arrays.asList(deployOnFVM),
+                                        true,
+                                        time / 10_000L)
+                                .block);
+
+        slowBlock.getHeader().setTimestamp(time / 10_000L + 100);
+        time += 100;
+
+        // sourceChain imports only fast block
+        connectResult = sourceChain.tryToConnectAndFetchSummary(fastBlock, time, true);
+        result = connectResult.getLeft();
+        receipt = connectResult.getRight().getReceipts().get(0);
+
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(receipt.isSuccessful()).isTrue();
+
+        AionAddress contract = receipt.getTransaction().getContractAddress();
+
+        // testChain imports both blocks
+        connectResult = testChain.tryToConnectAndFetchSummary(fastBlock, time, true);
+        result = connectResult.getLeft();
+        receipt = connectResult.getRight().getReceipts().get(0);
+
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(receipt.isSuccessful()).isTrue();
+        assertThat(receipt.getTransaction().getContractAddress()).isEqualTo(contract);
+
+        connectResult = testChain.tryToConnectAndFetchSummary(slowBlock, time, true);
+        result = connectResult.getLeft();
+        receipt = connectResult.getRight().getReceipts().get(0);
+
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(receipt.isSuccessful()).isTrue();
+        assertThat(receipt.getTransaction().getContractAddress()).isEqualTo(contract);
+
+        // ****** check that the correct contract details are kept ******
+
+        // check that both chains have the correct vm type for the AVM contract
+        byte[] codeHashAVM = sourceChain.getRepository().getAccountState(contract).getCodeHash();
+        assertThat(testChain.getRepository().getVMUsed(contract, codeHashAVM))
+                .isEqualTo(sourceChain.getRepository().getVMUsed(contract, codeHashAVM));
+
+        // check that only the second chain has the vm type for the FVM contract
+        byte[] codeHashFVM =
+                ((AionRepositoryImpl)
+                                testChain.getRepository().getSnapshotTo(slowBlock.getStateRoot()))
+                        .getAccountState(contract)
+                        .getCodeHash();
+        assertThat(sourceChain.getRepository().getVMUsed(contract, codeHashFVM))
+                .isEqualTo(InternalVmType.UNKNOWN);
+        assertThat(testChain.getRepository().getVMUsed(contract, codeHashFVM))
+                .isEqualTo(InternalVmType.FVM);
+
+        // check the stored information details
+        ContractInformation infoSingleImport =
+                sourceChain.getRepository().getIndexedContractInformation(contract);
+        System.out.println("without side chain:" + infoSingleImport);
+
+        assertThat(infoSingleImport.getVmUsed(codeHashAVM)).isEqualTo(InternalVmType.AVM);
+        assertThat(infoSingleImport.getInceptionBlocks(codeHashAVM))
+                .isEqualTo(Set.of(fastBlock.getHashWrapper()));
+        assertThat(infoSingleImport.getVmUsed(codeHashFVM)).isEqualTo(InternalVmType.UNKNOWN);
+        assertThat(infoSingleImport.getInceptionBlocks(codeHashFVM)).isEmpty();
+
+        ContractInformation infoMultiImport =
+                testChain.getRepository().getIndexedContractInformation(contract);
+        System.out.println("with side chain:" + infoMultiImport);
+
+        assertThat(infoMultiImport.getVmUsed(codeHashAVM)).isEqualTo(InternalVmType.AVM);
+        assertThat(infoMultiImport.getInceptionBlocks(codeHashAVM))
+                .isEqualTo(Set.of(fastBlock.getHashWrapper()));
+        assertThat(infoMultiImport.getVmUsed(codeHashFVM)).isEqualTo(InternalVmType.FVM);
+        assertThat(infoMultiImport.getInceptionBlocks(codeHashFVM))
+                .isEqualTo(Set.of(slowBlock.getHashWrapper()));
+
+        // build two blocks where the second block has a higher total difficulty
+        callTxOnFVM = callSetValue(sender, contract, 9, BigInteger.ONE);
+        lowBlock =
+                testChain.createNewBlockInternal(
+                                slowBlock, Arrays.asList(callTxOnFVM), true, time / 10_000L + 101)
+                        .block;
+
+        int expectedCount = 3;
+        List<AionTransaction> callTxOnAVM =
+                callStatefulnessAVM(sender, expectedCount, BigInteger.ONE, contract);
+        highBlock =
+                sourceChain.createNewBlockInternal(fastBlock, callTxOnAVM, true, time / 10_000L)
+                        .block;
+
+        assertThat(highBlock.getDifficultyBI()).isGreaterThan(lowBlock.getDifficultyBI());
+        time += 100;
+
+        // build first chain with highBlock applied directly
+        connectResult = sourceChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        receipt = connectResult.getRight().getReceipts().get(expectedCount); // get last tx
+        assertThat(receipt.isSuccessful()).isTrue();
+
+        result = connectResult.getLeft();
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // collect the consensus information from the block & receipt
+        AionBlockSummary blockSummary = connectResult.getRight();
+        byte[] stateRoot = blockSummary.getBlock().getStateRoot();
+        byte[] blockReceiptsRoot = blockSummary.getBlock().getReceiptsRoot();
+        byte[] receiptTrieEncoded = receipt.getReceiptTrieEncoded();
+
+        int returnedCount =
+                (int)
+                        ABIUtil.decodeOneObject(
+                                blockSummary
+                                        .getReceipts()
+                                        .get(expectedCount)
+                                        .getTransactionOutput());
+        assertThat(returnedCount).isEqualTo(expectedCount);
+
+        // ****** test fork behavior ******
+
+        // first import lowBlock
+        assertThat(testChain.tryToConnectInternal(lowBlock, time))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // next import highBlock causing the fork
+        connectResult = testChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        receipt = connectResult.getRight().getReceipts().get(expectedCount);
+        assertThat(receipt.isSuccessful()).isTrue();
+        System.out.println(receipt);
+
+        result = connectResult.getLeft();
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // collect the consensus information from the block & receipt
+        blockSummary = connectResult.getRight();
+        assertThat(testChain.getBestBlock()).isEqualTo(sourceChain.getBestBlock());
+        assertThat(blockSummary.getBlock().getStateRoot()).isEqualTo(stateRoot);
+        assertThat(blockSummary.getBlock().getReceiptsRoot()).isEqualTo(blockReceiptsRoot);
+        assertThat(receipt.getReceiptTrieEncoded()).isEqualTo(receiptTrieEncoded);
+
+        returnedCount =
+                (int)
+                        ABIUtil.decodeOneObject(
+                                blockSummary
+                                        .getReceipts()
+                                        .get(expectedCount)
+                                        .getTransactionOutput());
+        assertThat(returnedCount).isEqualTo(expectedCount);
+    }
+
+    private AionTransaction deployStatefulnessAVMContract(ECKey sender) {
+        byte[] statefulnessAVM =
+                new CodeAndArguments(
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
+                                new byte[0])
+                        .encodeToBytes();
+
+        AionTransaction transaction =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        new AionAddress(sender.getAddress()),
+                        null,
+                        BigInteger.ZERO.toByteArray(),
+                        statefulnessAVM,
+                        5_000_000L,
+                        10_123_456_789L,
+                        TransactionTypes.AVM_CREATE_CODE);
+
+        transaction.sign(sender);
+        return transaction;
+    }
+
+    private List<AionTransaction> callStatefulnessAVM(
+            ECKey sender, int count, BigInteger nonce, AionAddress contract) {
+
+        List<AionTransaction> txs = new ArrayList<>();
+        AionAddress senderAddress = new AionAddress(sender.getAddress());
+        AionTransaction transaction;
+
+        //  make call transactions
+        for (int i = 0; i < count; i++) {
+            transaction =
+                    new AionTransaction(
+                            nonce.toByteArray(),
+                            senderAddress,
+                            contract,
+                            BigInteger.ZERO.toByteArray(),
+                            ABIUtil.encodeMethodArguments("incrementCounter"),
+                            2_000_000L,
+                            10_123_456_789L);
+            transaction.sign(sender);
+            txs.add(transaction);
+            // increment nonce
+            nonce = nonce.add(BigInteger.ONE);
+        }
+
+        //  make one getCount transaction
+        transaction =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        senderAddress,
+                        contract,
+                        BigInteger.ZERO.toByteArray(),
+                        ABIUtil.encodeMethodArguments("getCount"),
+                        2_000_000L,
+                        10_123_456_789L);
+        transaction.sign(sender);
+        txs.add(transaction);
+
+        return txs;
+    }
 }
