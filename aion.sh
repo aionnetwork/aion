@@ -4,6 +4,8 @@ cd "$(dirname $(realpath $0))"
 
 KERVER=$(uname -r | grep -o "^4\.")
 
+export MALLOC_ARENA_MAX=4
+
 if [ "$KERVER" != "4." ]; then
   echo "Warning! The linux kernel must be greater than or equal to version 4."
 fi
@@ -41,11 +43,11 @@ chmod +x ./rt/bin/*
 # default to minimum 4gb heap if Xms not set.
 JAVA_OPTS="$JAVA_OPTS"
 if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
-  JAVA_OPTS+=" -Xms4g"
+  JAVA_OPTS+=" -Xms512m"
 fi
 
 if [[ ! ${JAVA_OPTS} = *"-Xmx"* ]]; then
-  JAVA_OPTS+=" -Xmx8g"
+  JAVA_OPTS+=" -Xmx2g"
 fi
 
 
