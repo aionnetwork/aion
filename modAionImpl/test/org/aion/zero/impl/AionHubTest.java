@@ -48,14 +48,9 @@ public class AionHubTest {
         cfg.put("CONS", "INFO");
         cfg.put("DB", "ERROR");
 
-        AionLoggerFactory.init(cfg);
-    }
+        LongLivedAvm.createAndStartLongLivedAvm();
 
-    @AfterClass
-    public static void tearDown() {
-        if (VirtualMachineProvider.isMachinesAreLive()) {
-            VirtualMachineProvider.shutdownAllVirtualMachines();
-        }
+        AionLoggerFactory.init(cfg);
     }
 
     @After
@@ -133,7 +128,6 @@ public class AionHubTest {
 
     @Test
     public void MockHubInst_wStartRecovery() {
-        LongLivedAvm.createAndStartLongLivedAvm();
 
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
@@ -205,11 +199,11 @@ public class AionHubTest {
         hub.close();
         assertThat(hub.isRunning()).isFalse();
 
-        LongLivedAvm.destroy();
     }
 
     @Test
     public void MockHubInst_wStartRollback() {
+
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
                 builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
