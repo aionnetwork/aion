@@ -941,7 +941,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             if (mainChain.size() > 1) {
                 LOG.error(
                         "The database is corrupted. There are two different main chain blocks at level {}."
-                                + " Please shutdown the kernel and repair the block information by executing:\t./aion.sh -r {} -n <network>",
+                                + " Please shutdown the kernel and rollback the block information by executing:\t./aion.sh -r {} -n <network>",
                         blockNumber, blockNumber - 1);
             }
 
