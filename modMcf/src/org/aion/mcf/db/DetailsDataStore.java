@@ -70,6 +70,12 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH>, BH extends BlockHea
         return detailsImpl;
     }
 
+    /** Determine if the contract exists in the database. */
+    public synchronized boolean isPresent(byte[] key) {
+        Optional<byte[]> rawDetails = detailsSrc.get(key);
+        return rawDetails.isPresent();
+    }
+
     public synchronized void update(AionAddress key, ContractDetails contractDetails) {
 
         contractDetails.setAddress(key);

@@ -482,7 +482,7 @@ public class AionRepositoryImpl
     public boolean hasContractDetails(AionAddress address) {
         rwLock.readLock().lock();
         try {
-            return detailsDS.get(address.toByteArray()) != null;
+            return detailsDS.isPresent(address.toByteArray());
         } finally {
             rwLock.readLock().unlock();
         }
