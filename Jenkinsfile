@@ -51,7 +51,7 @@ pipeline {
 
                     dir('FunctionalTests') { 
                         sh('tar -C Tests -xjf Tests/aion.tar.bz2')
-                        sh('./gradlew :Tests:ciTest -i')
+                        sh('./gradlew :Tests:ciTest -i -PtestNodes=java')
                     }
             }
         }
