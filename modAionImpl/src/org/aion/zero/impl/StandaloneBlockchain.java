@@ -48,6 +48,7 @@ import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 /**
  * Used mainly for debugging and testing purposes, provides codepaths for easy setup, into standard
@@ -227,6 +228,19 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         /** @param encodedDetails data obtained from {@link AionContractDetailsImpl#getEncoded()} */
         public Builder withDetails(AionAddress contract, byte[] encodedDetails) {
             this.contractDetails.put(contract, encodedDetails);
+            return this;
+        }
+
+        private Map<AionAddress, Triple<ByteArrayWrapper, ByteArrayWrapper, InternalVmType>>
+                contractIndex = new HashMap<>();
+
+        /** Required by contracts that are not precompiled to get the correct VM type during use. */
+        public Builder withContractIndex(
+                AionAddress contract,
+                ByteArrayWrapper codeHash,
+                ByteArrayWrapper inceptionBlock,
+                InternalVmType vmType) {
+            this.contractIndex.put(contract, Triple.of(codeHash, inceptionBlock, vmType));
             return this;
         }
 
@@ -416,6 +430,17 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                     contract.toByteArray(),
                                     contractDetails.get(contract),
                                     DatabaseType.DETAILS);
+                }
+            }
+
+            // set contract index
+            if (!contractIndex.isEmpty()) {
+                for (AionAddress contract : contractIndex.keySet()) {
+                    Triple<ByteArrayWrapper, ByteArrayWrapper, InternalVmType> ci =
+                            contractIndex.get(contract);
+                    bc.getRepository()
+                            .saveIndexedContractInformation(
+                                    contract, ci.getLeft(), ci.getMiddle(), ci.getRight(), true);
                 }
             }
 
