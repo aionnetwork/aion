@@ -11,7 +11,7 @@ import java.util.List;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.util.TestResources;
-import org.aion.vm.api.types.Address;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.After;
 import org.junit.Before;
@@ -223,7 +223,7 @@ public class AionBlockStoreTest {
         AionBlock blk1 =
                 new AionBlock(
                         new byte[0],
-                        Address.ZERO_ADDRESS(),
+                        AddressUtils.ZERO_ADDRESS,
                         new byte[0],
                         BigInteger.TEN.toByteArray(),
                         1,
@@ -240,7 +240,7 @@ public class AionBlockStoreTest {
         AionBlock blk2 =
                 new AionBlock(
                         new byte[0],
-                        Address.ZERO_ADDRESS(),
+                        AddressUtils.ZERO_ADDRESS,
                         new byte[0],
                         BigInteger.TWO.toByteArray(),
                         2,

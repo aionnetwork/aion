@@ -1901,6 +1901,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getNumber(),
                     other.getTransactionsList().size());
 
+            // Load bestblock for executing the CLI command.
+            if (bestBlock == null) {
+                bestBlock = getBlockStore().getBestBlock();
+            }
+
             this.add(other, true);
         }
 

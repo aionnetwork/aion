@@ -557,17 +557,16 @@ final class TaskImportBlocks implements Runnable {
         } else {
             // not printing this message when the state is in fast mode with no parent result
             // a different message will be printed to indicate the storage of blocks
-            if (log.isDebugEnabled()
+            if (log.isInfoEnabled()
                     && (!state.isInFastMode() || importResult != ImportResult.NO_PARENT)) {
-                log.debug(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms,task td = {}>",
+                log.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         displayId,
                         b.getShortHash(),
                         b.getNumber(),
                         b.getTransactionsList().size(),
                         importResult,
-                        t2 - t1,
-                        chain.getTotalDifficulty());
+                        t2 - t1);
             }
         }
         // trigger compact when IO is slow
