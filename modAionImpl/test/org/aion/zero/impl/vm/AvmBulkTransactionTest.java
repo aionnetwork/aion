@@ -118,6 +118,58 @@ public class AvmBulkTransactionTest {
         assertEquals(receipt.isSuccessful(), false);
     }
 
+    /** Ensures that AVM contracts can be deployed and called within the same block. */
+    @Test
+    public void importBlockWithContractDeploysAndSubsequentCalls() {
+        BigInteger expectedNonce = getNonce(deployerKey);
+        BigInteger initialBalance = getBalance(deployerKey);
+
+        // note: 3 contract deployments would pass the block energy limit
+        int nbCreateTransactions = 2;
+        int nbCallTransactions = 2;
+        int nbTransactions = nbCreateTransactions + nbCreateTransactions * nbCallTransactions;
+
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        for (int j = 0; j < nbCreateTransactions; j++) {
+            // create contract transaction
+            AionTransaction deployTx = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
+            expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+            AionAddress deployedContract = deployTx.getContractAddress();
+            transactions.add(deployTx);
+
+            // subsequent call transactions
+            for (int i = 0; i < nbCallTransactions; i++) {
+                transactions.add(
+                        makeAvmContractCallTransaction(
+                                deployerKey, expectedNonce, deployedContract));
+                expectedNonce = expectedNonce.add(BigInteger.ONE);
+            }
+        }
+
+        // process the transactions in bulk
+        AionBlockSummary blockSummary = sendTransactionsInBulkInSingleBlock(transactions);
+
+        // verify all transactions were successful
+        assertEquals(nbTransactions, blockSummary.getSummaries().size());
+        for (AionTxExecSummary transactionSummary : blockSummary.getSummaries()) {
+            System.out.println(transactionSummary.getReceipt());
+            assertTrue(transactionSummary.getReceipt().isSuccessful());
+        }
+
+        BigInteger expectedBalance = initialBalance;
+        for (int i = 0; i < nbTransactions; i++) {
+            BigInteger energyUsed =
+                    BigInteger.valueOf(
+                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
+            expectedBalance = expectedBalance.subtract(energyUsed);
+        }
+
+        assertEquals(expectedBalance, getBalance(deployerKey));
+        assertEquals(expectedNonce, getNonce(deployerKey));
+    }
+
     @Test
     public void sendValueTransferTransactionsInBulkTest() {
         int numTransactions = 50;
