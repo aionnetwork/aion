@@ -19,6 +19,8 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -160,6 +162,84 @@ public class AvmBulkTransactionTest {
 
         BigInteger expectedBalance = initialBalance;
         for (int i = 0; i < nbTransactions; i++) {
+            BigInteger energyUsed =
+                    BigInteger.valueOf(
+                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
+            expectedBalance = expectedBalance.subtract(energyUsed);
+        }
+
+        assertEquals(expectedBalance, getBalance(deployerKey));
+        assertEquals(expectedNonce, getNonce(deployerKey));
+    }
+
+    /**
+     * Ensures that the block described below is processed correctly, where the block contains the
+     * following transactions:
+     *
+     * <ol>
+     *   <li>a FVM contract deployment,
+     *   <li>an AVM contract deployment,
+     *   <li>a FVM call to the first contract,
+     *   <li>an AVM call to the second contract.
+     * </ol>
+     */
+    @Test
+    public void importBlockWithContractAndCallsForBothVMs() {
+        BigInteger expectedNonce = getNonce(deployerKey);
+        BigInteger initialBalance = getBalance(deployerKey);
+
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        // deploy on FVM
+        String contractCode =
+                "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
+        AionTransaction deployTxFVM =
+                new AionTransaction(
+                        expectedNonce.toByteArray(),
+                        null,
+                        BigInteger.ZERO.toByteArray(),
+                        ByteUtil.hexStringToBytes(contractCode),
+                        5_000_000L,
+                        energyPrice);
+        deployTxFVM.sign(deployerKey);
+        AionAddress fvmContract = deployTxFVM.getContractAddress();
+        transactions.add(deployTxFVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // deploy on AVM
+        AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
+        AionAddress avmContract = deployTxAVM.getContractAddress();
+        transactions.add(deployTxAVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // call to FVM contract
+        AionTransaction contractCallTx =
+                new AionTransaction(
+                        expectedNonce.toByteArray(),
+                        fvmContract,
+                        BigInteger.ZERO.toByteArray(),
+                        Hex.decode("62eb702a00000000000000000000000000000006"),
+                        2_000_000L,
+                        energyPrice);
+        contractCallTx.sign(deployerKey);
+        transactions.add(contractCallTx);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // call to AVM contract
+        transactions.add(makeAvmContractCallTransaction(deployerKey, expectedNonce, avmContract));
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // process the transactions in bulk
+        AionBlockSummary blockSummary = sendTransactionsInBulkInSingleBlock(transactions);
+
+        // verify all transactions were successful
+        assertEquals(transactions.size(), blockSummary.getSummaries().size());
+        for (AionTxExecSummary transactionSummary : blockSummary.getSummaries()) {
+            assertTrue(transactionSummary.getReceipt().isSuccessful());
+        }
+
+        BigInteger expectedBalance = initialBalance;
+        for (int i = 0; i < transactions.size(); i++) {
             BigInteger energyUsed =
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
