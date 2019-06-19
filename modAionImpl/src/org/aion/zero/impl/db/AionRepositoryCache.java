@@ -691,8 +691,8 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
                 "getCachelTx should be called on the tracked repository.");
     }
 
-    public InternalVmType getVMUsed(AionAddress contract) {
-        return repository.getVMUsed(contract);
+    public InternalVmType getVMUsed(AionAddress contract, byte[] codeHash) {
+        return repository.getVMUsed(contract, codeHash);
     }
 
     @Override

@@ -557,17 +557,33 @@ public final class BulkExecutor {
         }
     }
 
+    /** Returns the InternalVmType recorded for the given address. */
+    private static InternalVmType getInternalVmType(
+            RepositoryCache repository, AionAddress destination) {
+        // will load contract into memory otherwise leading to consensus issues
+        RepositoryCache<AccountState, IBlockStoreBase> track = repository.startTracking();
+        AccountState accountState = track.getAccountState(destination);
+
+        InternalVmType vm;
+        if (accountState == null) {
+            // the address doesn't exist yet, so it can be used by either vm
+            vm = InternalVmType.EITHER;
+        } else {
+            vm = repository.getVMUsed(destination, accountState.getCodeHash());
+
+            // UNKNOWN is returned when there was no contract information stored
+            if (vm == InternalVmType.UNKNOWN) {
+                // use the in-memory value
+                vm = track.getVmType(destination);
+            }
+        }
+        return vm;
+    }
+
     /** Returns true only if the given destination address is an Avm contract address. */
     private static boolean destinationIsAvmContract(
             RepositoryCache repository, AionAddress destination) {
-        InternalVmType vmType = repository.getVMUsed(destination);
-        if (vmType == InternalVmType.UNKNOWN) {
-            // will load contract into memory otherwise leading to consensus issues
-            RepositoryCache track = repository.startTracking();
-            return track.getVmType(destination) == InternalVmType.AVM;
-        } else {
-            return vmType == InternalVmType.AVM;
-        }
+        return getInternalVmType(repository, destination) == InternalVmType.AVM;
     }
 
     /**
@@ -576,31 +592,14 @@ public final class BulkExecutor {
      */
     private static boolean destinationIsRegularAccount(
             RepositoryCache repository, AionAddress destination) {
-        InternalVmType vmType = repository.getVMUsed(destination);
-        if (vmType == InternalVmType.UNKNOWN) {
-            // will load contract into memory otherwise leading to consensus issues
-            InternalVmType type = repository.startTracking().getVmType(destination);
-            return (type != InternalVmType.AVM) && (type != InternalVmType.FVM);
-        } else {
-            return (vmType != InternalVmType.AVM) && (vmType != InternalVmType.FVM);
-        }
+        return !(getInternalVmType(repository, destination).isContract());
     }
 
     /** Returns true only if the given destination address is a Fvm contract address. */
     private static boolean destinationIsFvmContract(
             RepositoryCache repository, AionAddress destination) {
-
-        // Note that precompiled contracts have vmType FVM as well.
-        InternalVmType vmType = repository.getVMUsed(destination);
-        if (vmType == InternalVmType.UNKNOWN) {
-            // will load contract into memory otherwise leading to consensus issues
-            RepositoryCache track = repository.startTracking();
-            return !ContractInfo.isPrecompiledContract(destination)
-                    && (track.getVmType(destination) == InternalVmType.FVM);
-        } else {
-            return !ContractInfo.isPrecompiledContract(destination)
-                    && (vmType == InternalVmType.FVM);
-        }
+        return !ContractInfo.isPrecompiledContract(destination)
+                && (getInternalVmType(repository, destination) == InternalVmType.FVM);
     }
 
     /** Returns true only if the given destination address is a precompiled contract address. */

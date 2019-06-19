@@ -44,4 +44,8 @@ public enum InternalVmType {
                 return EITHER;
         }
     }
+
+    public boolean isContract() {
+        return this == AVM || this == FVM;
+    }
 }

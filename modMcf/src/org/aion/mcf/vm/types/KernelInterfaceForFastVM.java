@@ -265,16 +265,24 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     private InternalVmType getVmType(AionAddress destination) {
-        InternalVmType storedVmType = repositoryCache.getVMUsed(destination);
+        // will load contract into memory otherwise leading to consensus issues
+        RepositoryCache<AccountState, IBlockStoreBase> track = repositoryCache.startTracking();
+        AccountState accountState = track.getAccountState(destination);
 
-        // DEFAULT is returned when there was no contract information stored
-        if (storedVmType == InternalVmType.UNKNOWN) {
-            // will load contract into memory otherwise leading to consensus issues
-            RepositoryCache track = repositoryCache.startTracking();
-            return track.getVmType(destination);
+        InternalVmType vm;
+        if (accountState == null) {
+            // the address doesn't exist yet, so it can be used by either vm
+            vm = InternalVmType.EITHER;
         } else {
-            return storedVmType;
+            vm = repositoryCache.getVMUsed(destination, accountState.getCodeHash());
+
+            // UNKNOWN is returned when there was no contract information stored
+            if (vm == InternalVmType.UNKNOWN) {
+                // use the in-memory value
+                vm = track.getVmType(destination);
+            }
         }
+        return vm;
     }
 
     /**

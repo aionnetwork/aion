@@ -119,11 +119,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     public void setVmType(InternalVmType vmType) {
-        if (this.vmType != vmType && vmType != InternalVmType.EITHER) {
+        if (this.vmType != vmType
+                && vmType != InternalVmType.EITHER
+                && vmType != InternalVmType.UNKNOWN) {
             this.vmType = vmType;
-
-            setDirty(true);
-            rlpEncoded = null;
         }
     }
 
@@ -197,9 +196,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode.
      *
      * @param rlpCode The encoding to decode.
+     * @implNote IMPORTANT: Requires the VM type to be set externally before decoding. The way the
+     *     data is interpreted during decoding differs for AVM contracts, therefore it will be
+     *     decoded incorrectly if the VM type is not set before making this method call.
      */
     @Override
     public void decode(byte[] rlpCode) {
+        // TODO: remove vm type requirement when refactoring into separate AVM & FVM implementations
         decode(rlpCode, false);
     }
 
@@ -219,53 +222,20 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         // partial decode either encoding
         boolean keepStorageInMem = decodeEncodingWithoutVmType(rlpList, fastCheck);
 
-        if (rlpList.size() == 5) {
-            // the old encoding is used by FVM contracts
-            // or by accounts accidentally mislabeled as contracts (issue in the repository cache)
-            vmType = InternalVmType.UNKNOWN;
-
+        if (rlpList.size() != 5) {
+            // revert back from storing the VM type in details
             // force a save with new encoding
-            this.rlpEncoded = null;
+            throw new IllegalStateException(
+                    "Incompatible data storage. Please shutdown the kernel and perform migration to version 0.4.1 of the kernel as instructed in the release.");
         } else {
-            // Decodes the new version of encoding which is a list of 6 elements, specifically:<br>
-            //  { 0:address, 1:isExternalStorage, 2:storageRoot, 3:storage, 4:code, 5: vmType }
-            RLPElement vm = rlpList.get(5);
-
-            if (vm == null || vm.getRLPData() == null || vm.getRLPData().length == 0) {
-                throw new IllegalArgumentException("rlp decode error: invalid vm code");
-            } else {
-                vmType = InternalVmType.getInstance(vm.getRLPData()[0]);
-            }
-
             // keep encoding when compatible with new style
             this.rlpEncoded = rlpCode;
         }
 
-        // both sides of the if above can return the UNKNOWN type
-        // UNKNOWN type + code  =>  FVM contract
-        if (vmType == InternalVmType.UNKNOWN) {
-            byte[] code = getCode();
-            if (code != null && code.length > 0) {
-                vmType = InternalVmType.FVM;
-                // force a save with new encoding
-                this.rlpEncoded = null;
-            }
-        }
-
         if (!fastCheck || externalStorage || !keepStorageInMem) { // it was not a fast check
+            // NOTE: under normal circumstances the VM type is set by the details data store
+            // Do not forget to set the vmType value externally during tests!!!
             decodeStorage(rlpList.get(2), rlpList.get(3), keepStorageInMem);
-
-            if (vmType == InternalVmType.UNKNOWN) {
-                if (!Arrays.equals(storageTrie.getRootHash(), EMPTY_TRIE_HASH)) {
-                    // old encoding of FVM contract without code
-                    vmType = InternalVmType.FVM;
-                } else {
-                    // no code & no storage => account mislabeled as contract
-                    vmType = InternalVmType.EITHER;
-                }
-                // force a save with new encoding
-                this.rlpEncoded = null;
-            }
         }
     }
 
@@ -393,25 +363,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             }
             byte[] rlpCode = RLP.encodeList(codes);
 
-            if (vmType != InternalVmType.EITHER) {
-                // vm type was not added
-                byte[] rlpVmType = RLP.encodeByte(vmType.getCode());
-
-                this.rlpEncoded =
-                        RLP.encodeList(
-                                rlpAddress,
-                                rlpIsExternalStorage,
-                                rlpStorageRoot,
-                                rlpStorage,
-                                rlpCode,
-                                rlpVmType);
-            } else {
-                throw new IllegalStateException(
-                        "Attempting to encode a contract without designated VM. Contract address: "
-                                + address
-                                + " Details: "
-                                + this.toString());
-            }
+            this.rlpEncoded =
+                    RLP.encodeList(
+                            rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
         }
 
         return rlpEncoded;
@@ -546,7 +500,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * @return the specified AionContractDetailsImpl.
      */
     @Override
-    public ContractDetails getSnapshotTo(byte[] hash) {
+    public ContractDetails getSnapshotTo(byte[] hash, InternalVmType vm) {
+        // set the VM type using the code hash
+        vmType = vm;
 
         SecureTrie snapStorage;
         AionContractDetailsImpl details;

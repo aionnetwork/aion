@@ -212,14 +212,16 @@ public interface ContractDetails {
     void syncStorage();
 
     /**
-     * Returns an ContractDetails object pertaining to a specific point in time given by the root
-     * hash hash.
+     * Returns a ContractDetails object pertaining to a specific point in time given by the storage
+     * root hash.
      *
+     * @param storageHash the storage root hash to search for
+     * @param vm used to direct the interpretation of the storage root hash, since AVM contracts
+     *     also include the hash of the object graph.
+     * @return the specified ContractDetails
      * @implNote Implementing classes may not necessarily support this method.
-     * @param hash The root hash to search for.
-     * @return the specified ContractDetails.
      */
-    ContractDetails getSnapshotTo(byte[] hash);
+    ContractDetails getSnapshotTo(byte[] storageHash, InternalVmType vm);
 
     /**
      * Sets the data source to dataSource.

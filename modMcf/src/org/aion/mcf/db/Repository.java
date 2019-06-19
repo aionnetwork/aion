@@ -97,7 +97,15 @@ public interface Repository<AS, BSB> extends RepositoryQuery<AS> {
     /** Performs batch transactions remove. */
     void removeTxBatch(Set<byte[]> pendingTx, boolean isPool);
 
-    InternalVmType getVMUsed(AionAddress contract);
+    /**
+     * Retrieves the vm type used when the given contract with the given code hash was deployed.
+     *
+     * @param contract the contract address for which the vm type is being retrieved
+     * @param codeHash the hash of the code with which the contract was deployed allowing
+     *     distinction between contracts deployed on separate chains
+     * @return the vm type used when the given contract with the given code hash was deployed
+     */
+    InternalVmType getVMUsed(AionAddress contract, byte[] codeHash);
 
     /**
      * Set the transformed code to the account associated with the given address.

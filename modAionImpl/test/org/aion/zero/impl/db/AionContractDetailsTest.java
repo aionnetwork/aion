@@ -21,7 +21,6 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.trie.JournalPruneDataSource;
-import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -442,77 +441,8 @@ public class AionContractDetailsTest {
         return new ByteArrayWrapper(new DataWordImpl(value.getData()).getData());
     }
 
-    @Test
-    public void testEncodingSwitchWithTrie() throws Exception {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-
-        // create old encoding
-        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 0);
-        byte[] rlpStorageRoot = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        byte[] rlpStorage = RLP.encodeElement(new SecureTrie(null).serialize());
-        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
-
-        byte[] oldEncoding =
-                RLP.encodeList(
-                        rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
-
-        // create object using encoding
-        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
-
-        // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
-
-        // check that the encoding has been updated
-        byte[] newEncoding =
-                RLP.encodeList(
-                        rlpAddress,
-                        rlpIsExternalStorage,
-                        rlpStorageRoot,
-                        rlpStorage,
-                        rlpCode,
-                        RLP.encodeByte(InternalVmType.FVM.getCode()));
-        assertThat(details.getEncoded()).isEqualTo(newEncoding);
-    }
-
-    @Test
-    public void testEncodingSwitchWithRoot() throws Exception {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-
-        // create old encoding
-
-        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
-        byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
-        byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
-
-        byte[] oldEncoding =
-                RLP.encodeList(
-                        rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
-
-        // create object using encoding
-        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
-
-        // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
-
-        // check that the encoding has been updated
-        byte[] newEncoding =
-                RLP.encodeList(
-                        rlpAddress,
-                        rlpIsExternalStorage,
-                        rlpStorageRoot,
-                        rlpStorage,
-                        rlpCode,
-                        RLP.encodeByte(InternalVmType.FVM.getCode()));
-        assertThat(details.getEncoded()).isEqualTo(newEncoding);
-    }
-
-    @Test
-    public void testEncodingWithAVM() throws Exception {
+    @Test(expected = IllegalStateException.class)
+    public void testEncodingIncorrectSize() throws Exception {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
@@ -533,14 +463,12 @@ public class AionContractDetailsTest {
                         RLP.encodeByte(InternalVmType.AVM.getCode()));
 
         // create object using encoding
-        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
-
-        // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.AVM);
+        // throws exception due to the illegal size of the encoding above
+        new AionContractDetailsImpl(oldEncoding);
     }
 
     @Test
-    public void testEncodingSize() {
+    public void testEncodingCorrectSize() throws Exception {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
@@ -555,26 +483,13 @@ public class AionContractDetailsTest {
 
         // ensure correct size after VM type is set
         RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
-        assertThat(data.size()).isEqualTo(6);
+        assertThat(data.size()).isEqualTo(5);
 
-        // check that the VM type is correct
+        // check that the initial VM type is as expected
         assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
-    }
 
-    @Test(expected = IllegalStateException.class)
-    public void testEncodingWithoutVM() {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-
-        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
-
-        AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
-        details.setExternalStorageDataSource(externalStorage);
-        details.setAddress(address);
-        details.setCode(code);
-
-        // if the VM type is not set the encoding has 5 parameters
-        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        // check that the decoding has the default VM type
+        AionContractDetailsImpl decoded = new AionContractDetailsImpl(details.getEncoded());
+        assertThat(decoded.getVmType()).isEqualTo(InternalVmType.EITHER);
     }
 }

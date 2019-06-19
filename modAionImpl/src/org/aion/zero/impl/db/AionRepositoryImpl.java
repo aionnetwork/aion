@@ -1,5 +1,6 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
+import org.apache.commons.lang3.tuple.Pair;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl
@@ -187,11 +190,20 @@ public class AionRepositoryImpl
 
                     updateContractDetails(address, contractDetails);
 
+                    // TODO: incorrect check codeHash != trie hash
                     if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
                         accountState.setStateRoot(contractDetails.getStorageHash());
                     }
 
                     updateAccountState(address, accountState);
+
+                    if (contractDetails.getVmType().isContract()) {
+                        cachedContractIndex.put(
+                                contractDetails.getAddress(),
+                                Pair.of(
+                                        ByteArrayWrapper.wrap(accountState.getCodeHash()),
+                                        contractDetails.getVmType()));
+                    }
 
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(
@@ -442,9 +454,9 @@ public class AionRepositoryImpl
     /**
      * @inheritDoc
      * @implNote Any other method calling this can rely on the fact that the contract details
-     *     returned is a newly created object by {@link ContractDetails#getSnapshotTo(byte[])}.
-     *     Since this querying method it locked, the methods calling it <b>may not need to be locked
-     *     or synchronized</b>, depending on the specific use case.
+     *     returned is a newly created object by {@link ContractDetails#getSnapshotTo(byte[],
+     *     InternalVmType)}. Since this querying method it locked, the methods calling it <b>may not
+     *     need to be locked or synchronized</b>, depending on the specific use case.
      */
     @Override
     public ContractDetails getContractDetails(AionAddress address) {
@@ -458,14 +470,17 @@ public class AionRepositoryImpl
             // saved in the account
             AccountState accountState = getAccountState(address);
             byte[] storageRoot = EMPTY_TRIE_HASH;
+            byte[] codeHash = EMPTY_DATA_HASH;
             if (accountState != null) {
-                storageRoot = getAccountState(address).getStateRoot();
+                storageRoot = accountState.getStateRoot();
+                codeHash = accountState.getCodeHash();
             }
 
-            details = detailsDS.get(address.toByteArray());
+            InternalVmType vm = getVMUsed(address, codeHash);
+            details = detailsDS.get(vm, address.toByteArray());
 
             if (details != null) {
-                details = details.getSnapshotTo(storageRoot);
+                details = details.getSnapshotTo(storageRoot, vm);
                 Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
                 if (code.isPresent()) {
                     details.setTransformedCode(code.get());
@@ -1058,6 +1073,21 @@ public class AionRepositoryImpl
         return contract == null ? null : contractInfoSource.get(contract.toByteArray());
     }
 
+    /**
+     * Stores information regarding the given contract address for indexing and fast retrieval.
+     *
+     * @param contract the contract address for which information is being indexed
+     * @param codeHash the hash of the code used at contract deployment allowing distinction between
+     *     contracts deployed on different chains
+     * @param inceptionBlock the block where the contract was created (to be used for sync through
+     *     state transfer)
+     * @param vmUsed the virtual machine used at the contract deployment (used to delegate contract
+     *     call transactions to the appropriate virtual machine)
+     * @param complete flag indicating if the data regarding this contract is complete (used by
+     *     future light clients and during sync through state transfer to ensure the contract data
+     *     is fully downloaded)
+     */
+    @VisibleForTesting
     public void saveIndexedContractInformation(
             AionAddress contract,
             ByteArrayWrapper codeHash,
@@ -1080,18 +1110,60 @@ public class AionRepositoryImpl
         }
     }
 
-    public InternalVmType getVMUsed(AionAddress contract) {
+    private Map<AionAddress, Pair<ByteArrayWrapper, InternalVmType>> cachedContractIndex =
+            new HashMap<>();
+
+    /** Indexes the contract information. */
+    public void commitCachedVMs(ByteArrayWrapper inceptionBlock) {
+        for (Map.Entry<AionAddress, Pair<ByteArrayWrapper, InternalVmType>> entry :
+                cachedContractIndex.entrySet()) {
+
+            AionAddress contract = entry.getKey();
+            ByteArrayWrapper codeHash = entry.getValue().getLeft();
+            InternalVmType vm = entry.getValue().getRight();
+
+            // write only if not already stored
+            ContractInformation ci = getIndexedContractInformation(contract);
+            if (ci == null || !ci.getVmUsed(codeHash.toBytes()).isContract()) {
+                saveIndexedContractInformation(contract, codeHash, inceptionBlock, vm, true);
+            } else {
+                if (ci != null && ci.getVmUsed(codeHash.toBytes()) != vm) {
+                    // possibly same code hash for AVM and FVM
+                    LOG.error(
+                            "The stored VM type does not match the cached VM type for the contract {} with code hash {}.",
+                            contract,
+                            codeHash);
+                }
+            }
+        }
+        cachedContractIndex.clear();
+    }
+
+    /**
+     * Called by the blockchain after the current block has been fully processed and before the
+     * contract information is indexed.
+     */
+    public void clearCachedVMs() {
+        cachedContractIndex.clear();
+    }
+
+    /** Used when the codeHash is already known. */
+    public InternalVmType getVMUsed(AionAddress contract, byte[] codeHash) {
         if (ContractInfo.isPrecompiledContract(contract)) {
             // skip the call to disk
             return InternalVmType.FVM;
         } else {
-            ContractInformation ci = getIndexedContractInformation(contract);
-            if (ci == null) {
-                // signals that the value is not set
-                return InternalVmType.UNKNOWN;
+            if (cachedContractIndex.containsKey(contract)) {
+                // block has not been committed yet
+                return cachedContractIndex.get(contract).getRight();
             } else {
-                AccountState accountState = getAccountState(contract);
-                return ci.getVmUsed(accountState.getCodeHash());
+                ContractInformation ci = getIndexedContractInformation(contract);
+                if (ci == null) {
+                    // signals that the value is not set
+                    return InternalVmType.UNKNOWN;
+                } else {
+                    return ci.getVmUsed(codeHash);
+                }
             }
         }
     }
