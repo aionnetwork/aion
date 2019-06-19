@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
@@ -38,9 +37,10 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
@@ -60,9 +60,6 @@ public class AionRepositoryImpl
 
     // inferred contract information not used for consensus
     private ObjectDataSource<ContractInformation> contractInfoSource;
-
-    // inferred the contract executing code not used for consensus.
-    private ByteArrayKeyValueDatabase contractTransformedCode;
 
     /**
      * used by getSnapShotTo
@@ -102,8 +99,6 @@ public class AionRepositoryImpl
                     new ObjectDataSource<>(
                             contractIndexDatabase, ContractInformation.RLP_SERIALIZER);
 
-            this.contractTransformedCode = contractPerformCodeDatabase;
-
             // Setup world trie.
             worldState = createStateTrie();
         } catch (Exception e) {
@@ -129,7 +124,8 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<AionAddress, AccountState> stateCache, Map<AionAddress, ContractDetails> detailsCache) {
+            Map<AionAddress, AccountState> stateCache,
+            Map<AionAddress, ContractDetails> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
@@ -471,7 +467,7 @@ public class AionRepositoryImpl
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot);
-                Optional<byte[]> code = contractTransformedCode.get(address.toByteArray());
+                Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
                 if (code.isPresent()) {
                     details.setTransformedCode(code.get());
                 }
@@ -543,7 +539,7 @@ public class AionRepositoryImpl
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
-        Optional<byte[]> code = contractTransformedCode.get(address.toByteArray());
+        Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
         if (code.isPresent()) {
             details.setTransformedCode(code.get());
         }
@@ -634,7 +630,7 @@ public class AionRepositoryImpl
             AionRepositoryImpl repo = new AionRepositoryImpl();
             repo.blockStore = blockStore;
             repo.contractInfoSource = contractInfoSource;
-            repo.contractTransformedCode = contractTransformedCode;
+            repo.contractPerformCodeDatabase = contractPerformCodeDatabase;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
@@ -796,10 +792,10 @@ public class AionRepositoryImpl
             }
 
             try {
-                if (contractTransformedCode != null) {
-                    contractTransformedCode.close();
-                    LOGGEN.info("contractTransformedCode store closed.");
-                    contractTransformedCode = null;
+                if (contractPerformCodeDatabase != null) {
+                    contractPerformCodeDatabase.close();
+                    LOGGEN.info("contractPerformCodeDatabase store closed.");
+                    contractPerformCodeDatabase = null;
                 }
             } catch (Exception e) {
                 LOGGEN.error(
@@ -1067,7 +1063,8 @@ public class AionRepositoryImpl
             AionAddress contract, long inceptionBlock, InternalVmType vmUsed, boolean complete) {
         if (contract != null) {
             contractInfoSource.put(
-                    contract.toByteArray(), new ContractInformation(inceptionBlock, vmUsed, complete));
+                    contract.toByteArray(),
+                    new ContractInformation(inceptionBlock, vmUsed, complete));
         }
     }
 
