@@ -5,9 +5,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.util.Collections;
+
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;

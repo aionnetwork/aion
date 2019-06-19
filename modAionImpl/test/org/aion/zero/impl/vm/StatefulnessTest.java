@@ -5,10 +5,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+
+import org.aion.avm.tooling.ABIUtil;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
-import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
