@@ -20,7 +20,7 @@ def getCommitHash = { ->
 }
 
 dependencies {
-    compile files("${rootProject.projectDir}/lib/aion-types-e367876.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'com.google.truth:truth:0.42'

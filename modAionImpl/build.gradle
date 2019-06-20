@@ -33,7 +33,7 @@ dependencies {
     compile project(':aion_fastvm')
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:3.6.1'
-    compile files("${rootProject.projectDir}/lib/aion-types-e367876.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
 
     testCompile project(path: ':modTxPoolImpl')
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')

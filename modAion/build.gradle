@@ -10,7 +10,7 @@ dependencies {
     compile project(':modUtil')
     compile project(':modRlp')
     compile project(':modCrypto')
-    compile files("${rootProject.projectDir}/lib/aion-types-e367876.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
 
     compile project(':modMcf')
     compile 'org.json:json:20180813'
