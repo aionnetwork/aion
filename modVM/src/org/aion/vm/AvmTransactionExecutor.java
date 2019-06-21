@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.aion.avm.core.FutureResult;
-import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
@@ -17,8 +16,6 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
-import org.aion.vm.api.interfaces.ResultCode;
-import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -95,7 +92,8 @@ public final class AvmTransactionExecutor {
                 // Check the block energy limit & reject if necessary.
                 long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
                 if (energyUsed > blockRemainingEnergy) {
-                    result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+                    // TODO This needs to be changed to Invalid Energy Limit
+                    result.setResultCode(AvmTransactionResult.Code.REJECTED);
                     result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
                     ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
                 }
@@ -155,7 +153,7 @@ public final class AvmTransactionExecutor {
             .internalTransactions(sideEffects.getInternalTransactions())
             .result(result.getReturnData());
 
-        ResultCode resultCode = result.getResultCode();
+        AvmTransactionResult.Code resultCode = result.getResultCode();
         if (resultCode.isRejected()) {
             builder.markAsRejected();
         } else if (resultCode.isFailed()) {
