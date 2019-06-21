@@ -84,7 +84,7 @@ public final class AvmTransactionExecutor {
             // Process the results of the transactions.
             int index = 0;
             for (FutureResult resultAsFuture : resultsAsFutures) {
-                TransactionResult result = resultAsFuture.get();
+                AvmTransactionResult result = resultAsFuture.get();
 
                 if (result.getResultCode().isFatal()) {
                     throw new VMException(result.toString());
@@ -134,7 +134,7 @@ public final class AvmTransactionExecutor {
         return transactionSummaries;
     }
 
-    private static AionTxExecSummary buildTransactionSummary(AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
+    private static AionTxExecSummary buildTransactionSummary(AionTransaction transaction, AvmTransactionResult result, boolean isLocalCall) {
         // TODO: should Avm assure us that this is always non-null like the fvm does? But in Avm
         // TODO: a null return value is actually meaningful. Need to figure this out.
         if (result.getReturnData() == null) {
@@ -171,7 +171,7 @@ public final class AvmTransactionExecutor {
         return summary;
     }
 
-    private static AionTxReceipt makeReceipt(AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result) {
+    private static AionTxReceipt makeReceipt(AionTransaction transaction, List<IExecutionLog> logs, AvmTransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
@@ -199,7 +199,7 @@ public final class AvmTransactionExecutor {
         return logs;
     }
 
-    private static long computeEnergyUsed(long limit, TransactionResult result) {
+    private static long computeEnergyUsed(long limit, AvmTransactionResult result) {
         return limit - result.getEnergyRemaining();
     }
 
