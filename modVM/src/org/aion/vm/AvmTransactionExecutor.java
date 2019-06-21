@@ -3,6 +3,8 @@ package org.aion.vm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.aion.avm.core.FutureResult;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.RepositoryCache;
@@ -16,7 +18,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
-import org.aion.vm.api.interfaces.SimpleFuture;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTransaction;
@@ -78,11 +79,11 @@ public final class AvmTransactionExecutor {
         try {
             // Acquire the avm lock and then run the transactions.
             avm.acquireAvmLock();
-            SimpleFuture<TransactionResult>[] resultsAsFutures = avm.run(kernel, transactions);
+            FutureResult[] resultsAsFutures = avm.run(kernel, transactions);
 
             // Process the results of the transactions.
             int index = 0;
-            for (SimpleFuture<TransactionResult> resultAsFuture : resultsAsFutures) {
+            for (FutureResult resultAsFuture : resultsAsFutures) {
                 TransactionResult result = resultAsFuture.get();
 
                 if (result.getResultCode().isFatal()) {
