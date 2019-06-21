@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+import org.aion.kernel.SideEffects;
 import org.aion.avm.core.FutureResult;
-import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
