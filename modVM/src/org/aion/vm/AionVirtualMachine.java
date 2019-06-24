@@ -3,14 +3,12 @@ package org.aion.vm;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.avm.core.AvmConfiguration;
 import org.aion.avm.core.AvmImpl;
+import org.aion.avm.core.AvmTransaction;
 import org.aion.avm.core.CommonAvmFactory;
 import org.aion.avm.core.FutureResult;
-import org.aion.interfaces.tx.Transaction;
 import org.aion.vm.api.interfaces.KernelInterface;
 
-/**
- * A thread-safe access-point to the Aion Virtual Machine.
- */
+/** A thread-safe access-point to the Aion Virtual Machine. */
 public final class AionVirtualMachine {
     private final ReentrantLock avmLock = new ReentrantLock();
     private final AvmImpl avm;
@@ -34,14 +32,14 @@ public final class AionVirtualMachine {
     /**
      * Executes the given transactions.
      *
-     * This method can only be invoked by the owner of the avm lock! That is, the caller must first
-     * have called {@code acquireAvmLock()} first.
+     * <p>This method can only be invoked by the owner of the avm lock! That is, the caller must
+     * first have called {@code acquireAvmLock()} first.
      *
      * @param kernelInterface The interface into the kernel.
      * @param transactions The transactions to execute.
      * @return The future results.
      */
-    public FutureResult[] run(KernelInterface kernelInterface, Transaction[] transactions) {
+    public FutureResult[] run(KernelInterface kernelInterface, AvmTransaction[] transactions) {
         if (this.avmLock.isHeldByCurrentThread()) {
             return this.avm.run(kernelInterface, transactions);
         } else {
@@ -52,8 +50,8 @@ public final class AionVirtualMachine {
     /**
      * Shuts down the AVM. This object can no longer be used once this method is called.
      *
-     * This method can only be invoked by the owner of the avm lock! That is, the caller must first
-     * have called {@code acquireAvmLock()} first.
+     * <p>This method can only be invoked by the owner of the avm lock! That is, the caller must
+     * first have called {@code acquireAvmLock()} first.
      */
     public void shutdown() {
         if (this.avmLock.isHeldByCurrentThread()) {
@@ -66,10 +64,10 @@ public final class AionVirtualMachine {
     /**
      * Acquires the lock.
      *
-     * If another thread currently holds the lock, then this method blocks until the current thread
-     * is the owner of the lock and then returns.
+     * <p>If another thread currently holds the lock, then this method blocks until the current
+     * thread is the owner of the lock and then returns.
      *
-     * It is the responsibility of the caller to release the lock once they are done with it.
+     * <p>It is the responsibility of the caller to release the lock once they are done with it.
      */
     public void acquireAvmLock() {
         this.avmLock.lock();
@@ -78,8 +76,8 @@ public final class AionVirtualMachine {
     /**
      * Releases the lock.
      *
-     * If the caller does not currently own the lock, this method returns immediately without doing
-     * anything.
+     * <p>If the caller does not currently own the lock, this method returns immediately without
+     * doing anything.
      */
     public void releaseAvmLock() {
         if (this.avmLock.isHeldByCurrentThread()) {

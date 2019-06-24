@@ -1,15 +1,16 @@
 package org.aion.vm;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.aion.avm.core.types.InternalTransaction;
-import org.aion.kernel.SideEffects;
+import org.aion.avm.core.AvmTransaction;
 import org.aion.avm.core.FutureResult;
+import org.aion.avm.core.types.InternalTransaction;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
+import org.aion.kernel.SideEffects;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -80,8 +81,9 @@ public final class AvmTransactionExecutor {
 
         try {
             // Acquire the avm lock and then run the transactions.
+            AvmTransaction[] avmTransactions = convertKernelTransactionsToAvm(transactions);
             avm.acquireAvmLock();
-            FutureResult[] resultsAsFutures = avm.run(kernel, transactions);
+            FutureResult[] resultsAsFutures = avm.run(kernel, avmTransactions);
 
             // Process the results of the transactions.
             int index = 0;
@@ -226,6 +228,32 @@ public final class AvmTransactionExecutor {
                             avmTx.getValue(),
                             avmTx.getData(),
                             null));
+        }
+        return txs;
+    }
+
+    /**
+     * Converts the Kernel AionTransaction implementation into an AVM Transaction implementation.
+     *
+     * <p>This should be a temporary measure until both are using the exact same type.
+     *
+     * @param aionTransactions The Kernel Transactions.
+     * @return The equivalent AVM Transactions.
+     */
+    private static AvmTransaction[] convertKernelTransactionsToAvm(AionTransaction[] aionTransactions) {
+        AvmTransaction[] txs = new AvmTransaction[aionTransactions.length];
+        for (int i = 0; i < aionTransactions.length; i++) {
+            AionTransaction tx = aionTransactions[i];
+            txs[i] = new AvmTransaction(
+                            tx.getSenderAddress(),
+                            tx.getDestinationAddress(),
+                            tx.getTransactionHash(),
+                            new BigInteger(1, tx.getValue()),
+                            new BigInteger(1, tx.getNonce()),
+                            tx.getEnergyPrice(),
+                            tx.getEnergyLimit(),
+                            tx.isContractCreationTransaction(),
+                            tx.getData());
         }
         return txs;
     }
