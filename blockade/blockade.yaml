@@ -1,0 +1,61 @@
+containers:
+  n1:
+    image: aionnetwork/aion:latest
+    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+    command: "./aion.sh -n custom"
+    volumes:
+      "<Absolute project path>/blockade/node1": "/aion/custom"
+      #e.g. "/home/jay/workspace/release/aion/blockade/node1": "/aion/custom"
+    expose: [30303, 8545]
+    ports:
+      3001: 30303
+      9001: 8545
+
+  n2:
+    image: aionnetwork/aion:latest
+    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+    command: "./aion.sh -n custom"
+    volumes:
+      "<Absolute project path>/blockade/node2": "/aion/custom"
+    expose: [30303, 8545]
+    ports:
+      3002: 30303
+      9002: 8545
+
+  n3:
+    image: aionnetwork/aion:latest
+    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+    command: "./aion.sh -n custom"
+    volumes:
+      "<Absolute project path>/blockade/node3": "/aion/custom"
+    expose: [30303, 8545]
+    ports:
+      3003: 30303
+      9003: 8545
+
+  n4:
+    image: aionnetwork/aion:latest
+    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+    command: "./aion.sh -n custom"
+    volumes:
+      "<Absolute project path>/blockade/node4": "/aion/custom"
+    expose: [30303, 8545]
+    ports:
+      3004: 30303
+      9004: 8545
+
+# aion rust unity kernel settings
+#  n5:
+#    image: unity
+#    command: "./aion"
+#    volumes:
+#      "/path/to/aionr-unity/blockade/node5": "/root/.aion"
+#    expose: [30303, 8545, 8008]
+#    ports:
+#      3005: 30303
+#      8001: 8008
+#      9005: 8545
+
+#network:
+#  flaky: 30%
+#  slow: 75ms 100ms distribution normal

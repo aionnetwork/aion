@@ -350,6 +350,33 @@ task packDocker(type: Exec) {
         "${buildDir}/docker"
 }
 
+task packDockerWithVersion(type: Exec) {
+    dependsOn copyPackForDocker
+
+    def stdout = new ByteArrayOutputStream()
+    def stdout2 = new ByteArrayOutputStream()
+
+    exec{
+        commandLine "./script/build_ver.sh"
+        standardOutput = stdout;
+    }
+
+    ant.echo("ver:" + stdout)
+    exec{
+        commandLine 'git', 'log', '-1', '--format=%h'
+        standardOutput = stdout2;
+    }
+
+    ant.echo("rev:" + stdout2)
+
+    def distImageTag = project.findProperty('dist_image_tag') ?: "aionnetwork/aion:${stdout.toString().trim()}-${stdout2.toString().trim()}"
+    ant.echo("distImageTag: " + distImageTag)
+
+    commandLine 'docker', 'build',
+        '--target', 'dist', '-t', distImageTag,
+        "${buildDir}/docker"
+}
+
 task packK8sDocker(type: Exec) { 
     dependsOn copyPackForDocker 
 
