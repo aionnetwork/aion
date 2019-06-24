@@ -14,6 +14,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -190,10 +191,10 @@ public final class AvmTransactionExecutor {
      * @param avmLogs The AVM logs.
      * @return The equivalent kernel logs.
      */
-    private static List<IExecutionLog> convertAvmLogsToKernel(List<org.aion.kernel.Log> avmLogs) {
+    private static List<IExecutionLog> convertAvmLogsToKernel(List<org.aion.types.Log> avmLogs) {
         List<IExecutionLog> logs = new ArrayList<>();
-        for (org.aion.kernel.Log avmLog : avmLogs) {
-            logs.add(new Log(avmLog.getSourceAddress(), avmLog.getTopics(), avmLog.getData()));
+        for (org.aion.types.Log avmLog : avmLogs) {
+            logs.add(new Log(new AionAddress(avmLog.copyOfAddress()), avmLog.copyOfTopics(), avmLog.copyOfData()));
         }
         return logs;
     }
