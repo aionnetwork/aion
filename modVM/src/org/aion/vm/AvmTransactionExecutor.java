@@ -190,9 +190,9 @@ public final class AvmTransactionExecutor {
      * @param avmLogs The AVM logs.
      * @return The equivalent kernel logs.
      */
-    private static List<IExecutionLog> convertAvmLogsToKernel(List<IExecutionLog> avmLogs) {
+    private static List<IExecutionLog> convertAvmLogsToKernel(List<org.aion.kernel.Log> avmLogs) {
         List<IExecutionLog> logs = new ArrayList<>();
-        for (IExecutionLog avmLog : avmLogs) {
+        for (org.aion.kernel.Log avmLog : avmLogs) {
             logs.add(new Log(avmLog.getSourceAddress(), avmLog.getTopics(), avmLog.getData()));
         }
         return logs;
