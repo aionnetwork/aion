@@ -1,9 +1,9 @@
 package org.aion.vm;
 
+import org.aion.avm.core.AvmTransaction;
 import org.aion.avm.core.IExternalCapabilities;
 import org.aion.avm.core.types.InternalTransaction;
 import org.aion.crypto.HashUtil;
-import org.aion.kernel.TestingTransaction;
 import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.TransactionInterface;
 
@@ -35,8 +35,8 @@ public class AionCapabilities implements IExternalCapabilities {
     }
 
     @Override
-    public AionAddress generateContractAddress(TestingTransaction tx) {
-        return new AionAddress(HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+    public AionAddress generateContractAddress(AvmTransaction tx) {
+        return new AionAddress(HashUtil.calcNewAddr(tx.senderAddress.toByteArray(), tx.nonce.toByteArray()));
     }
 
     @Override
