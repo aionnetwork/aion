@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
+import org.aion.avm.core.types.InternalTransaction;
 import org.aion.kernel.SideEffects;
 import org.aion.avm.core.FutureResult;
 import org.aion.interfaces.db.RepositoryCache;
@@ -17,12 +18,10 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxExecSummary;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
+import org.aion.zero.types.*;
 import org.slf4j.Logger;
 
 /**
@@ -149,10 +148,11 @@ public final class AvmTransactionExecutor {
         }
 
         List<IExecutionLog> logs = convertAvmLogsToKernel(sideEffects.getExecutionLogs());
+        List<InternalTransactionInterface> internalTxs = convertAvmInternalTransactionToKernel(sideEffects.getInternalTransactions());
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
             .logs(logs)
             .deletedAccounts(sideEffects.getAddressesToBeDeleted())
-            .internalTransactions(sideEffects.getInternalTransactions())
+            .internalTransactions(internalTxs)
             .result(result.getReturnData());
 
         AvmTransactionResult.Code resultCode = result.getResultCode();
@@ -197,6 +197,26 @@ public final class AvmTransactionExecutor {
             logs.add(new Log(new AionAddress(avmLog.copyOfAddress()), avmLog.copyOfTopics(), avmLog.copyOfData()));
         }
         return logs;
+    }
+
+
+    /**
+     * Converts the AVM Internal Transaction implementation into a kernel Internal Transaction implementation,
+     * since the kernel implementation has features that the kernel relies on that are not implemented by the AVM
+     * version.
+     *
+     * This should be a temporary measure until both are using the exact same type.
+     *
+     * @param avmInternalTransactions The AVM Internal Transactions.
+     * @return The equivalent kernel Internal Transactions.
+     */
+    private static List<InternalTransactionInterface> convertAvmInternalTransactionToKernel(List<InternalTransaction> avmInternalTransactions) {
+        List<InternalTransactionInterface> txs = new ArrayList<>();
+        for (InternalTransaction avmTx : avmInternalTransactions) {
+            txs.add(new AionInternalTx(null, 0, 0, avmTx.getNonce(), avmTx.getSenderAddress(),
+                    avmTx.getDestinationAddress(), avmTx.getValue(), avmTx.getData(), null));
+        }
+        return txs;
     }
 
     private static long computeEnergyUsed(long limit, AvmTransactionResult result) {
