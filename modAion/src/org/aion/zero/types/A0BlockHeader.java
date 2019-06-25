@@ -9,8 +9,9 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 
 import java.math.BigInteger;
 import java.util.Objects;
+
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.types.AionAddress;
-import org.aion.interfaces.block.PowBlockHeader;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
@@ -25,7 +26,7 @@ import org.json.JSONObject;
  *
  * @author Ross
  */
-public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader {
+public class A0BlockHeader extends AbstractBlockHeader {
 
     static final int RPL_BH_VERSION = 0,
             RPL_BH_NUMBER = 1,

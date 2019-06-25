@@ -1,12 +1,14 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
+
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
 /** Abstract BlockHeader. */
-public abstract class AbstractBlockHeader {
+public abstract class AbstractBlockHeader implements BlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
