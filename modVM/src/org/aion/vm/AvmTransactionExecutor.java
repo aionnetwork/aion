@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.avm.core.AvmTransaction;
 import org.aion.avm.core.FutureResult;
 import org.aion.avm.core.types.InternalTransaction;
 import org.aion.interfaces.db.RepositoryCache;
@@ -16,6 +15,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
 import org.aion.types.AionAddress;
+import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
@@ -81,7 +81,7 @@ public final class AvmTransactionExecutor {
 
         try {
             // Acquire the avm lock and then run the transactions.
-            AvmTransaction[] avmTransactions = convertKernelTransactionsToAvm(transactions);
+            Transaction[] avmTransactions = convertKernelTransactionsToAvm(transactions);
             avm.acquireAvmLock();
             FutureResult[] resultsAsFutures = avm.run(kernel, avmTransactions);
 
@@ -240,20 +240,30 @@ public final class AvmTransactionExecutor {
      * @param aionTransactions The Kernel Transactions.
      * @return The equivalent AVM Transactions.
      */
-    private static AvmTransaction[] convertKernelTransactionsToAvm(AionTransaction[] aionTransactions) {
-        AvmTransaction[] txs = new AvmTransaction[aionTransactions.length];
+    private static Transaction[] convertKernelTransactionsToAvm(AionTransaction[] aionTransactions) {
+        Transaction[] txs = new Transaction[aionTransactions.length];
         for (int i = 0; i < aionTransactions.length; i++) {
             AionTransaction tx = aionTransactions[i];
-            txs[i] = new AvmTransaction(
-                            tx.getSenderAddress(),
-                            tx.getDestinationAddress(),
-                            tx.getTransactionHash(),
-                            new BigInteger(1, tx.getValue()),
-                            new BigInteger(1, tx.getNonce()),
-                            tx.getEnergyPrice(),
-                            tx.getEnergyLimit(),
-                            tx.isContractCreationTransaction(),
-                            tx.getData());
+            if (tx.isContractCreationTransaction()) {
+                txs[i] = Transaction.contractCreateTransaction(
+                    tx.getSenderAddress(),
+                    tx.getTransactionHash(),
+                    new BigInteger(1, tx.getNonce()),
+                    new BigInteger(1, tx.getValue()),
+                    tx.getData(),
+                    tx.getEnergyLimit(),
+                    tx.getEnergyPrice());
+            } else {
+                txs[i] = Transaction.contractCallTransaction(
+                    tx.getSenderAddress(),
+                    tx.getDestinationAddress(),
+                    tx.getTransactionHash(),
+                    new BigInteger(1, tx.getNonce()),
+                    new BigInteger(1, tx.getValue()),
+                    tx.getData(),
+                    tx.getEnergyLimit(),
+                    tx.getEnergyPrice());
+            }
         }
         return txs;
     }

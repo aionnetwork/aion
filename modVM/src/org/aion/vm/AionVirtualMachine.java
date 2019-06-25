@@ -3,9 +3,9 @@ package org.aion.vm;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.avm.core.AvmConfiguration;
 import org.aion.avm.core.AvmImpl;
-import org.aion.avm.core.AvmTransaction;
 import org.aion.avm.core.CommonAvmFactory;
 import org.aion.avm.core.FutureResult;
+import org.aion.types.Transaction;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 /** A thread-safe access-point to the Aion Virtual Machine. */
@@ -39,7 +39,7 @@ public final class AionVirtualMachine {
      * @param transactions The transactions to execute.
      * @return The future results.
      */
-    public FutureResult[] run(KernelInterface kernelInterface, AvmTransaction[] transactions) {
+    public FutureResult[] run(KernelInterface kernelInterface, Transaction[] transactions) {
         if (this.avmLock.isHeldByCurrentThread()) {
             return this.avm.run(kernelInterface, transactions);
         } else {
