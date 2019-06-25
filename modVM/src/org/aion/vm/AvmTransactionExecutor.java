@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.avm.core.FutureResult;
-import org.aion.avm.core.types.InternalTransaction;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
@@ -15,6 +14,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -222,11 +222,11 @@ public final class AvmTransactionExecutor {
                             null,
                             0,
                             0,
-                            avmTx.getNonce(),
-                            avmTx.getSenderAddress(),
-                            avmTx.getDestinationAddress(),
-                            avmTx.getValue(),
-                            avmTx.getData(),
+                            avmTx.senderNonce.toByteArray(),
+                            avmTx.sender,
+                            avmTx.destination,
+                            avmTx.value.toByteArray(),
+                            avmTx.copyOfData(),
                             null));
         }
         return txs;

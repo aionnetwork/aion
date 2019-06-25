@@ -1,7 +1,6 @@
 package org.aion.vm;
 
 import org.aion.avm.core.IExternalCapabilities;
-import org.aion.avm.core.types.InternalTransaction;
 import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.Transaction;
