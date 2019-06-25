@@ -1,6 +1,7 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
+import org.aion.avm.core.IExternalState;
 import org.aion.types.AionAddress;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
@@ -12,9 +13,8 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.vm.api.interfaces.KernelInterface;
 
-public class KernelInterfaceForAVM implements KernelInterface {
+public class ChildExternalState implements IExternalState {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
@@ -24,7 +24,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
     private long blockNrgLimit;
     private AionAddress blockCoinbase;
 
-    public KernelInterfaceForAVM(
+    public ChildExternalState(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
@@ -48,8 +48,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
     }
 
     @Override
-    public KernelInterfaceForAVM makeChildKernelInterface() {
-        return new KernelInterfaceForAVM(
+    public ChildExternalState newChildExternalState() {
+        return new ChildExternalState(
                 this.repositoryCache.startTracking(),
                 this.allowNonceIncrement,
                 this.isLocalCall,
@@ -66,8 +66,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
     }
 
     @Override
-    public void commitTo(KernelInterface target) {
-        this.repositoryCache.flushTo(((KernelInterfaceForAVM) target).repositoryCache, false);
+    public void commitTo(IExternalState target) {
+        this.repositoryCache.flushTo(((ChildExternalState) target).repositoryCache, false);
     }
 
     // the below two methods are temporary and will be removed by the upcoming refactorings.

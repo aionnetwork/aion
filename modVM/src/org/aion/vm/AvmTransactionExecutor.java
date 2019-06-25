@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.avm.core.FutureResult;
+import org.aion.avm.core.IExternalState;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.kernel.AvmTransactionResult;
@@ -19,7 +20,6 @@ import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
-import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.*;
 import org.slf4j.Logger;
@@ -77,7 +77,7 @@ public final class AvmTransactionExecutor {
         long blockRemainingEnergy = initialBlockEnergyLimit;
 
         AionVirtualMachine avm = LongLivedAvm.singleton();
-        KernelInterface kernel = newKernelInterface(repository.startTracking(), block, allowNonceIncrement, isLocalCall);
+        IExternalState kernel = newExternalState(repository.startTracking(), block, allowNonceIncrement, isLocalCall);
 
         try {
             // Acquire the avm lock and then run the transactions.
@@ -109,8 +109,9 @@ public final class AvmTransactionExecutor {
                 AionTxExecSummary summary = buildTransactionSummary(transaction, result, isLocalCall);
 
                 // Update the repository by committing any changes in the Avm.
-                KernelInterface kernelFromAvm = result.getKernelInterface();
-                kernelFromAvm.commitTo(newKernelInterface(repository, block, allowNonceIncrement, isLocalCall));
+                IExternalState externalState = result.getExternalState();
+                externalState.commitTo(
+                    newExternalState(repository, block, allowNonceIncrement, isLocalCall));
 
                 // Do any post execution work if any is specified.
                 if (postExecutionWork != null) {
@@ -281,8 +282,8 @@ public final class AvmTransactionExecutor {
         return new DataWordImpl(diff);
     }
 
-    private static KernelInterface newKernelInterface(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, IAionBlock block, boolean allowNonceIncrement, boolean isLocalCall) {
-        return new KernelInterfaceForAVM(
+    private static IExternalState newExternalState(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, IAionBlock block, boolean allowNonceIncrement, boolean isLocalCall) {
+        return new ChildExternalState(
             repository,
             allowNonceIncrement,
             isLocalCall,
