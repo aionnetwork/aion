@@ -69,16 +69,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
      * exception of the genesis block, this must be 32 bytes or fewer
      */
     protected byte[] extraData;
-    /*
-     * A 256-bit hash which proves that a sufficient amount of computation has
-     * been carried out on this block
-     */
-    protected byte[] nonce;
-
-    /////////////////////////////////////////////////////////////////
-    // (1344 in 200-9, 1408 in 210,9)
-    protected byte[] solution; // The equihash solution in compressed format
-
+    
     /*
      * A long value containing energy consumed within this block
      */
@@ -88,14 +79,6 @@ public abstract class AbstractBlockHeader implements BlockHeader {
      * A long value containing energy limit of this block
      */
     protected long energyLimit;
-
-    public byte[] getSolution() {
-        return solution;
-    }
-
-    public void setSolution(byte[] solution) {
-        this.solution = solution;
-    }
 
     public AbstractBlockHeader() {}
 
@@ -187,14 +170,6 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return extraData;
     }
 
-    public byte[] getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(byte[] nonce) {
-        this.nonce = nonce;
-    }
-
     public void setLogsBloom(byte[] logsBloom) {
         this.logsBloom = logsBloom;
     }
@@ -205,15 +180,6 @@ public abstract class AbstractBlockHeader implements BlockHeader {
 
     public boolean isGenesis() {
         return this.number == 0;
-    }
-
-    public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(
-                32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
-    }
-
-    public BigInteger getPowBoundaryBI() {
-        return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
     }
 
     public byte getVersion() {

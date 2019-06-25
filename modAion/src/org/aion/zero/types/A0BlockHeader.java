@@ -20,6 +20,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
+import org.spongycastle.util.BigIntegers;
 
 /**
  * aion zero block header class.
@@ -43,6 +44,17 @@ public class A0BlockHeader extends AbstractBlockHeader {
             RPL_BH_TIMESTAMP = 12,
             RPL_BH_NONCE = 13,
             RPL_BH_SOLUTION = 14;
+
+
+    /*
+     * A 256-bit hash which proves that a sufficient amount of computation has
+     * been carried out on this block
+     */
+    private byte[] nonce;
+
+    /////////////////////////////////////////////////////////////////
+    // (1344 in 200-9, 1408 in 210,9)
+    private byte[] solution; // The equihash solution in compressed format
 
     private byte[] mineHashBytes;
 
@@ -400,6 +412,14 @@ public class A0BlockHeader extends AbstractBlockHeader {
     public void setSolution(byte[] _sl) {
         this.solution = _sl;
     }
+    
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(byte[] nonce) {
+        this.nonce = nonce;
+    }
 
     public long getEnergyConsumed() {
         return this.energyConsumed;
@@ -560,6 +580,16 @@ public class A0BlockHeader extends AbstractBlockHeader {
 
         return builder.build();
     }
+
+    public byte[] getPowBoundary() {
+        return BigIntegers.asUnsignedByteArray(
+                32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+    }
+
+    public BigInteger getPowBoundaryBI() {
+        return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
+    }
+
 
     /** Builder used to introduce blocks into system that come from unsafe sources */
     public static class Builder {
