@@ -5,8 +5,8 @@ import org.aion.avm.core.AvmConfiguration;
 import org.aion.avm.core.AvmImpl;
 import org.aion.avm.core.CommonAvmFactory;
 import org.aion.avm.core.FutureResult;
+import org.aion.avm.core.IExternalState;
 import org.aion.types.Transaction;
-import org.aion.vm.api.interfaces.KernelInterface;
 
 /** A thread-safe access-point to the Aion Virtual Machine. */
 public final class AionVirtualMachine {
@@ -35,13 +35,13 @@ public final class AionVirtualMachine {
      * <p>This method can only be invoked by the owner of the avm lock! That is, the caller must
      * first have called {@code acquireAvmLock()} first.
      *
-     * @param kernelInterface The interface into the kernel.
+     * @param externalState The interface into the kernel.
      * @param transactions The transactions to execute.
      * @return The future results.
      */
-    public FutureResult[] run(KernelInterface kernelInterface, Transaction[] transactions) {
+    public FutureResult[] run(IExternalState externalState, Transaction[] transactions) {
         if (this.avmLock.isHeldByCurrentThread()) {
-            return this.avm.run(kernelInterface, transactions);
+            return this.avm.run(externalState, transactions);
         } else {
             throw new IllegalMonitorStateException("The current thread does not own the avm lock!");
         }
