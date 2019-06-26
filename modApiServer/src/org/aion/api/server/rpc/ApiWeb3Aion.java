@@ -68,9 +68,9 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.api.types.Hash256;
+import org.aion.types.Log;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -2217,12 +2217,13 @@ public class ApiWeb3Aion extends ApiAion {
         result.put("transactionIndex", txInfo.getIndex());
 
         JSONArray logs = new JSONArray();
-        for (IExecutionLog l : txInfo.getReceipt().getLogInfoList()) {
+        for (Log l : txInfo.getReceipt().getLogInfoList()) {
             JSONObject log = new JSONObject();
-            log.put("address", l.getSourceAddress().toString());
-            log.put("data", StringUtils.toJsonHex(l.getData()));
+            AionAddress aionAddress = new AionAddress(l.copyOfAddress());
+            log.put("address", aionAddress.toString());
+            log.put("data", StringUtils.toJsonHex(l.copyOfData()));
             JSONArray topics = new JSONArray();
-            for (byte[] topic : l.getTopics()) {
+            for (byte[] topic : l.copyOfTopics()) {
                 topics.put(StringUtils.toJsonHex(topic));
             }
             log.put("topics", topics);

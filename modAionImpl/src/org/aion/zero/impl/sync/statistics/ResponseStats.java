@@ -20,7 +20,7 @@ public class ResponseStats {
     }
 
     /**
-     * Log the time of a request sent to a peer.
+     * Log2 the time of a request sent to a peer.
      *
      * @param nodeId peer display identifier
      * @param requestTime time when the request was sent in nanoseconds
@@ -36,7 +36,7 @@ public class ResponseStats {
     }
 
     /**
-     * Log the time of a response received from a peer and update the computed average time and
+     * Log2 the time of a response received from a peer and update the computed average time and
      * number of data points.
      *
      * @param nodeId peer display identifier

@@ -1190,7 +1190,7 @@ public class ContractIntegTest {
 
         byte[] input =
                 Arrays.copyOfRange(HashUtil.keccak256("sendValueToContract()".getBytes()), 0, 4);
-        // input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
+        // input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).copyOfData());
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
@@ -1253,15 +1253,6 @@ public class ContractIntegTest {
         result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
         assertEquals(1, result.getRight().getSummaries().get(0).getInternalTransactions().size());
-        assertEquals(
-                TransactionTypes.DEFAULT,
-                result.getRight()
-                        .getSummaries()
-                        .get(0)
-                        .getInternalTransactions()
-                        .get(0)
-                        .getTargetVM());
-
         assertEquals(
                 BigInteger.TEN.subtract(BigInteger.ONE),
                 blockchain.getRepository().getBalance(contract));

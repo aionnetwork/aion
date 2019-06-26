@@ -50,7 +50,7 @@ public abstract class AbstractTxTask<TX extends Transaction, P2P extends IP2pMgr
 
             return tx;
         } catch (Exception e) {
-            // Todo : Log
+            // Todo : Log2
             e.printStackTrace();
         }
 
