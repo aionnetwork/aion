@@ -18,6 +18,7 @@ import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
+import org.aion.types.Log;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -79,7 +80,7 @@ public class AvmLogAndInternalTransactionTest {
         AionTxReceipt receipt = summary.getReceipts().get(0);
         assertTrue(receipt.isSuccessful());
 
-        List<IExecutionLog> logs = receipt.getLogInfoList();
+        List<Log> logs = receipt.getLogInfoList();
         List<AionInternalTx> internalTransactions =
                 summary.getSummaries().get(0).getInternalTransactions();
 
@@ -100,9 +101,9 @@ public class AvmLogAndInternalTransactionTest {
         AionTxReceipt receipt = summary.getReceipts().get(0);
         assertFalse(receipt.isSuccessful());
 
-        List<IExecutionLog> logs = receipt.getLogInfoList();
         List<AionInternalTx> internalTransactions =
                 summary.getSummaries().get(0).getInternalTransactions();
+        List<Log> logs = receipt.getLogInfoList();
 
         assertEquals(0, logs.size());
         assertEquals(1, internalTransactions.size());

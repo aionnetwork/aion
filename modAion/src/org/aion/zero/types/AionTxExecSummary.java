@@ -20,13 +20,13 @@ import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.tx.TxReceipt;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.Log;
+import org.aion.mcf.vm.types.LogUtility;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
+import org.aion.types.Log;
 
 public class AionTxExecSummary implements TxExecSummary {
 
@@ -44,7 +44,7 @@ public class AionTxExecSummary implements TxExecSummary {
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
     private byte[] result;
-    private List<IExecutionLog> logs;
+    private List<Log> logs;
 
     /** Indicates whether the transaction failed */
     private TransactionStatus failed;
@@ -143,19 +143,19 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    private static List<IExecutionLog> decodeLogs(RLPList logs) {
-        ArrayList<IExecutionLog> result = new ArrayList<>();
+    private static List<Log> decodeLogs(RLPList logs) {
+        ArrayList<Log> result = new ArrayList<>();
         for (RLPElement log : logs) {
-            result.add(new Log(log.getRLPData()));
+            result.add(LogUtility.decodeLog(log.getRLPData()));
         }
         return result;
     }
 
-    private static byte[] encodeLogs(List<IExecutionLog> logs) {
+    private static byte[] encodeLogs(List<Log> logs) {
         byte[][] result = new byte[logs.size()][];
         for (int i = 0; i < logs.size(); i++) {
-            IExecutionLog log = logs.get(i);
-            result[i] = log.getEncoded();
+            Log log = logs.get(i);
+            result[i] = LogUtility.encodeLog(log);
         }
 
         return RLP.encodeList(result);
@@ -273,7 +273,7 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    public List<IExecutionLog> getLogs() {
+    public List<Log> getLogs() {
         if (!parsed) {
             rlpParse();
         }
@@ -376,7 +376,7 @@ public class AionTxExecSummary implements TxExecSummary {
             return this;
         }
 
-        public Builder logs(List<IExecutionLog> logs) {
+        public Builder logs(List<Log> logs) {
             summary.logs = logs;
             return this;
         }

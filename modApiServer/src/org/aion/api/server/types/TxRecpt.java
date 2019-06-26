@@ -7,10 +7,10 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.types.Log;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -85,7 +85,7 @@ public final class TxRecpt {
             this.txRoot = block.getReceiptsRoot();
             this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
             for (int i = 0; i < this.logs.length; i++) {
-                IExecutionLog logInfo = receipt.getLogInfoList().get(i);
+                Log logInfo = receipt.getLogInfoList().get(i);
                 this.logs[i] =
                         new TxRecptLg(
                                 logInfo,
@@ -144,7 +144,7 @@ public final class TxRecpt {
 
         this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < this.logs.length; i++) {
-            IExecutionLog logInfo = receipt.getLogInfoList().get(i);
+            Log logInfo = receipt.getLogInfoList().get(i);
             this.logs[i] =
                     new TxRecptLg(
                             logInfo, block, txIndex, receipt.getTransaction(), i, isMainchain);

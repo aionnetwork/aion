@@ -6,8 +6,9 @@ import java.util.List;
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.IBloomFilter;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.mcf.vm.types.LogUtility;
+import org.aion.types.Log;
 import org.aion.zero.impl.blockchain.BlockSummary;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -56,8 +57,8 @@ public final class FltrLg extends Fltr {
                         && matchesContractAddress(tx.getDestinationAddress().toByteArray())) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
-                        for (IExecutionLog logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloomFilterForLog())
+                        for (Log logInfo : receipt.getLogInfoList()) {
+                            if (matchBloom(LogUtility.createBloomFilterForLog(logInfo))
                                     && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
@@ -96,8 +97,8 @@ public final class FltrLg extends Fltr {
                     AionTxReceipt receipt = txInfo.getReceipt();
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
-                        for (IExecutionLog logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloomFilterForLog())
+                        for (Log logInfo : receipt.getLogInfoList()) {
+                            if (matchBloom(LogUtility.createBloomFilterForLog(logInfo))
                                     && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
@@ -160,10 +161,10 @@ public final class FltrLg extends Fltr {
         return contractAddresses.length == 0;
     }
 
-    public boolean matchesExactly(IExecutionLog logInfo) {
+    public boolean matchesExactly(Log logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getSourceAddress().toByteArray())) return false;
-        List<byte[]> logTopics = logInfo.getTopics();
+        if (!matchesContractAddress(logInfo.copyOfAddress())) return false;
+        List<byte[]> logTopics = logInfo.copyOfTopics();
         for (int i = 0; i < this.topics.size(); i++) {
             if (i >= logTopics.size()) return false;
             byte[][] orTopics = topics.get(i);

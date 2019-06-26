@@ -7,17 +7,19 @@ import java.util.List;
 import org.aion.base.Transaction;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.mcf.vm.types.LogUtility;
+import org.aion.types.Log;
 import org.aion.util.types.Bytesable;
 
 public abstract class AbstractTxReceipt<TX extends Transaction>
-        implements Bytesable<Object>, TxReceipt<TX, IExecutionLog> {
+        implements Bytesable<Object>, TxReceipt<TX, Log> {
 
     protected TX transaction;
 
     protected byte[] postTxState = EMPTY_BYTE_ARRAY;
 
     protected Bloom bloomFilter = new Bloom();
-    protected List<IExecutionLog> logInfoList = new ArrayList<>();
+    protected List<Log> logInfoList = new ArrayList<>();
 
     protected byte[] executionResult = EMPTY_BYTE_ARRAY;
     protected String error = "";
@@ -36,7 +38,7 @@ public abstract class AbstractTxReceipt<TX extends Transaction>
         return bloomFilter;
     }
 
-    public List<IExecutionLog> getLogInfoList() {
+    public List<Log> getLogInfoList() {
         return logInfoList;
     }
 
@@ -71,14 +73,14 @@ public abstract class AbstractTxReceipt<TX extends Transaction>
         this.error = error;
     }
 
-    public void setLogs(List<IExecutionLog> logInfoList) {
+    public void setLogs(List<Log> logInfoList) {
         if (logInfoList == null) {
             return;
         }
         this.logInfoList = logInfoList;
 
-        for (IExecutionLog loginfo : logInfoList) {
-            bloomFilter.or(loginfo.getBloomFilterForLog());
+        for (Log loginfo : logInfoList) {
+            bloomFilter.or(LogUtility.createBloomFilterForLog(loginfo));
         }
         rlpEncoded = null;
     }

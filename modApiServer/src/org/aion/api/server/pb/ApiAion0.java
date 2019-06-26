@@ -60,6 +60,7 @@ import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
+import org.aion.types.Log;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
@@ -121,7 +122,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         txr.getLogInfoList()
                                 .forEach(
                                         bi ->
-                                                bi.getTopics()
+                                                bi.copyOfTopics()
                                                         .forEach(
                                                                 lg -> {
                                                                     if (_fltr.isFor(
@@ -151,10 +152,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                                                                         EvtContract ec =
                                                                                 new EvtContract(
-                                                                                        bi.getSourceAddress()
-                                                                                                .toByteArray(),
+                                                                                        bi.copyOfAddress(),
                                                                                         bi
-                                                                                                .getData(),
+                                                                                                .copyOfData(),
                                                                                         blk
                                                                                                 .getHash(),
                                                                                         blk
@@ -2681,7 +2681,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
     private Message.t_TxDetail getTxDetailsObj(
             AionTransaction t,
-            List<IExecutionLog> _logs,
+            List<Log> _logs,
             int txIndex,
             long nrgConsumed,
             String error) {
@@ -2691,16 +2691,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .map(
                                 log -> {
                                     List<String> topics = new ArrayList<>();
-                                    for (int i = 0; i < log.getTopics().size(); i++) {
-                                        topics.add(StringUtils.toJsonHex(log.getTopics().get(i)));
+                                    for (int i = 0; i < log.copyOfTopics().size(); i++) {
+                                        topics.add(StringUtils.toJsonHex(log.copyOfTopics().get(i)));
                                     }
 
                                     return Message.t_LgEle
                                             .newBuilder()
-                                            .setData(ByteString.copyFrom(log.getData()))
+                                            .setData(ByteString.copyFrom(log.copyOfData()))
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            log.getSourceAddress().toByteArray()))
+                                                            log.copyOfAddress()))
                                             .addAllTopics(topics)
                                             .build();
                                 })
@@ -2821,16 +2821,17 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private String generateTransactionSqlStatement(
             AionBlock b,
             AionTransaction t,
-            List<IExecutionLog> _logs,
+            List<Log> _logs,
             int txIndex,
             long nrgConsumed) {
         JSONArray logs = new JSONArray();
-        for (IExecutionLog l : _logs) {
+        for (Log l : _logs) {
             JSONArray log = new JSONArray();
-            log.put(l.getSourceAddress().toString()); // address
-            log.put(ByteUtil.toHexString(l.getData())); // data
+            AionAddress aionAddress = new AionAddress(l.copyOfAddress());
+            log.put(aionAddress.toString()); // address
+            log.put(ByteUtil.toHexString(l.copyOfData())); // data
             JSONArray topics = new JSONArray();
-            for (byte[] topic : l.getTopics()) {
+            for (byte[] topic : l.copyOfTopics()) {
                 topics.put(ByteUtil.toHexString(topic));
             }
             log.put(topics); // topics
@@ -2968,13 +2969,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                     new ArrayList<>();
                                                                                     for (int i = 0;
                                                                                             i
-                                                                                                    < log.getTopics()
+                                                                                                    < log.copyOfTopics()
                                                                                                             .size();
                                                                                             i++) {
                                                                                         topics.add(
                                                                                                 StringUtils
                                                                                                         .toJsonHex(
-                                                                                                                log.getTopics()
+                                                                                                                log.copyOfTopics()
                                                                                                                         .get(
                                                                                                                                 i)));
                                                                                     }
@@ -2986,12 +2987,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                     ByteString
                                                                                                             .copyFrom(
                                                                                                                     log
-                                                                                                                            .getData()))
+                                                                                                                            .copyOfData()))
                                                                                             .setAddress(
                                                                                                     ByteString
                                                                                                             .copyFrom(
-                                                                                                                    log.getSourceAddress()
-                                                                                                                            .toByteArray()))
+                                                                                                                    log.copyOfAddress()))
                                                                                             .addAllTopics(
                                                                                                     topics)
                                                                                             .build();
