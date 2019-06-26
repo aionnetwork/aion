@@ -189,8 +189,7 @@ public class AionRepositoryImpl
 
                     updateContractDetails(address, contractDetails);
 
-                    // TODO: incorrect check codeHash != trie hash
-                    if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
+                    if (!Arrays.equals(accountState.getCodeHash(), EMPTY_DATA_HASH)) {
                         accountState.setStateRoot(contractDetails.getStorageHash());
                     }
 

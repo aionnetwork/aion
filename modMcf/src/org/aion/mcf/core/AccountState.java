@@ -299,6 +299,7 @@ public class AccountState extends AbstractState {
 
     public boolean isEmpty() {
         return Arrays.equals(codeHash, EMPTY_DATA_HASH)
+                && Arrays.equals(stateRoot, EMPTY_TRIE_HASH)
                 && BigInteger.ZERO.equals(balance)
                 && BigInteger.ZERO.equals(nonce);
     }

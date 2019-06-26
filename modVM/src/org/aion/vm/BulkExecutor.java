@@ -12,6 +12,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTxExecSummary;
 import org.slf4j.Logger;
@@ -316,6 +317,13 @@ public final class BulkExecutor {
         AionTransaction[] avmTransactions = new AionTransaction[avmTransactionsToExecute.size()];
         avmTransactionsToExecute.toArray(avmTransactions);
 
+        System.out.println(
+            "AVM size: "
+                + avmTransactionsToExecute.size()
+                + " tx = "
+                + Hex.toHexString(
+                avmTransactionsToExecute.get(0).getTransactionHash()));
+
         // Execute the avm transactions.
         return AvmTransactionExecutor.executeTransactions(
                 repository,
@@ -364,6 +372,13 @@ public final class BulkExecutor {
                         repository, transactions, currentIndex);
         AionTransaction[] fvmTransactions = new AionTransaction[fvmTransactionsToExecute.size()];
         fvmTransactionsToExecute.toArray(fvmTransactions);
+
+        System.out.println(
+            "FVM size: "
+                + fvmTransactionsToExecute.size()
+                + " tx = "
+                + Hex.toHexString(
+                fvmTransactionsToExecute.get(0).getTransactionHash()));
 
         // Execute the fvm transactions.
         return FvmTransactionExecutor.executeTransactions(

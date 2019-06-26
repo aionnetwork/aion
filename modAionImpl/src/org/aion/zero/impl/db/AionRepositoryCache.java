@@ -382,7 +382,11 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     public void addStorageRow(AionAddress address, ByteArrayWrapper key, ByteArrayWrapper value) {
         lockDetails.writeLock().lock();
         try {
-            getContractDetails(address).put(key, value);
+            ContractDetails details = getContractDetails(address);
+            details.put(key, value);
+
+            // update the storage root
+            getAccountState(address).setStateRoot(details.getStorageHash());
         } finally {
             lockDetails.writeLock().unlock();
         }
@@ -392,7 +396,11 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     public void removeStorageRow(AionAddress address, ByteArrayWrapper key) {
         lockDetails.writeLock().lock();
         try {
-            getContractDetails(address).delete(key);
+            ContractDetails details = getContractDetails(address);
+            details.delete(key);
+
+            // update the storage root
+            getAccountState(address).setStateRoot(details.getStorageHash());
         } finally {
             lockDetails.writeLock().unlock();
         }
