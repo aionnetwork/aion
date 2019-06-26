@@ -193,7 +193,7 @@ public class ContractIntegTest {
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
         }
@@ -240,7 +240,7 @@ public class ContractIntegTest {
             assertEquals(BigInteger.ONE, repo.getNonce(deployer));
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
         }
@@ -292,7 +292,7 @@ public class ContractIntegTest {
             assertEquals(BigInteger.ONE, repo.getNonce(deployer));
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
         }
@@ -346,7 +346,7 @@ public class ContractIntegTest {
             RepositoryCache repo = blockchain.getRepository().startTracking();
             AionTxExecSummary summary = executeTransaction(tx, block, repo);
 
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
         }
     }
 
@@ -394,7 +394,7 @@ public class ContractIntegTest {
                     BigInteger.ZERO);
             nonce = nonce.add(BigInteger.ONE);
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
         }
 
@@ -447,7 +447,7 @@ public class ContractIntegTest {
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, nonce);
         }
@@ -498,7 +498,7 @@ public class ContractIntegTest {
             checkStateOfDeployerOnBadDeploy(repo);
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("REJECTED_INSUFFICIENT_BALANCE", summary.getReceipt().getError());
+            assertEquals("Rejected: insufficient balance", summary.getReceipt().getError());
             checkStateOfDeployerOnBadDeploy(repo);
         }
     }
@@ -1160,7 +1160,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertEquals(nrg, tx.getNrgConsume());
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
-            assertEquals("FAILED_INVALID_DATA", summary.getReceipt().getError());
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertEquals(nrg, tx.getNrgConsume());
         }
