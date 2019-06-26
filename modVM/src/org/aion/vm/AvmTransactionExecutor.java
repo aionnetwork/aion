@@ -8,8 +8,6 @@ import org.aion.avm.core.FutureResult;
 import org.aion.avm.core.IExternalState;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
-import org.aion.kernel.AvmTransactionResult;
-import org.aion.kernel.SideEffects;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -17,6 +15,8 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
+import org.aion.types.TransactionResult;
+import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
@@ -88,28 +88,24 @@ public final class AvmTransactionExecutor {
             // Process the results of the transactions.
             int index = 0;
             for (FutureResult resultAsFuture : resultsAsFutures) {
-                AvmTransactionResult result = resultAsFuture.get();
+                TransactionResult result = resultAsFuture.getResult();
 
-                if (result.getResultCode().isFatal()) {
+                if (result.transactionStatus.isFatal()) {
                     throw new VMException(result.toString());
                 }
 
                 AionTransaction transaction = transactions[index];
 
                 // Check the block energy limit & reject if necessary.
-                long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
-                if (energyUsed > blockRemainingEnergy) {
-                    // TODO This needs to be changed to Invalid Energy Limit
-                    result.setResultCode(AvmTransactionResult.Code.REJECTED);
-                    result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-                    ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
+                if (result.energyUsed > blockRemainingEnergy) {
+                    result = createCopyEnergyLimitExceeded(result, transaction.getEnergyLimit());
                 }
 
                 // Build the transaction summary.
                 AionTxExecSummary summary = buildTransactionSummary(transaction, result, isLocalCall);
 
                 // Update the repository by committing any changes in the Avm.
-                IExternalState externalState = result.getExternalState();
+                IExternalState externalState = resultAsFuture.getExternalState();
                 externalState.commitTo(
                     newExternalState(repository, block, allowNonceIncrement, isLocalCall));
 
@@ -119,7 +115,7 @@ public final class AvmTransactionExecutor {
                 }
 
                 // Update the remaining block energy.
-                if (!result.getResultCode().isRejected()) {
+                if (!result.transactionStatus.isRejected()) {
                     blockRemainingEnergy -= ((decrementBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
                 }
 
@@ -140,29 +136,18 @@ public final class AvmTransactionExecutor {
         return transactionSummaries;
     }
 
-    private static AionTxExecSummary buildTransactionSummary(AionTransaction transaction, AvmTransactionResult result, boolean isLocalCall) {
-        // TODO: should Avm assure us that this is always non-null like the fvm does? But in Avm
-        // TODO: a null return value is actually meaningful. Need to figure this out.
-        if (result.getReturnData() == null) {
-            result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-        }
+    private static AionTxExecSummary buildTransactionSummary(AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
+        List<IExecutionLog> logs = result.transactionStatus.isSuccess() ? convertAvmLogsToKernel(result.logs) : new ArrayList<>();
+        List<InternalTransactionInterface> internalTxs = convertAvmInternalTransactionToKernel(result.internalTransactions);
+        byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
-        SideEffects sideEffects = new SideEffects();
-        if (result.getResultCode().isSuccess()) {
-            sideEffects.merge(result.getSideEffects());
-        } else {
-            sideEffects.addInternalTransactions(result.getSideEffects().getInternalTransactions());
-        }
-
-        List<IExecutionLog> logs = convertAvmLogsToKernel(sideEffects.getExecutionLogs());
-        List<InternalTransactionInterface> internalTxs = convertAvmInternalTransactionToKernel(sideEffects.getInternalTransactions());
-        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
+        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result, output))
             .logs(logs)
-            .deletedAccounts(sideEffects.getAddressesToBeDeleted())
+            .deletedAccounts(new ArrayList<>())
             .internalTransactions(internalTxs)
-            .result(result.getReturnData());
+            .result(output);
 
-        AvmTransactionResult.Code resultCode = result.getResultCode();
+        TransactionStatus resultCode = result.transactionStatus;
         if (resultCode.isRejected()) {
             builder.markAsRejected();
         } else if (resultCode.isFailed()) {
@@ -172,19 +157,19 @@ public final class AvmTransactionExecutor {
         AionTxExecSummary summary = builder.build();
 
         if (!isLocalCall && !summary.isRejected()) {
-            transaction.setNrgConsume(computeEnergyUsed(transaction.getEnergyLimit(), result));
+            transaction.setNrgConsume(result.energyUsed);
         }
 
         return summary;
     }
 
-    private static AionTxReceipt makeReceipt(AionTransaction transaction, List<IExecutionLog> logs, AvmTransactionResult result) {
+    private static AionTxReceipt makeReceipt(AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result, byte[] output) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
-        receipt.setExecutionResult(result.getReturnData());
-        receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
+        receipt.setNrgUsed(result.energyUsed);
+        receipt.setExecutionResult(output);
+        receipt.setError(result.transactionStatus.causeOfError);
         return receipt;
     }
 
@@ -247,30 +232,43 @@ public final class AvmTransactionExecutor {
             AionTransaction tx = aionTransactions[i];
             if (tx.isContractCreationTransaction()) {
                 txs[i] = Transaction.contractCreateTransaction(
-                    tx.getSenderAddress(),
-                    tx.getTransactionHash(),
-                    new BigInteger(1, tx.getNonce()),
-                    new BigInteger(1, tx.getValue()),
-                    tx.getData(),
-                    tx.getEnergyLimit(),
-                    tx.getEnergyPrice());
+                            tx.getSenderAddress(),
+                            tx.getTransactionHash(),
+                            new BigInteger(1, tx.getNonce()),
+                            new BigInteger(1, tx.getValue()),
+                            tx.getData(),
+                            tx.getEnergyLimit(),
+                            tx.getEnergyPrice());
             } else {
                 txs[i] = Transaction.contractCallTransaction(
-                    tx.getSenderAddress(),
-                    tx.getDestinationAddress(),
-                    tx.getTransactionHash(),
-                    new BigInteger(1, tx.getNonce()),
-                    new BigInteger(1, tx.getValue()),
-                    tx.getData(),
-                    tx.getEnergyLimit(),
-                    tx.getEnergyPrice());
+                            tx.getSenderAddress(),
+                            tx.getDestinationAddress(),
+                            tx.getTransactionHash(),
+                            new BigInteger(1, tx.getNonce()),
+                            new BigInteger(1, tx.getValue()),
+                            tx.getData(),
+                            tx.getEnergyLimit(),
+                            tx.getEnergyPrice());
             }
         }
         return txs;
     }
 
-    private static long computeEnergyUsed(long limit, AvmTransactionResult result) {
-        return limit - result.getEnergyRemaining();
+    /**
+     * Method that creates an almost identical copy of the original TransactionResult, except it is
+     * marked as a non-reverted failure because of an invalid energy limit, and the output
+     * byte-array is also set to empty.
+     *
+     * @param original The TransactionResult we were given.
+     * @return The new Failed TransactionResult instance.
+     */
+    private static TransactionResult createCopyEnergyLimitExceeded(TransactionResult original, long energyUsed) {
+        return new TransactionResult(
+                TransactionStatus.rejection("Rejected: block energy limit exceeded"),
+                original.logs,
+                original.internalTransactions,
+                energyUsed,
+                ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should investigate
