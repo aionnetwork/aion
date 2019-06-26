@@ -2,29 +2,38 @@ package org.aion.precompiled;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.List;
+import org.aion.types.AionAddress;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
-import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.TransactionSideEffects;
 
-public class PrecompiledTransactionResult implements TransactionResult {
+public class PrecompiledTransactionResult {
+
     private KernelInterface kernel;
     private PrecompiledResultCode code;
     private byte[] output;
     private long energyRemaining;
-    private PrecompiledSideEffects sideEffects;
+    private List<IExecutionLog> logs;
+    private List<InternalTransactionInterface> internalTransactions;
+    private List<AionAddress> deletedAddresses;
 
     /**
      * Constructs a new {@code TransactionResult} with no side-effects, with zero energy remaining,
-     * with an empty byte array as its output and {@link PrecompiledResultCode#SUCCESS} as its result code.
+     * with an empty byte array as its output and {@link PrecompiledResultCode#SUCCESS} as its
+     * result code.
      */
     public PrecompiledTransactionResult() {
         this.code = PrecompiledResultCode.SUCCESS;
         this.output = new byte[0];
         this.energyRemaining = 0;
         this.kernel = null;
-        this.sideEffects = new PrecompiledSideEffects();
+        this.logs = Collections.emptyList();
+        this.internalTransactions = Collections.emptyList();
+        this.deletedAddresses = Collections.emptyList();
     }
 
     /**
@@ -39,7 +48,9 @@ public class PrecompiledTransactionResult implements TransactionResult {
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
         this.kernel = null;
-        this.sideEffects = new PrecompiledSideEffects();
+        this.logs = Collections.emptyList();
+        this.internalTransactions = Collections.emptyList();
+        this.deletedAddresses = Collections.emptyList();
     }
 
     /**
@@ -50,19 +61,22 @@ public class PrecompiledTransactionResult implements TransactionResult {
      * @param energyRemaining The energy remaining after executing the transaction.
      * @param output The output of executing the transaction.
      */
-    public PrecompiledTransactionResult(PrecompiledResultCode code, long energyRemaining, byte[] output) {
+    public PrecompiledTransactionResult(
+            PrecompiledResultCode code, long energyRemaining, byte[] output) {
         this.code = code;
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
         this.kernel = null;
-        this.sideEffects = new PrecompiledSideEffects();
+        this.logs = Collections.emptyList();
+        this.internalTransactions = Collections.emptyList();
+        this.deletedAddresses = Collections.emptyList();
     }
 
     /**
      * Returns a <i>partial</i> byte array representation of this {@code TransactionResult}.
      *
-     * <p>The representation is partial because it only represents the {@link PrecompiledResultCode}, the amount
-     * of energy remaining, and the output.
+     * <p>The representation is partial because it only represents the {@link
+     * PrecompiledResultCode}, the amount of energy remaining, and the output.
      *
      * <p>In particular, the {@link KernelInterface} is not included in this representation, meaning
      * these components of this object will be lost when the byte array representation is
@@ -70,9 +84,10 @@ public class PrecompiledTransactionResult implements TransactionResult {
      *
      * @return A partial byte array representation of this object.
      */
-    @Override
     public byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES + Long.BYTES + Integer.BYTES + this.output.length);
+        ByteBuffer buffer =
+                ByteBuffer.allocate(
+                        Integer.BYTES + Long.BYTES + Integer.BYTES + this.output.length);
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.putInt(this.code.toInt());
         buffer.putLong(this.energyRemaining);
@@ -81,7 +96,8 @@ public class PrecompiledTransactionResult implements TransactionResult {
         return buffer.array();
     }
 
-    //TODO: document exception / maybe catch it and throw something more informative
+    // TODO: document exception / maybe catch it and throw something more informative
+
     /**
      * Returns a {@code TransactionResult} object from a partial byte array representation obtained
      * via the {@code toBytes()} method.
@@ -111,67 +127,87 @@ public class PrecompiledTransactionResult implements TransactionResult {
         this.energyRemaining = energyRemaining;
     }
 
-    @Override
     public void setResultCode(ResultCode code) {
         if (code == null) {
             throw new NullPointerException("Cannot set null result code.");
         }
         if (!(code instanceof PrecompiledResultCode)) {
-            throw new IllegalArgumentException("Type of code must be PrecompiledResultCode for FastVmTransactionResult.");
+            throw new IllegalArgumentException(
+                    "Type of code must be PrecompiledResultCode for FastVmTransactionResult.");
         }
         this.code = (PrecompiledResultCode) code;
     }
 
-    @Override
     public void setKernelInterface(KernelInterface kernel) {
         this.kernel = kernel;
     }
 
-    @Override
     public void setReturnData(byte[] output) {
         this.output = (output == null) ? new byte[0] : output;
     }
 
-    @Override
     public void setEnergyRemaining(long energyRemaining) {
         this.energyRemaining = energyRemaining;
     }
 
-    @Override
     public PrecompiledResultCode getResultCode() {
         return this.code;
     }
 
-    @Override
     public byte[] getReturnData() {
         return this.output;
     }
 
-    @Override
     public long getEnergyRemaining() {
         return this.energyRemaining;
     }
 
-    @Override
     public KernelInterface getKernelInterface() {
         return this.kernel;
     }
 
-    @Override
-    public TransactionSideEffects getSideEffects() {
-        return sideEffects;
+    public void addLogs(List<IExecutionLog> logs) {
+        this.logs.addAll(logs);
+    }
+
+    public void addInternalTransactions(List<InternalTransactionInterface> internalTransactions) {
+        this.internalTransactions.addAll(internalTransactions);
+    }
+
+    public void addDeletedAddresses(List<AionAddress> deletedAddresses) {
+        this.deletedAddresses.addAll(deletedAddresses);
+    }
+
+    public List<IExecutionLog> getLogs() {
+        return this.logs;
+    }
+
+    public List<InternalTransactionInterface> getInternalTransactions() {
+        return this.internalTransactions;
+    }
+
+    public List<AionAddress> getDeletedAddresses() {
+        return this.deletedAddresses;
     }
 
     @Override
     public String toString() {
-        return "TransactionResult { code = " + this.code
-            + ", energy remaining = " + this.energyRemaining
-            + ", output = " + ByteUtil.toHexString(this.output) + " }";
+        return "TransactionResult { code = "
+                + this.code
+                + ", energy remaining = "
+                + this.energyRemaining
+                + ", output = "
+                + ByteUtil.toHexString(this.output)
+                + " }";
     }
 
     public String toStringWithSideEffects() {
-        return "TransactionResult { code = " + this.code
-            + ", energy remaining = " + this.energyRemaining
-            + ", output = " + ByteUtil.toHexString(this.output) + " }";
+        return "TransactionResult { code = "
+                + this.code
+                + ", energy remaining = "
+                + this.energyRemaining
+                + ", output = "
+                + ByteUtil.toHexString(this.output)
+                + " }";
     }
 }
