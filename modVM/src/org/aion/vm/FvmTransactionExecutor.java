@@ -157,10 +157,11 @@ public final class FvmTransactionExecutor {
         }
 
         if (result.getResultCode().isSuccess()) {
-            transactionSideEffects.merge(result.getSideEffects());
+            transactionSideEffects.addLogs(result.getLogs());
+            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
+            transactionSideEffects.addAllToDeletedAddresses(result.getDeletedAddresses());
         } else {
-            transactionSideEffects.addInternalTransactions(
-                    result.getSideEffects().getInternalTransactions());
+            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
         }
 
         // We have to do this for now, because the kernel uses the log serialization, which is not
