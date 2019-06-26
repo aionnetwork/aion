@@ -12,7 +12,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.types.KernelInterface;
 import org.aion.mcf.types.ResultCode;
 import org.aion.mcf.vm.DataWord;
@@ -21,6 +20,7 @@ import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -182,7 +182,7 @@ public final class FvmTransactionExecutor {
 
         AionTxExecSummary.Builder builder =
                 AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
-                        .logs(aionTypesToKernelLogs(logs))
+                        .logs(logs)
                         .deletedAccounts(transactionSideEffects.getAddressesToBeDeleted())
                         .internalTransactions(transactionSideEffects.getInternalTransactions())
                         .result(result.getReturnData());
@@ -229,7 +229,7 @@ public final class FvmTransactionExecutor {
             AionTransaction transaction, List<Log> logs, FastVmTransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
-        receipt.setLogs(aionTypesToKernelLogs(logs));
+        receipt.setLogs(logs);
         receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
         receipt.setExecutionResult(result.getReturnData());
         receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
@@ -267,17 +267,5 @@ public final class FvmTransactionExecutor {
                 block.getTimestamp(),
                 block.getNrgLimit(),
                 block.getCoinbase());
-    }
-
-    private static List<IExecutionLog> aionTypesToKernelLogs(List<Log> aionTypesLogs) {
-        List<IExecutionLog> kernelLogs = new ArrayList<>();
-        for (Log aionTypesLog : aionTypesLogs) {
-            kernelLogs.add(
-                    new org.aion.mcf.vm.types.Log(
-                            new AionAddress(aionTypesLog.copyOfAddress()),
-                            aionTypesLog.copyOfTopics(),
-                            aionTypesLog.copyOfData()));
-        }
-        return kernelLogs;
     }
 }

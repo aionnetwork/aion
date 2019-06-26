@@ -563,10 +563,10 @@ public class TrieImpl implements Trie {
     //            }
     //
     //            for (ByteArrayWrapper key : toRemoveSet) {
-    //                this.getCache().delete(key.getData());
+    //                this.getCache().delete(key.copyOfData());
     //                // if (LOG.isTraceEnabled()) {
     //                // LOG.trace("Garbage collected node: [{}]",
-    //                // Hex.toHexString(key.getData()));
+    //                // Hex.toHexString(key.copyOfData()));
     //                // }
     //            }
     //        }

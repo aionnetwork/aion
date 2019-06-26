@@ -30,12 +30,13 @@ import java.util.Set;
 import org.aion.mcf.types.IExecutionLog;
 import org.aion.types.AionAddress;
 import org.aion.zero.types.AionInternalTx;
+import org.aion.types.Log;
 
 public class PrecompiledSideEffects {
 
     private Set<AionAddress> deleteAccounts = new HashSet<>();
     private List<AionInternalTx> internalTxs = new ArrayList<>();
-    private List<IExecutionLog> logs = new ArrayList<>();
+    private List<Log> logs = new ArrayList<>();
 
     public void addToDeletedAddresses(AionAddress address) {
         deleteAccounts.add(address);
@@ -59,7 +60,7 @@ public class PrecompiledSideEffects {
      *
      * @param log The log to add to the execution logs.
      */
-    public void addLog(IExecutionLog log) {
+    public void addLog(Log log) {
         logs.add(log);
     }
 
@@ -68,8 +69,8 @@ public class PrecompiledSideEffects {
      *
      * @param logs The collection of logs to add to the execution logs.
      */
-    public void addLogs(Collection<IExecutionLog> logs) {
-        for (IExecutionLog log : logs) {
+    public void addLogs(Collection<Log> logs) {
+        for (Log log : logs) {
             if (log != null) {
                 this.logs.add(log);
             }
@@ -114,7 +115,7 @@ public class PrecompiledSideEffects {
         return new ArrayList<>(deleteAccounts);
     }
 
-    public List<IExecutionLog> getExecutionLogs() {
+    public List<Log> getExecutionLogs() {
         return logs;
     }
 

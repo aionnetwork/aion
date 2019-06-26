@@ -7,7 +7,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.types.IExecutionLog;
+import org.aion.types.Log;
 import org.junit.Test;
 
 public class AionTxReceiptTest {
@@ -20,7 +20,7 @@ public class AionTxReceiptTest {
         receipt.setError("");
         receipt.setExecutionResult(HashUtil.h256(EMPTY_BYTE_ARRAY));
 
-        List<IExecutionLog> infos = new ArrayList<>();
+        List<Log> infos = new ArrayList<>();
         receipt.setLogs(infos);
         receipt.setPostTxState(HashUtil.h256(EMPTY_BYTE_ARRAY));
 

@@ -8,13 +8,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.Log;
+import org.aion.mcf.vm.types.LogUtility;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
@@ -49,14 +49,16 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
         }
 
         for (RLPElement log : logs) {
-            Log logInfo = new Log(log.getRLPData());
-            logInfoList.add(logInfo);
+            Log logInfo = LogUtility.decodeLog(log.getRLPData());
+            if (logInfo != null) {
+                logInfoList.add(logInfo);
+            }
         }
 
         rlpEncoded = rlp;
     }
 
-    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<IExecutionLog> logInfoList) {
+    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<Log> logInfoList) {
         this.postTxState = postTxState;
         this.bloomFilter = bloomFilter;
         this.logInfoList = logInfoList;
@@ -113,8 +115,8 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
             byte[][] logInfoListE = new byte[logInfoList.size()][];
 
             int i = 0;
-            for (IExecutionLog logInfo : logInfoList) {
-                logInfoListE[i] = logInfo.getEncoded();
+            for (Log logInfo : logInfoList) {
+                logInfoListE[i] = LogUtility.encodeLog(logInfo);
                 ++i;
             }
             logInfoListRLP = RLP.encodeList(logInfoListE);

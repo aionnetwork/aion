@@ -9,16 +9,14 @@ import org.aion.avm.core.IExternalState;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.Log;
-import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.*;
 import org.slf4j.Logger;
@@ -150,10 +148,7 @@ public final class AvmTransactionExecutor {
 
     private static AionTxExecSummary buildTransactionSummary(
             AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
-        List<IExecutionLog> logs =
-                result.transactionStatus.isSuccess()
-                        ? convertAvmLogsToKernel(result.logs)
-                        : new ArrayList<>();
+        List<Log> logs = result.transactionStatus.isSuccess() ? result.logs : new ArrayList<>();
         List<AionInternalTx> internalTxs =
                 convertAvmInternalTransactionToKernel(result.internalTransactions);
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
@@ -182,10 +177,7 @@ public final class AvmTransactionExecutor {
     }
 
     private static AionTxReceipt makeReceipt(
-            AionTransaction transaction,
-            List<IExecutionLog> logs,
-            TransactionResult result,
-            byte[] output) {
+            AionTransaction transaction, List<Log> logs, TransactionResult result, byte[] output) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
@@ -193,28 +185,6 @@ public final class AvmTransactionExecutor {
         receipt.setExecutionResult(output);
         receipt.setError(result.transactionStatus.causeOfError);
         return receipt;
-    }
-
-    /**
-     * Converts the AVM log implementation into a kernel log implementation, since the kernel
-     * implementation has features that the kernel relies on that are not implemented by the AVM
-     * version.
-     *
-     * <p>This should be a temporary measure until both are using the exact same type.
-     *
-     * @param avmLogs The AVM logs.
-     * @return The equivalent kernel logs.
-     */
-    private static List<IExecutionLog> convertAvmLogsToKernel(List<org.aion.types.Log> avmLogs) {
-        List<IExecutionLog> logs = new ArrayList<>();
-        for (org.aion.types.Log avmLog : avmLogs) {
-            logs.add(
-                    new Log(
-                            new AionAddress(avmLog.copyOfAddress()),
-                            avmLog.copyOfTopics(),
-                            avmLog.copyOfData()));
-        }
-        return logs;
     }
 
     /**
@@ -237,8 +207,7 @@ public final class AvmTransactionExecutor {
                             avmTx.sender,
                             avmTx.destination,
                             avmTx.value.toByteArray(),
-                            avmTx.copyOfData(),
-                            null));
+                            avmTx.copyOfData()));
         }
         return txs;
     }

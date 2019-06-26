@@ -37,13 +37,13 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
+import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -120,20 +120,20 @@ public class OpcodeIntegTest {
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
         // Check that the logs from our internal transactions are as we expect.
-        List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
+        List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(12, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(7).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(8).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(9).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(10).getData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(11).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(7).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(8).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(9).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(10).copyOfData());
+        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(11).copyOfData());
     }
 
     @Test
@@ -164,16 +164,16 @@ public class OpcodeIntegTest {
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
         // Check that the logs from our internal transactions are as we expect.
-        List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
+        List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(7).copyOfData());
     }
 
     @Test
@@ -204,16 +204,16 @@ public class OpcodeIntegTest {
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
         // Check that the logs from our internal transactions are as we expect.
-        List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
+        List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).getData());
-        assertArrayEquals(new DataWordImpl(7).getData(), logs.get(1).getData());
-        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(2).getData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(3).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(4).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(5).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(6).getData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWordImpl(7).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(7).copyOfData());
     }
 
     // ======================================= test CALLCODE =======================================
@@ -574,11 +574,11 @@ public class OpcodeIntegTest {
         // CALL             -->     CALLEE-CALLER-DEPLOYER-ZERO
         // CALLCODE         -->     CALLER-CALLER-DEPLOYER-ZERO
         // DELEGATECALL     -->     CALLER-DEPLOYER-DEPLOYER-ZERO
-        List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
+        List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(3, logs.size());
-        verifyLogData(logs.get(0).getData(), calleeContract, callerContract, deployer);
-        verifyLogData(logs.get(1).getData(), callerContract, callerContract, deployer);
-        verifyLogData(logs.get(2).getData(), callerContract, deployer, deployer);
+        verifyLogData(logs.get(0).copyOfData(), calleeContract, callerContract, deployer);
+        verifyLogData(logs.get(1).copyOfData(), callerContract, callerContract, deployer);
+        verifyLogData(logs.get(2).copyOfData(), callerContract, deployer, deployer);
     }
 
     // ======================================= test SUICIDE ========================================

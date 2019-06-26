@@ -2,8 +2,9 @@ package org.aion.api.server.types;
 
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.IExecutionLog;
+import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
+import org.aion.types.Log;
 
 public class TxRecptLg {
 
@@ -27,25 +28,21 @@ public class TxRecptLg {
     public boolean removed;
 
     public <TX extends Transaction> TxRecptLg(
-            IExecutionLog logInfo,
-            Block b,
-            Integer txIndex,
-            TX tx,
-            int logIdx,
-            boolean isMainchain) {
+            Log logInfo, Block b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
         this.logIndex = StringUtils.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : StringUtils.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : StringUtils.toJsonHex(b.getHash());
         this.transactionIndex =
                 (b == null || txIndex == null) ? null : StringUtils.toJsonHex(txIndex);
         this.transactionHash = StringUtils.toJsonHex(tx.getTransactionHash());
-        this.address = StringUtils.toJsonHex(logInfo.getSourceAddress().toString());
-        this.data = StringUtils.toJsonHex(logInfo.getData());
+        AionAddress aionAddress = new AionAddress(logInfo.copyOfAddress());
+        this.address = StringUtils.toJsonHex(aionAddress.toString());
+        this.data = StringUtils.toJsonHex(logInfo.copyOfData());
         this.removed = !isMainchain;
 
-        this.topics = new String[logInfo.getTopics().size()];
+        this.topics = new String[logInfo.copyOfTopics().size()];
         for (int i = 0, m = this.topics.length; i < m; i++) {
-            this.topics[i] = StringUtils.toJsonHex(logInfo.getTopics().get(i));
+            this.topics[i] = StringUtils.toJsonHex(logInfo.copyOfTopics().get(i));
         }
     }
 }

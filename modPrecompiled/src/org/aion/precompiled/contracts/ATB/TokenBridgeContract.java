@@ -267,7 +267,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         BigInteger nonce = this.track.getNonce(from);
         DataWordImpl valueToSend = new DataWordImpl(value);
         byte[] dataToSend = new byte[0];
-        AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
+        AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend);
 
         // add transaction to result
         this.context.addInternalTransaction(tx);
@@ -287,14 +287,17 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * <p>NOTE: copied from {@code Callback}
      */
     private AionInternalTx newInternalTx(
-            AionAddress from,
-            AionAddress to,
-            BigInteger nonce,
-            DataWordImpl value,
-            byte[] data,
-            String note) {
+        AionAddress from,
+        AionAddress to,
+        BigInteger nonce,
+        DataWordImpl value,
+        byte[] data) {
 
         return new AionInternalTx(
-                new DataWordImpl(nonce).getData(), from, to, value.getData(), data, note);
+                new DataWordImpl(nonce).getData(),
+                from,
+                to,
+                value.getData(),
+                data);
     }
 }
