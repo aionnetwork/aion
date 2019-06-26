@@ -15,7 +15,7 @@ import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.types.Log;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -124,7 +124,7 @@ public class TxRecptLgTest {
         // ======================
         TxRecptLg[] logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < logs.length; i++) {
-            IExecutionLog logInfo = receipt.getLogInfoList().get(i);
+            Log logInfo = receipt.getLogInfoList().get(i);
             logs[i] =
                     new TxRecptLg(
                             logInfo,

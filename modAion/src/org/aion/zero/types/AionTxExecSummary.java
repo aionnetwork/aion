@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static org.aion.mcf.vm.types.LogUtility.getDecodedLog;
+import static org.aion.mcf.vm.types.LogUtility.getEncodedLog;
 import static org.aion.util.biginteger.BIUtil.toBI;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
@@ -21,12 +23,11 @@ import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.types.Log;
 
 public class AionTxExecSummary implements TxExecSummary {
 
@@ -44,7 +45,7 @@ public class AionTxExecSummary implements TxExecSummary {
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
     private byte[] result;
-    private List<IExecutionLog> logs;
+    private List<Log> logs;
 
     /** Indicates whether the transaction failed */
     private TransactionStatus failed;
@@ -143,19 +144,19 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    private static List<IExecutionLog> decodeLogs(RLPList logs) {
-        ArrayList<IExecutionLog> result = new ArrayList<>();
+    private static List<Log> decodeLogs(RLPList logs) {
+        ArrayList<Log> result = new ArrayList<>();
         for (RLPElement log : logs) {
-            result.add(new Log(log.getRLPData()));
+            result.add(getDecodedLog(log.getRLPData()));
         }
         return result;
     }
 
-    private static byte[] encodeLogs(List<IExecutionLog> logs) {
+    private static byte[] encodeLogs(List<Log> logs) {
         byte[][] result = new byte[logs.size()][];
         for (int i = 0; i < logs.size(); i++) {
-            IExecutionLog log = logs.get(i);
-            result[i] = log.getEncoded();
+            Log log = logs.get(i);
+            result[i] = getEncodedLog(log);
         }
 
         return RLP.encodeList(result);
@@ -273,7 +274,7 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    public List<IExecutionLog> getLogs() {
+    public List<Log> getLogs() {
         if (!parsed) {
             rlpParse();
         }
@@ -376,7 +377,7 @@ public class AionTxExecSummary implements TxExecSummary {
             return this;
         }
 
-        public Builder logs(List<IExecutionLog> logs) {
+        public Builder logs(List<Log> logs) {
             summary.logs = logs;
             return this;
         }

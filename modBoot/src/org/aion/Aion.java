@@ -129,7 +129,7 @@ public class Aion {
         // from now on, all logging to console and file happens asynchronously
 
         String[] filePath = new String[9];
-        // Log/Database path
+        // Log2/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out.println(
                     "Logger disabled; to enable please update log settings in config.xml and restart kernel.");

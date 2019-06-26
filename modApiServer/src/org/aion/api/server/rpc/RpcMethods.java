@@ -103,7 +103,7 @@ public class RpcMethods {
                 // Remove the method if it was previously added to composite
                 composite.remove(disabledMethod);
             } else if (!allMethods.containsKey(disabledMethod)) {
-                // Log a warning if this RPC method is not known
+                // Log2 a warning if this RPC method is not known
                 LOG.warn(
                         "rpc-methods - Attempted to disable unknown RPC method '{}'",
                         disabledMethod);
