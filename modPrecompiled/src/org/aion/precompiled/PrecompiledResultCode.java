@@ -33,6 +33,8 @@ public enum PrecompiledResultCode implements ResultCode {
 
     STATIC_MODE_ERROR(8, ResultCategory.FAILED),
 
+    INCOMPATIBLE_CONTRACT_CALL(9, ResultCategory.FAILED),
+
     ABORT(11, ResultCategory.FAILED),
 
     VM_REJECTED(-1, ResultCategory.FATAL),

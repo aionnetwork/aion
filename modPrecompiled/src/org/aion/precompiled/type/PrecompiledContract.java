@@ -22,7 +22,7 @@
  */
 package org.aion.precompiled.type;
 
-import org.aion.vm.api.interfaces.TransactionResult;
+import org.aion.precompiled.PrecompiledTransactionResult;
 
 /** A pre-compiled contract interface. */
 public interface PrecompiledContract {
@@ -35,5 +35,5 @@ public interface PrecompiledContract {
      * @param nrgLimit The energy limit.
      * @return the contract execution result.
      */
-    TransactionResult execute(byte[] input, long nrgLimit);
+    PrecompiledTransactionResult execute(byte[] input, long nrgLimit);
 }
