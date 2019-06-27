@@ -5,6 +5,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
 import java.util.Properties;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -13,7 +14,6 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.crypto.HashUtil;
-import org.aion.fastvm.ExecutionContext;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -32,7 +32,8 @@ public class BridgeControllerOwnerTest {
 
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
@@ -65,8 +66,8 @@ public class BridgeControllerOwnerTest {
                 new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
 
-        ExecutionContext context = dummyContext();
-        this.result = context.getSideEffects();
+        PrecompiledTransactionContext context = dummyContext();
+        this.result = context.sideEffects;
         this.controller = new BridgeController(connector, this.result, CONTRACT_ADDR, OWNER_ADDR);
     }
 

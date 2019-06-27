@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Properties;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -18,7 +19,6 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.PrecompiledUtilities;
 
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -34,11 +34,12 @@ public class BridgeTransferTest {
     private BridgeStorageConnector connector;
     private BridgeController controller;
     private TokenBridgeContract contract;
-    private ExecutionContext context;
+    private PrecompiledTransactionContext context;
 
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -351,10 +352,10 @@ public class BridgeTransferTest {
 
         // check status of result
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
-        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
-        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(0))
+        assertThat(this.context.sideEffects.getExecutionLogs().size()).isEqualTo(1);
+        assertThat(this.context.sideEffects.getExecutionLogs().get(0).getTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
-        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(1))
+        assertThat(this.context.sideEffects.getExecutionLogs().get(0).getTopics().get(1))
                 .isEqualTo(aionTransactionHash);
 
         // one transfer should have gone through, second shouldn't
@@ -392,9 +393,9 @@ public class BridgeTransferTest {
                 .isEqualTo(transferTotalBigInteger);
 
         // 511 transfer events + 1 distributed event
-        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(512);
+        assertThat(this.context.sideEffects.getExecutionLogs().size()).isEqualTo(512);
 
-        List<IExecutionLog> logs = this.context.getSideEffects().getExecutionLogs();
+        List<IExecutionLog> logs = this.context.sideEffects.getExecutionLogs();
         for (int i = 0; i < 511; i++) {
             List<byte[]> topics = logs.get(i).getTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());

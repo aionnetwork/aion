@@ -11,6 +11,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -19,7 +20,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionInternalTx;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
@@ -28,7 +28,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     // queries
 
-    private final TransactionContext context;
+    private final PrecompiledTransactionContext context;
     private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
 
     private final BridgeStorageConnector connector;
@@ -39,7 +39,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     // TODO: add passing returns (need more though on gas consumption)
 
     public TokenBridgeContract(
-            @Nonnull final TransactionContext context,
+            @Nonnull final PrecompiledTransactionContext context,
             @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             @Nonnull final AionAddress ownerAddress,
             @Nonnull final AionAddress contractAddress) {
@@ -49,10 +49,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller =
                 new BridgeController(
-                        this.connector,
-                        this.context.getSideEffects(),
-                        contractAddress,
-                        ownerAddress);
+                        this.connector, this.context.sideEffects, contractAddress, ownerAddress);
         this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
@@ -101,7 +98,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.setNewOwner(
-                                    this.context.getSenderAddress().toByteArray(), address);
+                                    this.context.senderAddress.toByteArray(), address);
 
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
@@ -110,7 +107,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 {
                     ErrCode code =
                             this.controller.acceptOwnership(
-                                    this.context.getSenderAddress().toByteArray());
+                                    this.context.senderAddress.toByteArray());
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -124,7 +121,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.ringInitialize(
-                                    this.context.getSenderAddress().toByteArray(), addressList);
+                                    this.context.senderAddress.toByteArray(), addressList);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -137,7 +134,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.ringAddMember(
-                                    this.context.getSenderAddress().toByteArray(), address);
+                                    this.context.senderAddress.toByteArray(), address);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -151,7 +148,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.ringRemoveMember(
-                                    this.context.getSenderAddress().toByteArray(), address);
+                                    this.context.senderAddress.toByteArray(), address);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -163,7 +160,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     if (address == null) return fail();
                     ErrCode code =
                             this.controller.setRelayer(
-                                    this.context.getSenderAddress().toByteArray(), address);
+                                    this.context.senderAddress.toByteArray(), address);
 
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
@@ -182,8 +179,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     // we can refer to it at a later time.
                     BridgeController.ProcessedResults results =
                             this.controller.processBundles(
-                                    this.context.getSenderAddress().toByteArray(),
-                                    this.context.getTransactionHash(),
+                                    this.context.senderAddress.toByteArray(),
+                                    this.context.copyOfTransactionHash(),
                                     bundleRequests.blockHash,
                                     bundleRequests.bundles,
                                     bundleRequests.signatures);
@@ -224,18 +221,18 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
     private PrecompiledTransactionResult fail() {
-        this.context.getSideEffects().markAllInternalTransactionsAsRejected();
+        this.context.sideEffects.markAllInternalTransactionsAsRejected();
         return THROW;
     }
 
     private PrecompiledTransactionResult success() {
-        long energyRemaining = this.context.getTransactionEnergy() - ENERGY_CONSUME;
+        long energyRemaining = this.context.transactionEnergy - ENERGY_CONSUME;
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
     }
 
     private PrecompiledTransactionResult success(@Nonnull final byte[] response) {
         // should always be positive
-        long energyRemaining = this.context.getTransactionEnergy() - ENERGY_CONSUME;
+        long energyRemaining = this.context.transactionEnergy - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new PrecompiledTransactionResult(
                 PrecompiledResultCode.SUCCESS, energyRemaining, response);
@@ -243,7 +240,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     private boolean isFromAddress(byte[] address) {
         if (address == null) return false;
-        return this.context.getSenderAddress().equals(new AionAddress(address));
+        return this.context.senderAddress.equals(new AionAddress(address));
     }
 
     /**
@@ -273,7 +270,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
 
         // add transaction to result
-        this.context.getSideEffects().addInternalTransaction(tx);
+        this.context.sideEffects.addInternalTransaction(tx);
 
         // increase the nonce and do the transfer without executing code
         this.track.incrementNonce(from);
@@ -290,10 +287,15 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * <p>NOTE: copied from {@code Callback}
      */
     private AionInternalTx newInternalTx(
-            AionAddress from, AionAddress to, BigInteger nonce, DataWordImpl value, byte[] data, String note) {
-        byte[] parentHash = context.getTransactionHash();
-        int depth = context.getTransactionStackDepth();
-        int index = context.getSideEffects().getInternalTransactions().size();
+            AionAddress from,
+            AionAddress to,
+            BigInteger nonce,
+            DataWordImpl value,
+            byte[] data,
+            String note) {
+        byte[] parentHash = context.copyOfTransactionHash();
+        int depth = context.stackDepth;
+        int index = context.sideEffects.getInternalTransactions().size();
 
         return new AionInternalTx(
                 parentHash,

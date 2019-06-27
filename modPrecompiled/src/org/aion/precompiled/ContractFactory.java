@@ -1,5 +1,6 @@
 package org.aion.precompiled;
 
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
@@ -11,7 +12,6 @@ import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.KernelInterface;
-import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
 public class ContractFactory {
@@ -52,17 +52,17 @@ public class ContractFactory {
      * @return the specified pre-compiled address.
      */
     public PrecompiledContract getPrecompiledContract(
-            TransactionContext context, KernelInterface track) {
+            PrecompiledTransactionContext context, KernelInterface track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
 
         boolean fork_032 =
-                (forkProperty != null) && (context.getBlockNumber() >= Long.valueOf(forkProperty));
+                (forkProperty != null) && (context.blockNumber >= Long.valueOf(forkProperty));
 
         // TODO: need to provide a real solution for the repository here ....
 
-        switch (context.getDestinationAddress().toString()) {
+        switch (context.destinationAddress.toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                         new TokenBridgeContract(
@@ -71,8 +71,8 @@ public class ContractFactory {
                                 AddressUtils.wrapAddress(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
                                 AddressUtils.wrapAddress(ADDR_TOKEN_BRIDGE));
 
-                if (!context.getOriginAddress()
-                                .equals(AddressUtils.wrapAddress(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.originAddress.equals(
+                                AddressUtils.wrapAddress(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                         && !contract.isInitialized()) {
                     return null;
                 }
@@ -89,7 +89,7 @@ public class ContractFactory {
                         ? null
                         : new TotalCurrencyContract(
                                 ((KernelInterfaceForFastVM) track).getRepositoryCache(),
-                                context.getSenderAddress(),
+                                context.senderAddress,
                                 AddressUtils.wrapAddress(ADDR_OWNER));
             default:
                 return null;
@@ -121,7 +121,7 @@ public class ContractFactory {
      * @return the contract address.
      */
     public static AionAddress getTotalCurrencyContractAddress() {
-        return  AddressUtils.wrapAddress(ADDR_TOTAL_CURRENCY);
+        return AddressUtils.wrapAddress(ADDR_TOTAL_CURRENCY);
     }
 
     /**
@@ -148,6 +148,6 @@ public class ContractFactory {
      * @return the contract address
      */
     public static AionAddress getBlake2bHashContractAddress() {
-        return  AddressUtils.wrapAddress(ADDR_BLAKE2B_HASH);
+        return AddressUtils.wrapAddress(ADDR_BLAKE2B_HASH);
     }
 }

@@ -27,7 +27,8 @@ public class BridgeControllerRingTest {
     private BridgeController controller;
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -80,7 +81,7 @@ public class BridgeControllerRingTest {
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller =
                 new BridgeController(
-                        connector, dummyContext().getSideEffects(), CONTRACT_ADDR, OWNER_ADDR);
+                        connector, dummyContext().sideEffects, CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
 
         byte[][] memberList = new byte[members.length][];

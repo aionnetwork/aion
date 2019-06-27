@@ -12,14 +12,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import org.aion.fastvm.SideEffects;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
@@ -52,7 +53,7 @@ public class EDVerifyContractTest {
     private byte[] pubKey;
 
     private int depth = 0;
-    private int kind = ExecutionContext.CREATE;
+    private int kind = PrecompiledTransactionContext.CREATE;
     private int flags = 0;
 
     private File forkFile;
@@ -90,25 +91,17 @@ public class EDVerifyContractTest {
     @Test
     public void shouldReturnSuccessTestingWith256() {
         byte[] input = setupInput();
-        ExecutionContext ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+        PrecompiledTransactionContext ctx =
+                new PrecompiledTransactionContext(
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -121,25 +114,17 @@ public class EDVerifyContractTest {
     public void emptyInputTest() {
         byte[] input = new byte[128];
 
-        ExecutionContext ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+        PrecompiledTransactionContext ctx =
+                new PrecompiledTransactionContext(
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -156,25 +141,17 @@ public class EDVerifyContractTest {
         input[33] = (byte) ((int) (input[33]) + 4); // modify sig
         input[99] = (byte) ((int) (input[33]) - 40); // modify sig
 
-        ExecutionContext ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+        PrecompiledTransactionContext ctx =
+                new PrecompiledTransactionContext(
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -188,25 +165,18 @@ public class EDVerifyContractTest {
         nrgPrice = DataWordImpl.ONE;
 
         byte[] input = setupInput();
-        ExecutionContext ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+        PrecompiledTransactionContext ctx =
+                new PrecompiledTransactionContext(
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
+
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         PrecompiledTransactionResult result = contract.execute(input, 2999L);
@@ -219,25 +189,18 @@ public class EDVerifyContractTest {
         byte[] input = new byte[129]; // note the length is 129
         input[128] = 0x1;
 
-        ExecutionContext ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+        PrecompiledTransactionContext ctx =
+                new PrecompiledTransactionContext(
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
+
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         PrecompiledTransactionResult result = contract.execute(input, 21000L);

@@ -1,19 +1,19 @@
 package org.aion.precompiled.contracts.ATB;
 
+import org.aion.fastvm.SideEffects;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.util.types.AddressUtils;
 
-
 public class BridgeTestUtils {
-    static ExecutionContext dummyContext() {
+    static PrecompiledTransactionContext dummyContext() {
         return context(AddressUtils.ZERO_ADDRESS, AddressUtils.ZERO_ADDRESS, new byte[0]);
     }
 
-    static ExecutionContext context(AionAddress from, AionAddress to, byte[] txData) {
+    static PrecompiledTransactionContext context(AionAddress from, AionAddress to, byte[] txData) {
         final byte[] transactionHash = HashUtil.h256("transaction".getBytes());
         final AionAddress address = to;
         final AionAddress origin = from;
@@ -33,23 +33,15 @@ public class BridgeTestUtils {
         long blockNrgLimit = 0;
         DataWordImpl blockDifficulty = DataWordImpl.ZERO;
 
-        return new ExecutionContext(
-                null,
-                transactionHash,
+        return new PrecompiledTransactionContext(
                 address,
                 origin,
                 caller,
-                nrgPrice,
-                nrgLimit,
-                callValue,
-                callData,
-                callDepth,
-                flag,
-                kind,
-                blockCoinbase,
+                new SideEffects(),
+                transactionHash,
+                transactionHash,
                 blockNumber,
-                blockTimestamp,
-                blockNrgLimit,
-                blockDifficulty);
+                nrgLimit,
+                callDepth);
     }
 }

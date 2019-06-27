@@ -4,14 +4,14 @@ import javax.annotation.Nonnull;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
-import org.aion.vm.api.interfaces.TransactionContext;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 
 public class TXHashContract implements PrecompiledContract {
     public static final long COST = 20L;
 
-    private final TransactionContext context;
+    private final PrecompiledTransactionContext context;
 
-    public TXHashContract(@Nonnull final TransactionContext _context) {
+    public TXHashContract(@Nonnull final PrecompiledTransactionContext _context) {
         context = _context;
     }
 
@@ -24,6 +24,7 @@ public class TXHashContract implements PrecompiledContract {
             return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0, null);
         }
 
-        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrgLeft, context.getHashOfOriginTransaction());
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, nrgLeft, context.copyOfOriginTransactionHash());
     }
 }

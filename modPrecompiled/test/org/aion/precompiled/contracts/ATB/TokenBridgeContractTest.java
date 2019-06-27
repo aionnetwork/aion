@@ -7,6 +7,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Properties;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -20,7 +21,6 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
@@ -60,7 +60,8 @@ public class TokenBridgeContractTest {
 
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final long DEFAULT_NRG = 21000L;
 
@@ -153,7 +154,10 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(
+                                AddressUtils.ZERO_ADDRESS,
+                                CONTRACT_ADDR,
+                                ByteUtil.EMPTY_BYTE_ARRAY),
                         this.repository,
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -206,7 +210,10 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(
+                                AddressUtils.ZERO_ADDRESS,
+                                CONTRACT_ADDR,
+                                ByteUtil.EMPTY_BYTE_ARRAY),
                         this.repository,
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -227,7 +234,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransfer() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -261,7 +268,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -356,7 +363,7 @@ public class TokenBridgeContractTest {
                                                 payloadHash),
                                         21000L)
                                 .getReturnData())
-                .isEqualTo(submitBundleContext.getTransactionHash());
+                .isEqualTo(submitBundleContext.copyOfTransactionHash());
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
 
@@ -371,11 +378,10 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size())
-                .isEqualTo(10);
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
         for (InternalTransactionInterface tx :
-                submitBundleContext.getSideEffects().getInternalTransactions()) {
+                submitBundleContext.sideEffects.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -393,9 +399,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
+        for (IExecutionLog l : submitBundleContext.sideEffects.getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -421,7 +427,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testNonA0AddressTransfer() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -455,7 +461,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -549,7 +555,7 @@ public class TokenBridgeContractTest {
                                                 payloadHash),
                                         21000L)
                                 .getReturnData())
-                .isEqualTo(submitBundleContext.getTransactionHash());
+                .isEqualTo(submitBundleContext.copyOfTransactionHash());
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
 
@@ -564,11 +570,10 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size())
-                .isEqualTo(10);
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
         for (InternalTransactionInterface tx :
-                submitBundleContext.getSideEffects().getInternalTransactions()) {
+                submitBundleContext.sideEffects.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -586,9 +591,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
+        for (IExecutionLog l : submitBundleContext.sideEffects.getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -614,7 +619,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferNotRelayer() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -648,7 +653,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -719,7 +724,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext incorrectRelaySubmitBundleContext =
+        PrecompiledTransactionContext incorrectRelaySubmitBundleContext =
                 context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -779,7 +784,7 @@ public class TokenBridgeContractTest {
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
 
         // override defaults
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -861,14 +866,14 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(1024));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
     public void testAlreadySubmittedBundle() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -902,7 +907,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -931,7 +936,7 @@ public class TokenBridgeContractTest {
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
 
         // ATB-4.1 in order to test, we pretend that a bundle is already complete
-        this.connector.setBundle(payloadHash, submitBundleContext.getTransactionHash());
+        this.connector.setBundle(payloadHash, submitBundleContext.copyOfTransactionHash());
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
@@ -978,34 +983,22 @@ public class TokenBridgeContractTest {
 
         /// VERIFICATION
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().size()).isEqualTo(1);
 
         // ATB 4.1 check that proper event was emit
-        assertThat(
-                        submitBundleContext
-                                .getSideEffects()
-                                .getExecutionLogs()
-                                .get(0)
-                                .getTopics()
-                                .get(0))
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().get(0).getTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
 
-        assertThat(
-                        submitBundleContext
-                                .getSideEffects()
-                                .getExecutionLogs()
-                                .get(0)
-                                .getTopics()
-                                .get(1))
-                .isEqualTo(submitBundleContext.getTransactionHash());
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().get(0).getTopics().get(1))
+                .isEqualTo(submitBundleContext.copyOfTransactionHash());
     }
 
     // william test
     @Test
     public void testTransferRingLocked() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -1036,7 +1029,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -1139,14 +1132,14 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
     public void testTransferInvalidReLayer() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -1171,7 +1164,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -1274,14 +1267,14 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
     public void testTransferLessThanMinimumRequiredValidators() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -1315,7 +1308,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -1417,14 +1410,14 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
     public void testTransferInsufficientValidatorSignatures() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -1458,7 +1451,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -1562,14 +1555,14 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
     public void testTransferOutOfBoundsListMeta() {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -1604,7 +1597,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -1711,8 +1704,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1744,7 +1737,7 @@ public class TokenBridgeContractTest {
         }
 
         ReturnDataFromSetup fromSetup = setupForTest(transfers, members);
-        ExecutionContext submitBundleContext = fromSetup.submitBundleContext;
+        PrecompiledTransactionContext submitBundleContext = fromSetup.submitBundleContext;
         byte[] blockHash = fromSetup.blockHash;
         byte[] payloadHash = fromSetup.payloadHash;
         byte[] callPayload = fromSetup.callPayload;
@@ -1774,11 +1767,10 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size())
-                .isEqualTo(10);
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
         for (InternalTransactionInterface tx :
-                submitBundleContext.getSideEffects().getInternalTransactions()) {
+                submitBundleContext.sideEffects.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -1796,9 +1788,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
+        for (IExecutionLog l : submitBundleContext.sideEffects.getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -1839,7 +1831,7 @@ public class TokenBridgeContractTest {
 
         // setup
         ReturnDataFromSetup fromSetup = setupForTest(transfers, members);
-        ExecutionContext submitBundleContext = fromSetup.submitBundleContext;
+        PrecompiledTransactionContext submitBundleContext = fromSetup.submitBundleContext;
         byte[] payloadHash = fromSetup.payloadHash;
         byte[] callPayload = fromSetup.callPayload;
 
@@ -1868,8 +1860,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1889,7 +1881,7 @@ public class TokenBridgeContractTest {
 
         // setup
         ReturnDataFromSetup fromSetup = setupForTest(transfers, members);
-        ExecutionContext submitBundleContext = fromSetup.submitBundleContext;
+        PrecompiledTransactionContext submitBundleContext = fromSetup.submitBundleContext;
         byte[] payloadHash = fromSetup.payloadHash;
         byte[] callPayload = fromSetup.callPayload;
 
@@ -1918,8 +1910,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.sideEffects.getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -2005,7 +1997,7 @@ public class TokenBridgeContractTest {
 
     private ReturnDataFromSetup setupForTest(BridgeTransfer[] transfers, ECKey[] members) {
         // override defaults
-        ExecutionContext initializationContext =
+        PrecompiledTransactionContext initializationContext =
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
@@ -2039,7 +2031,7 @@ public class TokenBridgeContractTest {
 
         // we create a new token bridge contract here because we
         // need to change the execution context
-        ExecutionContext submitBundleContext =
+        PrecompiledTransactionContext submitBundleContext =
                 context(
                         new AionAddress(members[0].getAddress()),
                         CONTRACT_ADDR,
@@ -2101,13 +2093,13 @@ public class TokenBridgeContractTest {
     }
 
     class ReturnDataFromSetup {
-        ExecutionContext submitBundleContext;
+        PrecompiledTransactionContext submitBundleContext;
         byte[] blockHash;
         byte[] payloadHash;
         byte[] callPayload;
 
         public ReturnDataFromSetup(
-                ExecutionContext submitBundleContext,
+                PrecompiledTransactionContext submitBundleContext,
                 byte[] blockHash,
                 byte[] payloadHash,
                 byte[] callPayload) {
@@ -2403,7 +2395,10 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(
+                                AddressUtils.ZERO_ADDRESS,
+                                CONTRACT_ADDR,
+                                ByteUtil.EMPTY_BYTE_ARRAY),
                         this.repository,
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2552,7 +2547,10 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(
+                                AddressUtils.ZERO_ADDRESS,
+                                CONTRACT_ADDR,
+                                ByteUtil.EMPTY_BYTE_ARRAY),
                         this.repository,
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2630,7 +2628,10 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(
+                                AddressUtils.ZERO_ADDRESS,
+                                CONTRACT_ADDR,
+                                ByteUtil.EMPTY_BYTE_ARRAY),
                         this.repository,
                         OWNER_ADDR,
                         CONTRACT_ADDR);

@@ -4,8 +4,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.aion.fastvm.SideEffects;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
@@ -20,7 +21,7 @@ import org.junit.Test;
 public class BenchmarkTest {
 
     private ContractFactory cf;
-    private ExecutionContext ctx;
+    private PrecompiledTransactionContext ctx;
 
     private byte[] txHash, callData;
     private AionAddress origin, caller, blockCoinbase;
@@ -65,7 +66,7 @@ public class BenchmarkTest {
         callData = new byte[0];
 
         depth = 0;
-        kind = ExecutionContext.CREATE;
+        kind = PrecompiledTransactionContext.CREATE;
         flags = 0;
     }
 
@@ -80,36 +81,28 @@ public class BenchmarkTest {
     public void benchBlack2bHash() {
 
         ctx =
-                new ExecutionContext(
-                        null,
-                        txHash,
+                new PrecompiledTransactionContext(
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,
                         caller,
-                        nrgPrice,
-                        nrgLimit,
-                        callValue,
-                        callData,
-                        depth,
-                        kind,
-                        flags,
-                        blockCoinbase,
+                        new SideEffects(),
+                        txHash,
+                        txHash,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockDifficulty);
+                        nrgLimit,
+                        depth);
 
         PrecompiledContract ct;
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergy());
+            ct.execute(txHash, ctx.transactionEnergy);
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergy());
+            ct.execute(txHash, ctx.transactionEnergy);
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");
