@@ -49,7 +49,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller =
                 new BridgeController(
-                        this.connector, this.context.sideEffects, contractAddress, ownerAddress);
+                        this.connector, this.context.getLogs(), contractAddress, ownerAddress);
         this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
@@ -221,7 +221,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
     private PrecompiledTransactionResult fail() {
-        this.context.sideEffects.markAllInternalTransactionsAsRejected();
+        this.context.markAllInternalTransactionsAsRejected();
         return THROW;
     }
 
@@ -270,7 +270,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
 
         // add transaction to result
-        this.context.sideEffects.addInternalTransaction(tx);
+        this.context.addInternalTransaction(tx);
 
         // increase the nonce and do the transfer without executing code
         this.track.incrementNonce(from);
@@ -295,7 +295,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             String note) {
         byte[] parentHash = context.copyOfTransactionHash();
         int depth = context.stackDepth;
-        int index = context.sideEffects.getInternalTransactions().size();
+        int index = context.getInternalTransactions().size();
 
         return new AionInternalTx(
                 parentHash,

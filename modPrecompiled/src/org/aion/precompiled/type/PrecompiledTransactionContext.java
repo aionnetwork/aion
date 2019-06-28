@@ -1,8 +1,11 @@
 package org.aion.precompiled.type;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.interfaces.TransactionSideEffects;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 public final class PrecompiledTransactionContext {
 
@@ -13,7 +16,9 @@ public final class PrecompiledTransactionContext {
     public final int stackDepth;
     public final long blockNumber;
     public final long transactionEnergy;
-    public final TransactionSideEffects sideEffects;
+    private final List<IExecutionLog> logs;
+    private final List<InternalTransactionInterface> internalTransactions;
+    private final List<AionAddress> deletedAddresses;
     private final byte[] originTransactionHash;
     private final byte[] transactionHash;
 
@@ -21,7 +26,9 @@ public final class PrecompiledTransactionContext {
             AionAddress destinationAddress,
             AionAddress originAddress,
             AionAddress senderAddress,
-            TransactionSideEffects sideEffects,
+            List<IExecutionLog> logs,
+            List<InternalTransactionInterface> internalTransactions,
+            List<AionAddress> deletedAddresses,
             byte[] originTransactionHash,
             byte[] transactionHash,
             long blockNumber,
@@ -30,7 +37,9 @@ public final class PrecompiledTransactionContext {
         this.destinationAddress = destinationAddress;
         this.originAddress = originAddress;
         this.senderAddress = senderAddress;
-        this.sideEffects = sideEffects;
+        this.logs = logs;
+        this.internalTransactions = internalTransactions;
+        this.deletedAddresses = deletedAddresses;
         this.originTransactionHash =
                 originTransactionHash == null
                         ? null
@@ -56,5 +65,35 @@ public final class PrecompiledTransactionContext {
         return this.transactionHash == null
                 ? null
                 : Arrays.copyOf(this.transactionHash, this.transactionHash.length);
+    }
+
+    public List<IExecutionLog> getLogs() {
+        return this.logs;
+    }
+
+    public List<InternalTransactionInterface> getInternalTransactions() {
+        return this.internalTransactions;
+    }
+
+    public List<AionAddress> getDeletedAddresses() {
+        return this.deletedAddresses;
+    }
+
+    public void addInternalTransaction(InternalTransactionInterface internalTransaction) {
+        this.internalTransactions.add(internalTransaction);
+    }
+
+    public void addLogs(List<IExecutionLog> logs) {
+        this.logs.addAll(logs);
+    }
+
+    public void addInternalTransactions(List<InternalTransactionInterface> internalTransactions) {
+        this.internalTransactions.addAll(internalTransactions);
+    }
+
+    public void markAllInternalTransactionsAsRejected() {
+        for (InternalTransactionInterface internalTransaction : this.internalTransactions) {
+            internalTransaction.markAsRejected();
+        }
     }
 }

@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import org.aion.fastvm.SideEffects;
+import java.util.Collections;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
@@ -96,7 +96,9 @@ public class EDVerifyContractTest {
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,
@@ -119,7 +121,9 @@ public class EDVerifyContractTest {
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,
@@ -146,7 +150,9 @@ public class EDVerifyContractTest {
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,
@@ -170,7 +176,9 @@ public class EDVerifyContractTest {
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,
@@ -194,7 +202,9 @@ public class EDVerifyContractTest {
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,

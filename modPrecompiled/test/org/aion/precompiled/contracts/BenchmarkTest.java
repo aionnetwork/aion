@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.fastvm.SideEffects;
+import java.util.Collections;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.config.CfgFork;
@@ -85,7 +85,9 @@ public class BenchmarkTest {
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,
                         caller,
-                        new SideEffects(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
                         txHash,
                         txHash,
                         blockNumber,

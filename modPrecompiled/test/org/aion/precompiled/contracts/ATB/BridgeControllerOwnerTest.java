@@ -17,7 +17,7 @@ import org.aion.crypto.HashUtil;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.TransactionSideEffects;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -28,7 +28,9 @@ public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private TransactionSideEffects result;
+    private List<IExecutionLog> logs;
+    private List<InternalTransactionInterface> internalTransactions;
+    private List<AionAddress> deletedAddresses;
 
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
@@ -67,8 +69,10 @@ public class BridgeControllerOwnerTest {
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
 
         PrecompiledTransactionContext context = dummyContext();
-        this.result = context.sideEffects;
-        this.controller = new BridgeController(connector, this.result, CONTRACT_ADDR, OWNER_ADDR);
+        this.logs = context.getLogs();
+        this.internalTransactions = context.getInternalTransactions();
+        this.deletedAddresses = context.getDeletedAddresses();
+        this.controller = new BridgeController(connector, this.logs, CONTRACT_ADDR, OWNER_ADDR);
     }
 
     @Test
@@ -91,10 +95,9 @@ public class BridgeControllerOwnerTest {
 
         assertThat(this.connector.getOwner()).isEqualTo(newOwner);
         // check that an event was properly generated
-        List<IExecutionLog> logs = this.result.getExecutionLogs();
-        assertThat(logs.size()).isEqualTo(1);
+        assertThat(this.logs.size()).isEqualTo(1);
 
-        IExecutionLog changedOwnerLog = logs.get(0);
+        IExecutionLog changedOwnerLog = this.logs.get(0);
         assertThat(changedOwnerLog.getData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
         assertThat(changedOwnerLog.getTopics().get(0)).isEqualTo(transferOwnership);
         assertThat(changedOwnerLog.getTopics().get(1)).isEqualTo(newOwner);

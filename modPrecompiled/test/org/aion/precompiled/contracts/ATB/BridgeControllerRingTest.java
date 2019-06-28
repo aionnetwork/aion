@@ -81,7 +81,7 @@ public class BridgeControllerRingTest {
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller =
                 new BridgeController(
-                        connector, dummyContext().sideEffects, CONTRACT_ADDR, OWNER_ADDR);
+                        connector, dummyContext().getLogs(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
 
         byte[][] memberList = new byte[members.length][];

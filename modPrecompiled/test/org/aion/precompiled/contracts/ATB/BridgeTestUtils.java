@@ -1,6 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.fastvm.SideEffects;
+import java.util.Collections;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -37,7 +37,9 @@ public class BridgeTestUtils {
                 address,
                 origin,
                 caller,
-                new SideEffects(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 transactionHash,
                 transactionHash,
                 blockNumber,
