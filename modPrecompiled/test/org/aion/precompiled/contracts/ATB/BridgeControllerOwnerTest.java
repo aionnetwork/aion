@@ -15,8 +15,8 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.crypto.HashUtil;
 
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -28,7 +28,7 @@ public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private List<IExecutionLog> logs;
+    private List<Log> logs;
     private List<InternalTransactionInterface> internalTransactions;
     private List<AionAddress> deletedAddresses;
 
@@ -97,10 +97,10 @@ public class BridgeControllerOwnerTest {
         // check that an event was properly generated
         assertThat(this.logs.size()).isEqualTo(1);
 
-        IExecutionLog changedOwnerLog = this.logs.get(0);
-        assertThat(changedOwnerLog.getData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
-        assertThat(changedOwnerLog.getTopics().get(0)).isEqualTo(transferOwnership);
-        assertThat(changedOwnerLog.getTopics().get(1)).isEqualTo(newOwner);
+        Log changedOwnerLog = this.logs.get(0);
+        assertThat(changedOwnerLog.copyOfData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(changedOwnerLog.copyOfTopics().get(0)).isEqualTo(transferOwnership);
+        assertThat(changedOwnerLog.copyOfTopics().get(1)).isEqualTo(newOwner);
     }
 
     @Test

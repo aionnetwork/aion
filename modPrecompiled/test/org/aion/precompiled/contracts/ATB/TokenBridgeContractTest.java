@@ -6,6 +6,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
@@ -16,6 +17,7 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Log;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
@@ -31,7 +33,6 @@ import org.aion.precompiled.encoding.Uint128FVM;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -400,25 +401,24 @@ public class TokenBridgeContractTest {
         // check that proper events are emit
         assertThat(submitBundleContext.getLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getLogs()) {
+        for (Log l : submitBundleContext.getLogs()) {
             // verify address is correct
-            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.copyOfAddress()).isEqualTo(CONTRACT_ADDR.toByteArray());
+            List<byte[]> topics = l.copyOfTopics();
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getTopics().get(0))
-                        .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(topics.get(0)).isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
+                assertThat(topics.get(1)).isEqualTo(blockHash);
+                assertThat(topics.get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getTopics().get(3)))
-                    .isEqualTo(transfers[i].getTransferValue());
+            assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(topics.get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(topics.get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, topics.get(3))).isEqualTo(transfers[i].getTransferValue());
             i++;
         }
     }
@@ -591,25 +591,24 @@ public class TokenBridgeContractTest {
         // check that proper events are emit
         assertThat(submitBundleContext.getLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getLogs()) {
+        for (Log l : submitBundleContext.getLogs()) {
             // verify address is correct
-            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.copyOfAddress()).isEqualTo(CONTRACT_ADDR.toByteArray());
+            List<byte[]> topics = l.copyOfTopics();
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getTopics().get(0))
-                        .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(topics.get(0)).isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
+                assertThat(topics.get(1)).isEqualTo(blockHash);
+                assertThat(topics.get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getTopics().get(3)))
-                    .isEqualTo(transfers[i].getTransferValue());
+            assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(topics.get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(topics.get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, topics.get(3))).isEqualTo(transfers[i].getTransferValue());
             i++;
         }
     }
@@ -985,10 +984,10 @@ public class TokenBridgeContractTest {
         assertThat(submitBundleContext.getLogs().size()).isEqualTo(1);
 
         // ATB 4.1 check that proper event was emit
-        assertThat(submitBundleContext.getLogs().get(0).getTopics().get(0))
+        assertThat(submitBundleContext.getLogs().get(0).copyOfTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
 
-        assertThat(submitBundleContext.getLogs().get(0).getTopics().get(1))
+        assertThat(submitBundleContext.getLogs().get(0).copyOfTopics().get(1))
                 .isEqualTo(submitBundleContext.copyOfTransactionHash());
     }
 
@@ -1787,25 +1786,24 @@ public class TokenBridgeContractTest {
         // check that proper events are emit
         assertThat(submitBundleContext.getLogs().size()).isEqualTo(11);
         i = 0;
-        for (IExecutionLog l : submitBundleContext.getLogs()) {
+        for (Log l : submitBundleContext.getLogs()) {
             // verify address is correct
-            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.copyOfAddress()).isEqualTo(CONTRACT_ADDR.toByteArray());
+            List<byte[]> topics = l.copyOfTopics();
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getTopics().get(0))
-                        .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(topics.get(0)).isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
+                assertThat(topics.get(1)).isEqualTo(blockHash);
+                assertThat(topics.get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getTopics().get(3)))
-                    .isEqualTo(transfers[i].getTransferValue());
+            assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(topics.get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(topics.get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, topics.get(3))).isEqualTo(transfers[i].getTransferValue());
             i++;
         }
     }

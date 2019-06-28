@@ -13,13 +13,11 @@ import javax.annotation.Nonnull;
 import org.aion.types.AionAddress;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
-import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
@@ -28,14 +26,14 @@ import org.aion.vm.api.interfaces.InternalTransactionInterface;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private final List<IExecutionLog> logs;
+    private final List<Log> logs;
     private final AionAddress contractAddress;
     private final AionAddress ownerAddress;
     private Transferable transferable;
 
     public BridgeController(
             @Nonnull final BridgeStorageConnector storageConnector,
-            @Nonnull final List<IExecutionLog> logs,
+            @Nonnull final List<Log> logs,
             @Nonnull final AionAddress contractAddress,
             @Nonnull final AionAddress ownerAddress) {
         this.connector = storageConnector;
@@ -295,7 +293,7 @@ public class BridgeController {
     }
 
     private void addLog(List<byte[]> topics) {
-        this.logs.add(new Log(this.contractAddress, topics, null));
+        this.logs.add(Log.topicsAndData(this.contractAddress.toByteArray(), topics, new byte[0]));
     }
 
     private void emitAddMember(@Nonnull final byte[] address) {

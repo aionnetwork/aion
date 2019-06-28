@@ -1,10 +1,9 @@
 package org.aion.precompiled.type;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.types.Log;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 public final class PrecompiledTransactionContext {
@@ -16,7 +15,7 @@ public final class PrecompiledTransactionContext {
     public final int stackDepth;
     public final long blockNumber;
     public final long transactionEnergy;
-    private final List<IExecutionLog> logs;
+    private final List<Log> logs;
     private final List<InternalTransactionInterface> internalTransactions;
     private final List<AionAddress> deletedAddresses;
     private final byte[] originTransactionHash;
@@ -26,7 +25,7 @@ public final class PrecompiledTransactionContext {
             AionAddress destinationAddress,
             AionAddress originAddress,
             AionAddress senderAddress,
-            List<IExecutionLog> logs,
+            List<Log> logs,
             List<InternalTransactionInterface> internalTransactions,
             List<AionAddress> deletedAddresses,
             byte[] originTransactionHash,
@@ -67,7 +66,7 @@ public final class PrecompiledTransactionContext {
                 : Arrays.copyOf(this.transactionHash, this.transactionHash.length);
     }
 
-    public List<IExecutionLog> getLogs() {
+    public List<Log> getLogs() {
         return this.logs;
     }
 
@@ -83,7 +82,7 @@ public final class PrecompiledTransactionContext {
         this.internalTransactions.add(internalTransaction);
     }
 
-    public void addLogs(List<IExecutionLog> logs) {
+    public void addLogs(List<Log> logs) {
         this.logs.addAll(logs);
     }
 

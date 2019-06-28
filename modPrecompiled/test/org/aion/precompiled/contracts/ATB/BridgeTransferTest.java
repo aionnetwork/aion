@@ -21,7 +21,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.PrecompiledUtilities;
 
-import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.types.Log;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -353,9 +353,10 @@ public class BridgeTransferTest {
         // check status of result
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.context.getLogs().size()).isEqualTo(1);
-        assertThat(this.context.getLogs().get(0).getTopics().get(0))
+        assertThat(this.context.getLogs().get(0).copyOfTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
-        assertThat(this.context.getLogs().get(0).getTopics().get(1)).isEqualTo(aionTransactionHash);
+        assertThat(this.context.getLogs().get(0).copyOfTopics().get(1))
+                .isEqualTo(aionTransactionHash);
 
         // one transfer should have gone through, second shouldn't
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
@@ -394,9 +395,9 @@ public class BridgeTransferTest {
         // 511 transfer events + 1 distributed event
         assertThat(this.context.getLogs().size()).isEqualTo(512);
 
-        List<IExecutionLog> logs = this.context.getLogs();
+        List<Log> logs = this.context.getLogs();
         for (int i = 0; i < 511; i++) {
-            List<byte[]> topics = logs.get(i).getTopics();
+            List<byte[]> topics = logs.get(i).copyOfTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
             assertThat(topics.get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
             assertThat(topics.get(2)).isEqualTo(transfers[i].getRecipient());
@@ -407,7 +408,7 @@ public class BridgeTransferTest {
 
         // for the last element
         {
-            List<byte[]> topics = logs.get(511).getTopics();
+            List<byte[]> topics = logs.get(511).copyOfTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
             assertThat(topics.get(1)).isEqualTo(blockHash);
             assertThat(topics.get(2)).isEqualTo(tuple.bundleHash);

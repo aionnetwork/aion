@@ -1,6 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -37,9 +37,9 @@ public class BridgeTestUtils {
                 address,
                 origin,
                 caller,
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
                 transactionHash,
                 transactionHash,
                 blockNumber,
