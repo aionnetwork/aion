@@ -36,7 +36,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -48,6 +47,7 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.AionInternalTx;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.tuple.Pair;
@@ -329,7 +329,7 @@ public class InternalTransactionTest {
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
 
         System.out.println(summary.getReceipt());
-        for (InternalTransactionInterface tx : summary.getInternalTransactions()) {
+        for (AionInternalTx tx : summary.getInternalTransactions()) {
             System.out.println(tx);
         }
         bc.close();
@@ -434,7 +434,7 @@ public class InternalTransactionTest {
 
         System.out.println(summary.getReceipt());
         boolean firstItx = true;
-        for (InternalTransactionInterface itx : summary.getInternalTransactions()) {
+        for (AionInternalTx itx : summary.getInternalTransactions()) {
             System.out.println(itx);
             if (firstItx) {
                 assertEquals(

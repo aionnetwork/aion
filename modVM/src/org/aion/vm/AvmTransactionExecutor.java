@@ -10,7 +10,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.types.IExecutionLog;
-import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
@@ -155,7 +154,7 @@ public final class AvmTransactionExecutor {
                 result.transactionStatus.isSuccess()
                         ? convertAvmLogsToKernel(result.logs)
                         : new ArrayList<>();
-        List<InternalTransactionInterface> internalTxs =
+        List<AionInternalTx> internalTxs =
                 convertAvmInternalTransactionToKernel(result.internalTransactions);
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
@@ -228,15 +227,12 @@ public final class AvmTransactionExecutor {
      * @param avmInternalTransactions The AVM Internal Transactions.
      * @return The equivalent kernel Internal Transactions.
      */
-    private static List<InternalTransactionInterface> convertAvmInternalTransactionToKernel(
+    private static List<AionInternalTx> convertAvmInternalTransactionToKernel(
             List<InternalTransaction> avmInternalTransactions) {
-        List<InternalTransactionInterface> txs = new ArrayList<>();
+        List<AionInternalTx> txs = new ArrayList<>();
         for (InternalTransaction avmTx : avmInternalTransactions) {
             txs.add(
                     new AionInternalTx(
-                            null,
-                            0,
-                            0,
                             avmTx.senderNonce.toByteArray(),
                             avmTx.sender,
                             avmTx.destination,

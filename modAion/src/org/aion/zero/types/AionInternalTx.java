@@ -1,5 +1,6 @@
 package org.aion.zero.types;
 
+import static org.aion.util.bytes.ByteUtil.ZERO_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
@@ -7,31 +8,48 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.crypto.ECKey;
-import org.aion.mcf.types.InternalTransactionInterface;
-import org.aion.mcf.vm.types.DataWordImpl;
+import java.util.Arrays;
+import org.aion.crypto.HashUtil;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
 /** aion internal transaction class. */
-public class AionInternalTx extends AionTransaction implements InternalTransactionInterface {
+public class AionInternalTx {
 
-    private byte[] parentHash;
-    private int deep;
-    private int index;
+    /* Tx in encoded form */
+    private byte[] rlpEncoded;
+
     private boolean rejected = false;
     private String note;
 
-    public AionInternalTx(byte[] rawData) {
-        super(rawData);
+    protected byte[] hash;
+    protected byte[] value;
+    protected byte[] data;
+    protected AionAddress destination;
+    protected AionAddress sender;
+    protected byte[] nonce;
+    protected long nrg;
+    protected long nrgPrice;
+    protected byte type = TransactionTypes.DEFAULT;
+
+    public AionInternalTx(
+            byte[] nonce,
+            AionAddress destination,
+            byte[] value,
+            byte[] data,
+            long nrg,
+            long nrgPrice) {
+        this.nonce = nonce;
+        this.destination = destination;
+        this.value = nullToEmpty(value);
+        this.data = nullToEmpty(data);
+        this.nrg = nrg;
+        this.nrgPrice = nrgPrice;
     }
 
     public AionInternalTx(
-            byte[] parentHash,
-            int deep,
-            int index,
             byte[] nonce,
             AionAddress sendAddress,
             AionAddress receiveAddress,
@@ -39,72 +57,149 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
             byte[] data,
             String note) {
 
-        // @TODO: pass null to nrg and nrgprice for base class ( Transaction )
-        // will be safe?
-        super(nonce, receiveAddress, nullToEmpty(value), nullToEmpty(data));
-
-        this.parentHash = parentHash;
-        this.deep = deep;
-        this.index = index;
-        this.from = sendAddress;
+        this.nonce = nonce;
+        this.sender = sendAddress;
+        this.destination = receiveAddress;
+        this.value = nullToEmpty(value);
+        this.data = nullToEmpty(data);
         this.note = note;
-        this.parsed = true;
     }
 
-    // @TODO: check this functions used by whom
-    private static byte[] getData(DataWordImpl nrgPrice) {
-        return (nrgPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : nrgPrice.getData();
-    }
-
-    @Override
     public void markAsRejected() {
         this.rejected = true;
     }
 
-    public int getStackDepth() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return deep;
-    }
-
-    public int getIndexOfInternalTransaction() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return index;
-    }
-
     public boolean isRejected() {
-        if (!parsed) {
-            rlpParse();
-        }
         return rejected;
     }
 
-    public String getNote() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return note;
-    }
-
-    @Override
     public AionAddress getSenderAddress() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return from;
+        return sender;
     }
 
-    public byte[] getParentTransactionHash() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return parentHash;
+    private static byte[] encodeInt(int value) {
+        return RLP.encodeElement(ByteBuffer.allocate(Integer.BYTES).putInt(value).array());
     }
 
     @Override
+    public String toString() {
+        String to = (getDestinationAddress() == null) ? "" : getDestinationAddress().toString();
+        return "TransactionData ["
+                + ", hash="
+                + toHexString(getTransactionHash())
+                + ", nonce="
+                + toHexString(getNonce())
+                + ", fromAddress="
+                + getSenderAddress().toString()
+                + ", toAddress="
+                + to
+                + ", value="
+                + toHexString(getValue())
+                + ", data="
+                + toHexString(getData())
+                + ", rejected="
+                + isRejected()
+                + "]";
+    }
+
+    public byte[] getTransactionHash() {
+        if (hash != null) {
+            return hash;
+        }
+
+        byte[] plainMsg = this.getEncoded();
+        // cache it.
+        hash = HashUtil.h256(plainMsg);
+        return hash;
+    }
+
+    public byte[] getNonce() {
+        return nonce == null ? ZERO_BYTE_ARRAY : nonce;
+    }
+
+    public BigInteger getNonceBI() {
+        return new BigInteger(1, getNonce());
+    }
+
+    public long getEnergyLimit() {
+        return nrg;
+    }
+
+    public long getEnergyPrice() {
+        return nrgPrice;
+    }
+
+    public byte[] getValue() {
+        return value == null ? ZERO_BYTE_ARRAY : value;
+    }
+
+    public AionAddress getDestinationAddress() {
+        return destination;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public byte getTargetVM() {
+        return type;
+    }
+
+    public AionAddress getContractAddress() {
+        if (!this.isContractCreationTransaction()) {
+            return null;
+        }
+
+        AionAddress from = this.getSenderAddress();
+
+        if (from == null) {
+            return null;
+        }
+
+        try {
+            return new AionAddress(HashUtil.calcNewAddr(from.toByteArray(), this.getNonce()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public boolean isContractCreationTransaction() {
+        return destination == null;
+    }
+
+    public String toString(int maxDataSize) {
+        String dataS;
+        if (data == null) {
+            dataS = "";
+        } else if (data.length < maxDataSize) {
+            dataS = ByteUtil.toHexString(data);
+        } else {
+            dataS =
+                    ByteUtil.toHexString(Arrays.copyOfRange(data, 0, maxDataSize))
+                            + "... ("
+                            + data.length
+                            + " bytes)";
+        }
+        return "TransactionData ["
+                + "hash="
+                + ByteUtil.toHexString(hash)
+                + ", nonce="
+                + new BigInteger(1, nonce)
+                + ", receiveAddress="
+                + (destination == null ? "" : destination.toString())
+                + ", value="
+                + new BigInteger(1, value)
+                + ", data="
+                + dataS
+                + ", Nrg="
+                + this.nrg
+                + ", NrgPrice="
+                + this.nrgPrice
+                + ", txType="
+                + this.type
+                + "]";
+    }
+
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
@@ -115,17 +210,14 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
-            this.rlpEncoded =
+            rlpEncoded =
                     RLP.encodeList(
                             RLP.encodeElement(isEmptyNonce ? null : nonce),
-                            RLP.encodeElement(this.parentHash),
                             RLP.encodeElement(this.getSenderAddress().toByteArray()),
                             RLP.encodeElement(to),
                             RLP.encodeElement(getValue()),
                             RLP.encodeElement(getData()),
                             RLP.encodeString(this.note),
-                            encodeInt(this.deep),
-                            encodeInt(this.index),
                             encodeInt(this.rejected ? 1 : 0));
         }
 
@@ -133,74 +225,25 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
     }
 
     @Override
-    public byte[] getEncodedRaw() {
-        return getEncoded();
+    public int hashCode() {
+
+        byte[] hash = this.getTransactionHash();
+        int hashCode = 0;
+
+        for (int i = 0; i < hash.length; ++i) {
+            hashCode += hash[i] * i;
+        }
+
+        return hashCode;
     }
 
     @Override
-    public void rlpParse() {
-        RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList transaction = (RLPList) decodedTxList.get(0);
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AionInternalTx)) {
+            return false;
+        }
+        AionInternalTx tx = (AionInternalTx) obj;
 
-        int rlpIdx = 0;
-        this.nonce = transaction.get(rlpIdx++).getRLPData();
-        this.parentHash = transaction.get(rlpIdx++).getRLPData();
-        this.from = new AionAddress(transaction.get(rlpIdx++).getRLPData());
-        this.to = new AionAddress(transaction.get(rlpIdx++).getRLPData());
-        this.value = transaction.get(rlpIdx++).getRLPData();
-
-        // TODO: check the order
-        this.data = transaction.get(rlpIdx++).getRLPData();
-        this.note = new String(transaction.get(rlpIdx++).getRLPData());
-        this.deep = decodeInt(transaction.get(rlpIdx++).getRLPData());
-        this.index = decodeInt(transaction.get(rlpIdx++).getRLPData());
-        this.rejected = decodeInt(transaction.get(rlpIdx++).getRLPData()) == 1;
-
-        this.parsed = true;
-    }
-
-    private static byte[] encodeInt(int value) {
-        return RLP.encodeElement(ByteBuffer.allocate(Integer.BYTES).putInt(value).array());
-    }
-
-    private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
-    }
-
-    @Override
-    public void sign(ECKey key) throws ECKey.MissingPrivateKeyException {
-        throw new UnsupportedOperationException("Cannot sign internal transaction.");
-    }
-
-    @Override
-    public String toString() {
-        String to =
-                (this.getDestinationAddress() == null)
-                        ? ""
-                        : this.getDestinationAddress().toString();
-        return "TransactionData ["
-                + "  parentHash="
-                + toHexString(getParentTransactionHash())
-                + ", hash="
-                + toHexString(this.getTransactionHash())
-                + ", nonce="
-                + toHexString(getNonce())
-                + ", fromAddress="
-                + this.getSenderAddress().toString()
-                + ", toAddress="
-                + to
-                + ", value="
-                + toHexString(getValue())
-                + ", data="
-                + toHexString(getData())
-                + ", note="
-                + getNote()
-                + ", deep="
-                + getStackDepth()
-                + ", index="
-                + getIndexOfInternalTransaction()
-                + ", rejected="
-                + isRejected()
-                + "]";
+        return tx.hashCode() == this.hashCode();
     }
 }
