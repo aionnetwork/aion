@@ -27,7 +27,6 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 public class AionTxExecSummary implements TxExecSummary {
 
@@ -40,7 +39,7 @@ public class AionTxExecSummary implements TxExecSummary {
     private BigInteger value = BigInteger.ZERO;
 
     private List<AionAddress> deletedAccounts = emptyList();
-    private List<InternalTransactionInterface> internalTransactions = emptyList();
+    private List<AionInternalTx> internalTransactions = emptyList();
     private Map<DataWordImpl, DataWordImpl> storageDiff = emptyMap();
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
@@ -183,15 +182,6 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    private static List<InternalTransactionInterface> decodeInternalTransactions(
-            RLPList internalTransactions) {
-        List<InternalTransactionInterface> result = new ArrayList<>();
-        for (RLPElement internalTransaction : internalTransactions) {
-            result.add(new AionInternalTx(internalTransaction.getRLPData()));
-        }
-        return result;
-    }
-
     private static byte[] encodeDeletedAccounts(List<AionAddress> deletedAccounts) {
         byte[][] result = new byte[deletedAccounts.size()][];
         for (int i = 0; i < deletedAccounts.size(); i++) {
@@ -233,7 +223,7 @@ public class AionTxExecSummary implements TxExecSummary {
         return deletedAccounts;
     }
 
-    public List<InternalTransactionInterface> getInternalTransactions() {
+    public List<AionInternalTx> getInternalTransactions() {
         if (!parsed) {
             rlpParse();
         }
@@ -353,8 +343,7 @@ public class AionTxExecSummary implements TxExecSummary {
             summary = new AionTxExecSummary(receipt);
         }
 
-        public Builder internalTransactions(
-                List<InternalTransactionInterface> internalTransactions) {
+        public Builder internalTransactions(List<AionInternalTx> internalTransactions) {
             summary.internalTransactions = unmodifiableList(internalTransactions);
             return this;
         }
@@ -412,7 +401,7 @@ public class AionTxExecSummary implements TxExecSummary {
                 summary.internalTransactions = Collections.emptyList();
 
             if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
-                for (InternalTransactionInterface transaction : summary.internalTransactions) {
+                for (AionInternalTx transaction : summary.internalTransactions) {
                     transaction.markAsRejected();
                 }
             }

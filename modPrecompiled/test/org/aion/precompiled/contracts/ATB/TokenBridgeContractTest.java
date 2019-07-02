@@ -31,11 +31,11 @@ import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.types.AionInternalTx;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -380,7 +380,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -570,7 +570,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -1765,7 +1765,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();

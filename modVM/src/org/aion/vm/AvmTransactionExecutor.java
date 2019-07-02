@@ -19,7 +19,6 @@ import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.*;
 import org.slf4j.Logger;
@@ -148,7 +147,7 @@ public final class AvmTransactionExecutor {
                 result.transactionStatus.isSuccess()
                         ? convertAvmLogsToKernel(result.logs)
                         : new ArrayList<>();
-        List<InternalTransactionInterface> internalTxs =
+        List<AionInternalTx> internalTxs =
                 convertAvmInternalTransactionToKernel(result.internalTransactions);
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
@@ -221,15 +220,12 @@ public final class AvmTransactionExecutor {
      * @param avmInternalTransactions The AVM Internal Transactions.
      * @return The equivalent kernel Internal Transactions.
      */
-    private static List<InternalTransactionInterface> convertAvmInternalTransactionToKernel(
+    private static List<AionInternalTx> convertAvmInternalTransactionToKernel(
             List<InternalTransaction> avmInternalTransactions) {
-        List<InternalTransactionInterface> txs = new ArrayList<>();
+        List<AionInternalTx> txs = new ArrayList<>();
         for (InternalTransaction avmTx : avmInternalTransactions) {
             txs.add(
                     new AionInternalTx(
-                            null,
-                            0,
-                            0,
                             avmTx.senderNonce.toByteArray(),
                             avmTx.sender,
                             avmTx.destination,
