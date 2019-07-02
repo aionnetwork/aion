@@ -287,25 +287,19 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * <p>NOTE: copied from {@code Callback}
      */
     private AionInternalTx newInternalTx(
-            AionAddress from,
-            AionAddress to,
-            BigInteger nonce,
-            DataWordImpl value,
-            byte[] data,
-            String note) {
-        byte[] parentHash = context.copyOfTransactionHash();
-        int depth = context.stackDepth;
-        int index = context.getInternalTransactions().size();
+        AionAddress from,
+        AionAddress to,
+        BigInteger nonce,
+        DataWordImpl value,
+        byte[] data,
+        String note) {
 
         return new AionInternalTx(
-                parentHash,
-                depth,
-                index,
-                new DataWordImpl(nonce).getData(),
-                from,
-                to,
-                value.getData(),
-                data,
-                note);
+            new DataWordImpl(nonce).getData(),
+            from,
+            to,
+            value.getData(),
+            data,
+            note);
     }
 }

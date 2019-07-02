@@ -29,16 +29,14 @@ import java.util.List;
 import java.util.Set;
 import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
-import org.aion.vm.api.interfaces.TransactionSideEffects;
+import org.aion.zero.types.AionInternalTx;
 
-public class PrecompiledSideEffects implements TransactionSideEffects {
+public class PrecompiledSideEffects {
 
     private Set<AionAddress> deleteAccounts = new HashSet<>();
-    private List<InternalTransactionInterface> internalTxs = new ArrayList<>();
+    private List<AionInternalTx> internalTxs = new ArrayList<>();
     private List<IExecutionLog> logs = new ArrayList<>();
 
-    @Override
     public void addToDeletedAddresses(AionAddress address) {
         deleteAccounts.add(address);
     }
@@ -48,7 +46,6 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @param addresses The addressed to add to the set of deleted accounts.
      */
-    @Override
     public void addAllToDeletedAddresses(Collection<AionAddress> addresses) {
         for (AionAddress addr : addresses) {
             if (addr != null) {
@@ -62,7 +59,6 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @param log The log to add to the execution logs.
      */
-    @Override
     public void addLog(IExecutionLog log) {
         logs.add(log);
     }
@@ -72,7 +68,6 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @param logs The collection of logs to add to the execution logs.
      */
-    @Override
     public void addLogs(Collection<IExecutionLog> logs) {
         for (IExecutionLog log : logs) {
             if (log != null) {
@@ -86,8 +81,7 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @param tx The internal transaction to add.
      */
-    @Override
-    public void addInternalTransaction(InternalTransactionInterface tx) {
+    public void addInternalTransaction(AionInternalTx tx) {
         internalTxs.add(tx);
     }
 
@@ -96,35 +90,30 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @param txs The collection of internal transactions to add.
      */
-    @Override
-    public void addInternalTransactions(List<InternalTransactionInterface> txs) {
-        for (InternalTransactionInterface tx : txs) {
+    public void addInternalTransactions(List<AionInternalTx> txs) {
+        for (AionInternalTx tx : txs) {
             if (tx != null) {
                 this.internalTxs.add(tx);
             }
         }
     }
 
-    @Override
     public void markAllInternalTransactionsAsRejected() {
-        for (InternalTransactionInterface tx : getInternalTransactions()) {
+        for (AionInternalTx tx : getInternalTransactions()) {
             tx.markAsRejected();
         }
     }
 
-    @Override
-    public void merge(TransactionSideEffects other) {
+    public void merge(PrecompiledSideEffects other) {
         addInternalTransactions(other.getInternalTransactions());
         addAllToDeletedAddresses(other.getAddressesToBeDeleted());
         addLogs(other.getExecutionLogs());
     }
 
-    @Override
     public List<AionAddress> getAddressesToBeDeleted() {
         return new ArrayList<>(deleteAccounts);
     }
 
-    @Override
     public List<IExecutionLog> getExecutionLogs() {
         return logs;
     }
@@ -134,8 +123,7 @@ public class PrecompiledSideEffects implements TransactionSideEffects {
      *
      * @return the internal transactions.
      */
-    @Override
-    public List<InternalTransactionInterface> getInternalTransactions() {
+    public List<AionInternalTx> getInternalTransactions() {
         return internalTxs;
     }
 }
