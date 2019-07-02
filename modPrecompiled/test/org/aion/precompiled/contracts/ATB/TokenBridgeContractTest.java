@@ -18,7 +18,6 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryConfig;
-import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -36,6 +35,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.types.AionInternalTx;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -380,7 +380,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -570,7 +570,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -1765,7 +1765,7 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (InternalTransactionInterface tx : submitBundleContext.getInternalTransactions()) {
+        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
