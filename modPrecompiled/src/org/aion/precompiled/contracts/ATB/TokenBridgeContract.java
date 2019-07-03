@@ -14,13 +14,13 @@ import javax.annotation.Nonnull;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.types.AionAddress;
-import org.aion.zero.types.AionInternalTx;
+import org.aion.types.InternalTransaction;
+import org.aion.types.InternalTransaction.RejectedStatus;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
 
@@ -251,53 +251,41 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @implNote this method will check that the recipient account has no code. This means that we
      *     <b>cannot</b> do a transfer to any contract account.
      * @implNote assumes that the {@code fromValue} derived from the track will never be null.
-     * @param to recipient address
+     * @param dest recipient address
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
     public PrecompiledTransactionResult transfer(
-            @Nonnull final byte[] to, @Nonnull final BigInteger value) {
+            @Nonnull final byte[] dest, @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
         // assemble an internal transaction
-        AionAddress from = this.contractAddress;
-        AionAddress recipient = new AionAddress(to);
-        BigInteger nonce = this.track.getNonce(from);
-        DataWordImpl valueToSend = new DataWordImpl(value);
+        AionAddress sender = this.contractAddress;
+        AionAddress destination = new AionAddress(dest);
+        BigInteger nonce = this.track.getNonce(sender);
         byte[] dataToSend = new byte[0];
-        AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend);
+        InternalTransaction tx =
+                InternalTransaction.contractCallTransaction(
+                        RejectedStatus.NOT_REJECTED,
+                        sender,
+                        destination,
+                        nonce,
+                        value,
+                        dataToSend,
+                        0L,
+                        1L);
 
         // add transaction to result
         this.context.addInternalTransaction(tx);
 
         // increase the nonce and do the transfer without executing code
-        this.track.incrementNonce(from);
-        this.track.addBalance(from, value.negate());
-        this.track.addBalance(recipient, value);
+        this.track.incrementNonce(sender);
+        this.track.addBalance(sender, value.negate());
+        this.track.addBalance(destination, value);
 
         // construct result
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, 0);
-    }
-
-    /**
-     * Creates a new internal transaction.
-     *
-     * <p>NOTE: copied from {@code Callback}
-     */
-    private AionInternalTx newInternalTx(
-        AionAddress from,
-        AionAddress to,
-        BigInteger nonce,
-        DataWordImpl value,
-        byte[] data) {
-
-        return new AionInternalTx(
-                new DataWordImpl(nonce).getData(),
-                from,
-                to,
-                value.getData(),
-                data);
     }
 }

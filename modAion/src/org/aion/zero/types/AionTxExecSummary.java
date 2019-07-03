@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.aion.mcf.vm.types.InternalTransactionUtil;
+import org.aion.types.AionAddress;
 import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.core.TxTouchedStorage;
@@ -26,7 +28,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 
 public class AionTxExecSummary implements TxExecSummary {
@@ -40,7 +42,7 @@ public class AionTxExecSummary implements TxExecSummary {
     private BigInteger value = BigInteger.ZERO;
 
     private List<AionAddress> deletedAccounts = emptyList();
-    private List<AionInternalTx> internalTransactions = emptyList();
+    private List<InternalTransaction> internalTransactions = emptyList();
     private Map<DataWordImpl, DataWordImpl> storageDiff = emptyMap();
     private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
@@ -224,7 +226,7 @@ public class AionTxExecSummary implements TxExecSummary {
         return deletedAccounts;
     }
 
-    public List<AionInternalTx> getInternalTransactions() {
+    public List<InternalTransaction> getInternalTransactions() {
         if (!parsed) {
             rlpParse();
         }
@@ -344,7 +346,7 @@ public class AionTxExecSummary implements TxExecSummary {
             summary = new AionTxExecSummary(receipt);
         }
 
-        public Builder internalTransactions(List<AionInternalTx> internalTransactions) {
+        public Builder internalTransactions(List<InternalTransaction> internalTransactions) {
             summary.internalTransactions = unmodifiableList(internalTransactions);
             return this;
         }
@@ -398,13 +400,14 @@ public class AionTxExecSummary implements TxExecSummary {
                 summary.logs = Collections.emptyList();
             }
 
-            if (summary.internalTransactions == null)
+            if (summary.internalTransactions == null) {
                 summary.internalTransactions = Collections.emptyList();
+            }
 
             if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
-                for (AionInternalTx transaction : summary.internalTransactions) {
-                    transaction.markAsRejected();
-                }
+                summary.internalTransactions =
+                        InternalTransactionUtil.createRejectedTransactionList(
+                                summary.internalTransactions);
             }
             return summary;
         }

@@ -2,9 +2,10 @@ package org.aion.precompiled.type;
 
 import java.util.Arrays;
 import java.util.List;
+import org.aion.mcf.vm.types.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
-import org.aion.zero.types.AionInternalTx;
+import org.aion.types.InternalTransaction;
 
 public final class PrecompiledTransactionContext {
 
@@ -16,7 +17,7 @@ public final class PrecompiledTransactionContext {
     public final long blockNumber;
     public final long transactionEnergy;
     private final List<Log> logs;
-    private final List<AionInternalTx> internalTransactions;
+    private List<InternalTransaction> internalTransactions;
     private final List<AionAddress> deletedAddresses;
     private final byte[] originTransactionHash;
     private final byte[] transactionHash;
@@ -26,7 +27,7 @@ public final class PrecompiledTransactionContext {
             AionAddress originAddress,
             AionAddress senderAddress,
             List<Log> logs,
-            List<AionInternalTx> internalTransactions,
+            List<InternalTransaction> internalTransactions,
             List<AionAddress> deletedAddresses,
             byte[] originTransactionHash,
             byte[] transactionHash,
@@ -70,7 +71,7 @@ public final class PrecompiledTransactionContext {
         return this.logs;
     }
 
-    public List<AionInternalTx> getInternalTransactions() {
+    public List<InternalTransaction> getInternalTransactions() {
         return this.internalTransactions;
     }
 
@@ -78,7 +79,7 @@ public final class PrecompiledTransactionContext {
         return this.deletedAddresses;
     }
 
-    public void addInternalTransaction(AionInternalTx internalTransaction) {
+    public void addInternalTransaction(InternalTransaction internalTransaction) {
         this.internalTransactions.add(internalTransaction);
     }
 
@@ -86,13 +87,11 @@ public final class PrecompiledTransactionContext {
         this.logs.addAll(logs);
     }
 
-    public void addInternalTransactions(List<AionInternalTx> internalTransactions) {
+    public void addInternalTransactions(List<InternalTransaction> internalTransactions) {
         this.internalTransactions.addAll(internalTransactions);
     }
 
     public void markAllInternalTransactionsAsRejected() {
-        for (AionInternalTx internalTransaction : this.internalTransactions) {
-            internalTransaction.markAsRejected();
-        }
+        internalTransactions = InternalTransactionUtil.createRejectedTransactionList(internalTransactions);
     }
 }
