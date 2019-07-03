@@ -6,6 +6,13 @@ pipeline {
     agent any
 
     stages {
+        stage('Format') {
+            steps {
+                echo "Checking code formatting for branch: ${env.BRANCH_NAME}"
+                sh "./gradlew checkFormat"
+            }
+        }
+
         stage('Build') {
             steps {
                 echo "Building branch: ${env.BRANCH_NAME}"

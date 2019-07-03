@@ -207,6 +207,13 @@ task downloadSolidityGit(type:Download) {
     dest buildDir
 }
 
+task downloadGoogleFormatJar(type:Download) { 
+    overwrite false // TODO This seems to work only when this task is directly invoked
+    onlyIfModified true
+    src "https://github.com/google/google-java-format/releases/download/google-java-format-1.7/google-java-format-1.7-all-deps.jar"
+    dest buildDir
+}
+
 task buildVmDependencies(type: Exec) { 
     commandLine 'sh', 'aion_fastvm/scripts/release.sh', vmVersion, '1'
 }
@@ -261,6 +268,16 @@ task prePack(type:Exec)  {
 }
 
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
+
+task checkFormat(type:Exec) {
+    dependsOn downloadGoogleFormatJar
+    commandLine 'sh', 'script/check-format.sh'
+}
+
+task checkCommitFormat(type:Exec) {
+    dependsOn downloadGoogleFormatJar
+    commandLine 'sh', 'script/check-commit-format.sh'
+}
 
 /** Replaces `ant pack_build` */
 task pack(type: Tar) {
@@ -348,9 +365,9 @@ clean {
     delete file('report')
 }
 
-
 /** Replaces `ant ci_build` */
 task ciBuild {
+    dependsOn checkCommitFormat
     dependsOn build
     def ciModules = [
             'aion_fastvm',
@@ -473,3 +490,5 @@ subprojects  {
 
 	} //publishing
 }
+
+build.mustRunAfter checkCommitFormat
