@@ -11,12 +11,11 @@ import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.InternalTransaction;
+import org.aion.types.Log;
 import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.*;
 import org.slf4j.Logger;
@@ -142,15 +141,13 @@ public final class AvmTransactionExecutor {
     private static AionTxExecSummary buildTransactionSummary(
             AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
         List<Log> logs = result.transactionStatus.isSuccess() ? result.logs : new ArrayList<>();
-        List<AionInternalTx> internalTxs =
-                convertAvmInternalTransactionToKernel(result.internalTransactions);
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
         AionTxExecSummary.Builder builder =
                 AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result, output))
                         .logs(logs)
                         .deletedAccounts(new ArrayList<>())
-                        .internalTransactions(internalTxs)
+                        .internalTransactions(result.internalTransactions)
                         .result(output);
 
         TransactionStatus resultCode = result.transactionStatus;
@@ -178,31 +175,6 @@ public final class AvmTransactionExecutor {
         receipt.setExecutionResult(output);
         receipt.setError(result.transactionStatus.causeOfError);
         return receipt;
-    }
-
-    /**
-     * Converts the AVM Internal Transaction implementation into a kernel Internal Transaction
-     * implementation, since the kernel implementation has features that the kernel relies on that
-     * are not implemented by the AVM version.
-     *
-     * <p>This should be a temporary measure until both are using the exact same type.
-     *
-     * @param avmInternalTransactions The AVM Internal Transactions.
-     * @return The equivalent kernel Internal Transactions.
-     */
-    private static List<AionInternalTx> convertAvmInternalTransactionToKernel(
-            List<InternalTransaction> avmInternalTransactions) {
-        List<AionInternalTx> txs = new ArrayList<>();
-        for (InternalTransaction avmTx : avmInternalTransactions) {
-            txs.add(
-                    new AionInternalTx(
-                            avmTx.senderNonce.toByteArray(),
-                            avmTx.sender,
-                            avmTx.destination,
-                            avmTx.value.toByteArray(),
-                            avmTx.copyOfData()));
-        }
-        return txs;
     }
 
     /**

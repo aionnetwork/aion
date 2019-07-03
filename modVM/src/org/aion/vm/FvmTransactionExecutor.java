@@ -17,7 +17,6 @@ import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.types.Log;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.api.interfaces.SimpleFuture;

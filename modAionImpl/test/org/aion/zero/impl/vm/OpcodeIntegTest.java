@@ -39,17 +39,17 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
-import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.types.AionInternalTx;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.IAionBlock;
@@ -333,10 +333,10 @@ public class OpcodeIntegTest {
         assertEquals(summary.getNrgUsed().longValue(), summary.getNrgUsed().longValue());
 
         // We expect that the internal transaction is sent from D to D.
-        List<AionInternalTx> internalTxs = summary.getInternalTransactions();
+        List<InternalTransaction> internalTxs = summary.getInternalTransactions();
         assertEquals(1, internalTxs.size());
-        assertEquals(D, internalTxs.get(0).getSenderAddress());
-        assertEquals(D, internalTxs.get(0).getDestinationAddress());
+        assertEquals(D, internalTxs.get(0).sender);
+        assertEquals(D, internalTxs.get(0).destination);
     }
 
     @Test
@@ -487,10 +487,10 @@ public class OpcodeIntegTest {
 
         // We expect there to be one internal transaction and it should look like deployer sent to
         // D.
-        List<AionInternalTx> internalTxs = summary.getInternalTransactions();
+        List<InternalTransaction> internalTxs = summary.getInternalTransactions();
         assertEquals(1, internalTxs.size());
-        assertEquals(deployer, internalTxs.get(0).getSenderAddress());
-        assertEquals(D, internalTxs.get(0).getDestinationAddress());
+        assertEquals(deployer, internalTxs.get(0).sender);
+        assertEquals(D, internalTxs.get(0).destination);
     }
 
     @Test

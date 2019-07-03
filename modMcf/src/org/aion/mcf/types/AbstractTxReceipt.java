@@ -9,7 +9,6 @@ import org.aion.interfaces.Bytesable;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.LogUtility;
 import org.aion.types.Log;
 
 public abstract class AbstractTxReceipt<TX extends Transaction>

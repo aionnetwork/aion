@@ -5,11 +5,11 @@ import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.types.AionInternalTx;
 
 public class PrecompiledTransactionResult {
 
@@ -18,7 +18,7 @@ public class PrecompiledTransactionResult {
     private byte[] output;
     private long energyRemaining;
     private List<Log> logs;
-    private List<AionInternalTx> internalTransactions;
+    private List<InternalTransaction> internalTransactions;
     private List<AionAddress> deletedAddresses;
 
     /**
@@ -170,7 +170,7 @@ public class PrecompiledTransactionResult {
         this.logs.addAll(logs);
     }
 
-    public void addInternalTransactions(List<AionInternalTx> internalTransactions) {
+    public void addInternalTransactions(List<InternalTransaction> internalTransactions) {
         this.internalTransactions.addAll(internalTransactions);
     }
 
@@ -182,7 +182,7 @@ public class PrecompiledTransactionResult {
         return this.logs;
     }
 
-    public List<AionInternalTx> getInternalTransactions() {
+    public List<InternalTransaction> getInternalTransactions() {
         return this.internalTransactions;
     }
 

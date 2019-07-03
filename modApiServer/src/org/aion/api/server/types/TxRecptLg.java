@@ -3,8 +3,8 @@ package org.aion.api.server.types;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.types.AionAddress;
-import org.aion.util.string.StringUtils;
 import org.aion.types.Log;
+import org.aion.util.string.StringUtils;
 
 public class TxRecptLg {
 

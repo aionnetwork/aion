@@ -28,15 +28,14 @@ import org.aion.precompiled.encoding.ListFVM;
 import org.aion.precompiled.encoding.Uint128FVM;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.types.Log;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
-import org.aion.zero.types.AionInternalTx;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -381,20 +380,19 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
+        for (InternalTransaction tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
-            assertThat(tx.isRejected()).isFalse();
+            assertThat(tx.isRejected).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.sender).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
-            assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
+            assertThat(tx.value.intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getDestinationAddress())
-                    .isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.destination).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 
@@ -571,20 +569,19 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
+        for (InternalTransaction tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
-            assertThat(tx.isRejected()).isFalse();
+            assertThat(tx.isRejected).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.sender).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
-            assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
+            assertThat(tx.value.intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getDestinationAddress())
-                    .isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.destination).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 
@@ -1766,20 +1763,19 @@ public class TokenBridgeContractTest {
         // 1  ProcessedBundle Event
         assertThat(submitBundleContext.getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.getInternalTransactions()) {
+        for (InternalTransaction tx : submitBundleContext.getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
-            assertThat(tx.isRejected()).isFalse();
+            assertThat(tx.isRejected).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.sender).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
-            assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
+            assertThat(tx.value.intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getDestinationAddress())
-                    .isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.destination).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 

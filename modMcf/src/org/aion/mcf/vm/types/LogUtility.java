@@ -7,8 +7,8 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.types.Log;
+import org.aion.vm.api.interfaces.IBloomFilter;
 
 public class LogUtility {
 

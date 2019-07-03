@@ -15,9 +15,9 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.types.Log;
 
 /** aion transaction receipt class. */
 public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
