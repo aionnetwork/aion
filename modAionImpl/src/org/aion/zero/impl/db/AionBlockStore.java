@@ -17,6 +17,7 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -1244,6 +1245,36 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                         thisBlockInfo = null;
                     }
                 }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Performed before --redo-import to clear side chain blocks and reset the index.
+     *
+     * @param block the block that will be re-imported and should not be removed from the database
+     */
+    public void redoIndexWithoutSideChains(AionBlock block) {
+        lock.writeLock().lock();
+
+        try {
+            AionBlock currentBlock = block;
+
+            if (currentBlock != null) {
+                byte[] currentHash = block.getHash();
+                List<BlockInfo> level = getBlockInfoForLevel(currentBlock.getNumber());
+
+                // delete all the side-chain blocks
+                for (BlockInfo blockInfo : level) {
+                    if (!Arrays.equals(currentHash, blockInfo.getHash())) {
+                        blocks.delete(blockInfo.getHash());
+                    }
+                }
+
+                // replace all the block info with empty list
+                index.set(block.getNumber(), Collections.emptyList());
             }
         } finally {
             lock.writeLock().unlock();

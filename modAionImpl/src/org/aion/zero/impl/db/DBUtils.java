@@ -570,13 +570,17 @@ public class DBUtils {
 
                 // recover genesis
                 AionGenesis genesis = cfg.getGenesis();
+                store.redoIndexWithoutSideChains(genesis); // clear the index entry
                 AionHubUtils.buildGenesis(genesis, repo);
                 System.out.println("\nFinished rebuilding genesis block.");
                 startBlock = genesis;
                 currentBlock = 1L;
+                chain.setTotalDifficulty(genesis.getDifficultyBI()); // initial TD = genesis diff
             } else {
                 startBlock = store.getChainBlockByNumber(startHeight - 1);
                 currentBlock = startHeight;
+                // initial TD = diff of parent of first block to import
+                chain.setTotalDifficulty(store.getTotalDifficultyForHash(startBlock.getHash()));
             }
 
             boolean fail = false;
@@ -611,6 +615,8 @@ public class DBUtils {
                     }
 
                     try {
+                        // clear the index entry and prune side-chain blocks
+                        store.redoIndexWithoutSideChains(block);
                         result =
                                 chain.tryToConnectAndFetchSummary(
                                         block, System.currentTimeMillis() / THOUSAND_MS, false);
@@ -675,9 +681,9 @@ public class DBUtils {
                                         + String.format("%.0f", time)
                                         + " ms (under "
                                         + String.format("%.0f", time / 60_000 + 1)
-                                        + " min). The average time per block is < "
+                                        + " min).\n\tThe average time per block is < "
                                         + String.format("%.0f", timePerBlock + 1)
-                                        + " ms. Completion for remaining "
+                                        + " ms.\n\tCompletion for remaining "
                                         + remainingBlocks
                                         + " blocks estimated to take "
                                         + String.format("%.0f", estimate)
