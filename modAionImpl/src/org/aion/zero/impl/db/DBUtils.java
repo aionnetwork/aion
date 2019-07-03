@@ -33,7 +33,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *     into a diverse set of CLI calls for displaying or manipulating the data. It would benefit
  *     from refactoring to separate the different use cases.
  */
-public class RecoveryUtils {
+public class DBUtils {
 
     public enum Status {
         SUCCESS,

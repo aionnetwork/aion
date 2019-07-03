@@ -28,7 +28,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
-import org.aion.zero.impl.db.RecoveryUtils;
+import org.aion.zero.impl.db.DBUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import picocli.CommandLine;
 
@@ -385,7 +385,7 @@ public class Cli {
 
             if (options.isRebuildBlockInfo()) {
                 System.out.println("Starting database clean-up.");
-                RecoveryUtils.pruneAndCorrect();
+                DBUtils.pruneAndCorrect();
                 System.out.println("Finished database clean-up.");
                 return EXIT;
             }
@@ -417,7 +417,7 @@ public class Cli {
             if (options.getPruneStateOption() != null) {
                 String pruning_type = options.getPruneStateOption();
                 try {
-                    RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    DBUtils.pruneOrRecoverState(pruning_type);
                     return EXIT;
                 } catch (Exception e) {
                     System.out.println("Reorganizing the state storage FAILED due to:");
@@ -432,7 +432,7 @@ public class Cli {
 
                 if (parameter.isEmpty()) {
                     System.out.println("Retrieving state size for top " + block_count + " blocks.");
-                    RecoveryUtils.printStateTrieSize(block_count);
+                    DBUtils.printStateTrieSize(block_count);
                     return EXIT;
                 } else {
                     try {
@@ -450,7 +450,7 @@ public class Cli {
                     }
 
                     System.out.println("Retrieving state size for top " + block_count + " blocks.");
-                    RecoveryUtils.printStateTrieSize(block_count);
+                    DBUtils.printStateTrieSize(block_count);
                     return EXIT;
                 }
             }
@@ -461,7 +461,7 @@ public class Cli {
 
                 if (parameter.isEmpty()) {
                     System.out.println("Retrieving state for top main chain block...");
-                    RecoveryUtils.printStateTrieDump(level);
+                    DBUtils.printStateTrieDump(level);
                     return EXIT;
                 } else {
                     try {
@@ -479,7 +479,7 @@ public class Cli {
                         System.out.println(
                                 "Retrieving state for main chain block at level " + level + "...");
                     }
-                    RecoveryUtils.printStateTrieDump(level);
+                    DBUtils.printStateTrieDump(level);
                     return EXIT;
                 }
             }
@@ -507,7 +507,7 @@ public class Cli {
                                     + level
                                     + "...");
 
-                    RecoveryUtils.dumpTestData(level, parameters);
+                    DBUtils.dumpTestData(level, parameters);
                     return EXIT;
                 }
             }
@@ -518,7 +518,7 @@ public class Cli {
 
                 if (parameter.isEmpty()) {
                     System.out.println("Printing top " + count + " blocks from database.");
-                    RecoveryUtils.dumpBlocks(count);
+                    DBUtils.dumpBlocks(count);
                     return EXIT;
                 } else {
                     try {
@@ -536,13 +536,13 @@ public class Cli {
                     }
 
                     System.out.println("Printing top " + count + " blocks from database.");
-                    RecoveryUtils.dumpBlocks(count);
+                    DBUtils.dumpBlocks(count);
                     return EXIT;
                 }
             }
 
             if (options.isDbCompact()) {
-                RecoveryUtils.dbCompact();
+                DBUtils.dbCompact();
                 return EXIT;
             }
 
@@ -552,7 +552,7 @@ public class Cli {
 
                 if (parameter.isEmpty()) {
                     LongLivedAvm.createAndStartLongLivedAvm();
-                    RecoveryUtils.redoMainChainImport(height);
+                    DBUtils.redoMainChainImport(height);
                     LongLivedAvm.destroy();
                     return EXIT;
                 } else {
@@ -567,7 +567,7 @@ public class Cli {
                     }
 
                     LongLivedAvm.createAndStartLongLivedAvm();
-                    RecoveryUtils.redoMainChainImport(height);
+                    DBUtils.redoMainChainImport(height);
                     LongLivedAvm.destroy();
                     return EXIT;
                 }
@@ -1089,7 +1089,7 @@ public class Cli {
         return null; // Make compiler happy; never get here.
     }
 
-    private RecoveryUtils.Status revertTo(String blockNumber) {
+    private DBUtils.Status revertTo(String blockNumber) {
         // try to convert to long
         long block;
 
@@ -1098,10 +1098,10 @@ public class Cli {
         } catch (NumberFormatException e) {
             System.out.println(
                     "The given argument «" + blockNumber + "» cannot be converted to a number.");
-            return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
+            return DBUtils.Status.ILLEGAL_ARGUMENT;
         }
 
-        return RecoveryUtils.revertTo(block);
+        return DBUtils.revertTo(block);
     }
 
     private void createKeystoreDirIfMissing() {

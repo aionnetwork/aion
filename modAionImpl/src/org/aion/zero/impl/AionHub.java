@@ -29,7 +29,7 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.RecoveryUtils;
+import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
@@ -356,10 +356,10 @@ public class AionHub {
                 genLOG.info("Rebuild state FAILED. Reverting to previous block.");
 
                 --blockNumber;
-                RecoveryUtils.Status status = RecoveryUtils.revertTo(this.blockchain, blockNumber);
+                DBUtils.Status status = DBUtils.revertTo(this.blockchain, blockNumber);
 
                 recovered =
-                        (status == RecoveryUtils.Status.SUCCESS)
+                        (status == DBUtils.Status.SUCCESS)
                                 && this.repository.isValidRoot(
                                         this.repository
                                                 .getBlockStore()
