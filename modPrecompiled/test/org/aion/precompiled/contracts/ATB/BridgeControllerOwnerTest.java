@@ -14,12 +14,12 @@ import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
-import org.aion.zero.types.AionInternalTx;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ public class BridgeControllerOwnerTest {
     private BridgeStorageConnector connector;
     private BridgeController controller;
     private List<Log> logs;
-    private List<AionInternalTx> internalTransactions;
+    private List<InternalTransaction> internalTransactions;
     private List<AionAddress> deletedAddresses;
 
     private static final AionAddress CONTRACT_ADDR =

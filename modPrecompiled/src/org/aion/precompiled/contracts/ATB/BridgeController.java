@@ -292,7 +292,7 @@ public class BridgeController {
         return processSuccess(results);
     }
 
-    //TODO Is giving Log new byte[0] valid?
+    // TODO Is giving Log new byte[0] valid?
     private void addLog(List<byte[]> topics) {
         this.logs.add(Log.topicsAndData(this.contractAddress.toByteArray(), topics, new byte[0]));
     }
