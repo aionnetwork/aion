@@ -27,15 +27,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.types.AionAddress;
-import org.aion.zero.types.AionInternalTx;
+import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 
 public class PrecompiledSideEffects {
 
     private Set<AionAddress> deleteAccounts = new HashSet<>();
-    private List<AionInternalTx> internalTxs = new ArrayList<>();
+    private List<InternalTransaction> internalTxs = new ArrayList<>();
     private List<Log> logs = new ArrayList<>();
 
     public void addToDeletedAddresses(AionAddress address) {
@@ -50,7 +49,7 @@ public class PrecompiledSideEffects {
     public void addAllToDeletedAddresses(Collection<AionAddress> addresses) {
         for (AionAddress addr : addresses) {
             if (addr != null) {
-                deleteAccounts.add(addr);
+                addToDeletedAddresses(addr);
             }
         }
     }
@@ -72,7 +71,7 @@ public class PrecompiledSideEffects {
     public void addLogs(Collection<Log> logs) {
         for (Log log : logs) {
             if (log != null) {
-                this.logs.add(log);
+                addLog(log);
             }
         }
     }
@@ -82,7 +81,7 @@ public class PrecompiledSideEffects {
      *
      * @param tx The internal transaction to add.
      */
-    public void addInternalTransaction(AionInternalTx tx) {
+    public void addInternalTransaction(InternalTransaction tx) {
         internalTxs.add(tx);
     }
 
@@ -91,17 +90,11 @@ public class PrecompiledSideEffects {
      *
      * @param txs The collection of internal transactions to add.
      */
-    public void addInternalTransactions(List<AionInternalTx> txs) {
-        for (AionInternalTx tx : txs) {
+    public void addInternalTransactions(List<InternalTransaction> txs) {
+        for (InternalTransaction tx : txs) {
             if (tx != null) {
-                this.internalTxs.add(tx);
+                addInternalTransaction(tx);
             }
-        }
-    }
-
-    public void markAllInternalTransactionsAsRejected() {
-        for (AionInternalTx tx : getInternalTransactions()) {
-            tx.markAsRejected();
         }
     }
 
@@ -124,7 +117,7 @@ public class PrecompiledSideEffects {
      *
      * @return the internal transactions.
      */
-    public List<AionInternalTx> getInternalTransactions() {
+    public List<InternalTransaction> getInternalTransactions() {
         return internalTxs;
     }
 }

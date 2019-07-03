@@ -38,6 +38,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
@@ -47,7 +48,6 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionInternalTx;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.tuple.Pair;
@@ -329,7 +329,7 @@ public class InternalTransactionTest {
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
 
         System.out.println(summary.getReceipt());
-        for (AionInternalTx tx : summary.getInternalTransactions()) {
+        for (InternalTransaction tx : summary.getInternalTransactions()) {
             System.out.println(tx);
         }
         bc.close();
@@ -428,21 +428,25 @@ public class InternalTransactionTest {
 
         System.out.println("contractaddr: " + tx.getContractAddress());
 
-        RepositoryCache repo = bc.getRepository().startTracking();
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx);
 
         System.out.println(summary.getReceipt());
         boolean firstItx = true;
-        for (AionInternalTx itx : summary.getInternalTransactions()) {
+        for (InternalTransaction itx : summary.getInternalTransactions()) {
             System.out.println(itx);
             if (firstItx) {
-                assertEquals(
-                        new AionAddress(
-                                HashUtil.calcNewAddr(
-                                        tx.getContractAddress().toByteArray(),
-                                        BigInteger.ZERO.toByteArray())),
-                        itx.getDestinationAddress());
+
+                assertTrue(bc.getRepository().hasAccountState(tx.getContractAddress()));
+
+                assertTrue(
+                        bc.getRepository()
+                                .hasAccountState(
+                                        new AionAddress(
+                                                HashUtil.calcNewAddr(
+                                                        tx.getContractAddress().toByteArray(),
+                                                        BigInteger.ZERO.toByteArray()))));
+
                 firstItx = false;
             }
         }
@@ -462,14 +466,13 @@ public class InternalTransactionTest {
     private AionTxExecSummary executeTransaction(
             StandaloneBlockchain bc, BlockContext context, AionTransaction transaction)
             throws VMException {
-        return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                context.block,
-                transaction,
-                bc.getRepository().startTracking(),
-                false,
-                true,
-                false,
-                false,
-                LOGGER_VM);
+        RepositoryCache cache = bc.getRepository().startTracking();
+
+        AionTxExecSummary summary =
+                BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                        context.block, transaction, cache, false, true, false, false, LOGGER_VM);
+
+        cache.flush();
+        return summary;
     }
 }

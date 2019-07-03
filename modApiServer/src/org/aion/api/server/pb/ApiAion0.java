@@ -54,6 +54,7 @@ import org.aion.mcf.types.IExecutionLog;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.types.AionAddress;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.string.StringUtils;
@@ -152,7 +153,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                                                                         EvtContract ec =
                                                                                 new EvtContract(
-                                                                                        bi.copyOfAddress(),
+                                                                                        bi
+                                                                                                .copyOfAddress(),
                                                                                         bi
                                                                                                 .copyOfData(),
                                                                                         blk
@@ -2680,11 +2682,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private Message.t_TxDetail getTxDetailsObj(
-            AionTransaction t,
-            List<Log> _logs,
-            int txIndex,
-            long nrgConsumed,
-            String error) {
+            AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed, String error) {
 
         List<Message.t_LgEle> tles =
                 _logs.parallelStream()
@@ -2692,15 +2690,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 log -> {
                                     List<String> topics = new ArrayList<>();
                                     for (int i = 0; i < log.copyOfTopics().size(); i++) {
-                                        topics.add(StringUtils.toJsonHex(log.copyOfTopics().get(i)));
+                                        topics.add(
+                                                StringUtils.toJsonHex(log.copyOfTopics().get(i)));
                                     }
 
                                     return Message.t_LgEle
                                             .newBuilder()
                                             .setData(ByteString.copyFrom(log.copyOfData()))
-                                            .setAddress(
-                                                    ByteString.copyFrom(
-                                                            log.copyOfAddress()))
+                                            .setAddress(ByteString.copyFrom(log.copyOfAddress()))
                                             .addAllTopics(topics)
                                             .build();
                                 })
@@ -2819,11 +2816,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private String generateTransactionSqlStatement(
-            AionBlock b,
-            AionTransaction t,
-            List<Log> _logs,
-            int txIndex,
-            long nrgConsumed) {
+            AionBlock b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
         JSONArray logs = new JSONArray();
         for (Log l : _logs) {
             JSONArray log = new JSONArray();
@@ -2991,7 +2984,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                             .setAddress(
                                                                                                     ByteString
                                                                                                             .copyFrom(
-                                                                                                                    log.copyOfAddress()))
+                                                                                                                    log
+                                                                                                                            .copyOfAddress()))
                                                                                             .addAllTopics(
                                                                                                     topics)
                                                                                             .build();

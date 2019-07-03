@@ -66,6 +66,7 @@ import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.p2p.INode;
 import org.aion.types.AionAddress;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
