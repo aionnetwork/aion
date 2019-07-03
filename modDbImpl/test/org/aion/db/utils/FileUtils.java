@@ -1,4 +1,3 @@
-
 package org.aion.db.utils;
 
 import com.google.common.base.Preconditions;

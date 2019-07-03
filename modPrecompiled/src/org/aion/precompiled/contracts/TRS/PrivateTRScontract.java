@@ -1,11 +1,12 @@
 package org.aion.precompiled.contracts.TRS;
 
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
+
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
  * Foundation, for the foundation to lock its funds away over a number of months, ensuring continued

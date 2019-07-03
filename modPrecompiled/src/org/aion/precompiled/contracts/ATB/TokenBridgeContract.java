@@ -11,15 +11,15 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
-import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.zero.types.AionInternalTx;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {

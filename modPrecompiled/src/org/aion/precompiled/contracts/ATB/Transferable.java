@@ -17,5 +17,6 @@ public interface Transferable {
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
-    PrecompiledTransactionResult transfer(@Nonnull final byte[] to, @Nonnull final BigInteger value);
+    PrecompiledTransactionResult transfer(
+            @Nonnull final byte[] to, @Nonnull final BigInteger value);
 }

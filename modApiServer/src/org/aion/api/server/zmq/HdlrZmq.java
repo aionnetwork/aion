@@ -9,9 +9,9 @@ import org.aion.api.server.pb.Message;
 import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 public class HdlrZmq implements IHdlr {

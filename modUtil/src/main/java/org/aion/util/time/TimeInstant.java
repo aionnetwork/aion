@@ -2,7 +2,7 @@ package org.aion.util.time;
 
 import java.time.Instant;
 
-public final class  TimeInstant {
+public final class TimeInstant {
     private static Instant instant;
 
     public static final TimeInstant EPOCH = new TimeInstant();

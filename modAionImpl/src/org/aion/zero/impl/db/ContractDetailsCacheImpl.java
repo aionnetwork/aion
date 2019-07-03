@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 /** Contract details cache implementation. */

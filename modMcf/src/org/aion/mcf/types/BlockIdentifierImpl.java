@@ -3,7 +3,6 @@ package org.aion.mcf.types;
 import static org.aion.util.bytes.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
-
 import org.aion.interfaces.block.BlockIdentifier;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -45,6 +44,11 @@ public class BlockIdentifierImpl implements BlockIdentifier {
 
     @Override
     public String toString() {
-        return "BlockIdentifierImpl {" + "hash=" + Hex.toHexString(hash) + ", number=" + number + '}';
+        return "BlockIdentifierImpl {"
+                + "hash="
+                + Hex.toHexString(hash)
+                + ", number="
+                + number
+                + '}';
     }
 }

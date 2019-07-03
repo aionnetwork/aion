@@ -5,13 +5,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;

@@ -1,4 +1,3 @@
-
 package org.aion.db.impl;
 
 import static com.google.common.base.Charsets.UTF_8;

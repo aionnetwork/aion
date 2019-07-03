@@ -4,14 +4,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.types.AionAddress;
 
 /**
  * The TRSstateContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -273,7 +273,8 @@ public final class TRSstateContract extends AbstractTRS {
 
         // The caller must also be the owner of this contract.
         AionAddress contract =
-                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.LENGTH));
+                new AionAddress(
+                        Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.LENGTH));
         if (!caller.equals(getContractOwner(contract))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
@@ -328,7 +329,8 @@ public final class TRSstateContract extends AbstractTRS {
 
         // The caller must also be the owner of this contract.
         AionAddress contract =
-                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.LENGTH));
+                new AionAddress(
+                        Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.LENGTH));
         if (!caller.equals(getContractOwner(contract))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }

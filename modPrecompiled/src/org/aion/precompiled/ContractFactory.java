@@ -1,7 +1,5 @@
 package org.aion.precompiled;
 
-import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.types.AionAddress;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
@@ -10,6 +8,8 @@ import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.KernelInterface;
 

@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.interfaces.db.Repository;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.Repository;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
@@ -129,7 +129,9 @@ public class AionHub {
         try {
             loadBlockchain();
         } catch (IllegalStateException e) {
-            genLOG.error("Found database corruption, please re-import your database by using ./aion.sh -n <network> --redo-import", e);
+            genLOG.error(
+                    "Found database corruption, please re-import your database by using ./aion.sh -n <network> --redo-import",
+                    e);
             System.exit(SystemExitCodes.DATABASE_CORRUPTION);
         }
 

@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKeyFac;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
@@ -45,6 +44,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.BulkExecutor;
@@ -112,10 +112,10 @@ public class OldTxExecutorTest {
         byte[] txNonce = DataWordImpl.ZERO.getData();
         AionAddress from =
                 AddressUtils.wrapAddress(
-                    "1111111111111111111111111111111111111111111111111111111111111111");
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
-                    "2222222222222222222222222222222222222222222222222222222222222222");
+                        "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
@@ -153,7 +153,7 @@ public class OldTxExecutorTest {
         byte[] txNonce = DataWordImpl.ZERO.getData();
         AionAddress from =
                 AddressUtils.wrapAddress(
-                    "1111111111111111111111111111111111111111111111111111111111111111");
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to = null;
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode(deployer);
@@ -188,10 +188,10 @@ public class OldTxExecutorTest {
         byte[] txNonce = DataWordImpl.ZERO.getData();
         AionAddress from =
                 AddressUtils.wrapAddress(
-                    "1111111111111111111111111111111111111111111111111111111111111111");
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
-                    "2222222222222222222222222222222222222222222222222222222222222222");
+                        "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
@@ -223,10 +223,10 @@ public class OldTxExecutorTest {
         byte[] txNonce = DataWordImpl.ZERO.getData();
         AionAddress from =
                 AddressUtils.wrapAddress(
-                    "1111111111111111111111111111111111111111111111111111111111111111");
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
-                    "2222222222222222222222222222222222222222222222222222222222222222");
+                        "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = DataWordImpl.ONE.getData();
         byte[] data = new byte[0];
         long nrg = new DataWordImpl(100000L).longValue();
@@ -281,15 +281,9 @@ public class OldTxExecutorTest {
                 5000000);
     }
 
-    private AionTxExecSummary executeTransaction(Repository repo, IAionBlock block, AionTransaction transaction) throws VMException {
+    private AionTxExecSummary executeTransaction(
+            Repository repo, IAionBlock block, AionTransaction transaction) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            block,
-            transaction,
-            repo.startTracking(),
-            false,
-            true,
-            false,
-            false,
-            LOGGER_VM);
+                block, transaction, repo.startTracking(), false, true, false, false, LOGGER_VM);
     }
 }

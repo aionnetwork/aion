@@ -20,8 +20,7 @@ public abstract class StatefulPrecompiledContract implements PrecompiledContract
      *
      * @param track
      */
-    public StatefulPrecompiledContract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track) {
+    public StatefulPrecompiledContract(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track) {
 
         if (track == null) {
             throw new IllegalArgumentException("Null track.");

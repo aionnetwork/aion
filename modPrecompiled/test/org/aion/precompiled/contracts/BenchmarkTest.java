@@ -5,13 +5,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
-import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.types.AionAddress;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.type.PrecompiledContract;
-
+import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.types.AionAddress;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;

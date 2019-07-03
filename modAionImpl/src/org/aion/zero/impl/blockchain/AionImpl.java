@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import org.aion.crypto.ECKey;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.interfaces.db.Repository;
@@ -16,10 +15,11 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -137,14 +137,16 @@ public class AionImpl implements IAionChain {
             boolean checkBlockEnergyLimit = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                block,
-                tx,
-                repository,
-                isLocalCall,
-                incrementSenderNonce,
-                fork040enabled,
-                checkBlockEnergyLimit,
-                LOG_VM).getReceipt().getEnergyUsed();
+                            block,
+                            tx,
+                            repository,
+                            isLocalCall,
+                            incrementSenderNonce,
+                            fork040enabled,
+                            checkBlockEnergyLimit,
+                            LOG_VM)
+                    .getReceipt()
+                    .getEnergyUsed();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
@@ -172,14 +174,15 @@ public class AionImpl implements IAionChain {
             boolean checkBlockEnergyLimit = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                block,
-                tx,
-                repository,
-                isLocalCall,
-                incrementSenderNonce,
-                fork040enabled,
-                checkBlockEnergyLimit,
-                LOG_VM).getReceipt();
+                            block,
+                            tx,
+                            repository,
+                            isLocalCall,
+                            incrementSenderNonce,
+                            fork040enabled,
+                            checkBlockEnergyLimit,
+                            LOG_VM)
+                    .getReceipt();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);

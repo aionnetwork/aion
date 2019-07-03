@@ -57,7 +57,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         2,
                         new byte[32],
-                    AddressUtils.ZERO_ADDRESS,
+                        AddressUtils.ZERO_ADDRESS,
                         new byte[256],
                         ByteUtil.intToBytes(1),
                         null,

@@ -2,7 +2,6 @@ package org.aion.vm;
 
 import java.math.BigInteger;
 import org.aion.avm.core.IExternalState;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
@@ -12,6 +11,7 @@ import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class ExternalStateForAvm implements IExternalState {

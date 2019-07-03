@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.functional.Functional;
 import org.aion.interfaces.tx.Transaction;
@@ -15,6 +14,7 @@ import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 
 /** AbstractBlockSummary */

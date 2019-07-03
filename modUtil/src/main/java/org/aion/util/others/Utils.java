@@ -15,8 +15,7 @@ public class Utils {
     /**
      * Matches file sizes based on fileSize string, in the format: [numericalValue][sizeDescriptor]
      *
-     * <p>Examples of acceptable formats:
-     *   10b,10B,10K,10KB,10kB,10M,10mB,10MB,10G,10gB,10GB
+     * <p>Examples of acceptable formats: 10b,10B,10K,10KB,10kB,10M,10mB,10MB,10G,10gB,10GB
      *
      * <p>Commas are <b>not</b> accepted by the parser, and are considered invalid.
      *

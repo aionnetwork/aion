@@ -1,4 +1,3 @@
-
 package org.aion.db.utils.repeat;
 
 import org.junit.rules.TestRule;

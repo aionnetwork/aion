@@ -9,8 +9,9 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.types.AionAddress;
+import org.aion.vm.api.types.ByteArrayWrapper;
+
 /**
  * Blockchain interface.
  *

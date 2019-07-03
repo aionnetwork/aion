@@ -3,6 +3,7 @@ package org.aion.api.server.types;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.types.AionAddress;
+
 /** @author chris */
 // NOTE: only used by java api
 public class FltrCt extends Fltr {

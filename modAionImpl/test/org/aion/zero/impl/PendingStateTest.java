@@ -5,16 +5,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.util.Collections;
-
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -215,11 +214,11 @@ public class PendingStateTest {
     @Test
     public void testAionPendingStateInit() {
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withDefaultAccounts()
-                .withValidatorConfiguration("simple")
-                .withAvmEnabled()
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .withAvmEnabled()
+                        .build();
         StandaloneBlockchain blockchain = bundle.bc;
         CfgAion.inst().setGenesis(blockchain.getGenesis());
         CfgAion.inst().getConsensus().setSeed(true);

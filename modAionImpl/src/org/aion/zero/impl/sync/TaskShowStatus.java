@@ -170,8 +170,6 @@ final class TaskShowStatus implements Runnable {
                 + "";
     }
 
-
-
     private String dumpPeerStateInfo(Collection<INode> filtered) {
         List<NodeState> sorted = new ArrayList<>();
         for (INode n : filtered) {

@@ -198,7 +198,6 @@ public class AionHubTest {
 
         hub.close();
         assertThat(hub.isRunning()).isFalse();
-
     }
 
     @Test

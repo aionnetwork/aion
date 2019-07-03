@@ -4,7 +4,6 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
 import java.util.List;
-
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;

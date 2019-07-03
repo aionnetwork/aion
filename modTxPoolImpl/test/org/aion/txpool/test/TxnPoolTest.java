@@ -12,22 +12,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-
-import org.aion.types.AionAddress;
-import org.aion.interfaces.tx.Transaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
-
 
 public class TxnPoolTest {
 
@@ -178,7 +176,8 @@ public class TxnPoolTest {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(0).getAddress()),
-                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
+                AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -189,7 +188,8 @@ public class TxnPoolTest {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(_index).getAddress()),
-                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
+                AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -200,7 +200,8 @@ public class TxnPoolTest {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(0).getAddress()),
-                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
+                AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,

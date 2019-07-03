@@ -1,4 +1,3 @@
-
 package org.aion.db.utils.repeat;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;

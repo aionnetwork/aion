@@ -5,16 +5,15 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
 import java.util.Properties;
-import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.types.AionAddress;
+import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.crypto.HashUtil;
-
+import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;

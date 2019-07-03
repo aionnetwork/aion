@@ -58,8 +58,7 @@ public interface INode {
             byte _apiVersion,
             short _peerCount,
             int _pendingTxCount,
-            int _latency
-        );
+            int _latency);
 
     String getBinaryVersion();
 

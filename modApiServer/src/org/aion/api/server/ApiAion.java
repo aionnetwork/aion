@@ -15,15 +15,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.types.AionAddress;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.interfaces.tx.Transaction;
-import org.aion.interfaces.tx.TxReceipt;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -31,10 +27,14 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.BlockContext;
@@ -456,7 +456,8 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        AionAddress fromAddr = (params.getFrom() == null) ? AddressUtils.ZERO_ADDRESS : params.getFrom();
+        AionAddress fromAddr =
+                (params.getFrom() == null) ? AddressUtils.ZERO_ADDRESS : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
                         params.getNonce().toByteArray(),
@@ -526,7 +527,7 @@ public abstract class ApiAion extends Api {
 
     // Transaction Level
     public BigInteger getBalance(String _address) {
-            return this.ac.getRepository().getBalance(AddressUtils.wrapAddress(_address));
+        return this.ac.getRepository().getBalance(AddressUtils.wrapAddress(_address));
     }
 
     public BigInteger getBalance(AionAddress _address) {

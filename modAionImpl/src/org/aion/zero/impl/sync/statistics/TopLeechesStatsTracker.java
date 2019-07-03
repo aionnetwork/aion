@@ -73,8 +73,8 @@ public class TopLeechesStatsTracker {
             sb.append("------------------------------------\n");
 
             totalBlockReqByPeer.forEach(
-                (nodeId, totalBlocks) ->
-                    sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
+                    (nodeId, totalBlocks) ->
+                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
         }
 
         return sb.toString();

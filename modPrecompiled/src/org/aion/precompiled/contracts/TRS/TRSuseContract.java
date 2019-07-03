@@ -2,13 +2,13 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.types.AionAddress;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -252,7 +252,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexAddress, indexAmount));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexAddress, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
@@ -373,7 +374,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexContract, indexEntries));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexContract, indexEntries));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
@@ -523,7 +525,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
@@ -610,7 +613,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
@@ -678,7 +682,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexContract, indexAmount));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexContract, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);

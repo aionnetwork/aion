@@ -12,7 +12,12 @@ public class AvmInternalTx {
 
     public static int recursivelyGetValue() {
         byte[] args = ABIEncoder.encodeOneString("getValue");
-        Result result = Blockchain.call(Blockchain.getAddress(), BigInteger.ZERO, args, Blockchain.getRemainingEnergy());
+        Result result =
+                Blockchain.call(
+                        Blockchain.getAddress(),
+                        BigInteger.ZERO,
+                        args,
+                        Blockchain.getRemainingEnergy());
         Blockchain.require(result.isSuccess());
         ABIDecoder decoder = new ABIDecoder(result.getReturnData());
         return decoder.decodeOneInteger();

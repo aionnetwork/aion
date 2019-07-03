@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -22,7 +21,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-
+import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -38,33 +37,31 @@ public class TRSlinkedListTest extends TRShelpers {
     @Before
     public void setup() {
         RepositoryConfig repoConfig =
-            new RepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
+                new RepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
 
-                @Override
-                public PruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
+                    @Override
+                    public PruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
 
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
+                    @Override
+                    public ContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
 
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
-        repo =
-            new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
-
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
+        repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
         tempAddrs = new ArrayList<>();
         repo.addBalance(AION, BigInteger.ONE);
@@ -416,7 +413,11 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expect a list with acct3 as head as such: null <- acct3 <-> acct2 <-> acct4 <-> acct1 -> null
     private void checkLinkedListMultipleDepositors(
-            AionAddress contract, AionAddress acct1, AionAddress acct2, AionAddress acct3, AionAddress acct4) {
+            AionAddress contract,
+            AionAddress acct1,
+            AionAddress acct2,
+            AionAddress acct3,
+            AionAddress acct4) {
 
         TRSuseContract trs = newTRSuseContract(acct1);
         assertEquals(acct3, getLinkedListHead(trs, contract));
@@ -466,7 +467,8 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct));
     }
 
-    private void checkRemoveHeadOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
+    private void checkRemoveHeadOfLargerList(
+            AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. Remove the head.
         TRSuseContract trs = newTRSuseContract(owner);
         AionAddress head = getLinkedListHead(trs, contract);
@@ -515,7 +517,8 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct2));
     }
 
-    private void checkRemoveTailOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
+    private void checkRemoveTailOfLargerList(
+            AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. First find the tail. Ensure each address is
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
@@ -553,7 +556,11 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expects acct3 as head with: null <- acct3 <-> acct2 <-> acct -> null
     private void checkRemoveInteriorOfSizeThreeList(
-            AbstractTRS trs, AionAddress contract, AionAddress acct, AionAddress acct2, AionAddress acct3) {
+            AbstractTRS trs,
+            AionAddress contract,
+            AionAddress acct,
+            AionAddress acct2,
+            AionAddress acct3) {
 
         assertEquals(acct3, getLinkedListHead(trs, contract));
         assertEquals(acct2, getLinkedListNext(trs, contract, acct3));
@@ -575,7 +582,8 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct3));
     }
 
-    private void checkRemoveInteriorOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
+    private void checkRemoveInteriorOfLargerList(
+            AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each address is
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);

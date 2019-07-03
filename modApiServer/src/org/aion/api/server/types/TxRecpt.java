@@ -2,12 +2,12 @@ package org.aion.api.server.types;
 
 import static org.aion.util.string.StringUtils.toJsonHex;
 
-import org.aion.types.AionAddress;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.block.BlockHeader;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;

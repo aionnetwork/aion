@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.InternalVmType;
@@ -23,6 +22,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -594,7 +594,8 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
     @Override
     public void updateBatch(
-            Map<AionAddress, AccountState> accounts, final Map<AionAddress, ContractDetails> details) {
+            Map<AionAddress, AccountState> accounts,
+            final Map<AionAddress, ContractDetails> details) {
         fullyWriteLock();
         try {
 

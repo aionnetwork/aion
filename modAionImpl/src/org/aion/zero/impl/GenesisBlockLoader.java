@@ -50,7 +50,8 @@ public class GenesisBlockLoader {
                 }
 
                 if (mapper.has("coinbase")) {
-                    genesisBuilder.withCoinbase(AddressUtils.wrapAddress(mapper.getString("coinbase")));
+                    genesisBuilder.withCoinbase(
+                            AddressUtils.wrapAddress(mapper.getString("coinbase")));
                 }
 
                 if (mapper.has("difficulty")) {

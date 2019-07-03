@@ -11,7 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import org.aion.types.AionAddress;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -19,19 +23,14 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
-import org.aion.crypto.ISignature;
-import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryCache;
@@ -61,40 +60,57 @@ public class AionNameServiceContractTest {
     private String notSubdomain = "aion.bion"; // not a subdomain of domainName1
 
     private static final AionAddress AION =
-            AddressUtils.wrapAddress("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AddressUtils.wrapAddress(
+                    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private AionAddress emptyAddress =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000000");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000000");
     private AionAddress domainAddress1 =
-            AddressUtils.wrapAddress("a011111111111111111111111111111101010101010101010101010101010101");
+            AddressUtils.wrapAddress(
+                    "a011111111111111111111111111111101010101010101010101010101010101");
     private AionAddress domainAddress2 =
-            AddressUtils.wrapAddress("a022222222222222222222222222222202020202020202020202020202020202");
+            AddressUtils.wrapAddress(
+                    "a022222222222222222222222222222202020202020202020202020202020202");
     private AionAddress domainAddress3 =
-            AddressUtils.wrapAddress("a033333333333333333333333333333303030303030303030303030303030303");
+            AddressUtils.wrapAddress(
+                    "a033333333333333333333333333333303030303030303030303030303030303");
     private AionAddress domainAddress4 =
-            AddressUtils.wrapAddress("a044444444444444444444444444444404040404040404040404040404040404");
+            AddressUtils.wrapAddress(
+                    "a044444444444444444444444444444404040404040404040404040404040404");
     private AionAddress domainAddress5 =
-            AddressUtils.wrapAddress("a055555555555555555555555555555505050505050050505050505050505050");
+            AddressUtils.wrapAddress(
+                    "a055555555555555555555555555555505050505050050505050505050505050");
     private AionAddress domainAddress6 =
-            AddressUtils.wrapAddress("a066666666666666666666666666666606060606060606060606060606060060");
+            AddressUtils.wrapAddress(
+                    "a066666666666666666666666666666606060606060606060606060606060060");
     private AionAddress invalidDomainAddress =
-            AddressUtils.wrapAddress("b066666666666666666666666666666606060606060606060606060606060606");
+            AddressUtils.wrapAddress(
+                    "b066666666666666666666666666666606060606060606060606060606060606");
 
     private AionAddress newAddress1 =
-            AddressUtils.wrapAddress("1000000000000000000000000000000000000000000000000000000000000001");
+            AddressUtils.wrapAddress(
+                    "1000000000000000000000000000000000000000000000000000000000000001");
     private AionAddress newAddress2 =
-            AddressUtils.wrapAddress("0100000000000000000000000000000000000000000000000000000000000010");
+            AddressUtils.wrapAddress(
+                    "0100000000000000000000000000000000000000000000000000000000000010");
     private AionAddress newAddress3 =
-            AddressUtils.wrapAddress("0010000000000000000000000000000000000000000000000000000000000100");
+            AddressUtils.wrapAddress(
+                    "0010000000000000000000000000000000000000000000000000000000000100");
     private AionAddress newAddress4 =
-            AddressUtils.wrapAddress("0001000000000000000000000000000000000000000000000000000000001000");
+            AddressUtils.wrapAddress(
+                    "0001000000000000000000000000000000000000000000000000000000001000");
     private AionAddress newAddress5 =
-            AddressUtils.wrapAddress("0000100000000000000000000000000000000000000000000000000000010000");
+            AddressUtils.wrapAddress(
+                    "0000100000000000000000000000000000000000000000000000000000010000");
     private AionAddress newAddress6 =
-            AddressUtils.wrapAddress("0000010000000000000000000000000000000000000000000000000000100000");
+            AddressUtils.wrapAddress(
+                    "0000010000000000000000000000000000000000000000000000000000100000");
     private AionAddress newAddress7 =
-            AddressUtils.wrapAddress("0000001000000000000000000000000000000000000000000000000001000000");
+            AddressUtils.wrapAddress(
+                    "0000001000000000000000000000000000000000000000000000000001000000");
     private AionAddress newAddress8 =
-            AddressUtils.wrapAddress("0000000100000000000000000000000000000000000000000000000010000000");
+            AddressUtils.wrapAddress(
+                    "0000000100000000000000000000000000000000000000000000000010000000");
 
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     private ECKey defaultKey;
@@ -748,7 +764,10 @@ public class AionNameServiceContractTest {
 
         byte[] combined3 =
                 setupInputs(
-                        "bbbb.aaaa.aion", new AionAddress(k2.getAddress()), amount3.toByteArray(), k2);
+                        "bbbb.aaaa.aion",
+                        new AionAddress(k2.getAddress()),
+                        amount3.toByteArray(),
+                        k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, DEFAULT_INPUT_NRG);
 
@@ -777,13 +796,19 @@ public class AionNameServiceContractTest {
 
         byte[] combined4 =
                 setupInputs(
-                        "cccc.aaaa.aion", new AionAddress(k.getAddress()), amount3.toByteArray(), k);
+                        "cccc.aaaa.aion",
+                        new AionAddress(k.getAddress()),
+                        amount3.toByteArray(),
+                        k);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, DEFAULT_INPUT_NRG);
 
         byte[] combined5 =
                 setupInputs(
-                        "cccc.aaaa.aion", new AionAddress(k2.getAddress()), amount2.toByteArray(), k2);
+                        "cccc.aaaa.aion",
+                        new AionAddress(k2.getAddress()),
+                        amount2.toByteArray(),
+                        k2);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
         aac5.execute(combined5, DEFAULT_INPUT_NRG);
 
@@ -799,7 +824,7 @@ public class AionNameServiceContractTest {
     /** Helper functions for setup, conversion, and storage */
     // for ans basic operation
     private byte[] setupInputs(
-        AionAddress ownerAddress, AionAddress newAddress, byte id, byte operation, ECKey k) {
+            AionAddress ownerAddress, AionAddress newAddress, byte id, byte operation, ECKey k) {
         ByteBuffer bb = ByteBuffer.allocate(34);
         bb.put(id) // chainID
                 .put(operation) // OPERATION HERE
@@ -854,7 +879,7 @@ public class AionNameServiceContractTest {
     // for auction setup
     private byte[] setupInputs(
             AionAddress ownerAddress,
-        AionAddress newAddress,
+            AionAddress newAddress,
             byte id,
             byte operation,
             ECKey k,
@@ -974,7 +999,8 @@ public class AionNameServiceContractTest {
         for (ECKey key : accountList) repository.createAccount(new AionAddress(key.getAddress()));
     }
 
-    private byte[] setupInputs(String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
+    private byte[] setupInputs(
+            String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
         int domainLength = domainName.length();
         int amountLength = amount.length;
         int offset = 0;

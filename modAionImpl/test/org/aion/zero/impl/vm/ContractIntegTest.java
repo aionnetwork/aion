@@ -39,10 +39,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
@@ -56,6 +54,7 @@ import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.Constants;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
@@ -170,15 +169,9 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         RepositoryCache repo = blockchain.getRepository().startTracking();
 
-        AionTxExecSummary summary = BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            block,
-            tx,
-            repo,
-            false,
-            true,
-            false,
-            false,
-            LOGGER_VM);
+        AionTxExecSummary summary =
+                BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                        block, tx, repo, false, true, false, false, LOGGER_VM);
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
             AionAddress contract = tx.getContractAddress();
@@ -1233,7 +1226,8 @@ public class ContractIntegTest {
                 Arrays.copyOfRange(
                         HashUtil.keccak256("callBalanceTransfer(address)".getBytes()), 0, 4);
         AionAddress receiver =
-                AddressUtils.wrapAddress("0x000000000000000000000000000000000000000000000000000000000000000a");
+                AddressUtils.wrapAddress(
+                        "0x000000000000000000000000000000000000000000000000000000000000000a");
         input = ByteUtil.merge(input, receiver.toByteArray());
         nonce = nonce.add(BigInteger.ONE);
         tx =
@@ -1418,7 +1412,8 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
-                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
+                new AionAddress(
+                        HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1502,7 +1497,8 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
-                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
+                new AionAddress(
+                        HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1593,7 +1589,8 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress avmAddress =
-                new AionAddress(HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
+                new AionAddress(
+                        HashUtil.calcNewAddr(deployer.toByteArray(), deployerNonce.toByteArray()));
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1927,14 +1924,7 @@ public class ContractIntegTest {
     private AionTxExecSummary executeTransaction(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            block,
-            tx,
-            repo,
-            false,
-            true,
-            true,
-            false,
-            LOGGER_VM);
+                block, tx, repo, false, true, true, false, LOGGER_VM);
     }
 
     private AionBlock makeBlock(AionTransaction tx) {

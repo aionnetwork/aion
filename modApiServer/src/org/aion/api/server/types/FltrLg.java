@@ -7,6 +7,7 @@ import org.aion.interfaces.block.Block;
 import org.aion.interfaces.block.BlockSummary;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -14,7 +15,6 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
-import org.aion.vm.api.interfaces.IBloomFilter;
 
 /** @author chris */
 

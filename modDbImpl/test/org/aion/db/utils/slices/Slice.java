@@ -1,4 +1,3 @@
-
 package org.aion.db.utils.slices;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;

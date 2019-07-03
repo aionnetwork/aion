@@ -242,7 +242,8 @@ public class DBUtils {
                         writer.newLine();
 
                         ContractDetails details =
-                                repository.getContractDetails(AddressUtils.wrapAddress(otherParameters[i]));
+                                repository.getContractDetails(
+                                        AddressUtils.wrapAddress(otherParameters[i]));
 
                         if (details != null) {
                             writer.append("Details: " + Hex.toHexString(details.getEncoded()));
@@ -254,7 +255,8 @@ public class DBUtils {
                                                     repository.dumpImportableStorage(
                                                             details.getStorageHash(),
                                                             Integer.MAX_VALUE,
-                                                            AddressUtils.wrapAddress(otherParameters[i]))));
+                                                            AddressUtils.wrapAddress(
+                                                                    otherParameters[i]))));
                             writer.newLine();
                         }
                         writer.newLine();

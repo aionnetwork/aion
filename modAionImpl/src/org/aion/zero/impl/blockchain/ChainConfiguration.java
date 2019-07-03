@@ -3,7 +3,6 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -15,6 +14,7 @@ import org.aion.mcf.valid.BlockNumberRule;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TimeStampRule;
+import org.aion.types.AionAddress;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
@@ -55,12 +55,13 @@ public class ChainConfiguration implements IChainCfg<AionBlock, AionTransaction>
         this(new BlockConstants(), null, BigInteger.ZERO);
     }
 
-    public ChainConfiguration(BlockConstants constants, Long monetaryUpdateBlkNum, BigInteger initialSupply) {
+    public ChainConfiguration(
+            BlockConstants constants, Long monetaryUpdateBlkNum, BigInteger initialSupply) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
 
-
-        RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
+        RewardsCalculator rewardsCalcInternal =
+                new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
 
         this.difficultyCalculatorAdapter =
                 (parent, grandParent) -> {
@@ -131,6 +132,6 @@ public class ChainConfiguration implements IChainCfg<AionBlock, AionTransaction>
 
     public GrandParentBlockHeaderValidator<A0BlockHeader> createGrandParentHeaderValidator() {
         return new GrandParentBlockHeaderValidator<>(
-            Collections.singletonList(new AionDifficultyRule(this)));
+                Collections.singletonList(new AionDifficultyRule(this)));
     }
 }

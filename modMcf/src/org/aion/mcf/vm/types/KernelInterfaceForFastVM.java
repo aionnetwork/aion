@@ -8,9 +8,9 @@ import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.KernelInterface;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;

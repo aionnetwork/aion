@@ -1,12 +1,12 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ISignature;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.tx.TransactionTypes;
+import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements Transaction {
@@ -49,7 +49,8 @@ public abstract class AbstractTransaction implements Transaction {
 
     public AbstractTransaction() {}
 
-    public AbstractTransaction(byte[] nonce, AionAddress receiveAddress, byte[] value, byte[] data) {
+    public AbstractTransaction(
+            byte[] nonce, AionAddress receiveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;
         this.to = receiveAddress;
         this.value = value;

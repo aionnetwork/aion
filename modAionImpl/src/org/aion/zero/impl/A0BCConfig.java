@@ -1,4 +1,5 @@
 package org.aion.zero.impl;
+
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 
@@ -34,5 +35,4 @@ public interface A0BCConfig {
 
     /** Retrieves the selected energy strategy algorithm */
     AbstractEnergyStrategyLimit getEnergyLimitStrategy();
-
 }

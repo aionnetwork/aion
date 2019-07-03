@@ -2,9 +2,9 @@ package org.aion.txpool;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.types.AionAddress;
 import java.util.Map;
 import org.aion.interfaces.tx.Transaction;
+import org.aion.types.AionAddress;
 
 /**
  * Aion pending state should be the only user of transaction pool.

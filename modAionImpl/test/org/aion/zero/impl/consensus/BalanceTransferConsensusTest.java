@@ -9,11 +9,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
@@ -79,7 +79,8 @@ public class BalanceTransferConsensusTest {
 
         // get contract address from precompiled factory
         AionAddress to =
-                AddressUtils.wrapAddress("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+                AddressUtils.wrapAddress(
+                        "a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -100,10 +101,10 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
-            this.blockchain.createNewBlock(
-                parentBlock, Collections.singletonList(transaction), true);
+                this.blockchain.createNewBlock(
+                        parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
-            this.blockchain.tryToConnectAndFetchSummary(block);
+                this.blockchain.tryToConnectAndFetchSummary(block);
 
         assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -126,7 +127,8 @@ public class BalanceTransferConsensusTest {
 
         // get contract address from precompiled factory
         AionAddress to =
-                AddressUtils.wrapAddress("a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
+                AddressUtils.wrapAddress(
+                        "a0123456a89a6ffbfdc45782771fba3f5e9da36baa69444f8f95e325430463e7");
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -163,7 +165,9 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.AVM_CREATE_CODE); // illegal type for the balance transfer after the fork
+                        TransactionTypes
+                                .AVM_CREATE_CODE); // illegal type for the balance transfer after
+        // the fork
         transaction.sign(key);
 
         // check that the transaction is not valid
@@ -181,14 +185,14 @@ public class BalanceTransferConsensusTest {
 
         // Make balance transfer transaction to precompiled contract with DEFAULT type
         transaction =
-            new AionTransaction(
-                BigInteger.ONE.toByteArray(),
-                to,
-                amount.toByteArray(),
-                new byte[0],
-                2_000_000,
-                ENERGY_PRICE,
-                TransactionTypes.DEFAULT); // the only valid type after the fork
+                new AionTransaction(
+                        BigInteger.ONE.toByteArray(),
+                        to,
+                        amount.toByteArray(),
+                        new byte[0],
+                        2_000_000,
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT); // the only valid type after the fork
         transaction.sign(key);
 
         // check that the transaction is not valid
@@ -197,8 +201,8 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         block =
-            this.blockchain.createNewBlock(
-                parentBlock, Collections.singletonList(transaction), true);
+                this.blockchain.createNewBlock(
+                        parentBlock, Collections.singletonList(transaction), true);
         results = this.blockchain.tryToConnectAndFetchSummary(block);
 
         assertThat(results.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -360,7 +364,7 @@ public class BalanceTransferConsensusTest {
     }
 
     private static AionTransaction makeBalanceTransferTransaction(
-        AionAddress recipient, BigInteger amount) {
+            AionAddress recipient, BigInteger amount) {
         return makeBalanceTransferTransaction(recipient, amount, BigInteger.ZERO);
     }
 

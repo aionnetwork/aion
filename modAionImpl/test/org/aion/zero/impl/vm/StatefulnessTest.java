@@ -5,16 +5,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-
+import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.types.AionAddress;
-import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -179,7 +178,10 @@ public class StatefulnessTest {
         // Call the contract to send value using an internal call.
         receipt =
                 callContract(
-                        contract, "transferValue", beneficiary.toByteArray(), valueForContractToSend);
+                        contract,
+                        "transferValue",
+                        beneficiary.toByteArray(),
+                        valueForContractToSend);
         assertTrue(receipt.isSuccessful());
 
         // Verify the accounts have the expected state.

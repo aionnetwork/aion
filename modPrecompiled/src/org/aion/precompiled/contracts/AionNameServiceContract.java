@@ -9,20 +9,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -48,19 +48,26 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
     private AionAddress activeDomainsAddress =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000600");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000600");
     private AionAddress activeDomainsAddressTime =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000601");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000601");
     private AionAddress activeDomainsAddressValue =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000603");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000603");
     private AionAddress allAddresses =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000800");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000800");
     private AionAddress domainAddressNamePair =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000802");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000802");
     private AionAddress registeredDomainAddressName =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000803");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000803");
     private AionAddress registeredDomainNameAddress =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000804");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000804");
 
     private AionAddress address;
     private AionAddress ownerAddress;
@@ -288,9 +295,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         if (isSubdomain(subdomain)) {
             this.track.addStorageRow(
-                    sdAddress, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(addr1).toWrapper());
+                    sdAddress,
+                    new DataWordImpl(hash1).toWrapper(),
+                    new DataWordImpl(addr1).toWrapper());
             this.track.addStorageRow(
-                    sdAddress, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(addr2).toWrapper());
+                    sdAddress,
+                    new DataWordImpl(hash2).toWrapper(),
+                    new DataWordImpl(addr2).toWrapper());
             return new PrecompiledTransactionResult(
                     PrecompiledResultCode.SUCCESS, nrg - TRANSFER_COST);
         }
@@ -332,9 +343,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     private void storeResult(byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2) {
         this.track.addStorageRow(
-                this.address, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(addr1).toWrapper());
+                this.address,
+                new DataWordImpl(hash1).toWrapper(),
+                new DataWordImpl(addr1).toWrapper());
         this.track.addStorageRow(
-                this.address, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(addr2).toWrapper());
+                this.address,
+                new DataWordImpl(hash2).toWrapper(),
+                new DataWordImpl(addr2).toWrapper());
     }
 
     private AionAddress getValueFromStorage(AionAddress key) {
@@ -447,10 +462,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         ByteArrayWrapper addrSecondPart =
                 this.track.getStorageValue(
                         activeDomainsAddress,
-                        new DataWordImpl(blake128(blake128(domainAddress.toByteArray()))).toWrapper());
+                        new DataWordImpl(blake128(blake128(domainAddress.toByteArray())))
+                                .toWrapper());
         AionAddress addrFromRepo =
-                new AionAddress(
-                        combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
+                new AionAddress(combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
 
         return addrFromRepo.equals(ownerAddress);
     }
@@ -520,7 +535,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         ByteArrayWrapper nameSecondPartData =
                 this.track.getStorageValue(
                         domainAddressNamePair,
-                        new DataWordImpl(blake128(blake128(domainAddress.toByteArray()))).toWrapper());
+                        new DataWordImpl(blake128(blake128(domainAddress.toByteArray())))
+                                .toWrapper());
         byte[] nameData =
                 trimLeadingZeros(
                         combineTwoBytes(nameFirstPartData.getData(), nameSecondPartData.getData()));
@@ -576,7 +592,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         this.track
                                 .getStorageValue(
                                         activeDomainsAddress,
-                                        new DataWordImpl(blake128(blake128(tempDomainAddr.toByteArray())))
+                                        new DataWordImpl(
+                                                        blake128(
+                                                                blake128(
+                                                                        tempDomainAddr
+                                                                                .toByteArray())))
                                                 .toWrapper())
                                 .getData();
                 AionAddress tempOwnerAddr =
@@ -609,7 +629,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         this.track
                                 .getStorageValue(
                                         domainAddressNamePair,
-                                        new DataWordImpl(blake128(blake128(tempDomainAddr.toByteArray())))
+                                        new DataWordImpl(
+                                                        blake128(
+                                                                blake128(
+                                                                        tempDomainAddr
+                                                                                .toByteArray())))
                                                 .toWrapper())
                                 .getData();
                 String tempDomainName = null;
@@ -761,7 +785,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 this.track
                         .getStorageValue(
                                 registeredDomainNameAddress,
-                                new DataWordImpl(blake128(blake128(domainName.getBytes()))).toWrapper())
+                                new DataWordImpl(blake128(blake128(domainName.getBytes())))
+                                        .toWrapper())
                         .getData();
         AionAddress domainAddress =
                 new AionAddress(combineTwoBytes(addressFirstPart, addressSecondPart));

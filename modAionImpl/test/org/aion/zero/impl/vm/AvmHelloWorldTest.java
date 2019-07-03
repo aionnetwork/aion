@@ -6,20 +6,19 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -159,13 +158,13 @@ public class AvmHelloWorldTest {
         // Deploy the contract.
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-            newTransaction(
-                BigInteger.ZERO,
-                new AionAddress(deployerKey.getAddress()),
-                null,
-                jar,
-                5_000_000,
-                TransactionTypes.AVM_CREATE_CODE);
+                newTransaction(
+                        BigInteger.ZERO,
+                        new AionAddress(deployerKey.getAddress()),
+                        null,
+                        jar,
+                        5_000_000,
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         List<AionTransaction> ls = new ArrayList<>();
@@ -173,25 +172,20 @@ public class AvmHelloWorldTest {
 
         byte[] call = getCallArguments();
         AionTransaction transaction2 =
-            newTransaction(
-                BigInteger.ONE,
-                new AionAddress(deployerKey.getAddress()),
-                transaction.getContractAddress(),
-                call,
-                2_000_000,
-                TransactionTypes.DEFAULT);
+                newTransaction(
+                        BigInteger.ONE,
+                        new AionAddress(deployerKey.getAddress()),
+                        transaction.getContractAddress(),
+                        call,
+                        2_000_000,
+                        TransactionTypes.DEFAULT);
         transaction2.sign(this.deployerKey);
 
         ls.add(transaction2);
 
-
-        AionBlock block =
-            this.blockchain.createNewBlock(
-                this.blockchain.getBestBlock(),
-                ls,
-                false);
+        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), ls, false);
         Pair<ImportResult, AionBlockSummary> connectResult =
-            this.blockchain.tryToConnectAndFetchSummary(block);
+                this.blockchain.tryToConnectAndFetchSummary(block);
 
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(connectResult.getRight().getReceipts().size() == 2);

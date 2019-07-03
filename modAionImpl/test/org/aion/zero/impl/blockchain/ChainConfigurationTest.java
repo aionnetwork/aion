@@ -95,10 +95,12 @@ public class ChainConfigurationTest {
 
         // UPPER BOUND
         when(header.getNumber()).thenReturn(upperBound);
-        BigInteger blockReward259200 = config.getRewardsCalculator().calculateReward(header.getNumber());
+        BigInteger blockReward259200 =
+                config.getRewardsCalculator().calculateReward(header.getNumber());
 
         when(header.getNumber()).thenReturn(upperBound + 1);
-        BigInteger blockReward259201 = config.getRewardsCalculator().calculateReward(header.getNumber());
+        BigInteger blockReward259201 =
+                config.getRewardsCalculator().calculateReward(header.getNumber());
 
         // check that at the upper bound of our range (which is not included) blockReward is capped
         assertThat(blockReward259200).isEqualTo(new BigInteger("1497989283243258292"));

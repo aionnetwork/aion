@@ -5,12 +5,12 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.interfaces.db.InternalVmType;
 import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
@@ -91,7 +91,7 @@ public class BlockchainIntegrationTest {
         // generate a recipient
         final AionAddress receiverAddress =
                 AddressUtils.wrapAddress(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+                        "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder())
@@ -125,7 +125,7 @@ public class BlockchainIntegrationTest {
         // generate a recipient
         final AionAddress receiverAddress =
                 AddressUtils.wrapAddress(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+                        "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder())
@@ -190,7 +190,7 @@ public class BlockchainIntegrationTest {
         // generate a recipient
         final AionAddress receiverAddress =
                 AddressUtils.wrapAddress(
-                                "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+                        "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         // generate bc bundle with pruning enabled
         StandaloneBlockchain.Bundle bundle =

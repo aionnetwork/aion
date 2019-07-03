@@ -15,14 +15,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -30,8 +28,9 @@ import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -45,7 +44,8 @@ class TRShelpers {
     static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
     private IAionBlockchain blockchain = StandaloneBlockchain.inst();
     AionAddress AION =
-            AddressUtils.wrapAddress("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AddressUtils.wrapAddress(
+                    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     List<AionAddress> tempAddrs;
     ECKey senderKey;
@@ -340,7 +340,8 @@ class TRShelpers {
     }
 
     // Returns true only if account is eligible to use the special one-off withdrawal event.
-    boolean accountIsEligibleForSpecial(TRSuseContract trs, AionAddress contract, AionAddress account) {
+    boolean accountIsEligibleForSpecial(
+            TRSuseContract trs, AionAddress contract, AionAddress account) {
         return trs.accountIsEligibleForSpecial(contract, account);
     }
 
@@ -682,7 +683,8 @@ class TRShelpers {
 
     // Returns a properly formatted byte array to bulk deposit for each account in beneficiaries.
     // This method does: deposit amounts[i] on behalf of beneficiaries[i]
-    byte[] getBulkDepositForInput(AionAddress contract, AionAddress[] beneficiaries, BigInteger[] amounts) {
+    byte[] getBulkDepositForInput(
+            AionAddress contract, AionAddress[] beneficiaries, BigInteger[] amounts) {
         int len = beneficiaries.length;
         if ((len < 1) || (len > 100)) {
             fail("Imporper length: " + len);
@@ -734,7 +736,8 @@ class TRShelpers {
     }
 
     // Makes input for numBeneficiaries beneficiaries who each receive a deposit amount deposits.
-    byte[] makeBulkDepositForInput(AionAddress contract, int numBeneficiaries, BigInteger deposits) {
+    byte[] makeBulkDepositForInput(
+            AionAddress contract, int numBeneficiaries, BigInteger deposits) {
         AionAddress[] beneficiaries = new AionAddress[numBeneficiaries];
         BigInteger[] amounts = new BigInteger[numBeneficiaries];
         for (int i = 0; i < numBeneficiaries; i++) {

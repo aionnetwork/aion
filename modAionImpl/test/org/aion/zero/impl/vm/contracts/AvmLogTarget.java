@@ -6,9 +6,9 @@ import java.math.BigInteger;
 import org.aion.avm.userlib.abi.ABIDecoder;
 
 public class AvmLogTarget {
-    public static byte[] data = new byte[]{ 0, 1, 1, 2, 3, 2 };
-    public static byte[] topic1 = new byte[]{ 0, 1, 1, 2, 3, 2, 7, 7, 7, 3 };
-    public static byte[] topic2 = new byte[]{ 0, 1, 1, 2, 3, 2, 0, 0, 1 };
+    public static byte[] data = new byte[] {0, 1, 1, 2, 3, 2};
+    public static byte[] topic1 = new byte[] {0, 1, 1, 2, 3, 2, 7, 7, 7, 3};
+    public static byte[] topic2 = new byte[] {0, 1, 1, 2, 3, 2, 0, 0, 1};
 
     public static byte[] main() {
         ABIDecoder decoder = new ABIDecoder(Blockchain.getData());

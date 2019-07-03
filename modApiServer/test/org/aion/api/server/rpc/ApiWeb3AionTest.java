@@ -4,12 +4,12 @@ import static org.aion.util.string.StringUtils.StringHexToBigInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import org.aion.types.AionAddress;
+
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-
-import org.aion.vm.LongLivedAvm;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.json.JSONArray;
@@ -217,8 +217,12 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEth_call() {
-        AionAddress from = AddressUtils.wrapAddress("a000000000000000000000000000000000000000000000000000000000000001");
-        AionAddress to = AddressUtils.wrapAddress("a000000000000000000000000000000000000000000000000000000000000002");
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                        "a000000000000000000000000000000000000000000000000000000000000001");
+        AionAddress to =
+                AddressUtils.wrapAddress(
+                        "a000000000000000000000000000000000000000000000000000000000000002");
 
         JSONObject tx = new JSONObject();
         tx.put("from", from.toString());

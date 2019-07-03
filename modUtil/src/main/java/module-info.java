@@ -1,5 +1,6 @@
 module aion.util {
     requires aion.types;
+
     exports org.aion.util.bytes;
     exports org.aion.util.conversions;
     exports org.aion.util.others;

@@ -27,7 +27,12 @@ public class TxRecptLg {
     public boolean removed;
 
     public <TX extends Transaction> TxRecptLg(
-            IExecutionLog logInfo, Block b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
+            IExecutionLog logInfo,
+            Block b,
+            Integer txIndex,
+            TX tx,
+            int logIdx,
+            boolean isMainchain) {
         this.logIndex = StringUtils.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : StringUtils.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : StringUtils.toJsonHex(b.getHash());

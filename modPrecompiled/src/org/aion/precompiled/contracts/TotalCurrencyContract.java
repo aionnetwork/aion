@@ -1,18 +1,18 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
@@ -177,6 +177,8 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
-        return (value.isZero()) ? value.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
+        return (value.isZero())
+                ? value.toWrapper()
+                : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 }

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.types.AionAddress;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -46,6 +45,7 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
@@ -1088,14 +1088,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             boolean checkBlockEnergyLimit = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                bestBlk,
-                tx,
-                pendingState,
-                isLocalCall,
-                incrementSenderNonce,
-                fork040Enable,
-                checkBlockEnergyLimit,
-                LOGGER_VM);
+                    bestBlk,
+                    tx,
+                    pendingState,
+                    isLocalCall,
+                    incrementSenderNonce,
+                    fork040Enable,
+                    checkBlockEnergyLimit,
+                    LOGGER_VM);
         } catch (VMException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
@@ -1273,7 +1273,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
 
         int cnt = 0;
-        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
+        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e :
+                sortedMap.entrySet()) {
             for (AionTransaction tx : e.getValue().values()) {
                 pendingTxCache.addCacheTx(tx);
                 cnt++;
@@ -1314,7 +1315,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         List<AionTransaction> pendingPoolTx = new ArrayList<>();
 
-        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
+        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e :
+                sortedMap.entrySet()) {
             pendingPoolTx.addAll(e.getValue().values());
         }
 

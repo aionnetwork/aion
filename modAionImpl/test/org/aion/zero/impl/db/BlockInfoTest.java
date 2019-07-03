@@ -6,9 +6,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.junit.Test;
 
 /** Test suite for {@link org.aion.zero.impl.db.AionBlockStore.BlockInfo} serialization */
@@ -22,7 +22,8 @@ public class BlockInfoTest {
 
     @Test
     public void testBlockInfoSerialization() {
-        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
+        AionBlockStore.BlockInfo info =
+                new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(info));
@@ -41,8 +42,10 @@ public class BlockInfoTest {
 
     @Test
     public void testBlockInfoMultipleSerialization() {
-        AionBlockStore.BlockInfo info = new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
-        AionBlockStore.BlockInfo info2 = new AionBlockStore.BlockInfo(HashUtil.h256(DEFAULT_HASH), BigInteger.TWO, false);
+        AionBlockStore.BlockInfo info =
+                new AionBlockStore.BlockInfo(DEFAULT_HASH, BigInteger.ONE, true);
+        AionBlockStore.BlockInfo info2 =
+                new AionBlockStore.BlockInfo(HashUtil.h256(DEFAULT_HASH), BigInteger.TWO, false);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Arrays.asList(info, info2));

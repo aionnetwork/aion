@@ -1,8 +1,8 @@
 package org.aion.zero.impl.query;
 
 import java.util.Optional;
-import org.aion.types.AionAddress;
 import org.aion.mcf.core.AccountState;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 public interface StateQueryInterface {

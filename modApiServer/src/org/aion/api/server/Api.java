@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import org.aion.types.AionAddress;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.crypto.ECKey;
@@ -21,6 +20,7 @@ import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.CompilationResult.Contract;
 import org.aion.solidity.Compiler;
+import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
@@ -60,7 +60,8 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     protected boolean unlockAccount(
             final String _address, final String _password, final int _duration) {
-        return this.ACCOUNT_MANAGER.unlockAccount(AddressUtils.wrapAddress(_address), _password, _duration);
+        return this.ACCOUNT_MANAGER.unlockAccount(
+                AddressUtils.wrapAddress(_address), _password, _duration);
     }
 
     public boolean unlockAccount(

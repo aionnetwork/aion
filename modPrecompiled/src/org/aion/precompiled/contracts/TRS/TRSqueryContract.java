@@ -5,8 +5,6 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
-import org.aion.types.AionAddress;
 import org.aion.interfaces.block.Block;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
@@ -14,6 +12,7 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.types.AionAddress;
 
 /**
  * The TRSqueryContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -360,7 +359,8 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         // Grab the contract address and block number and determine the period.
-        AionAddress contract = new AionAddress(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
+        AionAddress contract =
+                new AionAddress(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
 
         ByteBuffer blockBuf = ByteBuffer.allocate(Long.BYTES);
         blockBuf.put(Arrays.copyOfRange(input, indexBlockNum, len));
@@ -478,7 +478,8 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrg The energy.
      * @return the period the contract is in at time given by block's timestamp.
      */
-    private PrecompiledTransactionResult determinePeriod(AionAddress contract, Block block, long nrg) {
+    private PrecompiledTransactionResult determinePeriod(
+            AionAddress contract, Block block, long nrg) {
         // If contract doesn't exist, return an error.
         ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
 

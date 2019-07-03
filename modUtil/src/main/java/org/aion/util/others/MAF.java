@@ -2,6 +2,7 @@ package org.aion.util.others;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+
 /** @author ali sharif Implements a simple Moving Average Filter This class is thread safe */
 public class MAF {
     // rationale for using ArrayDeque - doc: 'This class is likely to be faster than Stack when used

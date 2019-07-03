@@ -33,13 +33,12 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.ECKey;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
@@ -231,7 +230,8 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
+        byte[] input =
+                ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -271,7 +271,8 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BigInteger inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
+        BigInteger inStore =
+                new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         System.err.println("Found in D's storage for n: " + inStore);
         assertEquals(n, inStore);
         nonce = nonce.add(BigInteger.ONE);
@@ -308,7 +309,8 @@ public class OpcodeIntegTest {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
+        byte[] input =
+                ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -352,7 +354,8 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger value = new BigInteger("2387653");
         BigInteger nonce = BigInteger.TWO;
-        byte[] input = ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
+        byte[] input =
+                ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
         input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
@@ -427,7 +430,8 @@ public class OpcodeIntegTest {
         context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BigInteger inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
+        BigInteger inStore =
+                new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(n, inStore);
         nonce = nonce.add(BigInteger.ONE);
 
@@ -747,7 +751,7 @@ public class OpcodeIntegTest {
             RepositoryCache repo,
             String contractName,
             String contractFilename,
-        AionAddress contractAddr,
+            AionAddress contractAddr,
             BigInteger valueTransferred)
             throws IOException {
 
@@ -780,12 +784,15 @@ public class OpcodeIntegTest {
      * byte array consisting of the bytes of owner then caller then origin then finally 16 zero
      * bytes.
      */
-    private void verifyLogData(byte[] data, AionAddress owner, AionAddress caller, AionAddress origin) {
+    private void verifyLogData(
+            byte[] data, AionAddress owner, AionAddress caller, AionAddress origin) {
         assertArrayEquals(Arrays.copyOfRange(data, 0, AionAddress.LENGTH), owner.toByteArray());
         assertArrayEquals(
-                Arrays.copyOfRange(data, AionAddress.LENGTH, AionAddress.LENGTH * 2), caller.toByteArray());
+                Arrays.copyOfRange(data, AionAddress.LENGTH, AionAddress.LENGTH * 2),
+                caller.toByteArray());
         assertArrayEquals(
-                Arrays.copyOfRange(data, AionAddress.LENGTH * 2, AionAddress.LENGTH * 3), origin.toByteArray());
+                Arrays.copyOfRange(data, AionAddress.LENGTH * 2, AionAddress.LENGTH * 3),
+                origin.toByteArray());
         assertArrayEquals(
                 Arrays.copyOfRange(data, data.length - DataWordImpl.BYTES, data.length),
                 DataWordImpl.ZERO.getData());
@@ -794,13 +801,6 @@ public class OpcodeIntegTest {
     private AionTxExecSummary executeTransaction(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            block,
-            tx,
-            repo,
-            false,
-            true,
-            false,
-            false,
-            LOGGER_VM);
+                block, tx, repo, false, true, false, false, LOGGER_VM);
     }
 }

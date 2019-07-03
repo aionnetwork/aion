@@ -1,7 +1,5 @@
 package org.aion.zero.impl;
 
-import org.aion.interfaces.functional.Functional;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.interfaces.functional.Functional;
 
 /**
  * Queues execution tasks into a single pipeline where some tasks can be executed in parallel but

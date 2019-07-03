@@ -32,13 +32,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.ECKey;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
@@ -308,7 +308,9 @@ public class TransactionExecutorTest {
     }
 
     private AionAddress getNewRecipient(boolean isContractCreation) {
-        return (isContractCreation) ? null : new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+        return (isContractCreation)
+                ? null
+                : new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
     }
 
     private byte[] extractActualOutput(byte[] rawOutput) {
@@ -324,15 +326,10 @@ public class TransactionExecutorTest {
         return out;
     }
 
-    private AionTxExecSummary executeTransaction(RepositoryCache repo, BlockContext context, AionTransaction transaction) throws VMException {
+    private AionTxExecSummary executeTransaction(
+            RepositoryCache repo, BlockContext context, AionTransaction transaction)
+            throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            context.block,
-            transaction,
-            repo,
-            false,
-            true,
-            false,
-            false,
-            LOGGER_VM);
+                context.block, transaction, repo, false, true, false, false, LOGGER_VM);
     }
 }

@@ -5,8 +5,6 @@ import static org.aion.util.bytes.ByteUtil.ZERO_BYTE_ARRAY;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.types.AionAddress;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;
@@ -14,8 +12,10 @@ import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.vm.Constants;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
 import org.aion.util.types.AddressUtils;
@@ -344,7 +344,6 @@ public class AionTransaction extends AbstractTransaction {
         this.signature = key.sign(this.getRawHash());
         this.rlpEncoded = null;
     }
-
 
     @VisibleForTesting
     public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {

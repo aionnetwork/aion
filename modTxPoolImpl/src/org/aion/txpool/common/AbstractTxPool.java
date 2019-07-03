@@ -17,15 +17,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.types.AionAddress;
+import org.aion.interfaces.block.Constant;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
-import org.aion.interfaces.tx.Transaction;
-import org.aion.interfaces.block.Constant;
 
 public abstract class AbstractTxPool<TX extends Transaction> {
 

@@ -6,7 +6,7 @@ import java.io.OutputStream;
 /** A streaming Hex encoder. */
 public class HexEncoder {
 
-    private final static byte[] encodingTable = {
+    private static final byte[] encodingTable = {
         (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6',
                 (byte) '7',
         (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e',
@@ -16,7 +16,7 @@ public class HexEncoder {
     /*
      * set up the decoding table.
      */
-    private final static byte[] decodingTable = new byte[128];
+    private static final byte[] decodingTable = new byte[128];
 
     private void initialiseDecodingTable() {
         for (int i = 0; i < decodingTable.length; i++) {
@@ -67,7 +67,8 @@ public class HexEncoder {
      *
      * @return the number of bytes produced.
      */
-    public static int decode(byte[] data, int off, int length, OutputStream out) throws IOException {
+    public static int decode(byte[] data, int off, int length, OutputStream out)
+            throws IOException {
         byte b1, b2;
         int outLen = 0;
 

@@ -1,7 +1,6 @@
 package org.aion.zero.api;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;

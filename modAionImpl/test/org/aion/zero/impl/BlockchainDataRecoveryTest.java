@@ -29,7 +29,6 @@ public class BlockchainDataRecoveryTest {
     private static final int NUMBER_OF_BLOCKS = 20;
     private static final int MAX_TX_PER_BLOCK = 60;
 
-
     @BeforeClass
     public static void setup() {
         // logging to see errors

@@ -4,16 +4,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.types.AionAddress;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.tooling.ABIUtil;
+import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -125,23 +124,24 @@ public class AvmInternalTxTest {
 
     private void makeCall(BigInteger nonce, AionAddress contract, byte[] call) {
         AionTransaction transaction =
-            newTransaction(
-                nonce,
-                new AionAddress(deployerKey.getAddress()),
-                contract,
-                call,
-                2_000_000,
-                TransactionTypes.DEFAULT);
+                newTransaction(
+                        nonce,
+                        new AionAddress(deployerKey.getAddress()),
+                        contract,
+                        call,
+                        2_000_000,
+                        TransactionTypes.DEFAULT);
 
         transaction.sign(this.deployerKey);
 
         AionBlock block =
-            this.blockchain.createNewBlock(
-                this.blockchain.getBestBlock(),
-                Collections.singletonList(transaction),
-                false);
+                this.blockchain.createNewBlock(
+                        this.blockchain.getBestBlock(),
+                        Collections.singletonList(transaction),
+                        false);
 
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
 
         // Check the block was imported and the transaction was successful.
@@ -149,5 +149,4 @@ public class AvmInternalTxTest {
         assertThat(receipt.isSuccessful()).isTrue();
         System.out.println(block);
     }
-
 }

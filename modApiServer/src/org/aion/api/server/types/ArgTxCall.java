@@ -4,12 +4,12 @@ import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
 import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.util.types.AddressUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public final class ArgTxCall {
     }
 
     private static ArgTxCall fromJSON(
-        final JSONObject _jsonObj, long defaultNrgPrice, boolean forCall) {
+            final JSONObject _jsonObj, long defaultNrgPrice, boolean forCall) {
         try {
 
             String fromStr = _jsonObj.optString("from", "");

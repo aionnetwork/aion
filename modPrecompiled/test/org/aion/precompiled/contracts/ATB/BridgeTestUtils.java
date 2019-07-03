@@ -1,11 +1,11 @@
 package org.aion.precompiled.contracts.ATB;
 
 import java.util.ArrayList;
-import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.types.AionAddress;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 
 public class BridgeTestUtils {

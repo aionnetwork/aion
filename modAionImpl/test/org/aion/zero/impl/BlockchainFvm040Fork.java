@@ -7,10 +7,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;

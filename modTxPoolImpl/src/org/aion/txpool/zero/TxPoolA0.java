@@ -17,14 +17,14 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.aion.interfaces.tx.Transaction;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.types.AionAddress;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
@@ -464,7 +464,8 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
             for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair :
                     e.getValue().entrySet()) {
                 BigInteger ts = pair.getValue().getTimeStamp();
-                // If timestamp has collision, increase 1 for getting a new slot to put the transaction pair.
+                // If timestamp has collision, increase 1 for getting a new slot to put the
+                // transaction pair.
                 while (timeTxDep.get(ts) != null) {
                     ts = ts.add(BigInteger.ONE);
                 }

@@ -4,10 +4,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -18,7 +17,8 @@ import org.junit.Test;
 public class AionTxExecSummaryTest {
 
     private AionAddress defaultAddress =
-            AddressUtils.wrapAddress("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+            AddressUtils.wrapAddress(
+                    "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
     @Test
     public void testRLPEncoding() {

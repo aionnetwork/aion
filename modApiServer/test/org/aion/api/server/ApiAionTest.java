@@ -15,19 +15,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.AionAddress;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
-import org.aion.interfaces.tx.Transaction;
-import org.aion.interfaces.tx.TxReceipt;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.TxResponse;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -429,8 +428,10 @@ public class ApiAionTest {
     @Test
     public void testAccountGetters() {
         assertEquals(
-                repo.getBalance(AddressUtils.ZERO_ADDRESS), api.getBalance(AddressUtils.ZERO_ADDRESS));
-        assertEquals(repo.getNonce(AddressUtils.ZERO_ADDRESS), api.getNonce(AddressUtils.ZERO_ADDRESS));
+                repo.getBalance(AddressUtils.ZERO_ADDRESS),
+                api.getBalance(AddressUtils.ZERO_ADDRESS));
+        assertEquals(
+                repo.getNonce(AddressUtils.ZERO_ADDRESS), api.getNonce(AddressUtils.ZERO_ADDRESS));
         assertEquals(
                 repo.getBalance(AddressUtils.ZERO_ADDRESS),
                 api.getBalance(AddressUtils.ZERO_ADDRESS.toString()));
@@ -501,7 +502,8 @@ public class ApiAionTest {
         api.initNrgOracle(impl);
 
         assertNotNull(api.getCoinbase());
-        assertEquals(repo.getCode(AddressUtils.ZERO_ADDRESS), api.getCode(AddressUtils.ZERO_ADDRESS));
+        assertEquals(
+                repo.getCode(AddressUtils.ZERO_ADDRESS), api.getCode(AddressUtils.ZERO_ADDRESS));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());

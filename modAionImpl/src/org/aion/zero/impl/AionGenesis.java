@@ -4,19 +4,19 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.types.AionAddress;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.db.AionContractDetailsImpl;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 
@@ -359,12 +359,14 @@ public class AionGenesis extends AionBlock {
             AccountState networkBalanceAccount = new AccountState();
             networkBalanceAccount.setStateRoot(networkBalanceStorageHash);
 
-            worldTrie.update(NETWORK_BALANCE_ADDRESS.toByteArray(), networkBalanceAccount.getEncoded());
+            worldTrie.update(
+                    NETWORK_BALANCE_ADDRESS.toByteArray(), networkBalanceAccount.getEncoded());
 
             // update predefined accounts
             for (Map.Entry<AionAddress, AccountState> preminedEntry : this.premined.entrySet()) {
                 worldTrie.update(
-                        preminedEntry.getKey().toByteArray(), preminedEntry.getValue().getEncoded());
+                        preminedEntry.getKey().toByteArray(),
+                        preminedEntry.getValue().getEncoded());
             }
 
             return worldTrie.getRootHash();

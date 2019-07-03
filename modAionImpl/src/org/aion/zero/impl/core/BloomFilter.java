@@ -1,8 +1,8 @@
 package org.aion.zero.impl.core;
 
-import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.types.AionAddress;
 
 public class BloomFilter {
     public static boolean containsAddress(Bloom bloom, AionAddress address) {

@@ -7,9 +7,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 
-/**
- * An abstract notion of work that is to be applied after a transaction has been executed.
- */
+/** An abstract notion of work that is to be applied after a transaction has been executed. */
 public final class PostExecutionWork {
     private final Repository repository;
     private final PostExecutionLogic postExecutionLogic;
@@ -25,10 +23,11 @@ public final class PostExecutionWork {
         this.postExecutionLogic = logic;
     }
 
-    /**
-     * Performs some work.
-     */
-    public void doWork(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache, AionTxExecSummary summary, AionTransaction transaction) {
+    /** Performs some work. */
+    public void doWork(
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            AionTxExecSummary summary,
+            AionTransaction transaction) {
         this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction);
     }
 }

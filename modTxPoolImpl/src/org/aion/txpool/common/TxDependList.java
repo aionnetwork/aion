@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.types.AionAddress;
+
 public class TxDependList<BW> {
     private final List<BW> txList;
     private BW dependTx;

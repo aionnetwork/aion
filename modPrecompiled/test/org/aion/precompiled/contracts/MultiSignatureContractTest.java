@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import org.aion.types.AionAddress;
+import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -22,15 +24,12 @@ import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.ISignature;
-import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -56,30 +55,30 @@ public class MultiSignatureContractTest {
     @Before
     public void setup() {
         RepositoryConfig repoConfig =
-            new RepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
+                new RepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
 
-                @Override
-                public PruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
+                    @Override
+                    public PruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
 
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
+                    @Override
+                    public ContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
 
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
         repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         addrsToClean = new ArrayList<>();
         to = getExistentAddress(BigInteger.ZERO);
@@ -169,7 +168,11 @@ public class MultiSignatureContractTest {
     // Returns a properly formatted byte array for these input params for send-tx logic. We want to
     // allow null values so we can simulate missing elements in the input array.
     private byte[] toValidSendInput(
-            AionAddress wallet, List<ISignature> signatures, BigInteger amount, long nrg, AionAddress to) {
+            AionAddress wallet,
+            List<ISignature> signatures,
+            BigInteger amount,
+            long nrg,
+            AionAddress to) {
 
         int walletLen = (wallet == null) ? 0 : AionAddress.LENGTH;
         int sigsLen = (signatures == null) ? 0 : (signatures.size() * SIG_SIZE);
@@ -1026,7 +1029,8 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
         byte[] noNrgInput = new byte[input.length - Long.BYTES];
-        System.arraycopy(input, 0, noNrgInput, 0, input.length - AionAddress.LENGTH - Long.BYTES - 1);
+        System.arraycopy(
+                input, 0, noNrgInput, 0, input.length - AionAddress.LENGTH - Long.BYTES - 1);
         System.arraycopy(
                 input,
                 input.length - AionAddress.LENGTH,

@@ -15,22 +15,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -44,27 +44,37 @@ import org.apache.commons.collections4.map.LRUMap;
  */
 public class AionAuctionContract extends StatefulPrecompiledContract {
     private static final AionAddress AION =
-            AddressUtils.wrapAddress("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AddressUtils.wrapAddress(
+                    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private AionAddress activeDomainsAddress =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000600");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000600");
     private AionAddress activeDomainsAddressTime =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000601");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000601");
     private AionAddress activeDomainsAddressName =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000602");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000602");
     private AionAddress activeDomainsAddressValue =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000603");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000603");
 
     private AionAddress auctionDomainsAddress =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000700");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000700");
     private AionAddress auctionDomainsAddressName =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000702");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000702");
 
     private AionAddress allAddresses =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000800");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000800");
     private AionAddress domainNameAddressPair =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000801");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000801");
     private AionAddress domainAddressNamePair =
-            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000802");
+            AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000802");
 
     private static final long COST = 20000L;
     private static final int SIG_LEN = 96;
@@ -348,7 +358,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param ownerAddress new owner of the given domain
      */
     private void addToActiveDomains(
-            AionAddress domainAddress, AionAddress ownerAddress, String domainName, BigInteger value) {
+            AionAddress domainAddress,
+            AionAddress ownerAddress,
+            String domainName,
+            BigInteger value) {
         Date currentDate = new Date();
         Date finishDate =
                 new Date(currentDate.getTime() + ACTIVE_TIME.intValue()); // 1 year later, 5s
@@ -376,7 +389,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param value the bid value
      */
     private void processBid(
-            String domainNameRaw, AionAddress domainAddress, AionAddress bidderAddress, BigInteger value) {
+            String domainNameRaw,
+            AionAddress domainAddress,
+            AionAddress bidderAddress,
+            BigInteger value) {
         this.track.getAccountState(bidderAddress).subFromBalance(value);
         BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
@@ -489,7 +505,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, new BigInteger("0"));
         // remove from auction domains
         this.track.removeStorageRow(
-                auctionDomainsAddress, new DataWordImpl(blake128(domainAddress.toByteArray())).toWrapper());
+                auctionDomainsAddress,
+                new DataWordImpl(blake128(domainAddress.toByteArray())).toWrapper());
         addToActiveDomains(domainAddress, winnerAddress, domainName, secondHighestBid);
         printWinner(domainAddress, winnerAddress, secondHighestBid, domainName);
     }
@@ -554,7 +571,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param value the value (second highest) to deposit
      */
     private void printWinner(
-            AionAddress domainAddress, AionAddress winnerAddress, BigInteger value, String domainName) {
+            AionAddress domainAddress,
+            AionAddress winnerAddress,
+            BigInteger value,
+            String domainName) {
         System.out.println("Auction result for domain at: '" + domainAddress + "'");
         System.out.println("    Domain name: " + domainName);
         System.out.println("    New domain owner: " + winnerAddress);
@@ -605,7 +625,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         printRemoveActiveDomain(domainAddress);
         // erase
         this.track.removeStorageRow(
-                activeDomainsAddress, new DataWordImpl(blake128(domainAddress.toByteArray())).toWrapper());
+                activeDomainsAddress,
+                new DataWordImpl(blake128(domainAddress.toByteArray())).toWrapper());
         this.track.removeStorageRow(
                 activeDomainsAddress,
                 new DataWordImpl(blake128(blake128(domainAddress.toByteArray()))).toWrapper());
@@ -711,7 +732,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 this.track
                         .getStorageValue(
                                 domainNameAddressPair,
-                                new DataWordImpl(blake128(blake128(domainName.getBytes()))).toWrapper())
+                                new DataWordImpl(blake128(blake128(domainName.getBytes())))
+                                        .toWrapper())
                         .getData();
         return new AionAddress(combineTwoBytes(addrFirstPart, addrSecondPart));
     }
@@ -734,12 +756,15 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private AionAddress getAddressFromStorage(AionAddress key, AionAddress key2) {
         byte[] addrFirstPart =
                 this.track
-                        .getStorageValue(key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
+                        .getStorageValue(
+                                key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
                         .getData();
         byte[] addrSecondPart =
                 this.track
                         .getStorageValue(
-                                key, new DataWordImpl(blake128(blake128(key2.toByteArray()))).toWrapper())
+                                key,
+                                new DataWordImpl(blake128(blake128(key2.toByteArray())))
+                                        .toWrapper())
                         .getData();
         return new AionAddress(combineTwoBytes(addrFirstPart, addrSecondPart));
     }
@@ -747,12 +772,14 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private AionAddress getAddressFromStorage(AionAddress key, String key2) {
         byte[] addrFirstPart =
                 this.track
-                        .getStorageValue(key, new DataWordImpl(blake128(key2.getBytes())).toWrapper())
+                        .getStorageValue(
+                                key, new DataWordImpl(blake128(key2.getBytes())).toWrapper())
                         .getData();
         byte[] addrSecondPart =
                 this.track
                         .getStorageValue(
-                                key, new DataWordImpl(blake128(blake128(key2.getBytes()))).toWrapper())
+                                key,
+                                new DataWordImpl(blake128(blake128(key2.getBytes()))).toWrapper())
                         .getData();
         return new AionAddress(combineTwoBytes(addrFirstPart, addrSecondPart));
     }
@@ -766,19 +793,23 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private BigInteger getBigIntegerFromStorage(AionAddress key, AionAddress key2) {
         ByteArrayWrapper data =
-                this.track.getStorageValue(key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper());
+                this.track.getStorageValue(
+                        key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper());
         return new BigInteger(data.getData());
     }
 
     private String getNameFromStorage(AionAddress key, AionAddress key2) {
         byte[] domainNameFirstPart =
                 this.track
-                        .getStorageValue(key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
+                        .getStorageValue(
+                                key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
                         .getData();
         byte[] domainNameSecondPart =
                 this.track
                         .getStorageValue(
-                                key, new DataWordImpl(blake128(blake128(key2.toByteArray()))).toWrapper())
+                                key,
+                                new DataWordImpl(blake128(blake128(key2.toByteArray())))
+                                        .toWrapper())
                         .getData();
         String tempDomainName;
         try {
@@ -796,7 +827,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private Date getDateFromStorage(AionAddress key, AionAddress key2) {
         byte[] expireDateData =
                 this.track
-                        .getStorageValue(key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
+                        .getStorageValue(
+                                key, new DataWordImpl(blake128(key2.toByteArray())).toWrapper())
                         .getData();
         byte[] trimmedExpireDateData = trimLeadingZeros16(expireDateData);
         String expireDateStr;
@@ -937,8 +969,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     // data processing helpers
     // ---------------------------------------------------------------------------------------//
     /**
-     * Combines two length 16 byte[] (usually retrieved from repo as a DataWordImpl(length 16) into a
-     * length 32 byte[].
+     * Combines two length 16 byte[] (usually retrieved from repo as a DataWordImpl(length 16) into
+     * a length 32 byte[].
      *
      * @param byte1 input1
      * @param byte2 input2

@@ -9,13 +9,11 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 
 import java.math.BigInteger;
 import java.util.Objects;
-
-import org.aion.interfaces.block.BlockHeader;
-import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -44,7 +42,6 @@ public class A0BlockHeader extends AbstractBlockHeader {
             RPL_BH_TIMESTAMP = 12,
             RPL_BH_NONCE = 13,
             RPL_BH_SOLUTION = 14;
-
 
     /*
      * A 256-bit hash which proves that a sufficient amount of computation has
@@ -412,7 +409,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
     public void setSolution(byte[] _sl) {
         this.solution = _sl;
     }
-    
+
     public byte[] getNonce() {
         return nonce;
     }
@@ -589,7 +586,6 @@ public class A0BlockHeader extends AbstractBlockHeader {
     public BigInteger getPowBoundaryBI() {
         return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
     }
-
 
     /** Builder used to introduce blocks into system that come from unsafe sources */
     public static class Builder {

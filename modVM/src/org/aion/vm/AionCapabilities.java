@@ -29,6 +29,7 @@ public class AionCapabilities implements IExternalCapabilities {
 
     @Override
     public AionAddress generateContractAddress(Transaction tx) {
-        return new AionAddress(HashUtil.calcNewAddr(tx.senderAddress.toByteArray(), tx.nonce.toByteArray()));
+        return new AionAddress(
+                HashUtil.calcNewAddr(tx.senderAddress.toByteArray(), tx.nonce.toByteArray()));
     }
 }

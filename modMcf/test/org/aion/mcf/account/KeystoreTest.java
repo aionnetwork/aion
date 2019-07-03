@@ -13,13 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

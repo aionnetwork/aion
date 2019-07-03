@@ -31,10 +31,18 @@ public class Statefulness {
 
     public static void transferValue(byte[] beneficiary, long amount) {
         Address recipient = new Address(beneficiary);
-        if (Blockchain.call(recipient, BigInteger.valueOf(amount), new byte[0], Blockchain.getRemainingEnergy()).isSuccess()) {
-            Blockchain.println("Transfer was a success. "
-                + "Beneficiary balance = " + Blockchain.getBalance(recipient)
-                + ", Contract balance = " + Blockchain.getBalance(Blockchain.getAddress()));
+        if (Blockchain.call(
+                        recipient,
+                        BigInteger.valueOf(amount),
+                        new byte[0],
+                        Blockchain.getRemainingEnergy())
+                .isSuccess()) {
+            Blockchain.println(
+                    "Transfer was a success. "
+                            + "Beneficiary balance = "
+                            + Blockchain.getBalance(recipient)
+                            + ", Contract balance = "
+                            + Blockchain.getBalance(Blockchain.getAddress()));
         } else {
             Blockchain.println("Transfer was unsuccessful.");
         }
@@ -51,14 +59,14 @@ public class Statefulness {
     }
 
     public static long getContractBalance() {
-        BigInteger balance =  Blockchain.getBalance(Blockchain.getAddress());
+        BigInteger balance = Blockchain.getBalance(Blockchain.getAddress());
         Blockchain.println("Contract balance = " + balance);
         counter++;
         return balance.longValue();
     }
 
     public static long getBalanceOf(Address address) {
-        BigInteger balance =  Blockchain.getBalance(address);
+        BigInteger balance = Blockchain.getBalance(address);
         Blockchain.println("Balance of " + address + " = " + balance);
         counter++;
         return balance.longValue();

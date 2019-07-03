@@ -8,18 +8,18 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 
 /**
- * A functional interface that specifies post-execution logic that is to be applied
- * immediately after a transaction has been executed. Or, if the transaction is being executed in
- * bulk, then it is to be applied in such a manner that it appears to be logically applied immediately
- * after the execution of the transaction so that from the perspective of the caller there is no
- * difference between running the transactions in bulk or sequentially.
+ * A functional interface that specifies post-execution logic that is to be applied immediately
+ * after a transaction has been executed. Or, if the transaction is being executed in bulk, then it
+ * is to be applied in such a manner that it appears to be logically applied immediately after the
+ * execution of the transaction so that from the perspective of the caller there is no difference
+ * between running the transactions in bulk or sequentially.
  */
 @FunctionalInterface
 public interface PostExecutionLogic {
 
     /**
-     * Performs the specified post-execution logic that is to be done immediately after a transaction
-     * has been executed.
+     * Performs the specified post-execution logic that is to be done immediately after a
+     * transaction has been executed.
      *
      * <p>This logic may do whatever it needs to the provided inputs.
      *

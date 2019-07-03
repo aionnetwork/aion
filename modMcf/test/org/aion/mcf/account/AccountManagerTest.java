@@ -11,10 +11,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -24,7 +23,8 @@ import org.junit.Test;
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
     private AionAddress notRegistered =
-            AddressUtils.wrapAddress("a011111111111111111111111111111101010101010101010101010101010101");
+            AddressUtils.wrapAddress(
+                    "a011111111111111111111111111111101010101010101010101010101010101");
     private final int DEFAULT_TEST_TIMEOUT = 10;
 
     private static ECKey k1;

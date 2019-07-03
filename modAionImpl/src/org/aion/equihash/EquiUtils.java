@@ -1,6 +1,5 @@
 package org.aion.equihash;
 
-
 import static org.aion.util.bytes.ByteUtil.bytesToInts;
 import static org.aion.util.bytes.ByteUtil.intsToBytes;
 

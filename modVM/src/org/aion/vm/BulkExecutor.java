@@ -22,11 +22,11 @@ import org.slf4j.Logger;
 /**
  * A class responsible for executing transactions in bulk (as a block), or optionally singly.
  *
- * If given a block, the BulkExecutor will send the transactions off (in as large a contiguous
+ * <p>If given a block, the BulkExecutor will send the transactions off (in as large a contiguous
  * bundle as possible) to the appropriate virtual machine to be executed and will return the results
  * of these transactions to the caller.
  *
- * This class is thread-safe.
+ * <p>This class is thread-safe.
  */
 public final class BulkExecutor {
 
@@ -45,11 +45,21 @@ public final class BulkExecutor {
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param incrementSenderNonce Whether or not to increment the sender's nonce.
      * @param fork040Enable the fork logic affect the fvm behavior.
-     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per
+     *     transaction.
      * @param logger The logger.
      * @param postExecutionWork The post-execution work to apply after each transaction is run.
      */
-    public static List<AionTxExecSummary> executeAllTransactionsInBlock(IAionBlock block, RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, boolean isLocalCall, boolean incrementSenderNonce, boolean fork040Enable, boolean checkBlockEnergyLimit, Logger logger, PostExecutionWork postExecutionWork) throws VMException {
+    public static List<AionTxExecSummary> executeAllTransactionsInBlock(
+            IAionBlock block,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            boolean isLocalCall,
+            boolean incrementSenderNonce,
+            boolean fork040Enable,
+            boolean checkBlockEnergyLimit,
+            Logger logger,
+            PostExecutionWork postExecutionWork)
+            throws VMException {
         if (block == null) {
             throw new NullPointerException("Cannot execute given a null block!");
         }
@@ -63,7 +73,16 @@ public final class BulkExecutor {
             throw new NullPointerException("Cannot execute given a null postExecutionWork!");
         }
 
-        return executeInternal(block, block.getTransactionsList(), repository, postExecutionWork, logger, checkBlockEnergyLimit, incrementSenderNonce, isLocalCall, fork040Enable);
+        return executeInternal(
+                block,
+                block.getTransactionsList(),
+                repository,
+                postExecutionWork,
+                logger,
+                checkBlockEnergyLimit,
+                incrementSenderNonce,
+                isLocalCall,
+                fork040Enable);
     }
 
     /**
@@ -78,10 +97,20 @@ public final class BulkExecutor {
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param incrementSenderNonce Whether or not to increment the sender's nonce.
      * @param fork040Enable the fork logic affect the fvm behavior.
-     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per transaction.
+     * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per
+     *     transaction.
      * @param logger The logger.
      */
-    public static AionTxExecSummary executeTransactionWithNoPostExecutionWork(IAionBlock block, AionTransaction transaction, RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, boolean isLocalCall, boolean incrementSenderNonce, boolean fork040Enable, boolean checkBlockEnergyLimit, Logger logger) throws VMException {
+    public static AionTxExecSummary executeTransactionWithNoPostExecutionWork(
+            IAionBlock block,
+            AionTransaction transaction,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            boolean isLocalCall,
+            boolean incrementSenderNonce,
+            boolean fork040Enable,
+            boolean checkBlockEnergyLimit,
+            Logger logger)
+            throws VMException {
         if (block == null) {
             throw new NullPointerException("Cannot execute given a null block!");
         }
@@ -92,10 +121,30 @@ public final class BulkExecutor {
             throw new NullPointerException("Cannot execute given a null logger!");
         }
 
-        return executeInternal(block, Collections.singletonList(transaction), repository, null, logger, checkBlockEnergyLimit, incrementSenderNonce, isLocalCall, fork040Enable).get(0);
+        return executeInternal(
+                        block,
+                        Collections.singletonList(transaction),
+                        repository,
+                        null,
+                        logger,
+                        checkBlockEnergyLimit,
+                        incrementSenderNonce,
+                        isLocalCall,
+                        fork040Enable)
+                .get(0);
     }
 
-    private static List<AionTxExecSummary> executeInternal(IAionBlock block, List<AionTransaction> transactions, RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, PostExecutionWork postExecutionWork, Logger logger, boolean checkBlockEnergyLimit, boolean incrementSenderNonce, boolean isLocalCall, boolean fork040enabled) throws VMException {
+    private static List<AionTxExecSummary> executeInternal(
+            IAionBlock block,
+            List<AionTransaction> transactions,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            PostExecutionWork postExecutionWork,
+            Logger logger,
+            boolean checkBlockEnergyLimit,
+            boolean incrementSenderNonce,
+            boolean isLocalCall,
+            boolean fork040enabled)
+            throws VMException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
         long blockRemainingEnergy = block.getNrgLimit();
@@ -107,45 +156,56 @@ public final class BulkExecutor {
 
             if (transactionIsForAionVirtualMachine(repository, firstTransactionInNextBatch)) {
                 // Grab the next batch of avm transactions to execute.
-                List<AionTransaction> avmTransactionsToExecute = fetchNextBatchOfTransactionsForAionVirtualMachine(repository, transactions, currentIndex);
-                AionTransaction[] avmTransactions = new AionTransaction[avmTransactionsToExecute.size()];
+                List<AionTransaction> avmTransactionsToExecute =
+                        fetchNextBatchOfTransactionsForAionVirtualMachine(
+                                repository, transactions, currentIndex);
+                AionTransaction[] avmTransactions =
+                        new AionTransaction[avmTransactionsToExecute.size()];
                 avmTransactionsToExecute.toArray(avmTransactions);
 
                 // Execute the avm transactions.
-                currentBatchOfSummaries = AvmTransactionExecutor.executeTransactions(
-                    repository,
-                    block,
-                    avmTransactions,
-                    postExecutionWork,
-                    logger,
-                    checkBlockEnergyLimit,
-                    incrementSenderNonce,
-                    isLocalCall,
-                    blockRemainingEnergy);
+                currentBatchOfSummaries =
+                        AvmTransactionExecutor.executeTransactions(
+                                repository,
+                                block,
+                                avmTransactions,
+                                postExecutionWork,
+                                logger,
+                                checkBlockEnergyLimit,
+                                incrementSenderNonce,
+                                isLocalCall,
+                                blockRemainingEnergy);
             } else {
                 // Grab the next batch of fvm transactions to execute.
-                List<AionTransaction> fvmTransactionsToExecute = fetchNextBatchOfTransactionsForFastVirtualMachine(repository, transactions, currentIndex);
-                AionTransaction[] fvmTransactions = new AionTransaction[fvmTransactionsToExecute.size()];
+                List<AionTransaction> fvmTransactionsToExecute =
+                        fetchNextBatchOfTransactionsForFastVirtualMachine(
+                                repository, transactions, currentIndex);
+                AionTransaction[] fvmTransactions =
+                        new AionTransaction[fvmTransactionsToExecute.size()];
                 fvmTransactionsToExecute.toArray(fvmTransactions);
 
                 // Execute the fvm transactions.
-                currentBatchOfSummaries = FvmTransactionExecutor.executeTransactions(
-                    repository,
-                    block,
-                    fvmTransactions,
-                    postExecutionWork,
-                    logger,
-                    checkBlockEnergyLimit,
-                    incrementSenderNonce,
-                    isLocalCall,
-                    fork040enabled,
-                    blockRemainingEnergy);
+                currentBatchOfSummaries =
+                        FvmTransactionExecutor.executeTransactions(
+                                repository,
+                                block,
+                                fvmTransactions,
+                                postExecutionWork,
+                                logger,
+                                checkBlockEnergyLimit,
+                                incrementSenderNonce,
+                                isLocalCall,
+                                fork040enabled,
+                                blockRemainingEnergy);
             }
 
             // Update the remaining energy left in the block.
             for (AionTxExecSummary currentSummary : currentBatchOfSummaries) {
                 if (!currentSummary.isRejected()) {
-                    blockRemainingEnergy -= ((checkBlockEnergyLimit) ? currentSummary.getReceipt().getEnergyUsed() : 0);
+                    blockRemainingEnergy -=
+                            ((checkBlockEnergyLimit)
+                                    ? currentSummary.getReceipt().getEnergyUsed()
+                                    : 0);
                 }
             }
 
@@ -162,7 +222,8 @@ public final class BulkExecutor {
      * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
      * subsequent FVM-bound transactions.
      */
-    private static List<AionTransaction> fetchNextBatchOfTransactionsForFastVirtualMachine(RepositoryCache repository, List<AionTransaction> transactions, int startIndex) {
+    private static List<AionTransaction> fetchNextBatchOfTransactionsForFastVirtualMachine(
+            RepositoryCache repository, List<AionTransaction> transactions, int startIndex) {
         for (int i = startIndex; i < transactions.size(); i++) {
             // Find the index of the next transaction that is not fvm-bound, that is where we stop.
             if (transactionIsForAionVirtualMachine(repository, transactions.get(i))) {
@@ -178,7 +239,8 @@ public final class BulkExecutor {
      * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
      * subsequent AVM-bound transactions.
      */
-    private static List<AionTransaction> fetchNextBatchOfTransactionsForAionVirtualMachine(RepositoryCache repository, List<AionTransaction> transactions, int startIndex) {
+    private static List<AionTransaction> fetchNextBatchOfTransactionsForAionVirtualMachine(
+            RepositoryCache repository, List<AionTransaction> transactions, int startIndex) {
         for (int i = startIndex; i < transactions.size(); i++) {
             // Find the index of the next transaction that is not avm-bound, that is where we stop.
             if (!transactionIsForAionVirtualMachine(repository, transactions.get(i))) {
@@ -197,12 +259,14 @@ public final class BulkExecutor {
      * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
      * not a contract address.
      */
-    private static boolean transactionIsForAionVirtualMachine(RepositoryCache repository, AionTransaction transaction) {
+    private static boolean transactionIsForAionVirtualMachine(
+            RepositoryCache repository, AionTransaction transaction) {
         if (transaction.isContractCreationTransaction()) {
             return isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
             AionAddress destination = transaction.getDestinationAddress();
-            return !isContractAddress(repository, destination) || isAllowedByAVM(repository, destination);
+            return !isContractAddress(repository, destination)
+                    || isAllowedByAVM(repository, destination);
         }
     }
 

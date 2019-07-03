@@ -14,14 +14,13 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
@@ -126,7 +125,6 @@ public class ApiAion0Test {
 
         api.shutDown();
         rsp = null;
-
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
@@ -301,16 +299,13 @@ public class ApiAion0Test {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getBlockReward reqBody =
-            Message.req_getBlockReward
-                .newBuilder()
-                .setBlockNumber(1000000L)
-                .build();
+                Message.req_getBlockReward.newBuilder().setBlockNumber(1000000L).build();
 
         rsp =
-            sendRequest(
-                Message.Servs.s_chain_VALUE,
-                Funcs.f_getBlockReward_VALUE,
-                reqBody.toByteArray());
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Funcs.f_getBlockReward_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -320,10 +315,10 @@ public class ApiAion0Test {
         assertEquals(expectedReward, new BigInteger(rslt.getReward().toByteArray()));
 
         rsp =
-            sendRequest(
-                Message.Servs.s_hb_VALUE,
-                Funcs.f_getBlockReward_VALUE,
-                reqBody.toByteArray());
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Funcs.f_getBlockReward_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -1066,9 +1061,7 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        AionRepositoryImpl.inst()
-                                .getNonce(AddressUtils.ZERO_ADDRESS)
-                                .toByteArray(),
+                        AionRepositoryImpl.inst().getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
                         AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         val,

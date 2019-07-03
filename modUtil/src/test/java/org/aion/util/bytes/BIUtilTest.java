@@ -111,7 +111,9 @@ public class BIUtilTest {
                                 bigInt[1][0],
                                 BIUtil.sum(
                                         bigInt[2][0],
-                                        BIUtil.sum(bigInt[3][0], BIUtil.sum(bigInt[4][0], bigInt[5][0]))))));
+                                        BIUtil.sum(
+                                                bigInt[3][0],
+                                                BIUtil.sum(bigInt[4][0], bigInt[5][0]))))));
 
         Assert.assertEquals(
                 new BigInteger("160000000000000000000"),
@@ -121,7 +123,9 @@ public class BIUtilTest {
                                 bigInt[1][1],
                                 BIUtil.sum(
                                         bigInt[2][1],
-                                        BIUtil.sum(bigInt[3][1], BIUtil.sum(bigInt[4][1], bigInt[5][1]))))));
+                                        BIUtil.sum(
+                                                bigInt[3][1],
+                                                BIUtil.sum(bigInt[4][1], bigInt[5][1]))))));
     }
 
     @Test
@@ -140,7 +144,9 @@ public class BIUtilTest {
                                 bigInt[1][0],
                                 BIUtil.min(
                                         bigInt[2][0],
-                                        BIUtil.min(bigInt[3][0], BIUtil.min(bigInt[4][0], bigInt[5][0]))))));
+                                        BIUtil.min(
+                                                bigInt[3][0],
+                                                BIUtil.min(bigInt[4][0], bigInt[5][0]))))));
 
         Assert.assertEquals(
                 bigInt[bigInt.length - 1][1],
@@ -150,6 +156,8 @@ public class BIUtilTest {
                                 bigInt[1][1],
                                 BIUtil.max(
                                         bigInt[2][1],
-                                        BIUtil.max(bigInt[3][1], BIUtil.max(bigInt[4][1], bigInt[5][1]))))));
+                                        BIUtil.max(
+                                                bigInt[3][1],
+                                                BIUtil.max(bigInt[4][1], bigInt[5][1]))))));
     }
 }

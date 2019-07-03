@@ -16,16 +16,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.interfaces.tx.TxReceipt;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
@@ -183,7 +183,8 @@ public class AionTxExecSummary implements TxExecSummary {
         return result;
     }
 
-    private static List<InternalTransactionInterface> decodeInternalTransactions(RLPList internalTransactions) {
+    private static List<InternalTransactionInterface> decodeInternalTransactions(
+            RLPList internalTransactions) {
         List<InternalTransactionInterface> result = new ArrayList<>();
         for (RLPElement internalTransaction : internalTransactions) {
             result.add(new AionInternalTx(internalTransaction.getRLPData()));
@@ -352,7 +353,8 @@ public class AionTxExecSummary implements TxExecSummary {
             summary = new AionTxExecSummary(receipt);
         }
 
-        public Builder internalTransactions(List<InternalTransactionInterface> internalTransactions) {
+        public Builder internalTransactions(
+                List<InternalTransactionInterface> internalTransactions) {
             summary.internalTransactions = unmodifiableList(internalTransactions);
             return this;
         }

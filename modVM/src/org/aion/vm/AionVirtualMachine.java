@@ -15,7 +15,8 @@ public final class AionVirtualMachine {
 
     private AionVirtualMachine(AvmImpl avm) {
         if (avm == null) {
-            throw new IllegalStateException("Cannot initialize AionVirtualMachine with a null avm!");
+            throw new IllegalStateException(
+                    "Cannot initialize AionVirtualMachine with a null avm!");
         }
         this.avm = avm;
     }
@@ -26,7 +27,9 @@ public final class AionVirtualMachine {
      * @return A new AVM.
      */
     public static AionVirtualMachine createAndInitializeNewAvm() {
-        return new AionVirtualMachine(CommonAvmFactory.buildAvmInstanceForConfiguration(new AionCapabilities(), new AvmConfiguration()));
+        return new AionVirtualMachine(
+                CommonAvmFactory.buildAvmInstanceForConfiguration(
+                        new AionCapabilities(), new AvmConfiguration()));
     }
 
     /**

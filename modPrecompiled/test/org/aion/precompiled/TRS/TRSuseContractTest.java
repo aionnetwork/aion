@@ -12,21 +12,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
-import org.aion.types.AionAddress;
+import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -68,8 +67,7 @@ public class TRSuseContractTest extends TRShelpers {
                         return props;
                     }
                 };
-        repo =
-                new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         tempAddrs = new ArrayList<>();
         repo.addBalance(AION, BigInteger.ONE);
     }
@@ -515,7 +513,8 @@ public class TRSuseContractTest extends TRShelpers {
         trs.execute(input, COST);
 
         int rows =
-                repo.getStorageValue(contract, newDataWordStub(acct.toByteArray())).getData()[0] & 0x0F;
+                repo.getStorageValue(contract, newDataWordStub(acct.toByteArray())).getData()[0]
+                        & 0x0F;
         assertEquals(1, rows);
     }
 
@@ -529,7 +528,8 @@ public class TRSuseContractTest extends TRShelpers {
         trs.execute(input, COST);
 
         int rows =
-                repo.getStorageValue(contract, newDataWordStub(acct.toByteArray())).getData()[0] & 0x0F;
+                repo.getStorageValue(contract, newDataWordStub(acct.toByteArray())).getData()[0]
+                        & 0x0F;
         assertEquals(2, rows);
     }
 
@@ -547,7 +547,8 @@ public class TRSuseContractTest extends TRShelpers {
     @Test
     public void testDepositWhileTRSisLive() {
         AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
-        AionAddress contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress contract =
+                createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         TRSuseContract trs = newTRSuseContract(acct);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         PrecompiledTransactionResult res = trs.execute(input, COST);
@@ -2740,7 +2741,8 @@ public class TRSuseContractTest extends TRShelpers {
     public void testAddExtraFundsLive() {
         BigInteger amt = new BigInteger("32985623956237896532753265332").add(BigInteger.ONE);
         AionAddress acct = getNewExistentAccount(amt);
-        AionAddress contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress contract =
+                createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         AbstractTRS trs = newTRSuseContract(acct);
         byte[] input = getAddExtraInput(contract, amt.subtract(BigInteger.ONE));

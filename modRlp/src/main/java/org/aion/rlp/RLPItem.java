@@ -14,8 +14,7 @@ public class RLPItem implements RLPElement {
 
     /**
      * @implNote Inside the RLP encode/decode logic, there is no difference between null obj and
-     * zero-byte array Therefore, put empty array when we see the input data is null
-     *
+     *     zero-byte array Therefore, put empty array when we see the input data is null
      * @param rlpData byte array represent the encoded rlp data
      */
     public RLPItem(byte[] rlpData) {

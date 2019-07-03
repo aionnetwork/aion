@@ -71,7 +71,8 @@ public class AvmLogAndInternalTransactionTest {
         AionAddress contract = deployContract(BigInteger.ZERO);
         AionAddress other = deployContract(BigInteger.ONE);
 
-        Pair<ImportResult, AionBlockSummary> connectResult = callFireLogs(BigInteger.TWO, contract, other, "fireLogsOnSuccess");
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                callFireLogs(BigInteger.TWO, contract, other, "fireLogsOnSuccess");
         AionBlockSummary summary = connectResult.getRight();
 
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -79,7 +80,8 @@ public class AvmLogAndInternalTransactionTest {
         assertTrue(receipt.isSuccessful());
 
         List<IExecutionLog> logs = receipt.getLogInfoList();
-        List<InternalTransactionInterface> internalTransactions = summary.getSummaries().get(0).getInternalTransactions();
+        List<InternalTransactionInterface> internalTransactions =
+                summary.getSummaries().get(0).getInternalTransactions();
 
         assertEquals(3, logs.size());
         assertEquals(1, internalTransactions.size());
@@ -90,7 +92,8 @@ public class AvmLogAndInternalTransactionTest {
         AionAddress contract = deployContract(BigInteger.ZERO);
         AionAddress other = deployContract(BigInteger.ONE);
 
-        Pair<ImportResult, AionBlockSummary> connectResult = callFireLogs(BigInteger.TWO, contract, other, "fireLogsAndFail");
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                callFireLogs(BigInteger.TWO, contract, other, "fireLogsAndFail");
         AionBlockSummary summary = connectResult.getRight();
 
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -98,13 +101,15 @@ public class AvmLogAndInternalTransactionTest {
         assertFalse(receipt.isSuccessful());
 
         List<IExecutionLog> logs = receipt.getLogInfoList();
-        List<InternalTransactionInterface> internalTransactions = summary.getSummaries().get(0).getInternalTransactions();
+        List<InternalTransactionInterface> internalTransactions =
+                summary.getSummaries().get(0).getInternalTransactions();
 
         assertEquals(0, logs.size());
         assertEquals(1, internalTransactions.size());
     }
 
-    public Pair<ImportResult, AionBlockSummary> callFireLogs(BigInteger nonce, AionAddress address, AionAddress addressToCall, String methodName) {
+    public Pair<ImportResult, AionBlockSummary> callFireLogs(
+            BigInteger nonce, AionAddress address, AionAddress addressToCall, String methodName) {
         byte[] data =
                 new ABIStreamingEncoder()
                         .encodeOneString(methodName)
@@ -150,7 +155,8 @@ public class AvmLogAndInternalTransactionTest {
                         Collections.singletonList(transaction),
                         false,
                         this.blockchain.getBestBlock().getTimestamp());
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
 
         // Check the block was imported, the contract has the Avm prefix, and deployment succeeded.
@@ -160,7 +166,10 @@ public class AvmLogAndInternalTransactionTest {
     }
 
     private byte[] getJarBytes() {
-        return new CodeAndArguments(JarBuilder.buildJarForMainAndClassesAndUserlib(AvmLogTarget.class), new byte[0]).encodeToBytes();
+        return new CodeAndArguments(
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmLogTarget.class),
+                        new byte[0])
+                .encodeToBytes();
     }
 
     private AionTransaction newTransaction(

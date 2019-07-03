@@ -4,11 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.vm.api.interfaces.ResultCode;
 
-/**
- * An enumeration representing the execution status of a transaction.
- */
+/** An enumeration representing the execution status of a transaction. */
 public enum PrecompiledResultCode implements ResultCode {
-
     SUCCESS(0, ResultCategory.SUCCESS),
 
     INVALID_NONCE(101, ResultCategory.REJECTED),
@@ -41,7 +38,13 @@ public enum PrecompiledResultCode implements ResultCode {
 
     VM_INTERNAL_ERROR(-2, ResultCategory.FATAL);
 
-    private enum ResultCategory {SUCCESS, REJECTED, FAILED, FATAL, REVERT }
+    private enum ResultCategory {
+        SUCCESS,
+        REJECTED,
+        FAILED,
+        FATAL,
+        REVERT
+    }
 
     private static Map<Integer, PrecompiledResultCode> integerMapping = new HashMap<>();
     private ResultCategory category;
@@ -70,7 +73,8 @@ public enum PrecompiledResultCode implements ResultCode {
 
     @Override
     public boolean isFailed() {
-        return ((this.category == ResultCategory.FAILED) || (this.category == ResultCategory.REVERT));
+        return ((this.category == ResultCategory.FAILED)
+                || (this.category == ResultCategory.REVERT));
     }
 
     @Override
@@ -91,7 +95,8 @@ public enum PrecompiledResultCode implements ResultCode {
     public static PrecompiledResultCode fromInt(int code) {
         PrecompiledResultCode result = integerMapping.get(code);
         if (result == null) {
-            throw new IllegalArgumentException("No FastVmResultCode whose integer representation is: " + code);
+            throw new IllegalArgumentException(
+                    "No FastVmResultCode whose integer representation is: " + code);
         }
         return result;
     }

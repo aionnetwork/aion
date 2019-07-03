@@ -10,10 +10,10 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -70,7 +70,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // ensure bridge is viewed as precompiled contract
         AionAddress bridge =
-                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000200");
+                AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000200");
         assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -129,7 +130,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // ensure bridge is viewed as precompiled contract
         AionAddress bridge =
-                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000200");
+                AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000200");
         assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
 
         // Make call transaction to precompiled contract.
@@ -858,7 +860,8 @@ public class FvmBalanceTransferConsensusTest {
         return transaction;
     }
 
-    private static AionTransaction makeCallFallbackFunctionTx(AionAddress contract, BigInteger amount) {
+    private static AionTransaction makeCallFallbackFunctionTx(
+            AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
@@ -872,7 +875,8 @@ public class FvmBalanceTransferConsensusTest {
         return transaction;
     }
 
-    private static AionTransaction makeCallPayableFunctionTx(AionAddress contract, BigInteger amount) {
+    private static AionTransaction makeCallPayableFunctionTx(
+            AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(

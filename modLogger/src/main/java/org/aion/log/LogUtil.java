@@ -24,7 +24,6 @@ public class LogUtil {
         return new String(hexChars);
     }
 
-
     private static final String nullString = "";
 
     /**

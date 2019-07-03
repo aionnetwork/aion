@@ -5,11 +5,10 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
-
+import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Ignore;

@@ -36,7 +36,7 @@ public class ContractUtils {
      * @throws IOException
      */
     public static byte[] getContractDeployer(String fileName, String contractName)
-        throws IOException {
+            throws IOException {
         Compiler.Result r = Compiler.getInstance().compile(readContract(fileName), Options.BIN);
         CompilationResult cr = CompilationResult.parse(r.output);
         String deployer = cr.contracts.get(contractName).bin;

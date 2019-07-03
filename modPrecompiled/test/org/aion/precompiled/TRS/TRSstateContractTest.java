@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import org.aion.types.AionAddress;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -26,7 +25,7 @@ import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -68,8 +67,7 @@ public class TRSstateContractTest extends TRShelpers {
                         return props;
                     }
                 };
-        repo =
-                new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
         tempAddrs = new ArrayList<>();
         repo.addBalance(AION, BigInteger.ONE);
@@ -1343,7 +1341,8 @@ public class TRSstateContractTest extends TRShelpers {
     @Test
     public void testOpenFundsContractIsLive() {
         AionAddress acct = getNewExistentAccount(BigInteger.TEN);
-        AionAddress contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress contract =
+                createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(

@@ -11,8 +11,9 @@ import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.types.AionAddress;
+import org.aion.vm.api.types.ByteArrayWrapper;
+
 /** Detail data storage , */
 public class DetailsDataStore<
         BLK extends AbstractBlock<BH, ? extends Transaction>, BH extends BlockHeader> {

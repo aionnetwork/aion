@@ -7,23 +7,21 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.ArrayList;
-import java.util.Collections;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.utils.FileUtils;
 import org.aion.mcf.core.ImportResult;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
-
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;

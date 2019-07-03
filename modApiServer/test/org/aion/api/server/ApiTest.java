@@ -124,7 +124,9 @@ public class ApiTest {
         assertNull(api.getAccountKey(AddressUtils.ZERO_ADDRESS.toString()));
 
         addr = Keystore.create("testPwd");
-        assertEquals(AccountManager.inst().getKey(AddressUtils.wrapAddress(addr)), api.getAccountKey(addr));
+        assertEquals(
+                AccountManager.inst().getKey(AddressUtils.wrapAddress(addr)),
+                api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));
         tearDown();

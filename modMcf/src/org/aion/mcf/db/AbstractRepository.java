@@ -59,7 +59,6 @@ public abstract class AbstractRepository<
     protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
     protected static final String CONTRACT_PERFORM_CODE_DB = Names.CONTRACT_PERFORM_CODE;
 
-
     // State trie.
     protected Trie worldState;
 
@@ -81,7 +80,6 @@ public abstract class AbstractRepository<
     protected ByteArrayKeyValueDatabase txPoolDatabase;
     protected ByteArrayKeyValueDatabase pendingTxCacheDatabase;
     protected ByteArrayKeyValueDatabase contractPerformCodeDatabase;
-
 
     protected Collection<ByteArrayKeyValueDatabase> databaseGroup;
 

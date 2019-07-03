@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.Properties;
-import org.aion.types.AionAddress;
+import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -12,8 +12,7 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.crypto.HashUtil;
-
+import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;

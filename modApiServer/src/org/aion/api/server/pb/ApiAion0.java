@@ -1,5 +1,7 @@
 package org.aion.api.server.pb;
 
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.math.BigInteger;
@@ -20,7 +22,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import org.aion.types.AionAddress;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
@@ -38,10 +39,6 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.interfaces.block.Block;
-import org.aion.interfaces.tx.Transaction;
-import org.aion.interfaces.tx.TxReceipt;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -49,15 +46,20 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.account.Keystore;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
-import org.aion.vm.api.types.Hash256;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Hash256;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
@@ -70,8 +72,6 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
-
-import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
@@ -460,7 +460,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setContractAddress(
                                                     ByteString.copyFrom(
-                                                            result.getContractAddress().toByteArray()))
+                                                            result.getContractAddress()
+                                                                    .toByteArray()))
                                             .setTxHash(ByteString.copyFrom(result.getTxHash()))
                                             .build();
 
@@ -872,7 +873,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            AddressUtils.wrapAddress(log.address).toByteArray()))
+                                                            AddressUtils.wrapAddress(log.address)
+                                                                    .toByteArray()))
                                             .setData(
                                                     ByteString.copyFrom(
                                                             ByteUtil.hexStringToBytes(log.data)))
@@ -1497,7 +1499,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 pKeyList.add(ByteString.copyFrom(pKey));
                             }
 
-                            addressList.add(ByteString.copyFrom(AddressUtils.wrapAddress(addr).toByteArray()));
+                            addressList.add(
+                                    ByteString.copyFrom(
+                                            AddressUtils.wrapAddress(addr).toByteArray()));
                         }
 
                         Message.rsp_accountCreate rsp =
@@ -2481,7 +2485,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 a -> {
                                                     BigInteger b =
                                                             this.getBalance(
-                                                                    new AionAddress(a.toByteArray()));
+                                                                    new AionAddress(
+                                                                            a.toByteArray()));
 
                                                     Message.t_AccountDetail.Builder builder =
                                                             Message.t_AccountDetail.newBuilder();
@@ -2630,7 +2635,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     .setExtraData(ByteString.copyFrom(b.getExtraData()))
                                     .setHash(ByteString.copyFrom(b.getHash()))
                                     .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
-                                    .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                                    .setMinerAddress(
+                                            ByteString.copyFrom(b.getCoinbase().toByteArray()))
                                     .setNonce(ByteString.copyFrom(b.getNonce()))
                                     .setNrgConsumed(b.getNrgConsumed())
                                     .setNrgLimit(b.getNrgLimit())
@@ -2915,7 +2921,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .setHash(ByteString.copyFrom(b.getHash()))
                                             .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
                                             .setMinerAddress(
-                                                    ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                                                    ByteString.copyFrom(
+                                                            b.getCoinbase().toByteArray()))
                                             .setNonce(ByteString.copyFrom(b.getNonce()))
                                             .setNrgConsumed(b.getNrgConsumed())
                                             .setNrgLimit(b.getNrgLimit())

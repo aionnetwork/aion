@@ -6,10 +6,9 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
-
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.junit.Test;

@@ -77,7 +77,9 @@ public final class AvmTransactionExecutor {
         long blockRemainingEnergy = initialBlockEnergyLimit;
 
         AionVirtualMachine avm = LongLivedAvm.singleton();
-        IExternalState kernel = newExternalState(repository.startTracking(), block, allowNonceIncrement, isLocalCall);
+        IExternalState kernel =
+                newExternalState(
+                        repository.startTracking(), block, allowNonceIncrement, isLocalCall);
 
         try {
             // Acquire the avm lock and then run the transactions.
@@ -102,12 +104,13 @@ public final class AvmTransactionExecutor {
                 }
 
                 // Build the transaction summary.
-                AionTxExecSummary summary = buildTransactionSummary(transaction, result, isLocalCall);
+                AionTxExecSummary summary =
+                        buildTransactionSummary(transaction, result, isLocalCall);
 
                 // Update the repository by committing any changes in the Avm.
                 IExternalState externalState = resultAsFuture.getExternalState();
                 externalState.commitTo(
-                    newExternalState(repository, block, allowNonceIncrement, isLocalCall));
+                        newExternalState(repository, block, allowNonceIncrement, isLocalCall));
 
                 // Do any post execution work if any is specified.
                 if (postExecutionWork != null) {
@@ -116,7 +119,10 @@ public final class AvmTransactionExecutor {
 
                 // Update the remaining block energy.
                 if (!result.transactionStatus.isRejected()) {
-                    blockRemainingEnergy -= ((decrementBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
+                    blockRemainingEnergy -=
+                            ((decrementBlockEnergyLimit)
+                                    ? summary.getReceipt().getEnergyUsed()
+                                    : 0);
                 }
 
                 if (logger.isDebugEnabled()) {
@@ -136,16 +142,22 @@ public final class AvmTransactionExecutor {
         return transactionSummaries;
     }
 
-    private static AionTxExecSummary buildTransactionSummary(AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
-        List<IExecutionLog> logs = result.transactionStatus.isSuccess() ? convertAvmLogsToKernel(result.logs) : new ArrayList<>();
-        List<InternalTransactionInterface> internalTxs = convertAvmInternalTransactionToKernel(result.internalTransactions);
+    private static AionTxExecSummary buildTransactionSummary(
+            AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
+        List<IExecutionLog> logs =
+                result.transactionStatus.isSuccess()
+                        ? convertAvmLogsToKernel(result.logs)
+                        : new ArrayList<>();
+        List<InternalTransactionInterface> internalTxs =
+                convertAvmInternalTransactionToKernel(result.internalTransactions);
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
-        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result, output))
-            .logs(logs)
-            .deletedAccounts(new ArrayList<>())
-            .internalTransactions(internalTxs)
-            .result(output);
+        AionTxExecSummary.Builder builder =
+                AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result, output))
+                        .logs(logs)
+                        .deletedAccounts(new ArrayList<>())
+                        .internalTransactions(internalTxs)
+                        .result(output);
 
         TransactionStatus resultCode = result.transactionStatus;
         if (resultCode.isRejected()) {
@@ -163,7 +175,11 @@ public final class AvmTransactionExecutor {
         return summary;
     }
 
-    private static AionTxReceipt makeReceipt(AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result, byte[] output) {
+    private static AionTxReceipt makeReceipt(
+            AionTransaction transaction,
+            List<IExecutionLog> logs,
+            TransactionResult result,
+            byte[] output) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
@@ -186,7 +202,11 @@ public final class AvmTransactionExecutor {
     private static List<IExecutionLog> convertAvmLogsToKernel(List<org.aion.types.Log> avmLogs) {
         List<IExecutionLog> logs = new ArrayList<>();
         for (org.aion.types.Log avmLog : avmLogs) {
-            logs.add(new Log(new AionAddress(avmLog.copyOfAddress()), avmLog.copyOfTopics(), avmLog.copyOfData()));
+            logs.add(
+                    new Log(
+                            new AionAddress(avmLog.copyOfAddress()),
+                            avmLog.copyOfTopics(),
+                            avmLog.copyOfData()));
         }
         return logs;
     }
@@ -201,10 +221,12 @@ public final class AvmTransactionExecutor {
      * @param avmInternalTransactions The AVM Internal Transactions.
      * @return The equivalent kernel Internal Transactions.
      */
-    private static List<InternalTransactionInterface> convertAvmInternalTransactionToKernel(List<InternalTransaction> avmInternalTransactions) {
+    private static List<InternalTransactionInterface> convertAvmInternalTransactionToKernel(
+            List<InternalTransaction> avmInternalTransactions) {
         List<InternalTransactionInterface> txs = new ArrayList<>();
         for (InternalTransaction avmTx : avmInternalTransactions) {
-            txs.add(new AionInternalTx(
+            txs.add(
+                    new AionInternalTx(
                             null,
                             0,
                             0,
@@ -226,29 +248,32 @@ public final class AvmTransactionExecutor {
      * @param aionTransactions The Kernel Transactions.
      * @return The equivalent AVM Transactions.
      */
-    private static Transaction[] convertKernelTransactionsToAvm(AionTransaction[] aionTransactions) {
+    private static Transaction[] convertKernelTransactionsToAvm(
+            AionTransaction[] aionTransactions) {
         Transaction[] txs = new Transaction[aionTransactions.length];
         for (int i = 0; i < aionTransactions.length; i++) {
             AionTransaction tx = aionTransactions[i];
             if (tx.isContractCreationTransaction()) {
-                txs[i] = Transaction.contractCreateTransaction(
-                            tx.getSenderAddress(),
-                            tx.getTransactionHash(),
-                            new BigInteger(1, tx.getNonce()),
-                            new BigInteger(1, tx.getValue()),
-                            tx.getData(),
-                            tx.getEnergyLimit(),
-                            tx.getEnergyPrice());
+                txs[i] =
+                        Transaction.contractCreateTransaction(
+                                tx.getSenderAddress(),
+                                tx.getTransactionHash(),
+                                new BigInteger(1, tx.getNonce()),
+                                new BigInteger(1, tx.getValue()),
+                                tx.getData(),
+                                tx.getEnergyLimit(),
+                                tx.getEnergyPrice());
             } else {
-                txs[i] = Transaction.contractCallTransaction(
-                            tx.getSenderAddress(),
-                            tx.getDestinationAddress(),
-                            tx.getTransactionHash(),
-                            new BigInteger(1, tx.getNonce()),
-                            new BigInteger(1, tx.getValue()),
-                            tx.getData(),
-                            tx.getEnergyLimit(),
-                            tx.getEnergyPrice());
+                txs[i] =
+                        Transaction.contractCallTransaction(
+                                tx.getSenderAddress(),
+                                tx.getDestinationAddress(),
+                                tx.getTransactionHash(),
+                                new BigInteger(1, tx.getNonce()),
+                                new BigInteger(1, tx.getValue()),
+                                tx.getData(),
+                                tx.getEnergyLimit(),
+                                tx.getEnergyPrice());
             }
         }
         return txs;
@@ -262,7 +287,8 @@ public final class AvmTransactionExecutor {
      * @param original The TransactionResult we were given.
      * @return The new Failed TransactionResult instance.
      */
-    private static TransactionResult createCopyEnergyLimitExceeded(TransactionResult original, long energyUsed) {
+    private static TransactionResult createCopyEnergyLimitExceeded(
+            TransactionResult original, long energyUsed) {
         return new TransactionResult(
                 TransactionStatus.rejection("Rejected: block energy limit exceeded"),
                 original.logs,
@@ -271,7 +297,8 @@ public final class AvmTransactionExecutor {
                 ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
-    // TODO -- this has been marked as a temporary solution for a long time, someone should investigate
+    // TODO -- this has been marked as a temporary solution for a long time, someone should
+    // investigate
     private static DataWord getDifficultyAsDataWord(IAionBlock block) {
         byte[] diff = block.getDifficulty();
         if (diff.length > 16) {
@@ -280,15 +307,19 @@ public final class AvmTransactionExecutor {
         return new DataWordImpl(diff);
     }
 
-    private static IExternalState newExternalState(RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository, IAionBlock block, boolean allowNonceIncrement, boolean isLocalCall) {
+    private static IExternalState newExternalState(
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            IAionBlock block,
+            boolean allowNonceIncrement,
+            boolean isLocalCall) {
         return new ExternalStateForAvm(
-            repository,
-            allowNonceIncrement,
-            isLocalCall,
-            getDifficultyAsDataWord(block),
-            block.getNumber(),
-            block.getTimestamp(),
-            block.getNrgLimit(),
-            block.getCoinbase());
+                repository,
+                allowNonceIncrement,
+                isLocalCall,
+                getDifficultyAsDataWord(block),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase());
     }
 }

@@ -12,7 +12,8 @@ public final class Contract {
     }
 
     public static void transfer(Address address) {
-        Blockchain.call(address, Blockchain.getValue(), new byte[0], Blockchain.getRemainingEnergy());
+        Blockchain.call(
+                address, Blockchain.getValue(), new byte[0], Blockchain.getRemainingEnergy());
     }
 
     public static void output() {
@@ -34,5 +35,4 @@ public final class Contract {
             }
         }
     }
-
 }

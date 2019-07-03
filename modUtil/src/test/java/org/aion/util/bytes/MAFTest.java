@@ -38,41 +38,44 @@ public class MAFTest {
         MAF ma = new MAF(5);
 
         Thread producerA =
-            new Thread(() -> {
-                try {
-                    for (int i = 0; i < itrCount; i++) {
-                        ma.add(ThreadLocalRandom.current().nextDouble(min, max));
-                    }
-                    System.out.println("producerA done --------------");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+                new Thread(
+                        () -> {
+                            try {
+                                for (int i = 0; i < itrCount; i++) {
+                                    ma.add(ThreadLocalRandom.current().nextDouble(min, max));
+                                }
+                                System.out.println("producerA done --------------");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
         Thread producerB =
-            new Thread(() -> {
-                try {
-                    for (int i = 0; i < itrCount; i++) {
-                        ma.add(ThreadLocalRandom.current().nextDouble(min, max));
-                    }
-                    System.out.println("producerB done  --------------");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+                new Thread(
+                        () -> {
+                            try {
+                                for (int i = 0; i < itrCount; i++) {
+                                    ma.add(ThreadLocalRandom.current().nextDouble(min, max));
+                                }
+                                System.out.println("producerB done  --------------");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
 
         AtomicBoolean shutdown = new AtomicBoolean(false);
         Thread consumer =
-            new Thread(() -> {
-                try {
-                    while (!shutdown.get()) {
-                        System.out.println(ma.getAverage());
-                        // Thread.sleep(1);
-                    }
-                    System.out.println("consumer done --------------");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+                new Thread(
+                        () -> {
+                            try {
+                                while (!shutdown.get()) {
+                                    System.out.println(ma.getAverage());
+                                    // Thread.sleep(1);
+                                }
+                                System.out.println("consumer done --------------");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
 
         try {
             producerA.start();

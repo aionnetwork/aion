@@ -1,8 +1,8 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.tx.Transaction;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
 /**

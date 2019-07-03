@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.slf4j.Logger;
 
@@ -127,9 +127,7 @@ final class TaskImportTrieData implements Runnable {
      */
     private Map<ByteArrayWrapper, byte[]> filterImported(TrieNodeWrapper wrapper) {
         Map<ByteArrayWrapper, byte[]> nodes =
-                wrapper.getReferencedNodes()
-                        .entrySet()
-                        .stream()
+                wrapper.getReferencedNodes().entrySet().stream()
                         .filter(e -> !fastSyncMgr.containsExact(e.getKey(), e.getValue()))
                         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 

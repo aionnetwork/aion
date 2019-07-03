@@ -55,8 +55,6 @@ import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.vm.api.types.Hash256;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -65,6 +63,8 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionLogic;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IBloomFilter;
+import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Hash256;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -124,6 +124,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * configuration provider" to provide us different configurations.
      */
     ChainConfiguration chainConfiguration;
+
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
@@ -141,6 +142,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * a volatile block that is only published when all forking/appending behaviour is completed.
      */
     private volatile AionBlock pubBestBlock;
+
     private volatile BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifierImpl> bestKnownBlock = new AtomicReference<>();
@@ -333,46 +335,43 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will
-     * run the provided logic defined in this method. This work is to be applied after each
-     * transaction has been run.
+     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will run the
+     * provided logic defined in this method. This work is to be applied after each transaction has
+     * been run.
      *
      * <p>This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(IAionBlock)}
      * method.
      */
-    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock(Repository repository) {
-        PostExecutionLogic logic = (topRepository,
-                childRepository,
-                transactionSummary,
-                transaction) -> {
-            if (!transactionSummary.isRejected()) {
-                childRepository.flush();
+    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock(
+            Repository repository) {
+        PostExecutionLogic logic =
+                (topRepository, childRepository, transactionSummary, transaction) -> {
+                    if (!transactionSummary.isRejected()) {
+                        childRepository.flush();
 
-                AionTxReceipt receipt = transactionSummary.getReceipt();
-                receipt.setPostTxState(topRepository.getRoot());
-                receipt.setTransaction(transaction);
-            }
-        };
+                        AionTxReceipt receipt = transactionSummary.getReceipt();
+                        receipt.setPostTxState(topRepository.getRoot());
+                        receipt.setTransaction(transaction);
+                    }
+                };
 
         return new PostExecutionWork(repository, logic);
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will
-     * run the provided logic defined in this method. This work is to be applied after each
-     * transaction has been run.
+     * Returns a {@link PostExecutionWork} object whose {@code doWork()} method will run the
+     * provided logic defined in this method. This work is to be applied after each transaction has
+     * been run.
      *
      * <p>This "work" is specific to the {@link AionBlockchainImpl#applyBlock(IAionBlock)} method.
      */
     private static PostExecutionWork getPostExecutionWorkForApplyBlock(Repository repository) {
-        PostExecutionLogic logic = (topRepository,
-                childRepository,
-                transactionSummary,
-                transaction) -> {
-            childRepository.flush();
-            AionTxReceipt receipt = transactionSummary.getReceipt();
-            receipt.setPostTxState(topRepository.getRoot());
-        };
+        PostExecutionLogic logic =
+                (topRepository, childRepository, transactionSummary, transaction) -> {
+                    childRepository.flush();
+                    AionTxReceipt receipt = transactionSummary.getReceipt();
+                    receipt.setPostTxState(topRepository.getRoot());
+                };
 
         return new PostExecutionWork(repository, logic);
     }
@@ -1309,15 +1308,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 boolean incrementSenderNonce = true;
                 boolean checkBlockEnergyLimit = true;
 
-                List<AionTxExecSummary> executionSummaries = BulkExecutor.executeAllTransactionsInBlock(
-                    block,
-                    track,
-                    isLocalCall,
-                    incrementSenderNonce,
-                    fork040Enable,
-                    checkBlockEnergyLimit,
-                    LOGGER_VM,
-                    getPostExecutionWorkForGeneratePreBlock(repository));
+                List<AionTxExecSummary> executionSummaries =
+                        BulkExecutor.executeAllTransactionsInBlock(
+                                block,
+                                track,
+                                isLocalCall,
+                                incrementSenderNonce,
+                                fork040Enable,
+                                checkBlockEnergyLimit,
+                                LOGGER_VM,
+                                getPostExecutionWorkForGeneratePreBlock(repository));
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     if (!summary.isRejected()) {
@@ -1361,15 +1361,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 boolean incrementSenderNonce = true;
                 boolean checkBlockEnergyLimit = false;
 
-                List<AionTxExecSummary> executionSummaries = BulkExecutor.executeAllTransactionsInBlock(
-                    block,
-                    track,
-                    isLocalCall,
-                    incrementSenderNonce,
-                    fork040Enable,
-                    checkBlockEnergyLimit,
-                    LOGGER_VM,
-                    getPostExecutionWorkForApplyBlock(repository));
+                List<AionTxExecSummary> executionSummaries =
+                        BulkExecutor.executeAllTransactionsInBlock(
+                                block,
+                                track,
+                                isLocalCall,
+                                incrementSenderNonce,
+                                fork040Enable,
+                                checkBlockEnergyLimit,
+                                LOGGER_VM,
+                                getPostExecutionWorkForApplyBlock(repository));
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     receipts.add(summary.getReceipt());

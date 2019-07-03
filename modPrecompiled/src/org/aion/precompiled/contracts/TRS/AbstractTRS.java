@@ -6,18 +6,18 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.aion.types.AionAddress;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -26,7 +26,8 @@ import org.aion.util.types.AddressUtils;
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferably aion prefix too.
     static final AionAddress AION =
-            AddressUtils.wrapAddress("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AddressUtils.wrapAddress(
+                    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L; // temporary.
     private static final long TEST_DURATION = 1;
     private static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
@@ -477,7 +478,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param next The next entry.
      * @param isValid True only if the account is to be marked as invalid or deleted.
      */
-    void setListNext(AionAddress contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
+    void setListNext(
+            AionAddress contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
         if (!isValid) {
             // Mark account invalid and also make it ineligible for special withdrawal.
             track.addStorageRow(contract, toByteArrayWrapper(account), INVALID);
@@ -764,7 +766,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         }
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(
-                Arrays.copyOfRange(value.getData(), DataWordImpl.BYTES - Long.BYTES, DataWordImpl.BYTES));
+                Arrays.copyOfRange(
+                        value.getData(), DataWordImpl.BYTES - Long.BYTES, DataWordImpl.BYTES));
         buffer.flip();
         return buffer.getLong();
     }
@@ -964,7 +967,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account whose most recent period is to be updated.
      * @throws NullPointerException if account has no withdrawal stats.
      */
-    private void updateAccountLastWithdrawalPeriod(AionAddress contract, AionAddress account, int period) {
+    private void updateAccountLastWithdrawalPeriod(
+            AionAddress contract, AionAddress account, int period) {
         ByteArrayWrapper stats =
                 track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         if (stats == null) {
@@ -1068,7 +1072,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param currPeriod The current period the contract is in.
      * @return the number of withdrawal periods account is behind currPeriod by.
      */
-    private int computeNumberPeriodsBehind(AionAddress contract, AionAddress account, int currPeriod) {
+    private int computeNumberPeriodsBehind(
+            AionAddress contract, AionAddress account, int currPeriod) {
         return currPeriod - getAccountLastWithdrawalPeriod(contract, account);
     }
 
@@ -1354,7 +1359,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The TRS account to update.
      */
-    private void setExtraWithdrawalBalance(AionAddress contract, AionAddress account, BigInteger amount) {
+    private void setExtraWithdrawalBalance(
+            AionAddress contract, AionAddress account, BigInteger amount) {
         if (amount.compareTo(BigInteger.ONE) < 0) {
             return;
         }

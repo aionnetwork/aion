@@ -22,16 +22,16 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /** key store class. */
@@ -97,7 +97,8 @@ public class Keystore {
         }
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> exportAccount(Map<AionAddress, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> exportAccount(
+            Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
@@ -113,7 +114,8 @@ public class Keystore {
         return res;
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> backupAccount(Map<AionAddress, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> backupAccount(
+            Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }

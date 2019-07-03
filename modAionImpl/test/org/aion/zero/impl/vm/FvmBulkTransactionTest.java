@@ -8,11 +8,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -207,7 +207,7 @@ public class FvmBulkTransactionTest {
 
     private AionTransaction newTransaction(
             BigInteger nonce,
-        AionAddress sender,
+            AionAddress sender,
             AionAddress destination,
             BigInteger value,
             byte[] data,

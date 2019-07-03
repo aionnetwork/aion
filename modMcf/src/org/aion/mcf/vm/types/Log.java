@@ -2,12 +2,12 @@ package org.aion.mcf.vm.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.api.interfaces.IExecutionLog;

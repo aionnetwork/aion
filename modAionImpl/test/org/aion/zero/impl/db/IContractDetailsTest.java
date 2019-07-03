@@ -12,9 +12,9 @@ import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.api.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +50,8 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutSingleZeroValue() {
-        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper key =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
@@ -61,7 +62,8 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutDoubleZeroValue() {
-        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper key =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
@@ -72,7 +74,8 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutSingleZeroKey() {
-        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper value =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutSingleZeroKeyTest(cache1, value);
         doPutSingleZeroKeyTest(cache2, value);
 
@@ -83,7 +86,8 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutDoubleZeroKey() {
-        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper value =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutDoubleZeroKeyTest(cache1, value);
         doPutDoubleZeroKeyTest(cache2, value);
 
@@ -126,8 +130,10 @@ public class IContractDetailsTest {
     @Test
     public void testPutKeyValueThenOverwriteValueWithZero() {
         // single-single
-        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
-        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper key =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper value =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
@@ -315,8 +321,8 @@ public class IContractDetailsTest {
     // <------------------------------------------HELPERS------------------------------------------->
 
     /**
-     * Tests calling get() on a DataWordImpl key that is not in cache -- first on a zero-byte key and
-     * then on a random key.
+     * Tests calling get() on a DataWordImpl key that is not in cache -- first on a zero-byte key
+     * and then on a random key.
      */
     private void doGetNoSuchSingleKeyTest(ContractDetails cache) {
         checkGetNonExistentPairing(cache, DataWordImpl.ZERO.toWrapper());
@@ -482,7 +488,8 @@ public class IContractDetailsTest {
      */
     private void doSetZeroValueViaStorageTest(ContractDetails cache) {
         Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper key =
+                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         storage.put(key, null);
         cache.setStorage(storage);
         checkGetNonExistentPairing(cache, key);

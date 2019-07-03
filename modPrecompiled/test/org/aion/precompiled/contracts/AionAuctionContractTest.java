@@ -7,7 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import org.aion.types.AionAddress;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
+import org.aion.crypto.ISignature;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ContractDetails;
@@ -15,17 +18,13 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
-import org.aion.crypto.ISignature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryCache;
@@ -44,9 +43,11 @@ import org.junit.Test;
 public class AionAuctionContractTest {
     // use this addr for test to trigger test time periods
     private static final AionAddress AION =
-            AddressUtils.wrapAddress("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AddressUtils.wrapAddress(
+                    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private AionAddress domainAddress1 =
-            AddressUtils.wrapAddress("a011111111111111111111111111111101010101010101010101010101010101");
+            AddressUtils.wrapAddress(
+                    "a011111111111111111111111111111101010101010101010101010101010101");
     private String domainName1 = "bion.aion";
     private String domainName2 = "cion.aion.aion";
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
@@ -71,30 +72,30 @@ public class AionAuctionContractTest {
     public void setup() {
         // setup repo
         RepositoryConfig repoConfig =
-            new RepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
+                new RepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
 
-                @Override
-                public PruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
+                    @Override
+                    public PruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
 
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
+                    @Override
+                    public ContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
 
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
         repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
         defaultKey = ECKeyFac.inst().create();
@@ -243,8 +244,7 @@ public class AionAuctionContractTest {
         BigInteger amount6 = new BigInteger("2000");
 
         byte[] combined6 =
-                setupInputs(
-                        domainName2, new AionAddress(k.getAddress()), amount6.toByteArray(), k);
+                setupInputs(domainName2, new AionAddress(k.getAddress()), amount6.toByteArray(), k);
         AionAuctionContract aac6 = new AionAuctionContract(repo, AION, blockchain);
         aac6.execute(combined6, inputEnergy);
 
@@ -303,8 +303,7 @@ public class AionAuctionContractTest {
         aac.execute(combined, DEFAULT_INPUT_NRG);
 
         byte[] combined2 =
-                setupInputs(
-                        "aaaa.aion", new AionAddress(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs("aaaa.aion", new AionAddress(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined2, DEFAULT_INPUT_NRG);
 
@@ -318,8 +317,7 @@ public class AionAuctionContractTest {
         aac.execute(combined3, DEFAULT_INPUT_NRG);
 
         byte[] combined8 =
-                setupInputs(
-                        "aion.aion", new AionAddress(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs("aion.aion", new AionAddress(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac8 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined8, DEFAULT_INPUT_NRG);
 
@@ -577,7 +575,8 @@ public class AionAuctionContractTest {
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
-        Assert.assertArrayEquals("bidder account does not exist".getBytes(), result.getReturnData());
+        Assert.assertArrayEquals(
+                "bidder account does not exist".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -844,7 +843,8 @@ public class AionAuctionContractTest {
         assertEquals(32, result2.getReturnData().length); // check that an address was returned
     }
 
-    private byte[] setupInputs(String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
+    private byte[] setupInputs(
+            String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
         int domainLength = domainName.length();
         int amountLength = amount.length;
         int offset = 0;

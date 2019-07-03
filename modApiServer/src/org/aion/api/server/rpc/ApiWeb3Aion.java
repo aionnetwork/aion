@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
-import org.aion.types.AionAddress;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.types.ArgFltr;
@@ -42,17 +41,15 @@ import org.aion.api.server.types.NumericalValue;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.tx.Transaction;
-import org.aion.interfaces.tx.TxReceipt;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgApiNrg;
@@ -65,12 +62,15 @@ import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.p2p.INode;
-import org.aion.vm.api.types.Hash256;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.vm.api.types.Hash256;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -253,7 +253,8 @@ public class ApiWeb3Aion extends ApiAion {
                                     public MinerStatsView load(String key) { // no checked exception
                                         AionAddress miner = AddressUtils.wrapAddress(key);
                                         return new MinerStatsView(
-                                                        STRATUM_RECENT_BLK_COUNT, miner.toByteArray())
+                                                        STRATUM_RECENT_BLK_COUNT,
+                                                        miner.toByteArray())
                                                 .update();
                                     }
 

@@ -39,10 +39,14 @@ public class ArgFltr {
                 if (addressList == null) {
                     // let the address constructor do the validation on the string
                     // it will throw if user passes invalid address
-                    address.add((AddressUtils.wrapAddress(json.optString("address", null))).toByteArray());
+                    address.add(
+                            (AddressUtils.wrapAddress(json.optString("address", null)))
+                                    .toByteArray());
                 } else {
                     for (int i = 0; i < addressList.length(); i++) {
-                        address.add((AddressUtils.wrapAddress(addressList.optString(i, null))).toByteArray());
+                        address.add(
+                                (AddressUtils.wrapAddress(addressList.optString(i, null)))
+                                        .toByteArray());
                     }
                 }
             }

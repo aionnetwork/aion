@@ -7,20 +7,20 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.types.AionAddress;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -111,7 +111,12 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             long nrgPrice,
             AionAddress to) {
 
-        int len = 1 + (AionAddress.LENGTH * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
+        int len =
+                1
+                        + (AionAddress.LENGTH * 2)
+                        + (signatures.size() * SIG_LEN)
+                        + AMOUNT_LEN
+                        + Long.BYTES;
         byte[] input = new byte[len];
 
         int index = 0;
@@ -165,13 +170,21 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the transaction message that was signed.
      */
     public static byte[] constructMsg(
-            AionAddress walletId, BigInteger nonce, AionAddress to, BigInteger amount, long nrgPrice) {
+            AionAddress walletId,
+            BigInteger nonce,
+            AionAddress to,
+            BigInteger amount,
+            long nrgPrice) {
 
         byte[] nonceBytes = nonce.toByteArray();
         byte[] toBytes = to.toByteArray();
         byte[] amountBytes = amount.toByteArray();
         int len =
-                AionAddress.LENGTH + nonceBytes.length + toBytes.length + amountBytes.length + Long.BYTES;
+                AionAddress.LENGTH
+                        + nonceBytes.length
+                        + toBytes.length
+                        + amountBytes.length
+                        + Long.BYTES;
 
         byte[] msg = new byte[len];
         ByteBuffer buffer = ByteBuffer.allocate(len);
@@ -377,7 +390,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             if (result.contains(addr)) {
                 return null;
             }
-            if (track.getStorageValue(addr, new DataWordImpl(getMetaDataKey()).toWrapper()) != null) {
+            if (track.getStorageValue(addr, new DataWordImpl(getMetaDataKey()).toWrapper())
+                    != null) {
                 return null;
             }
             if (addr.equals(this.caller)) {
@@ -488,7 +502,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         System.arraycopy(data.array(), 0, metaValue, Long.BYTES, Long.BYTES);
 
         track.addStorageRow(
-                walletId, new DataWordImpl(metaKey).toWrapper(), new DataWordImpl(metaValue).toWrapper());
+                walletId,
+                new DataWordImpl(metaKey).toWrapper(),
+                new DataWordImpl(metaValue).toWrapper());
     }
 
     /**
@@ -517,7 +533,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             firstValue = new byte[DataWordImpl.BYTES];
             secondValue = new byte[DataWordImpl.BYTES];
             System.arraycopy(owner.toByteArray(), 0, firstValue, 0, DataWordImpl.BYTES);
-            System.arraycopy(owner.toByteArray(), DataWordImpl.BYTES, secondValue, 0, DataWordImpl.BYTES);
+            System.arraycopy(
+                    owner.toByteArray(), DataWordImpl.BYTES, secondValue, 0, DataWordImpl.BYTES);
 
             track.addStorageRow(
                     walletId,

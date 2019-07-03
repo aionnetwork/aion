@@ -1,6 +1,5 @@
 package org.aion.equihash;
 
-
 import static org.aion.util.bytes.ByteUtil.merge;
 import static org.aion.util.bytes.ByteUtil.toLEByteArray;
 import static org.aion.util.conversions.Hex.toHexString;
@@ -8,7 +7,6 @@ import static org.aion.util.conversions.Hex.toHexString;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.aion.crypto.HashUtil;
-import org.aion.interfaces.block.Solution;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.file.NativeLoader;

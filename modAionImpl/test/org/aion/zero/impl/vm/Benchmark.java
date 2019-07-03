@@ -32,17 +32,17 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ECKeyFac.ECKeyType;
 import org.aion.crypto.SignatureFac;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
@@ -167,7 +167,8 @@ public class Benchmark {
         return list;
     }
 
-    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs) throws VMException {
+    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs)
+            throws VMException {
         long t1 = System.currentTimeMillis();
         List<AionTxReceipt> list = new ArrayList<>();
 
@@ -212,7 +213,8 @@ public class Benchmark {
             AionTxExecSummary summary = executeTransaction(tx);
             assertFalse(summary.isFailed());
 
-            assertEquals(1, new DataWordImpl(summary.getReceipt().getTransactionOutput()).longValue());
+            assertEquals(
+                    1, new DataWordImpl(summary.getReceipt().getTransactionOutput()).longValue());
         }
     }
 
@@ -269,15 +271,9 @@ public class Benchmark {
                 5000000);
     }
 
-    private static AionTxExecSummary executeTransaction(AionTransaction transaction) throws VMException {
+    private static AionTxExecSummary executeTransaction(AionTransaction transaction)
+            throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            block,
-            transaction,
-            repo,
-            false,
-            true,
-            false,
-            false,
-            LOGGER);
+                block, transaction, repo, false, true, false, false, LOGGER);
     }
 }

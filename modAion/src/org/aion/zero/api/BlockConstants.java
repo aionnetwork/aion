@@ -1,10 +1,11 @@
 package org.aion.zero.api;
 
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+
 public class BlockConstants implements IBlockConstants {
 
     /** Number of bytes that is allowed in {@link AbstractBlockHeader#extraData} field */

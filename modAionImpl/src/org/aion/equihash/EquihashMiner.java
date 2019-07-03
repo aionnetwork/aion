@@ -1,6 +1,5 @@
 package org.aion.equihash;
 
-
 import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.ArrayList;

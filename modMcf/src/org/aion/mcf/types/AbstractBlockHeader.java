@@ -1,11 +1,9 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-
 import org.aion.interfaces.block.BlockHeader;
-import org.aion.types.AionAddress;
 import org.aion.log.AionLoggerFactory;
-import org.spongycastle.util.BigIntegers;
+import org.aion.types.AionAddress;
 
 /** Abstract BlockHeader. */
 public abstract class AbstractBlockHeader implements BlockHeader {
@@ -69,7 +67,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
      * exception of the genesis block, this must be 32 bytes or fewer
      */
     protected byte[] extraData;
-    
+
     /*
      * A long value containing energy consumed within this block
      */

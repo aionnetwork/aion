@@ -30,7 +30,6 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.interfaces.db.RepositoryCache;
@@ -38,6 +37,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
@@ -459,15 +459,17 @@ public class InternalTransactionTest {
         LongLivedAvm.destroy();
     }
 
-    private AionTxExecSummary executeTransaction(StandaloneBlockchain bc, BlockContext context, AionTransaction transaction) throws VMException {
+    private AionTxExecSummary executeTransaction(
+            StandaloneBlockchain bc, BlockContext context, AionTransaction transaction)
+            throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-            context.block,
-            transaction,
-            bc.getRepository().startTracking(),
-            false,
-            true,
-            false,
-            false,
-            LOGGER_VM);
+                context.block,
+                transaction,
+                bc.getRepository().startTracking(),
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM);
     }
 }

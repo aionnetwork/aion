@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.aion.types.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -26,9 +25,10 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.AionAddress;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.vm.api.types.Hash256;
-import org.aion.util.types.AddressUtils;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -350,7 +350,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
-                genesisBuilder.addPreminedAccount(new AionAddress(acc.getKey().getData()), acc.getValue());
+                genesisBuilder.addPreminedAccount(
+                        new AionAddress(acc.getKey().getData()), acc.getValue());
             }
 
             AionGenesis genesis;

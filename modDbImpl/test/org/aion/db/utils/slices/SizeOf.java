@@ -1,4 +1,3 @@
-
 package org.aion.db.utils.slices;
 
 public final class SizeOf {

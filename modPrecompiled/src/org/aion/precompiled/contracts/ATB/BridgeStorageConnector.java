@@ -3,16 +3,16 @@ package org.aion.precompiled.contracts.ATB;
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
-import org.aion.types.AionAddress;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**
  * Storage layout mapping as the following:
