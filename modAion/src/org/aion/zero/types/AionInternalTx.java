@@ -8,12 +8,12 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 /** aion internal transaction class. */
 public class AionInternalTx extends AionTransaction implements InternalTransactionInterface {

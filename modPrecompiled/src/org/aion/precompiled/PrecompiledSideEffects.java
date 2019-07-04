@@ -27,10 +27,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.aion.mcf.types.IExecutionLog;
+import org.aion.mcf.types.InternalTransactionInterface;
+import org.aion.precompiled.type.TransactionSideEffects;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
-import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 public class PrecompiledSideEffects implements TransactionSideEffects {
 

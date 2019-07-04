@@ -370,6 +370,7 @@ task ciBuild {
     dependsOn checkCommitFormat
     dependsOn build
     def ciModules = [
+            'modBase',
             'aion_fastvm',
             'modAion',
             'modAionImpl',

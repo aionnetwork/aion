@@ -10,6 +10,7 @@ module aion.zero {
     requires com.google.common;
     requires aion.types;
     requires core;
+    requires aion.base;
 
     exports org.aion.zero.api;
     exports org.aion.zero.types;

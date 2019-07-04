@@ -2,9 +2,9 @@ package org.aion.precompiled.type;
 
 import java.util.Arrays;
 import java.util.List;
+import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 public final class PrecompiledTransactionContext {
 

@@ -1,5 +1,6 @@
 rootProject.name = 'aion'
 include 'modAion', 'modAionImpl',
+    'modBase',
     'modUtil',
     'modCrypto',
     'modLogger',

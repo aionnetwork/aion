@@ -1,6 +1,7 @@
 package org.aion.precompiled;
 
 import org.aion.mcf.config.CfgFork;
+import org.aion.mcf.types.KernelInterface;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
@@ -11,7 +12,6 @@ import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.interfaces.KernelInterface;
 
 /** A factory class that produces pre-compiled contract instances. */
 public class ContractFactory {

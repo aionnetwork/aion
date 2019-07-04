@@ -1,7 +1,7 @@
 package org.aion.mcf.blockchain;
 
 import java.util.List;
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /**

@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;

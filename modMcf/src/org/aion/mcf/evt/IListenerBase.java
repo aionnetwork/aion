@@ -1,6 +1,6 @@
 package org.aion.mcf.evt;
 
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.types.AbstractBlockSummary;

@@ -1,9 +1,9 @@
 package org.aion.mcf.vm.types;
 
 import java.util.Arrays;
+import org.aion.mcf.types.IBloomFilter;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.interfaces.IBloomFilter;
 
 /** Utility class for creating/operating bloom. */
 public class Bloom implements IBloomFilter {

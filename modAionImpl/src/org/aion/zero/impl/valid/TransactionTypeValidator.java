@@ -2,7 +2,7 @@ package org.aion.zero.impl.valid;
 
 import static org.aion.mcf.valid.TransactionTypeRule.isValidTransactionType;
 
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.zero.types.AionTransaction;
 
 /**

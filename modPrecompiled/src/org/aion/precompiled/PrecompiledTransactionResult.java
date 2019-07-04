@@ -4,12 +4,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
+import org.aion.mcf.types.InternalTransactionInterface;
+import org.aion.mcf.types.KernelInterface;
+import org.aion.mcf.types.ResultCode;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
-import org.aion.vm.api.interfaces.KernelInterface;
-import org.aion.vm.api.interfaces.ResultCode;
 
 public class PrecompiledTransactionResult {
 

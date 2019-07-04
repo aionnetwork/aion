@@ -13,6 +13,7 @@ dependencies {
     compile project(':modLogger')
     compile project(':modRlp')
     compile project(':modCrypto')
+    compile project(':modBase')
 
     compile project(':modP2p')
     compile project(':modDbImpl')

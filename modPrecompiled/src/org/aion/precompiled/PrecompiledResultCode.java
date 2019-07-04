@@ -2,7 +2,7 @@ package org.aion.precompiled;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.mcf.types.ResultCode;
 
 /** An enumeration representing the execution status of a transaction. */
 public enum PrecompiledResultCode implements ResultCode {

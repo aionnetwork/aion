@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.aion.mcf.types.AbstractTxReceipt;
+import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
@@ -16,7 +17,6 @@ import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.interfaces.IExecutionLog;
 
 /** aion transaction receipt class. */
 public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {

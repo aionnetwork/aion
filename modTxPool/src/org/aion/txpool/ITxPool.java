@@ -3,7 +3,7 @@ package org.aion.txpool;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.types.AionAddress;
 
 /**

@@ -2,5 +2,6 @@ ext.moduleName = 'aion.txpool'
 
 dependencies {
     compile project(':aion_vm_api')
+    compile project(':modBase')
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
 }

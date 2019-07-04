@@ -3,7 +3,7 @@ package org.aion.mcf.core;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;

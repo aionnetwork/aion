@@ -3,7 +3,7 @@ package org.aion.mcf.valid;
 import static org.aion.mcf.tx.TransactionTypes.ALL;
 import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
 
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.mcf.tx.TransactionTypes;
 
 /**

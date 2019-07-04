@@ -7,7 +7,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
-import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.mcf.types.IExecutionLog;
 import org.junit.Test;
 
 public class AionTxReceiptTest {

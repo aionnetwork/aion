@@ -4,8 +4,8 @@ import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
 
 import java.util.Iterator;
 import java.util.Optional;
+import org.aion.base.Transaction;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;

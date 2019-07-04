@@ -1,7 +1,7 @@
 package org.aion.api.server.types;
 
 import org.aion.api.server.types.Fltr.Type;
-import org.aion.interfaces.tx.Transaction;
+import org.aion.base.Transaction;
 import org.aion.util.string.StringUtils;
 
 public class EvtTx extends Evt {

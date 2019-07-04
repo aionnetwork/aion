@@ -1,0 +1,5 @@
+ext.moduleName = 'aion.base'
+
+dependencies {
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+}

@@ -22,6 +22,7 @@ module aion.apiserver {
     requires aion.util;
     requires libnzmq;
     requires aion.types;
+    requires aion.base;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;

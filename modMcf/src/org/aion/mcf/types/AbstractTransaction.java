@@ -1,8 +1,8 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
+import org.aion.base.Transaction;
 import org.aion.crypto.ISignature;
-import org.aion.interfaces.tx.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.tx.TransactionTypes;

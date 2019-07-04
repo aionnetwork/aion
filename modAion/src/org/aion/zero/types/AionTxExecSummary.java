@@ -16,18 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.aion.interfaces.tx.TxExecSummary;
-import org.aion.interfaces.tx.TxReceipt;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
+import org.aion.mcf.tx.TxExecSummary;
+import org.aion.mcf.tx.TxReceipt;
+import org.aion.mcf.types.IExecutionLog;
+import org.aion.mcf.types.InternalTransactionInterface;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 public class AionTxExecSummary implements TxExecSummary {
 
