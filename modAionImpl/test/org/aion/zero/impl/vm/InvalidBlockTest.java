@@ -10,6 +10,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -32,11 +33,13 @@ public class InvalidBlockTest {
     @BeforeClass
     public static void setupAvm() {
         LongLivedAvm.createAndStartLongLivedAvm();
+        TransactionTypeRule.allowAVMContractTransaction();
     }
 
     @AfterClass
     public static void tearDownAvm() {
         LongLivedAvm.destroy();
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @Before
@@ -71,7 +74,10 @@ public class InvalidBlockTest {
         Pair<ImportResult, AionBlockSummary> res =
                 this.blockchain.tryToConnectAndFetchSummary(block);
 
-        assertEquals(ImportResult.INVALID_BLOCK, res.getLeft());
+        // A correct block is produced instead of an invalid one. But the correct block only
+        // contains the valid transactions, not all of them.
+        assertEquals(ImportResult.IMPORTED_BEST, res.getLeft());
+        assertEquals(2, res.getRight().getReceipts().size());
     }
 
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {

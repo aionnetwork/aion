@@ -111,9 +111,20 @@ public final class FvmTransactionExecutor {
 
             // Update the repository by committing any changes in the Fvm.
             KernelInterface kernelFromFvm = result.getKernelInterface();
-            kernelFromFvm.commitTo(
-                    newKernelInterface(
-                            repository, block, allowNonceIncrement, isLocalCall, fork040enabled));
+
+            // Note that the vm may have returned SUCCESS (and so there may be state changes
+            // here to
+            // commit) but the block limit check turned this to REJECTED. Now we do not want the
+            // changes.
+            if (!result.getResultCode().isRejected()) {
+                kernelFromFvm.commitTo(
+                        newKernelInterface(
+                                repository,
+                                block,
+                                allowNonceIncrement,
+                                isLocalCall,
+                                fork040enabled));
+            }
 
             // For non-rejected non-local transactions, make some final repository updates.
             if (!isLocalCall && !summary.isRejected()) {

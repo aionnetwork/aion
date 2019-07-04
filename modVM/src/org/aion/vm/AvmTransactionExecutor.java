@@ -109,8 +109,15 @@ public final class AvmTransactionExecutor {
 
                 // Update the repository by committing any changes in the Avm.
                 IExternalState externalState = resultAsFuture.getExternalState();
-                externalState.commitTo(
-                        newExternalState(repository, block, allowNonceIncrement, isLocalCall));
+
+                // Note that the vm may have returned SUCCESS (and so there may be state changes
+                // here to
+                // commit) but the block limit check turned this to REJECTED. Now we do not want the
+                // changes.
+                if (!result.transactionStatus.isRejected()) {
+                    externalState.commitTo(
+                            newExternalState(repository, block, allowNonceIncrement, isLocalCall));
+                }
 
                 // Do any post execution work if any is specified.
                 if (postExecutionWork != null) {

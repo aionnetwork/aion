@@ -25,6 +25,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -35,6 +36,11 @@ public class AlternatingVmBlockTest {
     @BeforeClass
     public static void setupAvm() {
         LongLivedAvm.createAndStartLongLivedAvm();
+        TransactionTypeRule.allowAVMContractTransaction();
+    }
+
+    @Before
+    public void setup() {
         StandaloneBlockchain.Bundle bundle =
                 new StandaloneBlockchain.Builder()
                         .withDefaultAccounts()
@@ -43,12 +49,12 @@ public class AlternatingVmBlockTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        TransactionTypeRule.allowAVMContractTransaction();
     }
 
     @AfterClass
     public static void tearDownAvm() {
         LongLivedAvm.destroy();
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     /**
@@ -104,7 +110,11 @@ public class AlternatingVmBlockTest {
         Pair<ImportResult, AionBlockSummary> connectResult =
                 blockchain.tryToConnectAndFetchSummary(block);
 
-        assertEquals(ImportResult.INVALID_BLOCK, connectResult.getLeft());
+        // A correct block is produced but it does not contain all of the transactions. The last
+        // transaction is rejected because
+        // it would cause the block energy limit to be exceeded.
+        assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+        assertEquals(4, connectResult.getRight().getReceipts().size());
     }
 
     /**
@@ -126,7 +136,13 @@ public class AlternatingVmBlockTest {
         Pair<ImportResult, AionBlockSummary> connectResult =
                 blockchain.tryToConnectAndFetchSummary(block);
 
-        assertEquals(ImportResult.INVALID_BLOCK, connectResult.getLeft());
+        // A correct block is produced but it does not contain all of the transactions. The second
+        // last transaction is rejected
+        // because it would cause the block energy limit to be exceeded, and the last transaction
+        // now has an invalid nonce since
+        // the previous transaction was rejected, so neither of these are included in the block.
+        assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+        assertEquals(4, connectResult.getRight().getReceipts().size());
     }
 
     private List<AionTransaction> makeAlternatingAvmFvmContractCreateTransactions(
