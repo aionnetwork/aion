@@ -14,7 +14,6 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':aion_vm_api')
     //compile 'network.aion:util4j:0.4.0'
     //compile 'network.aion:log4j:0.4.0'
     compile project(':modUtil')

@@ -18,7 +18,6 @@ module aion.apiserver {
     requires com.github.benmanes.caffeine;
     requires com.google.common;
     requires jdk.unsupported;
-    requires aion.vm.api;
     requires aion.util;
     requires libnzmq;
     requires aion.types;

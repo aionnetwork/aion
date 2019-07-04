@@ -23,7 +23,6 @@ module aion.zero.impl {
     requires commons.lang3;
     requires commons.collections4;
     requires org.json;
-    requires aion.vm.api;
     requires java.management;
     requires jdk.management;
     requires java.xml;

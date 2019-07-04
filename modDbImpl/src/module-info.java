@@ -2,7 +2,6 @@ module aion.db.impl {
     requires slf4j.api;
     requires aion.log;
     requires aion.util;
-    requires aion.vm.api;
     requires rocksdbjni;
     requires h2.mvstore;
     requires com.google.common;

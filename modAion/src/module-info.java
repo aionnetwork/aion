@@ -1,5 +1,4 @@
 module aion.zero {
-    requires aion.vm.api;
     requires aion.util;
     requires aion.rlp;
     requires aion.crypto;

@@ -9,7 +9,6 @@ module aion.mcf {
     requires aion.p2p;
     requires com.google.common;
     requires commons.collections4;
-    requires aion.vm.api;
     requires core;
     requires aion.types;
     requires aion.base;
