@@ -22,7 +22,7 @@ import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**

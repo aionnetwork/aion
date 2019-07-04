@@ -14,7 +14,7 @@ import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;

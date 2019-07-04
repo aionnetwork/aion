@@ -1,6 +1,6 @@
 package org.aion.mcf.db;
 
-import static org.aion.vm.api.types.ByteArrayWrapper.wrap;
+import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -10,7 +10,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /** Detail data storage , */
 public class DetailsDataStore<

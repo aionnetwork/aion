@@ -17,7 +17,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods

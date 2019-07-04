@@ -6,7 +6,7 @@ import java.util.Arrays;
 import org.aion.mcf.vm.DataWord;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.

@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Test;
 
 /** Test suite for {@link org.aion.zero.impl.db.AionBlockStore.BlockInfo} serialization */

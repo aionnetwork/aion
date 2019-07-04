@@ -1,9 +1,9 @@
 package org.aion.api.server.rpc;
 
 import static java.util.stream.Collectors.toList;
-import static org.aion.util.HexConvert.hexStringToBytes;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.util.types.HexConvert.hexStringToBytes;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -69,8 +69,8 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
-import org.aion.vm.api.types.Hash256;
+import org.aion.util.types.ByteArrayWrapper;
+import org.aion.util.types.Hash256;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;

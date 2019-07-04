@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 public interface ContractDetails {
 

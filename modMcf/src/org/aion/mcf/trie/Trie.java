@@ -3,7 +3,7 @@ package org.aion.mcf.trie;
 import java.util.Map;
 import java.util.Set;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Trie interface for the main data structure in Ethereum which is used to store both the account

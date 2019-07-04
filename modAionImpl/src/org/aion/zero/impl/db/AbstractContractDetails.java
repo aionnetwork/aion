@@ -12,7 +12,7 @@ import java.util.Map;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /** Abstract contract details. */
 public abstract class AbstractContractDetails implements ContractDetails {

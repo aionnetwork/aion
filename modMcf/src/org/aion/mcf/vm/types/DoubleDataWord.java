@@ -6,7 +6,7 @@ import java.util.Arrays;
 import org.aion.mcf.vm.DataWord;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * DoubleDataWord is double the size of the basic unit data (DataWordImpl) used by the VM. A

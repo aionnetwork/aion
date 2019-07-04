@@ -14,7 +14,7 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.types.AionBlock;

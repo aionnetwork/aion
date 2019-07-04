@@ -3,7 +3,7 @@ package org.aion.mcf.db;
 import java.math.BigInteger;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Repository interface for individual account additions and updates.

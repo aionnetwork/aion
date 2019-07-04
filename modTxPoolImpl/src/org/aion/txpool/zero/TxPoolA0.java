@@ -24,7 +24,7 @@ import org.aion.txpool.common.TxDependList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> implements ITxPool<TX> {

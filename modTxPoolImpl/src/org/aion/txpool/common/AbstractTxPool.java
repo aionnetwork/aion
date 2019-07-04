@@ -23,7 +23,7 @@ import org.aion.log.LogEnum;
 import org.aion.txpool.Constant;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 public abstract class AbstractTxPool<TX extends Transaction> {

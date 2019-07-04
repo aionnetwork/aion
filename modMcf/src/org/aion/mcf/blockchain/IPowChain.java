@@ -2,7 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.vm.api.types.Hash256;
+import org.aion.util.types.Hash256;
 
 /**
  * proof of work chain interface.

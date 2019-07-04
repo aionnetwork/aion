@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.slf4j.Logger;
 

@@ -18,7 +18,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

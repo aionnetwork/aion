@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.PersistenceMethod;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 

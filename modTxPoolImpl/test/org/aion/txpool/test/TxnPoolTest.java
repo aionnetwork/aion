@@ -19,7 +19,7 @@ import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;

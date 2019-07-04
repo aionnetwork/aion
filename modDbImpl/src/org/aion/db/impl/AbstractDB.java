@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**

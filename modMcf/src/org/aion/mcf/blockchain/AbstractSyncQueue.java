@@ -2,7 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.util.*;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 /** Abstract SyncQueue Class */
 public abstract class AbstractSyncQueue<

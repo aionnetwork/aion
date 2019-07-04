@@ -10,7 +10,7 @@ import org.aion.mcf.types.KernelInterface;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.DataWord;
 import org.aion.types.AionAddress;
-import org.aion.vm.api.types.ByteArrayWrapper;
+import org.aion.util.types.ByteArrayWrapper;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
