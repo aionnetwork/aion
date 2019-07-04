@@ -19,7 +19,6 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
-import org.aion.interfaces.block.Solution;
 import org.aion.mcf.mine.AbstractMineRunner;
 import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;

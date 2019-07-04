@@ -1,6 +1,5 @@
 package org.aion.mcf.blockchain;
 
-import org.aion.interfaces.block.Block;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;

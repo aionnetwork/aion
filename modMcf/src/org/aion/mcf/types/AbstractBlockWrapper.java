@@ -4,7 +4,7 @@ import static org.aion.util.time.TimeUtils.secondsToMillis;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.interfaces.block.Block;
+import org.aion.mcf.blockchain.Block;
 import org.aion.rlp.RLP;
 
 /** AbstractBlockWrapper */

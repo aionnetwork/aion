@@ -2,7 +2,6 @@ package org.aion.mcf.blockchain;
 
 import java.util.Collection;
 import java.util.List;
-import org.aion.interfaces.block.Block;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
 /**

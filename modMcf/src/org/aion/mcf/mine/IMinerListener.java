@@ -1,6 +1,6 @@
 package org.aion.mcf.mine;
 
-import org.aion.interfaces.block.Block;
+import org.aion.mcf.blockchain.Block;
 
 /**
  * Miner Listener interface.

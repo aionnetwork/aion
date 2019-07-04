@@ -1,6 +1,6 @@
 package org.aion.zero.impl.sync.msg;
 
-import org.aion.interfaces.block.Block;
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;

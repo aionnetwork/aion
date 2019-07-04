@@ -1,8 +1,8 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.interfaces.block.BlockHeader;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.types.AionAddress;
 
 /** Abstract BlockHeader. */

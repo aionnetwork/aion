@@ -1,6 +1,5 @@
 package org.aion.mcf.blockchain;
 
-import org.aion.interfaces.block.Block;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;

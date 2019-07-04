@@ -1,9 +1,9 @@
 package org.aion.mcf.evt;
 
 import java.util.List;
-import org.aion.interfaces.block.Block;
 import org.aion.interfaces.tx.Transaction;
 import org.aion.interfaces.tx.TxExecSummary;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 

@@ -1,7 +1,6 @@
 package org.aion.mcf.blockchain;
 
 import java.util.*;
-import org.aion.interfaces.block.Block;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 import org.aion.vm.api.types.ByteArrayWrapper;
 

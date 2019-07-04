@@ -1,7 +1,7 @@
 package org.aion.api.server.nrgprice;
 
-import org.aion.interfaces.block.Block;
 import org.aion.interfaces.tx.Transaction;
+import org.aion.mcf.blockchain.Block;
 
 public abstract class NrgPriceAdvisor<BLK extends Block, TXN extends Transaction>
         implements INrgPriceAdvisor<BLK, TXN> {

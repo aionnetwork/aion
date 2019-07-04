@@ -1,8 +1,8 @@
 package org.aion.mcf.mine;
 
-import org.aion.interfaces.block.Block;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.slf4j.Logger;
 
 /** Abstract Miner. */

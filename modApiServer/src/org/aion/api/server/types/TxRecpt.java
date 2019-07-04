@@ -2,8 +2,8 @@ package org.aion.api.server.types;
 
 import static org.aion.util.string.StringUtils.toJsonHex;
 
-import org.aion.interfaces.block.Block;
-import org.aion.interfaces.block.BlockHeader;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;

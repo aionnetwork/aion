@@ -1,6 +1,5 @@
 package org.aion.equihash;
 
-import org.aion.interfaces.block.Solution;
 import org.aion.zero.types.IAionBlock;
 
 /**

@@ -1,7 +1,7 @@
 package org.aion.mcf.mine;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.aion.interfaces.block.Block;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 /**
