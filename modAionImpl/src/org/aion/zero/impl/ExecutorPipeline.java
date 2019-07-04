@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.interfaces.functional.Functional;
+import org.aion.mcf.types.Functional;
 
 /**
  * Queues execution tasks into a single pipeline where some tasks can be executed in parallel but
