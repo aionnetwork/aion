@@ -17,7 +17,6 @@ import org.aion.db.impl.mockdb.MockDBDriver;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.junit.Test;
 
 public class DatabaseFactoryTest {

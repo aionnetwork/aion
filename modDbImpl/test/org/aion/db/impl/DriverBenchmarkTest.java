@@ -29,8 +29,6 @@ import org.aion.db.utils.repeat.RepeatRule;
 import org.aion.db.utils.slices.Slice;
 import org.aion.db.utils.slices.SliceOutput;
 import org.aion.db.utils.slices.Slices;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.db.PersistenceMethod;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

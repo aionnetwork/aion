@@ -3,10 +3,10 @@ package org.aion.zero.impl;
 import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.PruneConfig;
-import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
+import org.aion.mcf.db.ContractDetails;
+import org.aion.mcf.db.PruneConfig;
+import org.aion.mcf.db.RepositoryConfig;
 import org.aion.zero.impl.db.ContractDetailsAion;
 
 public class MockRepositoryConfig implements RepositoryConfig {

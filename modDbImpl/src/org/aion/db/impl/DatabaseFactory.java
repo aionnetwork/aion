@@ -13,7 +13,6 @@ import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;

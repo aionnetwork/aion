@@ -2,8 +2,8 @@ package org.aion.zero.impl.core;
 
 import java.util.List;
 import java.util.Map;
-import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.IBlockchain;
+import org.aion.mcf.db.Repository;
 import org.aion.vm.api.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;

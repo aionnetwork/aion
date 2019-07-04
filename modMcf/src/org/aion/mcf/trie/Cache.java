@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.crypto.HashUtil;
-import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.Value;

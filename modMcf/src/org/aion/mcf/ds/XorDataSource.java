@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.types.ByteArrayWrapper;
 

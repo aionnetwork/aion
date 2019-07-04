@@ -2,8 +2,8 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.Transaction;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
 public interface IPendingState<TX extends Transaction> {

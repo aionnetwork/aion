@@ -8,8 +8,8 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.util.TestResources;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.AionBlock;

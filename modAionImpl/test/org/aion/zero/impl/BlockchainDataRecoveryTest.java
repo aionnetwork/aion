@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.aion.crypto.ECKey;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;

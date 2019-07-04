@@ -2,7 +2,7 @@ package org.aion.mcf.trie;
 
 import java.util.Map;
 import java.util.Set;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**

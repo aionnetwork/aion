@@ -20,8 +20,6 @@ import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.utils.FileUtils;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;

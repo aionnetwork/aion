@@ -2,8 +2,8 @@ package org.aion.zero.impl;
 
 import java.math.BigInteger;
 import java.util.Map;
-import org.aion.interfaces.db.InternalVmType;
-import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.AionAddress;

@@ -9,10 +9,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.db.PersistenceMethod;
+import org.aion.db.impl.PersistenceMethod;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.slf4j.Logger;
 

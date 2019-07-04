@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
 import java.math.BigInteger;
-import org.aion.interfaces.db.InternalVmType;
+import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;

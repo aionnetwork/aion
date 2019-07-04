@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.DetailsProvider;
+import org.aion.mcf.db.ContractDetails;
+import org.aion.mcf.db.DetailsProvider;
 
 /**
  * Contract details provider for Aion.

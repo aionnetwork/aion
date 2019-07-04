@@ -2,9 +2,9 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.interfaces.db.Repository;
 import org.aion.mcf.blockchain.IChainInstancePOW;
 import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.query.QueryInterface;

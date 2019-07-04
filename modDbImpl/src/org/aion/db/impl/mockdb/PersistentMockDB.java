@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.aion.interfaces.db.PersistenceMethod;
+import org.aion.db.impl.PersistenceMethod;
 import org.aion.vm.api.types.ByteArrayWrapper;
 
 /**

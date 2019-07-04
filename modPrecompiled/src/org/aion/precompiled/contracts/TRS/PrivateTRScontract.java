@@ -1,8 +1,8 @@
 package org.aion.precompiled.contracts.TRS;
 
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.types.AionAddress;

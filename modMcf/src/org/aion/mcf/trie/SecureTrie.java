@@ -3,7 +3,7 @@ package org.aion.mcf.trie;
 import static org.aion.crypto.HashUtil.h256;
 
 import java.util.Arrays;
-import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.db.impl.ByteArrayKeyValueStore;
 
 public class SecureTrie extends TrieImpl implements Trie {
 

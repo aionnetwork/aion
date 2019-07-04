@@ -2,11 +2,11 @@ package org.aion.mcf.vm.types;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
-import org.aion.interfaces.db.InternalVmType;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.types.AionAddress;
 import org.aion.vm.api.interfaces.KernelInterface;

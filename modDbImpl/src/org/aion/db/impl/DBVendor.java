@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
-import org.aion.interfaces.db.PersistenceMethod;
 
 // @ThreadSafe
 public enum DBVendor {

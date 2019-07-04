@@ -1,8 +1,8 @@
 package org.aion.precompiled.type;
 
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.db.RepositoryCache;
 
 /**
  * A pre-compiled contract that is capable of modifying state.

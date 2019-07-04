@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.util.Properties;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.junit.Test;
 
 public class H2MVMapDriverTest {
