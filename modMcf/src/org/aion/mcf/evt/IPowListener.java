@@ -2,7 +2,6 @@ package org.aion.mcf.evt;
 
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.types.AbstractBlockSummary;
@@ -12,7 +11,6 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * POW listener interface.
  *
  * @param <BLK>
- * @param <TX>
  * @param <TXR>
  * @param <BS>
  */

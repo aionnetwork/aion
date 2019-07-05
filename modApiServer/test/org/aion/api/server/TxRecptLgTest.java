@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
@@ -19,7 +20,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 

@@ -11,7 +11,6 @@ import org.aion.mcf.vm.types.LogUtility;
 import org.aion.types.Log;
 import org.aion.util.types.Bytesable;
 
-
 public abstract class AbstractTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
 
     protected AionTransaction transaction;

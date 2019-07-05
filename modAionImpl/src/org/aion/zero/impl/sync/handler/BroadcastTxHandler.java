@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -16,7 +17,6 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 
 /** @author chris handler for new transaction broadcasted from network */

@@ -3,8 +3,8 @@ package org.aion.zero.impl.types;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.types.AionAddress;
 import org.aion.base.AionTransaction;
+import org.aion.types.AionAddress;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 

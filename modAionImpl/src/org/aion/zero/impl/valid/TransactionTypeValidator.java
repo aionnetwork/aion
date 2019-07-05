@@ -2,7 +2,6 @@ package org.aion.zero.impl.valid;
 
 import static org.aion.mcf.valid.TransactionTypeRule.isValidTransactionType;
 
-import org.aion.base.Transaction;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 
@@ -20,8 +19,8 @@ public class TransactionTypeValidator {
      * <ol>
      *   <li>Any transaction type is allowed before the 0.4 hard fork which enables the use of the
      *       AVM.
-     *   <li>Only the transaction types listed in {@link TransactionTypes#ALL} are
-     *       valid after the fork.
+     *   <li>Only the transaction types listed in {@link TransactionTypes#ALL} are valid after the
+     *       fork.
      *   <li>Contract deployments must have the transaction types from the set {@link
      *       TransactionTypes#ALL}.
      *   <li>Transactions that are not contract deployments must have the transaction type {@link
@@ -32,7 +31,7 @@ public class TransactionTypeValidator {
      * @return {@code true} is the transaction satisfies the rule described above; {@code false}
      *     otherwise
      * @implNote Delegates the check to {@link
-     *     org.aion.mcf.valid.TransactionTypeRule#isValidTransactionType(Transaction)}.
+     *     org.aion.mcf.valid.TransactionTypeRule#isValidTransactionType(AionTransaction)}.
      */
     public static boolean isValid(AionTransaction transaction) {
         /*

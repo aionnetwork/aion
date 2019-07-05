@@ -1,14 +1,14 @@
 package org.aion.api.server.types;
 
 import org.aion.api.server.types.Fltr.Type;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.util.string.StringUtils;
 
 public class EvtTx extends Evt {
 
-    private final Transaction tx;
+    private final AionTransaction tx;
 
-    public EvtTx(Transaction tx) {
+    public EvtTx(AionTransaction tx) {
         this.tx = tx;
     }
 

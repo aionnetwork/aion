@@ -5,13 +5,13 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.util.Collections;
 import java.util.Map;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.LogEnum;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
-import org.aion.base.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -2,13 +2,10 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
-/**
- * Abstract Pending Transaction Class.
- */
+/** Abstract Pending Transaction Class. */
 public abstract class AbstractPendingTx {
 
     protected AionTransaction transaction;

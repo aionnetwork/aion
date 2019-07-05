@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.ITxPool;
@@ -20,7 +20,6 @@ import org.aion.txpool.zero.TxPoolA0;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.base.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -118,8 +117,7 @@ public class TxnPoolTest {
         List<AionTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
-            AionTransaction tx =
-                    genTransaction(BigInteger.valueOf(i).toByteArray());
+            AionTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray());
             tx.setNrgConsume(5000L);
             tx.sign(key.get(0));
             txl.add(tx);
@@ -149,8 +147,7 @@ public class TxnPoolTest {
         List<AionTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
-            AionTransaction tx =
-                    genTransaction(BigInteger.valueOf(i).toByteArray());
+            AionTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray());
             tx.setNrgConsume(5000L);
             tx.sign(key.get(0));
             txl.add(tx);
@@ -265,8 +262,7 @@ public class TxnPoolTest {
         List<AionTransaction> txl = new ArrayList<>();
         int cnt = 26;
         for (int i = 0; i < cnt; i++) {
-            AionTransaction txe =
-                    genTransaction(BigInteger.valueOf(i).toByteArray());
+            AionTransaction txe = genTransaction(BigInteger.valueOf(i).toByteArray());
             txe.setNrgConsume(5000L);
             txe.sign(key.get(0));
             txl.add(txe);
@@ -305,7 +301,7 @@ public class TxnPoolTest {
         List<AionTransaction> txl = tp.snapshot();
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -335,7 +331,7 @@ public class TxnPoolTest {
         List<AionTransaction> txl = tp.snapshot();
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -368,7 +364,7 @@ public class TxnPoolTest {
         assertTrue(tp.snapshotAll().size() == txl.size());
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -401,7 +397,7 @@ public class TxnPoolTest {
         assertTrue(tp.snapshotAll().size() == txl.size());
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -435,7 +431,7 @@ public class TxnPoolTest {
         assertTrue(tp.snapshotAll().size() == txl.size());
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -469,7 +465,7 @@ public class TxnPoolTest {
         assertTrue(tp.snapshotAll().size() == txl.size());
 
         long nonce = 0;
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
         }
     }
@@ -482,7 +478,7 @@ public class TxnPoolTest {
         TxPoolA0 tp = new TxPoolA0(config);
 
         List<AionTransaction> txnl = new ArrayList<>();
-        Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
+        Map<ByteArrayWrapper, AionTransaction> txMap = new HashMap<>();
 
         int cnt = 25;
         for (int i = 0; i < cnt; i++) {
@@ -517,7 +513,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue(txMap.containsKey(ByteArrayWrapper.wrap(tx.getTransactionHash())));
             Assert.assertEquals(txMap.get(ByteArrayWrapper.wrap(tx.getTransactionHash())), tx);
         }
@@ -531,7 +527,7 @@ public class TxnPoolTest {
         TxPoolA0 tp = new TxPoolA0(config);
 
         List<AionTransaction> txnl = new ArrayList<>();
-        Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
+        Map<ByteArrayWrapper, AionTransaction> txMap = new HashMap<>();
         int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
@@ -585,7 +581,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue(txMap.containsKey(ByteArrayWrapper.wrap(tx.getTransactionHash())));
             Assert.assertEquals(txMap.get(ByteArrayWrapper.wrap(tx.getTransactionHash())), tx);
         }
@@ -599,7 +595,7 @@ public class TxnPoolTest {
         TxPoolA0 tp = new TxPoolA0(config);
 
         List<AionTransaction> txnl = new ArrayList<>();
-        Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
+        Map<ByteArrayWrapper, AionTransaction> txMap = new HashMap<>();
         int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
@@ -653,7 +649,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
-        for (Transaction tx : txl) {
+        for (AionTransaction tx : txl) {
             assertTrue(txMap.containsKey(ByteArrayWrapper.wrap(tx.getTransactionHash())));
             Assert.assertEquals(txMap.get(ByteArrayWrapper.wrap(tx.getTransactionHash())), tx);
         }

@@ -1,10 +1,10 @@
 package org.aion.zero.impl.tx;
 
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.tx.AbstractTxTask;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
-import org.aion.base.AionTransaction;
 
 public class A0TxTask extends AbstractTxTask<IP2pMgr> {
 

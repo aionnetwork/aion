@@ -12,15 +12,11 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.base.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;
 
-public class TransactionStore<
-                TX extends AbstractTransaction,
-                TXR extends AbstractTxReceipt,
-                INFO extends AbstractTxInfo<TXR, TX>>
+public class TransactionStore<TXR extends AbstractTxReceipt, INFO extends AbstractTxInfo<TXR>>
         implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final ObjectDataSource<List<INFO>> source;
@@ -47,7 +43,7 @@ public class TransactionStore<
             if (existingInfos == null) {
                 existingInfos = new ArrayList<>();
             } else {
-                for (AbstractTxInfo<TXR, TX> info : existingInfos) {
+                for (AbstractTxInfo<TXR> info : existingInfos) {
                     if (Arrays.equals(info.getBlockHash(), tx.getBlockHash())) {
                         return false;
                     }

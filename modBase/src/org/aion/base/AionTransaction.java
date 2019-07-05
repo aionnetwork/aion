@@ -7,15 +7,52 @@ import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
 import org.aion.util.types.AddressUtils;
+import org.slf4j.Logger;
 
 /** Aion transaction class. */
-public class AionTransaction extends AbstractTransaction {
+public class AionTransaction implements Cloneable {
+
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+
+    /* SHA3 hash of the RLP encoded transaction */
+    protected byte[] hash;
+
+    /* the amount of ether to transfer (calculated as wei) */
+    protected byte[] value;
+
+    /* An unlimited size byte array specifying
+     * input [data] of the message call or
+     * Initialization code for a new contract */
+    protected byte[] data;
+
+    /* the address of the destination account
+     * In creation transaction the receive address is - 0 */
+    protected AionAddress to;
+
+    /* a counter used to make sure each transaction can only be processed once */
+    protected byte[] nonce;
+
+    /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
+    protected byte[] timeStamp;
+
+    protected long nrg;
+
+    protected long nrgPrice;
+
+    /* define transaction type. */
+    protected byte type;
+
+    /* the elliptic curve signature
+     * (including public key recovery bits) */
+    protected ISignature signature;
 
     public static final int RLP_TX_NONCE = 0,
             RLP_TX_TO = 1,
@@ -55,8 +92,19 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     public AionTransaction(
-            byte[] nonce, AionAddress to, byte[] value, byte[] data, long nrg, long nrgPrice) {
-        super(nonce, to, value, data, nrg, nrgPrice);
+            byte[] nonce,
+            AionAddress receiveAddress,
+            byte[] value,
+            byte[] data,
+            long nrg,
+            long nrgPrice) {
+        this.nonce = nonce;
+        this.to = receiveAddress;
+        this.value = value;
+        this.data = data;
+        this.type = TransactionTypes.DEFAULT;
+        this.nrg = nrg;
+        this.nrgPrice = nrgPrice;
         parsed = true;
     }
 
@@ -68,7 +116,7 @@ public class AionTransaction extends AbstractTransaction {
             long nrg,
             long nrgPrice,
             byte type) {
-        super(nonce, to, value, data, nrg, nrgPrice);
+        this(nonce, to, value, data, nrg, nrgPrice);
         this.type = type;
         parsed = true;
     }
@@ -82,7 +130,7 @@ public class AionTransaction extends AbstractTransaction {
             byte[] data,
             long nrg,
             long nrgPrice) {
-        super(nonce, to, value, data, nrg, nrgPrice);
+        this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
         parsed = true;
     }
@@ -98,7 +146,7 @@ public class AionTransaction extends AbstractTransaction {
             long nrgPrice,
             byte txType) {
 
-        super(nonce, to, value, data, nrg, nrgPrice);
+        this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
         this.type = txType;
         parsed = true;
@@ -106,7 +154,7 @@ public class AionTransaction extends AbstractTransaction {
 
     // For InternalTx constructor
     public AionTransaction(byte[] nonce, AionAddress to, byte[] value, byte[] data) {
-        super(nonce, to, value, data, 0L, 0L);
+        this(nonce, to, value, data, 0L, 0L);
         parsed = true;
     }
 
@@ -165,11 +213,6 @@ public class AionTransaction extends AbstractTransaction {
         this.hash = this.getTransactionHash();
     }
 
-    public boolean isParsed() {
-        return parsed;
-    }
-
-    @Override
     public byte[] getTransactionHash() {
         if (hash != null) {
             return hash;
@@ -192,7 +235,6 @@ public class AionTransaction extends AbstractTransaction {
         return HashUtil.h256(plainMsg);
     }
 
-    @Override
     public byte[] getNonce() {
         if (!parsed) {
             rlpParse();
@@ -204,12 +246,10 @@ public class AionTransaction extends AbstractTransaction {
         return new BigInteger(1, getNonce());
     }
 
-    @Override
     public byte[] getTimestamp() {
         return getTimeStamp();
     }
 
-    @Override
     public byte[] getTimeStamp() {
         if (!parsed) {
             rlpParse();
@@ -221,7 +261,6 @@ public class AionTransaction extends AbstractTransaction {
         return new BigInteger(1, getTimestamp());
     }
 
-    @Override
     public long getEnergyLimit() {
         if (!parsed) {
             rlpParse();
@@ -229,7 +268,6 @@ public class AionTransaction extends AbstractTransaction {
         return this.nrg;
     }
 
-    @Override
     public long getEnergyPrice() {
         if (!parsed) {
             rlpParse();
@@ -242,7 +280,6 @@ public class AionTransaction extends AbstractTransaction {
         this.parsed = true;
     }
 
-    @Override
     public byte[] getValue() {
         if (!parsed) {
             rlpParse();
@@ -250,7 +287,6 @@ public class AionTransaction extends AbstractTransaction {
         return value == null ? ByteUtil.ZERO_BYTE_ARRAY : value;
     }
 
-    @Override
     public AionAddress getDestinationAddress() {
         if (!parsed) {
             rlpParse();
@@ -258,7 +294,6 @@ public class AionTransaction extends AbstractTransaction {
         return to;
     }
 
-    @Override
     public byte[] getData() {
         if (!parsed) {
             rlpParse();
@@ -266,7 +301,6 @@ public class AionTransaction extends AbstractTransaction {
         return data;
     }
 
-    @Override
     public byte getTargetVM() {
         if (!parsed) {
             rlpParse();
@@ -300,7 +334,6 @@ public class AionTransaction extends AbstractTransaction {
         }
     }
 
-    @Override
     public boolean isContractCreationTransaction() {
         if (!parsed) {
             rlpParse();
@@ -309,7 +342,6 @@ public class AionTransaction extends AbstractTransaction {
         return this.to == null;
     }
 
-    @Override
     public synchronized AionAddress getSenderAddress() {
         if (from != null) {
             return this.from;
@@ -482,15 +514,8 @@ public class AionTransaction extends AbstractTransaction {
         return tx.hashCode() == this.hashCode();
     }
 
-    public static AionTransaction createDefault(
-            String to, BigInteger amount, BigInteger nonce, long nrg, long nrgPrice)
-            throws Exception {
-        return create(to, amount, nonce, nrg, nrgPrice);
-    }
-
     public static AionTransaction create(
-            String to, BigInteger amount, BigInteger nonce, long nrg, long nrgPrice)
-            throws Exception {
+            String to, BigInteger amount, BigInteger nonce, long nrg, long nrgPrice) {
         return new AionTransaction(
                 nonce.toByteArray(),
                 AddressUtils.wrapAddress(to),
@@ -500,7 +525,6 @@ public class AionTransaction extends AbstractTransaction {
                 nrgPrice);
     }
 
-    @Override
     public void setEncoded(byte[] _encodedData) {
         this.rlpEncoded = _encodedData;
         parsed = false;
@@ -514,12 +538,10 @@ public class AionTransaction extends AbstractTransaction {
         return BigInteger.valueOf(nrg);
     }
 
-    @Override
     public long getTransactionCost() {
         return transactionCost(0);
     }
 
-    @Override
     public byte getKind() {
         return this.isContractCreationTransaction() ? CREATE_KIND : CALL_KIND;
     }
@@ -580,7 +602,6 @@ public class AionTransaction extends AbstractTransaction {
         return this.nrgConsume;
     }
 
-    @Override
     public void setNrgConsume(long consume) {
         this.nrgConsume = consume;
     }

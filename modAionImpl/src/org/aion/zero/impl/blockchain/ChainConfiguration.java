@@ -3,6 +3,7 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import org.aion.base.AionTransaction;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -28,7 +29,6 @@ import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.base.AionTransaction;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the

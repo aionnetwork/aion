@@ -1,16 +1,14 @@
 package org.aion.mcf.core;
 
-import org.aion.base.AbstractTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
  * Abstract transaction info.
  *
  * @param <TXR>
- * @param <TX>
  */
-public abstract class AbstractTxInfo<
-        TXR extends AbstractTxReceipt, TX extends AbstractTransaction> {
+public abstract class AbstractTxInfo<TXR extends AbstractTxReceipt> {
 
     protected TXR receipt;
 
@@ -20,7 +18,7 @@ public abstract class AbstractTxInfo<
 
     protected int index;
 
-    public abstract void setTransaction(TX tx);
+    public abstract void setTransaction(AionTransaction tx);
 
     public abstract byte[] getEncoded();
 

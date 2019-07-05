@@ -39,7 +39,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -50,7 +50,6 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.tx.TxReceipt;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.types.AionAddress;
@@ -61,7 +60,6 @@ import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
-import org.aion.types.Log;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
@@ -70,7 +68,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
@@ -130,10 +127,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                             contractAddress,
                                                                             ByteUtil.toHexString(
                                                                                     lg))) {
-                                                                        Block<?>
-                                                                                blk =
-                                                                                        (cbs)
-                                                                                                .getBlock();
+                                                                        Block<?> blk =
+                                                                                (cbs).getBlock();
                                                                         List<AionTransaction>
                                                                                 txList =
                                                                                         blk
@@ -179,7 +174,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         }
     }
 
-    protected void pendingTxReceived(Transaction _tx) {
+    protected void pendingTxReceived(AionTransaction _tx) {
         installedFilters
                 .values()
                 .forEach(

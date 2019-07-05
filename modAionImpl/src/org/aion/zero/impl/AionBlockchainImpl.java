@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -83,7 +84,6 @@ import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
@@ -129,8 +129,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
-    private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo>
-            transactionStore;
+    private TransactionStore<AionTxReceipt, org.aion.zero.impl.types.AionTxInfo> transactionStore;
     private AionBlock bestBlock;
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
@@ -1514,7 +1513,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getParent(block.getHeader()) != null;
     }
 
-    public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
+    public TransactionStore<AionTxReceipt, AionTxInfo> getTransactionStore() {
         return transactionStore;
     }
 
