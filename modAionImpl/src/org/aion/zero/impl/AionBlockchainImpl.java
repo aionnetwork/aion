@@ -972,6 +972,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         RetValidPreBlock preBlock = generatePreBlock(block);
 
+        track.flush();
+
         /*
          * Calculate the gas used for the included transactions
          */
@@ -1076,6 +1078,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return null;
         }
 
+        // update corresponding account with the new balance
+        track.flush();
+
         if (!rebuild) {
             byte[] blockStateRootHash = block.getStateRoot();
             byte[] worldStateRootHash = repository.getRoot();
@@ -1088,16 +1093,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         worldStateRootHash);
                 LOG.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
 
-                track.rollback();
-                // block is bad so 'rollback' the state root to the original
-                // state
+                // block is bad so 'rollback' the state root to the original state
                 repository.setRoot(origRoot);
                 return null;
             }
         }
-
-        // update corresponding account with the new balance
-        track.flush();
 
         // save contract creation data to index database
         for (AionTxReceipt receipt : receipts) {
@@ -1332,8 +1332,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Map<AionAddress, BigInteger> rewards = addReward(block);
 
-        track.flush();
-
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
         return new RetValidPreBlock(transactions, rewards, receipts, summaries);
@@ -1414,7 +1412,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * already paid for at a earlier point in execution.
          */
         track.addBalance(block.getCoinbase(), minerReward);
-        track.flush();
         return rewards;
     }
 
