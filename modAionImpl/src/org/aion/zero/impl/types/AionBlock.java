@@ -18,7 +18,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 

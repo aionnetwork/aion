@@ -1,12 +1,12 @@
 package org.aion.api.server.types;
 
-import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
-import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
+import static org.aion.base.Constants.NRG_CREATE_CONTRACT_DEFAULT;
+import static org.aion.base.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.base.TransactionTypes;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;

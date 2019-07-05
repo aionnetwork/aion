@@ -6,7 +6,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.json.JSONObject;
 

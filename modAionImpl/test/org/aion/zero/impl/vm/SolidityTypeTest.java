@@ -57,7 +57,7 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
@@ -115,7 +115,7 @@ public class SolidityTypeTest {
         RepositoryCache track = repo.startTracking();
         track.addBalance(
                 tx.getSenderAddress(),
-                tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
+                tx.nrgPrice().multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM);

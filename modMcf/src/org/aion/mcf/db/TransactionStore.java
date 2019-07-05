@@ -12,7 +12,7 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.mcf.types.AbstractTransaction;
+import org.aion.base.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;

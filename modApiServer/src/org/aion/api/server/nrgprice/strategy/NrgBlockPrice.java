@@ -8,7 +8,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 
 /**

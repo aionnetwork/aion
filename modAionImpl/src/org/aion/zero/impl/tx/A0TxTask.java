@@ -4,7 +4,7 @@ import java.util.List;
 import org.aion.mcf.tx.AbstractTxTask;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 
 public class A0TxTask extends AbstractTxTask<AionTransaction, IP2pMgr> {
 

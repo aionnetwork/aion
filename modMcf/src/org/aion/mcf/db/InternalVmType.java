@@ -5,7 +5,7 @@ package org.aion.mcf.db;
  * to deploy a specific contract.
  *
  * @implNote The values for FVM and AVM were specifically chosen to differ the ones from
- *     <i>org.aion.mcf.tx.TransactionTypes</i> to ensure that the two interpretations are properly
+ *     <i>org.aion.base.TransactionTypes</i> to ensure that the two interpretations are properly
  *     differentiated.
  */
 public enum InternalVmType {

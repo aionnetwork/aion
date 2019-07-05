@@ -14,7 +14,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 
 /**
  * Methods used by several classes testing the blockchain functionality.

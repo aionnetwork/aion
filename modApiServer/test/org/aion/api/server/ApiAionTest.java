@@ -35,7 +35,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.After;
 import org.junit.Before;

@@ -22,7 +22,7 @@ import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.types.Log;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;

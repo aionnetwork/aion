@@ -22,7 +22,7 @@ import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;

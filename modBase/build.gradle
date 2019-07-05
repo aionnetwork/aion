@@ -2,4 +2,9 @@ ext.moduleName = 'aion.base'
 
 dependencies {
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile project(':modUtil')
+    compile project(':modLogger')
+    compile project(':modRlp')
+    compile project(':modCrypto')
+    compile 'org.slf4j:slf4j-api:1.7.25'
 }

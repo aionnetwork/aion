@@ -50,7 +50,7 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;

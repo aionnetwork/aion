@@ -4,7 +4,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.AbstractTransaction;
+import org.aion.base.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.slf4j.Logger;
 

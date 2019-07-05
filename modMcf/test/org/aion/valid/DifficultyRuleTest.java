@@ -16,7 +16,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

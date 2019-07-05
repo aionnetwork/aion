@@ -1,6 +1,6 @@
 package org.aion.mcf.core;
 
-import org.aion.mcf.types.AbstractTransaction;
+import org.aion.base.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /**

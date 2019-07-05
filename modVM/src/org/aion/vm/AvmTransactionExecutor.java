@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.avm.core.FutureResult;
 import org.aion.avm.core.IExternalState;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;

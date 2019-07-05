@@ -5,7 +5,7 @@ import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {

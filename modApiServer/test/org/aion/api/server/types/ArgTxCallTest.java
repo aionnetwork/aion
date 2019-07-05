@@ -2,8 +2,8 @@ package org.aion.api.server.types;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
-import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
-import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
+import static org.aion.base.Constants.NRG_CREATE_CONTRACT_DEFAULT;
+import static org.aion.base.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
 import org.aion.util.types.AddressUtils;

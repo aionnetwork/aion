@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.aion.mcf.tx.AbstractTxTask;
-import org.aion.mcf.types.AbstractTransaction;
+import org.aion.base.AbstractTransaction;
 
 @SuppressWarnings("rawtypes")
 public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {

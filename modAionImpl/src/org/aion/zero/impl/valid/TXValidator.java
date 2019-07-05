@@ -11,7 +11,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

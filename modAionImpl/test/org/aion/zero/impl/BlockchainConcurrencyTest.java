@@ -8,7 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.Test;
 
 public class BlockchainConcurrencyTest {
