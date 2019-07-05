@@ -2,21 +2,22 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
-public interface IPendingState<TX extends Transaction> {
+public interface IPendingState {
 
-    List<TxResponse> addPendingTransactions(List<TX> transactions);
+    List<TxResponse> addPendingTransactions(List<AionTransaction> transactions);
 
-    TxResponse addPendingTransaction(TX tx);
+    TxResponse addPendingTransaction(AionTransaction tx);
 
-    boolean isValid(TX tx);
+    boolean isValid(AionTransaction tx);
 
     RepositoryCache<?, ?> getRepository();
 
-    List<TX> getPendingTransactions();
+    List<AionTransaction> getPendingTransactions();
 
     BigInteger bestPendingStateNonce(AionAddress addr);
 

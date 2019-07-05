@@ -16,7 +16,7 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
 
     private IDifficultyCalculator diffCalc;
 
-    public AionDifficultyRule(IChainCfg<AionBlock, AionTransaction> configuration) {
+    public AionDifficultyRule(IChainCfg<AionBlock> configuration) {
         this.diffCalc = configuration.getDifficultyCalculator();
     }
 

@@ -23,7 +23,7 @@ import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /** */
-public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> implements IAionBlock {
+public class AionBlock extends AbstractBlock<A0BlockHeader> implements IAionBlock {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
 

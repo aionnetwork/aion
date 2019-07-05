@@ -7,7 +7,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 
 /** aion block interface. */
-public interface IAionBlock extends Block<AionTransaction, A0BlockHeader> {
+public interface IAionBlock extends Block<A0BlockHeader> {
 
     AionAddress getCoinbase();
 

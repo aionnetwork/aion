@@ -230,7 +230,7 @@ public class AionImpl implements IAionChain {
         return aionHub;
     }
 
-    private IPendingStateInternal<?, ?> getIPendingStateInternal() {
+    private IPendingStateInternal<?> getIPendingStateInternal() {
         return this.aionHub.getPendingState();
     }
 

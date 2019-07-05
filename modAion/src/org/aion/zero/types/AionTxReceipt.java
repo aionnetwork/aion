@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.aion.base.AionTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;
@@ -20,7 +19,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
 /** aion transaction receipt class. */
-public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
+public class AionTxReceipt extends AbstractTxReceipt {
 
     private long energyUsed;
 

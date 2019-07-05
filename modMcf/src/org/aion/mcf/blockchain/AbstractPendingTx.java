@@ -1,18 +1,17 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
 /**
  * Abstract Pending Transaction Class.
- *
- * @param <TX>
  */
-public abstract class AbstractPendingTx<TX extends Transaction> {
+public abstract class AbstractPendingTx {
 
-    protected TX transaction;
+    protected AionTransaction transaction;
 
     protected long blockNumber;
 
@@ -20,18 +19,18 @@ public abstract class AbstractPendingTx<TX extends Transaction> {
         parse(bytes);
     }
 
-    public AbstractPendingTx(TX transaction) {
+    public AbstractPendingTx(AionTransaction transaction) {
         this(transaction, 0);
     }
 
-    public AbstractPendingTx(TX transaction, long blockNumber) {
+    public AbstractPendingTx(AionTransaction transaction, long blockNumber) {
         this.transaction = transaction;
         this.blockNumber = blockNumber;
     }
 
     protected abstract void parse(byte[] bs);
 
-    public TX getTransaction() {
+    public AionTransaction getTransaction() {
         return transaction;
     }
 

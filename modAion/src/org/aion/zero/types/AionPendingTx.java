@@ -6,7 +6,7 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.AbstractPendingTx;
 
 /** aion pending transaction class. */
-public class AionPendingTx extends AbstractPendingTx<AionTransaction> {
+public class AionPendingTx extends AbstractPendingTx {
 
     public AionPendingTx(byte[] bs) {
         super(bs);

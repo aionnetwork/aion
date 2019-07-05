@@ -1,5 +1,6 @@
 package org.aion.api.server.types;
 
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
@@ -27,8 +28,13 @@ public class TxRecptLg {
     // true when the log was removed, due to a chain reorganization. false if its a valid log.
     public boolean removed;
 
-    public <TX extends Transaction> TxRecptLg(
-            Log logInfo, Block b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
+    public TxRecptLg(
+            Log logInfo,
+            Block b,
+            Integer txIndex,
+            AionTransaction tx,
+            int logIdx,
+            boolean isMainchain) {
         this.logIndex = StringUtils.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : StringUtils.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : StringUtils.toJsonHex(b.getHash());

@@ -1,10 +1,11 @@
 package org.aion.mcf.blockchain;
 
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 
 /** @author jin */
-public interface Block<TX extends Transaction, BH extends BlockHeader> {
+public interface Block<BH extends BlockHeader> {
 
     long getNumber();
 
@@ -16,11 +17,11 @@ public interface Block<TX extends Transaction, BH extends BlockHeader> {
 
     String getShortHash();
 
-    boolean isEqual(Block<TX, BH> block);
+    boolean isEqual(Block<BH> block);
 
     String getShortDescr();
 
-    List<TX> getTransactionsList();
+    List<AionTransaction> getTransactionsList();
 
     BH getHeader();
 

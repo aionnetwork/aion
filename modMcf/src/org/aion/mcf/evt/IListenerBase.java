@@ -8,10 +8,9 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 /** Listener base interface. */
 public interface IListenerBase<
-        BLK extends Block<?, ?>,
-        TX extends Transaction,
-        TXR extends AbstractTxReceipt<?>,
-        BS extends AbstractBlockSummary<?, ?, ?, ?>> {
+        BLK extends Block<?>,
+        TXR extends AbstractTxReceipt,
+        BS extends AbstractBlockSummary<?, ?, ?>> {
 
     enum PendingTransactionState {
         /**
@@ -67,7 +66,7 @@ public interface IListenerBase<
      * arrives the PendingState is adjusted to the new Repository state and all transactions which
      * remain pending are executed on top of the new PendingState
      */
-    void onPendingStateChanged(IPendingStateInternal<BLK, TX> pendingState);
+    void onPendingStateChanged(IPendingStateInternal<BLK> pendingState);
 
     /**
      * Is called when PendingTransaction arrives, executed or dropped and included to a block

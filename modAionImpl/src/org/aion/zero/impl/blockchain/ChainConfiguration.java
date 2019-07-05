@@ -37,7 +37,7 @@ import org.aion.base.AionTransaction;
  *
  * @author yao
  */
-public class ChainConfiguration implements IChainCfg<AionBlock, AionTransaction> {
+public class ChainConfiguration implements IChainCfg<AionBlock> {
 
     protected BlockConstants constants;
     protected IMiner<?, ?> miner;

@@ -29,7 +29,7 @@ import org.slf4j.Logger;
  *
  * @author ali sharif
  */
-public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
+public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private ArrayBlockingQueue<Long> blkPriceQ;

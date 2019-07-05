@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -26,7 +27,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
-public abstract class AbstractTxPool<TX extends Transaction> {
+public abstract class AbstractTxPool {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
 
@@ -76,21 +77,21 @@ public abstract class AbstractTxPool<TX extends Transaction> {
      */
     private final Map<AionAddress, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
 
-    private final List<TX> outDated = new ArrayList<>();
+    private final List<AionTransaction> outDated = new ArrayList<>();
 
     private final Map<AionAddress, BigInteger> bestNonce = new ConcurrentHashMap<>();
 
     protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public abstract List<TX> add(List<TX> txl);
+    public abstract List<AionTransaction> add(List<AionTransaction> txl);
 
-    public abstract TX add(TX tx);
+    public abstract AionTransaction add(AionTransaction tx);
 
-    public abstract List<TX> remove(List<TX> txl);
+    public abstract List<AionTransaction> remove(List<AionTransaction> txl);
 
     public abstract int size();
 
-    public abstract List<TX> snapshot();
+    public abstract List<AionTransaction> snapshot();
 
     protected Map<ByteArrayWrapper, TXState> getMainMap() {
         return this.mainMap;
@@ -119,14 +120,14 @@ public abstract class AbstractTxPool<TX extends Transaction> {
         return this.poolStateView.get(acc);
     }
 
-    protected List<TX> getOutdatedListImpl() {
-        List<TX> rtn = new ArrayList<>(this.outDated);
+    protected List<AionTransaction> getOutdatedListImpl() {
+        List<AionTransaction> rtn = new ArrayList<>(this.outDated);
         this.outDated.clear();
 
         return rtn;
     }
 
-    protected void addOutDatedList(List<TX> txl) {
+    protected void addOutDatedList(List<AionTransaction> txl) {
         this.outDated.addAll(txl);
     }
 
@@ -157,7 +158,7 @@ public abstract class AbstractTxPool<TX extends Transaction> {
                                 return;
                             }
 
-                            Transaction tx = ts.getTx();
+                            AionTransaction tx = ts.getTx();
 
                             // Gen temp timeMap
                             long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
@@ -604,13 +605,13 @@ public abstract class AbstractTxPool<TX extends Transaction> {
 
     protected class TXState {
         private boolean sorted = false;
-        private TX tx;
+        private AionTransaction tx;
 
-        public TXState(TX tx) {
+        public TXState(AionTransaction tx) {
             this.tx = tx;
         }
 
-        public TX getTx() {
+        public AionTransaction getTx() {
             return this.tx;
         }
 

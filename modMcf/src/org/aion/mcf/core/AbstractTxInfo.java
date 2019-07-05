@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * @param <TX>
  */
 public abstract class AbstractTxInfo<
-        TXR extends AbstractTxReceipt<?>, TX extends AbstractTransaction> {
+        TXR extends AbstractTxReceipt, TX extends AbstractTransaction> {
 
     protected TXR receipt;
 
