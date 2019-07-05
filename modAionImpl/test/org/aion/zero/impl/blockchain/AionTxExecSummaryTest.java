@@ -8,7 +8,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;

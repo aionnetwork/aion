@@ -2,6 +2,7 @@ package org.aion.zero.types;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.AbstractPendingTx;
 
 /** aion pending transaction class. */

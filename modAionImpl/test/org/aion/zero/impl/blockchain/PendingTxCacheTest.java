@@ -13,7 +13,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
 

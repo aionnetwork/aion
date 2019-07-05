@@ -1,10 +1,10 @@
 package org.aion.mcf.valid;
 
-import static org.aion.mcf.tx.TransactionTypes.ALL;
-import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
+import static org.aion.base.TransactionTypes.ALL;
+import static org.aion.base.TransactionTypes.AVM_CREATE_CODE;
 
 import org.aion.base.Transaction;
-import org.aion.mcf.tx.TransactionTypes;
+import org.aion.base.TransactionTypes;
 
 /**
  * Rules for validating transactions based on allowed types.
@@ -22,12 +22,12 @@ public class TransactionTypeRule {
      * <ol>
      *   <li>Any transaction type is allowed before the 0.4 hard fork which enables the use of the
      *       AVM.
-     *   <li>Only the transaction types listed in {@link org.aion.mcf.tx.TransactionTypes#ALL} are
+     *   <li>Only the transaction types listed in {@link TransactionTypes#ALL} are
      *       valid after the fork.
      *   <li>Contract deployments must have the transaction types from the set {@link
-     *       org.aion.mcf.tx.TransactionTypes#ALL}.
+     *       TransactionTypes#ALL}.
      *   <li>Transactions that are not contract deployments must have the transaction type {@link
-     *       org.aion.mcf.tx.TransactionTypes#DEFAULT}
+     *       TransactionTypes#DEFAULT}
      * </ol>
      *
      * @param transaction the transaction to be validated

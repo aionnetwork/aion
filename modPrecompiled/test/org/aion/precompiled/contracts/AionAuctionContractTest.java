@@ -31,7 +31,7 @@ import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;

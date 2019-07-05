@@ -54,7 +54,7 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
@@ -126,7 +126,7 @@ public class OldTxExecutorTest {
 
         AionRepositoryImpl repo = blockchain.getRepository();
         RepositoryCache cache = repo.startTracking();
-        cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
+        cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice()));
         cache.createAccount(to);
         cache.saveCode(to, Hex.decode(contract));
         cache.saveVmType(to, InternalVmType.FVM);
@@ -165,7 +165,7 @@ public class OldTxExecutorTest {
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
-        repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice().value()));
+        repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice()));
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
@@ -203,7 +203,7 @@ public class OldTxExecutorTest {
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache repo = repoTop.startTracking();
-        repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
+        repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice()));
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
         repo.saveVmType(to, InternalVmType.FVM);

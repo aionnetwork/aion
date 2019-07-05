@@ -8,7 +8,6 @@ import org.aion.base.TransactionInterface;
  *
  * <p>An internal transaction is never submitted directly into a virtual machine. Transactions
  * submitted directly to a virtual machine are known as external transactions, or just transactions
- * (see {@link TransactionInterface}).
  *
  * <p>All internal transactions are spawned by the logic of some external transaction or else by the
  * logic of another internal transaction, whose original ancestor is an external transaction.

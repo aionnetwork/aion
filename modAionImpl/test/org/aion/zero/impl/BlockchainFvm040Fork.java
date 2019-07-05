@@ -15,7 +15,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 

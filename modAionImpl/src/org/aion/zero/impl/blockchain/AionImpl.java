@@ -26,7 +26,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;

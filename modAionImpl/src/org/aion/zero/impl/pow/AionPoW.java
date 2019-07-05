@@ -29,7 +29,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 
 /**

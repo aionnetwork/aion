@@ -17,7 +17,7 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.AfterClass;

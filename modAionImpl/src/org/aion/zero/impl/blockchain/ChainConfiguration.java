@@ -28,7 +28,7 @@ import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the

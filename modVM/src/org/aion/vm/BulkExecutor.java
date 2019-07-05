@@ -14,7 +14,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;

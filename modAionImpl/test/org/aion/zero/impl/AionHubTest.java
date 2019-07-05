@@ -20,7 +20,7 @@ import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

@@ -44,7 +44,7 @@ import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**

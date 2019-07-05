@@ -2,6 +2,7 @@ package org.aion.zero.types;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 

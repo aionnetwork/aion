@@ -1,4 +1,4 @@
-package org.aion.mcf.vm;
+package org.aion.base;
 
 /**
  * Virtual machine constants.

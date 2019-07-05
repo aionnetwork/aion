@@ -12,7 +12,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

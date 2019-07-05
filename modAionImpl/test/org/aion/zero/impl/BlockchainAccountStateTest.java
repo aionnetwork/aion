@@ -10,7 +10,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -10,7 +10,7 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.query.QueryInterface;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 

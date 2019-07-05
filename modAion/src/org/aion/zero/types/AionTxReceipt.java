@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;

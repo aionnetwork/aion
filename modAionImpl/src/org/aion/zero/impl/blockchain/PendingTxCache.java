@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

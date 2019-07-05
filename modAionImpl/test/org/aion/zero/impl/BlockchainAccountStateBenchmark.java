@@ -24,7 +24,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.Ignore;

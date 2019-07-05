@@ -16,7 +16,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 
 /** @author chris handler for new transaction broadcasted from network */

@@ -1,11 +1,9 @@
-package org.aion.mcf.types;
+package org.aion.base;
 
 import java.math.BigInteger;
-import org.aion.base.Transaction;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 

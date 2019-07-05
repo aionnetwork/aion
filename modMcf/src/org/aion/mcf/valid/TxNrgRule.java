@@ -1,6 +1,6 @@
 package org.aion.mcf.valid;
 
-import org.aion.mcf.vm.Constants;
+import org.aion.base.Constants;
 
 public class TxNrgRule {
     private static final long CONTRACT_CREATE_TX_NRG_MAX = Constants.NRG_CREATE_CONTRACT_MAX + 1;

@@ -7,7 +7,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
+import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
