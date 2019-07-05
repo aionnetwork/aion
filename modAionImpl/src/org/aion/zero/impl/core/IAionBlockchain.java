@@ -2,6 +2,7 @@ package org.aion.zero.impl.core;
 
 import java.util.List;
 import java.util.Map;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.Repository;
 import org.aion.util.types.ByteArrayWrapper;
@@ -10,7 +11,6 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */

@@ -3,7 +3,6 @@ package org.aion.zero.impl.sync.msg;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;

@@ -7,13 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.base.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,8 +94,8 @@ public class PendingTxCacheTest {
         PendingTxCache cache = new PendingTxCache(1);
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == txn.size());
@@ -109,8 +108,8 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(0, 10, 1));
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == txn.size());
@@ -140,8 +139,8 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(5, 10, 0));
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == 15);
@@ -159,8 +158,8 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
 
         List<AionTransaction> newCache;
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == 10);
@@ -183,8 +182,8 @@ public class PendingTxCacheTest {
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == 10);
@@ -208,8 +207,8 @@ public class PendingTxCacheTest {
         int singleTxSize = txn.get(0).getEncoded().length;
 
         int txSize = 0;
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
             txSize += tx.getEncoded().length;
         }
 
@@ -237,8 +236,8 @@ public class PendingTxCacheTest {
         int singleTxSize = txn.get(0).getEncoded().length;
 
         int txSize = 0;
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
             txSize += tx.getEncoded().length;
         }
 
@@ -268,8 +267,8 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, input, 0);
         txn.addAll(getMockTransaction(0, input, 1));
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == 20000);
@@ -295,8 +294,8 @@ public class PendingTxCacheTest {
         PendingTxCache cache = new PendingTxCache(1);
         List<AionTransaction> txn = getMockTransaction(0, 680, 0);
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         Map<BigInteger, AionTransaction> cacheMap =
@@ -310,8 +309,8 @@ public class PendingTxCacheTest {
         PendingTxCache cache = new PendingTxCache(1);
         List<AionTransaction> txn = getMockTransaction(0, 659, 0);
 
-        for (Transaction tx : txn) {
-            cache.addCacheTx((AionTransaction) tx);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
         assertTrue(cache.cacheTxSize() == 659);

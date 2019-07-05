@@ -1,14 +1,14 @@
 package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
-public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
+public class AionTxInfo extends AbstractTxInfo<AionTxReceipt> {
     public AionTxInfo(AionTxReceipt receipt, byte[] blockHash, int index) {
         this.receipt = receipt;
         this.blockHash = blockHash;

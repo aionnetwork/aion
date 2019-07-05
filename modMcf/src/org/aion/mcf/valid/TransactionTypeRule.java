@@ -3,7 +3,7 @@ package org.aion.mcf.valid;
 import static org.aion.base.TransactionTypes.ALL;
 import static org.aion.base.TransactionTypes.AVM_CREATE_CODE;
 
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 
 /**
@@ -22,8 +22,8 @@ public class TransactionTypeRule {
      * <ol>
      *   <li>Any transaction type is allowed before the 0.4 hard fork which enables the use of the
      *       AVM.
-     *   <li>Only the transaction types listed in {@link TransactionTypes#ALL} are
-     *       valid after the fork.
+     *   <li>Only the transaction types listed in {@link TransactionTypes#ALL} are valid after the
+     *       fork.
      *   <li>Contract deployments must have the transaction types from the set {@link
      *       TransactionTypes#ALL}.
      *   <li>Transactions that are not contract deployments must have the transaction type {@link
@@ -34,7 +34,7 @@ public class TransactionTypeRule {
      * @return {@code true} is the transaction satisfies the rule described above; {@code false}
      *     otherwise
      */
-    public static boolean isValidTransactionType(Transaction transaction) {
+    public static boolean isValidTransactionType(AionTransaction transaction) {
         if (AVM_CONTRACT_TRANSACTION_ALLOWED) {
             // transaction types are validated after the fork
             if (transaction.getDestinationAddress() == null) {

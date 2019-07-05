@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -35,7 +35,6 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.After;
 import org.junit.Before;
@@ -56,7 +55,7 @@ public class ApiAionTest {
         }
 
         @Override
-        protected void pendingTxReceived(Transaction _tx) {
+        protected void pendingTxReceived(AionTransaction _tx) {
             pendingRcvdFlag = true;
         }
 
@@ -79,7 +78,7 @@ public class ApiAionTest {
         private void addEvents() {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             AionTransaction tx = new AionTransaction(null);
-            List l1 = new ArrayList<Transaction>();
+            List l1 = new ArrayList<AionTransaction>();
             l1.add(tx);
             l1.add(tx);
             l1.add(tx);

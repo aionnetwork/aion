@@ -6,7 +6,6 @@ import java.util.Map;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.BlockSummary;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;

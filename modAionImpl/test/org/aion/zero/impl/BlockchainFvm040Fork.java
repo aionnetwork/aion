@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.mcf.core.ImportResult;
@@ -15,7 +16,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.base.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 

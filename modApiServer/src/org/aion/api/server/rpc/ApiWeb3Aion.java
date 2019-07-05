@@ -41,7 +41,7 @@ import org.aion.api.server.types.NumericalValue;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -62,7 +62,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.tx.TxReceipt;
-import org.aion.mcf.types.IExecutionLog;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.p2p.INode;
 import org.aion.types.AionAddress;
@@ -72,7 +71,6 @@ import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
-import org.aion.types.Log;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -88,7 +86,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
@@ -143,7 +140,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    protected void pendingTxReceived(Transaction _tx) {
+    protected void pendingTxReceived(AionTransaction _tx) {
         if (isFilterEnabled) {
             // not absolutely neccessary to do eviction on installedFilters here, since we're doing
             // it already

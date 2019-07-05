@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.txpool.Constant;
@@ -147,7 +146,7 @@ public abstract class AbstractTxPool {
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap =
                 Collections.synchronizedSortedMap(new TreeMap<>());
 
-        Map<Transaction, Long> updatedTx = new HashMap<>();
+        Map<AionTransaction, Long> updatedTx = new HashMap<>();
         this.mainMap
                 .entrySet()
                 .parallelStream()
@@ -164,7 +163,7 @@ public abstract class AbstractTxPool {
                             long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
 
                             Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> nonceMap;
-                            Transaction replacedTx = null;
+                            AionTransaction replacedTx = null;
                             synchronized (accMap) {
                                 if (accMap.get(tx.getSenderAddress()) != null) {
                                     nonceMap = accMap.get(tx.getSenderAddress());
@@ -259,7 +258,7 @@ public abstract class AbstractTxPool {
                         });
 
         if (!updatedTx.isEmpty()) {
-            for (Map.Entry<Transaction, Long> en : updatedTx.entrySet()) {
+            for (Map.Entry<AionTransaction, Long> en : updatedTx.entrySet()) {
                 ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getTransactionHash());
                 if (this.timeView.get(en.getValue()) != null) {
                     this.timeView.get(en.getValue()).remove(bw);

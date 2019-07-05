@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import org.aion.base.AionTransaction;
 import org.aion.equihash.AionPowSolution;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -29,7 +30,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.base.AionTransaction;
 import org.slf4j.Logger;
 
 /**
@@ -95,10 +95,7 @@ public class AionPoW {
      * @param pendingState List of Aion transactions
      * @param eventMgr Event manager
      */
-    public void init(
-            IAionBlockchain blockchain,
-            IPendingState pendingState,
-            IEventMgr eventMgr) {
+    public void init(IAionBlockchain blockchain, IPendingState pendingState, IEventMgr eventMgr) {
         if (initialized.compareAndSet(false, true)) {
             this.blockchain = blockchain;
             this.pendingState = pendingState;

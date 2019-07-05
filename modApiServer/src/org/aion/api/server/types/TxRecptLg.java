@@ -1,7 +1,6 @@
 package org.aion.api.server.types;
 
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;

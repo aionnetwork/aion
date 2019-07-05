@@ -2,7 +2,6 @@ package org.aion.mcf.blockchain;
 
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 
 /** @author jin */
 public interface Block<BH extends BlockHeader> {

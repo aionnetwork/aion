@@ -46,14 +46,13 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl
         extends AbstractRepository<AionBlock, A0BlockHeader, AionBlockStore> {
 
-    private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
+    private TransactionStore<AionTxReceipt, AionTxInfo> transactionStore;
 
     // pending block store
     private PendingBlockStore pendingStore;
@@ -114,7 +113,7 @@ public class AionRepositoryImpl
     }
 
     /** @implNote The transaction store is not locked within the repository implementation. */
-    public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
+    public TransactionStore<AionTxReceipt, AionTxInfo> getTransactionStore() {
         return this.transactionStore;
     }
 

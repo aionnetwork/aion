@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.base.AionTransaction;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -58,7 +59,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
@@ -96,7 +96,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private IAionBlockchain blockchain;
 
-    private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
+    private TransactionStore<AionTxReceipt, AionTxInfo> transactionStore;
 
     private Repository repository;
 

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.Transaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -18,9 +17,7 @@ import org.slf4j.Logger;
 
 /** AbstractBlockSummary */
 public class AbstractBlockSummary<
-        BLK extends Block<?>,
-        TXR extends AbstractTxReceipt,
-        TXES extends TxExecSummary> {
+        BLK extends Block<?>, TXR extends AbstractTxReceipt, TXES extends TxExecSummary> {
 
     protected BLK block;
     protected Map<AionAddress, BigInteger> rewards;

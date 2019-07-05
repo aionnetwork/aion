@@ -2,17 +2,16 @@ package org.aion.api.server.types;
 
 import static org.aion.util.string.StringUtils.toJsonHex;
 
+import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AbstractTxInfo;
-import org.aion.base.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -68,15 +67,11 @@ public final class TxRecpt {
     // indicates whether the transaction was successfully processed by the network
     public boolean successful;
 
-    public <
-                    TX extends AbstractTransaction,
-                    BH extends BlockHeader,
-                    TXR extends AbstractTxReceipt>
-            TxRecpt(
-                    Block<BH> block,
-                    AbstractTxInfo<TXR, TX> txInfo,
-                    long cumulativeNrgUsed,
-                    boolean isMainchain) {
+    public <BH extends BlockHeader, TXR extends AbstractTxReceipt> TxRecpt(
+            Block<BH> block,
+            AbstractTxInfo<TXR> txInfo,
+            long cumulativeNrgUsed,
+            boolean isMainchain) {
 
         AbstractTxReceipt receipt = txInfo.getReceipt();
         if (block != null) {

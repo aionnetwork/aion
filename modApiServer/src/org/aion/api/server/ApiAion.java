@@ -20,7 +20,7 @@ import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -47,7 +47,6 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.base.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
@@ -115,7 +114,8 @@ public abstract class ApiAion extends Api {
                                     GETSTATE((int) e.getFuncArgs().get(1)));
                         } else if (e.getCallbackType()
                                 == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                            for (Transaction tx : (List<Transaction>) e.getFuncArgs().get(0)) {
+                            for (AionTransaction tx :
+                                    (List<AionTransaction>) e.getFuncArgs().get(0)) {
                                 pendingTxReceived(tx);
                             }
                         }
@@ -131,7 +131,7 @@ public abstract class ApiAion extends Api {
 
     protected abstract void onBlock(AionBlockSummary cbs);
 
-    protected abstract void pendingTxReceived(Transaction _tx);
+    protected abstract void pendingTxReceived(AionTransaction _tx);
 
     protected abstract void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state);
 

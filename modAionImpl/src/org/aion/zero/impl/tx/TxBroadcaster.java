@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.tx.AbstractTxTask;
-import org.aion.base.AbstractTransaction;
 
 @SuppressWarnings("rawtypes")
-public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {
+public class TxBroadcaster<TXTASK extends AbstractTxTask> {
 
     private TxBroadcaster() {}
 
@@ -23,7 +23,7 @@ public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends Abstra
     private ExecutorService executor = Executors.newFixedThreadPool(1);
 
     @SuppressWarnings("unchecked")
-    public Future<List<TX>> submitTransaction(TXTASK task) {
+    public Future<List<AionTransaction>> submitTransaction(TXTASK task) {
         return executor.submit(task);
     }
 }

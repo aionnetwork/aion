@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.IBloomFilter;
 import org.aion.mcf.vm.types.Bloom;
@@ -53,7 +52,7 @@ public final class FltrLg extends Fltr {
         if (matchBloom(new Bloom(((IAionBlock) blk).getLogBloom()))) {
             int txIndex = 0;
             for (AionTxReceipt receipt : receipts) {
-                Transaction tx = receipt.getTransaction();
+                AionTransaction tx = receipt.getTransaction();
                 if (tx.getDestinationAddress() != null
                         && matchesContractAddress(tx.getDestinationAddress().toByteArray())) {
                     if (matchBloom(receipt.getBloomFilter())) {

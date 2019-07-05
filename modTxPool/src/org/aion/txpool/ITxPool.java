@@ -4,14 +4,9 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.types.AionAddress;
 
-/**
- * Aion pending state should be the only user of transaction pool.
- *
- * @param <TX>
- */
+/** Aion pending state should be the only user of transaction pool. */
 public interface ITxPool {
 
     String PROP_TX_TIMEOUT = "tx-timeout";

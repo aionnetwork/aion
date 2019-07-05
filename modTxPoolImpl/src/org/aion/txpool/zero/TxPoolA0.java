@@ -17,7 +17,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.aion.base.AionTransaction;
-import org.aion.base.Transaction;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
@@ -243,8 +242,8 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 .forEach(
                         bw -> {
                             if (this.getMainMap().get(bw) != null) {
-                                Transaction tx = this.getMainMap().get(bw).getTx().clone();
-                                removedTxl.add((AionTransaction) tx);
+                                AionTransaction tx = this.getMainMap().get(bw).getTx().clone();
+                                removedTxl.add(tx);
 
                                 long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
                                 synchronized (this.getTimeView().get(timestamp)) {
@@ -480,7 +479,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 if (dependTx == null || snapshotSet.contains(dependTx)) {
                     boolean firstTx = true;
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
-                        Transaction itx = this.getMainMap().get(bw).getTx();
+                        AionTransaction itx = this.getMainMap().get(bw).getTx();
 
                         cnt_txSz += itx.getEncoded().length;
                         cnt_nrg += itx.getNrgConsume();
@@ -495,7 +494,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
                         if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                             try {
-                                rtn.add((AionTransaction) itx.clone());
+                                rtn.add(itx.clone());
                                 if (firstTx) {
                                     snapshotSet.add(bw);
                                     firstTx = false;
@@ -527,7 +526,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                         firstTx = true;
                         for (ByteArrayWrapper bw :
                                 nonPickedTx.get(ancestor).getValue().getTxList()) {
-                            Transaction itx = this.getMainMap().get(bw).getTx();
+                            AionTransaction itx = this.getMainMap().get(bw).getTx();
 
                             cnt_txSz += itx.getEncoded().length;
                             cnt_nrg += itx.getNrgConsume();
