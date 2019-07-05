@@ -3,8 +3,8 @@ package org.aion.api.server.nrgprice;
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 
-public abstract class NrgPriceAdvisor<BLK extends Block, TXN extends Transaction>
-        implements INrgPriceAdvisor<BLK, TXN> {
+public abstract class NrgPriceAdvisor<BLK extends Block>
+        implements INrgPriceAdvisor<BLK> {
 
     protected long defaultPrice;
     protected long maxPrice;

@@ -14,7 +14,7 @@ import org.aion.util.types.ByteArrayWrapper;
 
 /** Detail data storage , */
 public class DetailsDataStore<
-        BLK extends AbstractBlock<BH, ? extends Transaction>, BH extends BlockHeader> {
+        BLK extends AbstractBlock<BH>, BH extends BlockHeader> {
 
     private JournalPruneDataSource storageDSPrune;
     private RepositoryConfig repoConfig;

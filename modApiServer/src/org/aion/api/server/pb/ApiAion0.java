@@ -130,7 +130,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                             contractAddress,
                                                                             ByteUtil.toHexString(
                                                                                     lg))) {
-                                                                        Block<AionTransaction, ?>
+                                                                        Block<?>
                                                                                 blk =
                                                                                         (cbs)
                                                                                                 .getBlock();

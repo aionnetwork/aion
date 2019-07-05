@@ -31,7 +31,7 @@ public class DifficultyRuleTest {
     private A0BlockHeader grandParentHeader;
     private A0BlockHeader parentHeader;
     private A0BlockHeader currentHeader;
-    @Mock IChainCfg<AionBlock, AionTransaction> mockChainCfg;
+    @Mock IChainCfg<AionBlock> mockChainCfg;
     @Mock IDifficultyCalculator mockDiffCalculator;
 
     @Before

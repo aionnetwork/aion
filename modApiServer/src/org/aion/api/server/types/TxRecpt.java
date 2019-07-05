@@ -71,14 +71,14 @@ public final class TxRecpt {
     public <
                     TX extends AbstractTransaction,
                     BH extends BlockHeader,
-                    TXR extends AbstractTxReceipt<TX>>
+                    TXR extends AbstractTxReceipt>
             TxRecpt(
-                    Block<TX, BH> block,
+                    Block<BH> block,
                     AbstractTxInfo<TXR, TX> txInfo,
                     long cumulativeNrgUsed,
                     boolean isMainchain) {
 
-        AbstractTxReceipt<TX> receipt = txInfo.getReceipt();
+        AbstractTxReceipt receipt = txInfo.getReceipt();
         if (block != null) {
             this.blockHash = toJsonHex(txInfo.getBlockHash());
             this.blockNumber = block.getNumber();

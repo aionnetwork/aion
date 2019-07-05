@@ -42,7 +42,7 @@ public class AionPoW {
     private static final int syncLimit = 128;
 
     protected IAionBlockchain blockchain;
-    protected IPendingState<AionTransaction> pendingState;
+    protected IPendingState pendingState;
     protected IEventMgr eventMgr;
 
     protected AtomicBoolean initialized = new AtomicBoolean(false);
@@ -97,7 +97,7 @@ public class AionPoW {
      */
     public void init(
             IAionBlockchain blockchain,
-            IPendingState<AionTransaction> pendingState,
+            IPendingState pendingState,
             IEventMgr eventMgr) {
         if (initialized.compareAndSet(false, true)) {
             this.blockchain = blockchain;

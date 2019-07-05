@@ -10,10 +10,10 @@ import org.slf4j.Logger;
 
 /** Transaction executor base class. */
 public abstract class TxExecutorBase<
-        BLK extends Block<?, ?>,
+        BLK extends Block<?>,
         TX extends AbstractTransaction,
         BS extends IBlockStoreBase<?, ?>,
-        TR extends AbstractTxReceipt<?>> {
+        TR extends AbstractTxReceipt> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 

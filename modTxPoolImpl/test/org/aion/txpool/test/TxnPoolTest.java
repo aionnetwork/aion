@@ -59,7 +59,7 @@ public class TxnPoolTest {
 
     @Test
     public void getTxnPool() {
-        ITxPool<?> tp = new TxPoolA0<>();
+        ITxPool tp = new TxPoolA0();
         assertNotNull(tp);
     }
 
@@ -68,16 +68,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txnl = getMockTransaction();
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txnl = getMockTransaction();
 
-        ((AionTransaction) txnl.get(0)).sign(key.get(0));
+        (txnl.get(0)).sign(key.get(0));
         tp.add(txnl);
 
         assertTrue(tp.size() == 1);
     }
 
-    private List<Transaction> getMockTransaction() {
+    private List<AionTransaction> getMockTransaction() {
         return Collections.singletonList(
                 new AionTransaction(
                         ByteUtils.fromHexString("0000000000000001"),
@@ -95,9 +95,9 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txnl = getMockTransaction();
-        ((AionTransaction) txnl.get(0)).sign(key.get(0));
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txnl = getMockTransaction();
+        (txnl.get(0)).sign(key.get(0));
         tp.add(txnl);
         assertTrue(tp.size() == 1);
 
@@ -113,13 +113,13 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100"); // 100 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txl = new ArrayList<>();
-        List<Transaction> txlrm = new ArrayList<>();
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txl = new ArrayList<>();
+        List<AionTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
             AionTransaction tx =
-                    (AionTransaction) genTransaction(BigInteger.valueOf(i).toByteArray());
+                    genTransaction(BigInteger.valueOf(i).toByteArray());
             tx.setNrgConsume(5000L);
             tx.sign(key.get(0));
             txl.add(tx);
@@ -144,13 +144,13 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100"); // 100 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txl = new ArrayList<>();
-        List<Transaction> txlrm = new ArrayList<>();
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txl = new ArrayList<>();
+        List<AionTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
             AionTransaction tx =
-                    (AionTransaction) genTransaction(BigInteger.valueOf(i).toByteArray());
+                    genTransaction(BigInteger.valueOf(i).toByteArray());
             tx.setNrgConsume(5000L);
             tx.sign(key.get(0));
             txl.add(tx);
@@ -172,7 +172,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == 10);
     }
 
-    private Transaction genTransaction(byte[] nonce) {
+    private AionTransaction genTransaction(byte[] nonce) {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(0).getAddress()),
@@ -184,7 +184,7 @@ public class TxnPoolTest {
                 1L);
     }
 
-    private Transaction genTransaction(byte[] nonce, int _index) {
+    private AionTransaction genTransaction(byte[] nonce, int _index) {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(_index).getAddress()),
@@ -196,7 +196,7 @@ public class TxnPoolTest {
                 1L);
     }
 
-    private Transaction genTransactionRandomPrice(byte[] nonce, long price) {
+    private AionTransaction genTransactionRandomPrice(byte[] nonce, long price) {
         return new AionTransaction(
                 nonce,
                 new AionAddress(key.get(0).getAddress()),
@@ -213,9 +213,9 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10"); // 10 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txnl = getMockTransaction();
-        ((AionTransaction) txnl.get(0)).sign(key.get(0));
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txnl = getMockTransaction();
+        (txnl.get(0)).sign(key.get(0));
         txnl.get(0).setNrgConsume(30000L);
         tp.add(txnl);
 
@@ -230,9 +230,9 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "1"); // 10 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txnl = getMockTransaction();
-        ((AionTransaction) txnl.get(0)).sign(key.get(0));
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txnl = getMockTransaction();
+        (txnl.get(0)).sign(key.get(0));
         txnl.get(0).setNrgConsume(30000L);
         tp.add(txnl);
 
@@ -247,9 +247,9 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10"); // 10 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txnl = getMockTransaction();
-        ((AionTransaction) txnl.get(0)).sign(key.get(0));
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txnl = getMockTransaction();
+        (txnl.get(0)).sign(key.get(0));
         tp.add(txnl);
 
         tp.snapshot();
@@ -261,12 +261,12 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100"); // 100 sec
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        List<Transaction> txl = new ArrayList<>();
+        ITxPool tp = new TxPoolA0(config);
+        List<AionTransaction> txl = new ArrayList<>();
         int cnt = 26;
         for (int i = 0; i < cnt; i++) {
             AionTransaction txe =
-                    (AionTransaction) genTransaction(BigInteger.valueOf(i).toByteArray());
+                    genTransaction(BigInteger.valueOf(i).toByteArray());
             txe.setNrgConsume(5000L);
             txe.sign(key.get(0));
             txl.add(txe);
@@ -285,16 +285,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 26;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(i + 1);
             txnl.add(txn);
         }
@@ -302,7 +302,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
 
         long nonce = 0;
         for (Transaction tx : txl) {
@@ -315,16 +315,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 26;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(50 - i);
             txnl.add(txn);
         }
@@ -332,7 +332,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
 
         long nonce = 0;
         for (Transaction tx : txl) {
@@ -345,17 +345,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 100;
         Random r = new Random();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(r.nextInt(1000));
             txnl.add(txn);
         }
@@ -363,7 +363,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -378,17 +378,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 200;
         Random r = new Random();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+            txn.sign(key.get(0));
             txn.setNrgConsume(r.nextInt(1000));
             txnl.add(txn);
         }
@@ -396,7 +396,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -411,18 +411,18 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 200;
         Random r = new Random();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+            AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
 
-            ((AionTransaction) txn).sign(key.get(i < 100 ? 0 : 1));
+            txn.sign(key.get(i < 100 ? 0 : 1));
             txn.setNrgConsume(r.nextInt(1000));
             txnl.add(txn);
         }
@@ -430,7 +430,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -445,18 +445,18 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 200;
         Random r = new Random();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+            AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
 
-            ((AionTransaction) txn).sign(key.get(r.nextInt(10)));
+            txn.sign(key.get(r.nextInt(10)));
             txn.setNrgConsume(r.nextInt(1000));
             txnl.add(txn);
         }
@@ -464,7 +464,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -479,18 +479,18 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
 
         int cnt = 25;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransaction(nonce, 0);
 
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -498,13 +498,13 @@ public class TxnPoolTest {
         tp.add(txnl);
         assertTrue(tp.size() == cnt);
 
-        List<Transaction> txnl2 = new ArrayList<>();
+        List<AionTransaction> txnl2 = new ArrayList<>();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransaction(nonce, 1);
 
-            ((AionTransaction) txn).sign(key.get(1));
+            txn.sign(key.get(1));
             txn.setNrgConsume(1);
             txnl2.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -513,7 +513,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt * 2);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -528,17 +528,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
         int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransaction(nonce, 0);
 
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -547,9 +547,9 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransaction(nonce, 1);
 
-            ((AionTransaction) txn).sign(key.get(1));
+            txn.sign(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -558,9 +558,9 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransaction(nonce, 0);
 
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -569,9 +569,9 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransaction(nonce, 1);
 
-            ((AionTransaction) txn).sign(key.get(1));
+            txn.sign(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -581,7 +581,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt * 4);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -596,17 +596,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         Map<ByteArrayWrapper, Transaction> txMap = new HashMap<>();
         int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransaction(nonce, 0);
 
-            ((AionTransaction) txn).signWithSecTimeStamp(key.get(0));
+            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -615,9 +615,9 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransaction(nonce, 1);
 
-            ((AionTransaction) txn).signWithSecTimeStamp(key.get(1));
+            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -626,9 +626,9 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransaction(nonce, 0);
 
-            ((AionTransaction) txn).signWithSecTimeStamp(key.get(0));
+            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -637,9 +637,9 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            Transaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransaction(nonce, 1);
 
-            ((AionTransaction) txn).signWithSecTimeStamp(key.get(1));
+            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -649,7 +649,7 @@ public class TxnPoolTest {
         assertTrue(tp.size() == cnt * 4);
 
         // sort the inserted txs
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
         assertTrue(tp.snapshotAll().size() == txl.size());
 
@@ -664,8 +664,8 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
-        Transaction txn =
+        ITxPool tp = new TxPoolA0(config);
+        AionTransaction txn =
                 new AionTransaction(
                         ByteUtils.fromHexString("0000000000000001"),
                         new AionAddress(key.get(0).getAddress()),
@@ -675,9 +675,9 @@ public class TxnPoolTest {
                         10000L,
                         1L);
 
-        ((AionTransaction) txn).sign(key.get(0));
+        txn.sign(key.get(0));
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         txnl.add(txn);
         txnl.add(txn);
         tp.add(txnl);
@@ -690,16 +690,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(50);
             txnl.add(txn);
         }
@@ -709,12 +709,12 @@ public class TxnPoolTest {
 
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
-        Transaction txn = genTransaction(nonce);
-        ((AionTransaction) txn).sign(key.get(0));
+        AionTransaction txn = genTransaction(nonce);
+        txn.sign(key.get(0));
         txn.setNrgConsume(500);
         tp.add(txn);
 
-        List<Transaction> snapshot = tp.snapshot();
+        List<AionTransaction> snapshot = tp.snapshot();
         assertTrue(snapshot.size() == cnt);
 
         assertTrue(snapshot.get(5).equals(txn));
@@ -725,16 +725,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(50);
             txnl.add(txn);
         }
@@ -745,12 +745,12 @@ public class TxnPoolTest {
 
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
-        Transaction txn = genTransaction(nonce);
-        ((AionTransaction) txn).sign(key.get(0));
+        AionTransaction txn = genTransaction(nonce);
+        txn.sign(key.get(0));
         txn.setNrgConsume(500);
         tp.add(txn);
 
-        List<Transaction> snapshot = tp.snapshot();
+        List<AionTransaction> snapshot = tp.snapshot();
         assertTrue(snapshot.size() == cnt);
 
         assertTrue(snapshot.get(5).equals(txn));
@@ -761,17 +761,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        ITxPool<Transaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
-        Transaction txn = genTransaction(ByteUtils.fromHexString("0000000000000001"));
+        AionTransaction txn = genTransaction(ByteUtils.fromHexString("0000000000000001"));
         txn.setNrgConsume(100);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
 
-        ((AionTransaction) txn).sign(key.get(0));
+        txn.sign(key.get(0));
         txnl.add(txn);
 
-        ((AionTransaction) txn).sign(key.get(0));
+        txn.sign(key.get(0));
         txnl.add(txn);
         long t = new BigInteger(txn.getTimestamp()).longValue();
 
@@ -779,7 +779,7 @@ public class TxnPoolTest {
 
         assertTrue(tp.size() == 1);
 
-        List<Transaction> txl = tp.snapshot();
+        List<AionTransaction> txl = tp.snapshot();
         assertTrue(txl.size() == 1);
         assertTrue(new BigInteger(txl.get(0).getTimestamp()).longValue() == t);
     }
@@ -789,16 +789,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
         AionAddress acc = new AionAddress(key.get(0).getAddress());
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 100;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
-            Transaction txn =
+            AionTransaction txn =
                     new AionTransaction(
                             nonce,
                             acc,
@@ -808,7 +808,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L);
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(100L);
             txnl.add(txn);
         }
@@ -831,16 +831,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 100;
         for (ECKey aKey1 : key) {
             AionAddress acc = new AionAddress(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 byte[] nonce = new byte[Long.BYTES];
                 nonce[Long.BYTES - 1] = (byte) (i + 1);
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 nonce,
                                 acc,
@@ -850,7 +850,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey1);
+                txn.sign(aKey1);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -876,16 +876,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 100;
         byte[] nonce = new byte[Long.BYTES];
         for (int i = 0; i < cnt; i++) {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionAddress addr = new AionAddress(key2.get(i).getAddress());
-            Transaction txn =
+            AionTransaction txn =
                     new AionTransaction(
                             nonce,
                             addr,
@@ -896,7 +896,7 @@ public class TxnPoolTest {
                             10000L,
                             1L);
 
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(i + 1);
             txnl.add(txn);
         }
@@ -920,17 +920,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
 
-            Transaction txn = genTransaction(nonce);
+            AionTransaction txn = genTransaction(nonce);
 
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(i + 1);
             txnl.add(txn);
         }
@@ -951,16 +951,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 17;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
 
-            Transaction txn = genTransaction(nonce);
-            ((AionTransaction) txn).sign(key.get(0));
+            AionTransaction txn = genTransaction(nonce);
+            txn.sign(key.get(0));
             txn.setNrgConsume(i + 1);
             txnl.add(txn);
         }
@@ -984,14 +984,14 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
             AionAddress acc = new AionAddress(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
@@ -1001,7 +1001,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey1);
+                txn.sign(aKey1);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -1031,14 +1031,14 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey2 : key) {
             AionAddress acc = new AionAddress(aKey2.getAddress());
             for (int i = 0; i < cnt; i++) {
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
@@ -1048,7 +1048,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey2);
+                txn.sign(aKey2);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -1066,7 +1066,7 @@ public class TxnPoolTest {
         txnl.clear();
         for (ECKey aKey1 : key) {
             for (int i = 0; i < cnt2; i++) {
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(cnt + i).toByteArray(),
                                 new AionAddress(aKey1.getAddress()),
@@ -1076,7 +1076,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey1);
+                txn.sign(aKey1);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -1107,16 +1107,16 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 100;
         System.out.println("Gen new transactions --");
         long start = System.currentTimeMillis();
         for (ECKey aKey21 : key2) {
             AionAddress acc = new AionAddress(aKey21.getAddress());
             for (int i = 0; i < cnt; i++) {
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
@@ -1126,7 +1126,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey21);
+                txn.sign(aKey21);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -1160,17 +1160,17 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
-        List<Transaction> txnlrm = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnlrm = new ArrayList<>();
         int cnt = 100000;
         int rmCnt = 10;
         AionAddress acc = new AionAddress(key.get(0).getAddress());
         System.out.println("gen new transactions...");
         long start = System.currentTimeMillis();
         for (int i = 0; i < cnt; i++) {
-            Transaction txn =
+            AionTransaction txn =
                     new AionTransaction(
                             BigInteger.valueOf(i).toByteArray(),
                             acc,
@@ -1180,7 +1180,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L);
-            ((AionTransaction) txn).sign(key.get(0));
+            txn.sign(key.get(0));
             txn.setNrgConsume(100L);
             txnl.add(txn);
 
@@ -1228,14 +1228,14 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
 
-        TxPoolA0<Transaction> tp = new TxPoolA0<>(config);
+        TxPoolA0 tp = new TxPoolA0(config);
 
-        List<Transaction> txnl = new ArrayList<>();
+        List<AionTransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
             AionAddress acc = new AionAddress(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
-                Transaction txn =
+                AionTransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
@@ -1245,7 +1245,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L);
-                ((AionTransaction) txn).sign(aKey1);
+                txn.sign(aKey1);
                 txn.setNrgConsume(100L);
                 txnl.add(txn);
             }
@@ -1296,7 +1296,7 @@ public class TxnPoolTest {
         }
 
         Properties config = new Properties();
-        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
         tp.add(txs.subList(0, 500));
         assertEquals(500, tp.snapshot().size());
@@ -1330,7 +1330,7 @@ public class TxnPoolTest {
         }
 
         Properties config = new Properties();
-        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
         tp.add(txs.subList(0, 17));
         assertEquals(17, tp.snapshot().size());
@@ -1360,7 +1360,7 @@ public class TxnPoolTest {
         }
 
         Properties config = new Properties();
-        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+        ITxPool tp = new TxPoolA0(config);
 
         tp.add(txs.subList(0, 26));
         assertEquals(26, tp.snapshot().size());

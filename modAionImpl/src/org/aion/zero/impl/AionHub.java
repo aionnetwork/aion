@@ -60,7 +60,7 @@ public class AionHub {
 
     private BlockPropagationHandler propHandler;
 
-    private IPendingStateInternal<AionBlock, AionTransaction> mempool;
+    private IPendingStateInternal<AionBlock> mempool;
 
     private IAionBlockchain blockchain;
 
@@ -280,7 +280,7 @@ public class AionHub {
         return this.repository.getBlockStore();
     }
 
-    public IPendingStateInternal<AionBlock, AionTransaction> getPendingState() {
+    public IPendingStateInternal<AionBlock> getPendingState() {
         return mempool;
     }
 

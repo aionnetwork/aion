@@ -3,6 +3,7 @@ package org.aion.txpool;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.types.AionAddress;
 
@@ -11,28 +12,28 @@ import org.aion.types.AionAddress;
  *
  * @param <TX>
  */
-public interface ITxPool<TX extends Transaction> {
+public interface ITxPool {
 
     String PROP_TX_TIMEOUT = "tx-timeout";
     String PROP_BLOCK_SIZE_LIMIT = "blk-size-limit";
     String PROP_BLOCK_NRG_LIMIT = "blk-nrg-limit";
     String PROP_TX_SEQ_MAX = "tx-seq-max";
 
-    List<TX> add(List<TX> tx);
+    List<AionTransaction> add(List<AionTransaction> tx);
 
     // return TX if the TX add success, if the pool already has the same nonce tx. return the old
     // tx.
-    TX add(TX tx);
+    AionTransaction add(AionTransaction tx);
 
-    List<TX> remove(List<TX> tx);
+    List<AionTransaction> remove(List<AionTransaction> tx);
 
-    List<TX> remove(Map<AionAddress, BigInteger> accNonce);
+    List<AionTransaction> remove(Map<AionAddress, BigInteger> accNonce);
 
     int size();
 
-    List<TX> snapshot();
+    List<AionTransaction> snapshot();
 
-    List<TX> getOutdatedList();
+    List<AionTransaction> getOutdatedList();
 
     long getOutDateTime();
 
@@ -43,7 +44,7 @@ public interface ITxPool<TX extends Transaction> {
     @SuppressWarnings("SameReturnValue")
     String getVersion();
 
-    List<TX> snapshotAll();
+    List<AionTransaction> snapshotAll();
 
-    TX getPoolTx(AionAddress from, BigInteger txNonce);
+    AionTransaction getPoolTx(AionAddress from, BigInteger txNonce);
 }

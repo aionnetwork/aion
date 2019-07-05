@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
@@ -27,7 +28,7 @@ import org.aion.util.time.TimeInstant;
 import org.aion.util.types.ByteArrayWrapper;
 
 @SuppressWarnings("unchecked")
-public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
+public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
     public TxPoolA0() {
         super();
@@ -90,8 +91,8 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
     }
 
     @Override
-    public TX add(TX tx) {
-        List<TX> rtn = this.add(Collections.singletonList(tx));
+    public AionTransaction add(AionTransaction tx) {
+        List<AionTransaction> rtn = this.add(Collections.singletonList(tx));
         return rtn.isEmpty() ? null : rtn.get(0);
     }
 
@@ -109,11 +110,11 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
     }
 
     @Override
-    public List<TX> add(List<TX> txl) {
+    public List<AionTransaction> add(List<AionTransaction> txl) {
 
-        List<TX> newPendingTx = new ArrayList<>();
+        List<AionTransaction> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
-        for (TX tx : txl) {
+        for (AionTransaction tx : txl) {
 
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
             if (this.getMainMap().get(bw) != null) {
@@ -156,7 +157,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
                                         this.getMainMap().get(entry.getKey()).getTx()));
 
                 if (oldTx != null && !oldTx.isEmpty()) {
-                    newPendingTx.add((TX) oldTx.get(0));
+                    newPendingTx.add((AionTransaction) oldTx.get(0));
                 }
             } else {
                 if (LOG.isTraceEnabled()) {
@@ -181,12 +182,12 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
         return newPendingTx;
     }
 
-    public List<TX> getOutdatedList() {
+    public List<AionTransaction> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
 
     @Override
-    public List<TX> remove(Map<AionAddress, BigInteger> accNonce) {
+    public List<AionTransaction> remove(Map<AionAddress, BigInteger> accNonce) {
 
         List<ByteArrayWrapper> bwList = new ArrayList<>();
         for (Map.Entry<AionAddress, BigInteger> en1 : accNonce.entrySet()) {
@@ -237,13 +238,13 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
             as.setDirty();
         }
 
-        List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
+        List<AionTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
         bwList.parallelStream()
                 .forEach(
                         bw -> {
                             if (this.getMainMap().get(bw) != null) {
                                 Transaction tx = this.getMainMap().get(bw).getTx().clone();
-                                removedTxl.add((TX) tx);
+                                removedTxl.add((AionTransaction) tx);
 
                                 long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
                                 synchronized (this.getTimeView().get(timestamp)) {
@@ -278,12 +279,12 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
 
     @Override
     @Deprecated
-    public List<TX> remove(List<TX> txs) {
+    public List<AionTransaction> remove(List<AionTransaction> txs) {
 
-        List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
+        List<AionTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
         Set<AionAddress> checkedAddress = Collections.synchronizedSet(new HashSet<>());
 
-        for (TX tx : txs) {
+        for (AionTransaction tx : txs) {
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
             lock.writeLock().lock();
             try {
@@ -295,7 +296,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
             }
 
             //noinspection unchecked
-            removedTxl.add((TX) tx.clone());
+            removedTxl.add(tx.clone());
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
@@ -391,7 +392,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
     }
 
     @Override
-    public TX getPoolTx(AionAddress from, BigInteger txNonce) {
+    public AionTransaction getPoolTx(AionAddress from, BigInteger txNonce) {
         if (from == null || txNonce == null) {
             LOG.error("TxPoolA0.getPoolTx null args");
             return null;
@@ -410,12 +411,12 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
     }
 
     @Override
-    public List<TX> snapshotAll() {
+    public List<AionTransaction> snapshotAll() {
 
         sortTxn();
         removeTimeoutTxn();
 
-        List<TX> rtn = new ArrayList<>();
+        List<AionTransaction> rtn = new ArrayList<>();
         for (Map.Entry<AionAddress, AccountState> as : this.getFullAcc().entrySet()) {
             for (Map.Entry<ByteArrayWrapper, BigInteger> txMap : as.getValue().getMap().values()) {
                 if (this.getMainMap().get(txMap.getKey()) == null) {
@@ -423,7 +424,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
                     continue;
                 }
 
-                rtn.add((TX) this.getMainMap().get(txMap.getKey()).getTx().clone());
+                rtn.add(this.getMainMap().get(txMap.getKey()).getTx().clone());
             }
         }
 
@@ -441,14 +442,14 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
         return rtn;
     }
 
-    public List<TX> snapshot() {
+    public List<AionTransaction> snapshot() {
 
         sortTxn();
         removeTimeoutTxn();
 
         int cnt_txSz = 0;
         long cnt_nrg = 0;
-        List<TX> rtn = new ArrayList<>();
+        List<AionTransaction> rtn = new ArrayList<>();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> nonPickedTx =
                 new HashMap<>();
@@ -494,7 +495,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
 
                         if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                             try {
-                                rtn.add((TX) itx.clone());
+                                rtn.add((AionTransaction) itx.clone());
                                 if (firstTx) {
                                     snapshotSet.add(bw);
                                     firstTx = false;
@@ -541,7 +542,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
 
                             if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                                 try {
-                                    rtn.add((TX) itx.clone());
+                                    rtn.add((AionTransaction) itx.clone());
                                     if (firstTx) {
                                         snapshotSet.add(bw);
                                         firstTx = false;
@@ -600,7 +601,7 @@ public class TxPoolA0<TX extends Transaction> extends AbstractTxPool<TX> impleme
     private void removeTimeoutTxn() {
 
         long ts = TimeInstant.now().toEpochSec() - txn_timeout;
-        List<TX> txl = Collections.synchronizedList(new ArrayList<>());
+        List<AionTransaction> txl = Collections.synchronizedList(new ArrayList<>());
 
         this.getTimeView()
                 .entrySet()

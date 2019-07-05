@@ -6,7 +6,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 import org.aion.base.AionTransaction;
 
-public class A0TxTask extends AbstractTxTask<AionTransaction, IP2pMgr> {
+public class A0TxTask extends AbstractTxTask<IP2pMgr> {
 
     public A0TxTask(AionTransaction _tx, IP2pMgr _p2pMgr, Msg _msg) {
         super(_tx, _p2pMgr, _msg);

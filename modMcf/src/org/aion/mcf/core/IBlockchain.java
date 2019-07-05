@@ -25,7 +25,6 @@ import org.aion.util.types.ByteArrayWrapper;
 public interface IBlockchain<
                 BLK extends Block,
                 BH extends AbstractBlockHeader,
-                TX extends Transaction,
                 TR extends AbstractTxReceipt,
                 INFO extends AbstractTxInfo>
         extends IPowChain<BLK, BH> {

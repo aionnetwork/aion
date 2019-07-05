@@ -3,6 +3,7 @@ package org.aion.api.server.types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.IBloomFilter;
@@ -87,7 +88,7 @@ public final class FltrLg extends Fltr {
     public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
-            for (Transaction txn : blk.getTransactionsList()) {
+            for (AionTransaction txn : blk.getTransactionsList()) {
                 if (txn.getDestinationAddress() != null
                         && matchesContractAddress(txn.getDestinationAddress().toByteArray())) {
                     // now that we know that our filter might match with some logs in this

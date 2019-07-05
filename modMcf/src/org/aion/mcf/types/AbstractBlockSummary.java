@@ -18,9 +18,8 @@ import org.slf4j.Logger;
 
 /** AbstractBlockSummary */
 public class AbstractBlockSummary<
-        BLK extends Block<?, ?>,
-        TX extends Transaction,
-        TXR extends AbstractTxReceipt<TX>,
+        BLK extends Block<?>,
+        TXR extends AbstractTxReceipt,
         TXES extends TxExecSummary> {
 
     protected BLK block;

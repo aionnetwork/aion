@@ -5,10 +5,10 @@ import org.aion.types.AionAddress;
 
 public interface Transaction extends Cloneable {
 
+    Transaction clone();
+
     AionAddress getSenderAddress();
-
     AionAddress getDestinationAddress();
-
     AionAddress getContractAddress();
 
     byte[] getTransactionHash();
@@ -30,8 +30,6 @@ public interface Transaction extends Cloneable {
 
     BigInteger getNonceBI();
     BigInteger getTimeStampBI();
-
-    Transaction clone();
 
     void setNrgConsume(long _nrg);
     void setEncoded(byte[] _encodedData);

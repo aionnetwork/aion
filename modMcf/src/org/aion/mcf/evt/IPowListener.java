@@ -1,6 +1,7 @@
 package org.aion.mcf.evt;
 
 import java.util.List;
+import org.aion.base.AionTransaction;
 import org.aion.base.Transaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.tx.TxExecSummary;
@@ -16,16 +17,15 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * @param <BS>
  */
 public interface IPowListener<
-                BLK extends Block<?, ?>,
-                TX extends Transaction,
-                TXR extends AbstractTxReceipt<?>,
-                BS extends AbstractBlockSummary<?, ?, ?, ?>>
-        extends IListenerBase<BLK, TX, TXR, BS> {
+                BLK extends Block<?>,
+                TXR extends AbstractTxReceipt,
+                BS extends AbstractBlockSummary<?, ?, ?>>
+        extends IListenerBase<BLK, TXR, BS> {
     void onBlock(BS blockSummary);
 
     void onPeerDisconnect(String host, long port);
 
-    void onPendingTransactionsReceived(List<TX> transactions);
+    void onPendingTransactionsReceived(List<AionTransaction> transactions);
 
     void onSyncDone();
 

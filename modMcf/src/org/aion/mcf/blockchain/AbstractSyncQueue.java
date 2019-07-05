@@ -6,7 +6,7 @@ import org.aion.util.types.ByteArrayWrapper;
 
 /** Abstract SyncQueue Class */
 public abstract class AbstractSyncQueue<
-                BLK extends Block<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>>
+                BLK extends Block<?>, BHW extends AbstractBlockHeaderWrapper<?>>
         implements ISyncQueue<BLK, BHW> {
 
     protected static int MAX_CHAIN_LEN = 192;
@@ -51,7 +51,7 @@ public abstract class AbstractSyncQueue<
         }
     }
 
-    public class HeaderElement<BK extends Block<?, ?>, BW extends AbstractBlockHeaderWrapper<?>> {
+    public class HeaderElement<BK extends Block<?>, BW extends AbstractBlockHeaderWrapper<?>> {
 
         public BW header;
         public BK block;

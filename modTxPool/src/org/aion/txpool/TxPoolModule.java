@@ -7,14 +7,14 @@ public final class TxPoolModule {
     private static TxPoolModule singleton = null;
     public static final String MODULENAME = "module_name";
 
-    private static ITxPool<Transaction> TXPOOL;
+    private static ITxPool TXPOOL;
 
     @SuppressWarnings("unchecked")
     private TxPoolModule(Properties config) throws Exception {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
             TXPOOL =
-                    (ITxPool<Transaction>)
+                    (ITxPool)
                             getClass()
                                     .getClassLoader()
                                     .loadClass(moduleName)
@@ -37,7 +37,7 @@ public final class TxPoolModule {
         return TxPoolModule.singleton;
     }
 
-    public ITxPool<?> getTxPool() throws Exception {
+    public ITxPool getTxPool() throws Exception {
         if (TxPoolModule.singleton == null) {
             throw new Exception("Module does not initialzed!");
         }

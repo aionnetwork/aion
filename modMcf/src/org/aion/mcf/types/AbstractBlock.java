@@ -5,20 +5,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AbstractTransaction;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 
 /** Abstract Block class. */
-public abstract class AbstractBlock<BH extends BlockHeader, TX extends AbstractTransaction>
-        implements Block<TX, BH> {
+public abstract class AbstractBlock<BH extends BlockHeader> implements Block<BH> {
 
     protected BH header;
 
-    protected List<TX> transactionsList = new CopyOnWriteArrayList<>();
+    protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
     @Override
-    public boolean isEqual(Block<TX, BH> block) {
+    public boolean isEqual(Block<BH> block) {
         return Arrays.equals(this.getHash(), block.getHash());
     }
 
@@ -32,7 +32,7 @@ public abstract class AbstractBlock<BH extends BlockHeader, TX extends AbstractT
      * @param block - possible a son of this
      * @return - true if this block is parent of param block
      */
-    public boolean isParentOf(Block<TX, BH> block) {
+    public boolean isParentOf(Block<BH> block) {
         return Arrays.equals(this.getHash(), block.getParentHash());
     }
 
@@ -54,7 +54,7 @@ public abstract class AbstractBlock<BH extends BlockHeader, TX extends AbstractT
 
         byte[][] transactionsEncoded = new byte[transactionsList.size()][];
         int i = 0;
-        for (TX tx : transactionsList) {
+        for (AionTransaction tx : transactionsList) {
             transactionsEncoded[i] = tx.getEncoded();
             ++i;
         }

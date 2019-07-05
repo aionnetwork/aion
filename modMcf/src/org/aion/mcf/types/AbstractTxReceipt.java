@@ -4,17 +4,17 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.Transaction;
+import org.aion.base.AionTransaction;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;
 import org.aion.types.Log;
 import org.aion.util.types.Bytesable;
 
-public abstract class AbstractTxReceipt<TX extends Transaction>
-        implements Bytesable<Object>, TxReceipt<TX, Log> {
 
-    protected TX transaction;
+public abstract class AbstractTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
+
+    protected AionTransaction transaction;
 
     protected byte[] postTxState = EMPTY_BYTE_ARRAY;
 
@@ -85,11 +85,11 @@ public abstract class AbstractTxReceipt<TX extends Transaction>
         rlpEncoded = null;
     }
 
-    public void setTransaction(TX transaction) {
+    public void setTransaction(AionTransaction transaction) {
         this.transaction = transaction;
     }
 
-    public TX getTransaction() {
+    public AionTransaction getTransaction() {
         if (transaction == null) {
             throw new NullPointerException(
                     "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");

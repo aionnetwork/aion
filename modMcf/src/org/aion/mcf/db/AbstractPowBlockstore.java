@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <BH>
  */
 public abstract class AbstractPowBlockstore<
-                BLK extends AbstractBlock<?, ?>, BH extends AbstractBlockHeader>
+                BLK extends AbstractBlock<?>, BH extends AbstractBlockHeader>
         implements IBlockStorePow<BLK, BH> {
 
     @Override

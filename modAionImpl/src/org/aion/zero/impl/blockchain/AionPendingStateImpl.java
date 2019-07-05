@@ -64,7 +64,7 @@ import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
-public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, AionTransaction> {
+public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
@@ -100,7 +100,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private Repository repository;
 
-    private ITxPool<AionTransaction> txPool;
+    private ITxPool txPool;
 
     private IEventMgr evtMgr = null;
 
@@ -316,7 +316,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             try {
                 txPoolModule = TxPoolModule.getSingleton(prop);
                 //noinspection unchecked
-                this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
+                this.txPool = txPoolModule.getTxPool();
             } catch (Exception e) {
                 LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
             }

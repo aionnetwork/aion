@@ -17,7 +17,7 @@ import org.aion.zero.types.IAionBlock;
  * @author yao
  */
 public class AionBlockSummary
-        extends AbstractBlockSummary<IAionBlock, AionTransaction, AionTxReceipt, AionTxExecSummary>
+        extends AbstractBlockSummary<IAionBlock, AionTxReceipt, AionTxExecSummary>
         implements BlockSummary {
 
     public AionBlockSummary(

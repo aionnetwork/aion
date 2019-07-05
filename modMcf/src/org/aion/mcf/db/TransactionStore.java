@@ -19,7 +19,7 @@ import org.apache.commons.collections4.map.LRUMap;
 
 public class TransactionStore<
                 TX extends AbstractTransaction,
-                TXR extends AbstractTxReceipt<TX>,
+                TXR extends AbstractTxReceipt,
                 INFO extends AbstractTxInfo<TXR, TX>>
         implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);

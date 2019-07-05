@@ -15,7 +15,7 @@ import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain
-        extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
+        extends IBlockchain<AionBlock, A0BlockHeader, AionTxReceipt, AionTxInfo> {
 
     AionBlock createNewBlock(
             AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
