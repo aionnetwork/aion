@@ -14,7 +14,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.types.KernelInterface;
-import org.aion.mcf.types.ResultCode;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
@@ -186,7 +185,7 @@ public final class FvmTransactionExecutor {
                         .internalTransactions(transactionSideEffects.getInternalTransactions())
                         .result(result.getReturnData());
 
-        ResultCode resultCode = result.getResultCode();
+        FastVmResultCode resultCode = result.getResultCode();
 
         if (resultCode.isRejected()) {
             builder.markAsRejected();

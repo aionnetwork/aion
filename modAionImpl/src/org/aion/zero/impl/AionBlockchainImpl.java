@@ -50,7 +50,6 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.types.BlockIdentifierImpl;
-import org.aion.mcf.types.IBloomFilter;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
@@ -304,7 +303,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static byte[] calcLogBloom(List<AionTxReceipt> receipts) {
         if (receipts == null || receipts.isEmpty()) {
-            return new byte[IBloomFilter.SIZE];
+            return new byte[Bloom.SIZE];
         }
 
         Bloom retBloomFilter = new Bloom();

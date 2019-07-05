@@ -1,14 +1,15 @@
 package org.aion.mcf.vm.types;
 
 import java.util.Arrays;
-import org.aion.mcf.types.IBloomFilter;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
 /** Utility class for creating/operating bloom. */
-public class Bloom implements IBloomFilter {
+public class Bloom {
 
-    public byte[] data = new byte[IBloomFilter.SIZE];
+    public static final int SIZE = 256;
+
+    public byte[] data = new byte[SIZE];
 
     public Bloom() {}
 
@@ -24,7 +25,7 @@ public class Bloom implements IBloomFilter {
         int mov3 = (((toBloom[4] & 0xff) & 7) << 8) + ((toBloom[5]) & 0xff);
 
         // # bits: 8 * 256 = 2048
-        byte[] data = new byte[IBloomFilter.SIZE];
+        byte[] data = new byte[SIZE];
         Bloom bloom = new Bloom(data);
 
         ByteUtil.setBit(data, mov1, 1);
@@ -34,22 +35,19 @@ public class Bloom implements IBloomFilter {
         return bloom;
     }
 
-    @Override
-    public void or(IBloomFilter bloom) {
+    public void or(Bloom bloom) {
         for (int i = 0; i < data.length; ++i) {
             data[i] |= bloom.getBloomFilterBytes()[i];
         }
     }
 
-    @Override
-    public void and(IBloomFilter bloom) {
+    public void and(Bloom bloom) {
         for (int i = 0; i < data.length; ++i) {
             data[i] &= bloom.getBloomFilterBytes()[i];
         }
     }
 
-    @Override
-    public boolean matches(IBloomFilter topicBloom) {
+    public boolean matches(Bloom topicBloom) {
         Bloom copy = copy();
         copy.or(topicBloom);
         return this.equals(copy);
@@ -62,14 +60,12 @@ public class Bloom implements IBloomFilter {
      * @param topicBloom another bloom already set with bloomBits
      * @return {@code true} if our bloom contains other bloom, {@code false} otherwise
      */
-    @Override
-    public boolean contains(IBloomFilter topicBloom) {
+    public boolean contains(Bloom topicBloom) {
         Bloom copy = copy();
         copy.and(topicBloom);
         return topicBloom.equals(copy);
     }
 
-    @Override
     public byte[] getBloomFilterBytes() {
         return data;
     }

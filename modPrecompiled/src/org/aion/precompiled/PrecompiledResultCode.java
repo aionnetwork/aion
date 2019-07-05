@@ -2,10 +2,9 @@ package org.aion.precompiled;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.mcf.types.ResultCode;
 
 /** An enumeration representing the execution status of a transaction. */
-public enum PrecompiledResultCode implements ResultCode {
+public enum PrecompiledResultCode {
     SUCCESS(0, ResultCategory.SUCCESS),
 
     INVALID_NONCE(101, ResultCategory.REJECTED),
@@ -61,33 +60,27 @@ public enum PrecompiledResultCode implements ResultCode {
         this.category = category;
     }
 
-    @Override
     public boolean isSuccess() {
         return this.category == ResultCategory.SUCCESS;
     }
 
-    @Override
     public boolean isRejected() {
         return this.category == ResultCategory.REJECTED;
     }
 
-    @Override
     public boolean isFailed() {
         return ((this.category == ResultCategory.FAILED)
                 || (this.category == ResultCategory.REVERT));
     }
 
-    @Override
     public boolean isFatal() {
         return this.category == ResultCategory.FATAL;
     }
 
-    @Override
     public boolean isRevert() {
         return this.category == ResultCategory.REVERT;
     }
 
-    @Override
     public int toInt() {
         return this.value;
     }
