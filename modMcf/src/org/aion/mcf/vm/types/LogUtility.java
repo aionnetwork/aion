@@ -3,7 +3,6 @@ package org.aion.mcf.vm.types;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.types.IBloomFilter;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -12,7 +11,7 @@ import org.aion.types.Log;
 
 public class LogUtility {
 
-    public static IBloomFilter createBloomFilterForLog(Log log) {
+    public static Bloom createBloomFilterForLog(Log log) {
         Bloom ret = Bloom.create(HashUtil.h256(log.copyOfAddress()));
         for (byte[] topic : log.copyOfTopics()) {
             ret.or(Bloom.create(HashUtil.h256(topic)));

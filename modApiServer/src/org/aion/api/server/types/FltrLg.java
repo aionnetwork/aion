@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.IBloomFilter;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;
 import org.aion.types.Log;
@@ -138,7 +137,7 @@ public final class FltrLg extends Fltr {
         }
     }
 
-    public boolean matchBloom(IBloomFilter blockBloom) {
+    public boolean matchBloom(Bloom blockBloom) {
         initBlooms();
         for (Bloom[] andBloom : filterBlooms) {
             boolean orMatches = false;

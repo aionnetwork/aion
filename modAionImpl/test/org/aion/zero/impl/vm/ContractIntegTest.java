@@ -53,7 +53,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.ResultCode;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
@@ -1821,7 +1820,7 @@ public class ContractIntegTest {
             String contractName,
             AionAddress contractAddr,
             byte[] output,
-            ResultCode result,
+            FastVmResultCode result,
             BigInteger value)
             throws IOException {
 

@@ -5,7 +5,6 @@ import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 import org.aion.mcf.types.KernelInterface;
-import org.aion.mcf.types.ResultCode;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
@@ -127,15 +126,11 @@ public class PrecompiledTransactionResult {
         this.energyRemaining = energyRemaining;
     }
 
-    public void setResultCode(ResultCode code) {
+    public void setResultCode(PrecompiledResultCode code) {
         if (code == null) {
             throw new NullPointerException("Cannot set null result code.");
         }
-        if (!(code instanceof PrecompiledResultCode)) {
-            throw new IllegalArgumentException(
-                    "Type of code must be PrecompiledResultCode for FastVmTransactionResult.");
-        }
-        this.code = (PrecompiledResultCode) code;
+        this.code = code;
     }
 
     public void setKernelInterface(KernelInterface kernel) {
