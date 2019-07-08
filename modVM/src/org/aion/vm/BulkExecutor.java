@@ -1,17 +1,15 @@
 package org.aion.vm;
 
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMContractDeployment;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.aion.avm.core.ExecutionType;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
@@ -184,6 +182,7 @@ public final class BulkExecutor {
                 .get(0);
     }
 
+    /** This is the common execution point that all publicly-exposed execute methods call into. */
     private static List<AionTxExecSummary> executeInternal(
             byte[] blockDifficulty,
             long blockNumber,
@@ -211,24 +210,16 @@ public final class BulkExecutor {
             AionTransaction firstTransactionInNextBatch = transactions.get(currentIndex);
 
             if (transactionIsForAionVirtualMachine(repository, firstTransactionInNextBatch)) {
-                // Grab the next batch of avm transactions to execute.
-                List<AionTransaction> avmTransactionsToExecute =
-                        fetchNextBatchOfTransactionsForAionVirtualMachine(
-                                repository, transactions, currentIndex);
-                AionTransaction[] avmTransactions =
-                        new AionTransaction[avmTransactionsToExecute.size()];
-                avmTransactionsToExecute.toArray(avmTransactions);
-
-                // Execute the avm transactions.
                 currentBatchOfSummaries =
-                        AvmTransactionExecutor.executeTransactions(
+                        executeNextBatchOfAvmTransactions(
                                 repository,
+                                transactions,
+                                currentIndex,
                                 blockDifficulty,
                                 blockNumber,
                                 blockTimestamp,
                                 blockNrgLimit,
                                 blockCoinbase,
-                                avmTransactions,
                                 postExecutionWork,
                                 logger,
                                 checkBlockEnergyLimit,
@@ -237,32 +228,29 @@ public final class BulkExecutor {
                                 blockRemainingEnergy,
                                 blockCachingContext.avmType,
                                 cachedBlockNumber);
-            } else {
-                // Grab the next batch of fvm transactions to execute.
-                List<AionTransaction> fvmTransactionsToExecute =
-                        fetchNextBatchOfTransactionsForFastVirtualMachine(
-                                repository, transactions, currentIndex);
-                AionTransaction[] fvmTransactions =
-                        new AionTransaction[fvmTransactionsToExecute.size()];
-                fvmTransactionsToExecute.toArray(fvmTransactions);
-
-                // Execute the fvm transactions.
+            } else if (transactionIsForFastVirtualMachine(
+                    repository, firstTransactionInNextBatch)) {
                 currentBatchOfSummaries =
-                        FvmTransactionExecutor.executeTransactions(
+                        executeNextBatchOfFvmTransactions(
                                 repository,
+                                transactions,
+                                currentIndex,
                                 blockDifficulty,
                                 blockNumber,
                                 blockTimestamp,
                                 blockNrgLimit,
                                 blockCoinbase,
-                                fvmTransactions,
                                 postExecutionWork,
                                 logger,
                                 checkBlockEnergyLimit,
                                 incrementSenderNonce,
                                 isLocalCall,
-                                fork040enabled,
-                                blockRemainingEnergy);
+                                blockRemainingEnergy,
+                                fork040enabled);
+            } else {
+                throw new IllegalStateException(
+                        "Transaction is not destined for any known VM: "
+                                + firstTransactionInNextBatch);
             }
 
             // Update the remaining energy left in the block.
@@ -281,6 +269,104 @@ public final class BulkExecutor {
         }
 
         return allSummaries;
+    }
+
+    /**
+     * Returns the execution summaries of the next batch of avm transactions to be run. This batch
+     * of transactions begins with the transaction at index {@code currentIndex} in the provided
+     * list of transactions and includes all subsequent transactions that are avm-bound.
+     */
+    private static List<AionTxExecSummary> executeNextBatchOfAvmTransactions(
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            List<AionTransaction> transactions,
+            int currentIndex,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
+            PostExecutionWork postExecutionWork,
+            Logger logger,
+            boolean checkBlockEnergyLimit,
+            boolean incrementSenderNonce,
+            boolean isLocalCall,
+            long blockRemainingEnergy,
+            ExecutionType executionType,
+            long cachedBlockNumber)
+            throws VMException {
+
+        // Grab the next batch of avm transactions to execute.
+        List<AionTransaction> avmTransactionsToExecute =
+                fetchNextBatchOfTransactionsForAionVirtualMachine(
+                        repository, transactions, currentIndex);
+        AionTransaction[] avmTransactions = new AionTransaction[avmTransactionsToExecute.size()];
+        avmTransactionsToExecute.toArray(avmTransactions);
+
+        // Execute the avm transactions.
+        return AvmTransactionExecutor.executeTransactions(
+                repository,
+                blockDifficulty,
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase,
+                avmTransactions,
+                postExecutionWork,
+                logger,
+                checkBlockEnergyLimit,
+                incrementSenderNonce,
+                isLocalCall,
+                blockRemainingEnergy,
+                executionType,
+                cachedBlockNumber);
+    }
+
+    /**
+     * Returns the execution summaries of the next batch of fvm transactions to be run. This batch
+     * of transactions begins with the transaction at index {@code currentIndex} in the provided
+     * list of transactions and includes all subsequent transactions that are fvm-bound.
+     */
+    private static List<AionTxExecSummary> executeNextBatchOfFvmTransactions(
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            List<AionTransaction> transactions,
+            int currentIndex,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
+            PostExecutionWork postExecutionWork,
+            Logger logger,
+            boolean checkBlockEnergyLimit,
+            boolean incrementSenderNonce,
+            boolean isLocalCall,
+            long blockRemainingEnergy,
+            boolean fork040enabled)
+            throws VMException {
+
+        // Grab the next batch of fvm transactions to execute.
+        List<AionTransaction> fvmTransactionsToExecute =
+                fetchNextBatchOfTransactionsForFastVirtualMachine(
+                        repository, transactions, currentIndex);
+        AionTransaction[] fvmTransactions = new AionTransaction[fvmTransactionsToExecute.size()];
+        fvmTransactionsToExecute.toArray(fvmTransactions);
+
+        // Execute the fvm transactions.
+        return FvmTransactionExecutor.executeTransactions(
+                repository,
+                blockDifficulty,
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase,
+                fvmTransactions,
+                postExecutionWork,
+                logger,
+                checkBlockEnergyLimit,
+                incrementSenderNonce,
+                isLocalCall,
+                fork040enabled,
+                blockRemainingEnergy);
     }
 
     /**
@@ -318,56 +404,108 @@ public final class BulkExecutor {
     }
 
     /**
-     * Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one of
-     * the following is true:
+     * Returns true only if the specified transaction is destined to be executed by the AVM.
+     * Otherwise false.
      *
-     * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
-     * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
-     * not a contract address.
+     * <p>A transaction is for the Avm if, and only if, the avm is enabled and one of the following
+     * is true:
+     *
+     * <p>1. It is a CREATE transaction and its target VM is the AVM
+     *
+     * <p>2. It is a CALL transaction and the destination is an AVM contract address
+     *
+     * <p>3. It is a CALL transaction and the destination is not a contract address.
      */
     private static boolean transactionIsForAionVirtualMachine(
             RepositoryCache repository, AionTransaction transaction) {
         if (transaction.isContractCreationTransaction()) {
-            return isValidAVMContractDeployment(transaction.getTargetVM());
+            return TransactionTypeRule.isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
             AionAddress destination = transaction.getDestinationAddress();
-            return !isContractAddress(repository, destination)
-                    || isAllowedByAVM(repository, destination);
+            return destinationIsAvmContract(repository, destination)
+                    || destinationIsRegularAccount(repository, destination);
         }
     }
 
-    /** Returns true only if address is a contract. */
-    private static boolean isContractAddress(RepositoryCache repository, AionAddress address) {
-        if (ContractFactory.isPrecompiledContract(address)) {
-            return true;
+    /**
+     * Returns true only if the specified transaction is destined to be executed by the FVM.
+     * Otherwise false.
+     *
+     * <p>A transaction is for the Fvm if, and only if, one of the following is true:
+     *
+     * <p>1. It is a CREATE transaction and its target VM is the FVM
+     *
+     * <p>2. It is a CALL transaction and the destination is a FVM contract address.
+     *
+     * <p>3. It is a CALL transaction and the destination is a Precompiled contract address.
+     *
+     * @param repository The repository.
+     * @param transaction The transaction in question.
+     * @return whether the transaction is for the FVM.
+     */
+    private static boolean transactionIsForFastVirtualMachine(
+            RepositoryCache repository, AionTransaction transaction) {
+
+        if (transaction.isContractCreationTransaction()) {
+            // CREATE can only be for avm or fvm, since fvm isn't defined as precisely as avm by any
+            // of our helpers, we consider it not avm.
+            // TODO: we should have a valid helper for isValidFVMContractDeployment()
+            return !TransactionTypeRule.isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
-            RepositoryCache cache = repository.startTracking();
-            byte[] code = cache.getCode(address);
-            // some contracts may have storage before they have code
-            // TODO: need unit tests for both cases
-            byte[] storage = ((AccountState) cache.getAccountState(address)).getStateRoot();
-            return ((code != null) && (code.length > 0)
-                    || (!Arrays.equals(storage, EMPTY_TRIE_HASH)));
+            AionAddress destination = transaction.getDestinationAddress();
+            return destinationIsFvmContract(repository, destination)
+                    || destinationIsPrecompiledContract(destination);
         }
     }
 
-    private static boolean isAllowedByAVM(RepositoryCache repository, AionAddress destination) {
-        InternalVmType vm;
-        if (ContractFactory.isPrecompiledContract(destination)) {
-            // skip the call to disk
-            vm = InternalVmType.FVM;
+    /** Returns true only if the given destination address is an Avm contract address. */
+    private static boolean destinationIsAvmContract(
+            RepositoryCache repository, AionAddress destination) {
+        InternalVmType vmType = repository.getVMUsed(destination);
+        if (vmType == InternalVmType.UNKNOWN) {
+            // will load contract into memory otherwise leading to consensus issues
+            RepositoryCache track = repository.startTracking();
+            return track.getVmType(destination) == InternalVmType.AVM;
         } else {
-            InternalVmType storedVmType = repository.getVMUsed(destination);
-
-            // DEFAULT is returned when there was no contract information stored
-            if (storedVmType == InternalVmType.UNKNOWN) {
-                // will load contract into memory otherwise leading to consensus issues
-                RepositoryCache track = repository.startTracking();
-                vm = track.getVmType(destination);
-            } else {
-                vm = storedVmType;
-            }
+            return vmType == InternalVmType.AVM;
         }
-        return vm != InternalVmType.FVM;
+    }
+
+    /**
+     * Returns true only if the given destination address is a regular account (ie. it is not an
+     * Avm, Fvm or Precompiled contract address).
+     */
+    private static boolean destinationIsRegularAccount(
+            RepositoryCache repository, AionAddress destination) {
+        InternalVmType vmType = repository.getVMUsed(destination);
+        if (vmType == InternalVmType.UNKNOWN) {
+            // will load contract into memory otherwise leading to consensus issues
+            InternalVmType type = repository.startTracking().getVmType(destination);
+            return (type != InternalVmType.AVM) && (type != InternalVmType.FVM);
+        } else {
+            return (vmType != InternalVmType.AVM) && (vmType != InternalVmType.FVM);
+        }
+    }
+
+    /** Returns true only if the given destination address is a Fvm contract address. */
+    private static boolean destinationIsFvmContract(
+            RepositoryCache repository, AionAddress destination) {
+
+        // Note that precompiled contracts have vmType FVM as well.
+        InternalVmType vmType = repository.getVMUsed(destination);
+        if (vmType == InternalVmType.UNKNOWN) {
+            // will load contract into memory otherwise leading to consensus issues
+            RepositoryCache track = repository.startTracking();
+            return !ContractFactory.isPrecompiledContract(destination)
+                    && (track.getVmType(destination) == InternalVmType.FVM);
+        } else {
+            return !ContractFactory.isPrecompiledContract(destination)
+                    && (vmType == InternalVmType.FVM);
+        }
+    }
+
+    /** Returns true only if the given destination address is a precompiled contract address. */
+    private static boolean destinationIsPrecompiledContract(AionAddress destination) {
+        return ContractFactory.isPrecompiledContract(destination);
     }
 }
