@@ -16,7 +16,6 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTxExecSummary;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -40,7 +39,11 @@ public final class BulkExecutor {
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
-     * @param block The block of transactions to execute.
+     * @param blockDifficulty The current best block's difficulty.
+     * @param blockNumber The current best block number.
+     * @param blockTimestamp The current best block timestamp.
+     * @param blockNrgLimit The current best block energy limit.
+     * @param blockCoinbase The address of the miner.
      * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param incrementSenderNonce Whether or not to increment the sender's nonce.
@@ -51,7 +54,12 @@ public final class BulkExecutor {
      * @param postExecutionWork The post-execution work to apply after each transaction is run.
      */
     public static List<AionTxExecSummary> executeAllTransactionsInBlock(
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
+            List<AionTransaction> transactions,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
             boolean incrementSenderNonce,
@@ -60,8 +68,15 @@ public final class BulkExecutor {
             Logger logger,
             PostExecutionWork postExecutionWork)
             throws VMException {
-        if (block == null) {
-            throw new NullPointerException("Cannot execute given a null block!");
+
+        if (blockDifficulty == null) {
+            throw new NullPointerException("Cannot execute given a null block difficulty!");
+        }
+        if (blockCoinbase == null) {
+            throw new NullPointerException("Cannot execute given a null block coinbase!");
+        }
+        if (transactions == null) {
+            throw new NullPointerException("Cannot execute given a null transactions!");
         }
         if (repository == null) {
             throw new NullPointerException("Cannot execute given a null repository!");
@@ -74,8 +89,12 @@ public final class BulkExecutor {
         }
 
         return executeInternal(
-                block,
-                block.getTransactionsList(),
+                blockDifficulty,
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase,
+                transactions,
                 repository,
                 postExecutionWork,
                 logger,
@@ -91,7 +110,11 @@ public final class BulkExecutor {
      * <p>If {@code isLocalCall == true} then no state changes will be applied and no transaction
      * validation checks will be performed. Otherwise a transaction is run as normal.
      *
-     * @param block The block that the specified transaction belongs to.
+     * @param blockDifficulty The current best block's difficulty.
+     * @param blockNumber The current best block number.
+     * @param blockTimestamp The current best block timestamp.
+     * @param blockNrgLimit The current best block energy limit.
+     * @param blockCoinbase The address of the miner.
      * @param transaction The transaction to execute.
      * @param repository The repository.
      * @param isLocalCall Whether or not the call is a network or local call.
@@ -102,7 +125,11 @@ public final class BulkExecutor {
      * @param logger The logger.
      */
     public static AionTxExecSummary executeTransactionWithNoPostExecutionWork(
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             AionTransaction transaction,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             boolean isLocalCall,
@@ -111,8 +138,12 @@ public final class BulkExecutor {
             boolean checkBlockEnergyLimit,
             Logger logger)
             throws VMException {
-        if (block == null) {
-            throw new NullPointerException("Cannot execute given a null block!");
+
+        if (blockDifficulty == null) {
+            throw new NullPointerException("Cannot execute given a null block difficulty!");
+        }
+        if (blockCoinbase == null) {
+            throw new NullPointerException("Cannot execute given a null block coinbase!");
         }
         if (repository == null) {
             throw new NullPointerException("Cannot execute given a null repository!");
@@ -122,7 +153,11 @@ public final class BulkExecutor {
         }
 
         return executeInternal(
-                        block,
+                        blockDifficulty,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockCoinbase,
                         Collections.singletonList(transaction),
                         repository,
                         null,
@@ -135,7 +170,11 @@ public final class BulkExecutor {
     }
 
     private static List<AionTxExecSummary> executeInternal(
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             List<AionTransaction> transactions,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
             PostExecutionWork postExecutionWork,
@@ -147,7 +186,7 @@ public final class BulkExecutor {
             throws VMException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
-        long blockRemainingEnergy = block.getNrgLimit();
+        long blockRemainingEnergy = blockNrgLimit;
 
         int currentIndex = 0;
         while (currentIndex < transactions.size()) {
@@ -167,7 +206,11 @@ public final class BulkExecutor {
                 currentBatchOfSummaries =
                         AvmTransactionExecutor.executeTransactions(
                                 repository,
-                                block,
+                                blockDifficulty,
+                                blockNumber,
+                                blockTimestamp,
+                                blockNrgLimit,
+                                blockCoinbase,
                                 avmTransactions,
                                 postExecutionWork,
                                 logger,
@@ -188,7 +231,11 @@ public final class BulkExecutor {
                 currentBatchOfSummaries =
                         FvmTransactionExecutor.executeTransactions(
                                 repository,
-                                block,
+                                blockDifficulty,
+                                blockNumber,
+                                blockTimestamp,
+                                blockNrgLimit,
+                                blockCoinbase,
                                 fvmTransactions,
                                 postExecutionWork,
                                 logger,

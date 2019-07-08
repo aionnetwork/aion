@@ -23,7 +23,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -42,7 +41,11 @@ public final class FvmTransactionExecutor {
      * perspective, as if it was run immediately after each transaction sequentially.
      *
      * @param repository The current snapshot of the kernel's repository layer.
-     * @param block The block in which the transactions are included.
+     * @param blockDifficulty The current best block's difficulty.
+     * @param blockNumber The current best block number.
+     * @param blockTimestamp The current best block timestamp.
+     * @param blockNrgLimit The current best block energy limit.
+     * @param blockCoinbase The address of the miner.
      * @param transactions The transactions to execute.
      * @param postExecutionWork The post-execute work, if any, to be run immediately after each
      *     transaction completes.
@@ -58,7 +61,11 @@ public final class FvmTransactionExecutor {
      */
     public static List<AionTxExecSummary> executeTransactions(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             AionTransaction[] transactions,
             PostExecutionWork postExecutionWork,
             Logger logger,
@@ -76,12 +83,17 @@ public final class FvmTransactionExecutor {
         // Run the transactions.
         FastVirtualMachine fvm = new FastVirtualMachine();
         KernelInterface kernel =
-                newKernelInterface(
+                new KernelInterfaceForFastVM(
                         repository.startTracking(),
-                        block,
                         allowNonceIncrement,
                         isLocalCall,
-                        fork040enabled);
+                        fork040enabled,
+                        getDifficultyAsDataWord(blockDifficulty),
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockCoinbase);
+
         SimpleFuture<FastVmTransactionResult>[] resultsAsFutures = fvm.run(kernel, transactions);
 
         // Process the results of the transactions.
@@ -116,12 +128,16 @@ public final class FvmTransactionExecutor {
             // changes.
             if (!result.getResultCode().isRejected()) {
                 kernelFromFvm.commitTo(
-                        newKernelInterface(
+                        new KernelInterfaceForFastVM(
                                 repository,
-                                block,
                                 allowNonceIncrement,
                                 isLocalCall,
-                                fork040enabled));
+                                fork040enabled,
+                                getDifficultyAsDataWord(blockDifficulty),
+                                blockNumber,
+                                blockTimestamp,
+                                blockNrgLimit,
+                                blockCoinbase));
             }
 
             // For non-rejected non-local transactions, make some final repository updates.
@@ -129,7 +145,7 @@ public final class FvmTransactionExecutor {
                 RepositoryCache repositoryTracker = repository.startTracking();
 
                 setEnergyConsumedAndRefundSender(repositoryTracker, summary, transaction, result);
-                payMiner(repositoryTracker, block, summary);
+                payMiner(repositoryTracker, blockCoinbase, summary);
                 deleteAccountsMarkedForDeletion(repositoryTracker, sideEffects, result);
 
                 repositoryTracker.flush();
@@ -210,8 +226,8 @@ public final class FvmTransactionExecutor {
     }
 
     private static void payMiner(
-            RepositoryCache repository, IAionBlock block, TxExecSummary summary) {
-        repository.addBalance(block.getCoinbase(), summary.getFee());
+            RepositoryCache repository, AionAddress miner, TxExecSummary summary) {
+        repository.addBalance(miner, summary.getFee());
     }
 
     private static void deleteAccountsMarkedForDeletion(
@@ -241,29 +257,10 @@ public final class FvmTransactionExecutor {
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should
     // investigate
-    private static DataWord getDifficultyAsDataWord(IAionBlock block) {
-        byte[] diff = block.getDifficulty();
+    private static DataWord getDifficultyAsDataWord(byte[] diff) {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
         return new DataWordImpl(diff);
-    }
-
-    private static KernelInterface newKernelInterface(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
-            boolean allowNonceIncrement,
-            boolean isLocalCall,
-            boolean fork040enable) {
-        return new KernelInterfaceForFastVM(
-                repository,
-                allowNonceIncrement,
-                isLocalCall,
-                fork040enable,
-                getDifficultyAsDataWord(block),
-                block.getNumber(),
-                block.getTimestamp(),
-                block.getNrgLimit(),
-                block.getCoinbase());
     }
 }

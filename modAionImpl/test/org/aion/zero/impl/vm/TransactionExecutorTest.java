@@ -46,6 +46,7 @@ import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.RandomUtils;
@@ -329,7 +330,19 @@ public class TransactionExecutorTest {
     private AionTxExecSummary executeTransaction(
             RepositoryCache repo, BlockContext context, AionTransaction transaction)
             throws VMException {
+        AionBlock block = context.block;
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                context.block, transaction, repo, false, true, false, false, LOGGER_VM);
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                transaction,
+                repo,
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM);
     }
 }

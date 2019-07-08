@@ -12,13 +12,15 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.*;
+import org.aion.zero.types.AionTxExecSummary;
+import org.aion.zero.types.AionTxReceipt;
 import org.slf4j.Logger;
 
 /**
@@ -44,7 +46,11 @@ public final class AvmTransactionExecutor {
      * <p>The only input that can be {@code null} is {@code postExecutionWork}.
      *
      * @param repository The current snapshot of the kernel's repository layer.
-     * @param block The block in which the transactions are included.
+     * @param blockDifficulty The current best block's difficulty.
+     * @param blockNumber The current best block number.
+     * @param blockTimestamp The current best block timestamp.
+     * @param blockNrgLimit The current best block energy limit.
+     * @param blockCoinbase The address of the miner.
      * @param transactions The transactions to execute.
      * @param postExecutionWork The post-execute work, if any, to be run immediately after each
      *     transaction completes.
@@ -59,7 +65,11 @@ public final class AvmTransactionExecutor {
      */
     public static List<AionTxExecSummary> executeTransactions(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             AionTransaction[] transactions,
             PostExecutionWork postExecutionWork,
             Logger logger,
@@ -75,8 +85,15 @@ public final class AvmTransactionExecutor {
 
         AionVirtualMachine avm = LongLivedAvm.singleton();
         IExternalState kernel =
-                newExternalState(
-                        repository.startTracking(), block, allowNonceIncrement, isLocalCall);
+                new ExternalStateForAvm(
+                        repository.startTracking(),
+                        allowNonceIncrement,
+                        isLocalCall,
+                        getDifficultyAsDataWord(blockDifficulty),
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockCoinbase);
 
         try {
             // Acquire the avm lock and then run the transactions.
@@ -113,7 +130,15 @@ public final class AvmTransactionExecutor {
                 // changes.
                 if (!result.transactionStatus.isRejected()) {
                     externalState.commitTo(
-                            newExternalState(repository, block, allowNonceIncrement, isLocalCall));
+                            new ExternalStateForAvm(
+                                    repository,
+                                    allowNonceIncrement,
+                                    isLocalCall,
+                                    getDifficultyAsDataWord(blockDifficulty),
+                                    blockNumber,
+                                    blockTimestamp,
+                                    blockNrgLimit,
+                                    blockCoinbase));
                 }
 
                 // Do any post execution work if any is specified.
@@ -244,27 +269,10 @@ public final class AvmTransactionExecutor {
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should
     // investigate
-    private static DataWord getDifficultyAsDataWord(IAionBlock block) {
-        byte[] diff = block.getDifficulty();
+    private static DataWord getDifficultyAsDataWord(byte[] diff) {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
         return new DataWordImpl(diff);
-    }
-
-    private static IExternalState newExternalState(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
-            boolean allowNonceIncrement,
-            boolean isLocalCall) {
-        return new ExternalStateForAvm(
-                repository,
-                allowNonceIncrement,
-                isLocalCall,
-                getDifficultyAsDataWord(block),
-                block.getNumber(),
-                block.getTimestamp(),
-                block.getNrgLimit(),
-                block.getCoinbase());
     }
 }

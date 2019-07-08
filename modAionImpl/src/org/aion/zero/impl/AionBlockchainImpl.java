@@ -1328,7 +1328,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 List<AionTxExecSummary> executionSummaries =
                         BulkExecutor.executeAllTransactionsInBlock(
-                                block,
+                                block.getDifficulty(),
+                                block.getNumber(),
+                                block.getTimestamp(),
+                                block.getNrgLimit(),
+                                block.getCoinbase(),
+                                block.getTransactionsList(),
                                 track,
                                 isLocalCall,
                                 incrementSenderNonce,
@@ -1379,7 +1384,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 List<AionTxExecSummary> executionSummaries =
                         BulkExecutor.executeAllTransactionsInBlock(
-                                block,
+                                block.getDifficulty(),
+                                block.getNumber(),
+                                block.getTimestamp(),
+                                block.getNrgLimit(),
+                                block.getCoinbase(),
+                                block.getTransactionsList(),
                                 track,
                                 isLocalCall,
                                 incrementSenderNonce,

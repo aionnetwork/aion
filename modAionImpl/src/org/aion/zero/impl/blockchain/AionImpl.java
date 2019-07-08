@@ -137,7 +137,11 @@ public class AionImpl implements IAionChain {
             boolean checkBlockEnergyLimit = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                            block,
+                            block.getDifficulty(),
+                            block.getNumber(),
+                            block.getTimestamp(),
+                            block.getNrgLimit(),
+                            block.getCoinbase(),
                             tx,
                             repository,
                             isLocalCall,
@@ -174,7 +178,11 @@ public class AionImpl implements IAionChain {
             boolean checkBlockEnergyLimit = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                            block,
+                            block.getDifficulty(),
+                            block.getNumber(),
+                            block.getTimestamp(),
+                            block.getNrgLimit(),
+                            block.getCoinbase(),
                             tx,
                             repository,
                             isLocalCall,

@@ -284,6 +284,17 @@ public class OldTxExecutorTest {
     private AionTxExecSummary executeTransaction(
             Repository repo, IAionBlock block, AionTransaction transaction) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                block, transaction, repo.startTracking(), false, true, false, false, LOGGER_VM);
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                transaction,
+                repo.startTracking(),
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM);
     }
 }

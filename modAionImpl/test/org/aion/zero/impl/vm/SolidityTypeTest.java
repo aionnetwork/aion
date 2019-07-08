@@ -396,7 +396,18 @@ public class SolidityTypeTest {
     private AionTxExecSummary executeTransaction(
             AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                block, tx, repo, false, true, false, false, LOGGER_VM);
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                tx,
+                repo,
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM);
     }
 
     private static AionBlock createDummyBlock() {

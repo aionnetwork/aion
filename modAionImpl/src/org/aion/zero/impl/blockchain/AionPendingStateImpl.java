@@ -1087,8 +1087,23 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             boolean incrementSenderNonce = !inPool;
             boolean checkBlockEnergyLimit = false;
 
+            // this parameter should not be relevant to execution
+            byte[] difficulty = bestBlk.getDifficulty();
+            // the pending state is executed on top of the best block
+            long currentBlockNumber = bestBlk.getNumber() + 1;
+            // simulating future block
+            long timestamp = bestBlk.getTimestamp() + 1;
+            // the limit is not checked so making it unlimited
+            long blockNrgLimit = Long.MAX_VALUE;
+            // assuming same person will mine the future block
+            AionAddress miner = bestBlk.getCoinbase();
+
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                    bestBlk,
+                    difficulty,
+                    currentBlockNumber,
+                    timestamp,
+                    blockNrgLimit,
+                    miner,
                     tx,
                     pendingState,
                     isLocalCall,

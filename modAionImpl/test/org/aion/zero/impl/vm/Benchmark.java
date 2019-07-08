@@ -274,6 +274,17 @@ public class Benchmark {
     private static AionTxExecSummary executeTransaction(AionTransaction transaction)
             throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                block, transaction, repo, false, true, false, false, LOGGER);
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                transaction,
+                repo,
+                false,
+                true,
+                false,
+                false,
+                LOGGER);
     }
 }

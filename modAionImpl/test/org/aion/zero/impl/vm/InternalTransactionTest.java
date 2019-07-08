@@ -468,9 +468,21 @@ public class InternalTransactionTest {
             throws VMException {
         RepositoryCache cache = bc.getRepository().startTracking();
 
+        AionBlock block = context.block;
         AionTxExecSummary summary =
                 BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                        context.block, transaction, cache, false, true, false, false, LOGGER_VM);
+                        block.getDifficulty(),
+                        block.getNumber(),
+                        block.getTimestamp(),
+                        block.getNrgLimit(),
+                        block.getCoinbase(),
+                        transaction,
+                        cache,
+                        false,
+                        true,
+                        false,
+                        false,
+                        LOGGER_VM);
 
         cache.flush();
         return summary;
