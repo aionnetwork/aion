@@ -394,7 +394,6 @@ clean {
 
 /** Replaces `ant ci_build` */
 task ciBuild {
-    dependsOn checkCommitFormat
     dependsOn build
     def ciModules = [
             'modBase',

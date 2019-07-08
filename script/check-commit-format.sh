@@ -8,11 +8,12 @@ do
     then
         echo formatting $file
         java -jar $jar --replace --aosp $file
-        count="$(git diff $file | wc -l)"
-        if [ $count -gt 0 ]
-        then 
-            echo "($file) is incorrectly formatted: $count lines in diff"
-            return 1
-        fi
     fi
 done
+count="$(git diff . | wc -l)"
+if [ $count -gt 0 ]
+then
+    echo "Some files were incorrectly formatted:"
+    git diff .
+    return 1
+fi
