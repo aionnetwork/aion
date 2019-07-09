@@ -873,6 +873,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
+     * Try to import the block without flush the repository
+     *
+     * @param block the block trying to import
+     * @return import result and summary
+     */
+    public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final AionBlock block) {
+        repository.syncToRoot(bestBlock.getStateRoot());
+        return add(block, false, false);
+    }
+
+    /**
      * Processes a new block and potentially appends it to the blockchain, thereby changing the
      * state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)} so we
      * can feed timestamps manually
@@ -1031,10 +1042,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public AionBlockSummary add(AionBlock block, boolean rebuild) {
+        return add(block, rebuild, true).getLeft();
+    }
+
+    /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
+    public Pair<AionBlockSummary, RepositoryCache> add(
+            AionBlock block, boolean rebuild, boolean flushRepo) {
 
         if (!isValid(block)) {
             LOG.error("Attempting to add {} block.", (block == null ? "NULL" : "INVALID"));
-            return null;
+            return Pair.of(null, null);
         }
 
         track = repository.startTracking();
@@ -1043,7 +1060,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // (if not reconstructing old blocks) keep chain continuity
         if (!rebuild && !Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
             LOG.error("Attempting to add NON-SEQUENTIAL block.");
-            return null;
+            return Pair.of(null, null);
         }
 
         AionBlockSummary summary = processBlock(block);
@@ -1062,7 +1079,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.warn("Calculated receipts: " + receipts);
             }
             track.rollback();
-            return null;
+            return Pair.of(null, null);
         }
 
         byte[] logBloomHash = block.getLogBloom();
@@ -1075,10 +1092,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ByteUtil.toHexString(logBloomHash),
                         ByteUtil.toHexString(logBloomListHash));
             track.rollback();
-            return null;
+            return Pair.of(null, null);
         }
 
-        // update corresponding account with the new balance
+        if (!flushRepo) {
+            return Pair.of(summary, track);
+        }
+
         track.flush();
 
         if (!rebuild) {
@@ -1095,7 +1115,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 // block is bad so 'rollback' the state root to the original state
                 repository.setRoot(origRoot);
-                return null;
+                return Pair.of(null, null);
             }
         }
 
@@ -1129,7 +1149,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         getTotalDifficulty());
         }
 
-        return summary;
+        return Pair.of(summary, null);
     }
 
     @Override

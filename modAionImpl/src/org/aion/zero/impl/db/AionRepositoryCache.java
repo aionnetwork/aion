@@ -720,4 +720,32 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
             fullyWriteUnlock();
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        s.append("cachedAccounts [");
+
+        if (cachedAccounts != null && !cachedAccounts.isEmpty()) {
+            s.append("\n");
+            for (Map.Entry<AionAddress, AccountState> ca : cachedAccounts.entrySet()) {
+                s.append(ca.getKey()).append("\n").append(ca.getValue()).append("\n");
+            }
+        } else {
+            s.append("]\n");
+        }
+
+        s.append("cachedDetails [");
+        if (cachedDetails != null && !cachedDetails.isEmpty()) {
+            s.append("\n");
+            for (Map.Entry<AionAddress, ContractDetails> ca : cachedDetails.entrySet()) {
+                s.append(ca.getKey()).append("\n").append(ca.getValue()).append("\n");
+            }
+        } else {
+            s.append("]\n");
+        }
+
+        return s.toString();
+    }
 }

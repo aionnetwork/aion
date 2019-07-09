@@ -4,6 +4,7 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.aion.zero.impl.config.Network.determineNetwork;
+import static org.aion.zero.impl.db.DBUtils.Status.SUCCESS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -24,6 +25,8 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
+import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.Version;
@@ -69,6 +72,9 @@ public class Cli {
         VERSION,
         CONFIG,
         INFO,
+        QUERY_BLOCK,
+        QUERY_TX,
+        QUERY_ACCOUNT,
         CREATE_ACCOUNT,
         LIST_ACCOUNTS,
         EXPORT_ACCOUNT,
@@ -326,6 +332,37 @@ public class Cli {
             // set correct keystore directory
             Keystore.setKeystorePath(cfg.getKeystoreDir().getAbsolutePath());
 
+            if (options.getBlockDetails() != null) {
+                if (SUCCESS != getBlockDetails(options.getBlockDetails())) {
+                    System.out.println("Invalid block query! Please check your input argument.");
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getTransactionDetails() != null) {
+                if (SUCCESS != getTransactionDetails(options.getTransactionDetails())) {
+                    System.out.println(
+                            "Invalid transaction query! Please check your input argument.");
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            // TODO: implement it when the worldstate setRoot has been fixed.
+            if (options.getAccountDetails() != null) {
+                // System.out.println("Function has not been implemented yet.");
+                // return EXIT;
+                if (SUCCESS != getAccountDetails(options.getAccountDetails())) {
+                    System.out.println("Invalid account query! Please check your input argument.");
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
             if (options.isCreateAccount()) {
                 if (!createAccount()) {
                     return ERROR;
@@ -581,6 +618,52 @@ public class Cli {
             e.printStackTrace();
             return ERROR;
         }
+    }
+
+    private DBUtils.Status getBlockDetails(String blockNumber) {
+        long block;
+
+        try {
+            block = Long.parseLong(blockNumber);
+        } catch (NumberFormatException e) {
+            System.out.println(
+                    "The given argument «" + blockNumber + "» cannot be converted to a number.");
+            return DBUtils.Status.ILLEGAL_ARGUMENT;
+        }
+
+        return DBUtils.queryBlock(block);
+    }
+
+    private DBUtils.Status getTransactionDetails(String txHash) {
+        byte[] hash;
+
+        try {
+            hash = ByteUtil.hexStringToBytes(txHash);
+        } catch (NumberFormatException e) {
+            System.out.println(
+                    "The given argument «"
+                            + txHash
+                            + "» cannot be converted to a valid transaction hash.");
+            return DBUtils.Status.ILLEGAL_ARGUMENT;
+        }
+
+        return DBUtils.queryTransaction(hash);
+    }
+
+    private DBUtils.Status getAccountDetails(String strAddress) {
+        AionAddress address;
+
+        try {
+            address = new AionAddress(ByteUtil.hexStringToBytes(strAddress));
+        } catch (NumberFormatException e) {
+            System.out.println(
+                    "The given argument «"
+                            + strAddress
+                            + "» cannot be converted to a valid account address.");
+            return DBUtils.Status.ILLEGAL_ARGUMENT;
+        }
+
+        return DBUtils.queryAccount(address);
     }
 
     /**
@@ -934,6 +1017,15 @@ public class Cli {
         if (options.isInfo()) {
             return TaskPriority.INFO;
         }
+        if (options.getBlockDetails() != null) {
+            return TaskPriority.QUERY_BLOCK;
+        }
+        if (options.getTransactionDetails() != null) {
+            return TaskPriority.QUERY_TX;
+        }
+        if (options.getAccountDetails() != null) {
+            return TaskPriority.QUERY_ACCOUNT;
+        }
         if (options.isCreateAccount()) {
             return TaskPriority.CREATE_ACCOUNT;
         }
@@ -976,6 +1068,7 @@ public class Cli {
         if (options.isRedoImport() != null) {
             return TaskPriority.REDO_IMPORT;
         }
+
         return TaskPriority.NONE;
     }
 
@@ -1008,6 +1101,18 @@ public class Cli {
         }
         if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0 && options.isInfo()) {
             skippedTasks.add("--info");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_BLOCK) < 0
+                && options.getBlockDetails() != null) {
+            skippedTasks.add("--query-block");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_TX) < 0
+                && options.getTransactionDetails() != null) {
+            skippedTasks.add("--query-tx");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_ACCOUNT) < 0
+                && options.getAccountDetails() != null) {
+            skippedTasks.add("--query-account");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
                 && options.isCreateAccount()) {
@@ -1063,6 +1168,7 @@ public class Cli {
                 && options.isRedoImport() != null) {
             skippedTasks.add("--redo-import");
         }
+
         return skippedTasks;
     }
 

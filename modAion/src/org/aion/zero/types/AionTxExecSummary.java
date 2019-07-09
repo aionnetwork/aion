@@ -457,4 +457,22 @@ public class AionTxExecSummary implements TxExecSummary {
             return null;
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        s.append(receipt.toString()).append("\n");
+        s.append("value= ").append(value).append("\n");
+        s.append("deletedAccounts [");
+        if (!deletedAccounts.isEmpty()) {
+            s.append("\n");
+            for (AionAddress a : deletedAccounts) {
+                s.append("  ").append(a).append("\n");
+            }
+        }
+        s.append("]\n");
+
+        return s.toString();
+    }
 }

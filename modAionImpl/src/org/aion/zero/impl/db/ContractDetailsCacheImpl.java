@@ -1,5 +1,7 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.crypto.HashUtil.h256;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +11,7 @@ import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
+import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 
 /** Contract details cache implementation. */
@@ -352,5 +355,44 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             storageCopy.put(keyWrapper, valueWrapper);
         }
         return storageCopy;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append("  VM: ").append(vmType.toString()).append("\n");
+        ret.append("  dirty: ").append(isDirty()).append("\n");
+
+        byte[] code = getCode();
+        if (code != null) {
+            ret.append("  Code: ")
+                    .append(
+                            (code.length < 2
+                                    ? Hex.toHexString(getCode())
+                                    : code.length + " versions"))
+                    .append("\n");
+        } else {
+            ret.append("  Code: null\n");
+        }
+
+        byte[] storage = getStorageHash();
+        if (storage != null) {
+            ret.append("  Storage: ").append(Hex.toHexString(storage)).append("\n");
+        } else {
+            ret.append("  Storage: null\n");
+        }
+
+        ret.append("  objectGraphHash: ")
+                .append(objectGraph == null ? "null" : Hex.toHexString(h256(objectGraph)))
+                .append("\n");
+        if (origContract != null && origContract instanceof AionContractDetailsImpl) {
+            byte[] hash = ((AionContractDetailsImpl) origContract).getConcatenatedStorageHash();
+            if (hash != null) {
+                ret.append("  concatenatedStorageHash: ")
+                        .append(Hex.toHexString(hash))
+                        .append("\n");
+            }
+        }
+        return ret.toString();
     }
 }

@@ -24,6 +24,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
+import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 
 public class AionContractDetailsImpl extends AbstractContractDetails {
@@ -693,5 +694,42 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             copyOfCodes.put(keyWrapper, copyOfValue);
         }
         return copyOfCodes;
+    }
+
+    public byte[] getConcatenatedStorageHash() {
+        return concatenatedStorageHash;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append("  VM: ").append(vmType.toString()).append("\n");
+        ret.append("  dirty: ").append(isDirty()).append("\n");
+
+        byte[] code = getCode();
+        if (code != null) {
+            ret.append("  Code: ")
+                    .append(
+                            (code.length < 2
+                                    ? Hex.toHexString(getCode())
+                                    : code.length + " versions"))
+                    .append("\n");
+        } else {
+            ret.append("  Code: null\n");
+        }
+
+        byte[] storage = getStorageHash();
+        if (storage != null) {
+            ret.append("  Storage: ").append(Hex.toHexString(storage)).append("\n");
+        } else {
+            ret.append("  Storage: null\n");
+        }
+
+        ret.append("  objectGraphHash: ").append(Hex.toHexString(objectGraphHash)).append("\n");
+        ret.append("  concatenatedStorageHash: ")
+                .append(Hex.toHexString(concatenatedStorageHash))
+                .append("\n");
+
+        return ret.toString();
     }
 }

@@ -247,6 +247,43 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
+     * @implNote method use for the CLI tooling
+     * @param number block number
+     * @return list of blocks in the given block level.
+     */
+    List<AionBlock> getAllChainBlockByNumber(long number) {
+        lock.readLock().lock();
+
+        try {
+            long size = index.size();
+            if (number < 0L || number >= size) {
+                return null;
+            }
+
+            List<BlockInfo> blockInfos = index.get(number);
+
+            if (blockInfos == null) {
+                return null;
+            }
+
+            List<AionBlock> blockList = new ArrayList<>();
+            for (BlockInfo blockInfo : blockInfos) {
+                AionBlock b = blocks.get(blockInfo.getHash());
+                if (blockInfo.isMainChain()) {
+                    b.setMainChain();
+                }
+
+                b.setCumulativeDifficulty(blockInfo.cummDifficulty);
+                blockList.add(b);
+            }
+
+            return blockList;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
      * Returns a range of main chain blocks.
      *
      * @param first the height of the first block in the requested range; this block must exist in

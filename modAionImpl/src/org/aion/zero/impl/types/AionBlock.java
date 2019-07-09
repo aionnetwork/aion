@@ -350,41 +350,41 @@ public class AionBlock extends AbstractBlock<A0BlockHeader> implements IAionBloc
         parseRLP();
 
         toStringBuff.setLength(0);
-        toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
         toStringBuff.append("BlockData [ ");
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
+        if (td != null) {
+            toStringBuff.append("  cumulative difficulty=").append(td).append("\n");
+        }
+
+        if (mainChain != null) {
+            toStringBuff.append("  mainChain=").append(mainChain ? "yes" : "no").append("\n");
+        }
+
         if (!getTransactionsList().isEmpty()) {
-            toStringBuff.append("Txs [\n");
+            toStringBuff
+                    .append("  transactions=")
+                    .append(getTransactionsList().size())
+                    .append("\n\n");
+            toStringBuff.append("  Txs [\n");
+            int index = 0;
             for (AionTransaction tx : getTransactionsList()) {
-                toStringBuff.append(tx);
-                toStringBuff.append("\n");
+                toStringBuff
+                        .append("  ")
+                        .append("index=")
+                        .append(index++)
+                        .append("\n")
+                        .append(tx)
+                        .append("\n");
             }
-            toStringBuff.append("]\n");
+            toStringBuff.append("  ]\n");
         } else {
-            toStringBuff.append("Txs []\n");
+            toStringBuff.append("  Txs []\n");
         }
-        toStringBuff.append("]");
+        toStringBuff.append("]\n");
+        toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
 
-        return toStringBuff.toString();
-    }
-
-    public String toFlatString() {
-        StringBuilder toStringBuff = new StringBuilder();
-        parseRLP();
-
-        toStringBuff.setLength(0);
-        toStringBuff.append("BlockData [");
-        toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash()));
-        toStringBuff.append(header.toFlatString());
-
-        for (AionTransaction tx : getTransactionsList()) {
-            toStringBuff.append("\n");
-            toStringBuff.append(tx.toString());
-        }
-
-        toStringBuff.append("]");
         return toStringBuff.toString();
     }
 
@@ -543,5 +543,12 @@ public class AionBlock extends AbstractBlock<A0BlockHeader> implements IAionBloc
 
     public void setCumulativeDifficulty(BigInteger _td) {
         td = _td;
+    }
+
+    /** use for cli tooling */
+    private Boolean mainChain;
+
+    public void setMainChain() {
+        mainChain = true;
     }
 }

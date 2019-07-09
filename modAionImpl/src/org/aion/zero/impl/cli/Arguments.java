@@ -167,6 +167,28 @@ public class Arguments {
                     "drops all databases except for block and index when not given a parameter or starting from 0 and redoes import of all known main chain blocks")
     private String redoImport = null;
 
+    // data query
+    @Option(
+            names = {"qb", "--query-block"},
+            arity = "1",
+            paramLabel = "<block_number>",
+            description = "retrieve block information")
+    private String blockDetails = null;
+
+    @Option(
+            names = {"qt", "--query-tx"},
+            arity = "1",
+            paramLabel = "<transaction_hash>",
+            description = "retrieve transaction information")
+    private String transactionDetails = null;
+
+    @Option(
+            names = {"qa", "--query-account"},
+            arity = "1",
+            paramLabel = "<account_address>",
+            description = "retrieve account information")
+    private String accountDetails = null;
+
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
         List<String> list = new ArrayList<>();
@@ -281,5 +303,17 @@ public class Arguments {
 
     public String isRedoImport() {
         return redoImport;
+    }
+
+    public String getBlockDetails() {
+        return blockDetails;
+    }
+
+    public String getTransactionDetails() {
+        return transactionDetails;
+    }
+
+    public String getAccountDetails() {
+        return accountDetails;
     }
 }
