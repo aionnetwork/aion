@@ -1,5 +1,6 @@
 package org.aion.zero.impl;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
+import org.aion.vm.BlockCachingContext;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -557,5 +559,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public void set040ForkNumber(long n) {
         fork040BlockNumber = n;
+    }
+
+    @VisibleForTesting
+    public Pair<Long, BlockCachingContext> getAvmCachingContext() {
+        return Pair.of(cachedBlockNumberForAVM, executionTypeForAVM);
     }
 }

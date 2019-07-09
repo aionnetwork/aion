@@ -16,6 +16,7 @@ import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
@@ -64,15 +65,24 @@ public class BlockchainForkingTest {
 
         // check that the returned block is the first block
         assertThat(bc.getBestBlock() == block).isTrue();
+        assertThat(firstRes).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        Pair<Long, BlockCachingContext> cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(block.getNumber() - 1);
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
 
         ImportResult secondRes = bc.tryToConnect(sameBlock);
 
         // the second block should get rejected, so check that the reference still refers
         // to the first block (we dont change the published reference)
         assertThat(bc.getBestBlock() == block).isTrue();
-
-        assertThat(firstRes).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(secondRes).isEqualTo(ImportResult.EXIST);
+
+        // the caching context does not change for already known blocks
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(block.getNumber() - 1);
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
     }
 
     /*-
@@ -123,6 +133,11 @@ public class BlockchainForkingTest {
         ImportResult result = bc.tryToConnect(standardBlock);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
+        // check that the correct caching context was used
+        Pair<Long, BlockCachingContext> cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(standardBlock.getNumber() - 1);
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
+
         // assert that the block we just inserted (best) is the instance that is returned
         assertThat(bc.getBestBlock() == standardBlock).isTrue();
 
@@ -135,6 +150,11 @@ public class BlockchainForkingTest {
          */
         assertThat(higherDifficultyResult).isEqualTo(ImportResult.INVALID_BLOCK);
         assertThat(bc.getBestBlockHash()).isEqualTo(standardBlock.getHash());
+
+        // since the block is second for that height, it is assumed as sidechain
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(standardBlock.getNumber() - 1);
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.SIDECHAIN);
 
         // the object reference here is intentional
         assertThat(bc.getBestBlock() == standardBlock).isTrue();
@@ -211,36 +231,57 @@ public class BlockchainForkingTest {
         long time = System.currentTimeMillis();
 
         StandaloneBlockchain bc = bundle.bc;
-        List<ECKey> accs = bundle.privateKeys;
 
         // generate three blocks, on the third block we get flexibility
         // for what difficulties can occur
 
-        BlockContext firstBlock =
+        AionBlock firstBlock =
                 bc.createNewBlockInternal(
-                        bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10)))
+                                bc.getGenesis(), Collections.emptyList(), true, time / 1000L)
+                        .block;
+        assertThat(bc.tryToConnectInternal(firstBlock, (time += 10)))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        Pair<Long, BlockCachingContext> cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(firstBlock.getNumber() - 1);
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
 
         // now connect the second block
-        BlockContext secondBlock =
-                bc.createNewBlockInternal(
-                        firstBlock.block, Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10))
+        AionBlock secondBlock =
+                bc.createNewBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L)
+                        .block;
+        assertThat(bc.tryToConnectInternal(secondBlock, time += 10))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
 
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(firstBlock.getNumber()); // the parent
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
+
         // now on the third block, we diverge with one block having higher TD than the other
-        BlockContext fasterSecondBlock =
-                bc.createNewBlockInternal(
-                        secondBlock.block, Collections.emptyList(), true, time / 1000L);
-        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
+        AionBlock fasterSecondBlock =
+                bc.createNewBlockInternal(secondBlock, Collections.emptyList(), true, time / 1000L)
+                        .block;
+        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
 
         slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
 
-        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100))
+        assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(secondBlock.getNumber()); // the parent
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
+
         assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100))
                 .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(secondBlock.getNumber()); // the parent
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.SIDECHAIN);
 
         // represents the amount of time we would have waited for the lower TD block to come in
         long timeDelta = 1000L;
@@ -249,41 +290,80 @@ public class BlockchainForkingTest {
         BigInteger loweredDifficulty =
                 BIUtil.max(
                         secondBlock
-                                .block
                                 .getDifficultyBI()
                                 .subtract(
                                         secondBlock
-                                                .block
                                                 .getDifficultyBI()
                                                 .divide(BigInteger.valueOf(1024L))),
                         BigInteger.valueOf(16L));
 
         time += 100;
 
-        BlockContext fastBlockDescendant =
+        AionBlock fastBlockDescendant =
                 bc.createNewBlockInternal(
-                        fasterSecondBlock.block, Collections.emptyList(), true, time / 1000L);
-        BlockContext slowerBlockDescendant =
+                                fasterSecondBlock, Collections.emptyList(), true, time / 1000L)
+                        .block;
+        AionBlock slowerBlockDescendant =
                 bc.createNewBlockInternal(
-                        slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
+                                slowerSecondBlock,
+                                Collections.emptyList(),
+                                true,
+                                time / 1000L + 100 + 1)
+                        .block;
 
         // increment by another hundred (this is supposed to be when the slower block descendant is
         // completed)
         time += 100;
 
-        assertThat(fastBlockDescendant.block.getDifficultyBI())
-                .isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
+        assertThat(fastBlockDescendant.getDifficultyBI())
+                .isGreaterThan(slowerBlockDescendant.getDifficultyBI());
+        System.out.println("faster block descendant TD: " + fastBlockDescendant.getDifficultyBI());
         System.out.println(
-                "faster block descendant TD: " + fastBlockDescendant.block.getDifficultyBI());
-        System.out.println(
-                "slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
+                "slower block descendant TD: " + slowerBlockDescendant.getDifficultyBI());
 
-        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time))
+        assertThat(bc.tryToConnectInternal(slowerBlockDescendant, time))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
 
-        assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant.block);
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(0); // no known parent
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.DEEP_SIDECHAIN);
+
+        assertThat(bc.tryToConnectInternal(fastBlockDescendant, time))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(0); // parent had been made side chain
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.DEEP_SIDECHAIN);
+
+        assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant);
+
+        // ensuring that the caching is correct for the nest block to be added
+        AionBlock switchBlock =
+                bc.createNewBlockInternal(
+                                fastBlockDescendant, Collections.emptyList(), true, time / 1000L)
+                        .block;
+
+        assertThat(bc.tryToConnectInternal(switchBlock, time))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(secondBlock.getNumber()); // common ancestor
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.SWITCHING_MAINCHAIN);
+
+        // ensuring that the caching is correct for the nest block to be added
+        AionBlock lastBlock =
+                bc.createNewBlockInternal(switchBlock, Collections.emptyList(), true, time / 1000L)
+                        .block;
+
+        assertThat(bc.tryToConnectInternal(lastBlock, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the correct caching context was used
+        cacheContext = bc.getAvmCachingContext();
+        assertThat(cacheContext.getLeft()).isEqualTo(switchBlock.getNumber()); // parent
+        assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
     }
 
     /** Test fork with exception. */
