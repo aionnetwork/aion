@@ -59,6 +59,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
@@ -181,7 +182,10 @@ public class ContractIntegTest {
                         true,
                         false,
                         false,
-                        LOGGER_VM);
+                        LOGGER_VM,
+                        BlockCachingContext.PENDING,
+                        block.getNumber() - 1);
+
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
             AionAddress contract = tx.getContractAddress();
@@ -1936,7 +1940,9 @@ public class ContractIntegTest {
                 true,
                 true,
                 false,
-                LOGGER_VM);
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 
     private AionBlock makeBlock(AionTransaction tx) {

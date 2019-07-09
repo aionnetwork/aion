@@ -41,6 +41,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
@@ -343,6 +344,8 @@ public class TransactionExecutorTest {
                 true,
                 false,
                 false,
-                LOGGER_VM);
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 }

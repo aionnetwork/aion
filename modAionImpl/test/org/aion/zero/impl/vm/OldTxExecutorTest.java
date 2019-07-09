@@ -48,6 +48,7 @@ import org.aion.solidity.Compiler.Options;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
@@ -295,6 +296,8 @@ public class OldTxExecutorTest {
                 true,
                 false,
                 false,
-                LOGGER_VM);
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 }

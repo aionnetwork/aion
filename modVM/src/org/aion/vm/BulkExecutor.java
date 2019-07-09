@@ -52,6 +52,11 @@ public final class BulkExecutor {
      *     transaction.
      * @param logger The logger.
      * @param postExecutionWork The post-execution work to apply after each transaction is run.
+     * @param blockCachingContext indicates to the AVM the purpose for the transaction execution
+     *     (AVM specific parameter)
+     * @param cachedBlockNumber represents a main chain block that is common to the current main
+     *     chain and the block that is about to be imported used for cache retrieval (AVM specific
+     *     parameter)
      */
     public static List<AionTxExecSummary> executeAllTransactionsInBlock(
             byte[] blockDifficulty,
@@ -66,7 +71,9 @@ public final class BulkExecutor {
             boolean fork040Enable,
             boolean checkBlockEnergyLimit,
             Logger logger,
-            PostExecutionWork postExecutionWork)
+            PostExecutionWork postExecutionWork,
+            BlockCachingContext blockCachingContext,
+            long cachedBlockNumber)
             throws VMException {
 
         if (blockDifficulty == null) {
@@ -101,7 +108,9 @@ public final class BulkExecutor {
                 checkBlockEnergyLimit,
                 incrementSenderNonce,
                 isLocalCall,
-                fork040Enable);
+                fork040Enable,
+                blockCachingContext,
+                cachedBlockNumber);
     }
 
     /**
@@ -123,6 +132,8 @@ public final class BulkExecutor {
      * @param checkBlockEnergyLimit Whether or not to check the block energy limit overflow per
      *     transaction.
      * @param logger The logger.
+     * @param blockCachingContext indicates to the AVM the purpose for the transaction execution
+     *     (AVM specific parameter)
      */
     public static AionTxExecSummary executeTransactionWithNoPostExecutionWork(
             byte[] blockDifficulty,
@@ -136,7 +147,9 @@ public final class BulkExecutor {
             boolean incrementSenderNonce,
             boolean fork040Enable,
             boolean checkBlockEnergyLimit,
-            Logger logger)
+            Logger logger,
+            BlockCachingContext blockCachingContext,
+            long cachedBlockNumber)
             throws VMException {
 
         if (blockDifficulty == null) {
@@ -165,7 +178,9 @@ public final class BulkExecutor {
                         checkBlockEnergyLimit,
                         incrementSenderNonce,
                         isLocalCall,
-                        fork040Enable)
+                        fork040Enable,
+                        blockCachingContext,
+                        cachedBlockNumber)
                 .get(0);
     }
 
@@ -182,7 +197,9 @@ public final class BulkExecutor {
             boolean checkBlockEnergyLimit,
             boolean incrementSenderNonce,
             boolean isLocalCall,
-            boolean fork040enabled)
+            boolean fork040enabled,
+            BlockCachingContext blockCachingContext,
+            long cachedBlockNumber)
             throws VMException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
@@ -217,7 +234,9 @@ public final class BulkExecutor {
                                 checkBlockEnergyLimit,
                                 incrementSenderNonce,
                                 isLocalCall,
-                                blockRemainingEnergy);
+                                blockRemainingEnergy,
+                                blockCachingContext.avmType,
+                                cachedBlockNumber);
             } else {
                 // Grab the next batch of fvm transactions to execute.
                 List<AionTransaction> fvmTransactionsToExecute =

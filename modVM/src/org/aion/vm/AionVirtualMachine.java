@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.aion.avm.core.AvmConfiguration;
 import org.aion.avm.core.AvmImpl;
 import org.aion.avm.core.CommonAvmFactory;
+import org.aion.avm.core.ExecutionType;
 import org.aion.avm.core.FutureResult;
 import org.aion.avm.core.IExternalState;
 import org.aion.types.Transaction;
@@ -40,11 +41,18 @@ public final class AionVirtualMachine {
      *
      * @param externalState The interface into the kernel.
      * @param transactions The transactions to execute.
+     * @param executionType indicates to the AVM the purpose for the transaction execution
+     * @param cachedBlockNumber represents a main chain block that is common to the current main
+     *     chain and the block that is about to be imported used for cache retrieval
      * @return The future results.
      */
-    public FutureResult[] run(IExternalState externalState, Transaction[] transactions) {
+    public FutureResult[] run(
+            IExternalState externalState,
+            Transaction[] transactions,
+            ExecutionType executionType,
+            long cachedBlockNumber) {
         if (this.avmLock.isHeldByCurrentThread()) {
-            return this.avm.run(externalState, transactions);
+            return this.avm.run(externalState, transactions, executionType, cachedBlockNumber);
         } else {
             throw new IllegalMonitorStateException("The current thread does not own the avm lock!");
         }

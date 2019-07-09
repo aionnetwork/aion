@@ -49,6 +49,7 @@ import org.aion.txpool.TxPoolModule;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -1110,7 +1111,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                     incrementSenderNonce,
                     fork040Enable,
                     checkBlockEnergyLimit,
-                    LOGGER_VM);
+                    LOGGER_VM,
+                    BlockCachingContext.PENDING,
+                    bestBlk.getNumber());
         } catch (VMException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);

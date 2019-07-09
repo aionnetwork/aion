@@ -52,6 +52,7 @@ import org.aion.solidity.SolidityType.StringType;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -407,7 +408,9 @@ public class SolidityTypeTest {
                 true,
                 false,
                 false,
-                LOGGER_VM);
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 
     private static AionBlock createDummyBlock() {

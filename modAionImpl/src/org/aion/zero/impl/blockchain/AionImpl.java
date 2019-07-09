@@ -20,6 +20,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
@@ -148,7 +149,9 @@ public class AionImpl implements IAionChain {
                             incrementSenderNonce,
                             fork040enabled,
                             checkBlockEnergyLimit,
-                            LOG_VM)
+                            LOG_VM,
+                            BlockCachingContext.CALL,
+                            block.getNumber())
                     .getReceipt()
                     .getEnergyUsed();
         } catch (VMException e) {
@@ -189,7 +192,9 @@ public class AionImpl implements IAionChain {
                             incrementSenderNonce,
                             fork040enabled,
                             checkBlockEnergyLimit,
-                            LOG_VM)
+                            LOG_VM,
+                            BlockCachingContext.CALL,
+                            block.getNumber())
                     .getReceipt();
         } catch (VMException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);

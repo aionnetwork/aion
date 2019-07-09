@@ -41,6 +41,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
@@ -482,7 +483,9 @@ public class InternalTransactionTest {
                         true,
                         false,
                         false,
-                        LOGGER_VM);
+                        LOGGER_VM,
+                        BlockCachingContext.PENDING,
+                        block.getNumber() - 1);
 
         cache.flush();
         return summary;

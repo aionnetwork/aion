@@ -44,6 +44,7 @@ import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
@@ -812,6 +813,8 @@ public class OpcodeIntegTest {
                 true,
                 false,
                 false,
-                LOGGER_VM);
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 }

@@ -46,6 +46,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -285,6 +286,8 @@ public class Benchmark {
                 true,
                 false,
                 false,
-                LOGGER);
+                LOGGER,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
     }
 }

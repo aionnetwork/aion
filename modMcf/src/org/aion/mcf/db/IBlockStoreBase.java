@@ -34,7 +34,8 @@ public interface IBlockStoreBase<BLK extends Block<?>, BH extends AbstractBlockH
 
     void flush();
 
-    void reBranch(BLK forkBlock);
+    /** @return the common block that was found during the re-branching */
+    long reBranch(BLK forkBlock);
 
     void revert(long previousLevel);
 

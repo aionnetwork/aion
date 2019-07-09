@@ -617,7 +617,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     @Override
-    public void reBranch(AionBlock forkBlock) {
+    public long reBranch(AionBlock forkBlock) {
         lock.writeLock().lock();
 
         try {
@@ -679,10 +679,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             // 2. Loop back on each level until common block
-            loopBackToCommonBlock(bestLine, forkLine);
+            long commonBlockNumber = loopBackToCommonBlock(bestLine, forkLine);
 
             logBranchingDetails();
 
+            return commonBlockNumber;
         } finally {
             lock.writeLock().unlock();
         }
@@ -713,13 +714,16 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         preBranchingBlk.clear();
     }
 
-    /** @implNote The method calling this method must handle the locking. */
-    private void loopBackToCommonBlock(IAionBlock bestLine, IAionBlock forkLine) {
+    /**
+     * @return the common block that was found during the re-branching
+     * @implNote The method calling this method must handle the locking.
+     */
+    private long loopBackToCommonBlock(IAionBlock bestLine, IAionBlock forkLine) {
         long currentLevel = bestLine.getNumber();
 
         if (forkLine.getNumber() != currentLevel) {
             LOG.error("Illegal parameters for loopBackToCommonBlock method.");
-            return;
+            return -1L;
         }
 
         while (!bestLine.isEqual(forkLine)) {
@@ -770,6 +774,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     forkLine.getNumber(),
                     Hex.toHexString(forkLine.getHash()));
         }
+
+        return currentLevel;
     }
 
     @Override
@@ -1164,6 +1170,25 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         try {
             // when null -> there was no block info for the hash
             return getBlockInfoForHash(getBlockInfoForLevel(level), hash) != null;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Checks if a hash is indexed as main chain or side chain.
+     *
+     * @param hash the hash for which we check its chain status
+     * @param level the height at which the block should be indexed
+     * @return {@code true} if the block is indexed as a main chain block, {@code false} if the
+     *     block is not indexed or is a side chain block
+     */
+    public boolean isMainChain(byte[] hash, long level) {
+        lock.readLock().lock();
+
+        try {
+            BlockInfo info = getBlockInfoForHash(getBlockInfoForLevel(level), hash);
+            return info != null && info.mainChain;
         } finally {
             lock.readLock().unlock();
         }
