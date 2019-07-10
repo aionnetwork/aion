@@ -1167,7 +1167,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return Pair.of(null, null);
             }
         }
-        
+
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {
                 transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));

@@ -12,15 +12,15 @@ import org.aion.util.time.TimeInstant;
 /** Aion transaction class. */
 public class AionTransaction implements Cloneable {
 
-    protected final AionAddress senderAddress;
-    protected final AionAddress destinationAddress;
+    public final AionAddress senderAddress;
+    public final AionAddress destinationAddress;
     // TODO transactionHash
-    protected final byte[] value;
-    protected final byte[] nonce;
-    protected final long energyPrice;
-    protected final long energyLimit;
+    public final byte[] value;
+    public final byte[] nonce;
+    public final long energyPrice;
+    public final long energyLimit;
     // TODO isCreate
-    protected final byte[] transactionData;
+    private final byte[] transactionData;
 
     /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
     protected byte[] timeStamp;
@@ -32,14 +32,8 @@ public class AionTransaction implements Cloneable {
      * (including public key recovery bits) */
     protected ISignature signature;
 
-    /** These four members doesn't include into the RLP encode data */
-    private long txIndexInBlock = 0;
-
-    private long blockNumber = 0;
-    private byte[] blockHash = null;
     private long nrgConsume = 0;
 
-    // constructor for create nrgEstimate transaction
     public AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
@@ -57,8 +51,8 @@ public class AionTransaction implements Cloneable {
         }
 
         this.nonce = nonce;
-        this.destinationAddress = destinationAddress;
         this.value = value;
+        this.destinationAddress = destinationAddress;
         this.transactionData = transactionData;
         this.type = TransactionTypes.DEFAULT;
         this.energyLimit = energyLimit;
@@ -116,21 +110,17 @@ public class AionTransaction implements Cloneable {
 
     @Override
     public AionTransaction clone() {
-        AionTransaction tx2 =
-                new AionTransaction(
-                        nonce,
-                        senderAddress,
-                        destinationAddress,
-                        value,
-                        transactionData,
-                        energyLimit,
-                        energyPrice,
-                        type);
-
-        tx2.signature = signature; // NOTE: reference copy
-        tx2.timeStamp = timeStamp;
-
-        return tx2;
+        return new AionTransaction(
+                nonce,
+                senderAddress,
+                destinationAddress,
+                value,
+                transactionData,
+                energyLimit,
+                energyPrice,
+                type,
+                signature,
+                timeStamp);
     }
 
     public byte[] getTransactionHash() {
@@ -138,11 +128,19 @@ public class AionTransaction implements Cloneable {
     }
 
     public byte[] getNonce() {
-        return nonce == null ? ByteUtil.ZERO_BYTE_ARRAY : nonce;
+        return nonce;
+    }
+
+    public byte[] getValue() {
+        return value;
     }
 
     public BigInteger getNonceBI() {
-        return new BigInteger(1, getNonce());
+        return new BigInteger(1, nonce);
+    }
+
+    public BigInteger getValueBI() {
+        return new BigInteger(1, value);
     }
 
     public byte[] getTimestamp() {
@@ -159,10 +157,6 @@ public class AionTransaction implements Cloneable {
 
     public long getEnergyPrice() {
         return this.energyPrice;
-    }
-
-    public byte[] getValue() {
-        return value == null ? ByteUtil.ZERO_BYTE_ARRAY : value;
     }
 
     public AionAddress getDestinationAddress() {
@@ -255,30 +249,6 @@ public class AionTransaction implements Cloneable {
 
     public BigInteger nrgLimit() {
         return BigInteger.valueOf(energyLimit);
-    }
-
-    public void setTxIndexInBlock(long idx) {
-        this.txIndexInBlock = idx;
-    }
-
-    public void setBlockNumber(long blkNr) {
-        this.blockNumber = blkNr;
-    }
-
-    public void setBlockHash(byte[] hash) {
-        this.blockHash = hash;
-    }
-
-    public long getTxIndexInBlock() {
-        return this.txIndexInBlock;
-    }
-
-    public long getBlockNumber() {
-        return this.blockNumber;
-    }
-
-    public byte[] getBlockHash() {
-        return this.blockHash;
     }
 
     public long getNrgConsume() {

@@ -1074,13 +1074,15 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                         }
 
-                        AionTransaction tx = this.getTransactionByBlockHashAndIndex(hash, txIdx);
-                        if (tx == null) {
+                        TransactionWithBlockInfo txInfo =
+                                this.getTransactionByBlockHashAndIndex(hash, txIdx);
+
+                        if (txInfo == null) {
                             return ApiUtil.toReturnHeader(
                                     getApiVersion(), Retcode.r_fail_function_call_VALUE);
                         }
 
-                        Message.rsp_getTransaction rsp = getRsp_getTransaction(tx);
+                        Message.rsp_getTransaction rsp = getRsp_getTransaction(txInfo);
 
                         byte[] retHeader =
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
@@ -1113,13 +1115,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                         }
 
-                        AionTransaction tx = this.getTransactionByBlockNumberAndIndex(blkNr, txIdx);
-                        if (tx == null) {
+                        TransactionWithBlockInfo txInfo =
+                                this.getTransactionByBlockNumberAndIndex(blkNr, txIdx);
+                        if (txInfo == null) {
                             return ApiUtil.toReturnHeader(
                                     getApiVersion(), Retcode.r_fail_function_call_VALUE);
                         }
 
-                        Message.rsp_getTransaction rsp = getRsp_getTransaction(tx);
+                        Message.rsp_getTransaction rsp = getRsp_getTransaction(txInfo);
 
                         byte[] retHeader =
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
@@ -1276,13 +1279,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                         }
 
-                        AionTransaction tx = this.getTransactionByHash(txHash);
-                        if (tx == null) {
+                        TransactionWithBlockInfo txInfo = this.getTransactionByHash(txHash);
+                        if (txInfo == null) {
                             return ApiUtil.toReturnHeader(
                                     getApiVersion(), Retcode.r_fail_function_call_VALUE);
                         }
 
-                        Message.rsp_getTransaction rsp = getRsp_getTransaction(tx);
+                        Message.rsp_getTransaction rsp = getRsp_getTransaction(txInfo);
 
                         byte[] retHeader =
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
@@ -2570,25 +2573,26 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         }
     }
 
-    private Message.rsp_getTransaction getRsp_getTransaction(AionTransaction tx) {
+    private Message.rsp_getTransaction getRsp_getTransaction(TransactionWithBlockInfo txInfo) {
+        AionTransaction tx = txInfo.tx;
         return Message.rsp_getTransaction
                 .newBuilder()
-                .setBlockhash(ByteString.copyFrom(tx.getBlockHash()))
-                .setBlocknumber(tx.getBlockNumber())
+                .setBlockhash(ByteString.copyFrom(txInfo.blockHash))
+                .setBlocknumber(txInfo.blockNumber)
                 .setFrom(ByteString.copyFrom(tx.getSenderAddress().toByteArray()))
-                .setNrgConsume(tx.getNrgConsume())
+                .setNrgConsume(txInfo.nrgUsed)
                 .setNrgPrice(tx.getEnergyPrice())
                 .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
                 .setData(
                         ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
-                .setNonce(ByteString.copyFrom(tx.getNonce()))
+                .setNonce(ByteString.copyFrom(tx.getNonceBI().toByteArray()))
                 .setTo(
                         ByteString.copyFrom(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
                                         : tx.getDestinationAddress().toByteArray()))
-                .setValue(ByteString.copyFrom(tx.getValue()))
-                .setTxIndex((int) tx.getTxIndexInBlock())
+                .setValue(ByteString.copyFrom(tx.getValueBI().toByteArray()))
+                .setTxIndex((int) txInfo.txIndexInBlock)
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimestamp()))
                 .build();
     }
@@ -2717,8 +2721,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 ? EMPTY_BYTE_ARRAY
                                                 : t.getDestinationAddress().toByteArray()))
                         .setFrom(ByteString.copyFrom(t.getSenderAddress().toByteArray()))
-                        .setNonce(ByteString.copyFrom(t.getNonce()))
-                        .setValue(ByteString.copyFrom(t.getValue()))
+                        .setNonce(ByteString.copyFrom(t.getNonceBI().toByteArray()))
+                        .setValue(ByteString.copyFrom(t.getValueBI().toByteArray()))
                         .setNrgConsumed(nrgConsumed)
                         .setNrgPrice(t.getEnergyPrice())
                         .setTxHash(ByteString.copyFrom(t.getTransactionHash()))
@@ -2888,7 +2892,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + b.getTimestamp()
                 + ","
                 + "'"
-                + ByteUtil.toHexString(t.getValue())
+                + ByteUtil.toHexString(t.getValueBI().toByteArray())
                 + "',"
                 + "'"
                 + logs.toString()
@@ -2897,7 +2901,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(t.getData())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(t.getNonce())
+                + ByteUtil.toHexString(t.getNonceBI().toByteArray())
                 + "'";
     }
 
@@ -3020,12 +3024,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .toByteArray()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getNonce()))
+                                                                                        tx.getNonceBI()
+                                                                                                .toByteArray()))
                                                                         .setValue(
                                                                                 ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getValue()))
+                                                                                        tx.getValueBI()
+                                                                                                .toByteArray()))
                                                                         .setNrgConsumed(
                                                                                 ti.getReceipt()
                                                                                         .getEnergyUsed())
