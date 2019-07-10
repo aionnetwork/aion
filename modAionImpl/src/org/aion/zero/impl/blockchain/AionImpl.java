@@ -1,6 +1,5 @@
 package org.aion.zero.impl.blockchain;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import org.aion.base.AionTransaction;
@@ -18,7 +17,6 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.BlockCachingContext;
@@ -92,14 +90,6 @@ public class AionImpl implements IAionChain {
     @Override
     public void close() {
         aionHub.close();
-    }
-
-    @Override
-    public AionTransaction createTransaction(
-            BigInteger nonce, AionAddress to, BigInteger value, byte[] data) {
-        byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
-        byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
-        return new AionTransaction(nonceBytes, to, valueBytes, data);
     }
 
     /**

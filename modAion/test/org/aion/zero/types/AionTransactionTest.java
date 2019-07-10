@@ -21,7 +21,7 @@ public class AionTransactionTest {
         assertEquals(tx.getEnergyPrice(), tx2.getEnergyPrice());
         assertEquals(tx.getTargetVM(), tx2.getTargetVM());
 
-        assertArrayEquals(tx.getTimeStamp(), tx2.getTimeStamp());
+        assertArrayEquals(tx.getTimestamp(), tx2.getTimestamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());
 
         assertArrayEquals(tx.getEncoded(), tx2.getEncoded());
@@ -80,7 +80,7 @@ public class AionTransactionTest {
         for (byte b : data) {
             expected += (b == 0) ? 4 : 64;
         }
-        assertEquals(expected, tx.transactionCost(1));
+        assertEquals(expected, tx.getTransactionCost());
     }
 
     @Test
@@ -99,6 +99,6 @@ public class AionTransactionTest {
         for (byte b : data) {
             expected += (b == 0) ? 4 : 64;
         }
-        assertEquals(expected, tx.transactionCost(1));
+        assertEquals(expected, tx.getTransactionCost());
     }
 }

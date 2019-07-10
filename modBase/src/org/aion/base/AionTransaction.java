@@ -14,7 +14,6 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
-import org.aion.util.types.AddressUtils;
 import org.slf4j.Logger;
 
 /** Aion transaction class. */
@@ -36,6 +35,8 @@ public class AionTransaction implements Cloneable {
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
     protected AionAddress to;
+
+    protected AionAddress from;
 
     /* a counter used to make sure each transaction can only be processed once */
     protected byte[] nonce;
@@ -64,15 +65,10 @@ public class AionTransaction implements Cloneable {
             RLP_TX_TYPE = 7,
             RLP_TX_SIG = 8;
 
-    public static byte CALL_KIND = 0;
-    public static byte CREATE_KIND = 3;
-
     /* Tx in encoded form */
     protected byte[] rlpEncoded;
 
     private byte[] rlpRaw;
-
-    protected AionAddress from;
 
     /** These four members doesn't include into the RLP encode data */
     private long txIndexInBlock = 0;
@@ -81,14 +77,9 @@ public class AionTransaction implements Cloneable {
     private byte[] blockHash = null;
     private long nrgConsume = 0;
 
-    /*
-     * Indicates if this transaction has been parsed from the RLP-encoded data
-     */
-    protected boolean parsed = false;
-
     public AionTransaction(byte[] encodedData) {
         this.rlpEncoded = encodedData;
-        parsed = false;
+        rlpParse(encodedData);
     }
 
     public AionTransaction(
@@ -105,7 +96,6 @@ public class AionTransaction implements Cloneable {
         this.type = TransactionTypes.DEFAULT;
         this.nrg = nrg;
         this.nrgPrice = nrgPrice;
-        parsed = true;
     }
 
     public AionTransaction(
@@ -118,7 +108,6 @@ public class AionTransaction implements Cloneable {
             byte type) {
         this(nonce, to, value, data, nrg, nrgPrice);
         this.type = type;
-        parsed = true;
     }
 
     // constructor for create nrgEstimate transaction
@@ -132,7 +121,6 @@ public class AionTransaction implements Cloneable {
             long nrgPrice) {
         this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
-        parsed = true;
     }
 
     // constructor for explicitly setting a transaction type.
@@ -149,21 +137,10 @@ public class AionTransaction implements Cloneable {
         this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
         this.type = txType;
-        parsed = true;
-    }
-
-    // For InternalTx constructor
-    public AionTransaction(byte[] nonce, AionAddress to, byte[] value, byte[] data) {
-        this(nonce, to, value, data, 0L, 0L);
-        parsed = true;
     }
 
     @Override
     public AionTransaction clone() {
-        if (!parsed) {
-            rlpParse();
-        }
-
         AionTransaction tx2 = new AionTransaction(nonce, to, value, data, nrg, nrgPrice, type);
 
         tx2.signature = signature; // NOTE: reference copy
@@ -172,7 +149,7 @@ public class AionTransaction implements Cloneable {
         return tx2;
     }
 
-    public void rlpParse() {
+    public void rlpParse(byte[] rlpEncoded) {
 
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList tx = (RLPList) decodedTxList.get(0);
@@ -209,7 +186,6 @@ public class AionTransaction implements Cloneable {
             LOG.error("tx -> no signature found");
         }
 
-        this.parsed = true;
         this.hash = this.getTransactionHash();
     }
 
@@ -218,9 +194,6 @@ public class AionTransaction implements Cloneable {
             return hash;
         }
 
-        if (!parsed) {
-            rlpParse();
-        }
         byte[] plainMsg = this.getEncoded();
         // cache it.
         hash = HashUtil.h256(plainMsg);
@@ -228,17 +201,11 @@ public class AionTransaction implements Cloneable {
     }
 
     public byte[] getRawHash() {
-        if (!parsed) {
-            rlpParse();
-        }
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.h256(plainMsg);
     }
 
     public byte[] getNonce() {
-        if (!parsed) {
-            rlpParse();
-        }
         return nonce == null ? ByteUtil.ZERO_BYTE_ARRAY : nonce;
     }
 
@@ -247,13 +214,6 @@ public class AionTransaction implements Cloneable {
     }
 
     public byte[] getTimestamp() {
-        return getTimeStamp();
-    }
-
-    public byte[] getTimeStamp() {
-        if (!parsed) {
-            rlpParse();
-        }
         return this.timeStamp == null ? ByteUtil.ZERO_BYTE_ARRAY : this.timeStamp;
     }
 
@@ -262,56 +222,30 @@ public class AionTransaction implements Cloneable {
     }
 
     public long getEnergyLimit() {
-        if (!parsed) {
-            rlpParse();
-        }
         return this.nrg;
     }
 
     public long getEnergyPrice() {
-        if (!parsed) {
-            rlpParse();
-        }
         return this.nrgPrice;
     }
 
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = BigInteger.valueOf(timeStamp).toByteArray();
-        this.parsed = true;
-    }
-
     public byte[] getValue() {
-        if (!parsed) {
-            rlpParse();
-        }
         return value == null ? ByteUtil.ZERO_BYTE_ARRAY : value;
     }
 
     public AionAddress getDestinationAddress() {
-        if (!parsed) {
-            rlpParse();
-        }
         return to;
     }
 
     public byte[] getData() {
-        if (!parsed) {
-            rlpParse();
-        }
         return data;
     }
 
     public byte getTargetVM() {
-        if (!parsed) {
-            rlpParse();
-        }
         return this.type;
     }
 
     public ISignature getSignature() {
-        if (!parsed) {
-            rlpParse();
-        }
         return signature;
     }
 
@@ -335,20 +269,12 @@ public class AionTransaction implements Cloneable {
     }
 
     public boolean isContractCreationTransaction() {
-        if (!parsed) {
-            rlpParse();
-        }
-
         return this.to == null;
     }
 
     public synchronized AionAddress getSenderAddress() {
         if (from != null) {
             return this.from;
-        }
-
-        if (!parsed) {
-            rlpParse();
         }
 
         if (this.signature == null) {
@@ -383,10 +309,6 @@ public class AionTransaction implements Cloneable {
     }
 
     public String toString(int maxDataSize) {
-        if (!parsed) {
-
-            rlpParse();
-        }
         String dataS;
         if (data == null) {
             dataS = "";
@@ -424,11 +346,8 @@ public class AionTransaction implements Cloneable {
     }
 
     /** For signatures you have to keep also RLP of the transaction without any signature data */
-    public byte[] getEncodedRaw() {
+    private byte[] getEncodedRaw() {
 
-        if (!parsed) {
-            rlpParse();
-        }
         if (rlpRaw != null) {
             return rlpRaw;
         }
@@ -485,7 +404,6 @@ public class AionTransaction implements Cloneable {
         sigs = RLP.encodeElement(signature.toBytes());
         this.rlpEncoded =
                 RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type, sigs);
-        this.hash = this.getTransactionHash();
 
         return rlpEncoded;
     }
@@ -514,22 +432,6 @@ public class AionTransaction implements Cloneable {
         return tx.hashCode() == this.hashCode();
     }
 
-    public static AionTransaction create(
-            String to, BigInteger amount, BigInteger nonce, long nrg, long nrgPrice) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                AddressUtils.wrapAddress(to),
-                amount.toByteArray(),
-                null,
-                nrg,
-                nrgPrice);
-    }
-
-    public void setEncoded(byte[] _encodedData) {
-        this.rlpEncoded = _encodedData;
-        parsed = false;
-    }
-
     public BigInteger nrgPrice() {
         return BigInteger.valueOf(nrgPrice);
     }
@@ -539,14 +441,6 @@ public class AionTransaction implements Cloneable {
     }
 
     public long getTransactionCost() {
-        return transactionCost(0);
-    }
-
-    public byte getKind() {
-        return this.isContractCreationTransaction() ? CREATE_KIND : CALL_KIND;
-    }
-
-    public long transactionCost(long blockNumber) {
         long nonZeroes = nonZeroBytesInData();
         long zeroes = zeroBytesInData();
 
@@ -556,13 +450,13 @@ public class AionTransaction implements Cloneable {
                 + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
     }
 
-    public long nonZeroBytesInData() {
+    private long nonZeroBytesInData() {
         int total = (data == null) ? 0 : data.length;
 
         return total - zeroBytesInData();
     }
 
-    public long zeroBytesInData() {
+    private long zeroBytesInData() {
         if (data == null) {
             return 0;
         }
