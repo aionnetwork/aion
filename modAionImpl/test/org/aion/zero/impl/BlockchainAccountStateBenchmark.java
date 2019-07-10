@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
@@ -175,6 +176,7 @@ public class BlockchainAccountStateBenchmark {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
+                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
@@ -218,11 +220,10 @@ public class BlockchainAccountStateBenchmark {
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
             assertThat(info.getReceipt().isValid()).isTrue();
 
-            AionAddress contractAddress = info.getReceipt().getTransaction().getContractAddress();
+            AionTransaction tx = info.getReceipt().getTransaction();
+            AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
 
-            byte[] contractCode =
-                    bc.getRepository()
-                            .getCode(info.getReceipt().getTransaction().getContractAddress());
+            byte[] contractCode = bc.getRepository().getCode(contractAddress);
 
             System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
             System.out.println("deployed at: " + contractAddress);
@@ -245,6 +246,7 @@ public class BlockchainAccountStateBenchmark {
         AionTransaction creationTx =
                 new AionTransaction(
                         accountNonce.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
@@ -282,6 +284,7 @@ public class BlockchainAccountStateBenchmark {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
+                            new AionAddress(key.getAddress()),
                             contractAddress,
                             BigInteger.ZERO.toByteArray(),
                             callData,
@@ -323,11 +326,10 @@ public class BlockchainAccountStateBenchmark {
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
             assertThat(info.getReceipt().isValid()).isTrue();
 
-            AionAddress contractAddress = info.getReceipt().getTransaction().getContractAddress();
+            AionTransaction tx = info.getReceipt().getTransaction();
+            AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
 
-            byte[] contractCode =
-                    bc.getRepository()
-                            .getCode(info.getReceipt().getTransaction().getContractAddress());
+            byte[] contractCode = bc.getRepository().getCode(contractAddress);
 
             System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
             System.out.println("deployed at: " + contractAddress);

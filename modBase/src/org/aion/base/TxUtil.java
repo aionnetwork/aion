@@ -1,8 +1,10 @@
 package org.aion.base;
 
 import java.math.BigInteger;
+import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
+import org.aion.fastvm.FvmConstants;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
@@ -120,5 +122,40 @@ public final class TxUtil {
         } else {
             return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type);
         }
+    }
+
+    public static long calculateTransactionCost(AionTransaction tx) {
+        long zeroes = zeroBytesInData(tx.data);
+        long nonZeroes = tx.data.length - zeroes;
+
+        return (tx.isContractCreationTransaction() ? FvmConstants.CREATE_TRANSACTION_FEE : 0)
+                + FvmConstants.TRANSACTION_BASE_FEE
+                + zeroes * FvmConstants.ZERO_BYTE_FEE
+                + nonZeroes * FvmConstants.NONZERO_BYTE_FEE;
+    }
+
+    private static long zeroBytesInData(byte[] data) {
+        if (data == null) {
+            return 0;
+        }
+
+        int c = 0;
+        for (byte b : data) {
+            c += (b == 0) ? 1 : 0;
+        }
+        return c;
+    }
+
+    public static AionAddress calculateContractAddress(AionTransaction tx) {
+        if (tx.getDestinationAddress() != null) {
+            return null;
+        }
+        return new AionAddress(
+            HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+    }
+
+    public static byte[] hashWithoutSignature(AionTransaction tx) {
+        byte[] plainMsg = encodeWithoutSignature(tx);
+        return HashUtil.h256(plainMsg);
     }
 }

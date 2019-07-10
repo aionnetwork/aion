@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
@@ -61,8 +62,8 @@ public class FvmBulkTransactionTest {
         expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
 
         // Grab the address of the newly deployed contract.
-        AionAddress deployedContract =
-                initialSummary.getReceipts().get(0).getTransaction().getContractAddress();
+        AionTransaction tx = initialSummary.getReceipts().get(0).getTransaction();
+        AionAddress deployedContract = TxUtil.calculateContractAddress(tx);
 
         int numFvmCreateTransactions = 10;
         int numFvmCallTransactions = 10;
@@ -106,13 +107,9 @@ public class FvmBulkTransactionTest {
 
             // The first batch are creates, so grab the new contract addresses.
             if (i < numFvmCreateTransactions) {
-                contracts.add(
-                        blockSummary
-                                .getSummaries()
-                                .get(i)
-                                .getReceipt()
-                                .getTransaction()
-                                .getContractAddress());
+                AionTransaction transaction =
+                        blockSummary.getSummaries().get(i).getReceipt().getTransaction();
+                contracts.add(TxUtil.calculateContractAddress(transaction));
             }
         }
 

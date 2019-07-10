@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
@@ -111,6 +112,7 @@ public class InternalTransactionTest {
         AionTransaction tx1 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -122,6 +124,7 @@ public class InternalTransactionTest {
         AionTransaction tx2 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
@@ -134,9 +137,9 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        AionAddress addressA = TxUtil.calculateContractAddress(tx1);
         System.out.println("contract A = " + addressA);
-        AionAddress addressB = tx2.getContractAddress();
+        AionAddress addressB = TxUtil.calculateContractAddress(tx2);
         System.out.println("contract B = " + addressB);
         Thread.sleep(1000);
 
@@ -147,6 +150,7 @@ public class InternalTransactionTest {
         AionTransaction tx3 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressB,
                         new byte[0],
                         ByteUtil.hexStringToBytes("0x26121ff0"),
@@ -170,6 +174,7 @@ public class InternalTransactionTest {
         AionTransaction tx4 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -197,6 +202,7 @@ public class InternalTransactionTest {
         AionTransaction tx6 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -249,6 +255,7 @@ public class InternalTransactionTest {
         AionTransaction tx1 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -260,7 +267,7 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        AionAddress addressA = TxUtil.calculateContractAddress(tx1);
         System.out.println("contract A = " + addressA);
         Thread.sleep(1000);
 
@@ -271,6 +278,7 @@ public class InternalTransactionTest {
         AionTransaction tx2 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -320,6 +328,7 @@ public class InternalTransactionTest {
         AionTransaction tx1 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -368,6 +377,7 @@ public class InternalTransactionTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         internalContractAddress,
                         BigInteger.ONE.toByteArray(),
                         new byte[0],
@@ -395,6 +405,7 @@ public class InternalTransactionTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -421,6 +432,7 @@ public class InternalTransactionTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -428,7 +440,7 @@ public class InternalTransactionTest {
                         1L);
         tx.sign(deployerAccount);
 
-        System.out.println("contractaddr: " + tx.getContractAddress());
+        System.out.println("contractaddr: " + TxUtil.calculateContractAddress(tx));
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx);
@@ -439,14 +451,15 @@ public class InternalTransactionTest {
             System.out.println(itx);
             if (firstItx) {
 
-                assertTrue(bc.getRepository().hasAccountState(tx.getContractAddress()));
+                AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
+                assertTrue(bc.getRepository().hasAccountState(contractAddress));
 
                 assertTrue(
                         bc.getRepository()
                                 .hasAccountState(
                                         new AionAddress(
                                                 HashUtil.calcNewAddr(
-                                                        tx.getContractAddress().toByteArray(),
+                                                        contractAddress.toByteArray(),
                                                         BigInteger.ZERO.toByteArray()))));
 
                 firstItx = false;

@@ -6,6 +6,7 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 import java.util.Collections;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.LogEnum;
@@ -81,7 +82,7 @@ public class TXValidator {
             return false;
         }
 
-        byte[] hash = tx.getRawHash();
+        byte[] hash = TxUtil.hashWithoutSignature(tx);
         if (hash == null || hash.length != Hash256.BYTES) {
             LOG.error("invalid tx raw hash!");
             return false;

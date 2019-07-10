@@ -6,6 +6,8 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
+import org.aion.base.TxUtil;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
@@ -59,10 +61,11 @@ public class Blk {
             AionTransaction tx = txs.get(i);
             if (fullTransaction) {
                 JSONObject jsonTx = new JSONObject();
+                AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
                 jsonTx.put(
                         "contractAddress",
-                        (tx.getContractAddress() != null)
-                                ? StringUtils.toJsonHex(tx.getContractAddress().toString())
+                        (contractAddress != null)
+                                ? StringUtils.toJsonHex(contractAddress.toString())
                                 : null);
                 jsonTx.put("hash", StringUtils.toJsonHex(tx.getTransactionHash()));
                 jsonTx.put("transactionIndex", i);

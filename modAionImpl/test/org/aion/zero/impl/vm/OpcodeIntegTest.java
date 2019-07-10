@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -105,6 +106,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -149,6 +151,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -189,6 +192,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -238,6 +242,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -260,6 +265,7 @@ public class OpcodeIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -282,6 +288,7 @@ public class OpcodeIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         E,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -317,6 +324,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -361,7 +369,13 @@ public class OpcodeIntegTest {
 
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), D, value.toByteArray(), input, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        D,
+                        value.toByteArray(),
+                        input,
+                        nrg,
+                        nrgPrice);
         tx.sign(deployerKey);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
@@ -401,7 +415,13 @@ public class OpcodeIntegTest {
 
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), D, value.toByteArray(), input, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        D,
+                        value.toByteArray(),
+                        input,
+                        nrg,
+                        nrgPrice);
         tx.sign(deployerKey);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
@@ -419,6 +439,7 @@ public class OpcodeIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         D,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -440,6 +461,7 @@ public class OpcodeIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         E,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -474,7 +496,13 @@ public class OpcodeIntegTest {
 
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), D, value.toByteArray(), input, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        D,
+                        value.toByteArray(),
+                        input,
+                        nrg,
+                        nrgPrice);
         tx.sign(deployerKey);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
@@ -516,7 +544,13 @@ public class OpcodeIntegTest {
 
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), D, value.toByteArray(), input, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        D,
+                        value.toByteArray(),
+                        input,
+                        nrg,
+                        nrgPrice);
         tx.sign(deployerKey);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
@@ -555,6 +589,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         callerContract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -605,6 +640,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -650,6 +686,7 @@ public class OpcodeIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -692,7 +729,13 @@ public class OpcodeIntegTest {
         BigInteger nonce = repo.getNonce(deployer);
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice);
         AionAddress contract =
                 deployContract(
                         repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce);
@@ -731,7 +774,7 @@ public class OpcodeIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        AionAddress contract = tx.getContractAddress();
+        AionAddress contract = TxUtil.calculateContractAddress(tx);
         checkStateOfNewContract(repo, contractName, contractFilename, contract, value);
         checkStateOfDeployer(
                 repo,

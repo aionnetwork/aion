@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
@@ -77,7 +78,7 @@ public class VMTxStateAlignTest {
         for (int i = 0; i < this.deployerKeys.size() && i < deployerNum; i++) {
             ECKey senderKey = this.deployerKeys.get(i);
             txList.add(makeFvmContractCreateTransaction(senderKey, BigInteger.ZERO));
-            deployAddr.add(txList.get(i).getContractAddress());
+            deployAddr.add(TxUtil.calculateContractAddress(txList.get(i)));
         }
 
         AionBlock deplayBlock = genNewBlock(txList, blockchainWoAVM);
