@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -1273,7 +1274,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingCacheTxBytes) {
             try {
-                pendingTx.add(new AionTransaction(b));
+                pendingTx.add(TxUtil.decode(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingPendingCacheTx error ", e);
             }
@@ -1314,7 +1315,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingPoolTxBytes) {
             try {
-                pendingTx.add(new AionTransaction(b));
+                pendingTx.add(TxUtil.decode(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingCachePendingTx error ", e);
             }
