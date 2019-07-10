@@ -96,17 +96,19 @@ public final class TxUtil {
 
     private static byte[] calculateEncodingPrivate(AionTransaction tx, boolean withSignature) {
 
-        byte[] nonce = RLP.encodeElement(tx.nonce);
-        byte[] to = RLP.encodeElement(tx.to == null ? null : tx.to.toByteArray());
-        byte[] value = RLP.encodeElement(tx.value);
-        byte[] data = RLP.encodeElement(tx.data);
-        byte[] timeStamp = RLP.encodeElement(tx.timeStamp);
-        byte[] nrg = RLP.encodeLong(tx.nrg);
-        byte[] nrgPrice = RLP.encodeLong(tx.nrgPrice);
-        byte[] type = RLP.encodeByte(tx.type);
+        byte[] nonce = RLP.encodeElement(tx.getNonce());
+        byte[] to = RLP.encodeElement(tx.getDestinationAddress() == null ? null : tx.getDestinationAddress().toByteArray());
+        byte[] value = RLP.encodeElement(tx.getValue());
+        byte[] data = RLP.encodeElement(tx.getData());
+        byte[] timeStamp = RLP.encodeElement(tx.getTimestamp());
+        byte[] nrg = RLP.encodeLong(tx.getEnergyLimit());
+        byte[] nrgPrice = RLP.encodeLong(tx.getEnergyPrice());
+        byte[] type = RLP.encodeByte(tx.getTargetVM());
 
         if (withSignature) {
-            byte[] sigs = RLP.encodeElement(tx.signature == null ? null : tx.signature.toBytes());
+            byte[] sigs =
+                    RLP.encodeElement(
+                            tx.getSignature() == null ? null : tx.getSignature().toBytes());
             return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type, sigs);
         } else {
             return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type);
@@ -114,8 +116,8 @@ public final class TxUtil {
     }
 
     public static long calculateTransactionCost(AionTransaction tx) {
-        long zeroes = zeroBytesInData(tx.data);
-        long nonZeroes = tx.data.length - zeroes;
+        long zeroes = zeroBytesInData(tx.getData());
+        long nonZeroes = tx.getData().length - zeroes;
 
         return (tx.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
             + Constants.NRG_TRANSACTION_MIN
