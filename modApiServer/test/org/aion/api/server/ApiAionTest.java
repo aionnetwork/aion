@@ -301,8 +301,8 @@ public class ApiAionTest {
         impl.getAionHub().getBlockchain().add(blk);
 
         assertTrue(blk.isEqual(api.getBlockByHash(blk.getHash())));
-        assertEquals(tx, api.getTransactionByBlockHashAndIndex(blk.getHash(), 0));
-        assertEquals(tx, api.getTransactionByBlockNumberAndIndex(blk.getNumber(), 0));
+        assertEquals(tx, api.getTransactionByBlockHashAndIndex(blk.getHash(), 0).tx);
+        assertEquals(tx, api.getTransactionByBlockNumberAndIndex(blk.getNumber(), 0).tx);
         assertEquals(1, api.getBlockTransactionCountByNumber(blk.getNumber()));
         assertEquals(1, api.getTransactionCountByHash(blk.getHash()));
 
@@ -314,7 +314,7 @@ public class ApiAionTest {
                         blk.getTransactionsList().get(0).getSenderAddress(), blk.getNumber()));
         assertEquals(0, api.getTransactionCount(null, blk.getNumber()));
 
-        assertEquals(tx, api.getTransactionByHash(tx.getTransactionHash()));
+        assertEquals(tx, api.getTransactionByHash(tx.getTransactionHash()).tx);
     }
 
     @Test
