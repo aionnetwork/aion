@@ -246,7 +246,7 @@ public class OldTxExecutorTest {
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
 
-        assertEquals(tx.transactionCost(block.getNumber()), receipt.getEnergyUsed());
+        assertEquals(tx.getTransactionCost(), receipt.getEnergyUsed());
     }
 
     private static AionBlock createDummyBlock() {
