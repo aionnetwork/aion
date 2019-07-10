@@ -78,8 +78,15 @@ public class ApiAionTest {
 
         private void addEvents() {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
-            AionTransaction tx = new AionTransaction(null);
-            List l1 = new ArrayList<AionTransaction>();
+            AionTransaction tx =
+                    new AionTransaction(
+                            new byte[0],
+                            new AionAddress(new byte[32]),
+                            new byte[0],
+                            new byte[0],
+                            0L,
+                            1L);
+            List<AionTransaction> l1 = new ArrayList<>();
             l1.add(tx);
             l1.add(tx);
             l1.add(tx);
