@@ -33,6 +33,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -123,7 +124,7 @@ public class TransactionExecutorTest {
         assertEquals("", summary.getReceipt().getError());
         assertArrayEquals(body, summary.getResult());
 
-        AionAddress contract = summary.getTransaction().getContractAddress();
+        AionAddress contract = TransactionUtil.calculateContractAddress(summary.getTransaction());
         assertArrayEquals(body, repo.getCode(contract));
         assertEquals(BigInteger.ZERO, repo.getBalance(contract));
         assertEquals(BigInteger.ZERO, repo.getNonce(contract));
@@ -169,7 +170,7 @@ public class TransactionExecutorTest {
         // transaction
         // fee plus the refund
         byte[] body = ContractUtils.getContractBody("ByteArrayMap.sol", "ByteArrayMap");
-        AionAddress contract = tx.getContractAddress();
+        AionAddress contract = TransactionUtil.calculateContractAddress(tx);
 
         assertArrayEquals(body, blockchain.getRepository().getCode(contract));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getBalance(contract));
@@ -324,7 +325,7 @@ public class TransactionExecutorTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         blockchain.tryToConnect(context.block);
 
-        return tx.getContractAddress();
+        return TransactionUtil.calculateContractAddress(tx);
     }
 
     private AionAddress getNewRecipient(boolean isContractCreation) {

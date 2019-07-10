@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -1166,7 +1167,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return Pair.of(null, null);
             }
         }
-
+        
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {
                 transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));

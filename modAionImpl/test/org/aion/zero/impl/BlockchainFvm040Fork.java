@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.mcf.core.ImportResult;
@@ -199,8 +200,8 @@ public class BlockchainFvm040Fork {
 
         Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(block1);
         assertTrue(result.getLeft().isSuccessful());
-        AionAddress contractAddr =
-                result.getRight().getReceipts().get(0).getTransaction().getContractAddress();
+        AionTransaction tx = result.getRight().getReceipts().get(0).getTransaction();
+        AionAddress contractAddr = TransactionUtil.calculateContractAddress(tx);
         assertNotNull(contractAddr);
 
         // excute old fvm logic before fork

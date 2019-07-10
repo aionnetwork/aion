@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -111,7 +112,7 @@ public class AionTransactionTest {
         for (byte b : data) {
             expected += (b == 0) ? 4 : 64;
         }
-        assertEquals(expected, tx.getTransactionCost());
+        assertEquals(expected, TransactionUtil.getTransactionCost(tx));
     }
 
     @Test
@@ -131,6 +132,6 @@ public class AionTransactionTest {
         for (byte b : data) {
             expected += (b == 0) ? 4 : 64;
         }
-        assertEquals(expected, tx.getTransactionCost());
+        assertEquals(expected, TransactionUtil.getTransactionCost(tx));
     }
 }

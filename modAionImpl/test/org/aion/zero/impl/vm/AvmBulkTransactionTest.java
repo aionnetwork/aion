@@ -14,6 +14,7 @@ import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
@@ -139,7 +140,7 @@ public class AvmBulkTransactionTest {
             AionTransaction deployTx = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
             expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-            AionAddress deployedContract = deployTx.getContractAddress();
+            AionAddress deployedContract = TransactionUtil.calculateContractAddress(deployTx);
             transactions.add(deployTx);
 
             // subsequent call transactions
@@ -204,13 +205,13 @@ public class AvmBulkTransactionTest {
                         5_000_000L,
                         energyPrice);
         deployTxFVM.sign(deployerKey);
-        AionAddress fvmContract = deployTxFVM.getContractAddress();
+        AionAddress fvmContract = TransactionUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
         // deploy on AVM
         AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
-        AionAddress avmContract = deployTxAVM.getContractAddress();
+        AionAddress avmContract = TransactionUtil.calculateContractAddress(deployTxAVM);
         transactions.add(deployTxAVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 

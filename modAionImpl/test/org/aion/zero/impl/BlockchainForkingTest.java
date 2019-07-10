@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
@@ -533,7 +534,7 @@ public class BlockchainForkingTest {
         assertThat(testChain.getRepository().getRoot())
                 .isEqualTo(sourceChain.getRepository().getRoot());
 
-        AionAddress contract = receipt.getTransaction().getContractAddress();
+        AionAddress contract = TransactionUtil.calculateContractAddress(receipt.getTransaction());
         // add a block with transactions to both
         List<AionTransaction> txs = generateTransactions(20, accounts, sourceChain.getRepository());
 

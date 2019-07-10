@@ -3,6 +3,7 @@ package org.aion.api.server.types;
 import static org.aion.util.string.StringUtils.toJsonHex;
 
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AbstractTxInfo;
@@ -97,9 +98,10 @@ public final class TxRecpt {
         this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getEnergyPrice();
         this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getEnergyLimit();
 
-        if (receipt.getTransaction().getContractAddress() != null)
-            this.contractAddress =
-                    toJsonHex(receipt.getTransaction().getContractAddress().toString());
+        AionAddress contractAddress =
+                TransactionUtil.calculateContractAddress(receipt.getTransaction());
+        this.contractAddress =
+                contractAddress != null ? toJsonHex(contractAddress.toString()) : null;
         this.transactionHash = toJsonHex(receipt.getTransaction().getTransactionHash());
         this.transactionIndex = txInfo.getIndex();
         this.root = ByteUtil.toHexString(this.txRoot);
@@ -148,10 +150,9 @@ public final class TxRecpt {
         this.cumulativeNrgUsed = cumulativeNrgUsed;
         this.nrgUsed = receipt.getEnergyUsed();
 
+        AionAddress contractAddress = TransactionUtil.calculateContractAddress(tx);
         this.contractAddress =
-                tx.getContractAddress() != null
-                        ? toJsonHex(tx.getContractAddress().toString())
-                        : null;
+                contractAddress != null ? toJsonHex(contractAddress.toString()) : null;
         this.transactionHash = toJsonHex(tx.getTransactionHash());
         this.transactionIndex = txIndex;
         this.root = this.txRoot != null ? ByteUtil.toHexString(this.txRoot) : null;

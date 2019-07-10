@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
@@ -90,9 +91,9 @@ public class TxRecptLgTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        AionAddress addressA = TransactionUtil.calculateContractAddress(tx1);
         System.out.println("contract A address = " + addressA);
-        AionAddress addressB = tx2.getContractAddress();
+        AionAddress addressB = TransactionUtil.calculateContractAddress(tx2);
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 

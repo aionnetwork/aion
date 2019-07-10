@@ -45,6 +45,7 @@ import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.Constants;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -189,7 +190,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -240,7 +241,7 @@ public class ContractIntegTest {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -293,7 +294,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertEquals(nrg, tx.getNrgConsume());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -345,7 +346,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
 
             checkStateOfDeployer(
                     repo, summary, nrgPrice, BigInteger.ZERO, nonce.add(BigInteger.ONE));
@@ -396,7 +397,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -448,7 +449,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -501,7 +502,7 @@ public class ContractIntegTest {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
             assertEquals(0, tx.getNrgConsume());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -1344,7 +1345,7 @@ public class ContractIntegTest {
                 new AionTransaction(
                         nonce.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
-                        tx.getContractAddress(),
+                        TransactionUtil.calculateContractAddress(tx),
                         BigInteger.TEN.toByteArray(),
                         input,
                         nrg,
@@ -1362,8 +1363,8 @@ public class ContractIntegTest {
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
 
-        assertEquals(
-                BigInteger.TEN, blockchain.getRepository().getBalance(tx.getContractAddress()));
+        AionAddress contractAddress = TransactionUtil.calculateContractAddress(tx);
+        assertEquals(BigInteger.TEN, blockchain.getRepository().getBalance(contractAddress));
         assertEquals(
                 senderBalance
                         .subtract(BigInteger.TEN)
@@ -1607,7 +1608,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -1820,7 +1821,7 @@ public class ContractIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        AionAddress contract = tx.getContractAddress();
+        AionAddress contract = TransactionUtil.calculateContractAddress(tx);
         if (contractFilename == null) {
             checkStateOfNewContract(
                     repo,
@@ -2033,9 +2034,9 @@ public class ContractIntegTest {
         assertThat(receipt.isSuccessful()).isTrue();
 
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toByteArray())
-                .isEqualTo(receipt.getTransactionOutput());
+        AionAddress contractAddress = TransactionUtil.calculateContractAddress(transaction);
+        assertThat(contractAddress.toByteArray()).isEqualTo(receipt.getTransactionOutput());
 
-        return transaction.getContractAddress();
+        return contractAddress;
     }
 }

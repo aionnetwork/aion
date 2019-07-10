@@ -122,11 +122,6 @@ public class AionTransaction implements Cloneable {
         return HashUtil.h256(TransactionRlpCodec.getEncoding(this));
     }
 
-    public byte[] getRawHash() {
-        byte[] plainMsg = TransactionRlpCodec.getEncodingNoSignature(this);
-        return HashUtil.h256(plainMsg);
-    }
-
     public byte[] getNonce() {
         return nonce == null ? ByteUtil.ZERO_BYTE_ARRAY : nonce;
     }
@@ -171,53 +166,22 @@ public class AionTransaction implements Cloneable {
         return signature;
     }
 
-    public AionAddress getContractAddress() {
-        if (!this.isContractCreationTransaction()) {
-            return null;
-        }
-
-        AionAddress from = this.getSenderAddress();
-
-        if (from == null) {
-            return null;
-        }
-
-        try {
-            return new AionAddress(HashUtil.calcNewAddr(from.toByteArray(), this.getNonce()));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public boolean isContractCreationTransaction() {
         return this.to == null;
     }
 
-    public synchronized AionAddress getSenderAddress() {
-        if (from != null) {
-            return this.from;
-        }
-
-        if (this.signature == null) {
-            return null;
-        }
-
-        try {
-            from = new AionAddress(this.signature.getAddress());
-            return from;
-        } catch (Exception e) {
-            return null;
-        }
+    public AionAddress getSenderAddress() {
+        return from;
     }
 
     public void sign(ECKey key) throws MissingPrivateKeyException {
         this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
-        this.signature = key.sign(this.getRawHash());
+        this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
     }
 
     public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {
         this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochSec() * 1_000_000L);
-        this.signature = key.sign(this.getRawHash());
+        this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
     }
 
     @Override
@@ -276,34 +240,6 @@ public class AionTransaction implements Cloneable {
 
     public BigInteger nrgLimit() {
         return BigInteger.valueOf(nrg);
-    }
-
-    public long getTransactionCost() {
-        long nonZeroes = nonZeroBytesInData();
-        long zeroes = zeroBytesInData();
-
-        return (this.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
-                + Constants.NRG_TRANSACTION_MIN
-                + zeroes * Constants.NRG_TX_DATA_ZERO
-                + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
-    }
-
-    private long nonZeroBytesInData() {
-        int total = (data == null) ? 0 : data.length;
-
-        return total - zeroBytesInData();
-    }
-
-    private long zeroBytesInData() {
-        if (data == null) {
-            return 0;
-        }
-
-        int c = 0;
-        for (byte b : data) {
-            c += (b == 0) ? 1 : 0;
-        }
-        return c;
     }
 
     public void setTxIndexInBlock(long idx) {

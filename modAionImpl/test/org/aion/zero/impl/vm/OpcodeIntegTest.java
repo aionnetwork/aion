@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -773,7 +774,7 @@ public class OpcodeIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        AionAddress contract = tx.getContractAddress();
+        AionAddress contract = TransactionUtil.calculateContractAddress(tx);
         checkStateOfNewContract(repo, contractName, contractFilename, contract, value);
         checkStateOfDeployer(
                 repo,
