@@ -21,6 +21,7 @@ import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -598,7 +599,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        AionTransaction tx = new AionTransaction(signedTx);
+        AionTransaction tx = TxUtil.decode(signedTx);
         try {
             return (new ApiTxResponse(
                     pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
