@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -120,7 +121,7 @@ public final class BroadcastTxHandler extends Handler {
 
         for (byte[] raw : broadCastTx) {
             try {
-                AionTransaction tx = new AionTransaction(raw);
+                AionTransaction tx = TransactionRlpCodec.decodeTransaction(raw);
                 if (tx.getTransactionHash() != null) {
                     if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getTransactionHash()))) {
                         if (pendingState.isValid(tx)) {

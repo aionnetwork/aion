@@ -29,6 +29,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -287,7 +288,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Trie txsState = new TrieImpl(null);
 
         for (int i = 0; i < transactions.size(); i++) {
-            byte[] txEncoding = transactions.get(i).getEncoded();
+            byte[] txEncoding = TransactionRlpCodec.getEncoding(transactions.get(i));
             if (txEncoding != null) {
                 txsState.update(RLP.encodeInt(i), txEncoding);
             } else {

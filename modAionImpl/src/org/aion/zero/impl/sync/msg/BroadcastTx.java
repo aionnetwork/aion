@@ -3,6 +3,7 @@ package org.aion.zero.impl.sync.msg;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -28,7 +29,7 @@ public final class BroadcastTx extends Msg {
     public byte[] encode() {
         List<byte[]> encodedTx = new ArrayList<>();
         for (AionTransaction tx : txl) {
-            encodedTx.add(tx.getEncoded());
+            encodedTx.add(TransactionRlpCodec.getEncoding(tx));
         }
 
         return RLP.encodeList(encodedTx.toArray(new byte[encodedTx.size()][]));

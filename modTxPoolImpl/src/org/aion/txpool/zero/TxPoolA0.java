@@ -17,6 +17,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
@@ -481,14 +482,15 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
                         AionTransaction itx = this.getMainMap().get(bw).getTx();
 
-                        cnt_txSz += itx.getEncoded().length;
+                        byte[] encodedItx = TransactionRlpCodec.getEncoding(itx);
+                        cnt_txSz += encodedItx.length;
                         cnt_nrg += itx.getNrgConsume();
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                     itx.getSenderAddress().toString(),
                                     itx.getNonceBI().toString(),
-                                    itx.getEncoded().length,
+                                    encodedItx.length,
                                     itx.getNrgConsume());
                         }
 
@@ -528,14 +530,15 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                                 nonPickedTx.get(ancestor).getValue().getTxList()) {
                             AionTransaction itx = this.getMainMap().get(bw).getTx();
 
-                            cnt_txSz += itx.getEncoded().length;
+                            byte[] encodedItx = TransactionRlpCodec.getEncoding(itx);
+                            cnt_txSz += encodedItx.length;
                             cnt_nrg += itx.getNrgConsume();
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                         itx.getSenderAddress().toString(),
                                         itx.getNonceBI().toString(),
-                                        itx.getEncoded().length,
+                                        encodedItx.length,
                                         itx.getNrgConsume());
                             }
 

@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.slf4j.Logger;
@@ -66,8 +67,8 @@ public class TxCollector {
         for (AionTransaction tx : txs) {
             try {
                 transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-                if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
-                    broadcastTx();
+                if (queueSizeBytes.addAndGet(TransactionRlpCodec.getEncoding(tx).length)
+                        >= this.maxTxBufferSize) broadcastTx();
 
             } catch (InterruptedException e) {
                 // Interrupted, no problem
@@ -81,8 +82,8 @@ public class TxCollector {
     public void submitTx(AionTransaction tx) {
         try {
             transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-            if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
-                broadcastTx();
+            if (queueSizeBytes.addAndGet(TransactionRlpCodec.getEncoding(tx).length)
+                    >= this.maxTxBufferSize) broadcastTx();
 
         } catch (InterruptedException e) {
             // Interrupted, no problem
@@ -104,7 +105,7 @@ public class TxCollector {
 
             // Reduce counter
             for (AionTransaction a : transactions) {
-                queueSizeBytes.addAndGet(a.getEncoded().length * -1);
+                queueSizeBytes.addAndGet(TransactionRlpCodec.getEncoding(a).length * -1);
             }
         } finally {
             broadcastLock.unlock();

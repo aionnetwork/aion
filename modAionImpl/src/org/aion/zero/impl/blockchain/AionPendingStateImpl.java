@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -484,7 +485,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                     addToTxCache(tx);
 
                     if (poolBackUp) {
-                        backupPendingCacheAdd.put(tx.getTransactionHash(), tx.getEncoded());
+                        backupPendingCacheAdd.put(
+                                tx.getTransactionHash(), TransactionRlpCodec.getEncoding(tx));
                     }
 
                     if (LOGGER_TX.isTraceEnabled()) {
@@ -509,7 +511,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                         addToTxCache(tx);
 
                         if (poolBackUp) {
-                            backupPendingCacheAdd.put(tx.getTransactionHash(), tx.getEncoded());
+                            backupPendingCacheAdd.put(
+                                    tx.getTransactionHash(), TransactionRlpCodec.getEncoding(tx));
                         }
 
                         if (LOGGER_TX.isTraceEnabled()) {
@@ -555,7 +558,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                             newPending.add(tx);
 
                             if (poolBackUp) {
-                                backupPendingPoolAdd.put(tx.getTransactionHash(), tx.getEncoded());
+                                backupPendingPoolAdd.put(
+                                        tx.getTransactionHash(),
+                                        TransactionRlpCodec.getEncoding(tx));
                             }
                         } else {
                             break;
@@ -583,7 +588,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                     txResponses.add(TxResponse.REPAID);
 
                     if (poolBackUp) {
-                        backupPendingPoolAdd.put(tx.getTransactionHash(), tx.getEncoded());
+                        backupPendingPoolAdd.put(
+                                tx.getTransactionHash(), TransactionRlpCodec.getEncoding(tx));
                     }
                 } else {
                     txResponses.add(implResponse);
@@ -1272,7 +1278,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingCacheTxBytes) {
             try {
-                pendingTx.add(new AionTransaction(b));
+                pendingTx.add(TransactionRlpCodec.decodeTransaction(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingPendingCacheTx error ", e);
             }
@@ -1313,7 +1319,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingPoolTxBytes) {
             try {
-                pendingTx.add(new AionTransaction(b));
+                pendingTx.add(TransactionRlpCodec.decodeTransaction(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingCachePendingTx error ", e);
             }

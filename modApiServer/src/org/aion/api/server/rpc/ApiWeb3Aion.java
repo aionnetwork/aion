@@ -42,6 +42,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -689,7 +690,7 @@ public class ApiWeb3Aion extends ApiAion {
         AionTransaction tx = signTransaction(txParams, _address);
         if (tx != null) {
             JSONObject obj = new JSONObject();
-            obj.put("raw", StringUtils.toJsonHex(tx.getEncoded()));
+            obj.put("raw", StringUtils.toJsonHex(TransactionRlpCodec.getEncoding(tx)));
 
             JSONObject txObj = new JSONObject();
             txObj.put("nonce", StringUtils.toJsonHex(tx.getNonce()));
@@ -1504,7 +1505,9 @@ public class ApiWeb3Aion extends ApiAion {
                 Tx.InfoToJSON(
                         transaction,
                         this.ac.getBlockchain().getBlockByHash(transaction.getBlockHash()));
-        String raw = ByteUtil.toHexString(transaction.getReceipt().getTransaction().getEncoded());
+        String raw =
+                ByteUtil.toHexString(
+                        TransactionRlpCodec.getEncoding(transaction.getReceipt().getTransaction()));
 
         JSONObject obj = new JSONObject();
         obj.put("transaction", tx);

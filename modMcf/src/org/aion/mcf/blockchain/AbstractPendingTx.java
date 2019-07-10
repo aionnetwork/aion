@@ -2,6 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
@@ -45,7 +46,7 @@ public abstract class AbstractPendingTx {
 
     public byte[] getBytes() {
         byte[] numberBytes = BigInteger.valueOf(blockNumber).toByteArray();
-        byte[] txBytes = transaction.getEncoded();
+        byte[] txBytes = TransactionRlpCodec.getEncoding(transaction);
         byte[] bytes = new byte[1 + numberBytes.length + txBytes.length];
 
         bytes[0] = (byte) numberBytes.length;

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
@@ -204,12 +205,12 @@ public class PendingTxCacheTest {
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
 
-        int singleTxSize = txn.get(0).getEncoded().length;
+        int singleTxSize = TransactionRlpCodec.getEncoding(txn.get(0)).length;
 
         int txSize = 0;
         for (AionTransaction tx : txn) {
             cache.addCacheTx(tx);
-            txSize += tx.getEncoded().length;
+            txSize += TransactionRlpCodec.getEncoding(tx).length;
         }
 
         assertTrue(cache.cacheTxSize() == 10);
@@ -233,12 +234,12 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(0, 10, 1));
 
-        int singleTxSize = txn.get(0).getEncoded().length;
+        int singleTxSize = TransactionRlpCodec.getEncoding(txn.get(0)).length;
 
         int txSize = 0;
         for (AionTransaction tx : txn) {
             cache.addCacheTx(tx);
-            txSize += tx.getEncoded().length;
+            txSize += TransactionRlpCodec.getEncoding(tx).length;
         }
 
         assertTrue(cache.cacheTxSize() == 20);

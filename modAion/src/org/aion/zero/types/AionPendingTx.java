@@ -3,6 +3,7 @@ package org.aion.zero.types;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.mcf.blockchain.AbstractPendingTx;
 
 /** aion pending transaction class. */
@@ -28,7 +29,7 @@ public class AionPendingTx extends AbstractPendingTx {
         System.arraycopy(bytes, 1 + numberBytes.length, txBytes, 0, txBytes.length);
 
         this.blockNumber = new BigInteger(numberBytes).longValue();
-        this.transaction = new AionTransaction(txBytes);
+        this.transaction = TransactionRlpCodec.decodeTransaction(txBytes);
     }
 
     /** Two pending transaction are equal if equal their sender + nonce */

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;
@@ -72,7 +73,7 @@ public class PendingTxCache {
             throw new NullPointerException();
         }
 
-        int txSize = tx.getEncoded().length;
+        int txSize = TransactionRlpCodec.getEncoding(tx).length;
         if (isCacheMax(txSize)) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("PendingTx reached the max Memory settings");
@@ -93,7 +94,9 @@ public class PendingTxCache {
                     // case 1: found tx has same nonce in the cachemap
                     removeTx.add(nonce);
                     int oldTxSize =
-                            cacheTxMap.get(tx.getSenderAddress()).get(nonce).getEncoded().length;
+                            TransactionRlpCodec.getEncoding(
+                                            cacheTxMap.get(tx.getSenderAddress()).get(nonce))
+                                    .length;
                     tempCacheSize -= oldTxSize;
                     if (!isCacheMax(txSize - oldTxSize)) {
                         // case 1a: replace nonce within the cachelimit, replace it
@@ -105,7 +108,8 @@ public class PendingTxCache {
                                 cacheTxMap.get(tx.getSenderAddress()).descendingMap().entrySet()) {
                             if (e.getKey().compareTo(nonce) > 0) {
                                 removeTx.add(e.getKey());
-                                tempCacheSize -= e.getValue().getEncoded().length;
+                                tempCacheSize -=
+                                        TransactionRlpCodec.getEncoding(e.getValue()).length;
                                 if (tempCacheSize + txSize < CacheMax) {
                                     findPosition = true;
                                     break;
@@ -120,7 +124,7 @@ public class PendingTxCache {
                             cacheTxMap.get(tx.getSenderAddress()).descendingMap().entrySet()) {
                         if (e.getKey().compareTo(nonce) > 0) {
                             removeTx.add(e.getKey());
-                            tempCacheSize -= e.getValue().getEncoded().length;
+                            tempCacheSize -= TransactionRlpCodec.getEncoding(e.getValue()).length;
                             if (tempCacheSize + txSize < CacheMax) {
                                 findPosition = true;
                                 break;
@@ -136,7 +140,9 @@ public class PendingTxCache {
                             cacheClearTxHash.add(remove.getTransactionHash().clone());
                         }
 
-                        subAccountSize(remove.getSenderAddress(), remove.getEncoded().length);
+                        subAccountSize(
+                                remove.getSenderAddress(),
+                                TransactionRlpCodec.getEncoding(remove).length);
                         cacheTxMap.get(tx.getSenderAddress()).remove(bi);
                     }
 
@@ -168,10 +174,8 @@ public class PendingTxCache {
 
             if (cacheTxMap.get(tx.getSenderAddress()).get(tx.getNonceBI()) != null) {
                 int oldTxSize =
-                        cacheTxMap
-                                .get(tx.getSenderAddress())
-                                .get(tx.getNonceBI())
-                                .getEncoded()
+                        TransactionRlpCodec.getEncoding(
+                                        cacheTxMap.get(tx.getSenderAddress()).get(tx.getNonceBI()))
                                 .length;
                 cacheTxMap.get(tx.getSenderAddress()).put(tx.getNonceBI(), tx);
 
@@ -233,7 +237,7 @@ public class PendingTxCache {
 
                 Map<BigInteger, AionTransaction> headmap = cacheTxMap.get(addr).headMap(bn);
                 for (AionTransaction tx : headmap.values()) {
-                    subAccountSize(addr, tx.getEncoded().length);
+                    subAccountSize(addr, TransactionRlpCodec.getEncoding(tx).length);
                     if (isPoolBackup) {
                         cacheClearTxHash.add(tx.getTransactionHash().clone());
                     }
