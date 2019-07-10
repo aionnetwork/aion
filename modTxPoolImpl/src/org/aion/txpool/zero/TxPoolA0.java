@@ -481,14 +481,15 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
                         AionTransaction itx = this.getMainMap().get(bw).getTx();
 
-                        cnt_txSz += itx.getEncoded().length;
+                        byte[] encodedItx =itx.getEncoded();
+                        cnt_txSz += encodedItx.length;
                         cnt_nrg += itx.getNrgConsume();
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                     itx.getSenderAddress().toString(),
                                     itx.getNonceBI().toString(),
-                                    itx.getEncoded().length,
+                                    encodedItx.length,
                                     itx.getNrgConsume());
                         }
 
@@ -528,14 +529,15 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                                 nonPickedTx.get(ancestor).getValue().getTxList()) {
                             AionTransaction itx = this.getMainMap().get(bw).getTx();
 
-                            cnt_txSz += itx.getEncoded().length;
+                            byte[] encodedItx = itx.getEncoded();
+                            cnt_txSz += encodedItx.length;
                             cnt_nrg += itx.getNrgConsume();
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                         itx.getSenderAddress().toString(),
                                         itx.getNonceBI().toString(),
-                                        itx.getEncoded().length,
+                                        encodedItx.length,
                                         itx.getNrgConsume());
                             }
 

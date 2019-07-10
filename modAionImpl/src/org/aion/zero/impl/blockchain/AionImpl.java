@@ -3,6 +3,7 @@ package org.aion.zero.impl.blockchain;
 import java.util.List;
 import java.util.Optional;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
@@ -100,14 +101,10 @@ public class AionImpl implements IAionChain {
     @SuppressWarnings("unchecked")
     @Override
     public void broadcastTransaction(AionTransaction transaction) {
-        transaction.getEncoded();
         collector.submitTx(transaction);
     }
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
-        for (AionTransaction tx : transaction) {
-            tx.getEncoded();
-        }
         collector.submitTx(transaction);
     }
 

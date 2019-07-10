@@ -2,8 +2,10 @@ package org.aion.zero.types;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
@@ -40,8 +42,9 @@ public class AionTransactionTest {
         AionTransaction tx = new AionTransaction(nonce, to, value, data, nrg, nrgPrice, type);
         tx.sign(ECKeyFac.inst().create());
 
-        AionTransaction tx2 = new AionTransaction(tx.getEncoded());
+        AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
 
+        assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
 

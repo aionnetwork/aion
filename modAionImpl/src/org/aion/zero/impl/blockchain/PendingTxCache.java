@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;
@@ -92,8 +93,7 @@ public class PendingTxCache {
                 if (cacheTxMap.get(tx.getSenderAddress()).get(nonce) != null) {
                     // case 1: found tx has same nonce in the cachemap
                     removeTx.add(nonce);
-                    int oldTxSize =
-                            cacheTxMap.get(tx.getSenderAddress()).get(nonce).getEncoded().length;
+                    int oldTxSize = cacheTxMap.get(tx.getSenderAddress()).get(nonce).getEncoded().length;
                     tempCacheSize -= oldTxSize;
                     if (!isCacheMax(txSize - oldTxSize)) {
                         // case 1a: replace nonce within the cachelimit, replace it
@@ -168,11 +168,7 @@ public class PendingTxCache {
 
             if (cacheTxMap.get(tx.getSenderAddress()).get(tx.getNonceBI()) != null) {
                 int oldTxSize =
-                        cacheTxMap
-                                .get(tx.getSenderAddress())
-                                .get(tx.getNonceBI())
-                                .getEncoded()
-                                .length;
+                    cacheTxMap.get(tx.getSenderAddress()).get(tx.getNonceBI()).getEncoded().length;
                 cacheTxMap.get(tx.getSenderAddress()).put(tx.getNonceBI(), tx);
 
                 int sizeDiff = txSize - oldTxSize;
