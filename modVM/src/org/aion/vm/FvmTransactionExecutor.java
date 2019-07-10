@@ -8,7 +8,6 @@ import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.SideEffects;
-import org.aion.fastvm.SimpleFuture;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
@@ -81,7 +80,6 @@ public final class FvmTransactionExecutor {
         long blockRemainingEnergy = initialBlockEnergyLimit;
 
         // Run the transactions.
-        FastVirtualMachine fvm = new FastVirtualMachine();
         KernelInterface kernel =
                 new KernelInterfaceForFastVM(
                         repository.startTracking(),
@@ -94,18 +92,14 @@ public final class FvmTransactionExecutor {
                         blockNrgLimit,
                         blockCoinbase);
 
-        SimpleFuture<FastVmTransactionResult>[] resultsAsFutures = fvm.run(kernel, transactions);
-
         // Process the results of the transactions.
-        int index = 0;
-        for (SimpleFuture<FastVmTransactionResult> resultAsFuture : resultsAsFutures) {
-            FastVmTransactionResult result = resultAsFuture.get();
+        for (AionTransaction transaction : transactions) {
+            FastVmTransactionResult result =
+                    FastVirtualMachine.run(kernel, transaction, fork040enabled);
 
             if (result.getResultCode().isFatal()) {
                 throw new VMException(result.toString());
             }
-
-            AionTransaction transaction = transactions[index];
 
             // Check the block energy limit & reject if necessary.
             long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
@@ -119,25 +113,9 @@ public final class FvmTransactionExecutor {
             SideEffects sideEffects = new SideEffects();
             AionTxExecSummary summary = buildTransactionSummary(transaction, result, sideEffects);
 
-            // Update the repository by committing any changes in the Fvm.
-            KernelInterface kernelFromFvm = result.getKernelInterface();
-
-            // Note that the vm may have returned SUCCESS (and so there may be state changes
-            // here to
-            // commit) but the block limit check turned this to REJECTED. Now we do not want the
-            // changes.
+            // If the transaction was not rejected, then commit the state changes.
             if (!result.getResultCode().isRejected()) {
-                kernelFromFvm.commitTo(
-                        new KernelInterfaceForFastVM(
-                                repository,
-                                allowNonceIncrement,
-                                isLocalCall,
-                                fork040enabled,
-                                getDifficultyAsDataWord(blockDifficulty),
-                                blockNumber,
-                                blockTimestamp,
-                                blockNrgLimit,
-                                blockCoinbase));
+                kernel.commit();
             }
 
             // For non-rejected non-local transactions, make some final repository updates.
@@ -168,7 +146,6 @@ public final class FvmTransactionExecutor {
             }
 
             transactionSummaries.add(summary);
-            index++;
         }
 
         return transactionSummaries;
