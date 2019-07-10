@@ -45,6 +45,7 @@ import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.Constants;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -154,6 +155,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -188,7 +190,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -218,6 +220,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         new byte[0],
@@ -238,7 +241,7 @@ public class ContractIntegTest {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -269,6 +272,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -290,7 +294,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertEquals(nrg, tx.getNrgConsume());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
             assertArrayEquals(new byte[0], repo.getCode(contract));
             assertEquals(BigInteger.ZERO, repo.getBalance(contract));
@@ -320,6 +324,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         new byte[0],
@@ -341,7 +346,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
 
             checkStateOfDeployer(
                     repo, summary, nrgPrice, BigInteger.ZERO, nonce.add(BigInteger.ONE));
@@ -370,6 +375,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -391,7 +397,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -421,6 +427,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -442,7 +449,7 @@ public class ContractIntegTest {
             assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
             assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -474,6 +481,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -494,7 +502,7 @@ public class ContractIntegTest {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
             assertEquals(0, tx.getNrgConsume());
 
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -524,6 +532,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -542,6 +551,7 @@ public class ContractIntegTest {
             tx =
                     new AionTransaction(
                             nonce.toByteArray(),
+                            new AionAddress(deployerKey.getAddress()),
                             contract,
                             BigInteger.ZERO.toByteArray(),
                             Hex.decode(getMsgFunctionHash),
@@ -576,6 +586,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -599,6 +610,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -626,6 +638,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -657,6 +670,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -682,6 +696,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -715,6 +730,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -738,6 +754,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -770,6 +787,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -798,6 +816,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -832,6 +851,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -859,6 +879,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -894,6 +915,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -920,6 +942,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -938,6 +961,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         callerContract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -970,6 +994,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         callerContract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -1001,6 +1026,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1028,6 +1054,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -1061,6 +1088,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -1139,6 +1167,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1190,6 +1219,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1210,6 +1240,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.TEN.toByteArray(),
                         input,
@@ -1249,6 +1280,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -1290,6 +1322,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1313,7 +1346,8 @@ public class ContractIntegTest {
         AionTransaction tx2 =
                 new AionTransaction(
                         nonce.toByteArray(),
-                        tx.getContractAddress(),
+                        new AionAddress(deployerKey.getAddress()),
+                    TxUtil.calculateContractAddress(tx),
                         BigInteger.TEN.toByteArray(),
                         input,
                         nrg,
@@ -1331,8 +1365,8 @@ public class ContractIntegTest {
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
 
-        assertEquals(
-                BigInteger.TEN, blockchain.getRepository().getBalance(tx.getContractAddress()));
+        AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
+        assertEquals(BigInteger.TEN, blockchain.getRepository().getBalance(contractAddress));
         assertEquals(
                 senderBalance
                         .subtract(BigInteger.TEN)
@@ -1363,6 +1397,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1386,6 +1421,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
@@ -1427,6 +1463,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         senderNonce.toByteArray(),
+                        new AionAddress(senderKey.getAddress()),
                         destinationAddr,
                         value.toByteArray(),
                         new byte[0],
@@ -1461,6 +1498,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         deployerNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         deployCode,
@@ -1512,6 +1550,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         senderNonce.toByteArray(),
+                        new AionAddress(senderKey.getAddress()),
                         destinationAddr,
                         value.toByteArray(),
                         new byte[0],
@@ -1546,6 +1585,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         deployerNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         deployCode,
@@ -1570,7 +1610,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            AionAddress contract = tx.getContractAddress();
+            AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
                     repo,
                     contractName,
@@ -1604,6 +1644,7 @@ public class ContractIntegTest {
         AionTransaction tx =
                 new AionTransaction(
                         senderNonce.toByteArray(),
+                        new AionAddress(senderKey.getAddress()),
                         avmAddress,
                         value.toByteArray(),
                         new byte[0],
@@ -1647,6 +1688,7 @@ public class ContractIntegTest {
         tx =
                 new AionTransaction(
                         deployerNonce.add(BigInteger.ONE).toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         avmAddress,
                         BigInteger.ZERO.toByteArray(),
                         call,
@@ -1781,7 +1823,7 @@ public class ContractIntegTest {
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
         assertNotEquals(nrg, tx.getNrgConsume());
 
-        AionAddress contract = tx.getContractAddress();
+        AionAddress contract = TxUtil.calculateContractAddress(tx);
         if (contractFilename == null) {
             checkStateOfNewContract(
                     repo,
@@ -1969,6 +2011,7 @@ public class ContractIntegTest {
         AionTransaction transaction =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         jar,
@@ -1993,9 +2036,9 @@ public class ContractIntegTest {
         assertThat(receipt.isSuccessful()).isTrue();
 
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toByteArray())
-                .isEqualTo(receipt.getTransactionOutput());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertThat(contractAddress.toByteArray()).isEqualTo(receipt.getTransactionOutput());
 
-        return transaction.getContractAddress();
+        return contractAddress;
     }
 }

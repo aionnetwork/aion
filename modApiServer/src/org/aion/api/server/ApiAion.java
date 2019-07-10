@@ -520,7 +520,8 @@ public abstract class ApiAion extends Api {
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return new ApiTxResponse(rsp, tx.getTransactionHash(), tx.getContractAddress());
+                AionAddress address = TxUtil.calculateContractAddress(tx);
+                return new ApiTxResponse(rsp, tx.getTransactionHash(), address);
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
@@ -577,6 +578,7 @@ public abstract class ApiAion extends Api {
                 AionTransaction tx =
                         new AionTransaction(
                                 nonce,
+                                new AionAddress(key.getAddress()),
                                 _params.getTo(),
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
@@ -636,6 +638,7 @@ public abstract class ApiAion extends Api {
                 AionTransaction tx =
                         new AionTransaction(
                                 nonce,
+                                new AionAddress(key.getAddress()),
                                 _params.getTo(),
                                 _params.getValue().toByteArray(),
                                 _params.getData(),

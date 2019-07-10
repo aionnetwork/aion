@@ -4,9 +4,10 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
+import org.aion.base.TxUtil;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.json.JSONObject;
@@ -35,10 +36,11 @@ public class Tx {
 
         JSONObject json = new JSONObject();
 
+        AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
         json.put(
                 "contractAddress",
-                (tx.getContractAddress() != null)
-                        ? StringUtils.toJsonHex(tx.getContractAddress().toString())
+                (contractAddress != null)
+                        ? StringUtils.toJsonHex(contractAddress.toString())
                         : null);
         json.put("hash", StringUtils.toJsonHex(tx.getTransactionHash()));
         json.put("transactionIndex", index);

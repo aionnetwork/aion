@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
@@ -80,6 +81,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         bridge,
                         amount.toByteArray(),
                         new byte[] {},
@@ -140,6 +142,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         bridge,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(
@@ -200,6 +203,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         blake2b,
                         amount.toByteArray(),
                         new byte[] {},
@@ -265,6 +269,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         blake2b,
                         amount.toByteArray(),
                         Hex.decode("abcdef0123456789"),
@@ -333,6 +338,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         blake2b,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("abcdef0123456789"),
@@ -399,7 +405,8 @@ public class FvmBalanceTransferConsensusTest {
         // Make the create & transfer transaction.
         AionTransaction transaction =
                 makeCreateAndTransferToFvmNonpayableConstructorContractTx(amount);
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -423,7 +430,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        BigInteger contractBalance = getBalance(transaction.getContractAddress());
+        BigInteger contractBalance = getBalance(contractAddress);
         assertEquals(BigInteger.ZERO, contractBalance);
 
         // Verify that the miner has the expected balance.
@@ -453,7 +460,8 @@ public class FvmBalanceTransferConsensusTest {
         // Make the create & transfer transaction.
         AionTransaction transaction =
                 makeCreateAndTransferToFvmPayableConstructorContractTx(amount);
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -476,7 +484,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        BigInteger contractBalance = getBalance(transaction.getContractAddress());
+        BigInteger contractBalance = getBalance(contractAddress);
         assertEquals(amount, contractBalance);
 
         // Verify that the miner has the expected balance.
@@ -506,7 +514,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -526,8 +535,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE3), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        AionAddress contract = transaction.getContractAddress();
-        transaction = makeCallNonpayableFunctionTx(contract, amount);
+        transaction = makeCallNonpayableFunctionTx(contractAddress, amount);
 
         // Process the transaction.
         results = processTransaction(transaction, 1);
@@ -551,7 +559,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        assertEquals(BigInteger.ZERO, getBalance(contract));
+        assertEquals(BigInteger.ZERO, getBalance(contractAddress));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500539496606935792");
@@ -574,7 +582,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -594,8 +603,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE3), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        AionAddress contract = transaction.getContractAddress();
-        transaction = makeCallPayableFunctionTx(contract, amount);
+        transaction = makeCallPayableFunctionTx(contractAddress, amount);
 
         // Process the transaction.
         results = processTransaction(transaction, 1);
@@ -619,7 +627,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        assertEquals(amount, getBalance(contract));
+        assertEquals(amount, getBalance(contractAddress));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500539557347676526");
@@ -648,7 +656,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // Make the create transaction.
         AionTransaction transaction = makeCreateNonpayableFallbackContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -668,8 +677,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE6), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        AionAddress contract = transaction.getContractAddress();
-        transaction = makeCallFallbackFunctionTx(contract, amount);
+        transaction = makeCallFallbackFunctionTx(contractAddress, amount);
 
         // Process the transaction.
         results = processTransaction(transaction, 1);
@@ -693,7 +701,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        assertEquals(BigInteger.ZERO, getBalance(contract));
+        assertEquals(BigInteger.ZERO, getBalance(contractAddress));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500509602039037875");
@@ -722,7 +730,8 @@ public class FvmBalanceTransferConsensusTest {
 
         // Make the create transaction.
         AionTransaction transaction = makeCreatePayableFallbackContractTx();
-        assertArrayEquals(Hex.decode(CONTRACT), transaction.getContractAddress().toByteArray());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertArrayEquals(Hex.decode(CONTRACT), contractAddress.toByteArray());
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -742,8 +751,7 @@ public class FvmBalanceTransferConsensusTest {
         assertArrayEquals(Hex.decode(RECEIPT_TRIE8), receiptTrieEncoded);
 
         // Make the balance transfer transaction.
-        AionAddress contract = transaction.getContractAddress();
-        transaction = makeCallFallbackFunctionTx(contract, amount);
+        transaction = makeCallFallbackFunctionTx(contractAddress, amount);
 
         // Process the transaction.
         results = processTransaction(transaction, 1);
@@ -767,7 +775,7 @@ public class FvmBalanceTransferConsensusTest {
         assertEquals(expectedBalance, getBalance(new AionAddress(SENDER_ADDR)));
 
         // Verify that the contract has the expected balance.
-        assertEquals(amount, getBalance(contract));
+        assertEquals(amount, getBalance(contractAddress));
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("1500503619076075576");
@@ -780,6 +788,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         amount.toByteArray(),
                         getNonpayableConstructorContractBytes(),
@@ -795,6 +804,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         amount.toByteArray(),
                         getPayableConstructorContractBytes(),
@@ -809,6 +819,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         getPayableFallbackContractBytes(),
@@ -823,6 +834,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         getNonpayableFallbackContractBytes(),
@@ -837,6 +849,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         getPayableContractBytes(),
@@ -852,6 +865,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contract,
                         amount.toByteArray(),
                         callNonpayableFunctionEncoding(),
@@ -867,6 +881,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contract,
                         amount.toByteArray(),
                         new byte[0],
@@ -882,6 +897,7 @@ public class FvmBalanceTransferConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contract,
                         amount.toByteArray(),
                         callPayableFunctionEncoding(),

@@ -10,6 +10,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
@@ -60,6 +61,7 @@ public class PendingStateTest {
         AionTransaction tx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(signer.getAddress()),
                         to,
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
@@ -93,6 +95,7 @@ public class PendingStateTest {
         AionTransaction tx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(signer.getAddress()),
                         to,
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
@@ -186,8 +189,8 @@ public class PendingStateTest {
         // Check the block was imported, the contract has the Avm prefix, and deployment succeeded.
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toByteArray())
-                .isEqualTo(receipt.getTransactionOutput());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertThat(contractAddress.toByteArray()).isEqualTo(receipt.getTransactionOutput());
 
         AionHub hub =
                 AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository());

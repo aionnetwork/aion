@@ -3,6 +3,7 @@ package org.aion.precompiled.type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
@@ -62,7 +63,7 @@ public final class ContractExecutor {
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
                         PrecompiledResultCode.SUCCESS,
-                        transaction.getEnergyLimit() - transaction.getTransactionCost());
+                        transaction.getEnergyLimit() - TxUtil.calculateTransactionCost(transaction));
 
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childExternalState, transaction, result);
@@ -218,10 +219,10 @@ public final class ContractExecutor {
         AionAddress callerAddress = transaction.getSenderAddress();
         byte[] transactionHash = transaction.getTransactionHash();
         long blockNumber = externalState.getBlockNumber();
-        long energyRemaining = transaction.getEnergyLimit() - transaction.getTransactionCost();
+        long energyRemaining = transaction.getEnergyLimit() - TxUtil.calculateTransactionCost(transaction);
         AionAddress destinationAddress =
                 transaction.isContractCreationTransaction()
-                        ? transaction.getContractAddress()
+                        ? TxUtil.calculateContractAddress(transaction)
                         : transaction.getDestinationAddress();
 
         return new PrecompiledTransactionContext(

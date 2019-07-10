@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.mcf.core.ImportResult;
@@ -186,6 +187,7 @@ public class BlockchainFvm040Fork {
         AionTransaction deployTx =
                 new AionTransaction(
                         accountNonce.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(deepContractCode),
@@ -198,14 +200,15 @@ public class BlockchainFvm040Fork {
 
         Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(block1);
         assertTrue(result.getLeft().isSuccessful());
-        AionAddress contractAddr =
-                result.getRight().getReceipts().get(0).getTransaction().getContractAddress();
+        AionTransaction tx = result.getRight().getReceipts().get(0).getTransaction();
+        AionAddress contractAddr = TxUtil.calculateContractAddress(tx);
         assertNotNull(contractAddr);
 
         // excute old fvm logic before fork
         AionTransaction txCall =
                 new AionTransaction(
                         accountNonce.add(BigInteger.ONE).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -224,6 +227,7 @@ public class BlockchainFvm040Fork {
         txCall =
                 new AionTransaction(
                         accountNonce.add(BigInteger.TWO).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,
