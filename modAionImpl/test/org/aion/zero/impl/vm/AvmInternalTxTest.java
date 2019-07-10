@@ -9,6 +9,7 @@ import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
@@ -91,7 +92,7 @@ public class AvmInternalTxTest {
 
         AionAddress contract = new AionAddress(receipt.getTransactionOutput());
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress()).isEqualTo(contract);
+        assertThat(TxUtil.calculateContractAddress(transaction)).isEqualTo(contract);
 
         byte[] call = ABIUtil.encodeMethodArguments("recursivelyGetValue");
         makeCall(BigInteger.ONE, contract, call);

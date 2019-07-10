@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ECKeyFac.ECKeyType;
@@ -99,7 +100,7 @@ public class Benchmark {
         AionTransaction tx = new AionTransaction(nonce, from, to, value, deployer, nrg, nrgPrice);
 
         // save contract address
-        contract = tx.getContractAddress();
+        contract = TxUtil.calculateContractAddress(tx);
 
         // deploy contract
         AionTxExecSummary summary = executeTransaction(tx);
@@ -116,7 +117,7 @@ public class Benchmark {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < num; i++) {
-            byte[] recipient = RandomUtils.nextBytes(20);
+            byte[] recipient = RandomUtils.nextBytes(AionAddress.LENGTH);
             recipients.add(recipient);
 
             // transfer token to random people
@@ -159,7 +160,7 @@ public class Benchmark {
             assertEquals(16, tx.getNonce().length);
             assertTrue(tx.getEnergyLimit() > 0);
             assertTrue(tx.getEnergyPrice() > 0);
-            assertTrue(SignatureFac.verify(tx.getRawHash(), tx.getSignature()));
+            assertTrue(SignatureFac.verify(TxUtil.hashWithoutSignature(tx), tx.getSignature()));
         }
 
         long t2 = System.currentTimeMillis();

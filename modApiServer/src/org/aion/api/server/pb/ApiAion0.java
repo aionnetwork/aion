@@ -40,6 +40,7 @@ import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -114,7 +115,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         AionTransaction tx = txr.getTransaction();
                         AionAddress contractAddress =
                                 Optional.ofNullable(tx.getDestinationAddress())
-                                        .orElse(tx.getContractAddress());
+                                        .orElse(TxUtil.calculateContractAddress(tx));
 
                         Integer cnt = 0;
                         txr.getLogInfoList()
@@ -2704,7 +2705,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
 
-        AionAddress contract = t.getContractAddress();
+        AionAddress contract = TxUtil.calculateContractAddress(t);
 
         Message.t_TxDetail.Builder tdBuilder =
                 Message.t_TxDetail

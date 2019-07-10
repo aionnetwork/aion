@@ -53,6 +53,7 @@ public class BlockchainAccountStateTest {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
+                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
@@ -117,6 +118,7 @@ public class BlockchainAccountStateTest {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
+                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,

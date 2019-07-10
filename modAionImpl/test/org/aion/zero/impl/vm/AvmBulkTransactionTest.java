@@ -14,6 +14,7 @@ import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
@@ -139,7 +140,7 @@ public class AvmBulkTransactionTest {
             AionTransaction deployTx = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
             expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-            AionAddress deployedContract = deployTx.getContractAddress();
+            AionAddress deployedContract = TxUtil.calculateContractAddress(deployTx);
             transactions.add(deployTx);
 
             // subsequent call transactions
@@ -197,19 +198,20 @@ public class AvmBulkTransactionTest {
         AionTransaction deployTxFVM =
                 new AionTransaction(
                         expectedNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
                         5_000_000L,
                         energyPrice);
         deployTxFVM.sign(deployerKey);
-        AionAddress fvmContract = deployTxFVM.getContractAddress();
+        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
         // deploy on AVM
         AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
-        AionAddress avmContract = deployTxAVM.getContractAddress();
+        AionAddress avmContract = TxUtil.calculateContractAddress(deployTxAVM);
         transactions.add(deployTxAVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
@@ -217,6 +219,7 @@ public class AvmBulkTransactionTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         expectedNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         fvmContract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("62eb702a00000000000000000000000000000006"),

@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
@@ -65,6 +66,7 @@ public class TxRecptLgTest {
         AionTransaction tx1 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -76,6 +78,7 @@ public class TxRecptLgTest {
         AionTransaction tx2 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
@@ -88,9 +91,9 @@ public class TxRecptLgTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        AionAddress addressA = TxUtil.calculateContractAddress(tx1);
         System.out.println("contract A address = " + addressA);
-        AionAddress addressB = tx2.getContractAddress();
+        AionAddress addressB = TxUtil.calculateContractAddress(tx2);
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 
@@ -103,6 +106,7 @@ public class TxRecptLgTest {
         AionTransaction tx3 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(functionAA, addressB.toByteArray()),

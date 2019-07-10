@@ -17,6 +17,7 @@ import org.aion.avm.tooling.ABIUtil;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
@@ -560,7 +561,7 @@ public class BlockchainForkingTest {
         assertThat(testChain.getRepository().getRoot())
                 .isEqualTo(sourceChain.getRepository().getRoot());
 
-        AionAddress contract = receipt.getTransaction().getContractAddress();
+        AionAddress contract = TxUtil.calculateContractAddress(receipt.getTransaction());
         // add a block with transactions to both
         List<AionTransaction> txs = generateTransactions(20, accounts, sourceChain.getRepository());
 
@@ -711,6 +712,7 @@ public class BlockchainForkingTest {
         AionTransaction contractDeploymentTx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
@@ -734,6 +736,7 @@ public class BlockchainForkingTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(contractCode),
@@ -761,6 +764,7 @@ public class BlockchainForkingTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(contractCode),
@@ -854,7 +858,7 @@ public class BlockchainForkingTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(receipt.isSuccessful()).isTrue();
 
-        AionAddress contract = receipt.getTransaction().getContractAddress();
+        AionAddress contract = TxUtil.calculateContractAddress(receipt.getTransaction());
 
         // testChain imports both blocks
         connectResult = testChain.tryToConnectAndFetchSummary(fastBlock, time, true);
@@ -863,7 +867,7 @@ public class BlockchainForkingTest {
 
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(receipt.isSuccessful()).isTrue();
-        assertThat(receipt.getTransaction().getContractAddress()).isEqualTo(contract);
+        assertThat(TxUtil.calculateContractAddress(receipt.getTransaction())).isEqualTo(contract);
 
         connectResult = testChain.tryToConnectAndFetchSummary(slowBlock, time, true);
         result = connectResult.getLeft();
@@ -871,7 +875,7 @@ public class BlockchainForkingTest {
 
         assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         assertThat(receipt.isSuccessful()).isTrue();
-        assertThat(receipt.getTransaction().getContractAddress()).isEqualTo(contract);
+        assertThat(TxUtil.calculateContractAddress(receipt.getTransaction())).isEqualTo(contract);
 
         // ****** check that the correct contract details are kept ******
 

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -64,17 +65,19 @@ public class BlockchainEnergyTest {
         // (byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data, byte[] nrg, byte[]
         // nrgPrice)
         List<AionTransaction> txs = new ArrayList<>();
+        ECKey key = bundle.privateKeys.get(0);
         for (int i = 0; i < amount; i++) {
             // this transaction should send one (1) AION coin from acc[0] to RECEIPT_ADDR
             AionTransaction atx =
                     new AionTransaction(
                             ByteUtil.intToBytes(i),
+                            new AionAddress(key.getAddress()),
                             RECEIPT_ADDR,
                             BigInteger.ONE.toByteArray(),
                             ByteUtil.EMPTY_BYTE_ARRAY,
                             21000L,
                             BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue());
-            atx.sign(bundle.privateKeys.get(0));
+            atx.sign(key);
             txs.add(atx);
         }
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);

@@ -57,44 +57,27 @@ public class AionTransaction implements Cloneable {
     private byte[] blockHash = null;
     private long nrgConsume = 0;
 
+    // constructor for create nrgEstimate transaction
     public AionTransaction(
             byte[] nonce,
-            AionAddress receiveAddress,
+            AionAddress from,
+            AionAddress destination,
             byte[] value,
             byte[] data,
             long nrg,
             long nrgPrice) {
+
+        if (from == null) {
+            throw new IllegalArgumentException();
+        }
+
         this.nonce = nonce;
-        this.to = receiveAddress;
+        this.to = destination;
         this.value = value;
         this.data = data;
         this.type = TransactionTypes.DEFAULT;
         this.nrg = nrg;
         this.nrgPrice = nrgPrice;
-    }
-
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress to,
-            byte[] value,
-            byte[] data,
-            long nrg,
-            long nrgPrice,
-            byte type) {
-        this(nonce, to, value, data, nrg, nrgPrice);
-        this.type = type;
-    }
-
-    // constructor for create nrgEstimate transaction
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress from,
-            AionAddress to,
-            byte[] value,
-            byte[] data,
-            long nrg,
-            long nrgPrice) {
-        this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
     }
 
@@ -109,8 +92,7 @@ public class AionTransaction implements Cloneable {
             long nrgPrice,
             byte txType) {
 
-        this(nonce, to, value, data, nrg, nrgPrice);
-        this.from = from;
+        this(nonce, from, to, value, data, nrg, nrgPrice);
         this.type = txType;
     }
 
@@ -134,7 +116,8 @@ public class AionTransaction implements Cloneable {
 
     @Override
     public AionTransaction clone() {
-        AionTransaction tx2 = new AionTransaction(nonce, to, value, data, nrg, nrgPrice, type);
+        AionTransaction tx2 =
+                new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice, type);
 
         tx2.signature = signature; // NOTE: reference copy
         tx2.timeStamp = timeStamp;
@@ -151,11 +134,6 @@ public class AionTransaction implements Cloneable {
 
     public byte[] getEncoded() {
         return TxUtil.encode(this);
-    }
-
-    public byte[] getRawHash() {
-        byte[] plainMsg = TxUtil.encodeWithoutSignature(this);
-        return HashUtil.h256(plainMsg);
     }
 
     public byte[] getNonce() {
@@ -202,53 +180,22 @@ public class AionTransaction implements Cloneable {
         return signature;
     }
 
-    public AionAddress getContractAddress() {
-        if (!this.isContractCreationTransaction()) {
-            return null;
-        }
-
-        AionAddress from = this.getSenderAddress();
-
-        if (from == null) {
-            return null;
-        }
-
-        try {
-            return new AionAddress(HashUtil.calcNewAddr(from.toByteArray(), this.getNonce()));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public boolean isContractCreationTransaction() {
         return this.to == null;
     }
 
-    public synchronized AionAddress getSenderAddress() {
-        if (from != null) {
-            return this.from;
-        }
-
-        if (this.signature == null) {
-            return null;
-        }
-
-        try {
-            from = new AionAddress(this.signature.getAddress());
-            return from;
-        } catch (Exception e) {
-            return null;
-        }
+    public AionAddress getSenderAddress() {
+        return from;
     }
 
     public void sign(ECKey key) throws MissingPrivateKeyException {
         this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
-        this.signature = key.sign(this.getRawHash());
+        this.signature = key.sign(TxUtil.hashWithoutSignature(this));
     }
 
     public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {
         this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochSec() * 1_000_000L);
-        this.signature = key.sign(this.getRawHash());
+        this.signature = key.sign(TxUtil.hashWithoutSignature(this));
     }
 
     @Override
@@ -307,34 +254,6 @@ public class AionTransaction implements Cloneable {
 
     public BigInteger nrgLimit() {
         return BigInteger.valueOf(nrg);
-    }
-
-    public long getTransactionCost() {
-        long nonZeroes = nonZeroBytesInData();
-        long zeroes = zeroBytesInData();
-
-        return (this.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
-                + Constants.NRG_TRANSACTION_MIN
-                + zeroes * Constants.NRG_TX_DATA_ZERO
-                + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
-    }
-
-    private long nonZeroBytesInData() {
-        int total = (data == null) ? 0 : data.length;
-
-        return total - zeroBytesInData();
-    }
-
-    private long zeroBytesInData() {
-        if (data == null) {
-            return 0;
-        }
-
-        int c = 0;
-        for (byte b : data) {
-            c += (b == 0) ? 1 : 0;
-        }
-        return c;
     }
 
     public void setTxIndexInBlock(long idx) {

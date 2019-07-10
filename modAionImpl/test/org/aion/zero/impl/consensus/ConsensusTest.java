@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.blockchain.Block;
@@ -191,7 +192,7 @@ public class ConsensusTest {
         StandaloneBlockchain blockchain = bundle.bc;
 
         AionTransaction deployTransaction = getDeployTransaction();
-        assertEquals(CONTRACT, deployTransaction.getContractAddress());
+        assertEquals(CONTRACT, TxUtil.calculateContractAddress(deployTransaction));
 
         // Place the transaction in a block alone.
         Block parentBlock = blockchain.getRepository().blockStore.getBestBlock();
@@ -364,6 +365,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         getContractCode(),
@@ -380,6 +382,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         CONTRACT,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -400,6 +403,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(nonce).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         CONTRACT,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -421,6 +425,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(4).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         CONTRACT,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -442,6 +447,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(5).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         CONTRACT,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -457,6 +463,7 @@ public class ConsensusTest {
         AionTransaction transaction =
                 new AionTransaction(
                         BigInteger.valueOf(7).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         OTHER,
                         amount.toByteArray(),
                         new byte[0],

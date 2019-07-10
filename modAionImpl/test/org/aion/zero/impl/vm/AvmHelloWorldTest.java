@@ -11,6 +11,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
@@ -92,8 +93,8 @@ public class AvmHelloWorldTest {
         assertThat(receipt.isSuccessful()).isTrue();
 
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress().toByteArray())
-                .isEqualTo(receipt.getTransactionOutput());
+        AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
+        assertThat(contractAddress.toByteArray()).isEqualTo(receipt.getTransactionOutput());
     }
 
     @Test
@@ -127,7 +128,7 @@ public class AvmHelloWorldTest {
 
         AionAddress contract = new AionAddress(receipt.getTransactionOutput());
         // verify that the output is indeed the contract address
-        assertThat(transaction.getContractAddress()).isEqualTo(contract);
+        assertThat(TxUtil.calculateContractAddress(transaction)).isEqualTo(contract);
         byte[] call = getCallArguments();
         transaction =
                 newTransaction(
@@ -175,7 +176,7 @@ public class AvmHelloWorldTest {
                 newTransaction(
                         BigInteger.ONE,
                         new AionAddress(deployerKey.getAddress()),
-                        transaction.getContractAddress(),
+                        TxUtil.calculateContractAddress(transaction),
                         call,
                         2_000_000,
                         TransactionTypes.DEFAULT);
