@@ -79,24 +79,26 @@ public class TransactionRlpCodec {
 
     private static byte[] getEncodingPrivate(AionTransaction tx, boolean withSignature) {
 
-        byte[] nonce = RLP.encodeElement(tx.nonce);
+        byte[] nonce = RLP.encodeElement(tx.getNonce());
 
         byte[] to;
-        if (tx.to == null) {
+        if (tx.getDestinationAddress() == null) {
             to = RLP.encodeElement(null);
         } else {
-            to = RLP.encodeElement(tx.to.toByteArray());
+            to = RLP.encodeElement(tx.getDestinationAddress().toByteArray());
         }
 
-        byte[] value = RLP.encodeElement(tx.value);
-        byte[] data = RLP.encodeElement(tx.data);
-        byte[] timeStamp = RLP.encodeElement(tx.timeStamp);
-        byte[] nrg = RLP.encodeLong(tx.nrg);
-        byte[] nrgPrice = RLP.encodeLong(tx.nrgPrice);
-        byte[] type = RLP.encodeByte(tx.type);
+        byte[] value = RLP.encodeElement(tx.getValue());
+        byte[] data = RLP.encodeElement(tx.getData());
+        byte[] timeStamp = RLP.encodeElement(tx.getTimestamp());
+        byte[] nrg = RLP.encodeLong(tx.getEnergyLimit());
+        byte[] nrgPrice = RLP.encodeLong(tx.getEnergyPrice());
+        byte[] type = RLP.encodeByte(tx.getTargetVM());
 
         if (withSignature) {
-            byte[] sigs = RLP.encodeElement(tx.signature == null ? null : tx.signature.toBytes());
+            byte[] sigs =
+                    RLP.encodeElement(
+                            tx.getSignature() == null ? null : tx.getSignature().toBytes());
             return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type, sigs);
         } else {
             return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type);

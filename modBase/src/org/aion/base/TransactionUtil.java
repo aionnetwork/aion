@@ -5,8 +5,8 @@ import org.aion.types.AionAddress;
 
 public class TransactionUtil {
     public static long getTransactionCost(AionTransaction tx) {
-        long zeroes = zeroBytesInData(tx.data);
-        long nonZeroes = tx.data.length - zeroes;
+        long zeroes = zeroBytesInData(tx.getData());
+        long nonZeroes = tx.getData().length - zeroes;
 
         return (tx.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
                 + Constants.NRG_TRANSACTION_MIN
