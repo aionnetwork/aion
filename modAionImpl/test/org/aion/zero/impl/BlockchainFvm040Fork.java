@@ -186,6 +186,7 @@ public class BlockchainFvm040Fork {
         AionTransaction deployTx =
                 new AionTransaction(
                         accountNonce.toByteArray(),
+                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(deepContractCode),
@@ -206,6 +207,7 @@ public class BlockchainFvm040Fork {
         AionTransaction txCall =
                 new AionTransaction(
                         accountNonce.add(BigInteger.ONE).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,
@@ -224,6 +226,7 @@ public class BlockchainFvm040Fork {
         txCall =
                 new AionTransaction(
                         accountNonce.add(BigInteger.TWO).toByteArray(),
+                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,

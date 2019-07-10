@@ -711,6 +711,7 @@ public class BlockchainForkingTest {
         AionTransaction contractDeploymentTx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
@@ -734,6 +735,7 @@ public class BlockchainForkingTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(contractCode),
@@ -761,6 +763,7 @@ public class BlockchainForkingTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(sender.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(contractCode),

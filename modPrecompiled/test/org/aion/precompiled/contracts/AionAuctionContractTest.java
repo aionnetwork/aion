@@ -923,6 +923,7 @@ public class AionAuctionContractTest {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
+                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
