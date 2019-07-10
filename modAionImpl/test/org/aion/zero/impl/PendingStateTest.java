@@ -60,6 +60,7 @@ public class PendingStateTest {
         AionTransaction tx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(signer.getAddress()),
                         to,
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
@@ -93,6 +94,7 @@ public class PendingStateTest {
         AionTransaction tx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
+                        new AionAddress(signer.getAddress()),
                         to,
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],

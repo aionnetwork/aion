@@ -50,44 +50,27 @@ public class AionTransaction implements Cloneable {
     private byte[] blockHash = null;
     private long nrgConsume = 0;
 
+    // constructor for create nrgEstimate transaction
     public AionTransaction(
             byte[] nonce,
-            AionAddress receiveAddress,
+            AionAddress from,
+            AionAddress destination,
             byte[] value,
             byte[] data,
             long nrg,
             long nrgPrice) {
+
+        if (from == null) {
+            throw new IllegalArgumentException();
+        }
+
         this.nonce = nonce;
-        this.to = receiveAddress;
+        this.to = destination;
         this.value = value;
         this.data = data;
         this.type = TransactionTypes.DEFAULT;
         this.nrg = nrg;
         this.nrgPrice = nrgPrice;
-    }
-
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress to,
-            byte[] value,
-            byte[] data,
-            long nrg,
-            long nrgPrice,
-            byte type) {
-        this(nonce, to, value, data, nrg, nrgPrice);
-        this.type = type;
-    }
-
-    // constructor for create nrgEstimate transaction
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress from,
-            AionAddress to,
-            byte[] value,
-            byte[] data,
-            long nrg,
-            long nrgPrice) {
-        this(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
     }
 
@@ -102,8 +85,7 @@ public class AionTransaction implements Cloneable {
             long nrgPrice,
             byte txType) {
 
-        this(nonce, to, value, data, nrg, nrgPrice);
-        this.from = from;
+        this(nonce, from, to, value, data, nrg, nrgPrice);
         this.type = txType;
     }
 
@@ -127,7 +109,8 @@ public class AionTransaction implements Cloneable {
 
     @Override
     public AionTransaction clone() {
-        AionTransaction tx2 = new AionTransaction(nonce, to, value, data, nrg, nrgPrice, type);
+        AionTransaction tx2 =
+                new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice, type);
 
         tx2.signature = signature; // NOTE: reference copy
         tx2.timeStamp = timeStamp;

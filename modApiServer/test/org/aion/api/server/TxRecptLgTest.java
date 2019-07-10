@@ -65,6 +65,7 @@ public class TxRecptLgTest {
         AionTransaction tx1 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
@@ -76,6 +77,7 @@ public class TxRecptLgTest {
         AionTransaction tx2 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
@@ -103,6 +105,7 @@ public class TxRecptLgTest {
         AionTransaction tx3 =
                 new AionTransaction(
                         nonce.toByteArray(),
+                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(functionAA, addressB.toByteArray()),

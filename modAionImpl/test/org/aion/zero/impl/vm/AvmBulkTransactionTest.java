@@ -197,6 +197,7 @@ public class AvmBulkTransactionTest {
         AionTransaction deployTxFVM =
                 new AionTransaction(
                         expectedNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
@@ -217,6 +218,7 @@ public class AvmBulkTransactionTest {
         AionTransaction contractCallTx =
                 new AionTransaction(
                         expectedNonce.toByteArray(),
+                        new AionAddress(deployerKey.getAddress()),
                         fvmContract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("62eb702a00000000000000000000000000000006"),
