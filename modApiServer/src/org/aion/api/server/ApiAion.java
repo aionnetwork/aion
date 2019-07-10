@@ -302,7 +302,6 @@ public abstract class ApiAion extends Api {
             throw new NullPointerException();
         }
 
-        tx.rlpParse();
         tx.setBlockNumber(pBlk.getNumber());
         tx.setBlockHash(pBlk.getHash());
         tx.setTxIndexInBlock(index);
