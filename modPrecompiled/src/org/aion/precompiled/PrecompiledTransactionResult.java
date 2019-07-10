@@ -2,7 +2,7 @@ package org.aion.precompiled;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import org.aion.mcf.types.KernelInterface;
 import org.aion.types.AionAddress;
@@ -30,9 +30,9 @@ public class PrecompiledTransactionResult {
         this.output = new byte[0];
         this.energyRemaining = 0;
         this.kernel = null;
-        this.logs = Collections.emptyList();
-        this.internalTransactions = Collections.emptyList();
-        this.deletedAddresses = Collections.emptyList();
+        this.logs = new ArrayList<>();
+        this.internalTransactions = new ArrayList<>();
+        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
@@ -47,9 +47,9 @@ public class PrecompiledTransactionResult {
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
         this.kernel = null;
-        this.logs = Collections.emptyList();
-        this.internalTransactions = Collections.emptyList();
-        this.deletedAddresses = Collections.emptyList();
+        this.logs = new ArrayList<>();
+        this.internalTransactions = new ArrayList<>();
+        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
@@ -66,9 +66,9 @@ public class PrecompiledTransactionResult {
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
         this.kernel = null;
-        this.logs = Collections.emptyList();
-        this.internalTransactions = Collections.emptyList();
-        this.deletedAddresses = Collections.emptyList();
+        this.logs = new ArrayList<>();
+        this.internalTransactions = new ArrayList<>();
+        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
