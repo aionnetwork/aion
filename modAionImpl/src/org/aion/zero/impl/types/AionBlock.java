@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -395,7 +396,7 @@ public class AionBlock extends AbstractBlock implements Block {
         Trie txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
-            this.transactionsList.add(new AionTransaction(transactionRaw.getRLPData()));
+            this.transactionsList.add(TransactionRlpCodec.decode(transactionRaw.getRLPData()));
             txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
         return txsState.getRootHash().clone();

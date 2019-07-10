@@ -2,8 +2,10 @@ package org.aion.zero.types;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
@@ -24,7 +26,8 @@ public class AionTransactionTest {
         assertArrayEquals(tx.getTimestamp(), tx2.getTimestamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());
 
-        assertArrayEquals(tx.getEncoded(), tx2.getEncoded());
+        assertArrayEquals(
+                TransactionRlpCodec.encode(tx), TransactionRlpCodec.encode(tx2));
     }
 
     @Test
@@ -40,8 +43,10 @@ public class AionTransactionTest {
         AionTransaction tx = new AionTransaction(nonce, to, value, data, nrg, nrgPrice, type);
         tx.sign(ECKeyFac.inst().create());
 
-        AionTransaction tx2 = new AionTransaction(tx.getEncoded());
+        AionTransaction tx2 =
+                TransactionRlpCodec.decode(TransactionRlpCodec.encode(tx));
 
+        assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
 

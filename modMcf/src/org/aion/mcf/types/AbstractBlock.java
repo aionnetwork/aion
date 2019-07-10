@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionRlpCodec;
 import org.aion.mcf.blockchain.Block;
 import org.aion.rlp.RLP;
 
@@ -51,7 +52,7 @@ public abstract class AbstractBlock implements Block {
         byte[][] transactionsEncoded = new byte[transactionsList.size()][];
         int i = 0;
         for (AionTransaction tx : transactionsList) {
-            transactionsEncoded[i] = tx.getEncoded();
+            transactionsEncoded[i] = TransactionRlpCodec.encode(tx);
             ++i;
         }
         return RLP.encodeList(transactionsEncoded);
