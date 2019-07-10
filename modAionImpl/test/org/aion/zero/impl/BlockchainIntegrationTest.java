@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
@@ -290,12 +291,13 @@ public class BlockchainIntegrationTest {
         ContractInformation ci =
                 blockchain
                         .getRepository()
-                        .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
+                        .getIndexedContractInformation(
+                                TransactionUtil.calculateContractAddress(contractDeploymentTx));
         assertThat(ci).isNotNull();
         byte[] codeHash =
                 blockchain
                         .getRepository()
-                        .getAccountState(contractDeploymentTx.getContractAddress())
+                        .getAccountState(TransactionUtil.calculateContractAddress(contractDeploymentTx))
                         .getCodeHash();
         assertThat(ci.getInceptionBlocks(codeHash)).contains(block.getHashWrapper());
         assertThat(ci.getVmUsed(codeHash)).isEqualTo(InternalVmType.FVM);

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -245,7 +246,7 @@ public class OldTxExecutorTest {
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
 
-        assertEquals(tx.getTransactionCost(), receipt.getEnergyUsed());
+        assertEquals(TransactionUtil.calculateTransactionCost(tx), receipt.getEnergyUsed());
     }
 
     private static AionBlock createDummyBlock() {

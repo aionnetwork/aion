@@ -22,6 +22,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -520,7 +521,8 @@ public abstract class ApiAion extends Api {
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return new ApiTxResponse(rsp, tx.getTransactionHash(), tx.getContractAddress());
+                AionAddress address = TransactionUtil.calculateContractAddress(tx);
+                return new ApiTxResponse(rsp, tx.getTransactionHash(), address);
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
