@@ -153,6 +153,27 @@ public abstract class ApiAion extends Api {
         return StringUtils.toJsonHex(coinbase);
     }
 
+    protected final class TransactionWithBlockInfo {
+        public final byte[] blockHash;
+        public final long blockNumber;
+        public final long txIndexInBlock;
+        public final long nrgUsed;
+        public final AionTransaction tx;
+
+        public TransactionWithBlockInfo(
+                AionTransaction tx,
+                byte[] blockHash,
+                long blockNumber,
+                long txIndexInBlock,
+                long nrgUsed) {
+            this.tx = tx;
+            this.blockHash = blockHash;
+            this.blockNumber = blockNumber;
+            this.txIndexInBlock = txIndexInBlock;
+            this.nrgUsed = nrgUsed;
+        }
+    }
+
     @Override
     public Block getBestBlock() {
         return this.ac.getBlockchain().getBestBlock();
@@ -246,7 +267,7 @@ public abstract class ApiAion extends Api {
         return sync;
     }
 
-    protected AionTransaction getTransactionByBlockHashAndIndex(byte[] hash, long index) {
+    protected TransactionWithBlockInfo getTransactionByBlockHashAndIndex(byte[] hash, long index) {
         Block pBlk = this.getBlockByHash(hash);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
@@ -272,14 +293,11 @@ public abstract class ApiAion extends Api {
             throw new NullPointerException();
         }
 
-        tx.setBlockNumber(pBlk.getNumber());
-        tx.setBlockHash(pBlk.getHash());
-        tx.setTxIndexInBlock(index);
-        tx.setNrgConsume(receipt.nrgUsed);
-        return tx;
+        return new TransactionWithBlockInfo(
+                tx, pBlk.getHash(), pBlk.getNumber(), index, receipt.nrgUsed);
     }
 
-    protected AionTransaction getTransactionByBlockNumberAndIndex(long blkNr, long index) {
+    protected TransactionWithBlockInfo getTransactionByBlockNumberAndIndex(long blkNr, long index) {
         Block pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
@@ -304,11 +322,8 @@ public abstract class ApiAion extends Api {
             throw new NullPointerException();
         }
 
-        tx.setBlockNumber(pBlk.getNumber());
-        tx.setBlockHash(pBlk.getHash());
-        tx.setTxIndexInBlock(index);
-        tx.setNrgConsume(receipt.nrgUsed);
-        return tx;
+        return new TransactionWithBlockInfo(
+                tx, pBlk.getHash(), pBlk.getNumber(), index, receipt.nrgUsed);
     }
 
     protected long getBlockTransactionCountByNumber(long blkNr) {
@@ -349,7 +364,7 @@ public abstract class ApiAion extends Api {
         return cnt;
     }
 
-    protected AionTransaction getTransactionByHash(byte[] hash) {
+    protected TransactionWithBlockInfo getTransactionByHash(byte[] hash) {
         TxRecpt txRecpt = this.getTransactionReceipt(hash);
 
         if (txRecpt == null) {
@@ -358,19 +373,18 @@ public abstract class ApiAion extends Api {
             }
             return null;
         } else {
-            AionTransaction atx =
+            TransactionWithBlockInfo txInfo =
                     this.getTransactionByBlockNumberAndIndex(
                             txRecpt.blockNumber, txRecpt.transactionIndex);
 
-            if (atx == null) {
+            if (txInfo == null) {
                 if (LOG.isErrorEnabled()) {
                     LOG.error("Can't find the transaction by the blocknumber and the txIndex.");
                 }
                 return null;
             }
 
-            atx.setNrgConsume(txRecpt.nrgUsed);
-            return atx;
+            return txInfo;
         }
     }
 
