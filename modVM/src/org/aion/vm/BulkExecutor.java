@@ -247,6 +247,24 @@ public final class BulkExecutor {
                                 isLocalCall,
                                 blockRemainingEnergy,
                                 fork040enabled);
+            } else if (transactionIsPrecompiledContractCall(firstTransactionInNextBatch)) {
+                currentBatchOfSummaries =
+                        executeNextBatchOfPrecompiledTransactions(
+                                repository,
+                                transactions,
+                                currentIndex,
+                                blockDifficulty,
+                                blockNumber,
+                                blockTimestamp,
+                                blockNrgLimit,
+                                blockCoinbase,
+                                postExecutionWork,
+                                logger,
+                                checkBlockEnergyLimit,
+                                incrementSenderNonce,
+                                isLocalCall,
+                                blockRemainingEnergy,
+                                fork040enabled);
             } else {
                 throw new IllegalStateException(
                         "Transaction is not destined for any known VM: "
@@ -370,6 +388,54 @@ public final class BulkExecutor {
     }
 
     /**
+     * Returns the execution summaries of the next batch of precompiled contract call transactions
+     * to be run. This batch of transactions begins with the transaction at index {@code
+     * currentIndex} in the provided list of transactions and includes all subsequent transactions
+     * that are precompiled-bound.
+     */
+    private static List<AionTxExecSummary> executeNextBatchOfPrecompiledTransactions(
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            List<AionTransaction> transactions,
+            int currentIndex,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
+            PostExecutionWork postExecutionWork,
+            Logger logger,
+            boolean checkBlockEnergyLimit,
+            boolean incrementSenderNonce,
+            boolean isLocalCall,
+            long blockRemainingEnergy,
+            boolean fork040enabled) {
+
+        // Grab the next batch of precompiled contract call transactions to execute.
+        List<AionTransaction> precompiledTransactionsToExecute =
+                fetchNextBatchOfPrecompiledContractCallTransactions(transactions, currentIndex);
+        AionTransaction[] precompiledTransactions =
+                new AionTransaction[precompiledTransactionsToExecute.size()];
+        precompiledTransactionsToExecute.toArray(precompiledTransactions);
+
+        // Execute the precompiled contract call transactions.
+        return PrecompiledTransactionExecutor.executeTransactions(
+                repository,
+                blockDifficulty,
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase,
+                precompiledTransactions,
+                postExecutionWork,
+                logger,
+                checkBlockEnergyLimit,
+                incrementSenderNonce,
+                isLocalCall,
+                fork040enabled,
+                blockRemainingEnergy);
+    }
+
+    /**
      * Returns a batch of transactions to execute that are destined to be executed by the FVM,
      * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
      * subsequent FVM-bound transactions.
@@ -378,7 +444,7 @@ public final class BulkExecutor {
             RepositoryCache repository, List<AionTransaction> transactions, int startIndex) {
         for (int i = startIndex; i < transactions.size(); i++) {
             // Find the index of the next transaction that is not fvm-bound, that is where we stop.
-            if (transactionIsForAionVirtualMachine(repository, transactions.get(i))) {
+            if (!transactionIsForFastVirtualMachine(repository, transactions.get(i))) {
                 return transactions.subList(startIndex, i);
             }
         }
@@ -396,6 +462,24 @@ public final class BulkExecutor {
         for (int i = startIndex; i < transactions.size(); i++) {
             // Find the index of the next transaction that is not avm-bound, that is where we stop.
             if (!transactionIsForAionVirtualMachine(repository, transactions.get(i))) {
+                return transactions.subList(startIndex, i);
+            }
+        }
+
+        return transactions.subList(startIndex, transactions.size());
+    }
+
+    /**
+     * Returns a batch of transactions to execute that are precompiled contract calls, starting with
+     * the transaction at index {@code startIndex} (inclusive) up to and including all subsequent
+     * precompiled contract call transactions.
+     */
+    private static List<AionTransaction> fetchNextBatchOfPrecompiledContractCallTransactions(
+            List<AionTransaction> transactions, int startIndex) {
+        for (int i = startIndex; i < transactions.size(); i++) {
+            // Find the index of the next transaction that is not a precompiled contract call, that
+            // is where we stop.
+            if (!transactionIsPrecompiledContractCall(transactions.get(i))) {
                 return transactions.subList(startIndex, i);
             }
         }
@@ -437,8 +521,6 @@ public final class BulkExecutor {
      *
      * <p>2. It is a CALL transaction and the destination is a FVM contract address.
      *
-     * <p>3. It is a CALL transaction and the destination is a Precompiled contract address.
-     *
      * @param repository The repository.
      * @param transaction The transaction in question.
      * @return whether the transaction is for the FVM.
@@ -453,8 +535,25 @@ public final class BulkExecutor {
             return !TransactionTypeRule.isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
             AionAddress destination = transaction.getDestinationAddress();
-            return destinationIsFvmContract(repository, destination)
-                    || destinationIsPrecompiledContract(destination);
+            return destinationIsFvmContract(repository, destination);
+        }
+    }
+
+    /**
+     * Returns true only if the specified transaction is destined to be executed as a precompiled
+     * contract call. Otherwise false.
+     *
+     * <p>A transaction is a precompiled contract call if, and only if, it is <b>not</b> a CREATE
+     * transaction <b>and</b> the destination address is a precompiled contract address.
+     *
+     * @param transaction The transaction in question.
+     * @return whether the transaction is a precompiled contract call.
+     */
+    private static boolean transactionIsPrecompiledContractCall(AionTransaction transaction) {
+        if (transaction.isContractCreationTransaction()) {
+            return false;
+        } else {
+            return destinationIsPrecompiledContract(transaction.getDestinationAddress());
         }
     }
 

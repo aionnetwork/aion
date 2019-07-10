@@ -21,14 +21,17 @@ import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 public final class PrecompiledTransactionExecutor {
 
     public static List<AionTxExecSummary> executeTransactions(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             AionTransaction[] transactions,
             PostExecutionWork postExecutionWork,
             Logger logger,
@@ -44,7 +47,11 @@ public final class PrecompiledTransactionExecutor {
         KernelInterface kernel =
                 newKernelInterface(
                         repository.startTracking(),
-                        block,
+                        blockDifficulty,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockCoinbase,
                         allowNonceIncrement,
                         isLocalCall,
                         fork040enabled);
@@ -76,7 +83,7 @@ public final class PrecompiledTransactionExecutor {
                 RepositoryCache repositoryTracker = repository.startTracking();
 
                 setEnergyConsumedAndRefundSender(repositoryTracker, summary, transaction, result);
-                payMiner(repositoryTracker, block, summary);
+                payMiner(repositoryTracker, blockCoinbase, summary);
                 deleteAccountsMarkedForDeletion(repositoryTracker, sideEffects, result);
 
                 repositoryTracker.flush();
@@ -118,8 +125,8 @@ public final class PrecompiledTransactionExecutor {
     }
 
     private static void payMiner(
-            RepositoryCache repository, IAionBlock block, TxExecSummary summary) {
-        repository.addBalance(block.getCoinbase(), summary.getFee());
+            RepositoryCache repository, AionAddress blockCoinbase, TxExecSummary summary) {
+        repository.addBalance(blockCoinbase, summary.getFee());
     }
 
     private static void deleteAccountsMarkedForDeletion(
@@ -189,7 +196,11 @@ public final class PrecompiledTransactionExecutor {
 
     private static KernelInterface newKernelInterface(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
-            IAionBlock block,
+            byte[] blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            AionAddress blockCoinbase,
             boolean allowNonceIncrement,
             boolean isLocalCall,
             boolean fork040enable) {
@@ -198,17 +209,16 @@ public final class PrecompiledTransactionExecutor {
                 allowNonceIncrement,
                 isLocalCall,
                 fork040enable,
-                getDifficultyAsDataWord(block),
-                block.getNumber(),
-                block.getTimestamp(),
-                block.getNrgLimit(),
-                block.getCoinbase());
+                getDifficultyAsDataWord(blockDifficulty),
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase);
     }
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should
     // investigate
-    private static DataWord getDifficultyAsDataWord(IAionBlock block) {
-        byte[] diff = block.getDifficulty();
+    private static DataWord getDifficultyAsDataWord(byte[] diff) {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
