@@ -37,7 +37,8 @@ public final class ContractExecutor {
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
                         PrecompiledResultCode.SUCCESS,
-                        transaction.getEnergyLimit() - TransactionUtil.getTransactionCost(transaction));
+                        transaction.getEnergyLimit()
+                                - TransactionUtil.getTransactionCost(transaction));
 
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childKernel, transaction, result);
@@ -193,7 +194,8 @@ public final class ContractExecutor {
         AionAddress callerAddress = transaction.getSenderAddress();
         byte[] transactionHash = transaction.getTransactionHash();
         long blockNumber = kernel.getBlockNumber();
-        long energyRemaining = transaction.getEnergyLimit() - TransactionUtil.getTransactionCost(transaction);
+        long energyRemaining =
+                transaction.getEnergyLimit() - TransactionUtil.getTransactionCost(transaction);
         AionAddress destinationAddress =
                 transaction.isContractCreationTransaction()
                         ? TransactionUtil.calculateContractAddress(transaction)
