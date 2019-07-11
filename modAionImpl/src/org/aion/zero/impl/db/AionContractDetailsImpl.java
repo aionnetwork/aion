@@ -18,7 +18,7 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -438,7 +438,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             throw new IllegalArgumentException("Address can not be null!");
         }
         this.address = address;
-        if (ContractFactory.isPrecompiledContract(address)) {
+        if (ContractInfo.isPrecompiledContract(address)) {
             setVmType(InternalVmType.FVM);
         }
         this.rlpEncoded = null;

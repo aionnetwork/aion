@@ -21,7 +21,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -338,7 +338,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     /** IMPORTNAT: a new cache must be created before calling this method */
     @Override
     public InternalVmType getVmType(AionAddress contract) {
-        if (ContractFactory.isPrecompiledContract(contract)) {
+        if (ContractInfo.isPrecompiledContract(contract)) {
             // skip the call to disk
             return InternalVmType.FVM;
         }

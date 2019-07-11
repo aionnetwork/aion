@@ -66,20 +66,4 @@ public class ContractFactory {
             return null;
         }
     }
-
-    /**
-     * Returns true if address is the address of a pre-compiled contract and false otherwise.
-     *
-     * @param address The address to check.
-     * @return true iff address is address of a pre-compiled contract.
-     */
-    public static boolean isPrecompiledContract(AionAddress address) {
-        for (ContractInfo contractInfo : ContractInfo.values()) {
-            if ((contractInfo != ContractInfo.TOTAL_CURRENCY)
-                    && (address.equals(contractInfo.contractAddress))) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

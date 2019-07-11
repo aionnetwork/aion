@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.types.KernelInterface;
 import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.types.AionAddress;
@@ -97,7 +98,7 @@ public final class ContractExecutor {
                 precompiledFactory.getPrecompiledContract(context, kernel);
 
         // Ensure we actually have a precompiled contract as our destination.
-        if (!ContractFactory.isPrecompiledContract(transaction.getDestinationAddress())) {
+        if (!ContractInfo.isPrecompiledContract(transaction.getDestinationAddress())) {
             throw new IllegalStateException("Expected destination to be a precompiled contract!");
         }
 

@@ -33,7 +33,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.p2p.V1Constants;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -147,7 +147,7 @@ public class AionRepositoryImpl
 
                     if (!contractDetails.isDirty()
                             || (contractDetails.getVmType() == InternalVmType.EITHER
-                                    && !ContractFactory.isPrecompiledContract(address))) {
+                                    && !ContractInfo.isPrecompiledContract(address))) {
                         // code added because contract details are not reliably
                         // marked as dirty at present
                         // TODO: issue above will be solved with the conversion to a
@@ -1068,7 +1068,7 @@ public class AionRepositoryImpl
     }
 
     public InternalVmType getVMUsed(AionAddress contract) {
-        if (ContractFactory.isPrecompiledContract(contract)) {
+        if (ContractInfo.isPrecompiledContract(contract)) {
             // skip the call to disk
             return InternalVmType.FVM;
         } else {

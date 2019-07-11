@@ -10,7 +10,7 @@ import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -226,7 +226,7 @@ public class ExternalStateForAvm implements IExternalState {
     @Override
     public boolean destinationAddressIsSafeForThisVM(AionAddress address) {
         // Avm cannot run pre-compiled contracts.
-        if (ContractFactory.isPrecompiledContract(address)) {
+        if (ContractInfo.isPrecompiledContract(address)) {
             return false;
         }
 

@@ -10,7 +10,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTxExecSummary;
@@ -595,16 +595,16 @@ public final class BulkExecutor {
         if (vmType == InternalVmType.UNKNOWN) {
             // will load contract into memory otherwise leading to consensus issues
             RepositoryCache track = repository.startTracking();
-            return !ContractFactory.isPrecompiledContract(destination)
+            return !ContractInfo.isPrecompiledContract(destination)
                     && (track.getVmType(destination) == InternalVmType.FVM);
         } else {
-            return !ContractFactory.isPrecompiledContract(destination)
+            return !ContractInfo.isPrecompiledContract(destination)
                     && (vmType == InternalVmType.FVM);
         }
     }
 
     /** Returns true only if the given destination address is a precompiled contract address. */
     private static boolean destinationIsPrecompiledContract(AionAddress destination) {
-        return ContractFactory.isPrecompiledContract(destination);
+        return ContractInfo.isPrecompiledContract(destination);
     }
 }

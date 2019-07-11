@@ -13,7 +13,6 @@ import java.util.Properties;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
-import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
@@ -73,7 +72,7 @@ public class FvmBalanceTransferConsensusTest {
         AionAddress bridge =
                 AddressUtils.wrapAddress(
                         "0000000000000000000000000000000000000000000000000000000000000200");
-        assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
+        assertThat(ContractInfo.isPrecompiledContract(bridge)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -133,7 +132,7 @@ public class FvmBalanceTransferConsensusTest {
         AionAddress bridge =
                 AddressUtils.wrapAddress(
                         "0000000000000000000000000000000000000000000000000000000000000200");
-        assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
+        assertThat(ContractInfo.isPrecompiledContract(bridge)).isTrue();
 
         // Make call transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -193,7 +192,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // get contract address from precompiled factory
         AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
-        assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
+        assertThat(ContractInfo.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -258,7 +257,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // get contract address from precompiled factory
         AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
-        assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
+        assertThat(ContractInfo.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
@@ -326,7 +325,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // get contract address from precompiled factory
         AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
-        assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
+        assertThat(ContractInfo.isPrecompiledContract(blake2b)).isTrue();
 
         // Make call transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
