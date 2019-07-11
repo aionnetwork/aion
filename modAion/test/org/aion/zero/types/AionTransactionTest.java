@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.math.BigInteger;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
@@ -89,10 +90,10 @@ public class AionTransactionTest {
 
     @Test
     public void testTransactionCost() {
-        byte[] nonce = DataWordImpl.ONE.getData();
+        byte[] nonce = BigInteger.ONE.toByteArray();
         byte[] from = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] to = RandomUtils.nextBytes(AionAddress.LENGTH);
-        byte[] value = DataWordImpl.ONE.getData();
+        byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
         long nrg = new DataWordImpl(1000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
@@ -116,10 +117,10 @@ public class AionTransactionTest {
 
     @Test
     public void testTransactionCost2() {
-        byte[] nonce = DataWordImpl.ONE.getData();
+        byte[] nonce = BigInteger.ONE.toByteArray();
         byte[] from = RandomUtils.nextBytes(AionAddress.LENGTH);
         AionAddress to = null;
-        byte[] value = DataWordImpl.ONE.getData();
+        byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
         long nrg = new DataWordImpl(1000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();

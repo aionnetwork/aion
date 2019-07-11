@@ -88,7 +88,7 @@ public class SolidityTypeTest {
     }
 
     private AionTransaction createTransaction(byte[] callData) {
-        byte[] txNonce = DataWordImpl.ZERO.getData();
+        byte[] txNonce = BigInteger.ZERO.toByteArray();
         AionAddress from =
                 new AionAddress(
                         Hex.decode(
@@ -97,7 +97,7 @@ public class SolidityTypeTest {
                 new AionAddress(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
-        byte[] value = DataWordImpl.ZERO.getData();
+        byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = callData;
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
