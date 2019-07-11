@@ -14,6 +14,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
@@ -191,7 +192,7 @@ public class FvmBalanceTransferConsensusTest {
         assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -256,7 +257,7 @@ public class FvmBalanceTransferConsensusTest {
         assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make balance transfer transaction to precompiled contract.
@@ -324,7 +325,7 @@ public class FvmBalanceTransferConsensusTest {
         assertThat(this.blockchain.getMinerCoinbase().toByteArray()).isEqualTo(MINER);
 
         // get contract address from precompiled factory
-        AionAddress blake2b = ContractFactory.getBlake2bHashContractAddress();
+        AionAddress blake2b = ContractInfo.BLAKE_2B.contractAddress;
         assertThat(ContractFactory.isPrecompiledContract(blake2b)).isTrue();
 
         // Make call transaction to precompiled contract.

@@ -20,6 +20,7 @@ import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
@@ -92,7 +93,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         PrecompiledTransactionContext ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getEdVerifyContractAddress(),
+                        ContractInfo.ED_VERIFY.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),
@@ -117,7 +118,7 @@ public class EDVerifyContractTest {
 
         PrecompiledTransactionContext ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getEdVerifyContractAddress(),
+                        ContractInfo.ED_VERIFY.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),
@@ -146,7 +147,7 @@ public class EDVerifyContractTest {
 
         PrecompiledTransactionContext ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getEdVerifyContractAddress(),
+                        ContractInfo.ED_VERIFY.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),
@@ -172,7 +173,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         PrecompiledTransactionContext ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getEdVerifyContractAddress(),
+                        ContractInfo.ED_VERIFY.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),
@@ -198,7 +199,7 @@ public class EDVerifyContractTest {
 
         PrecompiledTransactionContext ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getEdVerifyContractAddress(),
+                        ContractInfo.ED_VERIFY.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),

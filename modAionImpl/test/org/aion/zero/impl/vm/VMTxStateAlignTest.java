@@ -10,7 +10,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
@@ -115,7 +115,7 @@ public class VMTxStateAlignTest {
                 newTransaction(
                         nonce,
                         new AionAddress(sender.getAddress()),
-                        ContractFactory.getBlake2bHashContractAddress(),
+                        ContractInfo.BLAKE_2B.contractAddress,
                         BigInteger.ONE,
                         new byte[10],
                         2_000_000,

@@ -5,7 +5,7 @@ import java.util.Map;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -17,7 +17,7 @@ public class AionHubUtils {
         // initialization section for network balance contract
         RepositoryCache track = repository.startTracking();
 
-        AionAddress networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
+        AionAddress networkBalanceAddress = ContractInfo.TOTAL_CURRENCY.contractAddress;
         track.createAccount(networkBalanceAddress);
         // saving FVM type for networkBalance contract
         track.saveVmType(networkBalanceAddress, InternalVmType.FVM);

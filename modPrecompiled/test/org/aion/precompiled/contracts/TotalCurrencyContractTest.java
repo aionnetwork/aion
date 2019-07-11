@@ -16,7 +16,7 @@ import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.types.AionAddress;
@@ -30,7 +30,7 @@ import org.junit.Test;
 
 @Ignore
 public class TotalCurrencyContractTest {
-    private static final AionAddress ADDR = ContractFactory.getTotalCurrencyContractAddress();
+    private static final AionAddress ADDR = ContractInfo.TOTAL_CURRENCY.contractAddress;
     private static final long COST = 21000L;
     private static final BigInteger AMT = BigInteger.valueOf(1000);
     private TotalCurrencyContract tcc;

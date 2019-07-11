@@ -10,7 +10,7 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
@@ -26,7 +26,7 @@ public class AionGenesis extends AionBlock {
      * position, this indicates the address at which the storage rows are to be stored
      */
     protected static final AionAddress NETWORK_BALANCE_ADDRESS =
-            ContractFactory.getTotalCurrencyContractAddress();
+            ContractInfo.TOTAL_CURRENCY.contractAddress;
 
     /**
      * Aion Genesis Constants

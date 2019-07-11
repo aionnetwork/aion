@@ -8,6 +8,7 @@ import java.util.Collections;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
@@ -81,7 +82,7 @@ public class BenchmarkTest {
 
         ctx =
                 new PrecompiledTransactionContext(
-                        ContractFactory.getBlake2bHashContractAddress(),
+                        ContractInfo.BLAKE_2B.contractAddress,
                         origin,
                         caller,
                         Collections.emptyList(),

@@ -26,7 +26,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.precompiled.ContractFactory;
+import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -365,13 +365,13 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.genesis = genesis;
 
             RepositoryCache track = bc.getRepository().startTracking();
-            track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
-            track.saveVmType(ContractFactory.getTotalCurrencyContractAddress(), InternalVmType.FVM);
+            track.createAccount(ContractInfo.TOTAL_CURRENCY.contractAddress);
+            track.saveVmType(ContractInfo.TOTAL_CURRENCY.contractAddress, InternalVmType.FVM);
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 // assumes only additions can be made in the genesis
                 track.addStorageRow(
-                        ContractFactory.getTotalCurrencyContractAddress(),
+                        ContractInfo.TOTAL_CURRENCY.contractAddress,
                         new DataWordImpl(key.getKey()).toWrapper(),
                         new ByteArrayWrapper(
                                 new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
