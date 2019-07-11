@@ -112,13 +112,15 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin; // deployer
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
-        byte[] txNonce = DataWordImpl.ZERO.getData();
         ECKey senderKey = ECKeyFac.inst().create();
-        AionAddress from = new AionAddress(senderKey.getAddress());
+        byte[] txNonce = BigInteger.ZERO.toByteArray();
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
                         "2222222222222222222222222222222222222222222222222222222222222222");
-        byte[] value = DataWordImpl.ZERO.getData();
+        byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
@@ -153,11 +155,13 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin;
         System.out.println(deployer);
 
-        byte[] txNonce = DataWordImpl.ZERO.getData();
         ECKey senderKey = ECKeyFac.inst().create();
-        AionAddress from = new AionAddress(senderKey.getAddress());
+        byte[] txNonce = BigInteger.ZERO.toByteArray();
+        AionAddress from =
+                AddressUtils.wrapAddress(
+                        "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to = null;
-        byte[] value = DataWordImpl.ZERO.getData();
+        byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = Hex.decode(deployer);
         long nrg = 500_000L;
         long nrgPrice = 1;
@@ -188,14 +192,14 @@ public class OldTxExecutorTest {
         String deployer = cr.contracts.get("Ticker").bin; // deployer
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
-        byte[] txNonce = DataWordImpl.ZERO.getData();
+        byte[] txNonce = BigInteger.ZERO.toByteArray();
         AionAddress from =
                 AddressUtils.wrapAddress(
                         "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
                         "2222222222222222222222222222222222222222222222222222222222222222");
-        byte[] value = DataWordImpl.ZERO.getData();
+        byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = Hex.decode("c0004213");
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
@@ -223,14 +227,14 @@ public class OldTxExecutorTest {
 
     @Test
     public void testBasicTransactionCost() throws VMException {
-        byte[] txNonce = DataWordImpl.ZERO.getData();
+        byte[] txNonce = BigInteger.ZERO.toByteArray();
         AionAddress from =
                 AddressUtils.wrapAddress(
                         "1111111111111111111111111111111111111111111111111111111111111111");
         AionAddress to =
                 AddressUtils.wrapAddress(
                         "2222222222222222222222222222222222222222222222222222222222222222");
-        byte[] value = DataWordImpl.ONE.getData();
+        byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = new byte[0];
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
