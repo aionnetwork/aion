@@ -91,10 +91,10 @@ public class Benchmark {
         // create transaction
         byte[] deployer =
                 ContractUtils.getContractDeployer("BenchmarkERC20.sol", "FixedSupplyToken");
-        byte[] nonce = DataWordImpl.ZERO.getData();
+        byte[] nonce = BigInteger.ZERO.toByteArray();
         AionAddress from = owner;
         AionAddress to = null;
-        byte[] value = DataWordImpl.ZERO.getData();
+        byte[] value = BigInteger.ZERO.toByteArray();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
         AionTransaction tx = new AionTransaction(nonce, from, to, value, deployer, nrg, nrgPrice);
@@ -121,15 +121,15 @@ public class Benchmark {
             recipients.add(recipient);
 
             // transfer token to random people
-            byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
+            byte[] nonce = BigInteger.valueOf(ownerNonce + i).toByteArray();
             AionAddress from = owner;
             AionAddress to = contract;
-            byte[] value = DataWordImpl.ZERO.getData();
+            byte[] value = BigInteger.ZERO.toByteArray();
             byte[] data =
                     ByteUtil.merge(
                             Hex.decode("fbb001d6" + "000000000000000000000000"),
                             recipient,
-                            DataWordImpl.ONE.getData());
+                            BigInteger.ONE.toByteArray());
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
             AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
@@ -201,10 +201,10 @@ public class Benchmark {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < recipients.size(); i++) {
-            byte[] nonce = new DataWordImpl(ownerNonce + i).getData();
+            byte[] nonce = BigInteger.valueOf(ownerNonce + i).toByteArray();
             AionAddress from = owner;
             AionAddress to = contract;
-            byte[] value = DataWordImpl.ZERO.getData();
+            byte[] value = BigInteger.ZERO.toByteArray();
             byte[] data =
                     ByteUtil.merge(
                             Hex.decode("70a08231" + "000000000000000000000000"), recipients.get(i));
