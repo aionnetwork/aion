@@ -19,7 +19,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -35,7 +35,7 @@ import org.apache.commons.collections4.map.LRUMap;
  *
  * @author William
  */
-public class AionNameServiceContract extends StatefulPrecompiledContract {
+public class AionNameServiceContract implements PrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
     private static final Map<String, AionAddress> domains = new HashMap<>();
@@ -46,6 +46,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String TTL_HASH = "TTLHash";
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
+
+    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
 
     private AionAddress activeDomainsAddress =
             AddressUtils.wrapAddress(
@@ -84,7 +86,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             AionAddress address,
             AionAddress ownerAddress) { // byte
-        super(track);
+        this.track = track;
         this.address = address;
         setUpKeys();
         if (!isValidDomainAddress(address)) {

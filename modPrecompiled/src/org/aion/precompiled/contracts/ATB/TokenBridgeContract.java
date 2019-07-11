@@ -16,13 +16,13 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
 
-public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
+public class TokenBridgeContract implements PrecompiledContract, Transferable {
 
     private static final long ENERGY_CONSUME = 21000L;
 
@@ -43,9 +43,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             @Nonnull final AionAddress ownerAddress,
             @Nonnull final AionAddress contractAddress) {
-        super(track);
-        this.context = context;
         this.track = track;
+        this.context = context;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller =
                 new BridgeController(

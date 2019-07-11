@@ -27,7 +27,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -42,7 +42,7 @@ import org.apache.commons.collections4.map.LRUMap;
  *
  * @author William
  */
-public class AionAuctionContract extends StatefulPrecompiledContract {
+public class AionAuctionContract implements PrecompiledContract {
     private static final AionAddress AION =
             AddressUtils.wrapAddress(
                     "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
@@ -103,6 +103,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private static final Set<String> privateAionDomainNames =
             new HashSet<>(Arrays.asList("network.aion", "foundation.aion", "enterprise.aion"));
 
+    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
      *
@@ -113,7 +115,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             AionAddress address,
             IBlockchain blockchain) {
-        super(track);
+        this.track = track;
         this.callerAddress = address;
         this.blockchain = blockchain;
 

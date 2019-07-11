@@ -9,15 +9,16 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.types.ByteArrayWrapper;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
-public class TotalCurrencyContract extends StatefulPrecompiledContract {
+public class TotalCurrencyContract implements PrecompiledContract {
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 21000L;
+    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
 
     private AionAddress address;
     private AionAddress ownerAddress;
@@ -33,7 +34,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             AionAddress address,
             AionAddress ownerAddress) {
-        super(track);
+        this.track = track;
         this.address = address;
         this.ownerAddress = ownerAddress;
     }
