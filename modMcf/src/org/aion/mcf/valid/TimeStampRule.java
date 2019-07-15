@@ -4,10 +4,10 @@ import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 
 /** Validates whether the timestamp of the current block is > the timestamp of the parent block */
-public class TimeStampRule<BH extends BlockHeader> extends DependentBlockHeaderRule<BH> {
+public class TimeStampRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(BH header, BH dependency, List<RuleError> errors) {
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
         if (header.getTimestamp() <= dependency.getTimestamp()) {
             addError(
                     "timestamp ("

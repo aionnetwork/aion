@@ -114,8 +114,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
     private static boolean fork040Enable;
-    private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
-    private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
+    private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
     /**
      * Chain configuration class, because chain configuration may change dependant on the block

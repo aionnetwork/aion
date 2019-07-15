@@ -3,10 +3,10 @@ package org.aion.mcf.valid;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 
-public class BlockNumberRule<BH extends BlockHeader> extends DependentBlockHeaderRule<BH> {
+public class BlockNumberRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(BH header, BH parent, List<RuleError> errors) {
+    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
         if (header.getNumber() != (parent.getNumber() + 1)) {
             addError(formatError(header.getNumber(), parent.getNumber()), errors);
             return false;

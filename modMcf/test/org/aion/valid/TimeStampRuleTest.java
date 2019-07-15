@@ -40,7 +40,7 @@ public class TimeStampRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
+        boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isTrue();
@@ -58,7 +58,7 @@ public class TimeStampRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
+        boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -76,7 +76,7 @@ public class TimeStampRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
+        boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isFalse();

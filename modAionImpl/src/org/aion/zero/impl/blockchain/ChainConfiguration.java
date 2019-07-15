@@ -120,18 +120,18 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
     }
 
     @Override
-    public ParentBlockHeaderValidator<A0BlockHeader> createParentHeaderValidator() {
-        return new ParentBlockHeaderValidator<>(
+    public ParentBlockHeaderValidator createParentHeaderValidator() {
+        return new ParentBlockHeaderValidator(
                 Arrays.asList(
-                        new BlockNumberRule<>(),
-                        new TimeStampRule<>(),
+                        new BlockNumberRule(),
+                        new TimeStampRule(),
                         new EnergyLimitRule(
                                 this.getConstants().getEnergyDivisorLimitLong(),
                                 this.getConstants().getEnergyLowerBoundLong())));
     }
 
-    public GrandParentBlockHeaderValidator<A0BlockHeader> createGrandParentHeaderValidator() {
-        return new GrandParentBlockHeaderValidator<>(
+    public GrandParentBlockHeaderValidator createGrandParentHeaderValidator() {
+        return new GrandParentBlockHeaderValidator(
                 Collections.singletonList(new AionDifficultyRule(this)));
     }
 }

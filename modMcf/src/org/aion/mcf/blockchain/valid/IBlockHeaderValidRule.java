@@ -6,9 +6,8 @@ import org.aion.mcf.blockchain.BlockHeader;
 /**
  * Block header validation rules.
  *
- * @param <BH>
  */
-public interface IBlockHeaderValidRule<BH extends BlockHeader> extends IValidRule {
+public interface IBlockHeaderValidRule extends IValidRule {
 
-    boolean validate(BH header, BH dependency, List<RuleError> errors);
+    boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors);
 }

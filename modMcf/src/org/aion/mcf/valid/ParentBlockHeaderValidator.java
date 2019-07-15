@@ -8,19 +8,19 @@ import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */
-public class ParentBlockHeaderValidator<BH extends BlockHeader>
+public class ParentBlockHeaderValidator
         extends AbstractBlockHeaderValidator {
 
-    private List<DependentBlockHeaderRule<BH>> rules;
+    private List<DependentBlockHeaderRule> rules;
 
-    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule<BH>> rules) {
+    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> rules) {
         this.rules = rules;
     }
 
-    public boolean validate(BH header, BH parent, Logger logger) {
+    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger) {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
-        for (IBlockHeaderValidRule<BH> rule : rules) {
+        for (IBlockHeaderValidRule rule : rules) {
             if (!rule.validate(header, parent, errors)) {
                 if (logger != null) logErrors(logger, errors);
                 return false;

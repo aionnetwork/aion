@@ -1,6 +1,8 @@
 package org.aion.zero.impl.valid;
 
 import java.util.List;
+
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
 
@@ -12,7 +14,7 @@ import org.aion.zero.types.A0BlockHeader;
  *
  * <p>This rule depends on the parent to implement
  */
-public class EnergyLimitRule extends DependentBlockHeaderRule<A0BlockHeader> {
+public class EnergyLimitRule extends DependentBlockHeaderRule {
 
     private final long energyLimitDivisor;
     private final long energyLimitLowerBounds;
@@ -23,7 +25,7 @@ public class EnergyLimitRule extends DependentBlockHeaderRule<A0BlockHeader> {
     }
 
     @Override
-    public boolean validate(A0BlockHeader header, A0BlockHeader parent, List<RuleError> errors) {
+    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
         long energyLimit = header.getEnergyLimit();
         long parentEnergyLimit = parent.getEnergyLimit();
         long parentEnergyQuotient = parentEnergyLimit / this.energyLimitDivisor;

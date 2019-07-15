@@ -6,19 +6,19 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
 
-public class GrandParentBlockHeaderValidator<BH extends BlockHeader>
+public class GrandParentBlockHeaderValidator
         extends AbstractBlockHeaderValidator {
 
-    private List<GrandParentDependantBlockHeaderRule<BH>> rules;
+    private List<GrandParentDependantBlockHeaderRule> rules;
 
-    public GrandParentBlockHeaderValidator(List<GrandParentDependantBlockHeaderRule<BH>> rules) {
+    public GrandParentBlockHeaderValidator(List<GrandParentDependantBlockHeaderRule> rules) {
         this.rules = rules;
     }
 
-    public boolean validate(BH grandParent, BH parent, BH current, Logger logger) {
+    public boolean validate(BlockHeader grandParent, BlockHeader parent, BlockHeader current, Logger logger) {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
-        for (GrandParentDependantBlockHeaderRule<BH> rule : rules) {
+        for (GrandParentDependantBlockHeaderRule rule : rules) {
             if (!rule.validate(grandParent, parent, current, errors)) {
                 if (logger != null) logErrors(logger, errors);
                 return false;

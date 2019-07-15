@@ -40,7 +40,7 @@ public class BlockNumberRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH, errors);
+        boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);
 
         // test output
         assertThat(actual).isTrue();
@@ -58,7 +58,7 @@ public class BlockNumberRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH, errors);
+        boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -76,7 +76,7 @@ public class BlockNumberRuleTest {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH, errors);
+        boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);
 
         // test output
         assertThat(actual).isFalse();
