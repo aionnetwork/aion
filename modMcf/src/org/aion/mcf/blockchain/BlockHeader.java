@@ -36,8 +36,6 @@ public interface BlockHeader {
 
     void setReceiptsRoot(byte[] _rcrt);
 
-    void setTransactionsRoot(byte[] _txrt);
-
     void setTimestamp(long _ts);
 
     void setNumber(long _nb);
@@ -57,4 +55,6 @@ public interface BlockHeader {
     long getEnergyConsumed();
 
     long getEnergyLimit();
+    
+    byte getVersion();
 }
