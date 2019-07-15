@@ -36,6 +36,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
@@ -1201,7 +1202,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }
 
-    private IAionBlock getParent(A0BlockHeader header) {
+    private IAionBlock getParent(BlockHeader header) {
         return getBlockStore().getBlockByHash(header.getParentHash());
     }
 

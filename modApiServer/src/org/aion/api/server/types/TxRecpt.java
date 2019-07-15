@@ -68,7 +68,7 @@ public final class TxRecpt {
     public boolean successful;
 
     public <BH extends BlockHeader, TXR extends AbstractTxReceipt> TxRecpt(
-            Block<BH> block,
+            Block block,
             AbstractTxInfo<TXR> txInfo,
             long cumulativeNrgUsed,
             boolean isMainchain) {

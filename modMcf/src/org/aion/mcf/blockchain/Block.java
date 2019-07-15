@@ -4,7 +4,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 
 /** @author jin */
-public interface Block<BH extends BlockHeader> {
+public interface Block {
 
     long getNumber();
 
@@ -16,13 +16,13 @@ public interface Block<BH extends BlockHeader> {
 
     String getShortHash();
 
-    boolean isEqual(Block<BH> block);
+    boolean isEqual(Block block);
 
     String getShortDescr();
 
     List<AionTransaction> getTransactionsList();
 
-    BH getHeader();
+    BlockHeader getHeader();
 
     /**
      * Newly added with the refactory of API for libNc, both chains should have implemented this

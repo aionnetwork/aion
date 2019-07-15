@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <BLK>
  * @param <BH>
  */
-public interface IBlockStorePow<BLK extends Block<?>, BH extends AbstractBlockHeader>
+public interface IBlockStorePow<BLK extends Block, BH extends AbstractBlockHeader>
         extends IBlockStoreBase<BLK, BH> {
 
     BigInteger getTotalDifficultyForHash(byte[] hash);

@@ -174,7 +174,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
     /** Keeps mining until the thread is interrupted */
     private void mine() {
-        IAionBlock block;
+        AionBlock block;
         byte[] nonce;
         while (!Thread.currentThread().isInterrupted()) {
             if ((block = miningBlock) == null) {

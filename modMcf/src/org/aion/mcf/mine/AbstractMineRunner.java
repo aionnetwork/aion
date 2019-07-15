@@ -6,7 +6,7 @@ import org.aion.mcf.blockchain.Block;
 import org.slf4j.Logger;
 
 /** Abstract Miner. */
-public abstract class AbstractMineRunner<BLK extends Block<?>> implements IMineRunner {
+public abstract class AbstractMineRunner<BLK extends Block> implements IMineRunner {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 

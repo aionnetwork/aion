@@ -8,7 +8,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.rlp.RLP;
 
 /** AbstractBlockWrapper */
-public abstract class AbstractBlockWrapper<BLK extends Block<?>> {
+public abstract class AbstractBlockWrapper<BLK extends Block> {
 
     protected static final long SOLID_BLOCK_DURATION_THRESHOLD = secondsToMillis(60);
 

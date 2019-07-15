@@ -7,7 +7,7 @@ import org.aion.mcf.blockchain.Block;
  *
  * @param <BLK>
  */
-public interface IMinerListener<BLK extends Block<?>> {
+public interface IMinerListener<BLK extends Block> {
 
     void miningStarted();
 

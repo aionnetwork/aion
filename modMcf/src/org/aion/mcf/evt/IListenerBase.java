@@ -7,7 +7,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 /** Listener base interface. */
 public interface IListenerBase<
-        BLK extends Block<?>,
+        BLK extends Block,
         TXR extends AbstractTxReceipt,
         BS extends AbstractBlockSummary<?, ?, ?>> {
 

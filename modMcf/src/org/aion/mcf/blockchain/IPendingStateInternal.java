@@ -8,7 +8,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
  *
  * @param <BLK>
  */
-public interface IPendingStateInternal<BLK extends Block<?>> extends IPendingState {
+public interface IPendingStateInternal<BLK extends Block> extends IPendingState {
 
     // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt> receipts);

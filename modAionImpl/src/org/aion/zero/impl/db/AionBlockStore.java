@@ -576,7 +576,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             List<A0BlockHeader> headers = new ArrayList<>(blocks.size());
 
             for (IAionBlock b : blocks) {
-                headers.add(b.getHeader());
+                // TODO: Remove this cast by removing the generics from IBlockStore
+                headers.add((A0BlockHeader) b.getHeader());
             }
 
             return headers;

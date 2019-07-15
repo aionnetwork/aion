@@ -10,6 +10,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.file.NativeLoader;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -75,7 +76,7 @@ public class Equihash {
     /*
      * Mine for a single nonce
      */
-    public AionPowSolution mine(IAionBlock block, byte[] nonce) {
+    public AionPowSolution mine(AionBlock block, byte[] nonce) {
 
         A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
 

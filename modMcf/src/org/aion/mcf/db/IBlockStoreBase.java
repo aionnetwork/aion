@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <BLK>
  * @param <BH>
  */
-public interface IBlockStoreBase<BLK extends Block<?>, BH extends AbstractBlockHeader> {
+public interface IBlockStoreBase<BLK extends Block, BH extends AbstractBlockHeader> {
 
     byte[] getBlockHashByNumber(long blockNumber);
 

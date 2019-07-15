@@ -10,14 +10,14 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 
 /** Abstract Block class. */
-public abstract class AbstractBlock<BH extends BlockHeader> implements Block<BH> {
+public abstract class AbstractBlock<BH extends BlockHeader> implements Block {
 
     protected BH header;
 
     protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
     @Override
-    public boolean isEqual(Block<BH> block) {
+    public boolean isEqual(Block block) {
         return Arrays.equals(this.getHash(), block.getHash());
     }
 
@@ -31,7 +31,7 @@ public abstract class AbstractBlock<BH extends BlockHeader> implements Block<BH>
      * @param block - possible a son of this
      * @return - true if this block is parent of param block
      */
-    public boolean isParentOf(Block<BH> block) {
+    public boolean isParentOf(Block block) {
         return Arrays.equals(this.getHash(), block.getParentHash());
     }
 

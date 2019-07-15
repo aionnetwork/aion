@@ -1,5 +1,6 @@
 package org.aion.equihash;
 
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
 /**
@@ -10,18 +11,18 @@ import org.aion.zero.types.IAionBlock;
  */
 public class AionPowSolution implements Solution {
 
-    private final IAionBlock block;
+    private final AionBlock block;
     private final byte[] nonce;
     private final byte[] solution;
 
-    public AionPowSolution(IAionBlock block, byte[] nonce, byte[] solution) {
+    public AionPowSolution(AionBlock block, byte[] nonce, byte[] solution) {
 
         this.block = block;
         this.nonce = nonce;
         this.solution = solution;
     }
 
-    public IAionBlock getBlock() {
+    public AionBlock getBlock() {
         return block;
     }
 

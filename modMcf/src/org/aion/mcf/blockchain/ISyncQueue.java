@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeaderWrapper;
  * @param <BLK>
  * @param <BHW>
  */
-public interface ISyncQueue<BLK extends Block<?>, BHW extends AbstractBlockHeaderWrapper<?>> {
+public interface ISyncQueue<BLK extends Block, BHW extends AbstractBlockHeaderWrapper<?>> {
 
     /** Wanted headers */
     interface HeadersRequest {

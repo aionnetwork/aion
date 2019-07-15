@@ -7,7 +7,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 
 /** Chain configuration interface. */
-public interface IChainCfg<Blk extends Block<?>> {
+public interface IChainCfg<Blk extends Block> {
 
     boolean acceptTransactionSignature(AionTransaction tx);
 

@@ -15,7 +15,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * @param <BS>
  */
 public interface IPowListener<
-                BLK extends Block<?>,
+                BLK extends Block,
                 TXR extends AbstractTxReceipt,
                 BS extends AbstractBlockSummary<?, ?, ?>>
         extends IListenerBase<BLK, TXR, BS> {

@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <Blk>
  * @param <BH>
  */
-public interface IMiner<Blk extends Block<?>, BH extends AbstractBlockHeader> {
+public interface IMiner<Blk extends Block, BH extends AbstractBlockHeader> {
 
     ListenableFuture<Long> mine(Blk block);
 
