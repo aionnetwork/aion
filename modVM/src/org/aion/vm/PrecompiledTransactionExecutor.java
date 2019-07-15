@@ -1,7 +1,6 @@
 package org.aion.vm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.fastvm.SideEffects;
@@ -9,13 +8,10 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
-import org.aion.mcf.types.KernelInterface;
-import org.aion.mcf.vm.DataWord;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.ContractExecutor;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -27,10 +23,7 @@ public final class PrecompiledTransactionExecutor {
 
     public static List<AionTxExecSummary> executeTransactions(
             RepositoryCache<AccountState, IBlockStoreBase> repository,
-            byte[] blockDifficulty,
             long blockNumber,
-            long blockTimestamp,
-            long blockNrgLimit,
             AionAddress blockCoinbase,
             AionTransaction[] transactions,
             PostExecutionWork postExecutionWork,
@@ -38,28 +31,22 @@ public final class PrecompiledTransactionExecutor {
             boolean decrementBlockEnergyLimit,
             boolean allowNonceIncrement,
             boolean isLocalCall,
-            boolean fork040enabled,
             long initialBlockEnergyLimit) {
 
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
         long blockRemainingEnergy = initialBlockEnergyLimit;
 
-        KernelInterface kernel =
-                newKernelInterface(
+        IExternalStateForPrecompiled externalState =
+                new ExternalStateForPrecompiled(
                         repository.startTracking(),
-                        blockDifficulty,
                         blockNumber,
-                        blockTimestamp,
-                        blockNrgLimit,
-                        blockCoinbase,
-                        allowNonceIncrement,
                         isLocalCall,
-                        fork040enabled);
+                        allowNonceIncrement);
 
         for (AionTransaction transaction : transactions) {
 
             // Execute the contract.
-            PrecompiledTransactionResult result = ContractExecutor.execute(kernel, transaction);
+            PrecompiledTransactionResult result = ContractExecutor.execute(externalState, transaction);
 
             // Check the block energy limit & reject if necessary.
             long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
@@ -75,7 +62,7 @@ public final class PrecompiledTransactionExecutor {
 
             // If the transaction was not rejected, then commit the state changes.
             if (!result.getResultCode().isRejected()) {
-                kernel.commit();
+                externalState.commit();
             }
 
             // For non-rejected non-local transactions, make some final repository updates.
@@ -192,36 +179,5 @@ public final class PrecompiledTransactionExecutor {
 
     private static long computeEnergyUsed(long limit, PrecompiledTransactionResult result) {
         return limit - result.getEnergyRemaining();
-    }
-
-    private static KernelInterface newKernelInterface(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
-            byte[] blockDifficulty,
-            long blockNumber,
-            long blockTimestamp,
-            long blockNrgLimit,
-            AionAddress blockCoinbase,
-            boolean allowNonceIncrement,
-            boolean isLocalCall,
-            boolean fork040enable) {
-        return new KernelInterfaceForFastVM(
-                repository,
-                allowNonceIncrement,
-                isLocalCall,
-                fork040enable,
-                getDifficultyAsDataWord(blockDifficulty),
-                blockNumber,
-                blockTimestamp,
-                blockNrgLimit,
-                blockCoinbase);
-    }
-
-    // TODO -- this has been marked as a temporary solution for a long time, someone should
-    // investigate
-    private static DataWord getDifficultyAsDataWord(byte[] diff) {
-        if (diff.length > 16) {
-            diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
-        }
-        return new DataWordImpl(diff);
     }
 }

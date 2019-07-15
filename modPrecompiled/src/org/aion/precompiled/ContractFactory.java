@@ -1,13 +1,12 @@
 package org.aion.precompiled;
 
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.types.KernelInterface;
-import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
@@ -20,11 +19,11 @@ public class ContractFactory {
      * Returns null if address does not map to any known contracts.
      *
      * @param context Passed in execution context.
-     * @param track The repo.
+     * @param externalState The current state of the world.
      * @return the specified pre-compiled address.
      */
     public PrecompiledContract getPrecompiledContract(
-            PrecompiledTransactionContext context, KernelInterface track) {
+            PrecompiledTransactionContext context, IExternalStateForPrecompiled externalState) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
@@ -39,7 +38,7 @@ public class ContractFactory {
             TokenBridgeContract contract =
                     new TokenBridgeContract(
                             context,
-                            ((KernelInterfaceForFastVM) track).getRepositoryCache(),
+                            externalState,
                             ContractInfo.TOKEN_BRIDGE.ownerAddress,
                             ContractInfo.TOKEN_BRIDGE.contractAddress);
 
@@ -59,7 +58,7 @@ public class ContractFactory {
             return fork_032
                     ? null
                     : new TotalCurrencyContract(
-                            ((KernelInterfaceForFastVM) track).getRepositoryCache(),
+                            externalState,
                             context.senderAddress,
                             ContractInfo.TOTAL_CURRENCY.ownerAddress);
         } else {

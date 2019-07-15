@@ -22,6 +22,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.encoding.AbiEncoder;
 import org.aion.precompiled.encoding.AddressFVM;
 import org.aion.precompiled.encoding.ListFVM;
@@ -95,7 +96,7 @@ public class TokenBridgeContractTest {
         this.repository = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
         // override defaults
         this.contract =
-                new TokenBridgeContract(dummyContext(), this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                new TokenBridgeContract(dummyContext(), ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
     }
@@ -124,7 +125,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -158,7 +159,7 @@ public class TokenBridgeContractTest {
                                 AddressUtils.ZERO_ADDRESS,
                                 CONTRACT_ADDR,
                                 ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -183,7 +184,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -214,7 +215,7 @@ public class TokenBridgeContractTest {
                                 AddressUtils.ZERO_ADDRESS,
                                 CONTRACT_ADDR,
                                 ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -238,7 +239,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -275,7 +276,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -428,7 +429,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -465,7 +466,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -617,7 +618,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -654,7 +655,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -723,7 +724,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         incorrectRelaySubmitBundleContext,
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -750,7 +751,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -786,7 +787,7 @@ public class TokenBridgeContractTest {
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.valueOf(1024));
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -871,7 +872,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -908,7 +909,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -996,7 +997,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1030,7 +1031,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1137,7 +1138,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1165,7 +1166,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1272,7 +1273,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1309,7 +1310,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1415,7 +1416,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1452,7 +1453,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1560,7 +1561,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1598,7 +1599,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -1992,7 +1993,7 @@ public class TokenBridgeContractTest {
                 context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -2029,7 +2030,7 @@ public class TokenBridgeContractTest {
                         ByteUtil.EMPTY_BYTE_ARRAY);
         this.contract =
                 new TokenBridgeContract(
-                        submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+                        submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
@@ -2108,7 +2109,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2153,7 +2154,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2213,7 +2214,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2260,7 +2261,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2303,7 +2304,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2336,7 +2337,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2390,7 +2391,7 @@ public class TokenBridgeContractTest {
                                 AddressUtils.ZERO_ADDRESS,
                                 CONTRACT_ADDR,
                                 ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2423,7 +2424,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2488,7 +2489,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2542,7 +2543,7 @@ public class TokenBridgeContractTest {
                                 AddressUtils.ZERO_ADDRESS,
                                 CONTRACT_ADDR,
                                 ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2566,7 +2567,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2598,7 +2599,7 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         context(address1, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();
@@ -2623,7 +2624,7 @@ public class TokenBridgeContractTest {
                                 AddressUtils.ZERO_ADDRESS,
                                 CONTRACT_ADDR,
                                 ByteUtil.EMPTY_BYTE_ARRAY),
-                        this.repository,
+                        ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
         this.controller = this.contract.getController();

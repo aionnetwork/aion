@@ -253,18 +253,14 @@ public final class BulkExecutor {
                                 repository,
                                 transactions,
                                 currentIndex,
-                                blockDifficulty,
                                 blockNumber,
-                                blockTimestamp,
-                                blockNrgLimit,
                                 blockCoinbase,
                                 postExecutionWork,
                                 logger,
                                 checkBlockEnergyLimit,
                                 incrementSenderNonce,
                                 isLocalCall,
-                                blockRemainingEnergy,
-                                fork040enabled);
+                                blockRemainingEnergy);
             } else {
                 throw new IllegalStateException(
                         "Transaction is not destined for any known VM: "
@@ -397,18 +393,14 @@ public final class BulkExecutor {
             RepositoryCache<AccountState, IBlockStoreBase> repository,
             List<AionTransaction> transactions,
             int currentIndex,
-            byte[] blockDifficulty,
             long blockNumber,
-            long blockTimestamp,
-            long blockNrgLimit,
             AionAddress blockCoinbase,
             PostExecutionWork postExecutionWork,
             Logger logger,
             boolean checkBlockEnergyLimit,
             boolean incrementSenderNonce,
             boolean isLocalCall,
-            long blockRemainingEnergy,
-            boolean fork040enabled) {
+            long blockRemainingEnergy) {
 
         // Grab the next batch of precompiled contract call transactions to execute.
         List<AionTransaction> precompiledTransactionsToExecute =
@@ -420,10 +412,7 @@ public final class BulkExecutor {
         // Execute the precompiled contract call transactions.
         return PrecompiledTransactionExecutor.executeTransactions(
                 repository,
-                blockDifficulty,
                 blockNumber,
-                blockTimestamp,
-                blockNrgLimit,
                 blockCoinbase,
                 precompiledTransactions,
                 postExecutionWork,
@@ -431,7 +420,6 @@ public final class BulkExecutor {
                 checkBlockEnergyLimit,
                 incrementSenderNonce,
                 isLocalCall,
-                fork040enabled,
                 blockRemainingEnergy);
     }
 

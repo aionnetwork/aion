@@ -19,6 +19,7 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.ExternalStateForTests;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -67,7 +68,7 @@ public class TotalCurrencyContractTest {
         repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
         ownerKey = ECKeyFac.inst().create();
-        tcc = new TotalCurrencyContract(repo, ADDR, new AionAddress(ownerKey.getAddress()));
+        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerKey.getAddress()));
     }
 
     @After
@@ -152,7 +153,7 @@ public class TotalCurrencyContractTest {
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getEnergyRemaining());
 
-        tcc = new TotalCurrencyContract(repo, ADDR, new AionAddress(ownerKey.getAddress()));
+        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerKey.getAddress()));
         input = new byte[] {(byte) 0x0};
         res = tcc.execute(input, COST);
 
@@ -219,7 +220,7 @@ public class TotalCurrencyContractTest {
         System.out.println("Running TestUpdateTotalNotOwner.");
         TotalCurrencyContract contract =
                 new TotalCurrencyContract(
-                        repo,
+                        ExternalStateForTests.usingRepository(repo),
                         ADDR,
                         new AionAddress(ECKeyFac.inst().create().getAddress())); // diff owner.
 

@@ -4,12 +4,10 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
@@ -66,13 +64,13 @@ public class BridgeStorageConnector {
         }
     }
 
-    private final RepositoryCache<AccountState, IBlockStoreBase> track;
+    private final IExternalStateForPrecompiled externalState;
     private final AionAddress contractAddress;
 
     public BridgeStorageConnector(
-            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase> track,
+            @Nonnull final IExternalStateForPrecompiled externalState,
             @Nonnull final AionAddress contractAddress) {
-        this.track = track;
+        this.externalState = externalState;
         this.contractAddress = contractAddress;
     }
 
@@ -212,7 +210,7 @@ public class BridgeStorageConnector {
     // DWORD helpers
 
     private byte[] getWORD(@Nonnull final DataWordImpl key) {
-        ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
+        ByteArrayWrapper word = this.externalState.getStorageValue(contractAddress, key.toWrapper());
         // C1
         if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD)) return null;
         return alignBytes(word.getData());
@@ -220,9 +218,9 @@ public class BridgeStorageConnector {
 
     private void setWORD(@Nonnull final DataWordImpl key, @Nonnull final DataWordImpl word) {
         if (word.isZero()) {
-            this.track.removeStorageRow(contractAddress, key.toWrapper());
+            this.externalState.removeStorage(contractAddress, key.toWrapper());
         } else {
-            this.track.addStorageRow(
+            this.externalState.addStorageValue(
                     contractAddress,
                     key.toWrapper(),
                     new ByteArrayWrapper(word.getNoLeadZeroesData()));
@@ -233,14 +231,14 @@ public class BridgeStorageConnector {
         assert dword.length > 16;
         DoubleDataWord ddw = new DoubleDataWord(dword);
         if (ddw.isZero()) {
-            this.track.removeStorageRow(contractAddress, key.toWrapper());
+            this.externalState.removeStorage(contractAddress, key.toWrapper());
         } else {
-            this.track.addStorageRow(contractAddress, key.toWrapper(), ddw.toWrapper());
+            this.externalState.addStorageValue(contractAddress, key.toWrapper(), ddw.toWrapper());
         }
     }
 
     private byte[] getDWORD(@Nonnull final DataWordImpl key) {
-        ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
+        ByteArrayWrapper word = this.externalState.getStorageValue(contractAddress, key.toWrapper());
         if (word == null) return null;
 
         if (word.isZero()) return null;

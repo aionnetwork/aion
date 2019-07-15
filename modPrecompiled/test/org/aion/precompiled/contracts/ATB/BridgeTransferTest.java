@@ -18,6 +18,7 @@ import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
@@ -90,7 +91,7 @@ public class BridgeTransferTest {
 
     private void resetContext() {
         this.context = dummyContext();
-        this.contract = new TokenBridgeContract(context, repo, OWNER_ADDR, CONTRACT_ADDR);
+        this.contract = new TokenBridgeContract(context, ExternalStateForTests.usingRepository(repo), OWNER_ADDR, CONTRACT_ADDR);
         this.connector = this.contract.getConnector();
         this.controller = this.contract.getController();
         this.controller.initialize();

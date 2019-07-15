@@ -14,7 +14,7 @@ import org.aion.util.types.ByteArrayWrapper;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;
-    private boolean allowNonceIncrement, isLocalCall;
+    public boolean allowNonceIncrement, isLocalCall;
     private boolean fork040Enable;
 
     @VisibleForTesting

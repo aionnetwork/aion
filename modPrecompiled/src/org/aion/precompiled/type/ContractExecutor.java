@@ -3,7 +3,6 @@ package org.aion.precompiled.type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.types.KernelInterface;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledResultCode;
@@ -16,22 +15,22 @@ public final class ContractExecutor {
      * Returns the result of executing the specified transaction, which is a transaction that calls
      * into a precompiled contract.
      *
-     * @param kernel The kernel.
+     * @param externalState The current state of the world.
      * @param transaction The transaction.
      * @return the execution result.
      */
     public static PrecompiledTransactionResult execute(
-            KernelInterface kernel, AionTransaction transaction) {
-        if (kernel == null) {
-            throw new NullPointerException("Cannot run using a null kernel!");
+            IExternalStateForPrecompiled externalState, AionTransaction transaction) {
+        if (externalState == null) {
+            throw new NullPointerException("Cannot run using a null externalState!");
         }
         if (transaction == null) {
             throw new NullPointerException("Cannot run null transaction!");
         }
 
-        PrecompiledTransactionContext context = constructTransactionContext(transaction, kernel);
-        KernelInterface childKernel = kernel.makeChildKernelInterface();
-        KernelInterface grandChildKernel = childKernel.makeChildKernelInterface();
+        PrecompiledTransactionContext context = constructTransactionContext(transaction, externalState);
+        IExternalStateForPrecompiled childExternalState = externalState.newChildExternalState();
+        IExternalStateForPrecompiled grandChildExternalState = childExternalState.newChildExternalState();
 
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
@@ -39,30 +38,30 @@ public final class ContractExecutor {
                         transaction.getEnergyLimit() - transaction.getTransactionCost());
 
         // Perform the rejection checks and return immediately if transaction is rejected.
-        performRejectionChecks(childKernel, transaction, result);
+        performRejectionChecks(childExternalState, transaction, result);
         if (!result.getResultCode().isSuccess()) {
             return result;
         }
 
-        incrementNonceAndDeductEnergyCost(childKernel, transaction);
+        incrementNonceAndDeductEnergyCost(childExternalState, transaction);
 
         // Ensure that our caller did not erroneously pass us a CREATE transaction.
         if (transaction.isContractCreationTransaction()) {
             throw new IllegalStateException("A precompiled contract call cannot be a CREATE!");
         }
 
-        result = runPrecompiledContractCall(grandChildKernel, context, result, transaction);
+        result = runPrecompiledContractCall(grandChildExternalState, context, result, transaction);
 
         // If the execution was successful then we can safely commit any changes in the grandChild
         // up to the child kernel.
         if (result.getResultCode().isSuccess()) {
-            grandChildKernel.commit();
+            grandChildExternalState.commit();
         }
 
         // If the execution was not rejected then we can safely commit any changes in the child
         // kernel up to its parent.
         if (!result.getResultCode().isRejected()) {
-            childKernel.commit();
+            childExternalState.commit();
         }
 
         // Propagate any side-effects.
@@ -81,21 +80,21 @@ public final class ContractExecutor {
      * of the caller to evaluate the returned result and determine how to proceed with the state
      * changes.
      *
-     * @param kernel The kernel.
+     * @param externalState The current state of the world.
      * @param context The transaction context.
      * @param result The current state of the transaction result.
      * @param transaction The transaction.
      * @return the result of executing the transaction.
      */
     public static PrecompiledTransactionResult runPrecompiledContractCall(
-            KernelInterface kernel,
+            IExternalStateForPrecompiled externalState,
             PrecompiledTransactionContext context,
             PrecompiledTransactionResult result,
             AionTransaction transaction) {
 
         ContractFactory precompiledFactory = new ContractFactory();
         PrecompiledContract precompiledContract =
-                precompiledFactory.getPrecompiledContract(context, kernel);
+                precompiledFactory.getPrecompiledContract(context, externalState);
 
         // Ensure we actually have a precompiled contract as our destination.
         if (!ContractInfo.isPrecompiledContract(transaction.getDestinationAddress())) {
@@ -112,8 +111,8 @@ public final class ContractExecutor {
 
         // Transfer any specified value from the sender to the recipient.
         BigInteger transferValue = new BigInteger(1, transaction.getValue());
-        kernel.adjustBalance(transaction.getSenderAddress(), transferValue.negate());
-        kernel.adjustBalance(transaction.getDestinationAddress(), transferValue);
+        externalState.addBalance(transaction.getSenderAddress(), transferValue.negate());
+        externalState.addBalance(transaction.getDestinationAddress(), transferValue);
 
         return (newResult == null) ? result : newResult;
     }
@@ -123,26 +122,26 @@ public final class ContractExecutor {
      *
      * <p>Otherwise, returns a REJECTED result with the appropriate error cause specified.
      *
-     * @param kernel The kernel.
+     * @param externalState The state of the world.
      * @param transaction The transaction to verify.
      * @param result The current state of the transaction result.
      * @return the rejection-check result.
      */
     public static void performRejectionChecks(
-            KernelInterface kernel,
+            IExternalStateForPrecompiled externalState,
             AionTransaction transaction,
             PrecompiledTransactionResult result) {
         BigInteger energyPrice = BigInteger.valueOf(transaction.getEnergyPrice());
         long energyLimit = transaction.getEnergyLimit();
 
         if (transaction.isContractCreationTransaction()) {
-            if (!kernel.isValidEnergyLimitForCreate(energyLimit)) {
+            if (!externalState.isValidEnergyLimitForCreate(energyLimit)) {
                 result.setResultCode(PrecompiledResultCode.INVALID_NRG_LIMIT);
                 result.setEnergyRemaining(energyLimit);
                 return;
             }
         } else {
-            if (!kernel.isValidEnergyLimitForNonCreate(energyLimit)) {
+            if (!externalState.isValidEnergyLimitForNonCreate(energyLimit)) {
                 result.setResultCode(PrecompiledResultCode.INVALID_NRG_LIMIT);
                 result.setEnergyRemaining(energyLimit);
                 return;
@@ -150,7 +149,7 @@ public final class ContractExecutor {
         }
 
         BigInteger txNonce = new BigInteger(1, transaction.getNonce());
-        if (!kernel.accountNonceEquals(transaction.getSenderAddress(), txNonce)) {
+        if (!externalState.accountNonceEquals(transaction.getSenderAddress(), txNonce)) {
             result.setResultCode(PrecompiledResultCode.INVALID_NONCE);
             result.setEnergyRemaining(0);
             return;
@@ -159,7 +158,7 @@ public final class ContractExecutor {
         BigInteger transferValue = new BigInteger(1, transaction.getValue());
         BigInteger transactionCost =
                 energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transferValue);
-        if (!kernel.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {
+        if (!externalState.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {
             result.setResultCode(PrecompiledResultCode.INSUFFICIENT_BALANCE);
             result.setEnergyRemaining(0);
         }
@@ -172,26 +171,26 @@ public final class ContractExecutor {
      *
      * <p>These state changes are made directly in the given kernel.
      *
-     * @param kernel The kernel.
+     * @param externalState The state of the world.
      * @param transaction The transaction.
      */
     public static void incrementNonceAndDeductEnergyCost(
-            KernelInterface kernel, AionTransaction transaction) {
-        KernelInterface childKernel = kernel.makeChildKernelInterface();
-        childKernel.incrementNonce(transaction.getSenderAddress());
+            IExternalStateForPrecompiled externalState, AionTransaction transaction) {
+        IExternalStateForPrecompiled childExternalState = externalState.newChildExternalState();
+        childExternalState.incrementNonce(transaction.getSenderAddress());
         BigInteger energyLimit = BigInteger.valueOf(transaction.getEnergyLimit());
         BigInteger energyPrice = BigInteger.valueOf(transaction.getEnergyPrice());
         BigInteger energyCost = energyLimit.multiply(energyPrice);
-        childKernel.deductEnergyCost(transaction.getSenderAddress(), energyCost);
-        childKernel.commit();
+        childExternalState.deductEnergyCost(transaction.getSenderAddress(), energyCost);
+        childExternalState.commit();
     }
 
     private static PrecompiledTransactionContext constructTransactionContext(
-            AionTransaction transaction, KernelInterface kernel) {
+            AionTransaction transaction, IExternalStateForPrecompiled externalState) {
         AionAddress originAddress = transaction.getSenderAddress();
         AionAddress callerAddress = transaction.getSenderAddress();
         byte[] transactionHash = transaction.getTransactionHash();
-        long blockNumber = kernel.getBlockNumber();
+        long blockNumber = externalState.getBlockNumber();
         long energyRemaining = transaction.getEnergyLimit() - transaction.getTransactionCost();
         AionAddress destinationAddress =
                 transaction.isContractCreationTransaction()

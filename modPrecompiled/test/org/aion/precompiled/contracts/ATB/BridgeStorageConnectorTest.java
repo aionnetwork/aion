@@ -2,20 +2,12 @@ package org.aion.precompiled.contracts.ATB;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.util.Properties;
 import org.aion.crypto.HashUtil;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.PruneConfig;
-import org.aion.mcf.db.RepositoryConfig;
+import org.aion.precompiled.ExternalStateForTests;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,34 +17,8 @@ public class BridgeStorageConnectorTest {
 
     @Before
     public void beforeEach() {
-        RepositoryConfig repoConfig =
-                new RepositoryConfig() {
-                    @Override
-                    public String getDbPath() {
-                        return "";
-                    }
-
-                    @Override
-                    public PruneConfig getPruneConfig() {
-                        return new CfgPrune(false);
-                    }
-
-                    @Override
-                    public ContractDetails contractDetailsImpl() {
-                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                    }
-
-                    @Override
-                    public Properties getDatabaseConfig(String db_name) {
-                        Properties props = new Properties();
-                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                        return props;
-                    }
-                };
-        AionRepositoryCache repo =
-                new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
-        this.connector = new BridgeStorageConnector(repo, contractAddress);
+        IExternalStateForPrecompiled worldState = ExternalStateForTests.usingDefaultRepository();
+        this.connector = new BridgeStorageConnector(worldState, contractAddress);
     }
 
     // should be null

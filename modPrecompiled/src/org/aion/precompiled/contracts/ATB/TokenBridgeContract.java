@@ -11,11 +11,9 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
@@ -29,7 +27,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
     // queries
 
     private final PrecompiledTransactionContext context;
-    private final RepositoryCache<AccountState, IBlockStoreBase> track;
+    private final IExternalStateForPrecompiled externalState;
 
     private final BridgeStorageConnector connector;
     private final BridgeController controller;
@@ -40,12 +38,12 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
 
     public TokenBridgeContract(
             @Nonnull final PrecompiledTransactionContext context,
-            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase> track,
+            @Nonnull final IExternalStateForPrecompiled externalState,
             @Nonnull final AionAddress ownerAddress,
             @Nonnull final AionAddress contractAddress) {
-        this.track = track;
+        this.externalState = externalState;
         this.context = context;
-        this.connector = new BridgeStorageConnector(this.track, contractAddress);
+        this.connector = new BridgeStorageConnector(this.externalState, contractAddress);
         this.controller =
                 new BridgeController(
                         this.connector, this.context.getLogs(), contractAddress, ownerAddress);
@@ -249,7 +247,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
      *
      * @implNote this method will check that the recipient account has no code. This means that we
      *     <b>cannot</b> do a transfer to any contract account.
-     * @implNote assumes that the {@code fromValue} derived from the track will never be null.
+     * @implNote assumes that the {@code fromValue} derived from the worldState will never be null.
      * @param dest recipient address
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
@@ -257,13 +255,13 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
     public PrecompiledTransactionResult transfer(
             @Nonnull final byte[] dest, @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
-        if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
+        if (this.externalState.getBalance(this.contractAddress).compareTo(value) < 0)
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
         // assemble an internal transaction
         AionAddress sender = this.contractAddress;
         AionAddress destination = new AionAddress(dest);
-        BigInteger nonce = this.track.getNonce(sender);
+        BigInteger nonce = this.externalState.getNonce(sender);
         byte[] dataToSend = new byte[0];
         InternalTransaction tx =
                 InternalTransaction.contractCallTransaction(
@@ -280,9 +278,9 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
         this.context.addInternalTransaction(tx);
 
         // increase the nonce and do the transfer without executing code
-        this.track.incrementNonce(sender);
-        this.track.addBalance(sender, value.negate());
-        this.track.addBalance(destination, value);
+        this.externalState.incrementNonce(sender);
+        this.externalState.addBalance(sender, value.negate());
+        this.externalState.addBalance(destination, value);
 
         // construct result
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, 0);
