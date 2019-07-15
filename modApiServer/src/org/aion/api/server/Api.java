@@ -26,7 +26,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.slf4j.Logger;
 
-public abstract class Api<B extends AbstractBlock<?>> {
+public abstract class Api<B extends AbstractBlock> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 

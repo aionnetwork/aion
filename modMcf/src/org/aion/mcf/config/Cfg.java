@@ -575,7 +575,7 @@ public abstract class Cfg {
 
     public abstract void setGenesis();
 
-    public abstract AbstractBlock<?> getGenesis();
+    public abstract AbstractBlock getGenesis();
 
     public abstract void setForkProperties(String network, File forkFile);
 }

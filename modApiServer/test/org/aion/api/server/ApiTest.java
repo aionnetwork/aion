@@ -41,12 +41,12 @@ public class ApiTest {
         }
 
         @Override
-        public AbstractBlock<?> getBlock(long _bn) {
+        public AbstractBlock getBlock(long _bn) {
             return null;
         }
 
         @Override
-        public AbstractBlock<?> getBlockByHash(byte[] hash) {
+        public AbstractBlock getBlockByHash(byte[] hash) {
             return null;
         }
 

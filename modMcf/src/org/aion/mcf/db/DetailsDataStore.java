@@ -12,7 +12,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 /** Detail data storage , */
-public class DetailsDataStore<BLK extends AbstractBlock<BH>, BH extends BlockHeader> {
+public class DetailsDataStore<BLK extends AbstractBlock, BH extends BlockHeader> {
 
     private JournalPruneDataSource storageDSPrune;
     private RepositoryConfig repoConfig;

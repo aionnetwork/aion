@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 
 /** Abstract Repository class. */
 public abstract class AbstractRepository<
-                BLK extends AbstractBlock<BH>,
+                BLK extends AbstractBlock,
                 BH extends BlockHeader,
                 BSB extends IBlockStoreBase<?, ?>>
         implements Repository<AccountState, BSB> {

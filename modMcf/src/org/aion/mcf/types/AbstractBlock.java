@@ -6,13 +6,10 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 
 /** Abstract Block class. */
-public abstract class AbstractBlock<BH extends BlockHeader> implements Block {
-
-    protected BH header;
+public abstract class AbstractBlock implements Block {
 
     protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
