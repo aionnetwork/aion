@@ -418,23 +418,6 @@ public class A0BlockHeader extends AbstractBlockHeader {
         this.nonce = nonce;
     }
 
-    public long getEnergyConsumed() {
-        return this.energyConsumed;
-    }
-
-    public long getEnergyLimit() {
-        return this.energyLimit;
-    }
-
-    /**
-     * Set the energyConsumed field in header, this is used during block creation
-     *
-     * @param energyConsumed total energyConsumed during execution of transactions
-     */
-    public void setEnergyConsumed(long energyConsumed) {
-        this.energyConsumed = energyConsumed;
-    }
-
     /**
      * Return unencoded bytes of the header
      *

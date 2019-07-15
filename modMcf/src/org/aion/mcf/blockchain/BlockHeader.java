@@ -53,4 +53,8 @@ public interface BlockHeader {
     BigInteger getDifficultyBI();
 
     void setDifficulty(byte[] _diff);
+
+    long getEnergyConsumed();
+
+    long getEnergyLimit();
 }

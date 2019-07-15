@@ -187,4 +187,21 @@ public abstract class AbstractBlockHeader implements BlockHeader {
     public void setVersion(byte version) {
         this.version = version;
     }
+
+    public long getEnergyConsumed() {
+        return this.energyConsumed;
+    }
+
+    public long getEnergyLimit() {
+        return this.energyLimit;
+    }
+
+    /**
+     * Set the energyConsumed field in header, this is used during block creation
+     *
+     * @param energyConsumed total energyConsumed during execution of transactions
+     */
+    public void setEnergyConsumed(long energyConsumed) {
+        this.energyConsumed = energyConsumed;
+    }
 }
