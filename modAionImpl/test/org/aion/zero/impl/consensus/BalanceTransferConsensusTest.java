@@ -12,6 +12,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -99,7 +100,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
 
         // Process the transaction.
-        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
                 this.blockchain.createNewBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -147,7 +148,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
 
         // Process the transaction.
-        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
                 this.blockchain.createNewBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -335,7 +336,7 @@ public class BalanceTransferConsensusTest {
 
     private Pair<ImportResult, AionBlockSummary> processTransactions(
             List<AionTransaction> transactions, int numNonRejectedTransactions) {
-        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block = this.blockchain.createNewBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);

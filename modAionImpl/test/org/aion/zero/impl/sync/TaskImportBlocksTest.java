@@ -41,6 +41,7 @@ import junitparams.Parameters;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
@@ -181,7 +182,7 @@ public class TaskImportBlocksTest {
         // populate chain at random
         generateRandomChain(chain, 3, 1, accounts, 10);
 
-        AionBlock current = chain.getBestBlock();
+        Block current = chain.getBestBlock();
         while (current.getNumber() > 0) {
             // will pass both checks
             assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
@@ -214,10 +215,10 @@ public class TaskImportBlocksTest {
         generateRandomChain(chain, 3, 1, accounts, 10);
 
         // populate initial input lists
-        List<AionBlock> batch = new ArrayList<>();
+        List<Block> batch = new ArrayList<>();
         Map<ByteArrayWrapper, Object> imported = new HashMap<>();
 
-        AionBlock current = chain.getBestBlock();
+        Block current = chain.getBestBlock();
         while (current.getNumber() > 0) {
             batch.add(current);
             imported.put(ByteArrayWrapper.wrap(current.getHash()), true);
@@ -298,13 +299,13 @@ public class TaskImportBlocksTest {
         generateRandomChain(chain, height, 1, accounts, 10);
 
         // populate initial input lists
-        List<AionBlock> allBlocks = new ArrayList<>();
+        List<Block> allBlocks = new ArrayList<>();
         Map<ByteArrayWrapper, Object> allHashes = new HashMap<>();
-        List<AionBlock> unrestrictedBlocks = new ArrayList<>();
+        List<Block> unrestrictedBlocks = new ArrayList<>();
         Map<ByteArrayWrapper, Object> unrestrictedHashes = new HashMap<>();
 
         for (long i = 0; i <= height; i++) {
-            AionBlock current = chain.getBlockByNumber(i);
+            Block current = chain.getBlockByNumber(i);
             allBlocks.add(current);
             allHashes.put(ByteArrayWrapper.wrap(current.getHash()), true);
             if (i >= height - current_count + 1) {

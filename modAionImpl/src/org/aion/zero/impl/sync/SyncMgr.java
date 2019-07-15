@@ -24,6 +24,8 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.StatsType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
@@ -81,7 +83,7 @@ public final class SyncMgr {
     private Thread syncGs = null;
     private Thread syncSs = null;
 
-    private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private BlockHeaderValidator blockHeaderValidator;
     private volatile long timeUpdated = 0;
     private AtomicBoolean queueFull = new AtomicBoolean(false);
 
@@ -263,7 +265,7 @@ public final class SyncMgr {
      * @param _headers List validate headers batch and add batch to imported headers
      */
     public void validateAndAddHeaders(
-            int _nodeIdHashcode, String _displayId, List<A0BlockHeader> _headers) {
+            int _nodeIdHashcode, String _displayId, List<BlockHeader> _headers) {
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
@@ -277,9 +279,9 @@ public final class SyncMgr {
         }
 
         // filter imported block headers
-        List<A0BlockHeader> filtered = new ArrayList<>();
-        A0BlockHeader prev = null;
-        for (A0BlockHeader current : _headers) {
+        List<BlockHeader> filtered = new ArrayList<>();
+        BlockHeader prev = null;
+        for (BlockHeader current : _headers) {
 
             // ignore this batch if any invalidated header
             if (!this.blockHeaderValidator.validate(current, log)) {
@@ -336,9 +338,9 @@ public final class SyncMgr {
         }
 
         // assemble batch
-        List<A0BlockHeader> headers = hw.getHeaders();
-        List<AionBlock> blocks = new ArrayList<>(_bodies.size());
-        Iterator<A0BlockHeader> headerIt = headers.iterator();
+        List<BlockHeader> headers = hw.getHeaders();
+        List<Block> blocks = new ArrayList<>(_bodies.size());
+        Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());

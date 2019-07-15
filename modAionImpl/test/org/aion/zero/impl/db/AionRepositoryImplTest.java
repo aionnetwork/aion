@@ -181,7 +181,7 @@ public class AionRepositoryImplTest {
     @Test
     public void testRepoTrackUpdateStorageRow() {
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repoTrack =
+        final RepositoryCache<AccountState, IBlockStoreBase> repoTrack =
                 repository.startTracking();
         final AionAddress defaultAccount = new AionAddress(ByteUtil.hexStringToBytes(value1));
         final byte[] key = HashUtil.blake128("hello".getBytes());

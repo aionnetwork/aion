@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetails;
@@ -45,15 +46,13 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl
-        extends AbstractRepository<AionBlock, A0BlockHeader, AionBlockStore> {
+        extends AbstractRepository<AionBlockStore> {
 
     private TransactionStore<AionTxReceipt, AionTxInfo> transactionStore;
 
@@ -585,7 +584,7 @@ public class AionRepositoryImpl
         return this.pruneBlockCount;
     }
 
-    public void commitBlock(A0BlockHeader blockHeader) {
+    public void commitBlock(BlockHeader blockHeader) {
         rwLock.writeLock().lock();
 
         try {
@@ -608,14 +607,14 @@ public class AionRepositoryImpl
         }
     }
 
-    private void pruneBlocks(A0BlockHeader curBlock) {
+    private void pruneBlocks(BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) {
             // pruning only on increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
             if (pruneBlockNumber >= 0) {
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
-                    A0BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
+                    BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
                     stateDSPrune.prune(header.getHash(), header.getNumber());
                     detailsDS.getStorageDSPrune().prune(header.getHash(), header.getNumber());
                 }

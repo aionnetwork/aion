@@ -8,6 +8,7 @@ import org.aion.api.server.nrgprice.NrgPriceAdvisor;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ import org.slf4j.Logger;
  *
  * @author ali sharif
  */
-public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock> {
+public class NrgBlockPriceAveraging extends NrgPriceAdvisor {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private ArrayBlockingQueue<Long> blkPriceQ;
@@ -105,7 +106,7 @@ public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock> {
     // returns null if block is empty, invalid input, block filled only with miner's own
     // transactions
     @SuppressWarnings("Duplicates")
-    private Long getBlkPrice(AionBlock blk) {
+    private Long getBlkPrice(Block blk) {
         if (blk == null) return null;
 
         List<AionTransaction> txns = blk.getTransactionsList();
@@ -135,7 +136,7 @@ public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock> {
      */
     @Override
     @SuppressWarnings("Duplicates")
-    public void processBlock(AionBlock blk) {
+    public void processBlock(Block blk) {
         if (blk == null) return;
 
         Long blkPrice = getBlkPrice(blk);

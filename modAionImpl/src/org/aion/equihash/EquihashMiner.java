@@ -25,7 +25,6 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.IAionBlock;
 
 /** @author Ross Kitsis (ross@nuco.io) */
 public class EquihashMiner extends AbstractMineRunner<AionBlock> {

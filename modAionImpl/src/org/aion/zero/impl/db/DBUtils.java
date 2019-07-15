@@ -194,7 +194,7 @@ public class DBUtils {
 
         int paramIndex = 1;
         // print state for parent block
-        AionBlock parent = store.getChainBlockByNumber(blockNumber - 1);
+        Block parent = store.getChainBlockByNumber(blockNumber - 1);
         if (parent == null) {
             System.out.println("Illegal arguments. Parent block is null.");
         } else {
@@ -362,7 +362,7 @@ public class DBUtils {
             targetBlock = 0;
         }
 
-        AionBlock block;
+        Block block;
         byte[] stateRoot;
 
         while (targetBlock <= topBlock) {
@@ -421,7 +421,7 @@ public class DBUtils {
 
         AionBlockStore store = repository.getBlockStore();
 
-        AionBlock block;
+        Block block;
 
         if (blockNumber == -1L) {
             block = store.getBestBlock();
@@ -487,7 +487,7 @@ public class DBUtils {
         AionHubUtils.buildGenesis(genesis, repo);
 
         // recover all blocks
-        AionBlock block = store.getBestBlock();
+        Block block = store.getBestBlock();
         System.out.println(
                 "Rebuilding the main chain "
                         + block.getNumber()
@@ -550,8 +550,8 @@ public class DBUtils {
         AionBlockStore store = repo.getBlockStore();
 
         // determine the parameters of the rebuild
-        AionBlock block = store.getBestBlock();
-        AionBlock startBlock;
+        Block block = store.getBestBlock();
+        Block startBlock;
         long currentBlock;
         if (block != null && startHeight <= block.getNumber()) {
             System.out.println(
@@ -740,7 +740,7 @@ public class DBUtils {
 
             for (AionTxInfo info : txInfoList) {
 
-                AionBlock block = blockchain.getBlockStore().getBlockByHash(info.getBlockHash());
+                Block block = blockchain.getBlockStore().getBlockByHash(info.getBlockHash());
                 if (block == null) {
                     System.out.println(
                             "Can not find the block data with given block hash of the transaction info.");
@@ -788,14 +788,14 @@ public class DBUtils {
 
         try {
             LongLivedAvm.createAndStartLongLivedAvm();
-            List<AionBlock> blocks = blockchain.getBlockStore().getAllChainBlockByNumber(nbBlock);
+            List<Block> blocks = blockchain.getBlockStore().getAllChainBlockByNumber(nbBlock);
 
             if (blocks == null || blocks.isEmpty()) {
                 System.out.println("Can not find the block with given block height.");
                 return Status.FAILURE;
             }
 
-            for (AionBlock b : blocks) {
+            for (Block b : blocks) {
                 System.out.println(b);
             }
 
@@ -804,13 +804,13 @@ public class DBUtils {
             // TODO: the worldstate can not read the data after the stateroot has been setup, need
             // to fix the issue first then the tooling can print the states between the block.
 
-            AionBlock mainChainBlock = blockchain.getBlockStore().getChainBlockByNumber(nbBlock);
+            Block mainChainBlock = blockchain.getBlockStore().getChainBlockByNumber(nbBlock);
             if (mainChainBlock == null) {
                 System.out.println("Can not find the main chain block with given block height.");
                 return Status.FAILURE;
             }
 
-            AionBlock parentBlock = blockchain.getBlockByHash(mainChainBlock.getParentHash());
+            Block parentBlock = blockchain.getBlockByHash(mainChainBlock.getParentHash());
             if (parentBlock == null) {
                 System.out.println("Can not find the parent block with given block height.");
                 return Status.FAILURE;

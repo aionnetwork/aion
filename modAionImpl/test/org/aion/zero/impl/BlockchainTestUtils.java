@@ -11,6 +11,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -201,10 +202,10 @@ public class BlockchainTestUtils {
      * @param accounts existing accounts
      * @param txCount maximum number of transactions per block
      */
-    public static AionBlock generateNextBlock(
+    public static Block generateNextBlock(
             StandaloneBlockchain chain, List<ECKey> accounts, int txCount) {
 
-        AionBlock block, parent = chain.getBestBlock();
+        Block block, parent = chain.getBestBlock();
         AionRepositoryImpl repo = chain.getRepository();
         List<AionTransaction> txs = generateTransactions(txCount, accounts, repo);
 
@@ -221,11 +222,11 @@ public class BlockchainTestUtils {
      * @param txCount maximum number of transactions per block
      * @implNote returns {@code null} if the parent block is not part of the chain
      */
-    public static AionBlock generateNewBlock(
-            StandaloneBlockchain chain, AionBlock parent, List<ECKey> accounts, int txCount) {
+    public static Block generateNewBlock(
+            StandaloneBlockchain chain, Block parent, List<ECKey> accounts, int txCount) {
         if (!chain.getBlockStore().isBlockExist(parent.getHash())) return null;
 
-        AionBlock block;
+        Block block;
         AionRepositoryImpl repo = chain.getRepository();
         List<AionTransaction> txs;
 

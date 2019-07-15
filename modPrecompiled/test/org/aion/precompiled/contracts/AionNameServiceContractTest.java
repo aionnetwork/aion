@@ -112,7 +112,7 @@ public class AionNameServiceContractTest {
             AddressUtils.wrapAddress(
                     "0000000100000000000000000000000000000000000000000000000010000000");
 
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
+    private RepositoryCache<AccountState, IBlockStoreBase> repo;
     private ECKey defaultKey;
     private ECKey defaultKey2;
     private ECKey k;

@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
@@ -14,29 +15,23 @@ import org.aion.util.types.ByteArrayWrapper;
 /**
  * Blockchain interface.
  *
- * @param <BLK>
- * @param <BH>
- * @param <TX>
  * @param <TR>
  * @param <INFO>
  */
 @SuppressWarnings("rawtypes")
-public interface IBlockchain<
-                BLK extends Block,
-                BH extends AbstractBlockHeader,
-                TR extends AbstractTxReceipt,
+public interface IBlockchain<TR extends AbstractTxReceipt,
                 INFO extends AbstractTxInfo>
-        extends IPowChain<BLK, BH> {
+        extends IPowChain {
 
     long getSize();
 
-    AbstractBlockSummary add(BLK block);
+    AbstractBlockSummary add(Block block);
 
-    AbstractBlockSummary add(BLK block, boolean rebuild);
+    AbstractBlockSummary add(Block block, boolean rebuild);
 
-    ImportResult tryToConnect(BLK block);
+    ImportResult tryToConnect(Block block);
 
-    void storeBlock(BLK block, List<TR> receipts);
+    void storeBlock(Block block, List<TR> receipts);
 
     /**
      * Attempts to store the given block in the pending block store, saving it to be imported later
@@ -47,7 +42,7 @@ public interface IBlockchain<
      *     stored and saving it was not necessary.
      * @apiNote Functionality used to store blocks coming from <b>status requests</b>.
      */
-    boolean storePendingStatusBlock(BLK block);
+    boolean storePendingStatusBlock(Block block);
 
     /**
      * Attempts to store the given range of blocks in the pending block store, saving them to be
@@ -59,7 +54,7 @@ public interface IBlockchain<
      *     number of blocks that were stored from the given input.
      * @apiNote Functionality used to store blocks coming from <b>range import requests</b>.
      */
-    int storePendingBlockRange(List<BLK> blocks);
+    int storePendingBlockRange(List<Block> blocks);
 
     /**
      * Retrieves ranges of blocks from the pending block store for a specific blockchain height.
@@ -70,7 +65,7 @@ public interface IBlockchain<
      *     It may also contain several entries if there are multiple ranges starting at the given
      *     level due to the storage of different chains.
      */
-    Map<ByteArrayWrapper, List<BLK>> loadPendingBlocksAtLevel(long level);
+    Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level);
 
     /**
      * Returns a number greater or equal to the given {@code current} number representing the base
@@ -92,11 +87,11 @@ public interface IBlockchain<
      *     the ranges have been expanded, only the relevant blocks get deleted)
      */
     void dropImported(
-            long level, List<ByteArrayWrapper> ranges, Map<ByteArrayWrapper, List<BLK>> blocks);
+            long level, List<ByteArrayWrapper> ranges, Map<ByteArrayWrapper, List<Block>> blocks);
 
-    void setBestBlock(BLK block);
+    void setBestBlock(Block block);
 
-    boolean hasParentOnTheChain(BLK block);
+    boolean hasParentOnTheChain(Block block);
 
     void close();
 
@@ -116,7 +111,7 @@ public interface IBlockchain<
 
     boolean isBlockExist(byte[] hash);
 
-    List<BH> getListOfHeadersStartFrom(long number, int limit);
+    List<BlockHeader> getListOfHeadersStartFrom(long number, int limit);
 
     // /** Returns the list of headers for the main chain.
     //  *  Returns emptyList() for side chain blocks.

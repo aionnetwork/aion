@@ -18,7 +18,7 @@ import org.aion.util.types.ByteArrayWrapper;
 public class TotalCurrencyContract implements PrecompiledContract {
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 21000L;
-    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase> track;
 
     private AionAddress address;
     private AionAddress ownerAddress;
@@ -31,7 +31,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
      * @param ownerAddress
      */
     public TotalCurrencyContract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase> track,
             AionAddress address,
             AionAddress ownerAddress) {
         this.track = track;

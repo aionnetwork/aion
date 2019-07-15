@@ -31,6 +31,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.config.CfgFork;
@@ -62,7 +63,6 @@ import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
@@ -105,9 +105,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private IEventMgr evtMgr = null;
 
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> pendingState;
+    private RepositoryCache<AccountState, IBlockStoreBase> pendingState;
 
-    private AtomicReference<AionBlock> best;
+    private AtomicReference<Block> best;
 
     private PendingTxCache pendingTxCache;
 
@@ -430,7 +430,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         return isSeed ? new ArrayList<>() : this.txPool.snapshot();
     }
 
-    public synchronized AionBlock getBestBlock() {
+    public synchronized Block getBestBlock() {
         best.set(blockchain.getBestBlock());
         return best.get();
     }
@@ -655,7 +655,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
     }
 
     private void fireTxUpdate(
-            AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
+            AionTxReceipt txReceipt, PendingTransactionState state, Block block) {
         if (LOGGER_TX.isTraceEnabled()) {
             LOGGER_TX.trace(
                     String.format(
@@ -787,7 +787,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         return txReceipt;
     }
 
-    private IAionBlock findCommonAncestor(IAionBlock b1, IAionBlock b2) {
+    private Block findCommonAncestor(Block b1, Block b2) {
         while (!b1.isEqual(b2)) {
             if (b1.getNumber() >= b2.getNumber()) {
                 b1 = blockchain.getBlockByHash(b1.getParentHash());
@@ -817,7 +817,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
             // need to switch the state to another fork
 
-            IAionBlock commonAncestor = findCommonAncestor(best.get(), newBlock);
+            Block commonAncestor = findCommonAncestor(best.get(), newBlock);
 
             if (LOGGER_TX.isDebugEnabled()) {
                 LOGGER_TX.debug(
@@ -830,7 +830,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             }
 
             // first return back the transactions from forked blocks
-            IAionBlock rollback = best.get();
+            Block rollback = best.get();
             while (!rollback.isEqual(commonAncestor)) {
                 if (LOGGER_TX.isDebugEnabled()) {
                     LOGGER_TX.debug("Rollback: {}", rollback.getShortDescr());
@@ -846,8 +846,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
 
             // next process blocks from new fork
-            IAionBlock main = newBlock;
-            List<IAionBlock> mainFork = new ArrayList<>();
+            Block main = newBlock;
+            List<Block> mainFork = new ArrayList<>();
             while (!main.isEqual(commonAncestor)) {
                 if (LOGGER_TX.isDebugEnabled()) {
                     LOGGER_TX.debug("Mainfork: {}", main.getShortDescr());
@@ -929,7 +929,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         }
     }
 
-    private void processBestInternal(IAionBlock block, List<AionTxReceipt> receipts) {
+    private void processBestInternal(Block block, List<AionTxReceipt> receipts) {
 
         clearPending(block, receipts);
 
@@ -968,7 +968,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
     }
 
     @SuppressWarnings("unchecked")
-    private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
+    private void clearPending(Block block, List<AionTxReceipt> receipts) {
 
         if (block.getTransactionsList() != null) {
             if (LOGGER_TX.isDebugEnabled()) {
@@ -1025,7 +1025,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private List<AionTransaction> updateState(IAionBlock block) {
+    private List<AionTransaction> updateState(Block block) {
 
         pendingState = repository.startTracking();
 
@@ -1073,7 +1073,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private AionTxExecSummary executeTx(AionTransaction tx, boolean inPool) {
 
-        IAionBlock bestBlk = best.get();
+        Block bestBlk = best.get();
         if (LOGGER_TX.isTraceEnabled()) {
             LOGGER_TX.trace("executeTx: {}", Hex.toHexString(tx.getTransactionHash()));
         }

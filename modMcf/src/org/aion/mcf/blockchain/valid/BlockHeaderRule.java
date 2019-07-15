@@ -1,13 +1,13 @@
 package org.aion.mcf.blockchain.valid;
 
 import java.util.List;
-import org.aion.mcf.types.AbstractBlockHeader;
+
+import org.aion.mcf.blockchain.BlockHeader;
 
 /**
  * Block header rules.
  *
- * @param <BH>
  */
-public abstract class BlockHeaderRule<BH extends AbstractBlockHeader> extends AbstractValidRule {
-    public abstract boolean validate(BH header, List<RuleError> errors);
+public abstract class BlockHeaderRule extends AbstractValidRule {
+    public abstract boolean validate(BlockHeader header, List<RuleError> errors);
 }

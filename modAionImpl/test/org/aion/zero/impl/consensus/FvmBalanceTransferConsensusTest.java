@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Properties;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
@@ -892,7 +893,7 @@ public class FvmBalanceTransferConsensusTest {
 
     private Pair<ImportResult, AionBlockSummary> processTransaction(
             AionTransaction transaction, int numNonRejectedTransactions) {
-        AionBlock parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         List<AionTransaction> transactions = Collections.singletonList(transaction);
         AionBlock block = this.blockchain.createNewBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =

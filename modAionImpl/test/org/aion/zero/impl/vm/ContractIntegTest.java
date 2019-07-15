@@ -51,6 +51,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TransactionTypeRule;
@@ -72,7 +73,6 @@ import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -1323,7 +1323,7 @@ public class ContractIntegTest {
 
         BigInteger senderBalance = repo.getBalance(deployer);
 
-        AionBlock parent = blockchain.getBestBlock();
+        Block parent = blockchain.getBestBlock();
         AionBlock block = blockchain.createBlock(parent, ls, false, parent.getTimestamp());
 
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
@@ -1927,7 +1927,7 @@ public class ContractIntegTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),
@@ -1946,7 +1946,7 @@ public class ContractIntegTest {
     }
 
     private AionBlock makeBlock(AionTransaction tx) {
-        AionBlock parent = blockchain.getBestBlock();
+        Block parent = blockchain.getBestBlock();
         return blockchain.createBlock(
                 parent, Collections.singletonList(tx), false, parent.getTimestamp());
     }

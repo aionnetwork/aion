@@ -15,7 +15,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 public class ExternalStateForAvm implements IExternalState {
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
+    private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
     private DataWord blockDifficulty;
@@ -25,7 +25,7 @@ public class ExternalStateForAvm implements IExternalState {
     private AionAddress blockCoinbase;
 
     public ExternalStateForAvm(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
             DataWord blockDifficulty,
@@ -75,7 +75,7 @@ public class ExternalStateForAvm implements IExternalState {
         this.repositoryCache.rollback();
     }
 
-    public RepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
+    public RepositoryCache<AccountState, IBlockStoreBase> getRepositoryCache() {
         return this.repositoryCache;
     }
 

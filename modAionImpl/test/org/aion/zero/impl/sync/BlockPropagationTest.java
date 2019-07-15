@@ -18,6 +18,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -395,7 +396,7 @@ public class BlockPropagationTest {
         assertThat(block.getParentHash()).isEqualTo(bundle.bc.genesis.getHash());
         assertThat(block.getParentHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
-        AionBlock bestBlock = bundle.bc.getBestBlock();
+        Block bestBlock = bundle.bc.getBestBlock();
         assertThat(bestBlock.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
         SyncStats syncStats = new SyncStats(bestBlock.getNumber(), true);
         IEventMgr evtMgr = this.loadEventMgr();

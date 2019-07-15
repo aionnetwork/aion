@@ -13,6 +13,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -70,7 +71,7 @@ public class AlternatingVmBlockTest {
         List<AionTransaction> alternatingTransactions =
                 makeAlternatingAvmFvmContractCreateTransactions(4, nonce.add(BigInteger.TWO));
 
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock, alternatingTransactions, false, parentBlock.getTimestamp());
@@ -103,7 +104,7 @@ public class AlternatingVmBlockTest {
         List<AionTransaction> alternatingTransactions =
                 makeAlternatingAvmFvmContractCreateTransactions(5, BigInteger.ZERO);
 
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock, alternatingTransactions, false, parentBlock.getTimestamp());
@@ -129,7 +130,7 @@ public class AlternatingVmBlockTest {
         List<AionTransaction> alternatingTransactions =
                 makeAlternatingAvmFvmContractCreateTransactions(6, BigInteger.ZERO);
 
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock, alternatingTransactions, false, parentBlock.getTimestamp());
@@ -205,7 +206,7 @@ public class AlternatingVmBlockTest {
 
     private long getAvmContractDeploymentCost(BigInteger nonce) {
         AionTransaction avmDeploy = makeAvmContractCreateTransaction(deployerKey, nonce);
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock,
@@ -220,7 +221,7 @@ public class AlternatingVmBlockTest {
 
     private long getFvmContractDeploymentCost(BigInteger nonce) throws IOException {
         AionTransaction fvmDeploy = makeFvmContractCreateTransaction(deployerKey, nonce);
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock,

@@ -14,7 +14,6 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 
 /** @author chris */
 
@@ -48,7 +47,7 @@ public final class FltrLg extends Fltr {
         List<AionTxReceipt> receipts = ((AionBlockSummary) bs).getReceipts();
         Block blk = bs.getBlock();
 
-        if (matchBloom(new Bloom(((IAionBlock) blk).getLogBloom()))) {
+        if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
             for (AionTxReceipt receipt : receipts) {
                 AionTransaction tx = receipt.getTransaction();
@@ -83,7 +82,7 @@ public final class FltrLg extends Fltr {
     // impl.
     // rationale: this way, we only retrieve logs from DB for transactions that the bloom
     // filter gives a positive match for;
-    public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
+    public boolean onBlock(Block blk, IAionBlockchain chain) {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
             for (AionTransaction txn : blk.getTransactionsList()) {

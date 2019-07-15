@@ -1,6 +1,6 @@
 package org.aion.zero.impl.core.energy;
 
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader;
 
 public class ClampedDecayStrategy extends DecayStrategy {
 
@@ -27,7 +27,7 @@ public class ClampedDecayStrategy extends DecayStrategy {
      * consistent within a desired range
      */
     @Override
-    protected long getEnergyLimitInternal(A0BlockHeader header) {
+    protected long getEnergyLimitInternal(BlockHeader header) {
         long out = super.getEnergyLimitInternal(header);
         long prevEnergyLimit = header.getEnergyLimit();
 

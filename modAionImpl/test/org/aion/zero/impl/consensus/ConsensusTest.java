@@ -10,6 +10,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -193,7 +194,7 @@ public class ConsensusTest {
         assertEquals(CONTRACT, deployTransaction.getContractAddress());
 
         // Place the transaction in a block alone.
-        AionBlock parentBlock = blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = blockchain.getRepository().blockStore.getBestBlock();
         List<AionTransaction> transactions = Collections.singletonList(deployTransaction);
 
         // Run the transaction.

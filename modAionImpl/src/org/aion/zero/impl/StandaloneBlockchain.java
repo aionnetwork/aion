@@ -16,6 +16,8 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
@@ -341,9 +343,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                  * generated are valid.
                                  */
                                 @Override
-                                public BlockHeaderValidator<A0BlockHeader>
+                                public BlockHeaderValidator
                                         createBlockHeaderValidator() {
-                                    return new BlockHeaderValidator<>(
+                                    return new BlockHeaderValidator(
                                             Arrays.asList(
                                                     new AionExtraDataRule(
                                                             this.constants
@@ -478,7 +480,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     @Override
-    public synchronized ImportResult tryToConnect(final AionBlock block) {
+    public synchronized ImportResult tryToConnect(final Block block) {
         ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
 
         if (result == ImportResult.IMPORTED_BEST) {
@@ -497,7 +499,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     /** Uses the createNewBlockInternal functionality to avoid time-stamping issues. */
     public AionBlock createBlock(
-            AionBlock parent,
+            Block parent,
             List<AionTransaction> txs,
             boolean waitUntilBlockTime,
             long currTimeSeconds) {
@@ -533,7 +535,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         try {
             // we also need a grandparent block to calculate difficulty
-            AionBlock grandParentBlock = null;
+            Block grandParentBlock = null;
             if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
                 // create a grandparent block if none exists
                 A0BlockHeader header =
@@ -547,7 +549,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 .withTimestamp(0)
                                 .build();
 
-                AionBlock block = new AionBlock(header, Collections.emptyList());
+                Block block = new AionBlock(header, Collections.emptyList());
                 this.setBestBlock(block);
                 this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
                 grandParentBlock = block;
@@ -560,7 +562,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 .getKey();
             }
 
-            A0BlockHeader bestHeader = this.getBestBlock().getHeader();
+            BlockHeader bestHeader = this.getBestBlock().getHeader();
             A0BlockHeader header =
                     new A0BlockHeader.Builder()
                             .withParentHash(grandParentBlock.getHash())

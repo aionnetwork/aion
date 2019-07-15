@@ -25,7 +25,7 @@ public final class PostExecutionWork {
 
     /** Performs some work. */
     public void doWork(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase> repositoryCache,
             AionTxExecSummary summary,
             AionTransaction transaction) {
         this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction);

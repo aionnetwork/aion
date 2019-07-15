@@ -103,7 +103,7 @@ public class AionAuctionContract implements PrecompiledContract {
     private static final Set<String> privateAionDomainNames =
             new HashSet<>(Arrays.asList("network.aion", "foundation.aion", "enterprise.aion"));
 
-    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase> track;
 
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
@@ -112,7 +112,7 @@ public class AionAuctionContract implements PrecompiledContract {
      * @param address The callerAddress of the calling account, use AION address for testing
      */
     public AionAuctionContract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase> track,
             AionAddress address,
             IBlockchain blockchain) {
         this.track = track;

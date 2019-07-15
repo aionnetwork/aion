@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractInfo;
@@ -185,7 +186,7 @@ public class VMTxStateAlignTest {
     }
 
     private AionBlock genNewBlock(List<AionTransaction> transactions, StandaloneBlockchain bc) {
-        AionBlock parentBlock = bc.getBestBlock();
+        Block parentBlock = bc.getBestBlock();
         return bc.createBlock(parentBlock, transactions, false, parentBlock.getTimestamp());
     }
 

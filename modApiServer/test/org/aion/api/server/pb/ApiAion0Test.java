@@ -21,6 +21,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
@@ -466,7 +467,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -479,7 +480,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -596,7 +597,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -609,7 +610,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -650,7 +651,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -663,7 +664,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -704,7 +705,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -717,7 +718,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -756,7 +757,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -769,7 +770,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -808,7 +809,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -821,7 +822,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
@@ -858,7 +859,7 @@ public class ApiAion0Test {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
 
         AionTransaction tx =
                 new AionTransaction(
@@ -871,7 +872,7 @@ public class ApiAion0Test {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);

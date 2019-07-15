@@ -28,7 +28,7 @@ import org.junit.Test;
 public class DoubleDataWordTest {
     private RepositoryConfig repoConfig;
     private Repository repo;
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private RepositoryCache<AccountState, IBlockStoreBase> track;
     private Random rand;
     private AionAddress addr;
 

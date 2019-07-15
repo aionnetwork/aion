@@ -5,14 +5,12 @@ import static org.aion.util.types.ByteArrayWrapper.wrap;
 import java.util.Iterator;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.trie.JournalPruneDataSource;
-import org.aion.mcf.types.AbstractBlock;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 /** Detail data storage , */
-public class DetailsDataStore<BLK extends AbstractBlock, BH extends BlockHeader> {
+public class DetailsDataStore {
 
     private JournalPruneDataSource storageDSPrune;
     private RepositoryConfig repoConfig;
@@ -33,7 +31,7 @@ public class DetailsDataStore<BLK extends AbstractBlock, BH extends BlockHeader>
         withDb(detailsCache, storageCache, graphCache);
     }
 
-    public DetailsDataStore<BLK, BH> withDb(
+    public DetailsDataStore withDb(
             ByteArrayKeyValueDatabase detailsSrc,
             ByteArrayKeyValueDatabase storageSrc,
             ByteArrayKeyValueDatabase graphSrc) {

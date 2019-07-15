@@ -50,7 +50,7 @@ public class AionAuctionContractTest {
                     "a011111111111111111111111111111101010101010101010101010101010101");
     private String domainName1 = "bion.aion";
     private String domainName2 = "cion.aion.aion";
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
+    private RepositoryCache<AccountState, IBlockStoreBase> repo;
     private AionAuctionContract testAAC;
 
     private ECKey defaultKey;

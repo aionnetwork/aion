@@ -33,6 +33,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -61,7 +62,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -395,7 +395,7 @@ public class SolidityTypeTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

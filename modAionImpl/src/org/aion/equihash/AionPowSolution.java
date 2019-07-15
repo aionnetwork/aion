@@ -1,7 +1,6 @@
 package org.aion.equihash;
 
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.IAionBlock;
 
 /**
  * This class encapsulates a valid solution for the given block. This class allows solutions to be

@@ -36,6 +36,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
@@ -58,7 +59,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -165,7 +165,7 @@ public class OldTxExecutorTest {
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
+        RepositoryCache<AccountState, IBlockStoreBase> repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice()));
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
@@ -283,7 +283,7 @@ public class OldTxExecutorTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            Repository repo, IAionBlock block, AionTransaction transaction) throws VMException {
+            Repository repo, Block block, AionTransaction transaction) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

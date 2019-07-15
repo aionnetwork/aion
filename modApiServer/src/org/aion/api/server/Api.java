@@ -15,6 +15,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
@@ -26,7 +27,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.slf4j.Logger;
 
-public abstract class Api<B extends AbstractBlock> {
+public abstract class Api {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
@@ -82,14 +83,14 @@ public abstract class Api<B extends AbstractBlock> {
     }
 
     @SuppressWarnings("rawtypes")
-    public abstract AbstractBlock getBestBlock();
+    public abstract Block getBestBlock();
 
     // --Commented out by Inspection (02/02/18 6:56 PM):public abstract B
     // getBlock(final String _bnOrId);
 
-    public abstract B getBlock(final long _bn);
+    public abstract Block getBlock(final long _bn);
 
-    public abstract B getBlockByHash(final byte[] hash);
+    public abstract Block getBlockByHash(final byte[] hash);
 
     public abstract BigInteger getBalance(final String _address) throws Exception;
 

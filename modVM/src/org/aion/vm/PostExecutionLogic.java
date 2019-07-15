@@ -30,7 +30,7 @@ public interface PostExecutionLogic {
      */
     void apply(
             Repository repository,
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            RepositoryCache<AccountState, IBlockStoreBase> repositoryChild,
             AionTxExecSummary summary,
             AionTransaction transaction);
 }

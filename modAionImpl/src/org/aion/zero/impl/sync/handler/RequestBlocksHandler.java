@@ -2,6 +2,8 @@ package org.aion.zero.impl.sync.handler;
 
 import java.util.Arrays;
 import java.util.List;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -67,7 +69,7 @@ public final class RequestBlocksHandler extends Handler {
                             descending ? "DESC" : "ASC");
                 }
 
-                List<AionBlock> blockList = null;
+                List<Block> blockList = null;
                 try {
                     // retrieve blocks from block store depending on requested order
                     if (descending) {
@@ -102,11 +104,11 @@ public final class RequestBlocksHandler extends Handler {
                 }
 
                 // check if block exists
-                AionBlock block = chain.getBlockByHash(startHash);
+                Block block = chain.getBlockByHash(startHash);
 
                 if (block != null) {
                     long start = block.getNumber();
-                    List<AionBlock> blockList = null;
+                    List<Block> blockList = null;
                     try {
                         // retrieve blocks from block store depending on requested order
                         if (descending) {

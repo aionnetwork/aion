@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
@@ -24,7 +27,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
     private final int peerId;
     private final String displayId;
     private final ResponseBlocks response;
-    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private final BlockHeaderValidator blockHeaderValidator;
     private final BlockingQueue<BlocksWrapper> downloadedBlocks;
     private final Map<ByteArrayWrapper, Long> importedBlockHashes;
     private final Map<ByteArrayWrapper, ByteArrayWrapper> receivedBlockHashes;
@@ -34,7 +37,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
             final int peerId,
             final String displayId,
             final ResponseBlocks response,
-            final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator,
+            final BlockHeaderValidator blockHeaderValidator,
             final BlockingQueue<BlocksWrapper> downloadedBlocks,
             final Map<ByteArrayWrapper, Long> importedBlockHashes,
             final Map<ByteArrayWrapper, ByteArrayWrapper> receivedBlockHashes,
@@ -53,7 +56,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
     public void run() {
         // TODO: re-evaluate priority when full functionality is implemented
         Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
-        AionBlock firstBlock = response.getBlocks().get(0);
+        Block firstBlock = response.getBlocks().get(0);
         Thread.currentThread().setName("check-" + displayId + "-" + firstBlock.getShortHash());
 
         // log start of operation
@@ -65,11 +68,11 @@ public class TaskValidateAndAddBlocks implements Runnable {
                     response.getBlocks().size());
         }
 
-        List<AionBlock> filtered = new ArrayList<>();
+        List<Block> filtered = new ArrayList<>();
         List<ByteArrayWrapper> batchHashes = new ArrayList<>();
 
-        A0BlockHeader currentHeader, previousHeader = null;
-        for (AionBlock currentBlock : response.getBlocks()) {
+        BlockHeader currentHeader, previousHeader = null;
+        for (Block currentBlock : response.getBlocks()) {
             ByteArrayWrapper hash = currentBlock.getHashWrapper();
             if (importedBlockHashes.containsKey(hash) // exclude imported
                     || receivedBlockHashes.containsKey(hash)) { // exclude known hashes

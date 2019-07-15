@@ -28,6 +28,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
@@ -47,6 +48,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
@@ -150,7 +152,7 @@ public abstract class ApiAion extends Api {
     }
 
     @Override
-    public AionBlock getBestBlock() {
+    public Block getBestBlock() {
         return this.ac.getBlockchain().getBestBlock();
     }
 
@@ -158,9 +160,10 @@ public abstract class ApiAion extends Api {
 
         blockTemplateLock.lock();
         try {
-            AionBlock bestBlock =
+            Block bestBlock =
                     ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
-            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
+            // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what does that mean for staking blocks?
+            byte[] bestBlockHash = ((A0BlockHeader) bestBlock.getHeader()).getMineHash();
 
             if (currentBestBlockHash == null
                     || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
@@ -185,12 +188,12 @@ public abstract class ApiAion extends Api {
         return currentTemplate;
     }
 
-    public AionBlock getBlockByHash(byte[] hash) {
+    public Block getBlockByHash(byte[] hash) {
         return this.ac.getBlockchain().getBlockByHash(hash);
     }
 
     @Override
-    public AionBlock getBlock(long blkNr) {
+    public Block getBlock(long blkNr) {
         if (blkNr == -1) {
             return this.ac.getBlockchain().getBestBlock();
         } else if (blkNr > 0) {
@@ -204,7 +207,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+    protected Map.Entry<Block, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
                     .getChainBlockByNumberWithTotalDifficulty(blkNr);
@@ -242,7 +245,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected AionTransaction getTransactionByBlockHashAndIndex(byte[] hash, long index) {
-        AionBlock pBlk = this.getBlockByHash(hash);
+        Block pBlk = this.getBlockByHash(hash);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error(
@@ -275,7 +278,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected AionTransaction getTransactionByBlockNumberAndIndex(long blkNr, long index) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        Block pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error(
@@ -308,7 +311,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getBlockTransactionCountByNumber(long blkNr) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        Block pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
@@ -319,7 +322,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getTransactionCountByHash(byte[] hash) {
-        AionBlock pBlk = this.getBlockByHash(hash);
+        Block pBlk = this.getBlockByHash(hash);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
@@ -329,7 +332,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getTransactionCount(AionAddress addr, long blkNr) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        Block pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
@@ -394,7 +397,7 @@ public abstract class ApiAion extends Api {
             }
             return null;
         }
-        AionBlock block =
+        Block block =
                 this.ac.getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
 
         if (block == null) {
@@ -405,7 +408,7 @@ public abstract class ApiAion extends Api {
         }
 
         // need to return txes only from main chain
-        AionBlock mainBlock =
+        Block mainBlock =
                 this.ac.getAionHub().getBlockchain().getBlockByNumber(block.getNumber());
         if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
             LOG.debug("<get-transaction-receipt msg=hash-not-match>");

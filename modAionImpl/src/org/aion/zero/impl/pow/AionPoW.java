@@ -22,6 +22,7 @@ import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
@@ -193,14 +194,11 @@ public class AionPoW {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
                 LOG.debug(
-                        "Best block nonce [{}]",
-                        Hex.toHexString(blockchain.getBestBlock().getNonce()));
-                LOG.debug(
                         "Best block hash [{}]",
                         Hex.toHexString(blockchain.getBestBlock().getHash()));
             }
 
-            AionBlock block = (AionBlock) solution.getBlock();
+            AionBlock block = solution.getBlock();
             if (!Arrays.equals(block.getHeader().getNonce(), new byte[32])
                     && !(block.getHeader().getNonce().length == 0)) {
                 // block has been processed
@@ -259,12 +257,12 @@ public class AionPoW {
                 LOG.debug("Creating a new block template");
             }
 
-            AionBlock bestBlock =
+            Block bestBlock =
                     blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            AionBlock newBlock = blockchain.createNewBlock(bestBlock, txs, false);
+            Block newBlock = blockchain.createNewBlock(bestBlock, txs, false);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

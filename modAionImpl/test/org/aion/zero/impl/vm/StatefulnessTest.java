@@ -12,6 +12,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -255,7 +256,7 @@ public class StatefulnessTest {
     }
 
     private AionTxReceipt sendTransactions(AionTransaction... transactions) {
-        AionBlock parentBlock = this.blockchain.getBestBlock();
+        Block parentBlock = this.blockchain.getBestBlock();
         AionBlock block =
                 this.blockchain.createBlock(
                         parentBlock,

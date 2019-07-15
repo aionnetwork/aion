@@ -3,6 +3,8 @@ package org.aion.zero.impl.sync;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -18,7 +20,7 @@ final class TaskDropImportedBlocks implements Runnable {
     private final AionBlockchainImpl chain;
     private final long level;
     private final List<ByteArrayWrapper> importedQueues;
-    private final Map<ByteArrayWrapper, List<AionBlock>> levelFromDisk;
+    private final Map<ByteArrayWrapper, List<Block>> levelFromDisk;
 
     private final Logger log;
 
@@ -26,7 +28,7 @@ final class TaskDropImportedBlocks implements Runnable {
             final AionBlockchainImpl _chain,
             final long _level,
             final List<ByteArrayWrapper> _importedQueues,
-            final Map<ByteArrayWrapper, List<AionBlock>> _levelFromDisk,
+            final Map<ByteArrayWrapper, List<Block>> _levelFromDisk,
             final Logger _log) {
         this.chain = _chain;
         this.level = _level;

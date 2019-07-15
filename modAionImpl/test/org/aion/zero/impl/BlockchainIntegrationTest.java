@@ -11,6 +11,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
@@ -191,7 +192,7 @@ public class BlockchainIntegrationTest {
                         .withDefaultAccounts()
                         .build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock parent = bc.getBestBlock();
+        Block parent = bc.getBestBlock();
         AionBlock block =
                 bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
@@ -331,7 +332,7 @@ public class BlockchainIntegrationTest {
                 bundle.bc.createNewBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
 
         // gets the first main-chain block
-        AionBlock storedBlock1 = bundle.bc.getBlockStore().getChainBlockByNumber(1L);
+        Block storedBlock1 = bundle.bc.getBlockStore().getChainBlockByNumber(1L);
         System.out.println(ByteUtil.toHexString(storedBlock1.getHash()));
         System.out.println(ByteUtil.toHexString(newBlock.getParentHash()));
 

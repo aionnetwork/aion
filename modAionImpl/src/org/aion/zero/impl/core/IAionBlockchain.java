@@ -3,6 +3,7 @@ package org.aion.zero.impl.core;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.Repository;
 import org.aion.util.types.ByteArrayWrapper;
@@ -15,17 +16,17 @@ import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain
-        extends IBlockchain<AionBlock, A0BlockHeader, AionTxReceipt, AionTxInfo> {
+        extends IBlockchain<AionTxReceipt, AionTxInfo> {
 
-    AionBlock createNewBlock(
-            AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+    Block createNewBlock(
+            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     BlockContext createNewBlockContext(
-            AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
-    AionBlock getBestBlock();
+    Block getBestBlock();
 
-    AionBlock getBlockByNumber(long num);
+    Block getBlockByNumber(long num);
 
     /**
      * Returns a range of main chain blocks.
@@ -41,21 +42,21 @@ public interface IAionBlockchain
      *     first > last} the blocks are returned in descending order of their height, otherwise when
      *     {@code first < last} the blocks are returned in ascending order of their height.
      */
-    List<AionBlock> getBlocksByRange(long first, long last);
+    List<Block> getBlocksByRange(long first, long last);
 
     /**
      * Recovery functionality for rebuilding the world state.
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverWorldState(Repository repository, AionBlock block);
+    boolean recoverWorldState(Repository repository, Block block);
 
     /**
      * Recovery functionality for recreating the block info in the index database.
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverIndexEntry(Repository repository, AionBlock block);
+    boolean recoverIndexEntry(Repository repository, Block block);
 
     /**
      * Heuristic for skipping the call to tryToConnect with very large or very small block number.

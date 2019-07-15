@@ -3,6 +3,7 @@ package org.aion.api.server.types;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import org.aion.base.AionTransaction;
+import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
@@ -18,7 +19,7 @@ import org.json.JSONObject;
  */
 public class Tx {
 
-    public static JSONObject InfoToJSON(AionTxInfo info, AionBlock b) {
+    public static JSONObject InfoToJSON(AionTxInfo info, Block b) {
         if (info == null) return null;
 
         AionTxReceipt receipt = info.getReceipt();
@@ -29,7 +30,7 @@ public class Tx {
         return (AionTransactionToJSON(tx, b, info.getIndex()));
     }
 
-    public static JSONObject AionTransactionToJSON(AionTransaction tx, AionBlock b, int index) {
+    public static JSONObject AionTransactionToJSON(AionTransaction tx, Block b, int index) {
         if (tx == null) return null;
 
         JSONObject json = new JSONObject();

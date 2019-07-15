@@ -16,10 +16,9 @@ import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 
 /** AbstractBlockSummary */
-public class AbstractBlockSummary<
-        BLK extends Block, TXR extends AbstractTxReceipt, TXES extends TxExecSummary> {
+public class AbstractBlockSummary<TXR extends AbstractTxReceipt, TXES extends TxExecSummary> {
 
-    protected BLK block;
+    protected Block block;
     protected Map<AionAddress, BigInteger> rewards;
     protected List<TXR> receipts;
     protected List<TXES> summaries;
@@ -27,7 +26,7 @@ public class AbstractBlockSummary<
 
     private Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
 
-    public BLK getBlock() {
+    public Block getBlock() {
         return block;
     }
 

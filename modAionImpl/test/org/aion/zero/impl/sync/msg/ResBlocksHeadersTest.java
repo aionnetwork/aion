@@ -6,6 +6,8 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -66,14 +68,14 @@ public class ResBlocksHeadersTest {
     public void testHeaders() {
         int m = 192;
 
-        List<A0BlockHeader> bhs1 = new ArrayList<A0BlockHeader>();
+        List<BlockHeader> bhs1 = new ArrayList<BlockHeader>();
         for (int i = 0; i < m; i++) {
             bhs1.add(bh1);
         }
         ResBlocksHeaders rbhs1 = new ResBlocksHeaders(bhs1);
         byte[] rbhsBytes = rbhs1.encode();
         ResBlocksHeaders rbhs2 = ResBlocksHeaders.decode(rbhsBytes);
-        List<A0BlockHeader> bhs2 = rbhs2.getHeaders();
+        List<BlockHeader> bhs2 = rbhs2.getHeaders();
         assertThat(bhs2.size()).isEqualTo(m);
     }
 }

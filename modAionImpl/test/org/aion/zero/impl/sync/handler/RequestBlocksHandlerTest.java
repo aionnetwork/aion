@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl1.P2pMgr;
@@ -204,9 +206,9 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_nullValue_withHash() {
-        AionBlock first = consecutiveBlocks.get(0);
+        Block first = consecutiveBlocks.get(0);
         byte[] hash = first.getHash();
-        AionBlock last = consecutiveBlocks.get(3);
+        Block last = consecutiveBlocks.get(3);
 
         Logger log = mock(Logger.class);
         when(log.isDebugEnabled()).thenReturn(true);
@@ -272,9 +274,9 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_withException_withHash() {
-        AionBlock first = consecutiveBlocks.get(0);
+        Block first = consecutiveBlocks.get(0);
         byte[] hash = first.getHash();
-        AionBlock last = consecutiveBlocks.get(3);
+        Block last = consecutiveBlocks.get(3);
 
         Logger log = mock(Logger.class);
         when(log.isDebugEnabled()).thenReturn(true);
@@ -313,12 +315,12 @@ public class RequestBlocksHandlerTest {
     }
 
     // returns a list of blocks in ascending order of height
-    List<AionBlock> consecutiveBlocks = TestResources.consecutiveBlocks(4);
+    List<Block> consecutiveBlocks = TestResources.consecutiveBlocks(4);
 
     @Test
     public void testReceive_correctMessage_ascending_withHeight() {
-        AionBlock first = consecutiveBlocks.get(0);
-        AionBlock last = consecutiveBlocks.get(3);
+        Block first = consecutiveBlocks.get(0);
+        Block last = consecutiveBlocks.get(3);
 
         Logger log = mock(Logger.class);
         when(log.isDebugEnabled()).thenReturn(true);
@@ -349,9 +351,9 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_ascending_withHash() {
-        AionBlock first = consecutiveBlocks.get(0);
+        Block first = consecutiveBlocks.get(0);
         byte[] hash = first.getHash();
-        AionBlock last = consecutiveBlocks.get(3);
+        Block last = consecutiveBlocks.get(3);
 
         Logger log = mock(Logger.class);
         when(log.isDebugEnabled()).thenReturn(true);
@@ -384,11 +386,11 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_descending_withHeight() {
-        AionBlock first = consecutiveBlocks.get(3);
-        AionBlock last = consecutiveBlocks.get(0);
+        Block first = consecutiveBlocks.get(3);
+        Block last = consecutiveBlocks.get(0);
         // reverse the list order
-        LinkedList<AionBlock> reverse = new LinkedList<>();
-        for (AionBlock b : consecutiveBlocks) {
+        LinkedList<Block> reverse = new LinkedList<>();
+        for (Block b : consecutiveBlocks) {
             reverse.addFirst(b);
         }
 
@@ -420,12 +422,12 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_descending_withHash() {
-        AionBlock first = consecutiveBlocks.get(3);
+        Block first = consecutiveBlocks.get(3);
         byte[] hash = first.getHash();
-        AionBlock last = consecutiveBlocks.get(0);
+        Block last = consecutiveBlocks.get(0);
         // reverse the list order
-        LinkedList<AionBlock> reverse = new LinkedList<>();
-        for (AionBlock b : consecutiveBlocks) {
+        LinkedList<Block> reverse = new LinkedList<>();
+        for (Block b : consecutiveBlocks) {
             reverse.addFirst(b);
         }
 
@@ -459,9 +461,9 @@ public class RequestBlocksHandlerTest {
 
     @Test
     public void testReceive_correctMessage_withHashOnSideChain() {
-        AionBlock first = consecutiveBlocks.get(0);
+        Block first = consecutiveBlocks.get(0);
         byte[] hash = first.getHash();
-        AionBlock last = consecutiveBlocks.get(3);
+        Block last = consecutiveBlocks.get(3);
 
         Logger log = mock(Logger.class);
         when(log.isDebugEnabled()).thenReturn(true);

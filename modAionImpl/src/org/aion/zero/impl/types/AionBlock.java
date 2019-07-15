@@ -7,6 +7,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.AbstractBlock;
@@ -19,11 +21,10 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /** */
-public class AionBlock extends AbstractBlock implements IAionBlock {
+public class AionBlock extends AbstractBlock implements Block {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
 
@@ -487,11 +488,12 @@ public class AionBlock extends AbstractBlock implements IAionBlock {
         return this.header.getEnergyLimit();
     }
 
-    public static AionBlock createBlockFromNetwork(A0BlockHeader header, byte[] body) {
+    // TODO: [Unity] Either remove this method, or remove the cast on header
+    public static AionBlock createBlockFromNetwork(BlockHeader header, byte[] body) {
         if (header == null || body == null) return null;
 
         AionBlock block = new AionBlock();
-        block.header = header;
+        block.header = (A0BlockHeader) header;
         block.parsed = true;
 
         RLPList items = (RLPList) RLP.decode2(body).get(0);

@@ -1,6 +1,6 @@
 package org.aion.zero.impl.core.energy;
 
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader;
 
 public class MonotonicallyIncreasingStrategy extends AbstractEnergyStrategyLimit {
 
@@ -9,7 +9,7 @@ public class MonotonicallyIncreasingStrategy extends AbstractEnergyStrategyLimit
     }
 
     @Override
-    protected long getEnergyLimitInternal(A0BlockHeader header) {
+    protected long getEnergyLimitInternal(BlockHeader header) {
         return monotonicallyIncreasingEnergyStrategy(
                 header.getEnergyLimit(),
                 header.getEnergyConsumed(),

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
@@ -45,7 +46,7 @@ public class BlockPropagationHandler {
 
     private final IP2pMgr p2pManager;
 
-    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private final BlockHeaderValidator blockHeaderValidator;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -62,7 +63,7 @@ public class BlockPropagationHandler {
             final IAionBlockchain blockchain,
             final SyncStats syncStats,
             final IP2pMgr p2pManager,
-            BlockHeaderValidator<A0BlockHeader> headerValidator,
+            BlockHeaderValidator headerValidator,
             final boolean isSyncOnlyNode,
             final byte apiVersion,
             final IPendingStateInternal pendingState) {
@@ -211,7 +212,7 @@ public class BlockPropagationHandler {
 
         // notify higher td peers in order to limit the rebroadcast on delay of res status updating
         if (result.isBest()) {
-            AionBlock bestBlock = blockchain.getBestBlock();
+            Block bestBlock = blockchain.getBestBlock();
             BigInteger td = bestBlock.getCumulativeDifficulty();
             ResStatus rs =
                     new ResStatus(

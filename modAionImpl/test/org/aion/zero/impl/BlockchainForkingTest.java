@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
@@ -110,7 +111,7 @@ public class BlockchainForkingTest {
         StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain bc = b.bc;
-        AionBlock bestBlock = bc.getBestBlock();
+        Block bestBlock = bc.getBestBlock();
         AionBlock standardBlock =
                 bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 

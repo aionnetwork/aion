@@ -37,6 +37,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
@@ -53,7 +54,6 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
-import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -800,7 +800,7 @@ public class OpcodeIntegTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, IAionBlock block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

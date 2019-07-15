@@ -66,11 +66,11 @@ public class BridgeStorageConnector {
         }
     }
 
-    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase> track;
     private final AionAddress contractAddress;
 
     public BridgeStorageConnector(
-            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase> track,
             @Nonnull final AionAddress contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;

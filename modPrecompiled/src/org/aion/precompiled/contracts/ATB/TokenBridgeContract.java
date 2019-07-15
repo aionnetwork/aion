@@ -29,7 +29,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
     // queries
 
     private final PrecompiledTransactionContext context;
-    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase> track;
 
     private final BridgeStorageConnector connector;
     private final BridgeController controller;
@@ -40,7 +40,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
 
     public TokenBridgeContract(
             @Nonnull final PrecompiledTransactionContext context,
-            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase> track,
             @Nonnull final AionAddress ownerAddress,
             @Nonnull final AionAddress contractAddress) {
         this.track = track;

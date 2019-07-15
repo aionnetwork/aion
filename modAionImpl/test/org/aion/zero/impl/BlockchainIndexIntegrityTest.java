@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
@@ -50,13 +51,13 @@ public class BlockchainIndexIntegrityTest {
 
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next =
+            Block next =
                     chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         chain.getRepository().flush();
@@ -92,13 +93,13 @@ public class BlockchainIndexIntegrityTest {
 
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next =
+            Block next =
                     chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         chain.getRepository().flush();
@@ -127,11 +128,11 @@ public class BlockchainIndexIntegrityTest {
 
         StandaloneBlockchain chain = bundle.bc;
 
-        AionBlock bestBlock;
+        Block bestBlock;
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -180,11 +181,11 @@ public class BlockchainIndexIntegrityTest {
 
         StandaloneBlockchain chain = bundle.bc;
 
-        AionBlock bestBlock;
+        Block bestBlock;
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 

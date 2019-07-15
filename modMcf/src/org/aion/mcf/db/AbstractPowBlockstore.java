@@ -1,21 +1,16 @@
 package org.aion.mcf.db;
 
-import org.aion.mcf.types.AbstractBlock;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.blockchain.Block;
 
 /**
  * Abstract POW blockstore.
  *
- * @param <BLK>
- * @param <BH>
  */
-public abstract class AbstractPowBlockstore<
-                BLK extends AbstractBlock, BH extends AbstractBlockHeader>
-        implements IBlockStorePow<BLK, BH> {
+public abstract class AbstractPowBlockstore implements IBlockStorePow {
 
     @Override
     public byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash) {
-        BLK branchBlock = getBlockByHash(branchBlockHash);
+        Block branchBlock = getBlockByHash(branchBlockHash);
         if (branchBlock.getNumber() < blockNumber) {
             throw new IllegalArgumentException(
                     "Requested block number > branch hash number: "

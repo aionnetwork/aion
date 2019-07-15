@@ -24,6 +24,7 @@ import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
@@ -180,7 +181,7 @@ public class ApiAionTest {
     public void testGetBlock() {
         assertNotNull(api.getBlockTemplate());
 
-        AionBlock blk = impl.getBlockchain().getBestBlock();
+        Block blk = impl.getBlockchain().getBestBlock();
 
         // sanity check
         assertEquals(blk, api.getBestBlock());
@@ -195,7 +196,7 @@ public class ApiAionTest {
         assertTrue(api.getBlock(blk.getNumber()).isEqual(blk));
 
         // retrieval based on block number that also gives total difficulty
-        Map.Entry<AionBlock, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
+        Map.Entry<Block, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
 
         assertTrue(rslt.getKey().isEqual(blk));
 
@@ -268,7 +269,7 @@ public class ApiAionTest {
     @Test
     @Ignore
     public void testGetTransactions() {
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        Block parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
         AionTransaction tx =
                 new AionTransaction(
@@ -281,7 +282,7 @@ public class ApiAionTest {
                         100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk =
+        Block blk =
                 impl.getAionHub()
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);

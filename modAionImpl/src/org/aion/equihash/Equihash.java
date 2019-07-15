@@ -12,7 +12,6 @@ import org.aion.log.LogEnum;
 import org.aion.util.file.NativeLoader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 /**

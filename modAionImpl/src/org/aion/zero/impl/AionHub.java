@@ -16,6 +16,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStorePow;
@@ -82,7 +83,7 @@ public class AionHub {
     /**
      * A "cached" block that represents our local best block when the application is first booted.
      */
-    private volatile AionBlock startingBlock;
+    private volatile Block startingBlock;
 
     /**
      * Initialize as per the <a href=
@@ -275,7 +276,7 @@ public class AionHub {
         return blockchain;
     }
 
-    public IBlockStorePow<AionBlock, A0BlockHeader> getBlockStore() {
+    public IBlockStorePow getBlockStore() {
         return this.repository.getBlockStore();
     }
 
@@ -302,7 +303,7 @@ public class AionHub {
         }
 
         // Note: if block DB corruption, the bestBlock may not match with the indexDB.
-        AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
+        Block bestBlock = this.repository.getBlockStore().getBestBlock();
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -537,7 +538,7 @@ public class AionHub {
         return Version.REPO_VERSION;
     }
 
-    public AionBlock getStartingBlock() {
+    public Block getStartingBlock() {
         return this.startingBlock;
     }
 

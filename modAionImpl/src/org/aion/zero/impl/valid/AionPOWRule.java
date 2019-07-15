@@ -3,13 +3,19 @@ package org.aion.zero.impl.valid;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
 
 /** Checks proof value against its boundary for the block header */
-public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
+public class AionPOWRule extends BlockHeaderRule {
 
     @Override
+    public boolean validate(BlockHeader header, List<RuleError> errors) {
+        A0BlockHeader minedHeader = (A0BlockHeader) header;
+        return (validate(minedHeader, errors));
+    }
+    
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
 

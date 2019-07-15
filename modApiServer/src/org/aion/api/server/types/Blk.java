@@ -5,6 +5,7 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
@@ -20,7 +21,9 @@ import org.json.JSONObject;
 public class Blk {
 
     public static Object AionBlockToJson(
-            AionBlock block, BigInteger totalDifficulty, boolean fullTransaction) {
+            Block genericBlock, BigInteger totalDifficulty, boolean fullTransaction) {
+        // TODO: [Unity] This cast should be removed when we support staking blocks
+        AionBlock block = (AionBlock) genericBlock;
         if (block == null) return null;
 
         JSONObject obj = new JSONObject();
@@ -89,9 +92,10 @@ public class Blk {
     }
 
     @SuppressWarnings("Duplicates")
-    public static JSONObject AionBlockOnlyToJson(AionBlock block, BigInteger totalDifficulty) {
-        if (block == null) return null;
-
+    public static JSONObject AionBlockOnlyToJson(Block genericBlock, BigInteger totalDifficulty) {
+        if (genericBlock == null) return null;
+        // TODO: [Unity] This cast should be removed when we support staking blocks
+        AionBlock block = (AionBlock) genericBlock;
         JSONObject obj = new JSONObject();
         obj.put("number", block.getNumber());
         obj.put("hash", StringUtils.toJsonHex(block.getHash()));

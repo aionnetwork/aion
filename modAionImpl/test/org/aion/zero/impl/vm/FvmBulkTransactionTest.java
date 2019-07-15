@@ -11,6 +11,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
@@ -134,7 +135,7 @@ public class FvmBulkTransactionTest {
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
             List<AionTransaction> transactions) {
-        AionBlock parentBlock = this.blockchain.getBestBlock();
+        Block parentBlock = this.blockchain.getBestBlock();
         AionBlock block =
                 this.blockchain.createBlock(
                         parentBlock, transactions, false, parentBlock.getTimestamp());

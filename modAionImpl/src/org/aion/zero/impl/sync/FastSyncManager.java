@@ -18,6 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
@@ -44,7 +45,7 @@ public final class FastSyncManager {
     private final AtomicBoolean completeBlocks = new AtomicBoolean(false);
 
     private final AionBlockchainImpl chain;
-    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private final BlockHeaderValidator blockHeaderValidator;
     private final P2pMgr p2pMgr;
 
     // TODO: consider adding a FAST_SYNC log as well
@@ -64,7 +65,7 @@ public final class FastSyncManager {
 
     public FastSyncManager(
             AionBlockchainImpl chain,
-            BlockHeaderValidator<A0BlockHeader> blockHeaderValidator,
+            BlockHeaderValidator blockHeaderValidator,
             final P2pMgr p2pMgr) {
         this.enabled = true;
         this.chain = chain;
@@ -274,7 +275,7 @@ public final class FastSyncManager {
                         } else {
                             // determine if the block is in the middle of the batch
                             boolean isRequred = false;
-                            for (AionBlock block : wrapper.getBlocks()) {
+                            for (Block block : wrapper.getBlocks()) {
                                 ByteArrayWrapper hash = block.getHashWrapper();
                                 receivedBlockHashes.put(hash, firstHash);
                                 if (hash.equals(requiredHash)) {

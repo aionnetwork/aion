@@ -26,13 +26,13 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
-public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
+public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** the repository being tracked */
-    protected Repository<AccountState, IBlockStoreBase<?, ?>> repository;
+    protected Repository<AccountState, IBlockStoreBase> repository;
 
     /** local accounts cache */
     protected Map<AionAddress, AccountState> cachedAccounts;
@@ -432,7 +432,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     // get a reference of the blockstore without using
     // NProgInvoke/NcpProgInvoke.
     @Override
-    public IBlockStoreBase<?, ?> getBlockStore() {
+    public IBlockStoreBase getBlockStore() {
         return repository.getBlockStore();
     }
 

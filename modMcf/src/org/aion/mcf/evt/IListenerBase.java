@@ -9,7 +9,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
 public interface IListenerBase<
         BLK extends Block,
         TXR extends AbstractTxReceipt,
-        BS extends AbstractBlockSummary<?, ?, ?>> {
+        BS extends AbstractBlockSummary<?, ?>> {
 
     enum PendingTransactionState {
         /**

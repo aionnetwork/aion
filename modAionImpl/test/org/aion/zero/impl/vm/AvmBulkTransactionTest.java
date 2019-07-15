@@ -17,6 +17,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -101,7 +102,7 @@ public class AvmBulkTransactionTest {
 
         deployEmptyContractTx.sign(deployerKey);
 
-        AionBlock parentBlock = blockchain.getBestBlock();
+        Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(
                         parentBlock,
@@ -463,7 +464,7 @@ public class AvmBulkTransactionTest {
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
             List<AionTransaction> transactions) {
-        AionBlock parentBlock = this.blockchain.getBestBlock();
+        Block parentBlock = this.blockchain.getBestBlock();
         AionBlock block =
                 this.blockchain.createBlock(
                         parentBlock, transactions, false, parentBlock.getTimestamp());

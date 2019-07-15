@@ -14,6 +14,7 @@ import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
@@ -76,11 +77,11 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
+        List<Block> blocks = TestResources.consecutiveBlocks(6);
         assertThat(blocks.size()).isEqualTo(6);
 
         // test with valid block
-        AionBlock block = blocks.remove(0);
+        Block block = blocks.remove(0);
         assertThat(pb.addStatusBlock(block)).isTrue();
         // #index=1 #level=1 #queue=1 #status=1
         assertThat(pb.getIndexSize()).isEqualTo(1);
@@ -90,7 +91,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.getStatusItem(block.getHash())).isNotNull();
 
         // test with valid range
-        List<AionBlock> range = new ArrayList<>();
+        List<Block> range = new ArrayList<>();
         int rangeSize = 4;
         for (int i = 0; i < rangeSize; i++) {
             range.add(blocks.remove(0));
@@ -149,7 +150,7 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(4);
+        List<Block> blocks = TestResources.consecutiveBlocks(4);
         assertThat(blocks.size()).isEqualTo(4);
 
         // test with null input
@@ -162,7 +163,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.getStatusItem(null)).isNull();
 
         // test with valid block
-        AionBlock block = blocks.get(0);
+        Block block = blocks.get(0);
         assertThat(pb.addStatusBlock(block)).isTrue();
         // #index=1 #level=1 #queue=1 #status=1
         assertThat(pb.getIndexSize()).isEqualTo(1);
@@ -223,7 +224,7 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+        Block block = TestResources.consecutiveBlocks(1).get(0);
 
         // closing the pending block store to cause exception
         pb.close();
@@ -244,11 +245,11 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(16);
+        List<Block> blocks = TestResources.consecutiveBlocks(16);
         assertThat(blocks.size()).isEqualTo(16);
 
         // test with empty list input
-        List<AionBlock> input = new ArrayList<>();
+        List<Block> input = new ArrayList<>();
         assertThat(pb.addBlockRange(input)).isEqualTo(0); // #index=0 #level=0 #queue=0
         assertThat(pb.getStatusSize()).isEqualTo(0);
 
@@ -324,7 +325,7 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(4);
+        List<Block> blocks = TestResources.consecutiveBlocks(4);
         assertThat(blocks.size()).isEqualTo(4);
 
         // closing the pending block store to cause exception
@@ -346,17 +347,17 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> allBlocks = TestResources.consecutiveBlocks(8);
+        List<Block> allBlocks = TestResources.consecutiveBlocks(8);
 
         // 1. test with empty storage
         assertThat(pb.loadBlockRange(100)).isEmpty();
 
         // 2. test with valid range
-        List<AionBlock> blocks = allBlocks.subList(0, 6);
-        AionBlock first = blocks.get(0);
+        List<Block> blocks = allBlocks.subList(0, 6);
+        Block first = blocks.get(0);
         assertThat(blocks.size()).isEqualTo(6);
         assertThat(pb.addBlockRange(blocks)).isEqualTo(6);
-        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        Map<ByteArrayWrapper, List<Block>> actual = pb.loadBlockRange(first.getNumber());
         assertThat(actual.size()).isEqualTo(1);
         assertThat(actual.get(ByteArrayWrapper.wrap(first.getHash()))).isEqualTo(blocks);
 
@@ -366,7 +367,7 @@ public class PendingBlockStoreTest {
         AionBlock altBlock = new AionBlock(first.getEncoded());
         altBlock.setExtraData("random".getBytes());
         assertThat(altBlock.equals(first)).isFalse();
-        List<AionBlock> sideChain = new ArrayList<>();
+        List<Block> sideChain = new ArrayList<>();
         sideChain.add(altBlock);
         assertThat(pb.addBlockRange(sideChain)).isEqualTo(1);
 
@@ -382,7 +383,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.loadBlockRange(level + 1)).isEmpty();
 
         // 5. test after status import with new queue
-        AionBlock status = allBlocks.get(7);
+        Block status = allBlocks.get(7);
         assertThat(pb.addStatusBlock(status)).isTrue();
         actual = pb.loadBlockRange(status.getNumber());
         assertThat(actual.size()).isEqualTo(1);
@@ -434,14 +435,14 @@ public class PendingBlockStoreTest {
         assertThat(pb.isOpen()).isTrue();
 
         // add first queue
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
-        AionBlock first = blocks.get(0);
+        List<Block> blocks = TestResources.consecutiveBlocks(6);
+        Block first = blocks.get(0);
         pb.addBlockRange(blocks);
 
         // add second queue
         AionBlock altBlock = new AionBlock(first.getEncoded());
         altBlock.setExtraData("random".getBytes());
-        List<AionBlock> sideChain = new ArrayList<>();
+        List<Block> sideChain = new ArrayList<>();
         sideChain.add(altBlock);
         pb.addBlockRange(sideChain);
 
@@ -452,7 +453,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.getStatusSize()).isEqualTo(0);
 
         // test drop functionality
-        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        Map<ByteArrayWrapper, List<Block>> actual = pb.loadBlockRange(first.getNumber());
         pb.dropPendingQueues(first.getNumber(), actual.keySet(), actual);
 
         // check storage after drop functionality
@@ -476,14 +477,14 @@ public class PendingBlockStoreTest {
         assertThat(pb.isOpen()).isTrue();
 
         // add first queue
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
-        AionBlock first = blocks.get(0);
+        List<Block> blocks = TestResources.consecutiveBlocks(6);
+        Block first = blocks.get(0);
         pb.addBlockRange(blocks);
 
         // add second queue
         AionBlock altBlock = new AionBlock(first.getEncoded());
         altBlock.setExtraData("random".getBytes());
-        List<AionBlock> sideChain = new ArrayList<>();
+        List<Block> sideChain = new ArrayList<>();
         sideChain.add(altBlock);
         pb.addBlockRange(sideChain);
 
@@ -497,7 +498,7 @@ public class PendingBlockStoreTest {
         pb.close();
 
         // test drop functionality
-        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        Map<ByteArrayWrapper, List<Block>> actual = pb.loadBlockRange(first.getNumber());
         pb.dropPendingQueues(first.getNumber(), actual.keySet(), actual);
     }
 
@@ -515,14 +516,14 @@ public class PendingBlockStoreTest {
         assertThat(pb.isOpen()).isTrue();
 
         // add first queue
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
-        AionBlock first = blocks.get(0);
+        List<Block> blocks = TestResources.consecutiveBlocks(6);
+        Block first = blocks.get(0);
         pb.addBlockRange(blocks);
 
         // add second queue
         AionBlock altBlock = new AionBlock(first.getEncoded());
         altBlock.setExtraData("random".getBytes());
-        List<AionBlock> sideChain = new ArrayList<>();
+        List<Block> sideChain = new ArrayList<>();
         sideChain.add(altBlock);
         pb.addBlockRange(sideChain);
 
@@ -533,7 +534,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.getStatusSize()).isEqualTo(0);
 
         // test drop functionality
-        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        Map<ByteArrayWrapper, List<Block>> actual = pb.loadBlockRange(first.getNumber());
         List<ByteArrayWrapper> queues = new ArrayList<>();
         queues.add(ByteArrayWrapper.wrap(first.getHash()));
         pb.dropPendingQueues(first.getNumber(), queues, actual);
@@ -559,14 +560,14 @@ public class PendingBlockStoreTest {
         assertThat(pb.isOpen()).isTrue();
 
         // add first queue
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
-        AionBlock first = blocks.get(0);
+        List<Block> blocks = TestResources.consecutiveBlocks(6);
+        Block first = blocks.get(0);
         pb.addBlockRange(blocks);
 
         // add second queue
         AionBlock altBlock = new AionBlock(first.getEncoded());
         altBlock.setExtraData("random".getBytes());
-        List<AionBlock> sideChain = new ArrayList<>();
+        List<Block> sideChain = new ArrayList<>();
         sideChain.add(altBlock);
         pb.addBlockRange(sideChain);
 
@@ -580,7 +581,7 @@ public class PendingBlockStoreTest {
         ByteArrayWrapper queueId = ByteArrayWrapper.wrap(first.getHash());
         List<ByteArrayWrapper> queues = new ArrayList<>();
         queues.add(queueId);
-        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        Map<ByteArrayWrapper, List<Block>> actual = pb.loadBlockRange(first.getNumber());
         actual.get(queueId).remove(5);
         pb.dropPendingQueues(first.getNumber(), queues, actual);
 
@@ -604,7 +605,7 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+        Block block = TestResources.consecutiveBlocks(1).get(0);
 
         // setup: add status
         assertThat(pb.addStatusBlock(block)).isTrue();
@@ -696,7 +697,7 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+        Block block = TestResources.consecutiveBlocks(1).get(0);
 
         // setup: add status
         assertThat(pb.addStatusBlock(block)).isTrue();
@@ -721,11 +722,11 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(3);
+        List<Block> blocks = TestResources.consecutiveBlocks(3);
         assertThat(blocks.size()).isEqualTo(3);
 
         // setup: add status entries
-        for (AionBlock block : blocks) {
+        for (Block block : blocks) {
             assertThat(pb.addStatusBlock(block)).isTrue();
             // all blocks get added to the same queue
             assertThat(pb.getStatusSize()).isEqualTo(1);
@@ -751,14 +752,14 @@ public class PendingBlockStoreTest {
         }
         assertThat(pb.isOpen()).isTrue();
 
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(3);
+        List<Block> blocks = TestResources.consecutiveBlocks(3);
 
         // setup: add status entries
-        AionBlock status1 = blocks.get(0);
+        Block status1 = blocks.get(0);
         assertThat(pb.addStatusBlock(status1)).isTrue();
         assertThat(pb.getStatusSize()).isEqualTo(1);
 
-        AionBlock status2 = blocks.get(2);
+        Block status2 = blocks.get(2);
         assertThat(pb.addStatusBlock(status2)).isTrue();
         assertThat(pb.getStatusSize()).isEqualTo(2);
 

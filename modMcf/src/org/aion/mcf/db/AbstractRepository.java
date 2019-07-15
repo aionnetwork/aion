@@ -14,23 +14,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgDb.Names;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
-import org.aion.mcf.types.AbstractBlock;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 
 /** Abstract Repository class. */
-public abstract class AbstractRepository<
-                BLK extends AbstractBlock,
-                BH extends BlockHeader,
-                BSB extends IBlockStoreBase<?, ?>>
+public abstract class AbstractRepository<BSB extends IBlockStoreBase>
         implements Repository<AccountState, BSB> {
 
     // Logger
@@ -82,7 +77,7 @@ public abstract class AbstractRepository<
 
     protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
-    protected DetailsDataStore<BLK, BH> detailsDS;
+    protected DetailsDataStore detailsDS;
 
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -293,7 +288,7 @@ public abstract class AbstractRepository<
 
             // Setup the cache for transaction data source.
             this.detailsDS =
-                    new DetailsDataStore<>(
+                    new DetailsDataStore(
                             detailsDatabase, storageDatabase, graphDatabase, this.cfg);
 
             // pruning config

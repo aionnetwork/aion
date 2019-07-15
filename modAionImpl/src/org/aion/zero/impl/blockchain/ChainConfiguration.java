@@ -109,8 +109,8 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
     }
 
     @Override
-    public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
-        return new BlockHeaderValidator<>(
+    public BlockHeaderValidator createBlockHeaderValidator() {
+        return new BlockHeaderValidator(
                 Arrays.asList(
                         new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
                         new EnergyConsumedRule(),

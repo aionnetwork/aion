@@ -14,6 +14,8 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
@@ -298,13 +300,13 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
         assertThat(best.getNumber()).isGreaterThan(0L);
         byte[] bestHash = best.getHash();
 
         // expected result with qty >= chain height
         List<ByteArrayWrapper> expectedAll = new ArrayList<>();
-        AionBlock block = best;
+        Block block = best;
         while (block.getNumber() > 0) {
             expectedAll.add(ByteArrayWrapper.wrap(block.getHash()));
             block = chain.getBlockByHash(block.getParentHash());
@@ -371,14 +373,14 @@ public class BlockchainImplementationTest {
         generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
 
         AionBlock genesis = chain.getGenesis();
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         assertThat(best.getNumber()).isGreaterThan(0L);
         byte[] genesisHash = genesis.getHash();
 
         // expected result with qty >= chain height
         List<ByteArrayWrapper> expectedAll = new ArrayList<>();
-        AionBlock block = chain.getBlockByHash(best.getParentHash());
+        Block block = chain.getBlockByHash(best.getParentHash());
         while (block.getNumber() > 0) {
             expectedAll.add(0, ByteArrayWrapper.wrap(block.getHash()));
             block = chain.getBlockByHash(block.getParentHash());
@@ -430,7 +432,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
         byte[] bestHash = best.getHash();
         long bestNumber = best.getNumber();
 
@@ -497,14 +499,14 @@ public class BlockchainImplementationTest {
         generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
 
         AionBlock genesis = chain.getGenesis();
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         assertThat(best.getNumber()).isGreaterThan(0L);
         byte[] genesisHash = genesis.getHash();
 
         // expected result with qty >= chain height
         List<ByteArrayWrapper> expectedAll = new ArrayList<>();
-        AionBlock block = chain.getBlockByHash(best.getParentHash());
+        Block block = chain.getBlockByHash(best.getParentHash());
         while (block.getNumber() > 0) {
             expectedAll.add(0, ByteArrayWrapper.wrap(block.getHash()));
             block = chain.getBlockByHash(block.getParentHash());
@@ -556,7 +558,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
         byte[] bestHash = best.getHash();
         long bestNumber = best.getNumber();
 
@@ -580,7 +582,7 @@ public class BlockchainImplementationTest {
 
     public static void assertStartFrom_expectedOne(
             StandaloneBlockchain chain, byte[] hash, long number, int qty) {
-        List<A0BlockHeader> hashes = chain.getListOfHeadersStartFrom(number, qty);
+        List<BlockHeader> hashes = chain.getListOfHeadersStartFrom(number, qty);
         assertThat(hashes.size()).isEqualTo(1);
         assertThat(hashes.get(0).getHash()).isEqualTo(hash);
     }
@@ -604,7 +606,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 2, 1);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         assertThat(chain.findMissingAncestor(best)).isNull();
     }
@@ -619,7 +621,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 2, 1);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
         byte[] bestHash = best.getHash();
 
         // delete the block from the db
@@ -640,7 +642,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 2, 1);
 
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
         byte[] parentHash = best.getParentHash();
 
         // delete the block from the db
@@ -674,7 +676,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 1, 1);
 
-        AionBlock parent = chain.getBestBlock();
+        Block parent = chain.getBestBlock();
         A0BlockHeader.Builder headerBuilder =
                 new A0BlockHeader.Builder()
                         .withVersion((byte) 1)
@@ -699,7 +701,7 @@ public class BlockchainImplementationTest {
 
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 2, 1);
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         assertThat(chain.tryFastImport(best)).isEqualTo(FastImportResult.KNOWN);
     }
@@ -713,7 +715,7 @@ public class BlockchainImplementationTest {
 
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 2, 1);
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         // delete the block from the db
         chain.getRepository().getBlockDatabase().delete(best.getHash());
@@ -730,10 +732,10 @@ public class BlockchainImplementationTest {
 
         // populate chain at random
         generateRandomChainWithoutTransactions(chain, 3, 1);
-        AionBlock best = chain.getBestBlock();
+        Block best = chain.getBestBlock();
 
         // save then delete the block from the db
-        AionBlock block = chain.getBlockByHash(best.getParentHash());
+        Block block = chain.getBlockByHash(best.getParentHash());
         chain.getRepository().getBlockDatabase().delete(best.getParentHash());
 
         assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.IMPORTED);

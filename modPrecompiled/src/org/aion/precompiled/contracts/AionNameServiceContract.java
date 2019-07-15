@@ -47,7 +47,7 @@ public class AionNameServiceContract implements PrecompiledContract {
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
-    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase> track;
 
     private AionAddress activeDomainsAddress =
             AddressUtils.wrapAddress(
@@ -83,7 +83,7 @@ public class AionNameServiceContract implements PrecompiledContract {
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase> track,
             AionAddress address,
             AionAddress ownerAddress) { // byte
         this.track = track;

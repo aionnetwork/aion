@@ -2,6 +2,8 @@ package org.aion.zero.impl.sync;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -80,16 +82,16 @@ final class TaskFastImportBlocks implements Runnable {
                     }
 
                     // filter blocks just in case they don't start at the correct place
-                    List<AionBlock> batch =
+                    List<Block> batch =
                             bw.getBlocks().stream()
                                     .filter(b -> b.getNumber() <= requiredLevel)
                                     .collect(Collectors.toList()); // TODO: probably remove
 
                     // process batch and update the peer state
                     FastImportResult importResult;
-                    AionBlock lastImported = null;
+                    Block lastImported = null;
 
-                    for (AionBlock b : batch) {
+                    for (Block b : batch) {
                         if (b.getNumber() > requiredLevel) {
                             continue;
                         }

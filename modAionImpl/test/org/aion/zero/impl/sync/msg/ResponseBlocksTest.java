@@ -5,6 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.util.Collections;
 import java.util.List;
 import junitparams.JUnitParamsRunner;
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.util.TestResources;
@@ -63,7 +64,7 @@ public class ResponseBlocksTest {
 
     @Test
     public void testEncodeDecode_emptyList() {
-        List<AionBlock> blocks = Collections.emptyList();
+        List<Block> blocks = Collections.emptyList();
 
         // encode
         ResponseBlocks message = new ResponseBlocks(blocks);
@@ -82,7 +83,7 @@ public class ResponseBlocksTest {
 
     @Test
     public void testEncodeDecode_singleElement() {
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(1);
+        List<Block> blocks = TestResources.consecutiveBlocks(1);
 
         // encode
         ResponseBlocks message = new ResponseBlocks(blocks);
@@ -101,7 +102,7 @@ public class ResponseBlocksTest {
 
     @Test
     public void testEncodeDecode_multipleElements() {
-        List<AionBlock> blocks = TestResources.consecutiveBlocks(10);
+        List<Block> blocks = TestResources.consecutiveBlocks(10);
 
         // encode
         ResponseBlocks message = new ResponseBlocks(blocks);

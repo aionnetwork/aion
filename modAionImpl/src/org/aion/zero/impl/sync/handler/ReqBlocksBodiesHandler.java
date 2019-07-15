@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -82,7 +84,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
                 if (blockBytes != null) {
                     blockBytesForadd = blockBytes;
                 } else {
-                    AionBlock block = blockchain.getBlockByHash(hash);
+                    Block block = blockchain.getBlockByHash(hash);
 
                     if (block != null) {
                         blockBytesForadd = block.getEncodedBody();

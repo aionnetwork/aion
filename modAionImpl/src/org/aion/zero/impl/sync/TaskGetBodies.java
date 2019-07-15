@@ -6,6 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.PeerState.State;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
@@ -69,7 +71,7 @@ final class TaskGetBodies implements Runnable {
 
             int idHash = hw.getNodeIdHash();
             String displayId = hw.getDisplayId();
-            List<A0BlockHeader> headers = hw.getHeaders();
+            List<BlockHeader> headers = hw.getHeaders();
             if (headers.isEmpty()) {
                 continue;
             }

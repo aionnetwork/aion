@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 public final class PrecompiledTransactionExecutor {
 
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            RepositoryCache<AccountState, IBlockStoreBase> repository,
             byte[] blockDifficulty,
             long blockNumber,
             long blockTimestamp,
@@ -195,7 +195,7 @@ public final class PrecompiledTransactionExecutor {
     }
 
     private static KernelInterface newKernelInterface(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            RepositoryCache<AccountState, IBlockStoreBase> repository,
             byte[] blockDifficulty,
             long blockNumber,
             long blockTimestamp,

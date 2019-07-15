@@ -10,6 +10,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -68,7 +69,7 @@ public class InvalidBlockTest {
                         .getNonce(new AionAddress(this.deployerKey.getAddress()));
         List<AionTransaction> transactions = makeTransactions(5, nonce);
 
-        AionBlock parent = this.blockchain.getBestBlock();
+        Block parent = this.blockchain.getBestBlock();
         AionBlock block = this.blockchain.createNewBlock(parent, transactions, false);
 
         Pair<ImportResult, AionBlockSummary> res =

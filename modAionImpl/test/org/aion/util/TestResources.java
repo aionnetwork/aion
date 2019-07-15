@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 
@@ -135,8 +137,8 @@ public class TestResources {
      * @return a set of consecutive blocks (in ascending order of the block number) to be used for
      *     testing.
      */
-    public static List<AionBlock> consecutiveBlocks(int limit) {
-        List<AionBlock> parameters = new ArrayList<>();
+    public static List<Block> consecutiveBlocks(int limit) {
+        List<Block> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(limit, rawDataFileWithConsecutiveBlocks)) {
             parameters.add(new AionBlock(rawData));

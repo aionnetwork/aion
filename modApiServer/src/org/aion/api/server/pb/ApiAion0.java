@@ -982,7 +982,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     try {
                         req = Message.req_getBlockByNumber.parseFrom(data);
                         long num = req.getBlockNumber();
-                        AionBlock blk = this.getBlock(num);
+                        Block blk = this.getBlock(num);
 
                         return createBlockMsg(blk);
                     } catch (Exception e) {
@@ -1045,7 +1045,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                         }
 
-                        AionBlock blk = this.getBlockByHash(hash);
+                        Block blk = this.getBlockByHash(hash);
                         return createBlockMsg(blk);
                     } catch (Exception e) {
                         LOG.error("ApiAion0.process.getBlockByHash exception: [{}]", e);
@@ -1890,7 +1890,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             blkNum = blkNum.subList(0, 1000);
                         }
 
-                        List<Map.Entry<AionBlock, BigInteger>> blks =
+                        List<Map.Entry<Block, BigInteger>> blks =
                                 getBlkAndDifficultyForBlkNumList(blkNum);
 
                         if (blks == null) {
@@ -1978,9 +1978,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         for (int i = 0; i < listLength; i++) {
                             long blkNum = blkStart + i;
-                            Map.Entry<AionBlock, BigInteger> entry =
+                            Map.Entry<Block, BigInteger> entry =
                                     getBlockWithTotalDifficulty(blkNum);
-                            AionBlock b = entry.getKey();
+                            Block b = entry.getKey();
                             BigInteger td = entry.getValue();
                             long blocktime;
                             if (blkNum != 0 && lastBlockTimestamp == null) {
@@ -2206,9 +2206,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         for (int i = 0; i < listLength; i++) {
                             long blkNum = blkStart + i;
-                            Map.Entry<AionBlock, BigInteger> entry =
+                            Map.Entry<Block, BigInteger> entry =
                                     getBlockWithTotalDifficulty(blkNum);
-                            AionBlock b = entry.getKey();
+                            Block b = entry.getKey();
                             BigInteger td = entry.getValue();
                             long blocktime = 0;
                             if (b.getNumber() > 0 && lastBlockTimestamp == null) {
@@ -2380,7 +2380,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         .boxed()
                                         .collect(Collectors.toList());
 
-                        List<Map.Entry<AionBlock, BigInteger>> blks =
+                        List<Map.Entry<Block, BigInteger>> blks =
                                 getBlkAndDifficultyForBlkNumList(blkNum);
 
                         if (blks == null) {
@@ -2433,7 +2433,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         .boxed()
                                         .collect(Collectors.toList());
 
-                        List<Map.Entry<AionBlock, BigInteger>> blks =
+                        List<Map.Entry<Block, BigInteger>> blks =
                                 getBlkAndDifficultyForBlkNumList(blkNum);
 
                         if (blks == null) {
@@ -2550,7 +2550,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return txWait.take();
     }
 
-    private byte[] createBlockMsg(AionBlock blk) {
+    private byte[] createBlockMsg(Block blk) {
         if (blk == null) {
             return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
         } else {
@@ -2593,7 +2593,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private Message.rsp_getBlock getRsp_getBlock(
-            AionBlock blk, List<ByteString> al, BigInteger td) {
+            Block genericBlock, List<ByteString> al, BigInteger td) {
+        // TODO: [Unity] Remove this cast when staked blocks are supported
+        AionBlock blk = (AionBlock) genericBlock;
         return Message.rsp_getBlock
                 .newBuilder()
                 .setParentHash(ByteString.copyFrom(blk.getParentHash()))
@@ -2617,13 +2619,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .build();
     }
 
-    private List<Message.t_Block> getRsp_getBlocks(List<Map.Entry<AionBlock, BigInteger>> blks) {
+    private List<Message.t_Block> getRsp_getBlocks(List<Map.Entry<Block, BigInteger>> blks) {
 
         return blks.parallelStream()
                 .filter(Objects::nonNull)
                 .map(
                         blk -> {
-                            AionBlock b = blk.getKey();
+                            // TODO: [Unity] Remove this cast when staked blocks are supported
+                            AionBlock b = (AionBlock) blk.getKey();
 
                             return Message.t_Block
                                     .newBuilder()
@@ -2652,8 +2655,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private Message.t_BlockDetail.Builder getBlockDetailsObj(
-            AionBlock b, BigInteger td, long blocktime) {
-
+            Block block, BigInteger td, long blocktime) {
+        
+        // TODO: [Unity] Remove this cast when staked blocks are supported
+        AionBlock b = (AionBlock) block;
         return Message.t_BlockDetail
                 .newBuilder()
                 .setBlockNumber(b.getNumber())
@@ -2729,7 +2734,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return tdBuilder.build();
     }
 
-    private String generateBlockSqlStatement(AionBlock b, BigInteger td, long blocktime) {
+    private String generateBlockSqlStatement(Block block, BigInteger td, long blocktime) {
+        // TODO: [Unity] Remove this cast when staked blocks are supported
+        AionBlock b = (AionBlock) block;
         /*
         create table block_cache(
             block_number bigint(64) primary key,
@@ -2811,7 +2818,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private String generateTransactionSqlStatement(
-            AionBlock b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
+            Block b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
         JSONArray logs = new JSONArray();
         for (Log l : _logs) {
             JSONArray log = new JSONArray();
@@ -2894,13 +2901,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private List<Message.t_BlockDetail> getRsp_getBlockDetails(
-            List<Map.Entry<AionBlock, BigInteger>> blks) {
+            List<Map.Entry<Block, BigInteger>> blks) {
 
         return blks.parallelStream()
                 .filter(Objects::nonNull)
                 .map(
                         blk -> {
-                            AionBlock b = blk.getKey();
+                            // TODO: [Unity] Remove this cast when staked blocks are supported
+                            AionBlock b = (AionBlock) blk.getKey();
                             Message.t_BlockDetail.Builder builder =
                                     Message.t_BlockDetail
                                             .newBuilder()
@@ -3049,7 +3057,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     // all or nothing. if any block from list is not found, unchecked exception gets thrown by
     // Map.entry()
     // causes this function to return in Exception
-    private List<Map.Entry<AionBlock, BigInteger>> getBlkAndDifficultyForBlkNumList(
+    private List<Map.Entry<Block, BigInteger>> getBlkAndDifficultyForBlkNumList(
             List<Long> blkNum) {
         return blkNum.parallelStream()
                 .map(this::getBlockWithTotalDifficulty)

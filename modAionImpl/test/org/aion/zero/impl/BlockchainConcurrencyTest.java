@@ -8,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.aion.base.AionTransaction;
+import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
@@ -55,7 +56,7 @@ public class BlockchainConcurrencyTest {
                             assertThat(bc.getBestBlockHash()).isNotNull();
                             bc.getSize();
 
-                            AionBlock block = bc.getBestBlock();
+                            Block block = bc.getBestBlock();
                             assertThat(block).isNotNull();
                             assertThat(block.getNumber()).isAtLeast(prevNumber);
                             prevNumber = block.getNumber();

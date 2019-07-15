@@ -15,6 +15,7 @@ import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.vm.LongLivedAvm;
@@ -96,7 +97,7 @@ public class AionHubTest {
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
         checkHubNullity(hub);
 
-        AionBlock blk = hub.getStartingBlock();
+        Block blk = hub.getStartingBlock();
         assertThat(blk).isNotNull();
         assertThat(blk.getNumber()).isEqualTo(0);
 
@@ -118,7 +119,7 @@ public class AionHubTest {
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
         checkHubNullity(hub);
 
-        AionBlock blk = hub.getStartingBlock();
+        Block blk = hub.getStartingBlock();
         assertThat(blk).isNotNull();
         assertThat(blk.getNumber()).isEqualTo((long) expectedStartBlock);
 
@@ -165,7 +166,7 @@ public class AionHubTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete some world state root entries from the database
@@ -187,7 +188,7 @@ public class AionHubTest {
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
         checkHubNullity(hub);
 
-        AionBlock blk = hub.getStartingBlock();
+        Block blk = hub.getStartingBlock();
         assertThat(blk).isNotNull();
         assertThat(blk.getNumber()).isEqualTo((long) NUMBER_OF_BLOCKS);
 
@@ -244,7 +245,7 @@ public class AionHubTest {
             }
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         BigInteger td2 = chain.getTotalDifficulty();
@@ -280,7 +281,7 @@ public class AionHubTest {
 
         assertEquals(td6, chain.getTotalDifficulty());
 
-        AionBlock blk = hub.getStartingBlock();
+        Block blk = hub.getStartingBlock();
         assertThat(blk).isNotNull();
         assertThat(blk.getNumber()).isEqualTo(6);
         // ensure that the world state is ok

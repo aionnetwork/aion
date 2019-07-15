@@ -1,5 +1,6 @@
 package org.aion.zero.impl.core.energy;
 
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.types.A0BlockHeader;
 
 public abstract class AbstractEnergyStrategyLimit {
@@ -23,9 +24,9 @@ public abstract class AbstractEnergyStrategyLimit {
         return this.energyDivisorLimit;
     }
 
-    public long getEnergyLimit(A0BlockHeader header) {
+    public long getEnergyLimit(BlockHeader header) {
         return Math.max(getEnergyLimitInternal(header), this.energyLowerBound);
     }
 
-    protected abstract long getEnergyLimitInternal(A0BlockHeader header);
+    protected abstract long getEnergyLimitInternal(BlockHeader header);
 }

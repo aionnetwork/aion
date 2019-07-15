@@ -11,6 +11,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
@@ -80,7 +81,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete some world state root entries from the database
@@ -159,7 +160,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete some world state root entries from the database
@@ -240,7 +241,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete some world state root entries from the database
@@ -367,11 +368,11 @@ public class BlockchainDataRecoveryTest {
             }
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete middle block from db
-        AionBlock middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
+        Block middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
         repo.getBlockDatabase().delete(middle.getHash());
 
         // delete some world state root entries from the database
@@ -482,7 +483,7 @@ public class BlockchainDataRecoveryTest {
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
@@ -594,7 +595,7 @@ public class BlockchainDataRecoveryTest {
         }
 
         // splitting chains
-        AionBlock mainChainBlock, sideChainBlock;
+        Block mainChainBlock, sideChainBlock;
         mainChainBlock = chain.getBestBlock();
         sideChainBlock = mainChainBlock;
 
@@ -641,7 +642,7 @@ public class BlockchainDataRecoveryTest {
                 .isEqualTo(ImportResult.IMPORTED_BEST);
         mainChainBlock = context.block;
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(EVEN_NUMBER_OF_BLOCKS);
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
@@ -774,7 +775,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
@@ -887,7 +888,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
@@ -963,7 +964,7 @@ public class BlockchainDataRecoveryTest {
             blocksToImport.add(context.block);
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
@@ -1128,11 +1129,11 @@ public class BlockchainDataRecoveryTest {
             }
         }
 
-        AionBlock bestBlock = chain.getBestBlock();
+        Block bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete middle block from db
-        AionBlock middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
+        Block middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
         repo.getBlockDatabase().delete(middle.getHash());
 
         // delete index entries from the database

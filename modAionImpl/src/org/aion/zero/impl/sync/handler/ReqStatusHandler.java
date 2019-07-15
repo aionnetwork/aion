@@ -1,6 +1,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.math.BigInteger;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -69,7 +71,7 @@ public final class ReqStatusHandler extends Handler {
         if ((now - cacheTs) > this.UPDATE_INTERVAL) {
             synchronized (cache) {
                 try {
-                    AionBlock bestBlock = chain.getBestBlock();
+                    Block bestBlock = chain.getBestBlock();
                     cache =
                             new ResStatus(
                                     bestBlock.getNumber(),

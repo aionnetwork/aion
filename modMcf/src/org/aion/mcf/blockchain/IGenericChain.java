@@ -2,18 +2,17 @@ package org.aion.mcf.blockchain;
 
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.types.AbstractBlockHeader;
 
 /** Generic Chain interface. */
-public interface IGenericChain<BLK extends Block, BH extends AbstractBlockHeader> {
+public interface IGenericChain {
 
-    BLK getBlockByNumber(long number);
+    Block getBlockByNumber(long number);
 
-    BLK getBlockByHash(byte[] hash);
+    Block getBlockByHash(byte[] hash);
 
-    IBlockStoreBase<?, ?> getBlockStore();
+    IBlockStoreBase getBlockStore();
 
-    BLK getBestBlock();
+    Block getBestBlock();
 
     AbstractTxInfo getTransactionInfo(byte[] hash);
 

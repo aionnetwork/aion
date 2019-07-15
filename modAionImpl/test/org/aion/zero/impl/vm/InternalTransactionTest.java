@@ -35,6 +35,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
@@ -374,7 +375,7 @@ public class InternalTransactionTest {
                         1L);
         tx.sign(deployerAccount);
 
-        AionBlock parentBlock = bc.getBestBlock();
+        Block parentBlock = bc.getBestBlock();
 
         AionBlock newBlock =
                 bc.createBlock(

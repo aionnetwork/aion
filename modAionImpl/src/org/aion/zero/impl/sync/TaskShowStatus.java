@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.config.StatsType;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -148,7 +150,7 @@ final class TaskShowStatus implements Runnable {
     }
 
     private String getStatus() {
-        AionBlock selfBest = this.chain.getBestBlock();
+        Block selfBest = this.chain.getBestBlock();
         String selfTd = selfBest.getCumulativeDifficulty().toString(10);
 
         return "sync-status avg-import="

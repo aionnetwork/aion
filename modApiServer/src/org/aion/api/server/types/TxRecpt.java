@@ -67,7 +67,7 @@ public final class TxRecpt {
     // indicates whether the transaction was successfully processed by the network
     public boolean successful;
 
-    public <BH extends BlockHeader, TXR extends AbstractTxReceipt> TxRecpt(
+    public <TXR extends AbstractTxReceipt> TxRecpt(
             Block block,
             AbstractTxInfo<TXR> txInfo,
             long cumulativeNrgUsed,

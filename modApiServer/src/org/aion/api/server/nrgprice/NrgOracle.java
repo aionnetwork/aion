@@ -3,6 +3,7 @@ package org.aion.api.server.nrgprice;
 import org.aion.api.server.nrgprice.strategy.NrgBlockPrice;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class NrgOracle {
 
     private void buildRecommendation() {
         long firstBlockNum = blockchain.getBestBlock().getNumber();
-        AionBlock lastBlock = blockchain.getBestBlock();
+        Block lastBlock = blockchain.getBestBlock();
 
         advisor.flush();
 

@@ -1,18 +1,14 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.util.types.Hash256;
 
 /**
  * proof of work chain interface.
  *
- * @param <BLK>
- * @param <BH>
  */
 @SuppressWarnings("rawtypes")
-public interface IPowChain<BLK extends Block, BH extends AbstractBlockHeader>
-        extends IGenericChain<BLK, BH> {
+public interface IPowChain extends IGenericChain {
 
     BigInteger getTotalDifficulty();
 

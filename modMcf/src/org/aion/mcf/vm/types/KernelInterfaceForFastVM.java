@@ -13,13 +13,13 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
-    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
+    private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
     private boolean fork040Enable;
 
     @VisibleForTesting
     public KernelInterfaceForFastVM(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
             DataWord blockDifficulty,
@@ -46,7 +46,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     private AionAddress blockCoinbase;
 
     public KernelInterfaceForFastVM(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            RepositoryCache<AccountState, IBlockStoreBase> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
             boolean fork040Enable,
@@ -99,7 +99,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.repositoryCache.rollback();
     }
 
-    public RepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
+    public RepositoryCache<AccountState, IBlockStoreBase> getRepositoryCache() {
         return this.repositoryCache;
     }
 

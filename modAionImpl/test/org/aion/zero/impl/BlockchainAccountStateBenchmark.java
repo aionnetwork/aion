@@ -18,6 +18,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.utils.FileUtils;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -259,7 +260,7 @@ public class BlockchainAccountStateBenchmark {
     private static AionBlock createContractBundle(
             final StandaloneBlockchain bc,
             final ECKey key,
-            final AionBlock parentBlock,
+            final Block parentBlock,
             final AionAddress contractAddress) {
         return createContractBundle(bc, key, parentBlock, contractAddress, 133);
     }
@@ -267,7 +268,7 @@ public class BlockchainAccountStateBenchmark {
     private static AionBlock createContractBundle(
             final StandaloneBlockchain bc,
             final ECKey key,
-            final AionBlock parentBlock,
+            final Block parentBlock,
             final AionAddress contractAddress,
             final int repeat) {
 

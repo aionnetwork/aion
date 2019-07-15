@@ -9,6 +9,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
@@ -27,9 +28,7 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 public class AionImpl implements IAionChain {
@@ -65,7 +64,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
+    public IPowChain getBlockchain() {
         return aionHub.getBlockchain();
     }
 
@@ -121,7 +120,7 @@ public class AionImpl implements IAionChain {
         collector.submitTx(transaction);
     }
 
-    public long estimateTxNrg(AionTransaction tx, IAionBlock block) {
+    public long estimateTxNrg(AionTransaction tx, Block block) {
 
         if (tx.getSignature() == null) {
             tx.sign(keyForCallandEstimate);
@@ -164,7 +163,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public AionTxReceipt callConstant(AionTransaction tx, IAionBlock block) {
+    public AionTxReceipt callConstant(AionTransaction tx, Block block) {
 
         if (tx.getSignature() == null) {
             tx.sign(keyForCallandEstimate);

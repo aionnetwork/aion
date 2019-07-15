@@ -1,6 +1,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.util.List;
+
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -40,7 +42,7 @@ public final class ResBlocksHeadersHandler extends Handler {
                     .getSyncStats()
                     .updateResponseTime(_displayId, System.nanoTime(), RequestType.HEADERS);
 
-            List<A0BlockHeader> headers = resHeaders.getHeaders();
+            List<BlockHeader> headers = resHeaders.getHeaders();
             if (headers != null && headers.size() > 0) {
                 if (log.isDebugEnabled()) {
                     this.log.debug(

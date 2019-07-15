@@ -1,7 +1,8 @@
 package org.aion.zero.impl.sync;
 
 import java.util.List;
-import org.aion.zero.types.A0BlockHeader;
+
+import org.aion.mcf.blockchain.BlockHeader;
 
 /** @author chris used by imported headers on sync mgr */
 final class HeadersWrapper {
@@ -12,13 +13,13 @@ final class HeadersWrapper {
 
     private long timestamp;
 
-    private List<A0BlockHeader> headers;
+    private List<BlockHeader> headers;
 
     /**
      * @param _nodeIdHash int
      * @param _headers List
      */
-    HeadersWrapper(int _nodeIdHash, String _displayId, final List<A0BlockHeader> _headers) {
+    HeadersWrapper(int _nodeIdHash, String _displayId, final List<BlockHeader> _headers) {
         this.nodeIdHash = _nodeIdHash;
         this.displayId = _displayId;
         this.headers = _headers;
@@ -41,7 +42,7 @@ final class HeadersWrapper {
     }
 
     /** @return List */
-    List<A0BlockHeader> getHeaders() {
+    List<BlockHeader> getHeaders() {
         return this.headers;
     }
 }

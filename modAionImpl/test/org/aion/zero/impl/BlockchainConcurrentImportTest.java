@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.util.types.Hash256;
@@ -344,7 +345,7 @@ public class BlockchainConcurrentImportTest {
                 () -> {
 
                     // parent will be main chain block
-                    AionBlock _parent = _chain.getBestBlock();
+                    Block _parent = _chain.getBestBlock();
 
                     if (_parent.getNumber() >= _startHeight) {
 

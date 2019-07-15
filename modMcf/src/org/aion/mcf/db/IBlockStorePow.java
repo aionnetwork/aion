@@ -2,20 +2,16 @@ package org.aion.mcf.db;
 
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.AbstractBlockHeader;
 
 /**
  * POW BLockstore interface.
  *
- * @param <BLK>
- * @param <BH>
  */
-public interface IBlockStorePow<BLK extends Block, BH extends AbstractBlockHeader>
-        extends IBlockStoreBase<BLK, BH> {
+public interface IBlockStorePow extends IBlockStoreBase {
 
     BigInteger getTotalDifficultyForHash(byte[] hash);
 
-    void saveBlock(BLK block, BigInteger cummDifficulty, boolean mainChain);
+    void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
 
     BigInteger getTotalDifficulty();
 }

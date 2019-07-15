@@ -68,7 +68,7 @@ public final class AvmTransactionExecutor {
      * @return a list of transaction summaries pertaining to the transactions.
      */
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            RepositoryCache<AccountState, IBlockStoreBase> repository,
             byte[] blockDifficulty,
             long blockNumber,
             long blockTimestamp,

@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.P2pConstant;
 import org.aion.util.types.ByteArrayWrapper;
@@ -109,7 +111,7 @@ final class TaskImportBlocks implements Runnable {
                 // ignoring these blocks
                 log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
             } else { // the peerState is not null after this
-                List<AionBlock> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
+                List<Block> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
 
                 if (log.isDebugEnabled()) {
                     log.debug(
@@ -156,8 +158,8 @@ final class TaskImportBlocks implements Runnable {
      * @return the list of blocks that pass the filter conditions.
      */
     @VisibleForTesting
-    static List<AionBlock> filterBatch(
-            List<AionBlock> blocks,
+    static List<Block> filterBatch(
+            List<Block> blocks,
             AionBlockchainImpl chain,
             Map<ByteArrayWrapper, Object> imported) {
         if (chain.hasPruneRestriction()) {
@@ -174,16 +176,16 @@ final class TaskImportBlocks implements Runnable {
         }
     }
 
-    private static boolean isNotImported(AionBlock b, Map<ByteArrayWrapper, Object> imported) {
+    private static boolean isNotImported(Block b, Map<ByteArrayWrapper, Object> imported) {
         return imported.get(ByteArrayWrapper.wrap(b.getHash())) == null;
     }
 
-    private static boolean isNotRestricted(AionBlock b, AionBlockchainImpl chain) {
+    private static boolean isNotRestricted(Block b, AionBlockchainImpl chain) {
         return !chain.isPruneRestricted(b.getNumber());
     }
 
     /** @implNote This method is called only when state is not null. */
-    private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId) {
+    private PeerState processBatch(PeerState givenState, List<Block> batch, String displayId) {
         // make a copy of the original state
         state.copy(Objects.requireNonNull(givenState));
 
@@ -216,7 +218,7 @@ final class TaskImportBlocks implements Runnable {
         // the batch cannot be empty henceforth
         // check last block in batch to see if we can skip batch
         if (givenState.getMode() != BACKWARD) {
-            AionBlock b = batch.get(batch.size() - 1);
+            Block b = batch.get(batch.size() - 1);
             Mode mode = givenState.getMode();
 
             // last block already exists
@@ -251,7 +253,7 @@ final class TaskImportBlocks implements Runnable {
         long first = -1L, last = -1L;
         ImportResult importResult;
 
-        for (AionBlock b : batch) {
+        for (Block b : batch) {
             try {
                 importResult = importBlock(b, displayId, givenState);
 
@@ -532,11 +534,11 @@ final class TaskImportBlocks implements Runnable {
      * @apiNote Should be used when we aim to bypass any recovery methods set in place for importing
      *     old blocks, for example when blocks are imported in {@link PeerState.Mode#FORWARD} mode.
      */
-    static boolean isAlreadyStored(AionBlockStore store, AionBlock block) {
+    static boolean isAlreadyStored(AionBlockStore store, Block block) {
         return store.getMaxNumber() >= block.getNumber() && store.isBlockExist(block.getHash());
     }
 
-    private ImportResult importBlock(AionBlock b, String displayId, PeerState state) {
+    private ImportResult importBlock(Block b, String displayId, PeerState state) {
         ImportResult importResult;
         long t1 = System.currentTimeMillis();
         importResult = this.chain.tryToConnect(b);
@@ -629,7 +631,7 @@ final class TaskImportBlocks implements Runnable {
 
         while (level <= last) {
             // get blocks stored for level
-            Map<ByteArrayWrapper, List<AionBlock>> levelFromDisk =
+            Map<ByteArrayWrapper, List<Block>> levelFromDisk =
                     chain.loadPendingBlocksAtLevel(level);
 
             if (levelFromDisk.isEmpty()) {
@@ -640,11 +642,11 @@ final class TaskImportBlocks implements Runnable {
 
             List<ByteArrayWrapper> importedQueues = new ArrayList<>(levelFromDisk.keySet());
 
-            for (Map.Entry<ByteArrayWrapper, List<AionBlock>> entry : levelFromDisk.entrySet()) {
+            for (Map.Entry<ByteArrayWrapper, List<Block>> entry : levelFromDisk.entrySet()) {
                 // initialize batch counter
                 batch = 0;
 
-                List<AionBlock> batchFromDisk = entry.getValue();
+                List<Block> batchFromDisk = entry.getValue();
 
                 if (log.isDebugEnabled()) {
                     log.debug(
@@ -673,7 +675,7 @@ final class TaskImportBlocks implements Runnable {
                     continue;
                 }
 
-                for (AionBlock b : batchFromDisk) {
+                for (Block b : batchFromDisk) {
                     try {
                         importResult = importBlock(b, "STORAGE", state);
 

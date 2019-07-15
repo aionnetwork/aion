@@ -1,6 +1,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.util.List;
+
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -58,7 +60,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
                         take,
                         _displayId);
             }
-            List<A0BlockHeader> headers =
+            List<BlockHeader> headers =
                     this.blockchain.getListOfHeadersStartFrom(
                             fromBlock, Math.min(take, MAX_NUM_OF_BLOCKS));
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
