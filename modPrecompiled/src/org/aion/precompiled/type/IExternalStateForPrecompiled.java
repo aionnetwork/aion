@@ -2,7 +2,6 @@ package org.aion.precompiled.type;
 
 import java.math.BigInteger;
 import org.aion.types.AionAddress;
-import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * An interface that allows the caller to supply the precompiled contract module with access to
@@ -30,7 +29,7 @@ public interface IExternalStateForPrecompiled {
      * @param key The key.
      * @param value The value.
      */
-    void addStorageValue(AionAddress address, ByteArrayWrapper key, ByteArrayWrapper value);
+    void addStorageValue(AionAddress address, IPrecompiledDataWord key, IPrecompiledDataWord value);
 
     /**
      * Removes any key-value pairing whose key is the given key in the storage space of the given
@@ -39,7 +38,7 @@ public interface IExternalStateForPrecompiled {
      * @param address The address.
      * @param key The key.
      */
-    void removeStorage(AionAddress address, ByteArrayWrapper key);
+    void removeStorage(AionAddress address, IPrecompiledDataWord key);
 
     /**
      * Returns the value of the key-value pairing in the storage space of the given address if one
@@ -49,7 +48,7 @@ public interface IExternalStateForPrecompiled {
      * @param key The key.
      * @return the value.
      */
-    ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key);
+    IPrecompiledDataWord getStorageValue(AionAddress address, IPrecompiledDataWord key);
 
     /**
      * Returns the balance of the specified address.

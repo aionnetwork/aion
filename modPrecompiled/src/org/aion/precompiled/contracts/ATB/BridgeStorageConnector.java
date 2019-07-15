@@ -4,13 +4,13 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
+import org.aion.precompiled.type.PrecompiledDataWord;
+import org.aion.precompiled.type.PrecompiledDoubleDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Storage layout mapping as the following:
@@ -38,17 +38,17 @@ import org.aion.util.types.ByteArrayWrapper;
 public class BridgeStorageConnector {
 
     private enum S_OFFSET {
-        OWNER(new DataWordImpl(0x0)),
-        NEW_OWNER(new DataWordImpl(0x1)),
-        MEMBER_COUNT(new DataWordImpl(0x2)),
-        MIN_THRESH(new DataWordImpl(0x3)),
-        RING_LOCKED(new DataWordImpl(0x4)),
-        RELAYER(new DataWordImpl(0x5)),
-        INITIALIZED(new DataWordImpl(0x42));
+        OWNER(PrecompiledDataWord.fromInt(0x0)),
+        NEW_OWNER(PrecompiledDataWord.fromInt(0x1)),
+        MEMBER_COUNT(PrecompiledDataWord.fromInt(0x2)),
+        MIN_THRESH(PrecompiledDataWord.fromInt(0x3)),
+        RING_LOCKED(PrecompiledDataWord.fromInt(0x4)),
+        RELAYER(PrecompiledDataWord.fromInt(0x5)),
+        INITIALIZED(PrecompiledDataWord.fromInt(0x42));
 
-        private final DataWordImpl offset;
+        private final PrecompiledDataWord offset;
 
-        S_OFFSET(DataWordImpl offset) {
+        S_OFFSET(PrecompiledDataWord offset) {
             this.offset = offset;
         }
     }
@@ -75,7 +75,7 @@ public class BridgeStorageConnector {
     }
 
     public void setInitialized(final boolean initialized) {
-        DataWordImpl init = initialized ? new DataWordImpl(1) : new DataWordImpl(0);
+        PrecompiledDataWord init = initialized ? PrecompiledDataWord.fromInt(1) : PrecompiledDataWord.fromInt(0);
         this.setWORD(S_OFFSET.INITIALIZED.offset, init);
     }
 
@@ -113,7 +113,7 @@ public class BridgeStorageConnector {
 
     public void setMemberCount(int amount) {
         assert amount >= 0 : "amount must be positive";
-        this.setWORD(S_OFFSET.MEMBER_COUNT.offset, new DataWordImpl(amount));
+        this.setWORD(S_OFFSET.MEMBER_COUNT.offset, PrecompiledDataWord.fromInt(amount));
     }
 
     public int getMemberCount() {
@@ -124,7 +124,7 @@ public class BridgeStorageConnector {
 
     public void setMinThresh(int amount) {
         assert amount >= 0 : "amount must be positive";
-        this.setWORD(S_OFFSET.MIN_THRESH.offset, new DataWordImpl(amount));
+        this.setWORD(S_OFFSET.MIN_THRESH.offset, PrecompiledDataWord.fromInt(amount));
     }
 
     public int getMinThresh() {
@@ -136,7 +136,7 @@ public class BridgeStorageConnector {
 
     // TODO: this can be optimized
     public void setRingLocked(boolean value) {
-        DataWordImpl lockedDw = value ? new DataWordImpl(1) : new DataWordImpl(0);
+        PrecompiledDataWord lockedDw = value ? PrecompiledDataWord.fromInt(1) : PrecompiledDataWord.fromInt(0);
         this.setWORD(S_OFFSET.RING_LOCKED.offset, lockedDw);
     }
 
@@ -152,15 +152,15 @@ public class BridgeStorageConnector {
     public void setActiveMember(@Nonnull final byte[] key, final boolean value) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
-        DataWordImpl hWord = new DataWordImpl(h);
-        DataWordImpl b = value ? new DataWordImpl(1) : new DataWordImpl(0);
+        PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
+        PrecompiledDataWord b = value ? PrecompiledDataWord.fromInt(1) : PrecompiledDataWord.fromInt(0);
         this.setWORD(hWord, b);
     }
 
     public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
-        DataWordImpl hWord = new DataWordImpl(h);
+        PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
 
         // C1 covered by getWORD
         byte[] activeMemberWord = this.getWORD(hWord);
@@ -180,7 +180,7 @@ public class BridgeStorageConnector {
         assert value.length == 32;
 
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
-        DataWordImpl hWord = new DataWordImpl(h);
+        PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
         this.setDWORD(hWord, value);
     }
 
@@ -196,7 +196,7 @@ public class BridgeStorageConnector {
     public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
-        DataWordImpl hWord = new DataWordImpl(h);
+        PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
         byte[] bundleDoubleWord = this.getDWORD(hWord);
         if (bundleDoubleWord == null) return ByteUtil.EMPTY_WORD;
 
@@ -209,40 +209,50 @@ public class BridgeStorageConnector {
 
     // DWORD helpers
 
-    private byte[] getWORD(@Nonnull final DataWordImpl key) {
-        ByteArrayWrapper word = this.externalState.getStorageValue(contractAddress, key.toWrapper());
+    private byte[] getWORD(@Nonnull final PrecompiledDataWord key) {
+        IPrecompiledDataWord word = this.externalState.getStorageValue(contractAddress, key);
         // C1
-        if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD)) return null;
-        return alignBytes(word.getData());
+        if (word == null || Arrays.equals(word.copyOfData(), ByteUtil.EMPTY_HALFWORD)) return null;
+        return alignBytes(word.copyOfData());
     }
 
-    private void setWORD(@Nonnull final DataWordImpl key, @Nonnull final DataWordImpl word) {
-        if (word.isZero()) {
-            this.externalState.removeStorage(contractAddress, key.toWrapper());
+    private void setWORD(@Nonnull final PrecompiledDataWord key, @Nonnull final PrecompiledDataWord word) {
+        if (allBytesAreZero(word)) {
+            this.externalState.removeStorage(contractAddress, key);
         } else {
             this.externalState.addStorageValue(
                     contractAddress,
-                    key.toWrapper(),
-                    new ByteArrayWrapper(word.getNoLeadZeroesData()));
+                    key,
+                    word);
         }
     }
 
-    private void setDWORD(@Nonnull final DataWordImpl key, @Nonnull final byte[] dword) {
+    private void setDWORD(@Nonnull final PrecompiledDataWord key, @Nonnull final byte[] dword) {
         assert dword.length > 16;
-        DoubleDataWord ddw = new DoubleDataWord(dword);
-        if (ddw.isZero()) {
-            this.externalState.removeStorage(contractAddress, key.toWrapper());
+        PrecompiledDoubleDataWord ddw = PrecompiledDoubleDataWord.fromBytes(dword);
+        if (allBytesAreZero(ddw)) {
+            this.externalState.removeStorage(contractAddress, key);
         } else {
-            this.externalState.addStorageValue(contractAddress, key.toWrapper(), ddw.toWrapper());
+            this.externalState.addStorageValue(contractAddress, key, ddw);
         }
     }
 
-    private byte[] getDWORD(@Nonnull final DataWordImpl key) {
-        ByteArrayWrapper word = this.externalState.getStorageValue(contractAddress, key.toWrapper());
+    private byte[] getDWORD(@Nonnull final PrecompiledDataWord key) {
+        IPrecompiledDataWord word = this.externalState.getStorageValue(contractAddress, key);
         if (word == null) return null;
 
-        if (word.isZero()) return null;
-        return alignBytes(word.getData());
+        if (allBytesAreZero(word)) return null;
+        return alignBytes(word.copyOfData());
+    }
+
+    private static boolean allBytesAreZero(IPrecompiledDataWord precompiledDataWord) {
+        boolean allBytesAreZero = true;
+        for (byte singleByte : precompiledDataWord.copyOfData()) {
+            if (singleByte != 0x0) {
+                allBytesAreZero = false;
+            }
+        }
+        return allBytesAreZero;
     }
 
     private byte[] alignBytes(byte[] unalignedBytes) {
@@ -250,8 +260,8 @@ public class BridgeStorageConnector {
             return null;
         }
 
-        return (unalignedBytes.length > DataWordImpl.BYTES)
-                ? new DoubleDataWord(unalignedBytes).getData()
-                : new DataWordImpl(unalignedBytes).getData();
+        return (unalignedBytes.length > PrecompiledDataWord.SIZE)
+                ? PrecompiledDoubleDataWord.fromBytes(unalignedBytes).copyOfData()
+                : PrecompiledDataWord.fromBytes(unalignedBytes).copyOfData();
     }
 }

@@ -11,7 +11,10 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
+import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
+import org.aion.precompiled.type.PrecompiledDataWord;
+import org.aion.precompiled.type.PrecompiledDoubleDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryCache;
@@ -72,18 +75,23 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
     }
 
     @Override
-    public void addStorageValue(AionAddress address, ByteArrayWrapper key, ByteArrayWrapper value) {
-        this.repository.addStorageRow(address, key, value);
+    public void addStorageValue(AionAddress address, IPrecompiledDataWord key, IPrecompiledDataWord value) {
+        // We drop all of the leading zero bytes when we have a 16-byte data word as the value.
+        // This has always been done, it's a repository storage implementation detail as a kind of
+        // compaction optimization.
+        byte[] valueBytes = (value instanceof PrecompiledDataWord) ? dropLeadingZeroes(value.copyOfData()) : value.copyOfData();
+        this.repository.addStorageRow(address, new ByteArrayWrapper(key.copyOfData()), new ByteArrayWrapper(valueBytes));
     }
 
     @Override
-    public void removeStorage(AionAddress address, ByteArrayWrapper key) {
-        this.repository.removeStorageRow(address, key);
+    public void removeStorage(AionAddress address, IPrecompiledDataWord key) {
+        this.repository.removeStorageRow(address, new ByteArrayWrapper(key.copyOfData()));
     }
 
     @Override
-    public ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key) {
-        return this.repository.getStorageValue(address, key);
+    public IPrecompiledDataWord getStorageValue(AionAddress address, IPrecompiledDataWord key) {
+        ByteArrayWrapper byteArray = this.repository.getStorageValue(address, new ByteArrayWrapper(key.copyOfData()));
+        return (byteArray == null) ? null : toDataWord(byteArray.toBytes());
     }
 
     @Override
@@ -134,5 +142,49 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
     @Override
     public void deductEnergyCost(AionAddress address, BigInteger energyCost) {
         this.repository.addBalance(address, energyCost.negate());
+    }
+
+    private static int findIndexOfFirstNonZeroByte(byte[] bytes) {
+        int indexOfFirstNonZeroByte = 0;
+        for (byte singleByte : bytes) {
+            if (singleByte != 0x0) {
+                return indexOfFirstNonZeroByte;
+            }
+            indexOfFirstNonZeroByte++;
+        }
+        return indexOfFirstNonZeroByte;
+    }
+
+    /**
+     * Returns the input bytes but with all leading zero bytes removed.
+     *
+     * <p>If the input bytes consists of all zero bytes then an array of length 1 whose only byte is
+     * a zero byte is returned.
+     *
+     * @param bytes The bytes to chop.
+     * @return the chopped bytes.
+     */
+    private static byte[] dropLeadingZeroes(byte[] bytes) {
+        int indexOfFirstNonZeroByte = findIndexOfFirstNonZeroByte(bytes);
+
+        if (indexOfFirstNonZeroByte == bytes.length) {
+            return new byte[1];
+        }
+
+        byte[] nonZeroBytes = new byte[bytes.length - indexOfFirstNonZeroByte];
+        System.arraycopy(bytes, indexOfFirstNonZeroByte, nonZeroBytes, 0, bytes.length - indexOfFirstNonZeroByte);
+        return nonZeroBytes;
+    }
+
+    /**
+     * Converts bytes to the appropriately sized data word implementation and returns it.
+     *
+     * @param bytes The bytes to convert.
+     * @return the data word.
+     */
+    private static IPrecompiledDataWord toDataWord(byte[] bytes) {
+        // A PrecompiledDataWord can be placed into storage as a byte array whose length is between
+        // 1 and 16 inclusive. This is how we can tell whether we have a data word or a double.
+        return (bytes.length > PrecompiledDataWord.SIZE) ? PrecompiledDoubleDataWord.fromBytes(bytes) : PrecompiledDataWord.fromBytes(bytes);
     }
 }

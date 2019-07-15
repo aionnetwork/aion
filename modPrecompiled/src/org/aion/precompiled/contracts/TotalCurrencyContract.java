@@ -3,14 +3,14 @@ package org.aion.precompiled.contracts;
 import java.math.BigInteger;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
-import org.aion.util.types.ByteArrayWrapper;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract implements PrecompiledContract {
@@ -94,10 +94,10 @@ public class TotalCurrencyContract implements PrecompiledContract {
             return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
-        ByteArrayWrapper balanceData =
-                this.externalState.getStorageValue(this.address, new DataWordImpl(input).toWrapper());
+        IPrecompiledDataWord balanceData =
+                this.externalState.getStorageValue(this.address, PrecompiledDataWord.fromInt(input));
         return new PrecompiledTransactionResult(
-                PrecompiledResultCode.SUCCESS, nrg - COST, balanceData.getData());
+                PrecompiledResultCode.SUCCESS, nrg - COST, balanceData.copyOfData());
     }
 
     private PrecompiledTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
@@ -112,7 +112,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
 
         // process input data
         int offset = 0;
-        DataWordImpl chainId = new DataWordImpl(input[0]);
+        PrecompiledDataWord chainId = PrecompiledDataWord.fromInt(input[0]);
         offset++;
 
         byte signum = input[1];
@@ -145,9 +145,9 @@ public class TotalCurrencyContract implements PrecompiledContract {
         }
 
         // payload processing
-        ByteArrayWrapper totalCurr = this.externalState.getStorageValue(this.address, chainId.toWrapper());
+        IPrecompiledDataWord totalCurr = this.externalState.getStorageValue(this.address, chainId);
         BigInteger totalCurrBI =
-                totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
+                totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.copyOfData());
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
@@ -170,14 +170,8 @@ public class TotalCurrencyContract implements PrecompiledContract {
         // store result and successful exit
         this.externalState.addStorageValue(
                 this.address,
-                chainId.toWrapper(),
-                wrapValueForPut(new DataWordImpl(finalValue.toByteArray())));
+                chainId,
+                PrecompiledDataWord.fromBytes(finalValue.toByteArray()));
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
-    }
-
-    private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
-        return (value.isZero())
-                ? value.toWrapper()
-                : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 }
