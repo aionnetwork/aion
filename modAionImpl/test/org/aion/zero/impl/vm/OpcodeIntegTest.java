@@ -771,8 +771,7 @@ public class OpcodeIntegTest {
 
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         AionAddress contract = TxUtil.calculateContractAddress(tx);
         checkStateOfNewContract(repo, contractName, contractFilename, contract, value);
