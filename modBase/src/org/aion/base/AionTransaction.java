@@ -26,11 +26,11 @@ public class AionTransaction implements Cloneable {
     protected byte[] timeStamp;
 
     /* define transaction type. */
-    protected byte type;
+    private final byte type;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
-    protected ISignature signature;
+    private ISignature signature;
 
     private byte[] transactionHash;
 
@@ -45,21 +45,15 @@ public class AionTransaction implements Cloneable {
             long energyLimit,
             long energyPrice) {
 
-        if (senderAddress == null) {
-            throw new IllegalArgumentException();
-        }
-        if (nonce == null) {
-            throw new IllegalArgumentException();
-        }
-
-        this.nonce = nonce;
-        this.destinationAddress = destinationAddress;
-        this.value = value;
-        this.transactionData = transactionData;
-        this.type = TransactionTypes.DEFAULT;
-        this.energyLimit = energyLimit;
-        this.energyPrice = energyPrice;
-        this.senderAddress = senderAddress;
+        this(
+                nonce,
+                senderAddress,
+                destinationAddress,
+                value,
+                transactionData,
+                energyLimit,
+                energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     // constructor for explicitly setting a transaction type.
@@ -80,8 +74,10 @@ public class AionTransaction implements Cloneable {
                 value,
                 transactionData,
                 energyLimit,
-                energyPrice);
-        this.type = txType;
+                energyPrice,
+                txType,
+                null,
+                null);
     }
 
     // constructor for explicitly setting a transaction type.
@@ -97,15 +93,21 @@ public class AionTransaction implements Cloneable {
             ISignature signature,
             byte[] timeStamp) {
 
-        this(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                txType);
+        if (nonce == null) {
+            throw new NullPointerException("No Nonce");
+        }
+        if (senderAddress == null) {
+            throw new NullPointerException("No Sender");
+        }
+
+        this.nonce = nonce;
+        this.value = value;
+        this.destinationAddress = destinationAddress;
+        this.transactionData = transactionData;
+        this.energyLimit = energyLimit;
+        this.energyPrice = energyPrice;
+        this.senderAddress = senderAddress;
+        this.type = txType;
         this.signature = signature;
         this.timeStamp = timeStamp;
     }
