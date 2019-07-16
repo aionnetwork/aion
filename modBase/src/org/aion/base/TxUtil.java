@@ -106,6 +106,9 @@ public final class TxUtil {
         byte[] type = RLP.encodeByte(tx.getTargetVM());
 
         if (withSignature) {
+            if (tx.getSignature() == null) {
+                throw new IllegalArgumentException();
+            }
             byte[] sigs =
                     RLP.encodeElement(
                             tx.getSignature() == null ? null : tx.getSignature().toBytes());

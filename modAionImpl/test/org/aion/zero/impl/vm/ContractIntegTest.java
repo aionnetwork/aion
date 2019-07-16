@@ -291,8 +291,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertEquals(nrg, tx.getNrgConsume());
+            assertEquals(nrg, summary.getNrgUsed().longValue());
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
@@ -343,8 +342,7 @@ public class ContractIntegTest {
             AionTxExecSummary summary = executeTransaction(tx, block, repo);
 
             assertEquals("", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
+            assertNotEquals(nrg, summary.getNrgUsed().longValue()); // all energy is not used up.
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
 
@@ -394,8 +392,7 @@ public class ContractIntegTest {
         if (txType == TransactionTypes.DEFAULT) {
 
             assertEquals("REVERT", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
+            assertNotEquals(nrg, summary.getNrgUsed().longValue()); // all energy is not used up.
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
@@ -446,8 +443,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
+            assertNotEquals(nrg, summary.getNrgUsed().longValue()); // all energy is not used up.
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
@@ -514,6 +510,7 @@ public class ContractIntegTest {
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Rejected: insufficient balance", summary.getReceipt().getError());
+            assertEquals(0, tx.getNrgConsume());
             checkStateOfDeployerOnBadDeploy(repo);
         }
     }
@@ -564,8 +561,7 @@ public class ContractIntegTest {
             AionBlock block = makeBlock(tx);
             AionTxExecSummary summary = executeTransaction(tx, block, repo);
             assertEquals("", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertNotEquals(nrg, tx.getNrgConsume());
+            assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
             String expectedMsg = "Im alive!";
             assertEquals(expectedMsg, new String(extractOutput(summary.getResult())));
@@ -623,8 +619,7 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         // Since input takes in uint8 we only want the last byte of num. Output size is well-defined
         // at 128 bits, or 16 bytes.
@@ -650,8 +645,7 @@ public class ContractIntegTest {
         block = makeBlock(tx);
         summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         // Since input takes in uint8 we only want the last byte of num. Output size is well-defined
         // at 128 bits, or 16 bytes.
@@ -709,13 +703,13 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("REVERT", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         System.out.println("DEP: " + deployerBalance);
 
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
     }
 
@@ -767,12 +761,12 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         // Check that the deployer did get the requested value sent back.
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost).add(value), repo.getBalance(deployer));
     }
 
@@ -829,11 +823,11 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
 
         // Check that the recipient received the value.
@@ -892,11 +886,11 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
 
         // Check that the recipient received the value.
@@ -974,11 +968,11 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
         deployerBalance = repo.getBalance(deployer);
         deployerNonce = repo.getNonce(deployer);
@@ -1007,10 +1001,11 @@ public class ContractIntegTest {
         block = makeBlock(tx);
         summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
-        txCost = BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+        txCost =
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
         assertEquals(value, repo.getBalance(recipient));
     }
@@ -1067,11 +1062,11 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         BigInteger txCost =
-                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
 
         deployerBalance = repo.getBalance(deployer);
@@ -1101,10 +1096,11 @@ public class ContractIntegTest {
         block = makeBlock(tx);
         summary = executeTransaction(tx, block, repo);
         assertEquals("REVERT", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
-        txCost = BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+        txCost =
+                BigInteger.valueOf(summary.getNrgUsed().longValue())
+                        .multiply(BigInteger.valueOf(nrgPrice));
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
     }
 
@@ -1195,12 +1191,10 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("FAILURE", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertEquals(nrg, tx.getNrgConsume());
+            assertEquals(nrg, summary.getNrgUsed().longValue());
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Failed: invalid data", summary.getReceipt().getError());
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-            assertEquals(nrg, tx.getNrgConsume());
+            assertEquals(nrg, summary.getNrgUsed().longValue());
         }
     }
 
@@ -1255,8 +1249,7 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
 
@@ -1265,7 +1258,7 @@ public class ContractIntegTest {
                 senderBalance
                         .subtract(BigInteger.TEN)
                         .subtract(
-                                BigInteger.valueOf(tx.getNrgConsume())
+                                BigInteger.valueOf(summary.getNrgUsed().longValue())
                                         .multiply(BigInteger.valueOf(nrgPrice))),
                 blockchain.getRepository().getBalance(deployer));
 
@@ -1295,8 +1288,7 @@ public class ContractIntegTest {
         block = makeBlock(tx);
         summary = executeTransaction(tx, block, repo);
         assertEquals("", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
@@ -1436,8 +1428,7 @@ public class ContractIntegTest {
         // The evmjit only return the the transaction success or failed when performing the function
         // call.
         assertEquals("REVERT", summary.getReceipt().getError());
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());
         assertTrue(result.getRight().getSummaries().get(0).isFailed());
@@ -1820,8 +1811,7 @@ public class ContractIntegTest {
         if (!summary.getReceipt().getError().equals("")) {
             return null;
         }
-        assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
-        assertNotEquals(nrg, tx.getNrgConsume());
+        assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         AionAddress contract = TxUtil.calculateContractAddress(tx);
         if (contractFilename == null) {
