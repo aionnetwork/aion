@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.types.KernelInterface;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
@@ -12,7 +11,6 @@ import org.aion.util.bytes.ByteUtil;
 
 public class PrecompiledTransactionResult {
 
-    private KernelInterface kernel;
     private PrecompiledResultCode code;
     private byte[] output;
     private long energyRemaining;
@@ -29,7 +27,6 @@ public class PrecompiledTransactionResult {
         this.code = PrecompiledResultCode.SUCCESS;
         this.output = new byte[0];
         this.energyRemaining = 0;
-        this.kernel = null;
         this.logs = new ArrayList<>();
         this.internalTransactions = new ArrayList<>();
         this.deletedAddresses = new ArrayList<>();
@@ -46,7 +43,6 @@ public class PrecompiledTransactionResult {
         this.code = code;
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
-        this.kernel = null;
         this.logs = new ArrayList<>();
         this.internalTransactions = new ArrayList<>();
         this.deletedAddresses = new ArrayList<>();
@@ -65,7 +61,6 @@ public class PrecompiledTransactionResult {
         this.code = code;
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
-        this.kernel = null;
         this.logs = new ArrayList<>();
         this.internalTransactions = new ArrayList<>();
         this.deletedAddresses = new ArrayList<>();
@@ -76,10 +71,6 @@ public class PrecompiledTransactionResult {
      *
      * <p>The representation is partial because it only represents the {@link
      * PrecompiledResultCode}, the amount of energy remaining, and the output.
-     *
-     * <p>In particular, the {@link KernelInterface} is not included in this representation, meaning
-     * these components of this object will be lost when the byte array representation is
-     * transformed back into a {@code TransactionResult} via the {@code fromBytes()} method.
      *
      * @return A partial byte array representation of this object.
      */
@@ -101,9 +92,6 @@ public class PrecompiledTransactionResult {
      * Returns a {@code TransactionResult} object from a partial byte array representation obtained
      * via the {@code toBytes()} method.
      *
-     * <p>The returned object will be constructed from the partial representation, which, because it
-     * is partial, will have no {@link KernelInterface}.
-     *
      * @param bytes A partial byte array representation of a {@code TransactionResult}.
      * @return The {@code TransactionResult} object obtained from the byte array representation.
      */
@@ -121,20 +109,11 @@ public class PrecompiledTransactionResult {
         return new PrecompiledTransactionResult(code, energyRemaining, output);
     }
 
-    public void setResultCodeAndEnergyRemaining(PrecompiledResultCode code, long energyRemaining) {
-        this.code = code;
-        this.energyRemaining = energyRemaining;
-    }
-
     public void setResultCode(PrecompiledResultCode code) {
         if (code == null) {
             throw new NullPointerException("Cannot set null result code.");
         }
         this.code = code;
-    }
-
-    public void setKernelInterface(KernelInterface kernel) {
-        this.kernel = kernel;
     }
 
     public void setReturnData(byte[] output) {
@@ -155,10 +134,6 @@ public class PrecompiledTransactionResult {
 
     public long getEnergyRemaining() {
         return this.energyRemaining;
-    }
-
-    public KernelInterface getKernelInterface() {
-        return this.kernel;
     }
 
     public void addLogs(List<Log> logs) {
@@ -187,16 +162,6 @@ public class PrecompiledTransactionResult {
 
     @Override
     public String toString() {
-        return "TransactionResult { code = "
-                + this.code
-                + ", energy remaining = "
-                + this.energyRemaining
-                + ", output = "
-                + ByteUtil.toHexString(this.output)
-                + " }";
-    }
-
-    public String toStringWithSideEffects() {
         return "TransactionResult { code = "
                 + this.code
                 + ", energy remaining = "
