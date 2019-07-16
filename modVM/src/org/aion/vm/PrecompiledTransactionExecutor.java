@@ -46,7 +46,7 @@ public final class PrecompiledTransactionExecutor {
         for (AionTransaction transaction : transactions) {
 
             // Execute the contract.
-            PrecompiledTransactionResult result = ContractExecutor.execute(externalState, transaction);
+            PrecompiledTransactionResult result = ContractExecutor.executeExternalCall(externalState, transaction);
 
             // Check the block energy limit & reject if necessary.
             long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);

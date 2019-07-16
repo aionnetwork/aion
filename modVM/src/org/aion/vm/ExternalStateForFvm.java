@@ -1,6 +1,9 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
+import org.aion.fastvm.ExecutionContext;
+import org.aion.fastvm.FastVmResultCode;
+import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -10,6 +13,12 @@ import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.ContractInfo;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.ContractExecutor;
+import org.aion.precompiled.type.IExternalStateForPrecompiled;
+import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -79,6 +88,35 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     @Override
     public IExternalStateForFvm newChildExternalState() {
         return new ExternalStateForFvm(this.repository.startTracking(), this.miner, this.blockDifficulty, this.isLocalCall, this.allowNonceIncrement, this.isFork040enabled, this.blockNumber, this.blockTimestamp, this.blockEnergyLimit);
+    }
+
+    /**
+     * Returns {@code true} only if the specified address is the address of a precompiled contract.
+     *
+     * @param address The address to check.
+     * @return whether the address is a precompiled contract.
+     */
+    @Override
+    public boolean isPrecompiledContract(AionAddress address) {
+        return ContractInfo.isPrecompiledContract(address);
+    }
+
+    /**
+     * Executes an internal precompiled contract call and returns the result.
+     *
+     * @param context The context of the internal transaction.
+     * @return the execution result.
+     */
+    @Override
+    public FastVmTransactionResult runInternalPrecompiledContractCall(ExecutionContext context) {
+
+        PrecompiledTransactionContext precompiledContext = toPrecompiledTransactionContext(context);
+
+        IExternalStateForPrecompiled precompiledWorldState = new ExternalStateForPrecompiled(this.repository, this.blockNumber, this.isLocalCall, this.allowNonceIncrement);
+
+        PrecompiledTransactionResult result = ContractExecutor.executeInternalCall(precompiledWorldState, precompiledContext, context.getTransactionData(), context.getTransactionEnergy());
+
+        return precompiledToFvmResult(result);
     }
 
     /**
@@ -499,5 +537,45 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
             }
         }
         return vm;
+    }
+
+    private static FastVmTransactionResult precompiledToFvmResult(PrecompiledTransactionResult precompiledResult) {
+        FastVmTransactionResult fvmResult = new FastVmTransactionResult();
+
+        fvmResult.addLogs(precompiledResult.getLogs());
+        fvmResult.addInternalTransactions(precompiledResult.getInternalTransactions());
+        fvmResult.addDeletedAddresses(precompiledResult.getDeletedAddresses());
+
+        fvmResult.setEnergyRemaining(precompiledResult.getEnergyRemaining());
+        fvmResult.setResultCode(precompiledToFvmResultCode(precompiledResult.getResultCode()));
+        fvmResult.setReturnData(precompiledResult.getReturnData());
+
+        return fvmResult;
+    }
+
+    private static FastVmResultCode precompiledToFvmResultCode(PrecompiledResultCode precompiledResultCode) {
+        switch (precompiledResultCode) {
+            case BAD_JUMP_DESTINATION: return FastVmResultCode.BAD_JUMP_DESTINATION;
+            case VM_INTERNAL_ERROR: return FastVmResultCode.VM_INTERNAL_ERROR;
+            case STATIC_MODE_ERROR: return FastVmResultCode.STATIC_MODE_ERROR;
+            case INVALID_NRG_LIMIT: return FastVmResultCode.INVALID_NRG_LIMIT;
+            case STACK_UNDERFLOW: return FastVmResultCode.STACK_UNDERFLOW;
+            case BAD_INSTRUCTION: return FastVmResultCode.BAD_INSTRUCTION;
+            case STACK_OVERFLOW: return FastVmResultCode.STACK_OVERFLOW;
+            case INVALID_NONCE: return FastVmResultCode.INVALID_NONCE;
+            case VM_REJECTED: return FastVmResultCode.VM_REJECTED;
+            case OUT_OF_NRG: return FastVmResultCode.OUT_OF_NRG;
+            case SUCCESS: return FastVmResultCode.SUCCESS;
+            case FAILURE: return FastVmResultCode.FAILURE;
+            case REVERT: return FastVmResultCode.REVERT;
+            case ABORT: return FastVmResultCode.ABORT;
+            case INSUFFICIENT_BALANCE: return FastVmResultCode.INSUFFICIENT_BALANCE;
+            case INCOMPATIBLE_CONTRACT_CALL: return FastVmResultCode.INCOMPATIBLE_CONTRACT_CALL;
+            default: throw new IllegalStateException("Unknown code: " + precompiledResultCode);
+        }
+    }
+
+    private static PrecompiledTransactionContext toPrecompiledTransactionContext(ExecutionContext context) {
+        return new PrecompiledTransactionContext(context.getDestinationAddress(), context.getOriginAddress(), context.getSenderAddress(), context.getSideEffects().getExecutionLogs(), context.getSideEffects().getInternalTransactions(), context.getSideEffects().getAddressesToBeDeleted(), context.getHashOfOriginTransaction(), context.getTransactionHash(), context.getBlockNumber(), context.getTransactionEnergy(), context.getTransactionStackDepth());
     }
 }

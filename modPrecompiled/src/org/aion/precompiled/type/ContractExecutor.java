@@ -12,14 +12,41 @@ import org.aion.types.AionAddress;
 public final class ContractExecutor {
 
     /**
+     * Returns the result of executing the internal transaction whose context is the specified
+     * context.
+     *
+     * This method only executes the input and does nothing else. This should only ever be called
+     * by internal transactions!
+     *
+     * @param worldState The current state of the world.
+     * @param context The transaction context.
+     * @param input The call input.
+     * @param energyRemaining The current energy remaining.
+     * @return the execution result.
+     */
+    public static PrecompiledTransactionResult executeInternalCall(IExternalStateForPrecompiled worldState, PrecompiledTransactionContext context, byte[] input, long energyRemaining) {
+        ContractFactory factory = new ContractFactory();
+        PrecompiledContract precompiledContract = factory.getPrecompiledContract(context, worldState);
+
+        if (precompiledContract == null) {
+            return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
+        } else {
+            return precompiledContract.execute(input, energyRemaining);
+        }
+    }
+
+    /**
      * Returns the result of executing the specified transaction, which is a transaction that calls
      * into a precompiled contract.
+     *
+     * This method performs verifications, balance transfers, etc. and runs as an external
+     * transaction!
      *
      * @param externalState The current state of the world.
      * @param transaction The transaction.
      * @return the execution result.
      */
-    public static PrecompiledTransactionResult execute(
+    public static PrecompiledTransactionResult executeExternalCall(
             IExternalStateForPrecompiled externalState, AionTransaction transaction) {
         if (externalState == null) {
             throw new NullPointerException("Cannot run using a null externalState!");
