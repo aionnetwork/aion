@@ -7,15 +7,14 @@ import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
+import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
-import org.aion.mcf.types.KernelInterface;
 import org.aion.mcf.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -80,22 +79,22 @@ public final class FvmTransactionExecutor {
         long blockRemainingEnergy = initialBlockEnergyLimit;
 
         // Run the transactions.
-        KernelInterface kernel =
-                new KernelInterfaceForFastVM(
+        IExternalStateForFvm externalState =
+                new ExternalStateForFvm(
                         repository.startTracking(),
-                        allowNonceIncrement,
-                        isLocalCall,
-                        fork040enabled,
+                        blockCoinbase,
                         getDifficultyAsDataWord(blockDifficulty),
+                        isLocalCall,
+                        allowNonceIncrement,
+                        fork040enabled,
                         blockNumber,
                         blockTimestamp,
-                        blockNrgLimit,
-                        blockCoinbase);
+                        blockNrgLimit);
 
         // Process the results of the transactions.
         for (AionTransaction transaction : transactions) {
             FastVmTransactionResult result =
-                    FastVirtualMachine.run(kernel, transaction, fork040enabled);
+                    FastVirtualMachine.run(externalState, transaction, fork040enabled);
 
             if (result.getResultCode().isFatal()) {
                 throw new VMException(result.toString());
@@ -115,7 +114,7 @@ public final class FvmTransactionExecutor {
 
             // If the transaction was not rejected, then commit the state changes.
             if (!result.getResultCode().isRejected()) {
-                kernel.commit();
+                externalState.commit();
             }
 
             // For non-rejected non-local transactions, make some final repository updates.
