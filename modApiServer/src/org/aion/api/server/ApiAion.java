@@ -24,6 +24,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -460,8 +461,8 @@ public abstract class ApiAion extends Api {
     protected byte[] doCall(ArgTxCall _params) {
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         _params.getNonce().toByteArray(),
-                        _params.getFrom() == null ? AddressUtils.ZERO_ADDRESS : _params.getFrom(),
                         _params.getTo(),
                         _params.getValue().toByteArray(),
                         _params.getData(),
@@ -474,12 +475,10 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        AionAddress fromAddr =
-                (params.getFrom() == null) ? AddressUtils.ZERO_ADDRESS : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         params.getNonce().toByteArray(),
-                        fromAddr,
                         params.getTo(),
                         params.getValue().toByteArray(),
                         params.getData(),
@@ -523,15 +522,14 @@ public abstract class ApiAion extends Api {
 
                 AionTransaction tx =
                         new AionTransaction(
+                                key,
                                 nonce,
-                                from,
                                 null,
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
@@ -592,15 +590,14 @@ public abstract class ApiAion extends Api {
 
                 AionTransaction tx =
                         new AionTransaction(
+                                key,
                                 nonce,
-                                new AionAddress(key.getAddress()),
                                 _params.getTo(),
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 return (new ApiTxResponse(
                         pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
@@ -650,19 +647,15 @@ public abstract class ApiAion extends Api {
                                         .bestPendingStateNonce(new AionAddress(key.getAddress()))
                                         .toByteArray();
 
-                AionTransaction tx =
-                        new AionTransaction(
-                                nonce,
-                                new AionAddress(key.getAddress()),
-                                _params.getTo(),
-                                _params.getValue().toByteArray(),
-                                _params.getData(),
-                                _params.getNrg(),
-                                _params.getNrgPrice(),
-                                _params.getType());
-                tx.sign(key);
-
-                return tx;
+                return new AionTransaction(
+                        key,
+                        nonce,
+                        _params.getTo(),
+                        _params.getValue().toByteArray(),
+                        _params.getData(),
+                        _params.getNrg(),
+                        _params.getNrgPrice(),
+                        _params.getType());
             }
         } catch (Exception ex) {
             if (LOG.isDebugEnabled()) {

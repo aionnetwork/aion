@@ -70,14 +70,13 @@ public class BlockchainEnergyTest {
             // this transaction should send one (1) AION coin from acc[0] to RECEIPT_ADDR
             AionTransaction atx =
                     new AionTransaction(
+                            key,
                             ByteUtil.intToBytes(i),
-                            new AionAddress(key.getAddress()),
                             RECEIPT_ADDR,
                             BigInteger.ONE.toByteArray(),
                             ByteUtil.EMPTY_BYTE_ARRAY,
                             21000L,
                             BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue());
-            atx.sign(key);
             txs.add(atx);
         }
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);

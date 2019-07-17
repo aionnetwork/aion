@@ -44,6 +44,7 @@ import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -811,15 +812,10 @@ public class ApiWeb3Aion extends ApiAion {
 
         Block b = getBlockByBN(bn);
 
-        AionAddress sender = txParams.getFrom();
-        if (sender == null) {
-            sender = AddressUtils.ZERO_ADDRESS;
-        }
-
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         txParams.getNonce().toByteArray(),
-                        sender,
                         txParams.getTo(),
                         txParams.getValue().toByteArray(),
                         txParams.getData(),

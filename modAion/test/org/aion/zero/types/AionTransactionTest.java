@@ -16,6 +16,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 
 public class AionTransactionTest {
+    private ECKey key = ECKeyFac.inst().create();
 
     private void assertTransactionEquals(AionTransaction tx, AionTransaction tx2) {
         assertArrayEquals(tx.getTransactionHash(), tx2.getTransactionHash());
@@ -43,18 +44,16 @@ public class AionTransactionTest {
         long nrgPrice = 0;
         byte type = 0;
 
-        ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
-                        new AionAddress(key.getAddress()),
                         to,
                         value,
                         data,
                         nrg,
                         nrgPrice,
                         type);
-        tx.sign(key);
 
         AionTransaction tx2 =
                 TransactionRlpCodec.decode(TransactionRlpCodec.encode(tx));
@@ -73,19 +72,16 @@ public class AionTransactionTest {
         long nrgPrice = RandomUtils.nextLong(0, Long.MAX_VALUE);
         byte type = 1;
 
-        ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
-                        new AionAddress(key.getAddress()),
                         to,
                         value,
                         data,
                         nrg,
                         nrgPrice,
                         type);
-        tx.sign(key);
-
         AionTransaction tx2 = tx.clone();
 
         assertTransactionEquals(tx, tx2);
@@ -94,7 +90,6 @@ public class AionTransactionTest {
     @Test
     public void testTransactionCost() {
         byte[] nonce = BigInteger.ONE.toByteArray();
-        byte[] from = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] to = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
@@ -103,8 +98,8 @@ public class AionTransactionTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
-                        new AionAddress(from),
                         new AionAddress(to),
                         value,
                         data,
@@ -121,15 +116,13 @@ public class AionTransactionTest {
     @Test
     public void testTransactionCost2() {
         byte[] nonce = BigInteger.ONE.toByteArray();
-        byte[] from = RandomUtils.nextBytes(AionAddress.LENGTH);
         AionAddress to = null;
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
         long nrg = new DataWordImpl(1000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
 
-        AionTransaction tx =
-                new AionTransaction(nonce, new AionAddress(from), to, value, data, nrg, nrgPrice);
+        AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
 
         long expected = 200000 + 21000;
         for (byte b : data) {

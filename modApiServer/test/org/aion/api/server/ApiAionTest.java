@@ -18,7 +18,8 @@ import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.AionTransaction;
-import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
@@ -34,7 +35,6 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.After;
@@ -43,6 +43,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class ApiAionTest {
+    private ECKey key = ECKeyFac.inst().create();
 
     private class ApiAionImpl extends ApiAion {
 
@@ -80,8 +81,8 @@ public class ApiAionTest {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             AionTransaction tx =
                     new AionTransaction(
+                            key,
                             new byte[0],
-                            new AionAddress(new byte[32]),
                             new AionAddress(new byte[32]),
                             new byte[0],
                             new byte[0],
@@ -281,14 +282,13 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -324,17 +324,6 @@ public class ApiAionTest {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionTransaction tx =
-                new AionTransaction(
-                        repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        addr,
-                        AddressUtils.ZERO_ADDRESS,
-                        BigInteger.ONE.toByteArray(),
-                        msg,
-                        100000,
-                        100000);
-        tx.sign(new ECKeyEd25519());
-
         ArgTxCall txcall =
                 new ArgTxCall(
                         addr,
@@ -358,14 +347,13 @@ public class ApiAionTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        addr,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         ArgTxCall txcall =
                 new ArgTxCall(

@@ -62,14 +62,13 @@ public class BlockchainTestUtils {
                 AionAddress destAddr = new AionAddress(aionBytes);
                 AionTransaction newTx =
                         new AionTransaction(
+                                key,
                                 accountNonce.toByteArray(),
-                                new AionAddress(key.getAddress()),
                                 destAddr,
                                 BigInteger.ONE.toByteArray(),
                                 ZERO_BYTE,
                                 NRG,
                                 NRG_PRICE);
-                newTx.sign(key);
                 transactions.add(newTx);
                 accountNonce = accountNonce.add(BigInteger.ONE);
                 nonces.put(key, accountNonce);

@@ -6,21 +6,16 @@ import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.types.AionAddress;
+import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
 
 /** Aion transaction class. */
 public class AionTransaction implements Cloneable {
 
-    public final AionAddress senderAddress;
-    public final AionAddress destinationAddress;
-    // TODO transactionHash
+    public final Transaction transaction;
     public final byte[] value;
     public final byte[] nonce;
-    public final long energyPrice;
-    public final long energyLimit;
-    // TODO isCreate
-    private final byte[] transactionData;
 
     /* define transaction type. */
     private final byte type;
@@ -36,8 +31,8 @@ public class AionTransaction implements Cloneable {
     private long nrgConsume = 0;
 
     public AionTransaction(
+            ECKey key,
             byte[] nonce,
-            AionAddress senderAddress,
             AionAddress destinationAddress,
             byte[] value,
             byte[] transactionData,
@@ -45,8 +40,8 @@ public class AionTransaction implements Cloneable {
             long energyPrice) {
 
         this(
+                key,
                 nonce,
-                senderAddress,
                 destinationAddress,
                 value,
                 transactionData,
@@ -57,8 +52,8 @@ public class AionTransaction implements Cloneable {
 
     // constructor for explicitly setting a transaction type.
     public AionTransaction(
+            ECKey key,
             byte[] nonce,
-            AionAddress senderAddress,
             AionAddress destinationAddress,
             byte[] value,
             byte[] transactionData,
@@ -66,17 +61,32 @@ public class AionTransaction implements Cloneable {
             long energyPrice,
             byte txType) {
 
-        this(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                txType,
-                null,
-                null);
+        if (destinationAddress == null) {
+            this.transaction =
+                    Transaction.contractCreateTransaction(
+                            new AionAddress(key.getAddress()),
+                            new BigInteger(1, nonce),
+                            new BigInteger(1, value),
+                            transactionData,
+                            energyLimit,
+                            energyPrice);
+        } else {
+            this.transaction =
+                    Transaction.contractCallTransaction(
+                            new AionAddress(key.getAddress()),
+                            destinationAddress,
+                            new BigInteger(1, nonce),
+                            new BigInteger(1, value),
+                            transactionData,
+                            energyLimit,
+                            energyPrice);
+        }
+
+        this.nonce = nonce;
+        this.value = value;
+        this.type = txType;
+        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
     }
 
     // constructor for explicitly setting a transaction type.
@@ -99,13 +109,29 @@ public class AionTransaction implements Cloneable {
             throw new IllegalArgumentException();
         }
 
+        if (destinationAddress == null) {
+            this.transaction =
+                    Transaction.contractCreateTransaction(
+                            senderAddress,
+                            new BigInteger(1, nonce),
+                            new BigInteger(1, value),
+                            transactionData,
+                            energyLimit,
+                            energyPrice);
+        } else {
+            this.transaction =
+                    Transaction.contractCallTransaction(
+                            senderAddress,
+                            destinationAddress,
+                            new BigInteger(1, nonce),
+                            new BigInteger(1, value),
+                            transactionData,
+                            energyLimit,
+                            energyPrice);
+        }
+
         this.nonce = nonce;
         this.value = value;
-        this.destinationAddress = destinationAddress;
-        this.transactionData = transactionData;
-        this.energyLimit = energyLimit;
-        this.energyPrice = energyPrice;
-        this.senderAddress = senderAddress;
         this.type = txType;
         this.signature = signature;
         this.timeStamp = timeStamp;
@@ -115,12 +141,12 @@ public class AionTransaction implements Cloneable {
     public AionTransaction clone() {
         return new AionTransaction(
                 nonce,
-                senderAddress,
-                destinationAddress,
+                getSenderAddress(),
+                getDestinationAddress(),
                 value,
-                transactionData,
-                energyLimit,
-                energyPrice,
+                getData(),
+                getEnergyLimit(),
+                getEnergyPrice(),
                 type,
                 signature,
                 timeStamp);
@@ -139,11 +165,11 @@ public class AionTransaction implements Cloneable {
     }
 
     public BigInteger getNonceBI() {
-        return new BigInteger(1, nonce);
+        return transaction.nonce;
     }
 
     public BigInteger getValueBI() {
-        return new BigInteger(1, value);
+        return transaction.value;
     }
 
     public byte[] getTimestamp() {
@@ -155,23 +181,23 @@ public class AionTransaction implements Cloneable {
     }
 
     public long getEnergyLimit() {
-        return this.energyLimit;
+        return transaction.energyLimit;
     }
 
     public long getEnergyPrice() {
-        return this.energyPrice;
+        return transaction.energyPrice;
     }
 
     public AionAddress getDestinationAddress() {
-        return destinationAddress;
+        return transaction.destinationAddress;
     }
 
     public byte[] getData() {
-        return transactionData;
+        return transaction.copyOfTransactionData();
     }
 
     public byte getTargetVM() {
-        return this.type;
+        return type;
     }
 
     public ISignature getSignature() {
@@ -179,11 +205,19 @@ public class AionTransaction implements Cloneable {
     }
 
     public boolean isContractCreationTransaction() {
-        return this.destinationAddress == null;
+        return transaction.isCreate;
     }
 
     public AionAddress getSenderAddress() {
-        return senderAddress;
+        return transaction.senderAddress;
+    }
+
+    public long nrgPrice() {
+        return transaction.energyPrice;
+    }
+
+    public long nrgLimit() {
+        return transaction.energyLimit;
     }
 
     public void sign(ECKey key) throws MissingPrivateKeyException {
@@ -204,19 +238,19 @@ public class AionTransaction implements Cloneable {
                 + ", nonce="
                 + new BigInteger(1, nonce)
                 + ", receiveAddress="
-                + (destinationAddress == null ? "" : destinationAddress.toString())
+                + (getDestinationAddress() == null ? "" : getDestinationAddress().toString())
                 + ", value="
                 + new BigInteger(1, value)
                 + ", data="
-                + ByteUtil.toHexString(transactionData)
+                + ByteUtil.toHexString(transaction.copyOfTransactionData())
                 + ", timeStamp="
                 + ByteUtil.byteArrayToLong(timeStamp)
                 + ", Nrg="
-                + this.energyLimit
+                + transaction.energyLimit
                 + ", NrgPrice="
-                + this.energyPrice
+                + transaction.energyPrice
                 + ", txType="
-                + this.type
+                + type
                 + ", sig="
                 + ((signature == null) ? "null" : signature.toString())
                 + "]";
@@ -244,14 +278,6 @@ public class AionTransaction implements Cloneable {
         AionTransaction tx = (AionTransaction) obj;
 
         return tx.hashCode() == this.hashCode();
-    }
-
-    public BigInteger nrgPrice() {
-        return BigInteger.valueOf(energyPrice);
-    }
-
-    public BigInteger nrgLimit() {
-        return BigInteger.valueOf(energyLimit);
     }
 
     public long getNrgConsume() {

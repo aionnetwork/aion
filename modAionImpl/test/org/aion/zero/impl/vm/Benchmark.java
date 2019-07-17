@@ -92,12 +92,11 @@ public class Benchmark {
         byte[] deployer =
                 ContractUtils.getContractDeployer("BenchmarkERC20.sol", "FixedSupplyToken");
         byte[] nonce = BigInteger.ZERO.toByteArray();
-        AionAddress from = owner;
         AionAddress to = null;
         byte[] value = BigInteger.ZERO.toByteArray();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
-        AionTransaction tx = new AionTransaction(nonce, from, to, value, deployer, nrg, nrgPrice);
+        AionTransaction tx = new AionTransaction(key, nonce, to, value, deployer, nrg, nrgPrice);
 
         // save contract address
         contract = TransactionUtil.calculateContractAddress(tx);
@@ -122,7 +121,6 @@ public class Benchmark {
 
             // transfer token to random people
             byte[] nonce = BigInteger.valueOf(ownerNonce + i).toByteArray();
-            AionAddress from = owner;
             AionAddress to = contract;
             byte[] value = BigInteger.ZERO.toByteArray();
             byte[] data =
@@ -132,9 +130,8 @@ public class Benchmark {
                             BigInteger.ONE.toByteArray());
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
-            AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
+            AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
 
-            tx.sign(key);
             list.add(tx);
         }
 
@@ -199,12 +196,11 @@ public class Benchmark {
         timeFlush = t2 - t1;
     }
 
-    private static void verifyState(int num) throws VMException {
+    private static void verifyState() throws VMException {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < recipients.size(); i++) {
             byte[] nonce = BigInteger.valueOf(ownerNonce + i).toByteArray();
-            AionAddress from = owner;
             AionAddress to = contract;
             byte[] value = BigInteger.ZERO.toByteArray();
             byte[] data =
@@ -212,7 +208,7 @@ public class Benchmark {
                             Hex.decode("70a08231" + "000000000000000000000000"), recipients.get(i));
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
-            AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
+            AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
 
             AionTxExecSummary summary = executeTransaction(tx);
             assertFalse(summary.isFailed());
@@ -229,7 +225,7 @@ public class Benchmark {
         validateTransactions(list);
         executeTransactions(list);
         flush();
-        verifyState(n);
+        verifyState();
 
         System.out.println("==========================================");
         System.out.println("Benchmark (ERC20 transfer): " + n + " txs");

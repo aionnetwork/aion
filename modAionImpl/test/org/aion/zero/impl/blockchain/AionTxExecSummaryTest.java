@@ -5,6 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.types.AionAddress;
@@ -24,8 +25,8 @@ public class AionTxExecSummaryTest {
     public void testRLPEncoding() {
         AionTransaction mockTx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         BigInteger.ONE.toByteArray(),
-                        defaultAddress,
                         defaultAddress,
                         BigInteger.ONE.toByteArray(),
                         HashUtil.EMPTY_DATA_HASH,

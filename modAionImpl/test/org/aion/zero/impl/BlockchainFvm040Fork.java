@@ -186,15 +186,14 @@ public class BlockchainFvm040Fork {
         // deploy
         AionTransaction deployTx =
                 new AionTransaction(
+                        key,
                         accountNonce.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(deepContractCode),
                         1000000L,
                         1L);
 
-        deployTx.sign(key);
         AionBlock block1 =
                 bc.createNewBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
 
@@ -207,14 +206,13 @@ public class BlockchainFvm040Fork {
         // excute old fvm logic before fork
         AionTransaction txCall =
                 new AionTransaction(
+                        key,
                         accountNonce.add(BigInteger.ONE).toByteArray(),
-                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
                         1L);
-        txCall.sign(key);
 
         AionBlock block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block2);
@@ -226,14 +224,13 @@ public class BlockchainFvm040Fork {
         // excute new fvm logic at fork
         txCall =
                 new AionTransaction(
+                        key,
                         accountNonce.add(BigInteger.TWO).toByteArray(),
-                        new AionAddress(key.getAddress()),
                         contractAddr,
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
                         1L);
-        txCall.sign(key);
 
         AionBlock block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block3);

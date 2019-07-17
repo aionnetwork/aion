@@ -111,26 +111,24 @@ public class InternalTransactionTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx1 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx1.sign(deployerAccount);
 
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
                         1L);
-        tx2.sign(deployerAccount);
 
         BlockContext context =
                 bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
@@ -149,14 +147,13 @@ public class InternalTransactionTest {
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx3 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         addressB,
                         new byte[0],
                         ByteUtil.hexStringToBytes("0x26121ff0"),
                         1_000_000L,
                         1L);
-        tx3.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);
@@ -173,8 +170,8 @@ public class InternalTransactionTest {
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx4 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -183,7 +180,6 @@ public class InternalTransactionTest {
                                 new DataWordImpl(80_000).getData()),
                         1_000_000L,
                         1L);
-        tx4.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx4), false);
         result = bc.tryToConnect(context.block);
@@ -201,8 +197,8 @@ public class InternalTransactionTest {
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx6 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -211,7 +207,6 @@ public class InternalTransactionTest {
                                 new DataWordImpl(20_000).getData()),
                         1_000_000L,
                         1L);
-        tx6.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx6), false);
         result = bc.tryToConnect(context.block);
@@ -254,14 +249,13 @@ public class InternalTransactionTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx1 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx1.sign(deployerAccount);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ImportResult result = bc.tryToConnect(context.block);
@@ -277,8 +271,8 @@ public class InternalTransactionTest {
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
@@ -286,7 +280,6 @@ public class InternalTransactionTest {
                                 new DataWordImpl(2).getData()),
                         1_000_000L,
                         1L);
-        tx2.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx2);
@@ -327,14 +320,13 @@ public class InternalTransactionTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx1 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx1.sign(deployerAccount);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
@@ -376,14 +368,13 @@ public class InternalTransactionTest {
         // ======================
         AionTransaction tx =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         internalContractAddress,
                         BigInteger.ONE.toByteArray(),
                         new byte[0],
                         1_000_000L,
                         1L);
-        tx.sign(deployerAccount);
 
         Block parentBlock = bc.getBestBlock();
 
@@ -404,14 +395,13 @@ public class InternalTransactionTest {
         // ======================
         tx =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx.sign(deployerAccount);
 
         parentBlock = bc.getBestBlock();
         newBlock =
@@ -431,14 +421,13 @@ public class InternalTransactionTest {
         // ======================
         tx =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx.sign(deployerAccount);
 
         System.out.println("contractaddr: " + TransactionUtil.calculateContractAddress(tx));
 

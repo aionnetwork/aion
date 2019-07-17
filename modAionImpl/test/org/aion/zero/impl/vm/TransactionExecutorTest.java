@@ -95,14 +95,13 @@ public class TransactionExecutorTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
@@ -145,14 +144,13 @@ public class TransactionExecutorTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -190,14 +188,13 @@ public class TransactionExecutorTest {
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
         AionTransaction tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
                         1);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -220,14 +217,13 @@ public class TransactionExecutorTest {
         nonce = repo.getNonce(deployer);
         tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
                         1);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         context =
@@ -271,14 +267,13 @@ public class TransactionExecutorTest {
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
         AionTransaction tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
                         1);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -307,14 +302,13 @@ public class TransactionExecutorTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));

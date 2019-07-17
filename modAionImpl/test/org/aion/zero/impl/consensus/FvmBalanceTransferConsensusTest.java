@@ -80,14 +80,13 @@ public class FvmBalanceTransferConsensusTest {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         bridge,
                         amount.toByteArray(),
                         new byte[] {},
                         2_000_000,
                         ENERGY_PRICE);
-        transaction.sign(key);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -141,15 +140,14 @@ public class FvmBalanceTransferConsensusTest {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         bridge,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(
                                 "a6f9dae1a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0"),
                         2_000_000,
                         ENERGY_PRICE);
-        transaction.sign(key);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -202,14 +200,13 @@ public class FvmBalanceTransferConsensusTest {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         blake2b,
                         amount.toByteArray(),
                         new byte[] {},
                         2_000_000,
                         ENERGY_PRICE);
-        transaction.sign(key);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -268,14 +265,13 @@ public class FvmBalanceTransferConsensusTest {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         blake2b,
                         amount.toByteArray(),
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
                         ENERGY_PRICE);
-        transaction.sign(key);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -337,14 +333,13 @@ public class FvmBalanceTransferConsensusTest {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
                 new AionTransaction(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         blake2b,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
                         ENERGY_PRICE);
-        transaction.sign(key);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -785,126 +780,102 @@ public class FvmBalanceTransferConsensusTest {
     private static AionTransaction makeCreateAndTransferToFvmNonpayableConstructorContractTx(
             BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        amount.toByteArray(),
-                        getNonpayableConstructorContractBytes(),
-                        5_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                amount.toByteArray(),
+                getNonpayableConstructorContractBytes(),
+                5_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCreateAndTransferToFvmPayableConstructorContractTx(
             BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        amount.toByteArray(),
-                        getPayableConstructorContractBytes(),
-                        5_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                amount.toByteArray(),
+                getPayableConstructorContractBytes(),
+                5_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCreatePayableFallbackContractTx() {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        getPayableFallbackContractBytes(),
-                        5_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                getPayableFallbackContractBytes(),
+                5_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCreateNonpayableFallbackContractTx() {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        getNonpayableFallbackContractBytes(),
-                        5_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                getNonpayableFallbackContractBytes(),
+                5_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCreatePayableContractTx() {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        getPayableContractBytes(),
-                        5_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                getPayableContractBytes(),
+                5_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCallNonpayableFunctionTx(
             AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        contract,
-                        amount.toByteArray(),
-                        callNonpayableFunctionEncoding(),
-                        2_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ONE.toByteArray(),
+                contract,
+                amount.toByteArray(),
+                callNonpayableFunctionEncoding(),
+                2_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCallFallbackFunctionTx(
             AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        contract,
-                        amount.toByteArray(),
-                        new byte[0],
-                        2_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ONE.toByteArray(),
+                contract,
+                amount.toByteArray(),
+                new byte[0],
+                2_000_000,
+                ENERGY_PRICE);
     }
 
     private static AionTransaction makeCallPayableFunctionTx(
             AionAddress contract, BigInteger amount) {
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        contract,
-                        amount.toByteArray(),
-                        callPayableFunctionEncoding(),
-                        2_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return new AionTransaction(
+                key,
+                BigInteger.ONE.toByteArray(),
+                contract,
+                amount.toByteArray(),
+                callPayableFunctionEncoding(),
+                2_000_000,
+                ENERGY_PRICE);
     }
 
     private Pair<ImportResult, AionBlockSummary> processTransaction(

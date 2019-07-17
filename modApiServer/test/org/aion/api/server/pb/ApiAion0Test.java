@@ -17,7 +17,8 @@ import java.util.Collections;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.base.AionTransaction;
-import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
@@ -31,7 +32,6 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +53,8 @@ public class ApiAion0Test {
     private static final String KEYSTORE_PATH;
     private static final String DATABASE_PATH = "ApiServerTestPath";
     private static final String MAINNET_PATH;
+
+    private ECKey key = ECKeyFac.inst().create();
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -471,14 +473,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -601,14 +602,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -655,14 +655,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -709,14 +708,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -761,14 +759,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -813,14 +810,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -863,14 +859,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -1062,14 +1057,13 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         AionRepositoryImpl.inst().getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
                         val,
                         msg,
                         1000,
                         5000);
-        tx.sign(new ECKeyEd25519());
 
         assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
 

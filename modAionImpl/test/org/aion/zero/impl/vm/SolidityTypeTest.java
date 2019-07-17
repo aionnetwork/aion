@@ -92,10 +92,6 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = BigInteger.ZERO.toByteArray();
-        AionAddress from =
-                new AionAddress(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
         AionAddress to =
                 new AionAddress(
                         Hex.decode(
@@ -104,9 +100,7 @@ public class SolidityTypeTest {
         byte[] data = callData;
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
-        AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
-        tx.sign(deployerKey);
-        return tx;
+        return new AionTransaction(deployerKey, txNonce, to, value, data, nrg, nrgPrice);
     }
 
     private RepositoryCache createRepository(AionTransaction tx) throws IOException {
@@ -120,7 +114,8 @@ public class SolidityTypeTest {
         AionRepositoryImpl repo = blockchain.getRepository();
         RepositoryCache track = repo.startTracking();
         track.addBalance(
-                tx.getSenderAddress(), tx.nrgPrice().multiply(BigInteger.valueOf(500_000L)));
+                tx.getSenderAddress(),
+                BigInteger.valueOf(tx.nrgPrice()).multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM);
