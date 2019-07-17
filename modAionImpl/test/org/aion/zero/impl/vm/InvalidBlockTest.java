@@ -9,6 +9,7 @@ import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
@@ -94,16 +95,15 @@ public class InvalidBlockTest {
         for (int i = 0; i < num; i++) {
 
             AionTransaction transaction =
-                    new AionTransaction(
+                    TxUtil.newAionTransaction(
+                            deployerKey,
                             nonce.toByteArray(),
-                            new AionAddress(this.deployerKey.getAddress()),
                             null,
                             BigInteger.ZERO.toByteArray(),
                             jar,
                             5_000_000L,
                             10_000_000_000L,
                             TransactionTypes.AVM_CREATE_CODE);
-            transaction.sign(this.deployerKey);
 
             transactions.add(transaction);
             nonce = nonce.add(BigInteger.ONE);

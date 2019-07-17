@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -1057,15 +1059,15 @@ public class AionNameServiceContractTest {
         for (int i = 0; i < 100; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
-                    new AionTransaction(
+                    TxUtil.newAionTransaction(
+                            key,
                             accountNonce.toByteArray(),
-                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
-            sendTransaction.sign(key);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

@@ -14,6 +14,7 @@ import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
@@ -117,14 +118,15 @@ public class AvmLogAndInternalTransactionTest {
                         .toBytes();
 
         AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(deployerKey.getAddress()),
+                TxUtil.newAionTransaction(
+                        deployerKey,
+                        nonce.toByteArray(),
                         address,
+                        new byte[0],
                         data,
                         2_000_000,
+                        1,
                         TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
 
         AionBlock block =
                 this.blockchain.createBlock(
@@ -139,15 +141,15 @@ public class AvmLogAndInternalTransactionTest {
         TransactionTypeRule.allowAVMContractTransaction();
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(deployerKey.getAddress()),
+                TxUtil.newAionTransaction(
+                        deployerKey,
+                        nonce.toByteArray(),
                         null,
+                        new byte[0],
                         jar,
                         5_000_000,
+                        1,
                         TransactionTypes.AVM_CREATE_CODE);
-
-        transaction.sign(this.deployerKey);
 
         AionBlock block =
                 this.blockchain.createBlock(
@@ -170,23 +172,5 @@ public class AvmLogAndInternalTransactionTest {
                         JarBuilder.buildJarForMainAndClassesAndUserlib(AvmLogTarget.class),
                         new byte[0])
                 .encodeToBytes();
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            byte[] data,
-            long energyLimit,
-            byte type) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                BigInteger.ZERO.toByteArray(),
-                data,
-                energyLimit,
-                1,
-                type);
     }
 }

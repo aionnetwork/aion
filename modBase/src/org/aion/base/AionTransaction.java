@@ -1,87 +1,35 @@
 package org.aion.base;
 
 import java.math.BigInteger;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKey.MissingPrivateKeyException;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.types.AionAddress;
+import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.time.TimeInstant;
 
 /** Aion transaction class. */
-public class AionTransaction implements Cloneable {
+public class AionTransaction {
 
-    protected final AionAddress senderAddress;
-    protected final AionAddress destinationAddress;
-    // TODO transactionHash
-    protected final byte[] value;
-    protected final byte[] nonce;
-    protected final long energyPrice;
-    protected final long energyLimit;
-    // TODO isCreate
-    protected final byte[] transactionData;
+    private final Transaction transaction;
+    private final byte[] value;
+    private final byte[] nonce;
 
     /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
-    protected byte[] timeStamp;
+    private final byte[] timeStamp;
 
     /* define transaction type. */
     private final byte type;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
-    private ISignature signature;
+    private final ISignature signature;
 
-    private byte[] transactionHash;
+    private final byte[] transactionHashWithoutSignature;
+
+    private final byte[] rlpEncoding;
 
     private long nrgConsume = 0;
 
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress senderAddress,
-            AionAddress destinationAddress,
-            byte[] value,
-            byte[] transactionData,
-            long energyLimit,
-            long energyPrice) {
-
-        this(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                TransactionTypes.DEFAULT);
-    }
-
-    // constructor for explicitly setting a transaction type.
-    public AionTransaction(
-            byte[] nonce,
-            AionAddress senderAddress,
-            AionAddress destinationAddress,
-            byte[] value,
-            byte[] transactionData,
-            long energyLimit,
-            long energyPrice,
-            byte txType) {
-
-        this(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                txType,
-                null,
-                null);
-    }
-
-    // constructor for explicitly setting a transaction type.
-    public AionTransaction(
+    AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
             AionAddress destinationAddress,
@@ -90,52 +38,54 @@ public class AionTransaction implements Cloneable {
             long energyLimit,
             long energyPrice,
             byte txType,
+            byte[] timeStamp,
+            byte[] transactionHashWithoutSignature,
             ISignature signature,
-            byte[] timeStamp) {
-
-        if (nonce == null) {
-            throw new NullPointerException("No Nonce");
-        }
-        if (senderAddress == null) {
-            throw new NullPointerException("No Sender");
-        }
+            byte[] rlpEncoding,
+            byte[] transactionHash) {
 
         this.nonce = nonce;
         this.value = value;
-        this.destinationAddress = destinationAddress;
-        this.transactionData = transactionData;
-        this.energyLimit = energyLimit;
-        this.energyPrice = energyPrice;
-        this.senderAddress = senderAddress;
         this.type = txType;
-        this.signature = signature;
         this.timeStamp = timeStamp;
-    }
+        this.transactionHashWithoutSignature = transactionHashWithoutSignature;
+        this.signature = signature;
+        this.rlpEncoding = rlpEncoding;
 
-    @Override
-    public AionTransaction clone() {
-        return new AionTransaction(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                type,
-                signature,
-                timeStamp);
+        if (destinationAddress == null) {
+            this.transaction =
+                Transaction.contractCreateTransaction(
+                    senderAddress,
+                    transactionHash,
+                    new BigInteger(1, nonce),
+                    new BigInteger(1, value),
+                    transactionData,
+                    energyLimit,
+                    energyPrice);
+        } else {
+            this.transaction =
+                Transaction.contractCallTransaction(
+                    senderAddress,
+                    destinationAddress,
+                    transactionHash,
+                    new BigInteger(1, nonce),
+                    new BigInteger(1, value),
+                    transactionData,
+                    energyLimit,
+                    energyPrice);
+        }
     }
 
     public byte[] getTransactionHash() {
-        if (transactionHash == null) {
-            transactionHash = HashUtil.h256(getEncoded());
-        }
-        return transactionHash;
+        return transaction.copyOfTransactionHash();
+    }
+
+    public byte[] getTransactionHashWithoutSignature() {
+        return transactionHashWithoutSignature;
     }
 
     public byte[] getEncoded() {
-        return TxUtil.encode(this);
+        return rlpEncoding;
     }
 
     public byte[] getNonce() {
@@ -147,15 +97,15 @@ public class AionTransaction implements Cloneable {
     }
 
     public BigInteger getNonceBI() {
-        return new BigInteger(1, nonce);
+        return transaction.nonce;
     }
 
     public BigInteger getValueBI() {
-        return new BigInteger(1, value);
+        return transaction.value;
     }
 
     public byte[] getTimestamp() {
-        return this.timeStamp == null ? ByteUtil.ZERO_BYTE_ARRAY : this.timeStamp;
+        return timeStamp;
     }
 
     public BigInteger getTimeStampBI() {
@@ -163,23 +113,23 @@ public class AionTransaction implements Cloneable {
     }
 
     public long getEnergyLimit() {
-        return this.energyLimit;
+        return transaction.energyLimit;
     }
 
     public long getEnergyPrice() {
-        return this.energyPrice;
+        return transaction.energyPrice;
     }
 
     public AionAddress getDestinationAddress() {
-        return destinationAddress;
+        return transaction.destinationAddress;
     }
 
     public byte[] getData() {
-        return transactionData;
+        return transaction.copyOfTransactionData();
     }
 
     public byte getTargetVM() {
-        return this.type;
+        return type;
     }
 
     public ISignature getSignature() {
@@ -187,21 +137,19 @@ public class AionTransaction implements Cloneable {
     }
 
     public boolean isContractCreationTransaction() {
-        return this.destinationAddress == null;
+        return transaction.isCreate;
     }
 
     public AionAddress getSenderAddress() {
-        return senderAddress;
+        return transaction.senderAddress;
     }
 
-    public void sign(ECKey key) throws MissingPrivateKeyException {
-        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
-        this.signature = key.sign(TxUtil.hashWithoutSignature(this));
+    public long nrgPrice() {
+        return transaction.energyPrice;
     }
 
-    public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {
-        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochSec() * 1_000_000L);
-        this.signature = key.sign(TxUtil.hashWithoutSignature(this));
+    public long nrgLimit() {
+        return transaction.energyLimit;
     }
 
     @Override
@@ -212,19 +160,19 @@ public class AionTransaction implements Cloneable {
                 + ", nonce="
                 + new BigInteger(1, nonce)
                 + ", receiveAddress="
-                + (destinationAddress == null ? "" : destinationAddress.toString())
+                + (getDestinationAddress() == null ? "" : getDestinationAddress().toString())
                 + ", value="
                 + new BigInteger(1, value)
                 + ", data="
-                + ByteUtil.toHexString(transactionData)
+                + ByteUtil.toHexString(transaction.copyOfTransactionData())
                 + ", timeStamp="
                 + ByteUtil.byteArrayToLong(timeStamp)
                 + ", Nrg="
-                + this.energyLimit
+                + transaction.energyLimit
                 + ", NrgPrice="
-                + this.energyPrice
+                + transaction.energyPrice
                 + ", txType="
-                + this.type
+                + type
                 + ", sig="
                 + ((signature == null) ? "null" : signature.toString())
                 + "]";
@@ -252,14 +200,6 @@ public class AionTransaction implements Cloneable {
         AionTransaction tx = (AionTransaction) obj;
 
         return tx.hashCode() == this.hashCode();
-    }
-
-    public BigInteger nrgPrice() {
-        return BigInteger.valueOf(energyPrice);
-    }
-
-    public BigInteger nrgLimit() {
-        return BigInteger.valueOf(energyLimit);
     }
 
     public long getNrgConsume() {

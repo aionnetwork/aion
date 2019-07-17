@@ -6,6 +6,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
@@ -51,15 +53,15 @@ public class BlockchainAccountStateTest {
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
-                    new AionTransaction(
+                    TxUtil.newAionTransaction(
+                            key,
                             accountNonce.toByteArray(),
-                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
-            sendTransaction.sign(key);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -116,15 +118,15 @@ public class BlockchainAccountStateTest {
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
-                    new AionTransaction(
+                    TxUtil.newAionTransaction(
+                            key,
                             accountNonce.toByteArray(),
-                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
-            sendTransaction.sign(key);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
         }
 

@@ -12,11 +12,11 @@ import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -166,18 +166,15 @@ public class AlternatingVmBlockTest {
 
     private AionTransaction makeAvmContractCreateTransaction(ECKey sender, BigInteger nonce) {
         byte[] jar = getJarBytes();
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO,
-                        jar,
-                        5_000_000,
-                        1,
-                        TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(deployerKey);
-        return transaction;
+        return TxUtil.newAionTransaction(
+                sender,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                jar,
+                5_000_000,
+                1,
+                TransactionTypes.AVM_CREATE_CODE);
     }
 
     private byte[] getJarBytes() {
@@ -190,18 +187,15 @@ public class AlternatingVmBlockTest {
     private AionTransaction makeFvmContractCreateTransaction(ECKey sender, BigInteger nonce)
             throws IOException {
         byte[] contractBytes = ContractUtils.getContractDeployer("Ticker.sol", "Ticker");
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO,
-                        contractBytes,
-                        5_000_000,
-                        1,
-                        TransactionTypes.DEFAULT);
-        transaction.sign(deployerKey);
-        return transaction;
+        return TxUtil.newAionTransaction(
+                sender,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                contractBytes,
+                5_000_000,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     private long getAvmContractDeploymentCost(BigInteger nonce) {
@@ -232,25 +226,5 @@ public class AlternatingVmBlockTest {
                 blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight().getReceipts().get(0).getEnergyUsed();
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            BigInteger value,
-            byte[] data,
-            long energyLimit,
-            long energyPrice,
-            byte vm) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                value.toByteArray(),
-                data,
-                energyLimit,
-                energyPrice,
-                vm);
     }
 }
