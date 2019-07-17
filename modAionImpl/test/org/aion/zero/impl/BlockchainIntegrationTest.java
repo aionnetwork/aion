@@ -122,6 +122,7 @@ public class BlockchainIntegrationTest {
         ECKey key = bundle.privateKeys.get(0);
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         BigInteger.valueOf(1).toByteArray(),
                         new AionAddress(key.getAddress()),
                         receiverAddress,
@@ -130,7 +131,6 @@ public class BlockchainIntegrationTest {
                         1L,
                         1L);
 
-        tx.sign(key);
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
@@ -160,6 +160,7 @@ public class BlockchainIntegrationTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        sender,
                         BigInteger.valueOf(0).toByteArray(),
                         new AionAddress(sender.getAddress()),
                         receiverAddress,
@@ -167,7 +168,6 @@ public class BlockchainIntegrationTest {
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
                         1L);
-        tx.sign(sender);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -229,6 +229,7 @@ public class BlockchainIntegrationTest {
         // pk[0] -> receiverAddress
         AionTransaction tx =
                 new AionTransaction(
+                        sender,
                         BigInteger.valueOf(0).toByteArray(),
                         new AionAddress(sender.getAddress()),
                         receiverAddress,
@@ -236,7 +237,6 @@ public class BlockchainIntegrationTest {
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
                         1L);
-        tx.sign(sender);
 
         // create a new block containing a single transaction (tx)
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -266,6 +266,7 @@ public class BlockchainIntegrationTest {
 
         AionTransaction contractDeploymentTx =
                 new AionTransaction(
+                        sender,
                         BigInteger.ZERO.toByteArray(),
                         new AionAddress(sender.getAddress()),
                         null,
@@ -273,8 +274,6 @@ public class BlockchainIntegrationTest {
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
                         1L);
-
-        contractDeploymentTx.sign(sender);
 
         AionBlock block =
                 blockchain.createNewBlock(
@@ -297,7 +296,7 @@ public class BlockchainIntegrationTest {
         byte[] codeHash =
                 blockchain
                         .getRepository()
-                        .getAccountState(contractDeploymentTx.getContractAddress())
+                        .getAccountState(TransactionUtil.calculateContractAddress(contractDeploymentTx))
                         .getCodeHash();
         assertThat(ci.getInceptionBlocks(codeHash)).contains(block.getHashWrapper());
         assertThat(ci.getVmUsed(codeHash)).isEqualTo(InternalVmType.FVM);

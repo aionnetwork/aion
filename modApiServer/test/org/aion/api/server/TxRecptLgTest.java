@@ -65,6 +65,7 @@ public class TxRecptLgTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx1 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
                         new AionAddress(deployerAccount.getAddress()),
                         null,
@@ -72,11 +73,11 @@ public class TxRecptLgTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L);
-        tx1.sign(deployerAccount);
 
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
                         new AionAddress(deployerAccount.getAddress()),
                         null,
@@ -84,7 +85,6 @@ public class TxRecptLgTest {
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
                         1L);
-        tx2.sign(deployerAccount);
 
         BlockContext context =
                 bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
@@ -105,6 +105,7 @@ public class TxRecptLgTest {
         System.arraycopy(HashUtil.keccak256("AA(address)".getBytes()), 0, functionAA, 0, 4);
         AionTransaction tx3 =
                 new AionTransaction(
+                        deployerAccount,
                         nonce.toByteArray(),
                         new AionAddress(deployerAccount.getAddress()),
                         addressA,
@@ -112,7 +113,6 @@ public class TxRecptLgTest {
                         ByteUtil.merge(functionAA, addressB.toByteArray()),
                         1_000_000L,
                         1L);
-        tx3.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);

@@ -43,6 +43,7 @@ public class PendingTxCacheTest {
 
             AionTransaction tx =
                     new AionTransaction(
+                            key.get(keyIndex),
                             BigInteger.valueOf(i).toByteArray(),
                             new AionAddress(key.get(keyIndex).getAddress()),
                             AddressUtils.wrapAddress(
@@ -52,7 +53,6 @@ public class PendingTxCacheTest {
                             10000L,
                             1L);
 
-            tx.sign(key.get(keyIndex));
             txn.add(tx);
         }
 
@@ -73,6 +73,7 @@ public class PendingTxCacheTest {
 
             AionTransaction tx =
                     new AionTransaction(
+                            key.get(keyIndex),
                             BigInteger.valueOf(i).toByteArray(),
                             new AionAddress(key.get(keyIndex).getAddress()),
                             AddressUtils.wrapAddress(
@@ -82,7 +83,6 @@ public class PendingTxCacheTest {
                             10000L,
                             1L);
 
-            tx.sign(key.get(keyIndex));
             txn.add(tx);
         }
 

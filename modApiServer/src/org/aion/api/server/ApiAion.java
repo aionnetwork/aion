@@ -24,6 +24,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -460,6 +461,7 @@ public abstract class ApiAion extends Api {
     protected byte[] doCall(ArgTxCall _params) {
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         _params.getNonce().toByteArray(),
                         _params.getFrom() == null ? AddressUtils.ZERO_ADDRESS : _params.getFrom(),
                         _params.getTo(),
@@ -478,6 +480,7 @@ public abstract class ApiAion extends Api {
                 (params.getFrom() == null) ? AddressUtils.ZERO_ADDRESS : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         params.getNonce().toByteArray(),
                         fromAddr,
                         params.getTo(),
@@ -523,6 +526,7 @@ public abstract class ApiAion extends Api {
 
                 AionTransaction tx =
                         new AionTransaction(
+                                key,
                                 nonce,
                                 from,
                                 null,
@@ -531,7 +535,6 @@ public abstract class ApiAion extends Api {
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
@@ -592,6 +595,7 @@ public abstract class ApiAion extends Api {
 
                 AionTransaction tx =
                         new AionTransaction(
+                                key,
                                 nonce,
                                 new AionAddress(key.getAddress()),
                                 _params.getTo(),
@@ -600,7 +604,6 @@ public abstract class ApiAion extends Api {
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 return (new ApiTxResponse(
                         pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
@@ -652,6 +655,7 @@ public abstract class ApiAion extends Api {
 
                 AionTransaction tx =
                         new AionTransaction(
+                                key,
                                 nonce,
                                 new AionAddress(key.getAddress()),
                                 _params.getTo(),
@@ -660,7 +664,6 @@ public abstract class ApiAion extends Api {
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 return tx;
             }

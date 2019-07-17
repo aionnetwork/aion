@@ -15,6 +15,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 
 public class AionTransactionTest {
+    private ECKey key = ECKeyFac.inst().create();
 
     private void assertTransactionEquals(AionTransaction tx, AionTransaction tx2) {
         assertArrayEquals(tx.getTransactionHash(), tx2.getTransactionHash());
@@ -42,9 +43,9 @@ public class AionTransactionTest {
         long nrgPrice = 0;
         byte type = 0;
 
-        ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
                         new AionAddress(key.getAddress()),
                         to,
@@ -53,7 +54,6 @@ public class AionTransactionTest {
                         nrg,
                         nrgPrice,
                         type);
-        tx.sign(key);
 
         AionTransaction tx2 =
                 TransactionRlpCodec.decodeTransaction(TransactionRlpCodec.getEncoding(tx));
@@ -71,9 +71,9 @@ public class AionTransactionTest {
         long nrgPrice = RandomUtils.nextLong(0, Long.MAX_VALUE);
         byte type = 1;
 
-        ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
                         new AionAddress(key.getAddress()),
                         to,
@@ -82,8 +82,6 @@ public class AionTransactionTest {
                         nrg,
                         nrgPrice,
                         type);
-        tx.sign(key);
-
         AionTransaction tx2 = tx.clone();
 
         assertTransactionEquals(tx, tx2);
@@ -101,6 +99,7 @@ public class AionTransactionTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         nonce,
                         new AionAddress(from),
                         new AionAddress(to),
@@ -127,7 +126,8 @@ public class AionTransactionTest {
         long nrgPrice = DataWordImpl.ONE.longValue();
 
         AionTransaction tx =
-                new AionTransaction(nonce, new AionAddress(from), to, value, data, nrg, nrgPrice);
+                new AionTransaction(
+                        key, nonce, new AionAddress(from), to, value, data, nrg, nrgPrice);
 
         long expected = 200000 + 21000;
         for (byte b : data) {

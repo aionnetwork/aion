@@ -52,6 +52,7 @@ public class BlockchainAccountStateTest {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
+                            key,
                             accountNonce.toByteArray(),
                             new AionAddress(key.getAddress()),
                             destAddr,
@@ -59,7 +60,6 @@ public class BlockchainAccountStateTest {
                             ZERO_BYTE,
                             21000,
                             1);
-            sendTransaction.sign(key);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -117,6 +117,7 @@ public class BlockchainAccountStateTest {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
+                            key,
                             accountNonce.toByteArray(),
                             new AionAddress(key.getAddress()),
                             destAddr,
@@ -124,7 +125,6 @@ public class BlockchainAccountStateTest {
                             ZERO_BYTE,
                             21000,
                             1);
-            sendTransaction.sign(key);
             transactions.add(sendTransaction);
         }
 

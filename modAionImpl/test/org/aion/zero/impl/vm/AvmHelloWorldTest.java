@@ -68,15 +68,16 @@ public class AvmHelloWorldTest {
         TransactionTypeRule.allowAVMContractTransaction();
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                newTransaction(
-                        BigInteger.ZERO,
+                new AionTransaction(
+                        deployerKey,
+                        new byte[0],
                         new AionAddress(deployerKey.getAddress()),
                         null,
+                        new byte[0],
                         jar,
                         5_000_000,
+                        1,
                         TransactionTypes.AVM_CREATE_CODE);
-
-        transaction.sign(this.deployerKey);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
@@ -103,14 +104,16 @@ public class AvmHelloWorldTest {
         // Deploy the contract.
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                newTransaction(
-                        BigInteger.ZERO,
+                new AionTransaction(
+                        deployerKey,
+                        new byte[0],
                         new AionAddress(deployerKey.getAddress()),
                         null,
+                        new byte[0],
                         jar,
                         5_000_000,
+                        1,
                         TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(this.deployerKey);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
@@ -131,14 +134,16 @@ public class AvmHelloWorldTest {
         assertThat(TransactionUtil.calculateContractAddress(transaction)).isEqualTo(contract);
         byte[] call = getCallArguments();
         transaction =
-                newTransaction(
-                        BigInteger.ONE,
+                new AionTransaction(
+                        deployerKey,
+                        BigInteger.ONE.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
                         contract,
+                        new byte[0],
                         call,
                         2_000_000,
+                        1,
                         TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
 
         block =
                 this.blockchain.createNewBlock(
@@ -159,28 +164,32 @@ public class AvmHelloWorldTest {
         // Deploy the contract.
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                newTransaction(
-                        BigInteger.ZERO,
+                new AionTransaction(
+                        deployerKey,
+                        new byte[0],
                         new AionAddress(deployerKey.getAddress()),
                         null,
+                        new byte[0],
                         jar,
                         5_000_000,
+                        1,
                         TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(this.deployerKey);
 
         List<AionTransaction> ls = new ArrayList<>();
         ls.add(transaction);
 
         byte[] call = getCallArguments();
         AionTransaction transaction2 =
-                newTransaction(
-                        BigInteger.ONE,
+                new AionTransaction(
+                        deployerKey,
+                        BigInteger.ONE.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
                         TransactionUtil.calculateContractAddress(transaction),
+                        new byte[0],
                         call,
                         2_000_000,
+                        1,
                         TransactionTypes.DEFAULT);
-        transaction2.sign(this.deployerKey);
 
         ls.add(transaction2);
 
@@ -210,23 +219,5 @@ public class AvmHelloWorldTest {
                         JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
                         new byte[0])
                 .encodeToBytes();
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            byte[] data,
-            long energyLimit,
-            byte type) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                BigInteger.ZERO.toByteArray(),
-                data,
-                energyLimit,
-                1,
-                type);
     }
 }

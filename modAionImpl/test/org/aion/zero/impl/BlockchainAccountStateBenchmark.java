@@ -175,6 +175,7 @@ public class BlockchainAccountStateBenchmark {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
+                            key,
                             accountNonce.toByteArray(),
                             new AionAddress(key.getAddress()),
                             destAddr,
@@ -182,7 +183,6 @@ public class BlockchainAccountStateBenchmark {
                             ZERO_BYTE,
                             21000,
                             1);
-            sendTransaction.sign(key);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -245,6 +245,7 @@ public class BlockchainAccountStateBenchmark {
         // deploy
         AionTransaction creationTx =
                 new AionTransaction(
+                        key,
                         accountNonce.toByteArray(),
                         new AionAddress(key.getAddress()),
                         null,
@@ -253,7 +254,6 @@ public class BlockchainAccountStateBenchmark {
                         1000000,
                         1);
 
-        creationTx.sign(key);
         AionBlock block =
                 bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
@@ -283,6 +283,7 @@ public class BlockchainAccountStateBenchmark {
         for (int i = 0; i < repeat; i++) {
             AionTransaction sendTransaction =
                     new AionTransaction(
+                            key,
                             accountNonce.toByteArray(),
                             new AionAddress(key.getAddress()),
                             contractAddress,
@@ -290,7 +291,6 @@ public class BlockchainAccountStateBenchmark {
                             callData,
                             200000,
                             1);
-            sendTransaction.sign(key);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

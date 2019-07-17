@@ -95,6 +95,7 @@ public class InvalidBlockTest {
 
             AionTransaction transaction =
                     new AionTransaction(
+                            deployerKey,
                             nonce.toByteArray(),
                             new AionAddress(this.deployerKey.getAddress()),
                             null,
@@ -103,7 +104,6 @@ public class InvalidBlockTest {
                             5_000_000L,
                             10_000_000_000L,
                             TransactionTypes.AVM_CREATE_CODE);
-            transaction.sign(this.deployerKey);
 
             transactions.add(transaction);
             nonce = nonce.add(BigInteger.ONE);

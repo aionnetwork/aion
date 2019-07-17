@@ -44,6 +44,7 @@ import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -818,6 +819,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionTransaction tx =
                 new AionTransaction(
+                        ECKeyFac.inst().create(),
                         txParams.getNonce().toByteArray(),
                         sender,
                         txParams.getTo(),

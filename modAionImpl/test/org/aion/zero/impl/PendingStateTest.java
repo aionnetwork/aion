@@ -60,6 +60,7 @@ public class PendingStateTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        signer,
                         BigInteger.ZERO.toByteArray(),
                         new AionAddress(signer.getAddress()),
                         to,
@@ -67,8 +68,6 @@ public class PendingStateTest {
                         new byte[0],
                         1_000_000L,
                         10_000_000_000L);
-
-        tx.sign(signer);
 
         assertEquals(hub.getPendingState().addPendingTransaction(tx), TxResponse.SUCCESS);
     }
@@ -94,6 +93,7 @@ public class PendingStateTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        signer,
                         BigInteger.ZERO.toByteArray(),
                         new AionAddress(signer.getAddress()),
                         to,
@@ -101,7 +101,6 @@ public class PendingStateTest {
                         new byte[0],
                         1_000_000L,
                         1L);
-        tx.sign(signer);
 
         assertEquals(
                 hub.getPendingState().addPendingTransaction(tx), TxResponse.INVALID_TX_NRG_PRICE);
@@ -133,6 +132,7 @@ public class PendingStateTest {
 
         AionTransaction transaction =
                 new AionTransaction(
+                        deployerKey,
                         BigInteger.ZERO.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
                         null,
@@ -141,7 +141,6 @@ public class PendingStateTest {
                         5_000_000,
                         10_000_000_000L,
                         TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(deployerKey);
 
         assertEquals(hub.getPendingState().addPendingTransaction(transaction), TxResponse.SUCCESS);
     }
@@ -169,6 +168,7 @@ public class PendingStateTest {
 
         AionTransaction transaction =
                 new AionTransaction(
+                        deployerKey,
                         BigInteger.ZERO.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
                         null,
@@ -177,7 +177,6 @@ public class PendingStateTest {
                         5_000_000,
                         10_000_000_000L,
                         TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(deployerKey);
 
         AionBlock block =
                 blockchain.createNewBlock(
@@ -200,6 +199,7 @@ public class PendingStateTest {
         byte[] call = ABIEncoder.encodeOneString("sayHello");
         transaction =
                 new AionTransaction(
+                        deployerKey,
                         BigInteger.ONE.toByteArray(),
                         new AionAddress(deployerKey.getAddress()),
                         contract,
@@ -208,8 +208,6 @@ public class PendingStateTest {
                         2_000_000,
                         10_000_000_000L,
                         TransactionTypes.DEFAULT);
-
-        transaction.sign(deployerKey);
 
         assertEquals(hub.getPendingState().addPendingTransaction(transaction), TxResponse.SUCCESS);
     }

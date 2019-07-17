@@ -1058,6 +1058,7 @@ public class AionNameServiceContractTest {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
+                            key,
                             accountNonce.toByteArray(),
                             new AionAddress(key.getAddress()),
                             destAddr,
@@ -1065,7 +1066,6 @@ public class AionNameServiceContractTest {
                             ZERO_BYTE,
                             21000,
                             1);
-            sendTransaction.sign(key);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

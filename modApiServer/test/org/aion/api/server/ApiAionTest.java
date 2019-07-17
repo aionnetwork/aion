@@ -18,7 +18,8 @@ import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.AionTransaction;
-import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
@@ -43,6 +44,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class ApiAionTest {
+    private ECKey key = ECKeyFac.inst().create();
 
     private class ApiAionImpl extends ApiAion {
 
@@ -80,6 +82,7 @@ public class ApiAionTest {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             AionTransaction tx =
                     new AionTransaction(
+                            key,
                             new byte[0],
                             new AionAddress(new byte[32]),
                             new AionAddress(new byte[32]),
@@ -281,6 +284,7 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
                         AddressUtils.ZERO_ADDRESS,
                         AddressUtils.ZERO_ADDRESS,
@@ -288,7 +292,6 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         Block blk =
                 impl.getAionHub()
@@ -326,6 +329,7 @@ public class ApiAionTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
                         addr,
                         AddressUtils.ZERO_ADDRESS,
@@ -333,7 +337,6 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         ArgTxCall txcall =
                 new ArgTxCall(
@@ -358,6 +361,7 @@ public class ApiAionTest {
 
         AionTransaction tx =
                 new AionTransaction(
+                        key,
                         repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
                         addr,
                         AddressUtils.ZERO_ADDRESS,
@@ -365,7 +369,6 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000);
-        tx.sign(new ECKeyEd25519());
 
         ArgTxCall txcall =
                 new ArgTxCall(

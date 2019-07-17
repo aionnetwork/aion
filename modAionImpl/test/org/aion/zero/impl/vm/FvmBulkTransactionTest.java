@@ -147,18 +147,16 @@ public class FvmBulkTransactionTest {
             throws IOException {
         byte[] contractBytes = ContractUtils.getContractDeployer("Ticker.sol", "Ticker");
 
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO,
-                        contractBytes,
-                        5_000_000,
-                        this.energyPrice,
-                        TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
-        return transaction;
+        return new AionTransaction(
+                deployerKey,
+                nonce.toByteArray(),
+                new AionAddress(sender.getAddress()),
+                null,
+                new byte[0],
+                contractBytes,
+                5_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction makeFvmContractCallTransaction(
@@ -167,18 +165,16 @@ public class FvmBulkTransactionTest {
         // counter).
         byte[] callBytes = Hex.decode("dae29f29");
 
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        contract,
-                        BigInteger.ZERO,
-                        callBytes,
-                        2_000_000,
-                        this.energyPrice,
-                        TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
-        return transaction;
+        return new AionTransaction(
+                deployerKey,
+                nonce.toByteArray(),
+                new AionAddress(sender.getAddress()),
+                contract,
+                new byte[0],
+                callBytes,
+                2_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private int getDeployedTickerCountValue(ECKey sender, BigInteger nonce, AionAddress contract) {
@@ -187,40 +183,20 @@ public class FvmBulkTransactionTest {
         byte[] callBytes = Hex.decode("c0004213");
 
         AionTransaction transaction =
-                newTransaction(
-                        nonce,
+                new AionTransaction(
+                        deployerKey,
+                        nonce.toByteArray(),
                         new AionAddress(sender.getAddress()),
                         contract,
-                        BigInteger.ZERO,
+                        new byte[0],
                         callBytes,
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
         return new DataWordImpl(summary.getReceipts().get(0).getTransactionOutput()).intValue();
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            BigInteger value,
-            byte[] data,
-            long energyLimit,
-            long energyPrice,
-            byte vm) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                value.toByteArray(),
-                data,
-                energyLimit,
-                energyPrice,
-                vm);
     }
 
     private BigInteger getNonce(AionAddress address) {
