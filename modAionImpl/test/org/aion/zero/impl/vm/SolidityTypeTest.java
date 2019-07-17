@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -71,6 +72,7 @@ import org.slf4j.Logger;
 public class SolidityTypeTest {
     static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private StandaloneBlockchain blockchain;
+    private ECKey deployerKey;
 
     @Before
     public void setup() {
@@ -80,6 +82,7 @@ public class SolidityTypeTest {
                         .withValidatorConfiguration("simple")
                         .build();
         blockchain = bundle.bc;
+        deployerKey = bundle.privateKeys.get(0);
     }
 
     @After
@@ -101,7 +104,9 @@ public class SolidityTypeTest {
         byte[] data = callData;
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
-        return new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(deployerKey);
+        return tx;
     }
 
     private RepositoryCache createRepository(AionTransaction tx) throws IOException {

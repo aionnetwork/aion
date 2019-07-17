@@ -234,7 +234,6 @@ public final class AvmTransactionExecutor {
                 txs[i] =
                         Transaction.contractCreateTransaction(
                                 tx.getSenderAddress(),
-                                tx.getTransactionHash(),
                                 new BigInteger(1, tx.getNonce()),
                                 new BigInteger(1, tx.getValue()),
                                 tx.getData(),
@@ -245,7 +244,6 @@ public final class AvmTransactionExecutor {
                         Transaction.contractCallTransaction(
                                 tx.getSenderAddress(),
                                 tx.getDestinationAddress(),
-                                tx.getTransactionHash(),
                                 new BigInteger(1, tx.getNonce()),
                                 new BigInteger(1, tx.getValue()),
                                 tx.getData(),

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionUtil;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -75,6 +76,7 @@ import org.slf4j.Logger;
 public class OldTxExecutorTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private StandaloneBlockchain blockchain;
+    private ECKey deployerKey;
 
     @BeforeClass
     public static void beforeClass() {
@@ -91,6 +93,7 @@ public class OldTxExecutorTest {
                         .withValidatorConfiguration("simple")
                         .build();
         blockchain = bundle.bc;
+        deployerKey = bundle.privateKeys.get(0);
 
         LongLivedAvm.createAndStartLongLivedAvm();
     }
@@ -123,6 +126,7 @@ public class OldTxExecutorTest {
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(deployerKey);
 
         AionBlock block = createDummyBlock();
 
@@ -162,6 +166,7 @@ public class OldTxExecutorTest {
         long nrg = 500_000L;
         long nrgPrice = 1;
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(deployerKey);
 
         AionBlock block = createDummyBlock();
 
