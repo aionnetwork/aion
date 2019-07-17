@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -121,16 +122,16 @@ public class BlockchainIntegrationTest {
         // (byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data)
         ECKey key = bundle.privateKeys.get(0);
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         BigInteger.valueOf(1).toByteArray(),
-                        new AionAddress(key.getAddress()),
                         receiverAddress,
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         1L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
-        tx.sign(key);
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
@@ -159,15 +160,15 @@ public class BlockchainIntegrationTest {
                 bc.getRepository().getBalance(new AionAddress(sender.getAddress()));
 
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        sender,
                         BigInteger.valueOf(0).toByteArray(),
-                        new AionAddress(sender.getAddress()),
                         receiverAddress,
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L);
-        tx.sign(sender);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -228,15 +229,15 @@ public class BlockchainIntegrationTest {
         // generate transaction that transfers 100 tokens from sender to receiver
         // pk[0] -> receiverAddress
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        sender,
                         BigInteger.valueOf(0).toByteArray(),
-                        new AionAddress(sender.getAddress()),
                         receiverAddress,
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L);
-        tx.sign(sender);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         // create a new block containing a single transaction (tx)
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -265,16 +266,15 @@ public class BlockchainIntegrationTest {
         final ECKey sender = bundle.privateKeys.get(0);
 
         AionTransaction contractDeploymentTx =
-                new AionTransaction(
+                AionTransaction.create(
+                        sender,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(sender.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
-                        1L);
-
-        contractDeploymentTx.sign(sender);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block =
                 blockchain.createNewBlock(

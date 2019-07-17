@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -64,27 +65,27 @@ public class TxRecptLgTest {
 
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx1 =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L);
-        tx1.sign(deployerAccount);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         null,
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
-                        1L);
-        tx2.sign(deployerAccount);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
@@ -104,15 +105,15 @@ public class TxRecptLgTest {
         byte[] functionAA = new byte[4];
         System.arraycopy(HashUtil.keccak256("AA(address)".getBytes()), 0, functionAA, 0, 4);
         AionTransaction tx3 =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerAccount,
                         nonce.toByteArray(),
-                        new AionAddress(deployerAccount.getAddress()),
                         addressA,
                         new byte[0],
                         ByteUtil.merge(functionAA, addressB.toByteArray()),
                         1_000_000L,
-                        1L);
-        tx3.sign(deployerAccount);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);

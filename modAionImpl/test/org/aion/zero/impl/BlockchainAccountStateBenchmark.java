@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -174,15 +175,15 @@ public class BlockchainAccountStateBenchmark {
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            key,
                             accountNonce.toByteArray(),
-                            new AionAddress(key.getAddress()),
                             destAddr,
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
-            sendTransaction.sign(key);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -244,16 +245,16 @@ public class BlockchainAccountStateBenchmark {
 
         // deploy
         AionTransaction creationTx =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         accountNonce.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
                         1000000,
-                        1);
+                        1,
+                        TransactionTypes.DEFAULT);
 
-        creationTx.sign(key);
         AionBlock block =
                 bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
@@ -282,15 +283,15 @@ public class BlockchainAccountStateBenchmark {
         // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < repeat; i++) {
             AionTransaction sendTransaction =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            key,
                             accountNonce.toByteArray(),
-                            new AionAddress(key.getAddress()),
                             contractAddress,
                             BigInteger.ZERO.toByteArray(),
                             callData,
                             200000,
-                            1);
-            sendTransaction.sign(key);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

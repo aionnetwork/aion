@@ -242,7 +242,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 .forEach(
                         bw -> {
                             if (this.getMainMap().get(bw) != null) {
-                                AionTransaction tx = this.getMainMap().get(bw).getTx().clone();
+                                AionTransaction tx = this.getMainMap().get(bw).getTx();
                                 removedTxl.add(tx);
 
                                 long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
@@ -295,7 +295,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
             }
 
             //noinspection unchecked
-            removedTxl.add(tx.clone());
+            removedTxl.add(tx);
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
@@ -423,7 +423,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                     continue;
                 }
 
-                rtn.add(this.getMainMap().get(txMap.getKey()).getTx().clone());
+                rtn.add(this.getMainMap().get(txMap.getKey()).getTx());
             }
         }
 
@@ -495,7 +495,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
                         if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                             try {
-                                rtn.add(itx.clone());
+                                rtn.add(itx);
                                 if (firstTx) {
                                     snapshotSet.add(bw);
                                     firstTx = false;
@@ -543,7 +543,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
                             if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                                 try {
-                                    rtn.add((AionTransaction) itx.clone());
+                                    rtn.add(itx);
                                     if (firstTx) {
                                         snapshotSet.add(bw);
                                         firstTx = false;

@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
@@ -113,18 +114,15 @@ public class VMTxStateAlignTest {
     }
 
     private AionTransaction makePrecompiledContractTransaction(ECKey sender, BigInteger nonce) {
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        ContractInfo.BLAKE_2B.contractAddress,
-                        BigInteger.ONE,
-                        new byte[10],
-                        2_000_000,
-                        this.energyPrice,
-                        (byte) 0x01);
-        transaction.sign(sender);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                ContractInfo.BLAKE_2B.contractAddress,
+                BigInteger.ONE.toByteArray(),
+                new byte[10],
+                2_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     // Deploys the Ticker.sol contract.
@@ -132,18 +130,15 @@ public class VMTxStateAlignTest {
             throws IOException {
         byte[] contractBytes = ContractUtils.getContractDeployer("Ticker.sol", "Ticker");
 
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO,
-                        contractBytes,
-                        5_000_000,
-                        this.energyPrice,
-                        (byte) 0x01);
-        transaction.sign(sender);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                contractBytes,
+                5_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction makeFvmContractCallTransaction(
@@ -152,38 +147,15 @@ public class VMTxStateAlignTest {
         // counter).
         byte[] callBytes = Hex.decode("dae29f29");
 
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        contract,
-                        BigInteger.ZERO,
-                        callBytes,
-                        2_000_000,
-                        this.energyPrice,
-                        (byte) 0x01);
-        transaction.sign(sender);
-        return transaction;
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            BigInteger value,
-            byte[] data,
-            long energyLimit,
-            long energyPrice,
-            byte vm) {
-        return new AionTransaction(
-                nonce.toByteArray(),
+        return AionTransaction.create(
                 sender,
-                destination,
-                value.toByteArray(),
-                data,
-                energyLimit,
-                energyPrice,
-                vm);
+                nonce.toByteArray(),
+                contract,
+                new byte[0],
+                callBytes,
+                2_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private AionBlock genNewBlock(List<AionTransaction> transactions, StandaloneBlockchain bc) {

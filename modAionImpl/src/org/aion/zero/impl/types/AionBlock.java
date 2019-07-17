@@ -41,9 +41,7 @@ public class AionBlock extends AbstractBlock implements Block {
     // copy constructor
     public AionBlock(AionBlock block) {
         this.header = new A0BlockHeader(block.getHeader());
-        for (AionTransaction tx : block.getTransactionsList()) {
-            this.transactionsList.add(tx.clone());
-        }
+        this.transactionsList.addAll(block.getTransactionsList());
         this.parsed = true;
     }
 

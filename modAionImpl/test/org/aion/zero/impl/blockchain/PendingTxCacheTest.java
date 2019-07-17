@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
@@ -41,17 +42,17 @@ public class PendingTxCacheTest {
         for (int i = startNonce; i < startNonce + num; i++) {
 
             AionTransaction tx =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            key.get(keyIndex),
                             BigInteger.valueOf(i).toByteArray(),
-                            new AionAddress(key.get(keyIndex).getAddress()),
                             AddressUtils.wrapAddress(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtil.hexStringToBytes("1"),
                             ByteUtil.hexStringToBytes("1"),
                             10000L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
 
-            tx.sign(key.get(keyIndex));
             txn.add(tx);
         }
 
@@ -71,17 +72,17 @@ public class PendingTxCacheTest {
         for (int i = startNonce; i < startNonce + num; i++) {
 
             AionTransaction tx =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            key.get(keyIndex),
                             BigInteger.valueOf(i).toByteArray(),
-                            new AionAddress(key.get(keyIndex).getAddress()),
                             AddressUtils.wrapAddress(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtil.hexStringToBytes("1"),
                             ByteUtil.hexStringToBytes(data),
                             10000L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
 
-            tx.sign(key.get(keyIndex));
             txn.add(tx);
         }
 
