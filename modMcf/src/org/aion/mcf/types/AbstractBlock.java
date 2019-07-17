@@ -5,11 +5,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.rlp.RLP;
+import org.slf4j.Logger;
 
 /** Abstract Block class. */
 public abstract class AbstractBlock implements Block {
+
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
+
+    /** use for cli tooling */
+    protected Boolean mainChain;
 
     protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -55,5 +63,9 @@ public abstract class AbstractBlock implements Block {
             ++i;
         }
         return RLP.encodeList(transactionsEncoded);
+    }
+
+    public void setMainChain() {
+        mainChain = true;
     }
 }
