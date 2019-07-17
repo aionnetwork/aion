@@ -25,6 +25,7 @@ import org.aion.mcf.config.CfgReports;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
+import org.aion.stake.GenesisStakingBlock;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 import org.aion.zero.impl.SystemExitCodes;
@@ -33,6 +34,8 @@ import org.aion.zero.impl.SystemExitCodes;
 public final class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
+
+    private GenesisStakingBlock genesisStakingBlock;
 
     protected static final int N = 210;
 
@@ -97,6 +100,18 @@ public final class CfgAion extends Cfg {
     public synchronized AionGenesis getGenesis() {
         if (this.genesis == null) setGenesis();
         return this.genesis;
+    }
+
+    public GenesisStakingBlock getGenesisStakingBlock() throws HeaderStructureException {
+
+        // We need the extraData from the PoWGenesis block
+        if (genesis == null) {
+            setGenesis();
+        }
+
+        genesisStakingBlock = new GenesisStakingBlock(genesis.getExtraData());
+
+        return genesisStakingBlock;
     }
 
     public static int getN() {

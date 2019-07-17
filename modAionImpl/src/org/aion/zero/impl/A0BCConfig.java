@@ -30,6 +30,8 @@ public interface A0BCConfig {
 
     AionAddress getMinerCoinbase();
 
+    AionAddress getStakerCoinbase();
+
     /** Retrieves the number indicating how many blocks between each flush */
     int getFlushInterval();
 

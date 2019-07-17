@@ -255,6 +255,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress());
             }
 
+            @Override
+            public AionAddress getStakerCoinbase() {
+                return AddressUtils.wrapAddress(cfgAion.getConsensus().getStakerAddress());
+            }
+
             // TODO: hook up to configuration file
             @Override
             public int getFlushInterval() {

@@ -309,6 +309,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 }
 
                                 @Override
+                                public AionAddress getStakerCoinbase() {
+                                    return AddressUtils.ZERO_ADDRESS;
+                                }
+
+                                @Override
                                 public int getFlushInterval() {
                                     return 1;
                                 }
