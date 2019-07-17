@@ -22,16 +22,17 @@ public class AionTransaction implements Cloneable {
     // TODO isCreate
     private final byte[] transactionData;
 
+    /* define transaction type. */
+    private final byte type;
+
     /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
     protected byte[] timeStamp;
 
-    /* define transaction type. */
-    protected byte type;
-
     /* the elliptic curve signature
      * (including public key recovery bits) */
-    protected ISignature signature;
+    private ISignature signature;
 
+    // TODO This is used in TxPoolA0, but probably doesn't belong in this class. See AKI-265
     private long nrgConsume = 0;
 
     public AionTransaction(
@@ -43,21 +44,15 @@ public class AionTransaction implements Cloneable {
             long energyLimit,
             long energyPrice) {
 
-        if (senderAddress == null) {
-            throw new IllegalArgumentException();
-        }
-        if (nonce == null) {
-            throw new IllegalArgumentException();
-        }
-
-        this.nonce = nonce;
-        this.value = value;
-        this.destinationAddress = destinationAddress;
-        this.transactionData = transactionData;
-        this.type = TransactionTypes.DEFAULT;
-        this.energyLimit = energyLimit;
-        this.energyPrice = energyPrice;
-        this.senderAddress = senderAddress;
+        this(
+                nonce,
+                senderAddress,
+                destinationAddress,
+                value,
+                transactionData,
+                energyLimit,
+                energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     // constructor for explicitly setting a transaction type.
@@ -78,8 +73,10 @@ public class AionTransaction implements Cloneable {
                 value,
                 transactionData,
                 energyLimit,
-                energyPrice);
-        this.type = txType;
+                energyPrice,
+                txType,
+                null,
+                null);
     }
 
     // constructor for explicitly setting a transaction type.
@@ -95,15 +92,21 @@ public class AionTransaction implements Cloneable {
             ISignature signature,
             byte[] timeStamp) {
 
-        this(
-                nonce,
-                senderAddress,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                txType);
+        if (senderAddress == null) {
+            throw new IllegalArgumentException();
+        }
+        if (nonce == null) {
+            throw new IllegalArgumentException();
+        }
+
+        this.nonce = nonce;
+        this.value = value;
+        this.destinationAddress = destinationAddress;
+        this.transactionData = transactionData;
+        this.energyLimit = energyLimit;
+        this.energyPrice = energyPrice;
+        this.senderAddress = senderAddress;
+        this.type = txType;
         this.signature = signature;
         this.timeStamp = timeStamp;
     }
