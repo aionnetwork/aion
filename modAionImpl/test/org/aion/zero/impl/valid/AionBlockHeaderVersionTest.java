@@ -23,7 +23,7 @@ public class AionBlockHeaderVersionTest {
 
     @Test
     public void testSupportedVersion() {
-        when(mockHeader.getVersion()).thenReturn((byte) 1);
+        when(mockHeader.getSealType()).thenReturn((byte) 1);
 
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
@@ -36,7 +36,7 @@ public class AionBlockHeaderVersionTest {
 
     @Test
     public void testUnsupportedVersion() {
-        when(mockHeader.getVersion()).thenReturn((byte) -1);
+        when(mockHeader.getSealType()).thenReturn((byte) -1);
 
         List<IValidRule.RuleError> errors = new ArrayList<>();
 

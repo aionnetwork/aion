@@ -66,4 +66,6 @@ public interface BlockHeader {
     byte[] getSolution();
 
     JSONObject toJSON();
+
+    byte getSealType();
 }

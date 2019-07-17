@@ -13,6 +13,7 @@ dependencies {
     compile project(':modRlp')
     compile project(':modCrypto')
     compile project(':modBase')
+    compile 'org.json:json:20180813'
 
     compile project(':modP2p')
     compile project(':modDbImpl')

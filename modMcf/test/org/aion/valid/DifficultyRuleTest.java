@@ -1,8 +1,8 @@
 package org.aion.valid;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.types.AbstractBlockHeader.NONCE_LENGTH;
-import static org.aion.mcf.types.AbstractBlockHeader.SOLUTIONSIZE;
+import static org.aion.zero.types.A0BlockHeader.NONCE_LENGTH;
+import static org.aion.zero.types.A0BlockHeader.SOLUTIONSIZE;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;

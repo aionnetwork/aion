@@ -694,7 +694,7 @@ public class BlockchainImplementationTest {
         Block parent = chain.getBestBlock();
         A0BlockHeader.Builder headerBuilder =
                 new A0BlockHeader.Builder()
-                        .withVersion((byte) 1)
+                        .withSealType((byte) 1)
                         .withParentHash(parent.getHash())
                         .withCoinbase(parent.getCoinbase())
                         .withNumber(parent.getNumber() + 1)

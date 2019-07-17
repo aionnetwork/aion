@@ -10,10 +10,10 @@ public class AionHeaderVersionRule extends BlockHeaderRule {
 
     @Override
     public boolean validate(BlockHeader header, List<RuleError> errors) {
-        if (!A0BlockHeaderVersion.isActive(header.getVersion())) {
+        if (!A0BlockHeaderVersion.isActive(header.getSealType())) {
             addError(
                     "Invalid header version, found version "
-                            + header.getVersion()
+                            + header.getSealType()
                             + " expected one of "
                             + A0BlockHeaderVersion.activeVersions(),
                     errors);

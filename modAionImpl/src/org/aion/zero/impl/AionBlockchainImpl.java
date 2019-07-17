@@ -1007,7 +1007,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         try {
             A0BlockHeader.Builder headerBuilder =
                     new A0BlockHeader.Builder()
-                            .withVersion((byte) 1)
+                            .withSealType((byte) 1)
                             .withParentHash(parent.getHash())
                             .withCoinbase(minerCoinbase)
                             .withNumber(parent.getNumber() + 1)
