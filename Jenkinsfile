@@ -35,14 +35,7 @@ pipeline {
             }
         }
 
-        stage('Format') {
-            steps {
-                echo "Checking code formatting for branch: ${env.BRANCH_NAME}"
-                sh "./gradlew checkFormat"
-            }
-        }
-
-        stage('Functional tests') { 
+        stage('Functional tests') {
             when { 
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
