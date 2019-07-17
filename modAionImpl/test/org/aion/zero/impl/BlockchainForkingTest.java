@@ -709,19 +709,15 @@ public class BlockchainForkingTest {
         String contractCode =
                 "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
 
-        AionTransaction contractDeploymentTx =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        ByteUtil.hexStringToBytes(contractCode),
-                        5_000_000L,
-                        10_123_456_789L);
-
-        contractDeploymentTx.sign(sender);
-
-        return contractDeploymentTx;
+        return AionTransaction.create(
+                sender,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                ByteUtil.hexStringToBytes(contractCode),
+                5_000_000L,
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction callSetValue(
@@ -733,19 +729,15 @@ public class BlockchainForkingTest {
         // code for contract call
         String contractCode = "62eb702a0000000000000000000000000000000" + digit;
 
-        AionTransaction contractCallTx =
-                new AionTransaction(
-                        nonce.toByteArray(),
-                        new AionAddress(sender.getAddress()),
-                        contract,
-                        BigInteger.ZERO.toByteArray(),
-                        Hex.decode(contractCode),
-                        2_000_000L,
-                        10_123_456_789L);
-
-        contractCallTx.sign(sender);
-
-        return contractCallTx;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                contract,
+                BigInteger.ZERO.toByteArray(),
+                Hex.decode(contractCode),
+                2_000_000L,
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction callSetValue2(
@@ -761,19 +753,15 @@ public class BlockchainForkingTest {
                         + "0000000000000000000000000000000"
                         + digit2;
 
-        AionTransaction contractCallTx =
-                new AionTransaction(
-                        nonce.toByteArray(),
-                        new AionAddress(sender.getAddress()),
-                        contract,
-                        BigInteger.ZERO.toByteArray(),
-                        Hex.decode(contractCode),
-                        2_000_000L,
-                        10_123_456_789L);
-
-        contractCallTx.sign(sender);
-
-        return contractCallTx;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                contract,
+                BigInteger.ZERO.toByteArray(),
+                Hex.decode(contractCode),
+                2_000_000L,
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -996,40 +984,35 @@ public class BlockchainForkingTest {
                                 new byte[0])
                         .encodeToBytes();
 
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        statefulnessAVM,
-                        5_000_000L,
-                        10_123_456_789L,
-                        TransactionTypes.AVM_CREATE_CODE);
-
-        transaction.sign(sender);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                statefulnessAVM,
+                5_000_000L,
+                10_123_456_789L,
+                TransactionTypes.AVM_CREATE_CODE);
     }
 
     private List<AionTransaction> callStatefulnessAVM(
             ECKey sender, int count, BigInteger nonce, AionAddress contract) {
 
         List<AionTransaction> txs = new ArrayList<>();
-        AionAddress senderAddress = new AionAddress(sender.getAddress());
         AionTransaction transaction;
 
         //  make call transactions
         for (int i = 0; i < count; i++) {
             transaction =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            sender,
                             nonce.toByteArray(),
-                            senderAddress,
                             contract,
                             BigInteger.ZERO.toByteArray(),
                             ABIUtil.encodeMethodArguments("incrementCounter"),
                             2_000_000L,
-                            10_123_456_789L);
-            transaction.sign(sender);
+                            10_123_456_789L,
+                            TransactionTypes.DEFAULT);
             txs.add(transaction);
             // increment nonce
             nonce = nonce.add(BigInteger.ONE);
@@ -1037,15 +1020,15 @@ public class BlockchainForkingTest {
 
         //  make one getCount transaction
         transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        sender,
                         nonce.toByteArray(),
-                        senderAddress,
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         ABIUtil.encodeMethodArguments("getCount"),
                         2_000_000L,
-                        10_123_456_789L);
-        transaction.sign(sender);
+                        10_123_456_789L,
+                        TransactionTypes.DEFAULT);
         txs.add(transaction);
 
         return txs;

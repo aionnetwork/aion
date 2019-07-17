@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -61,15 +62,15 @@ public class BlockchainTestUtils {
                 aionBytes[0] = (byte) 0xa0; // the Aion prefix
                 AionAddress destAddr = new AionAddress(aionBytes);
                 AionTransaction newTx =
-                        new AionTransaction(
+                        AionTransaction.create(
+                                key,
                                 accountNonce.toByteArray(),
-                                new AionAddress(key.getAddress()),
                                 destAddr,
                                 BigInteger.ONE.toByteArray(),
                                 ZERO_BYTE,
                                 NRG,
-                                NRG_PRICE);
-                newTx.sign(key);
+                                NRG_PRICE,
+                                TransactionTypes.DEFAULT);
                 transactions.add(newTx);
                 accountNonce = accountNonce.add(BigInteger.ONE);
                 nonces.put(key, accountNonce);

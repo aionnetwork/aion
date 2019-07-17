@@ -209,48 +209,45 @@ public class StatefulnessTest {
     private AionTxReceipt deployContract() {
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                newTransaction(
-                        getNonce(this.deployer),
-                        this.deployer,
+                AionTransaction.create(
+                        deployerKey,
+                        getNonce(this.deployer).toByteArray(),
                         null,
-                        BigInteger.ZERO,
+                        new byte[0],
                         jar,
                         5_000_000,
                         this.energyPrice,
                         txType);
-        transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
     }
 
     private AionTxReceipt callContract(AionAddress contract, String method, Object... arguments) {
         AionTransaction transaction =
-                newTransaction(
-                        getNonce(this.deployer),
-                        this.deployer,
+                AionTransaction.create(
+                        deployerKey,
+                        getNonce(this.deployer).toByteArray(),
                         contract,
-                        BigInteger.ZERO,
+                        new byte[0],
                         abiEncodeMethodCall(method, arguments),
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
     }
 
     private AionTxReceipt transferValueTo(AionAddress beneficiary, BigInteger value) {
         AionTransaction transaction =
-                newTransaction(
-                        getNonce(this.deployer),
-                        this.deployer,
+                AionTransaction.create(
+                        deployerKey,
+                        getNonce(this.deployer).toByteArray(),
                         beneficiary,
-                        value,
+                        value.toByteArray(),
                         new byte[0],
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
     }
@@ -278,26 +275,6 @@ public class StatefulnessTest {
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
         return ABIUtil.encodeMethodArguments(method, arguments);
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            BigInteger value,
-            byte[] data,
-            long energyLimit,
-            long energyPrice,
-            byte vm) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                value.toByteArray(),
-                data,
-                energyLimit,
-                energyPrice,
-                vm);
     }
 
     private BigInteger getBalance(AionAddress address) {

@@ -458,7 +458,7 @@ public abstract class ApiAion extends Api {
 
     protected byte[] doCall(ArgTxCall _params) {
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.createWithoutKey(
                         _params.getNonce().toByteArray(),
                         _params.getFrom() == null ? AddressUtils.ZERO_ADDRESS : _params.getFrom(),
                         _params.getTo(),
@@ -476,7 +476,7 @@ public abstract class ApiAion extends Api {
         AionAddress fromAddr =
                 (params.getFrom() == null) ? AddressUtils.ZERO_ADDRESS : params.getFrom();
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.createWithoutKey(
                         params.getNonce().toByteArray(),
                         fromAddr,
                         params.getTo(),
@@ -521,16 +521,15 @@ public abstract class ApiAion extends Api {
                                         .toByteArray();
 
                 AionTransaction tx =
-                        new AionTransaction(
+                        AionTransaction.create(
+                                key,
                                 nonce,
-                                from,
                                 null,
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
@@ -590,16 +589,15 @@ public abstract class ApiAion extends Api {
                                         .toByteArray();
 
                 AionTransaction tx =
-                        new AionTransaction(
+                        AionTransaction.create(
+                                key,
                                 nonce,
-                                new AionAddress(key.getAddress()),
                                 _params.getTo(),
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
                                 _params.getType());
-                tx.sign(key);
 
                 return (new ApiTxResponse(
                         pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
@@ -649,19 +647,15 @@ public abstract class ApiAion extends Api {
                                         .bestPendingStateNonce(new AionAddress(key.getAddress()))
                                         .toByteArray();
 
-                AionTransaction tx =
-                        new AionTransaction(
-                                nonce,
-                                new AionAddress(key.getAddress()),
-                                _params.getTo(),
-                                _params.getValue().toByteArray(),
-                                _params.getData(),
-                                _params.getNrg(),
-                                _params.getNrgPrice(),
-                                _params.getType());
-                tx.sign(key);
-
-                return tx;
+                return AionTransaction.create(
+                        key,
+                        nonce,
+                        _params.getTo(),
+                        _params.getValue().toByteArray(),
+                        _params.getData(),
+                        _params.getNrg(),
+                        _params.getNrgPrice(),
+                        _params.getType());
             }
         } catch (Exception ex) {
             if (LOG.isDebugEnabled()) {

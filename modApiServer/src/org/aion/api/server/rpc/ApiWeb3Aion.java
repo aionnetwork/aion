@@ -42,6 +42,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -816,14 +817,15 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.createWithoutKey(
                         txParams.getNonce().toByteArray(),
                         sender,
                         txParams.getTo(),
                         txParams.getValue().toByteArray(),
                         txParams.getData(),
                         txParams.getNrg(),
-                        txParams.getNrgPrice());
+                        txParams.getNrgPrice(),
+                        TransactionTypes.DEFAULT);
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 

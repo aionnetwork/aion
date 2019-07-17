@@ -86,16 +86,15 @@ public class BalanceTransferConsensusTest {
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         to,
                         amount.toByteArray(),
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
                         (byte) 11); // legal type before the fork
-        transaction.sign(key);
 
         // check that the transaction is valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
@@ -135,16 +134,15 @@ public class BalanceTransferConsensusTest {
         // Make balance transfer transaction to precompiled contract.
         ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
         AionTransaction transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         to,
                         amount.toByteArray(),
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
                         (byte) 11); // illegal type after the fork
-        transaction.sign(key);
 
         // check that the transaction is not valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
@@ -161,9 +159,9 @@ public class BalanceTransferConsensusTest {
 
         // Make balance transfer transaction to precompiled contract with AVM_CREATE_CODE
         transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         to,
                         amount.toByteArray(),
                         new byte[0],
@@ -172,7 +170,6 @@ public class BalanceTransferConsensusTest {
                         TransactionTypes
                                 .AVM_CREATE_CODE); // illegal type for the balance transfer after
         // the fork
-        transaction.sign(key);
 
         // check that the transaction is not valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
@@ -189,16 +186,15 @@ public class BalanceTransferConsensusTest {
 
         // Make balance transfer transaction to precompiled contract with DEFAULT type
         transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        key,
                         BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
                         to,
                         amount.toByteArray(),
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
                         TransactionTypes.DEFAULT); // the only valid type after the fork
-        transaction.sign(key);
 
         // check that the transaction is not valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
@@ -376,17 +372,15 @@ public class BalanceTransferConsensusTest {
     private static AionTransaction makeBalanceTransferTransaction(
             AionAddress recipient, BigInteger amount, BigInteger nonce) {
         org.aion.crypto.ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        nonce.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        recipient,
-                        amount.toByteArray(),
-                        new byte[] {0x1, 0x2, 0x3},
-                        2_000_000,
-                        ENERGY_PRICE);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                nonce.toByteArray(),
+                recipient,
+                amount.toByteArray(),
+                new byte[] {0x1, 0x2, 0x3},
+                2_000_000,
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private BigInteger getBalance(AionAddress address) {

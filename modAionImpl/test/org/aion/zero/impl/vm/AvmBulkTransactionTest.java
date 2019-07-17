@@ -91,17 +91,15 @@ public class AvmBulkTransactionTest {
     @Test
     public void deployEmptyContract() {
         AionTransaction deployEmptyContractTx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         BigInteger.ZERO.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
                         5_000_000L,
                         10_123_456_789L,
                         TransactionTypes.AVM_CREATE_CODE);
-
-        deployEmptyContractTx.sign(deployerKey);
 
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
@@ -196,15 +194,16 @@ public class AvmBulkTransactionTest {
         String contractCode =
                 "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
         AionTransaction deployTxFVM =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         expectedNonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
                         5_000_000L,
-                        energyPrice);
-        deployTxFVM.sign(deployerKey);
+                        energyPrice,
+                        TransactionTypes.DEFAULT);
+
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
@@ -217,15 +216,15 @@ public class AvmBulkTransactionTest {
 
         // call to FVM contract
         AionTransaction contractCallTx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         expectedNonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         fvmContract,
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("62eb702a00000000000000000000000000000006"),
                         2_000_000L,
-                        energyPrice);
-        contractCallTx.sign(deployerKey);
+                        energyPrice,
+                        TransactionTypes.DEFAULT);
         transactions.add(contractCallTx);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
@@ -396,69 +395,57 @@ public class AvmBulkTransactionTest {
     // Deploys the Statefulness.java contract
     private AionTransaction makeAvmContractCreateTransaction(ECKey sender, BigInteger nonce) {
         byte[] jar = getJarBytes();
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        null,
-                        BigInteger.ZERO,
-                        jar,
-                        5_000_000,
-                        this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
-        transaction.sign(this.deployerKey);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                jar,
+                5_000_000,
+                this.energyPrice,
+                TransactionTypes.AVM_CREATE_CODE);
     }
 
     private AionTransaction makeAvmContractCallTransaction(
             ECKey sender, BigInteger nonce, AionAddress contract) {
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        new AionAddress(sender.getAddress()),
-                        contract,
-                        BigInteger.ZERO,
-                        abiEncodeMethodCall("incrementCounter"),
-                        2_000_000,
-                        this.energyPrice,
-                        TransactionTypes.DEFAULT);
-        transaction.sign(this.deployerKey);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                contract,
+                new byte[0],
+                abiEncodeMethodCall("incrementCounter"),
+                2_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction makeValueTransferTransaction(
             ECKey sender, ECKey beneficiary, BigInteger value, BigInteger nonce) {
-        AionAddress senderAddress = new AionAddress(sender.getAddress());
 
-        AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        senderAddress,
-                        new AionAddress(beneficiary.getAddress()),
-                        value,
-                        new byte[0],
-                        2_000_000,
-                        this.energyPrice,
-                        TransactionTypes.DEFAULT);
-        transaction.sign(sender);
-        return transaction;
+        return AionTransaction.create(
+                sender,
+                nonce.toByteArray(),
+                new AionAddress(beneficiary.getAddress()),
+                value.toByteArray(),
+                new byte[0],
+                2_000_000,
+                this.energyPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private int getDeployedStatefulnessCountValue(
             ECKey sender, BigInteger nonce, AionAddress contract) {
-        AionAddress senderAddress = new AionAddress(sender.getAddress());
 
         AionTransaction transaction =
-                newTransaction(
-                        nonce,
-                        senderAddress,
+                AionTransaction.create(
+                        sender,
+                        nonce.toByteArray(),
                         contract,
-                        BigInteger.ZERO,
+                        new byte[0],
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT);
-        transaction.sign(sender);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
@@ -475,26 +462,6 @@ public class AvmBulkTransactionTest {
                 this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight();
-    }
-
-    private AionTransaction newTransaction(
-            BigInteger nonce,
-            AionAddress sender,
-            AionAddress destination,
-            BigInteger value,
-            byte[] data,
-            long energyLimit,
-            long energyPrice,
-            byte vm) {
-        return new AionTransaction(
-                nonce.toByteArray(),
-                sender,
-                destination,
-                value.toByteArray(),
-                data,
-                energyLimit,
-                energyPrice,
-                vm);
     }
 
     private BigInteger getNonce(AionAddress address) {

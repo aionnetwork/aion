@@ -15,6 +15,35 @@ public final class TxUtil {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
+    public static long calculateTransactionCost(AionTransaction tx) {
+        long zeroes = zeroBytesInData(tx.getData());
+        long nonZeroes = tx.getData().length - zeroes;
+
+        return (tx.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
+            + Constants.NRG_TRANSACTION_MIN
+            + zeroes * Constants.NRG_TX_DATA_ZERO
+            + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
+    }
+
+    private static long zeroBytesInData(byte[] data) {
+        if (data == null) {
+            return 0;
+        }
+
+        int c = 0;
+        for (byte b : data) {
+            c += (b == 0) ? 1 : 0;
+        }
+        return c;
+    }
+
+    public static AionAddress calculateContractAddress(AionTransaction tx) {
+        if (tx.getDestinationAddress() != null) {
+            return null;
+        }
+        return new AionAddress(HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+    }
+
     private static final int RLP_TX_NONCE = 0,
             RLP_TX_TO = 1,
             RLP_TX_VALUE = 2,
@@ -49,8 +78,8 @@ public final class TxUtil {
         }
 
         byte[] timeStamp = tx.get(RLP_TX_TIMESTAMP).getRLPData();
-        long nrg = new BigInteger(1, tx.get(RLP_TX_NRG).getRLPData()).longValue();
-        long nrgPrice = new BigInteger(1, tx.get(RLP_TX_NRGPRICE).getRLPData()).longValue();
+        long energyLimit = new BigInteger(1, tx.get(RLP_TX_NRG).getRLPData()).longValue();
+        long energyPrice = new BigInteger(1, tx.get(RLP_TX_NRGPRICE).getRLPData()).longValue();
         byte type = new BigInteger(1, tx.get(RLP_TX_TYPE).getRLPData()).byteValue();
 
         byte[] sigs = tx.get(RLP_TX_SIG).getRLPData();
@@ -72,84 +101,81 @@ public final class TxUtil {
             return null;
         }
 
-        return new AionTransaction(
+        return AionTransaction.createFromRlp(
                 nonce,
                 sender,
                 destination,
                 value,
                 data,
-                nrg,
-                nrgPrice,
+                energyLimit,
+                energyPrice,
                 type,
+                timeStamp,
                 signature,
-                timeStamp);
+                rlpEncoding);
     }
 
     /** For signatures you have to keep also RLP of the transaction without any signature data */
-    static byte[] encodeWithoutSignature(AionTransaction tx) {
-        return calculateEncodingPrivate(tx, false);
+    static byte[] rlpEncodeWithoutSignature(
+            byte[] nonce,
+            AionAddress destination,
+            byte[] value,
+            byte[] data,
+            byte[] timeStamp,
+            long energyLimit,
+            long energyPrice,
+            byte type) {
+
+        byte[] nonceEncoded = RLP.encodeElement(nonce);
+        byte[] destinationEncoded = RLP.encodeElement(destination == null ? null : destination.toByteArray());
+        byte[] valueEncoded = RLP.encodeElement(value);
+        byte[] dataEncoded = RLP.encodeElement(data);
+        byte[] timeStampEncoded = RLP.encodeElement(timeStamp);
+        byte[] energyLimitEncoded = RLP.encodeLong(energyLimit);
+        byte[] energyPriceEncoded = RLP.encodeLong(energyPrice);
+        byte[] typeEncoded = RLP.encodeByte(type);
+
+        return RLP.encodeList(
+                nonceEncoded,
+                destinationEncoded,
+                valueEncoded,
+                dataEncoded,
+                timeStampEncoded,
+                energyLimitEncoded,
+                energyPriceEncoded,
+                typeEncoded);
     }
 
-    static byte[] encode(AionTransaction tx) {
-        return calculateEncodingPrivate(tx, true);
-    }
+    static byte[] rlpEncode(
+            byte[] nonce,
+            AionAddress destination,
+            byte[] value,
+            byte[] data,
+            byte[] timeStamp,
+            long energyLimit,
+            long energyPrice,
+            byte type,
+            ISignature signature) {
 
-    private static byte[] calculateEncodingPrivate(AionTransaction tx, boolean withSignature) {
+        byte[] nonceEncoded = RLP.encodeElement(nonce);
+        byte[] destinationEncoded = RLP.encodeElement(destination == null ? null : destination.toByteArray());
+        byte[] valueEncoded = RLP.encodeElement(value);
+        byte[] dataEncoded = RLP.encodeElement(data);
+        byte[] timeStampEncoded = RLP.encodeElement(timeStamp);
+        byte[] energyLimitEncoded = RLP.encodeLong(energyLimit);
+        byte[] energyPriceEncoded = RLP.encodeLong(energyPrice);
+        byte[] typeEncoded = RLP.encodeByte(type);
+        byte[] signatureEncoded = RLP.encodeElement(signature.toBytes());
 
-        byte[] nonce = RLP.encodeElement(tx.getNonce());
-        byte[] to = RLP.encodeElement(tx.getDestinationAddress() == null ? null : tx.getDestinationAddress().toByteArray());
-        byte[] value = RLP.encodeElement(tx.getValue());
-        byte[] data = RLP.encodeElement(tx.getData());
-        byte[] timeStamp = RLP.encodeElement(tx.getTimestamp());
-        byte[] nrg = RLP.encodeLong(tx.getEnergyLimit());
-        byte[] nrgPrice = RLP.encodeLong(tx.getEnergyPrice());
-        byte[] type = RLP.encodeByte(tx.getTargetVM());
-
-        if (withSignature) {
-            if (tx.getSignature() == null) {
-                throw new IllegalArgumentException();
-            }
-            byte[] sigs =
-                    RLP.encodeElement(
-                            tx.getSignature() == null ? null : tx.getSignature().toBytes());
-            return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type, sigs);
-        } else {
-            return RLP.encodeList(nonce, to, value, data, timeStamp, nrg, nrgPrice, type);
-        }
-    }
-
-    public static long calculateTransactionCost(AionTransaction tx) {
-        long zeroes = zeroBytesInData(tx.getData());
-        long nonZeroes = tx.getData().length - zeroes;
-
-        return (tx.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
-            + Constants.NRG_TRANSACTION_MIN
-            + zeroes * Constants.NRG_TX_DATA_ZERO
-            + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
-    }
-
-    private static long zeroBytesInData(byte[] data) {
-        if (data == null) {
-            return 0;
-        }
-
-        int c = 0;
-        for (byte b : data) {
-            c += (b == 0) ? 1 : 0;
-        }
-        return c;
-    }
-
-    public static AionAddress calculateContractAddress(AionTransaction tx) {
-        if (tx.getDestinationAddress() != null) {
-            return null;
-        }
-        return new AionAddress(
-            HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
-    }
-
-    public static byte[] hashWithoutSignature(AionTransaction tx) {
-        byte[] plainMsg = encodeWithoutSignature(tx);
-        return HashUtil.h256(plainMsg);
+        return RLP.encodeList(
+                nonceEncoded,
+                destinationEncoded,
+                valueEncoded,
+                dataEncoded,
+                timeStampEncoded,
+                energyLimitEncoded,
+                energyPriceEncoded,
+                typeEncoded,
+                signatureEncoded);
     }
 }

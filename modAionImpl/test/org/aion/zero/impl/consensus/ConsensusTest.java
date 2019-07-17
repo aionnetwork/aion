@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -362,34 +363,30 @@ public class ConsensusTest {
 
     private static AionTransaction getDeployTransaction() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        getContractCode(),
-                        2_000_000,
-                        1);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.ZERO.toByteArray(),
+                null,
+                BigInteger.ZERO.toByteArray(),
+                getContractCode(),
+                2_000_000,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /** Calls the function: addOwner(Address) in Wallet.sol */
     private static AionTransaction getTransactionThatCallsAddOwner() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("7065cb48"), OWNER.toByteArray());
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.ONE.toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        CONTRACT,
-                        BigInteger.ZERO.toByteArray(),
-                        callData,
-                        2_000_000,
-                        1);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.ONE.toByteArray(),
+                CONTRACT,
+                BigInteger.ZERO.toByteArray(),
+                callData,
+                2_000_000,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -400,17 +397,15 @@ public class ConsensusTest {
     private static AionTransaction getTransactionThatCallsIsOwner(AionAddress owner, int nonce) {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), owner.toByteArray());
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.valueOf(nonce).toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        CONTRACT,
-                        BigInteger.ZERO.toByteArray(),
-                        callData,
-                        2_000_000,
-                        1);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.valueOf(nonce).toByteArray(),
+                CONTRACT,
+                BigInteger.ZERO.toByteArray(),
+                callData,
+                2_000_000,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -422,17 +417,15 @@ public class ConsensusTest {
     private static AionTransaction getTransactionThatCallsIsOwnerAndRunOutOfEnergy() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), OWNER.toByteArray());
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.valueOf(4).toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        CONTRACT,
-                        BigInteger.ZERO.toByteArray(),
-                        callData,
-                        24_460,
-                        1);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.valueOf(4).toByteArray(),
+                CONTRACT,
+                BigInteger.ZERO.toByteArray(),
+                callData,
+                24_460,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -444,33 +437,29 @@ public class ConsensusTest {
     private static AionTransaction getTransactionThatCallsNumOwners() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("4123cb6b"));
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.valueOf(5).toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        CONTRACT,
-                        BigInteger.ZERO.toByteArray(),
-                        callData,
-                        22_326,
-                        2);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.valueOf(5).toByteArray(),
+                CONTRACT,
+                BigInteger.ZERO.toByteArray(),
+                callData,
+                22_326,
+                2,
+                TransactionTypes.DEFAULT);
     }
 
     /** Transfers the specified amount of value from OWNER account to OTHER. */
     private static AionTransaction getTransactionThatOnlyTransfersValue(BigInteger amount) {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
-        AionTransaction transaction =
-                new AionTransaction(
-                        BigInteger.valueOf(7).toByteArray(),
-                        new AionAddress(key.getAddress()),
-                        OTHER,
-                        amount.toByteArray(),
-                        new byte[0],
-                        21_000,
-                        1);
-        transaction.sign(key);
-        return transaction;
+        return AionTransaction.create(
+                key,
+                BigInteger.valueOf(7).toByteArray(),
+                OTHER,
+                amount.toByteArray(),
+                new byte[0],
+                21_000,
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /** The binary of the contract: Wallet.sol */
