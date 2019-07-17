@@ -49,8 +49,10 @@
 		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
-		<mining>true</mining>
+		<mining>false</mining>
+                <staking>true</staking>
 		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+                <staker-address>a02df9004be3c4a20aeb50c459212412b1d0a58da3e1ac70ba74dde6b4accf4b</staker-address>
 		<cpu-mine-threads>1</cpu-mine-threads>
 		<extra-data>AION</extra-data>
 		<nrg-strategy>
@@ -74,7 +76,7 @@
 		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>
 		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
-		<enable_db_compression>false</enable_db_compression>
+		<enable_db_compression>true</enable_db_compression>
 	</db>
 	<log>
 		<!--Enable/Disable logback service; if disabled, output will not be logged -->
@@ -87,6 +89,6 @@
 		<CONS>INFO</CONS>
 		<DB>WARN</DB>
 		<API>INFO</API>
-		<P2P>DEBUG</P2P>
+		<P2P>INFO</P2P>
 	</log>
 </aion>
