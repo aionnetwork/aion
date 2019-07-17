@@ -7,14 +7,13 @@ import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
+import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
-import org.aion.mcf.vm.DataWord;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -233,10 +232,10 @@ public final class FvmTransactionExecutor {
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should
     // investigate
-    private static DataWord getDifficultyAsDataWord(byte[] diff) {
+    private static FvmDataWord getDifficultyAsDataWord(byte[] diff) {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
-        return new DataWordImpl(diff);
+        return FvmDataWord.fromBytes(diff);
     }
 }
