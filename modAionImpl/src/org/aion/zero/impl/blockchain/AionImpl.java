@@ -109,11 +109,6 @@ public class AionImpl implements IAionChain {
     }
 
     public long estimateTxNrg(AionTransaction tx, Block block) {
-
-        if (tx.getSignature() == null) {
-            tx.sign(keyForCallandEstimate);
-        }
-
         RepositoryCache repository =
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
@@ -152,11 +147,6 @@ public class AionImpl implements IAionChain {
 
     @Override
     public AionTxReceipt callConstant(AionTransaction tx, Block block) {
-
-        if (tx.getSignature() == null) {
-            tx.sign(keyForCallandEstimate);
-        }
-
         RepositoryCache repository =
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 

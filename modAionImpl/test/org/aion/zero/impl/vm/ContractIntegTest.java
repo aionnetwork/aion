@@ -153,16 +153,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -218,16 +217,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         new byte[0],
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -270,16 +268,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -321,16 +318,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         new byte[0],
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -371,16 +367,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -422,16 +417,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -475,16 +469,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -527,9 +520,9 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
 
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -546,16 +539,15 @@ public class ContractIntegTest {
             // Now call the contract and check that the constructor message was set.
             String getMsgFunctionHash = "ce6d41de";
             tx =
-                    new AionTransaction(
+                    AionTransaction.create(
+                            deployerKey,
                             nonce.toByteArray(),
-                            new AionAddress(deployerKey.getAddress()),
                             contract,
                             BigInteger.ZERO.toByteArray(),
                             Hex.decode(getMsgFunctionHash),
                             nrg,
                             nrgPrice,
                             txType);
-            tx.sign(deployerKey);
             assertFalse(tx.isContractCreationTransaction());
 
             AionBlock block = makeBlock(tx);
@@ -580,9 +572,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -604,16 +596,15 @@ public class ContractIntegTest {
         byte[] input = ByteUtil.merge(Hex.decode("f601704f"), new DataWordImpl(num).getData());
         input = ByteUtil.merge(input, new DataWordImpl(1).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -631,15 +622,15 @@ public class ContractIntegTest {
         input = ByteUtil.merge(input, new DataWordImpl(0).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
-        tx.sign(deployerKey);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -662,9 +653,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -688,16 +679,15 @@ public class ContractIntegTest {
         // Contract has no funds, try to withdraw just 1 coin.
         byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWordImpl(1).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -722,9 +712,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.TWO.pow(32);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -746,16 +736,15 @@ public class ContractIntegTest {
         // Contract has 2^32 coins, let's withdraw them.
         byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWordImpl(value).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -779,9 +768,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.TWO.pow(13);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -808,16 +797,15 @@ public class ContractIntegTest {
         byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -843,9 +831,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.TWO.pow(13);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -871,16 +859,15 @@ public class ContractIntegTest {
         byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -907,9 +894,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.TWO.pow(20);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -934,9 +921,9 @@ public class ContractIntegTest {
         deployCode = getDeployCode(contractName);
         value = BigInteger.ZERO;
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -953,16 +940,15 @@ public class ContractIntegTest {
         // Set the MultiFeatureCaller to call the deployed MultiFeatureContract.
         byte[] input = ByteUtil.merge(Hex.decode("8c30ffe6"), multiFeatureContract.toByteArray());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         callerContract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -986,16 +972,15 @@ public class ContractIntegTest {
         input = ByteUtil.merge(input, new DataWordImpl(value).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         callerContract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -1019,9 +1004,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1047,16 +1032,15 @@ public class ContractIntegTest {
         byte[] input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1081,16 +1065,15 @@ public class ContractIntegTest {
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -1114,7 +1097,7 @@ public class ContractIntegTest {
         //        BigInteger value = BigInteger.ZERO;
         //        BigInteger nonce = BigInteger.ZERO;
         //        AionTransaction tx =
-        //                new AionTransaction(
+        //                AionTransaction.newAionTransaction(
         //                        nonce.toByteArray(),
         //                        Address.wrap(ContractFactoryMock.CALL_ME),
         //                        value.toByteArray(),
@@ -1161,9 +1144,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1180,7 +1163,6 @@ public class ContractIntegTest {
 
         when(repo.startTracking()).thenReturn(repo);
 
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -1211,9 +1193,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1232,16 +1214,15 @@ public class ContractIntegTest {
                 Arrays.copyOfRange(HashUtil.keccak256("sendValueToContract()".getBytes()), 0, 4);
         // input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).copyOfData());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.TEN.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         BigInteger senderBalance = repo.getBalance(deployer);
@@ -1271,16 +1252,15 @@ public class ContractIntegTest {
         input = ByteUtil.merge(input, receiver.toByteArray());
         nonce = nonce.add(BigInteger.ONE);
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         repo = blockchain.getRepository().startTracking();
@@ -1312,9 +1292,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1324,7 +1304,6 @@ public class ContractIntegTest {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
 
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(deployerBalance, repo.getBalance(deployer));
@@ -1336,16 +1315,15 @@ public class ContractIntegTest {
         byte[] input =
                 Arrays.copyOfRange(HashUtil.keccak256("sendValueToContract()".getBytes()), 0, 4);
         AionTransaction tx2 =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
-                    TxUtil.calculateContractAddress(tx),
+                        TxUtil.calculateContractAddress(tx),
                         BigInteger.TEN.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx2.sign(deployerKey);
         assertFalse(tx2.isContractCreationTransaction());
         ls.add(tx2);
 
@@ -1387,9 +1365,9 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         value.toByteArray(),
                         deployCode,
@@ -1411,16 +1389,15 @@ public class ContractIntegTest {
         byte[] input = Arrays.copyOfRange(HashUtil.keccak256("callAVM(address)".getBytes()), 0, 4);
         input = ByteUtil.merge(input, avmAddress.toByteArray());
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         contract,
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1452,16 +1429,15 @@ public class ContractIntegTest {
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        senderKey,
                         senderNonce.toByteArray(),
-                        new AionAddress(senderKey.getAddress()),
                         destinationAddr,
                         value.toByteArray(),
                         new byte[0],
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(senderKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1487,16 +1463,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         deployerNonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -1539,16 +1514,15 @@ public class ContractIntegTest {
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        senderKey,
                         senderNonce.toByteArray(),
-                        new AionAddress(senderKey.getAddress()),
                         destinationAddr,
                         value.toByteArray(),
                         new byte[0],
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(senderKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1574,16 +1548,15 @@ public class ContractIntegTest {
 
         // to == null  signals that this is contract creation.
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         deployerNonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         deployCode,
                         nrg,
                         nrgPrice,
                         txType);
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -1633,16 +1606,15 @@ public class ContractIntegTest {
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
         AionTransaction tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        senderKey,
                         senderNonce.toByteArray(),
-                        new AionAddress(senderKey.getAddress()),
                         avmAddress,
                         value.toByteArray(),
                         new byte[0],
                         nrg,
                         nrgPrice,
                         TransactionTypes.DEFAULT);
-        tx.sign(senderKey);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1677,16 +1649,15 @@ public class ContractIntegTest {
 
         byte[] call = getCallArguments();
         tx =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         deployerNonce.add(BigInteger.ONE).toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         avmAddress,
                         BigInteger.ZERO.toByteArray(),
                         call,
                         2_000_000,
                         nrgPrice,
                         TransactionTypes.DEFAULT);
-        tx.sign(this.deployerKey);
 
         block =
                 this.blockchain.createNewBlock(
@@ -1799,7 +1770,6 @@ public class ContractIntegTest {
             boolean addToBlockChain)
             throws IOException, VMException {
 
-        tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(deployerBalance, repo.getBalance(deployer));
@@ -1999,17 +1969,15 @@ public class ContractIntegTest {
     private AionAddress deployAvmContract(BigInteger nonce) {
         byte[] jar = getJarBytes();
         AionTransaction transaction =
-                new AionTransaction(
+                AionTransaction.create(
+                        deployerKey,
                         nonce.toByteArray(),
-                        new AionAddress(deployerKey.getAddress()),
                         null,
                         BigInteger.ZERO.toByteArray(),
                         jar,
                         5_000_000L,
                         1,
                         TransactionTypes.AVM_CREATE_CODE);
-
-        transaction.sign(this.deployerKey);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
