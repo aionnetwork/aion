@@ -2,5 +2,5 @@ ext.moduleName = 'aion.txpool'
 
 dependencies {
     compile project(':modBase')
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-11fa82a.jar")
 }
