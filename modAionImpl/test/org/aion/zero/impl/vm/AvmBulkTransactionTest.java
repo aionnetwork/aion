@@ -102,8 +102,6 @@ public class AvmBulkTransactionTest {
                         10_123_456_789L,
                         TransactionTypes.AVM_CREATE_CODE);
 
-        deployEmptyContractTx.sign(deployerKey);
-
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(

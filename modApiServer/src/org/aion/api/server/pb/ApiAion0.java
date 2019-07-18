@@ -40,7 +40,9 @@ import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
+import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -942,22 +944,24 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         AionAddress from = new AionAddress(req.getFrom().toByteArray());
                         AionAddress to = new AionAddress(req.getTo().toByteArray());
 
-                        BigInteger value = new BigInteger(req.getValue().toByteArray());
-                        byte[] d = req.getData().toByteArray();
+                        byte[] value = req.getValue().toByteArray();
+                        byte[] dat = req.getData().toByteArray();
 
-                        ArgTxCall params =
-                                new ArgTxCall(
+                        AionTransaction tx =
+                                new AionTransaction(
+                                        this.getAccountKey(from.toString()),
+                                        BigInteger.ZERO.toByteArray(),
                                         from,
                                         to,
-                                        d,
-                                        BigInteger.ZERO,
                                         value,
+                                        dat,
                                         req.getNrg(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        TransactionTypes.DEFAULT);
                         Message.rsp_call rsp =
                                 Message.rsp_call
                                         .newBuilder()
-                                        .setResult(ByteString.copyFrom(this.doCall(params)))
+                                        .setResult(ByteString.copyFrom(this.doCall(tx)))
                                         .build();
 
                         byte[] retHeader =
@@ -3024,10 +3028,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .toByteArray()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getNonce()))
+                                                                                        tx
+                                                                                                .getNonce()))
                                                                         .setValue(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getValue()))
+                                                                                        tx
+                                                                                                .getValue()))
                                                                         .setNrgConsumed(
                                                                                 ti.getReceipt()
                                                                                         .getEnergyUsed())

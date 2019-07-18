@@ -14,11 +14,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.time.TimeInstant;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Assert;
@@ -171,7 +174,7 @@ public class TxnPoolTest {
         return new AionTransaction(
                 key.get(0),
                 nonce,
-                new AionAddress(key.get(0).getAddress()),
+                AddressUtils.ZERO_ADDRESS,
                 AddressUtils.wrapAddress(
                         "0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
@@ -191,6 +194,21 @@ public class TxnPoolTest {
                 ByteUtils.fromHexString("1"),
                 10000L,
                 1L);
+    }
+
+    private AionTransaction genTransactionWithTimestamp(byte[] nonce, ECKey key, byte[] timeStamp) {
+        return new AionTransaction(
+            key,
+            nonce,
+            new AionAddress(key.getAddress()),
+            AddressUtils.wrapAddress(
+                "0000000000000000000000000000000000000000000000000000000000000001"),
+            ByteUtils.fromHexString("1"),
+            ByteUtils.fromHexString("1"),
+            10000L,
+            1L,
+            TransactionTypes.DEFAULT,
+            timeStamp);
     }
 
     private AionTransaction genTransactionRandomPrice(byte[] nonce, long price, ECKey key) {
@@ -575,6 +593,7 @@ public class TxnPoolTest {
     }
 
     @Test
+    // TODO Check if this is the right behaviour
     public void snapshotWithSameTransactionTimestamp() {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
@@ -583,46 +602,47 @@ public class TxnPoolTest {
 
         List<AionTransaction> txnl = new ArrayList<>();
         Map<ByteArrayWrapper, AionTransaction> txMap = new HashMap<>();
-        int cnt = 16;
+
+        byte[] timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        final int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
-        for (int i = 16; i < 16 + cnt; i++) {
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
-        for (int i = 16; i < 16 + cnt; i++) {
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
@@ -735,29 +755,32 @@ public class TxnPoolTest {
     }
 
     @Test
+    // TODO Both transactions will be added to the pool if they are added at the same time. Is this okay?
     public void addTxWithSameNonce() {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
-
         ITxPool tp = new TxPoolA0(config);
 
-        AionTransaction txn = genTransaction(ByteUtils.fromHexString("0000000000000001"));
-        AionTransaction txn2 = genTransaction(ByteUtils.fromHexString("0000000000000001"));
+        AionTransaction txn = genTransaction(BigInteger.ONE.toByteArray());
         txn.setNrgConsume(100);
+        AionTransaction txn2 = genTransaction(BigInteger.ONE.toByteArray());
+        txn2.setNrgConsume(100);
 
         List<AionTransaction> txnl = new ArrayList<>();
 
         txnl.add(txn);
-        txnl.add(txn2);
-        long t = new BigInteger(txn.getTimestamp()).longValue();
-
         tp.add(txnl);
 
+        txnl.clear();
+        txnl.add(txn2);
+        tp.add(txnl);
+
+        tp.add(txnl);
         Assert.assertEquals(1, tp.size());
 
         List<AionTransaction> txl = tp.snapshot();
         Assert.assertEquals(1, txl.size());
-        Assert.assertEquals(new BigInteger(txl.get(0).getTimestamp()).longValue(), t);
+        Assert.assertArrayEquals(txl.get(0).getTimestamp(), txn2.getTimestamp()); // TODO Check this is the expected behaviour
     }
 
     @Test

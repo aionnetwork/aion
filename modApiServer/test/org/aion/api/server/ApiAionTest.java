@@ -338,17 +338,7 @@ public class ApiAionTest {
                         100000,
                         100000);
 
-        ArgTxCall txcall =
-                new ArgTxCall(
-                        addr,
-                        AddressUtils.ZERO_ADDRESS,
-                        msg,
-                        repo.getNonce(addr),
-                        BigInteger.ONE,
-                        100000,
-                        100000);
-
-        assertNotNull(api.doCall(txcall));
+        assertNotNull(api.doCall(tx));
     }
 
     @Test

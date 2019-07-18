@@ -2,7 +2,6 @@ package org.aion.base;
 
 import java.math.BigInteger;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKey.MissingPrivateKeyException;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.types.AionAddress;
@@ -21,11 +20,13 @@ public class AionTransaction implements Cloneable {
     private final byte type;
 
     /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
-    protected byte[] timeStamp;
+    private final byte[] timeStamp;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
-    private ISignature signature;
+    private final ISignature signature;
+
+    private final byte[] transactionHash;
 
     // TODO This is used in TxPoolA0, but probably doesn't belong in this class. See AKI-265
     private long nrgConsume = 0;
@@ -64,35 +65,62 @@ public class AionTransaction implements Cloneable {
             long energyPrice,
             byte txType) {
 
+        this(
+                key,
+                nonce,
+                senderAddress,
+                destinationAddress,
+                value,
+                transactionData,
+                energyLimit,
+                energyPrice,
+                txType,
+                ByteUtil.longToBytes(TimeInstant.now().toEpochMicro()));
+    }
+
+    // constructor for testing to explicitly set the timestamp
+    public AionTransaction(
+        ECKey key,
+        byte[] nonce,
+        AionAddress senderAddress,
+        AionAddress destinationAddress,
+        byte[] value,
+        byte[] transactionData,
+        long energyLimit,
+        long energyPrice,
+        byte txType,
+        byte[] timeStamp) {
+
         if (destinationAddress == null) {
             this.transaction =
-                    Transaction.contractCreateTransaction(
-                            senderAddress,
-                            new BigInteger(1, nonce),
-                            new BigInteger(1, value),
-                            transactionData,
-                            energyLimit,
-                            energyPrice);
+                Transaction.contractCreateTransaction(
+                    senderAddress,
+                    new BigInteger(1, nonce),
+                    new BigInteger(1, value),
+                    transactionData,
+                    energyLimit,
+                    energyPrice);
         } else {
             this.transaction =
-                    Transaction.contractCallTransaction(
-                            senderAddress,
-                            destinationAddress,
-                            new BigInteger(1, nonce),
-                            new BigInteger(1, value),
-                            transactionData,
-                            energyLimit,
-                            energyPrice);
+                Transaction.contractCallTransaction(
+                    senderAddress,
+                    destinationAddress,
+                    new BigInteger(1, nonce),
+                    new BigInteger(1, value),
+                    transactionData,
+                    energyLimit,
+                    energyPrice);
         }
 
         this.nonce = nonce;
         this.value = value;
         this.type = txType;
-        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        this.timeStamp = timeStamp;
         this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
+        this.transactionHash = TransactionUtil.hashTransacion(this); // This has to come last
     }
 
-    // constructor for explicitly setting a transaction type.
+    // Only for creating a transaction from and RLP encoding
     public AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
@@ -103,12 +131,25 @@ public class AionTransaction implements Cloneable {
             long energyPrice,
             byte txType,
             ISignature signature,
-            byte[] timeStamp) {
+            byte[] timeStamp,
+            long nrgConsume) {
 
+        if (nonce == null) {
+            throw new IllegalArgumentException();
+        }
         if (senderAddress == null) {
             throw new IllegalArgumentException();
         }
-        if (nonce == null) {
+        if (value == null) {
+            throw new IllegalArgumentException();
+        }
+        if (transactionData == null) {
+            throw new IllegalArgumentException();
+        }
+        if (signature == null) {
+            throw new IllegalArgumentException();
+        }
+        if (timeStamp == null) {
             throw new IllegalArgumentException();
         }
 
@@ -138,6 +179,8 @@ public class AionTransaction implements Cloneable {
         this.type = txType;
         this.signature = signature;
         this.timeStamp = timeStamp;
+        this.nrgConsume = nrgConsume;
+        this.transactionHash = TransactionUtil.hashTransacion(this);
     }
 
     @Override
@@ -152,11 +195,12 @@ public class AionTransaction implements Cloneable {
                 getEnergyPrice(),
                 type,
                 signature,
-                timeStamp);
+                timeStamp,
+                nrgConsume);
     }
 
     public byte[] getTransactionHash() {
-        return HashUtil.h256(TransactionRlpCodec.getEncoding(this));
+        return transactionHash;
     }
 
     public byte[] getNonce() {
@@ -176,7 +220,7 @@ public class AionTransaction implements Cloneable {
     }
 
     public byte[] getTimestamp() {
-        return this.timeStamp == null ? ByteUtil.ZERO_BYTE_ARRAY : this.timeStamp;
+        return timeStamp;
     }
 
     public BigInteger getTimeStampBI() {
@@ -223,42 +267,30 @@ public class AionTransaction implements Cloneable {
         return transaction.energyLimit;
     }
 
-    public void sign(ECKey key) throws MissingPrivateKeyException {
-        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
-        this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
+    public long getNrgConsume() {
+        return this.nrgConsume;
     }
 
-    public void signWithSecTimeStamp(ECKey key) throws MissingPrivateKeyException {
-        this.timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochSec() * 1_000_000L);
-        this.signature = key.sign(TransactionUtil.hashWithoutSignature(this));
+    public void setNrgConsume(long consume) {
+        this.nrgConsume = consume;
     }
 
     @Override
     public String toString() {
         return "TransactionData ["
+                + transaction.toString()
                 + "hash="
                 + ByteUtil.toHexString(getTransactionHash())
-                + ", nonce="
-                + new BigInteger(1, nonce)
-                + ", receiveAddress="
-                + (getDestinationAddress() == null ? "" : getDestinationAddress().toString())
-                + ", value="
-                + new BigInteger(1, value)
-                + ", data="
-                + ByteUtil.toHexString(transaction.copyOfTransactionData())
-                + ", timeStamp="
-                + ByteUtil.byteArrayToLong(timeStamp)
-                + ", Nrg="
-                + transaction.energyLimit
-                + ", NrgPrice="
-                + transaction.energyPrice
                 + ", txType="
                 + type
+                + ", timeStamp="
+                + ByteUtil.byteArrayToLong(timeStamp)
                 + ", sig="
                 + ((signature == null) ? "null" : signature.toString())
                 + "]";
     }
 
+    // TODO is there a reason for this to be different than the transactionHash?
     @Override
     public int hashCode() {
 
@@ -281,13 +313,5 @@ public class AionTransaction implements Cloneable {
         AionTransaction tx = (AionTransaction) obj;
 
         return tx.hashCode() == this.hashCode();
-    }
-
-    public long getNrgConsume() {
-        return this.nrgConsume;
-    }
-
-    public void setNrgConsume(long consume) {
-        this.nrgConsume = consume;
     }
 }

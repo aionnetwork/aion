@@ -65,7 +65,7 @@ public class TransactionRlpCodec {
         // this.hash = this.getTransactionHash();
 
         return new AionTransaction(
-                nonce, sender, destination, value, data, nrg, nrgPrice, type, signature, timeStamp);
+                nonce, sender, destination, value, data, nrg, nrgPrice, type, signature, timeStamp, 0);
     }
 
     /** For signatures you have to keep also RLP of the transaction without any signature data */
