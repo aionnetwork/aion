@@ -25,7 +25,7 @@ public class AionTransactionTest {
         assertArrayEquals(tx.getData(), tx2.getData());
         assertEquals(tx.getEnergyLimit(), tx2.getEnergyLimit());
         assertEquals(tx.getEnergyPrice(), tx2.getEnergyPrice());
-        assertEquals(tx.getTargetVM(), tx2.getTargetVM());
+        assertEquals(tx.getType(), tx2.getType());
 
         assertArrayEquals(tx.getTimestamp(), tx2.getTimestamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());
@@ -90,21 +90,21 @@ public class AionTransactionTest {
     @Test
     public void testTransactionCost2() {
         byte[] nonce = BigInteger.ONE.toByteArray();
-        AionAddress to = null;
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
         long nrg = new DataWordImpl(1000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
 
-        AionTransaction tx = TxUtil.newAionTransaction(
-                key,
-                nonce,
-                to,
-                value,
-                data,
-                nrg,
-                nrgPrice,
-                TransactionTypes.DEFAULT);
+        AionTransaction tx =
+                TxUtil.newAionTransaction(
+                        key,
+                        nonce,
+                        null,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         long expected = 200000 + 21000;
         for (byte b : data) {

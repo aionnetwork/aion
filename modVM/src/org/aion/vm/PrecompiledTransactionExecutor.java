@@ -82,7 +82,7 @@ public final class PrecompiledTransactionExecutor {
             if (!isLocalCall && !summary.isRejected()) {
                 RepositoryCache repositoryTracker = repository.startTracking();
 
-                setEnergyConsumedAndRefundSender(repositoryTracker, summary, transaction, result);
+                refundSender(repositoryTracker, summary, transaction, result);
                 payMiner(repositoryTracker, blockCoinbase, summary);
                 deleteAccountsMarkedForDeletion(repositoryTracker, sideEffects, result);
 
@@ -111,14 +111,13 @@ public final class PrecompiledTransactionExecutor {
         return transactionSummaries;
     }
 
-    private static void setEnergyConsumedAndRefundSender(
+    private static void refundSender(
             RepositoryCache repository,
             TxExecSummary summary,
             AionTransaction transaction,
             PrecompiledTransactionResult result) {
-        transaction.setNrgConsume(computeEnergyUsed(transaction.getEnergyLimit(), result));
 
-        // Refund energy if transaction was successfully or reverted.
+        // Refund energy if transaction was successful or reverted.
         if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
             repository.addBalance(transaction.getSenderAddress(), summary.getRefund());
         }

@@ -1,6 +1,8 @@
 package org.aion.base;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Objects;
 import org.aion.crypto.ISignature;
 import org.aion.types.AionAddress;
 import org.aion.types.Transaction;
@@ -10,25 +12,30 @@ import org.aion.util.bytes.ByteUtil;
 public class AionTransaction {
 
     private final Transaction transaction;
+
+    /** Value is kept as a byte-array to prevent conversion problems */
     private final byte[] value;
+
+    /** Nonce is kept as a byte-array to prevent conversion problems */
     private final byte[] nonce;
 
-    /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
-    private final byte[] timeStamp;
-
-    /* define transaction type. */
+    /** AVM_CREATE_CODE for AVM contract creation. DEFAULT otherwise */
     private final byte type;
 
-    /* the elliptic curve signature
+    /** timeStamp is an 8-byte array showing the time the transaction is signed by the kernel, in nanoseconds. */
+    private final byte[] timeStamp;
+
+    /** the elliptic curve signature
      * (including public key recovery bits) */
     private final ISignature signature;
 
+    /** transactionHashWithoutSignature is used to create and later verify the signature */
     private final byte[] transactionHashWithoutSignature;
 
+    /** rlpEncoding is saved because it is needed to calculate the transactionHash */
     private final byte[] rlpEncoding;
 
-    private long nrgConsume = 0;
-
+    /** Main constructor for AionTransaction */
     AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
@@ -128,7 +135,7 @@ public class AionTransaction {
         return transaction.copyOfTransactionData();
     }
 
-    public byte getTargetVM() {
+    public byte getType() {
         return type;
     }
 
@@ -144,69 +151,40 @@ public class AionTransaction {
         return transaction.senderAddress;
     }
 
-    public long nrgPrice() {
-        return transaction.energyPrice;
-    }
-
-    public long nrgLimit() {
-        return transaction.energyLimit;
-    }
-
     @Override
     public String toString() {
         return "TransactionData ["
-                + "hash="
-                + ByteUtil.toHexString(getTransactionHash())
-                + ", nonce="
-                + new BigInteger(1, nonce)
-                + ", receiveAddress="
-                + (getDestinationAddress() == null ? "" : getDestinationAddress().toString())
-                + ", value="
-                + new BigInteger(1, value)
-                + ", data="
-                + ByteUtil.toHexString(transaction.copyOfTransactionData())
-                + ", timeStamp="
-                + ByteUtil.byteArrayToLong(timeStamp)
-                + ", Nrg="
-                + transaction.energyLimit
-                + ", NrgPrice="
-                + transaction.energyPrice
+                + transaction.toString()
                 + ", txType="
                 + type
-                + ", sig="
+                + ", timeStamp="
+                + ByteUtil.byteArrayToLong(timeStamp)
+                + ", signature="
                 + ((signature == null) ? "null" : signature.toString())
                 + "]";
     }
 
     @Override
     public int hashCode() {
-
-        byte[] hash = this.getTransactionHash();
-        int hashCode = 0;
-
-        for (int i = 0; i < hash.length; ++i) {
-            hashCode += hash[i] * i;
-        }
-
-        return hashCode;
+        return Arrays.hashCode(getTransactionHash());
     }
 
     @Override
     public boolean equals(Object obj) {
-
-        if (!(obj instanceof AionTransaction)) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AionTransaction)) {
             return false;
+        } else {
+            AionTransaction otherObject = (AionTransaction)obj;
+            return this.transaction.equals(otherObject.transaction)
+                && Arrays.equals(this.getValue(), otherObject.getValue())
+                && Arrays.equals(this.getNonce(), otherObject.getNonce())
+                && this.getType() == otherObject.getType()
+                && Arrays.equals(this.getTimestamp(), otherObject.getTimestamp())
+                && Objects.equals(this.getSignature(), otherObject.getSignature())
+                && Arrays.equals(this.getTransactionHashWithoutSignature(), otherObject.getTransactionHashWithoutSignature())
+                && Arrays.equals(this.getEncoded(), otherObject.getEncoded());
         }
-        AionTransaction tx = (AionTransaction) obj;
-
-        return tx.hashCode() == this.hashCode();
-    }
-
-    public long getNrgConsume() {
-        return this.nrgConsume;
-    }
-
-    public void setNrgConsume(long consume) {
-        this.nrgConsume = consume;
     }
 }
