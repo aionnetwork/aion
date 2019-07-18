@@ -1,6 +1,5 @@
 package org.aion.vm;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -125,8 +124,7 @@ public final class AvmTransactionExecutor {
                 }
 
                 // Build the transaction summary.
-                AionTxExecSummary summary =
-                        buildTransactionSummary(transaction, result, isLocalCall);
+                AionTxExecSummary summary = buildTransactionSummary(transaction, result);
 
                 // Update the repository by committing any changes in the Avm.
                 IExternalState externalState = resultAsFuture.getExternalState();
@@ -179,7 +177,7 @@ public final class AvmTransactionExecutor {
     }
 
     private static AionTxExecSummary buildTransactionSummary(
-            AionTransaction transaction, TransactionResult result, boolean isLocalCall) {
+            AionTransaction transaction, TransactionResult result) {
         List<Log> logs = result.transactionStatus.isSuccess() ? result.logs : new ArrayList<>();
         byte[] output = result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY);
 
@@ -197,13 +195,7 @@ public final class AvmTransactionExecutor {
             builder.markAsFailed();
         }
 
-        AionTxExecSummary summary = builder.build();
-
-        if (!isLocalCall && !summary.isRejected()) {
-            transaction.setNrgConsume(result.energyUsed);
-        }
-
-        return summary;
+        return builder.build();
     }
 
     private static AionTxReceipt makeReceipt(
@@ -235,8 +227,8 @@ public final class AvmTransactionExecutor {
                         Transaction.contractCreateTransaction(
                                 tx.getSenderAddress(),
                                 tx.getTransactionHash(),
-                                new BigInteger(1, tx.getNonce()),
-                                new BigInteger(1, tx.getValue()),
+                                tx.getNonceBI(),
+                                tx.getValueBI(),
                                 tx.getData(),
                                 tx.getEnergyLimit(),
                                 tx.getEnergyPrice());
@@ -246,8 +238,8 @@ public final class AvmTransactionExecutor {
                                 tx.getSenderAddress(),
                                 tx.getDestinationAddress(),
                                 tx.getTransactionHash(),
-                                new BigInteger(1, tx.getNonce()),
-                                new BigInteger(1, tx.getValue()),
+                                tx.getNonceBI(),
+                                tx.getValueBI(),
                                 tx.getData(),
                                 tx.getEnergyLimit(),
                                 tx.getEnergyPrice());

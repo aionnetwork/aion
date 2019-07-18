@@ -220,6 +220,59 @@ public final class TxUtil {
                 transactionHash);
     }
 
+    public static AionTransaction newAionTransactionGivenTimestamp(
+        ECKey key,
+        byte[] nonce,
+        AionAddress destination,
+        byte[] value,
+        byte[] data,
+        long energyLimit,
+        long energyPrice,
+        byte type,
+        byte[] timeStamp) {
+
+        byte[] transactionHashWithoutSignature =
+            HashUtil.h256(encodeWithoutSignature(
+                nonce,
+                destination,
+                value,
+                data,
+                timeStamp,
+                energyLimit,
+                energyPrice,
+                type));
+
+        ISignature signature = calculateSignature(key, transactionHashWithoutSignature);
+
+        byte[] rlpEncoding = encode(
+            nonce,
+            destination,
+            value,
+            data,
+            timeStamp,
+            energyLimit,
+            energyPrice,
+            type,
+            signature);
+
+        byte[] transactionHash = calculateTransactionHash(rlpEncoding);
+
+        return new AionTransaction(
+            nonce,
+            new AionAddress(key.getAddress()),
+            destination,
+            value,
+            data,
+            energyLimit,
+            energyPrice,
+            type,
+            timeStamp,
+            transactionHashWithoutSignature,
+            signature,
+            rlpEncoding,
+            transactionHash);
+    }
+
     /** For signatures you have to keep also RLP of the transaction without any signature data */
     private static byte[] encodeWithoutSignature(
             byte[] nonce,

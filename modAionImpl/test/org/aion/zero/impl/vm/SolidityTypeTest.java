@@ -124,7 +124,7 @@ public class SolidityTypeTest {
         RepositoryCache track = repo.startTracking();
         track.addBalance(
                 tx.getSenderAddress(),
-                BigInteger.valueOf(tx.nrgPrice()).multiply(BigInteger.valueOf(500_000L)));
+                BigInteger.valueOf(tx.getEnergyPrice()).multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM);

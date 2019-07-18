@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.PooledTransaction;
 import org.aion.types.AionAddress;
 
 /** Aion pending state should be the only user of transaction pool. */
@@ -14,21 +15,23 @@ public interface ITxPool {
     String PROP_BLOCK_NRG_LIMIT = "blk-nrg-limit";
     String PROP_TX_SEQ_MAX = "tx-seq-max";
 
-    List<AionTransaction> add(List<AionTransaction> tx);
+    List<PooledTransaction> add(List<PooledTransaction> tx);
 
     // return TX if the TX add success, if the pool already has the same nonce tx. return the old
     // tx.
-    AionTransaction add(AionTransaction tx);
+    PooledTransaction add(PooledTransaction tx);
 
-    List<AionTransaction> remove(List<AionTransaction> tx);
+    List<PooledTransaction> remove(List<PooledTransaction> tx);
 
-    List<AionTransaction> remove(Map<AionAddress, BigInteger> accNonce);
+    PooledTransaction remove(PooledTransaction tx);
+
+    List<PooledTransaction> remove(Map<AionAddress, BigInteger> accNonce);
 
     int size();
 
     List<AionTransaction> snapshot();
 
-    List<AionTransaction> getOutdatedList();
+    List<PooledTransaction> getOutdatedList();
 
     long getOutDateTime();
 
@@ -41,5 +44,5 @@ public interface ITxPool {
 
     List<AionTransaction> snapshotAll();
 
-    AionTransaction getPoolTx(AionAddress from, BigInteger txNonce);
+    PooledTransaction getPoolTx(AionAddress from, BigInteger txNonce);
 }
