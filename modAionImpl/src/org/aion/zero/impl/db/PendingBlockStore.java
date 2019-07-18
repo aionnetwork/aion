@@ -39,6 +39,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
 /**
@@ -226,7 +227,20 @@ public class PendingBlockStore implements Flushable, Closeable {
                     List<Block> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
-                        res.add(new AionBlock(aList.getRLPData()));
+                        // TODO : [unity] better way to avoid rlp decode?
+                        RLPList params = RLP.decode2(aList.getRLPData());
+                        RLPList block = (RLPList) params.get(0);
+                        RLPList header = (RLPList) block.get(0);
+                        byte[] sealType = header.get(0).getRLPData();
+                        if (sealType[0] == 0x01) {
+                            res.add(new AionBlock(aList.getRLPData()));
+                        } else if (sealType[0] == 0x02) {
+                            res.add(new StakingBlock(aList.getRLPData()));
+                        } else {
+                            throw new IllegalStateException(
+                                    "Invalid rlp encode data: "
+                                            + ByteUtil.toHexString(aList.getRLPData()));
+                        }
                     }
                     return res;
                 }
@@ -681,7 +695,7 @@ public class PendingBlockStore implements Flushable, Closeable {
     /**
      * Generates a number greater or equal to the given {@code current} number representing the base
      * value for a subsequent LIGHTNING request. The returned base is generated taking into
-     * consideration the status updates from {@link #addStatusBlock(AionBlock)} and the {@code
+     * consideration the status updates from {@link #addStatusBlock(Block)} and the {@code
      * knownBest} value for the peer for which this functionality is requested.
      *
      * <p>The bases are generated in an optimistic continuous manner based on the following
