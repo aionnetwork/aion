@@ -28,6 +28,8 @@ module aion.zero.impl {
     requires aion.types;
     requires aion.base;
     requires core;
+    requires org.aion.avm.userlib;
+    requires org.aion.avm.api;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

@@ -93,7 +93,7 @@ public class BlockPropagationHandler {
     }
 
     // assumption here is that blocks propagated have unique hashes
-    public void propagateNewBlock(final AionBlock block) {
+    public void propagateNewBlock(final Block block) {
         if (block == null) return;
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 

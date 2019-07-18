@@ -71,6 +71,7 @@ import org.aion.vm.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.blockchain.StakingContractHelper;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -83,11 +84,13 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
+import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.mcf.types.AionTxExecSummary;
 import org.aion.mcf.types.AionTxReceipt;
+import org.aion.zero.impl.types.StakedBlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +122,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
+
+    private StakingContractHelper stakingContractHelper;
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
      * being executed. This is simple for now but in the future we may have to create a "chain
@@ -148,6 +153,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
     private AionAddress minerCoinbase;
+    private AionAddress stakerCoinbase;
     private byte[] minerExtraData;
     private Stack<State> stateStack = new Stack<>();
     private IEventMgr evtMgr = null;
@@ -195,6 +201,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.warn("No miner Coinbase!");
         }
 
+        stakerCoinbase = config.getStakerCoinbase();
+        if (stakerCoinbase == null) {
+            LOG.warn("No staker Coinbase!");
+        }
+
         /** Save a copy of the miner extra data */
         byte[] extraBytes = this.config.getExtraData();
         this.minerExtraData =
@@ -210,6 +221,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     this.chainConfiguration.getConstants().getMaximumExtraDataSize());
         }
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
+
+        stakingContractHelper =
+                new StakingContractHelper(
+                        ChainConfiguration.getStakingContractAddress(),
+                        ChainConfiguration.getStakerKey(),
+                        this);
     }
 
     /**
@@ -644,6 +661,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return repository.getReferencedTrieNodes(value, limit, dbType);
     }
 
+    @Override
+    public StakingContractHelper getStakingContractHelper() {
+        return stakingContractHelper;
+    }
+
     /**
      * Imports a trie node to the indicated blockchain database.
      *
@@ -971,6 +993,89 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return createNewBlockInternal(
                         parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
                 .block;
+    }
+
+    @Override
+    public synchronized Block createNewBlock(Block parent, List<AionTransaction> txs, byte[] seed) {
+        long time = System.currentTimeMillis();
+
+        if (parent.getTimestamp() >= time) {
+            time = parent.getTimestamp() + 1;
+        }
+        long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
+
+        StakingBlock block;
+        try {
+            StakedBlockHeader.Builder headerBuilder =
+                    new StakedBlockHeader.Builder()
+                            .withSealType((byte) 2)
+                            .withParentHash(parent.getHash())
+                            .withCoinbase(minerCoinbase)
+                            .withNumber(parent.getNumber() + 1)
+                            .withTimestamp(time)
+                            .withExtraData(minerExtraData)
+                            .withTxTrieRoot(calcTxTrie(txs))
+                            .withEnergyLimit(energyLimit)
+                            .withSeed(seed);
+            block = new StakingBlock(headerBuilder.build(), txs);
+        } catch (HeaderStructureException e) {
+            throw new RuntimeException(e);
+        }
+
+        Block grandParent = this.getParent(parent.getHeader());
+        block.getHeader()
+                .setDifficulty(
+                        ByteUtil.bigIntegerToBytes(
+                                this.chainConfiguration
+                                        .getStakingDifficultyCalculator()
+                                        .calculateDifficulty(
+                                                parent.getHeader(),
+                                                grandParent == null
+                                                        ? null
+                                                        : grandParent.getHeader()),
+                                DIFFICULTY_BYTES));
+
+        // TODO: [unity] refactor the following process with the pow block create.
+
+        /*
+         * Begin execution phase
+         */
+        pushState(parent.getHash());
+
+        track = repository.startTracking();
+
+        RetValidPreBlock preBlock = generatePreBlock(block);
+
+        /*
+         * Calculate the gas used for the included transactions
+         */
+        long totalEnergyUsed = 0;
+        BigInteger totalTransactionFee = BigInteger.ZERO;
+        for (AionTxExecSummary summary : preBlock.summaries) {
+            totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
+            totalTransactionFee = totalTransactionFee.add(summary.getFee());
+        }
+
+        byte[] stateRoot = getRepository().getRoot();
+        popState();
+
+        /*
+         * End execution phase
+         */
+        Bloom logBloom = new Bloom();
+        for (AionTxReceipt receipt : preBlock.receipts) {
+            logBloom.or(receipt.getBloomFilter());
+        }
+
+        block.seal(
+                preBlock.txs,
+                calcTxTrie(preBlock.txs),
+                stateRoot,
+                logBloom.getBloomFilterBytes(),
+                calcReceiptsTrie(preBlock.receipts),
+                totalEnergyUsed);
+
+        return block;
     }
 
     /**

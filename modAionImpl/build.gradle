@@ -19,7 +19,8 @@ dependencies {
     compile project(':modLogger')
     compile project(':modRlp')
     compile project(':modCrypto')
-
+    compile files('../lib/org-aion-avm-userlib.jar')
+    compile files('../lib/org-aion-avm-api.jar')
 
     compile project(':modMcf')
     compile project(':modP2pImpl')
