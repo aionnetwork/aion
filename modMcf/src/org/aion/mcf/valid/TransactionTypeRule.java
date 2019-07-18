@@ -39,10 +39,10 @@ public class TransactionTypeRule {
             // transaction types are validated after the fork
             if (transaction.getDestinationAddress() == null) {
                 // checks for valid contract deployments
-                return ALL.contains(transaction.getTargetVM());
+                return ALL.contains(transaction.getType());
             } else {
                 // other transactions must have default type
-                return transaction.getTargetVM() == TransactionTypes.DEFAULT;
+                return transaction.getType() == TransactionTypes.DEFAULT;
             }
         } else {
             // transaction types are not checked before the fork

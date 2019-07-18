@@ -50,9 +50,11 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -162,8 +164,9 @@ public class TransactionExecutorTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        ImportResult result = blockchain.tryToConnect(context.block);
-        assertEquals(ImportResult.IMPORTED_BEST, result);
+        Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(context.block);
+        AionBlockSummary summary = result.getRight();
+        assertEquals(ImportResult.IMPORTED_BEST, result.getLeft());
 
         // We expect that there is a new account created, the contract, with 0 balance and 0 nonce
         // and that its code is the contract body. We also expect that the deployer (sender) has
@@ -179,7 +182,8 @@ public class TransactionExecutorTest {
         assertEquals(BigInteger.ONE, blockchain.getRepository().getNonce(deployer));
         assertEquals(
                 Builder.DEFAULT_BALANCE.subtract(
-                        BigInteger.valueOf(tx.getNrgConsume())
+                        BigInteger.valueOf(
+                            summary.getReceipts().get(0).getEnergyUsed())
                                 .multiply(BigInteger.valueOf(nrgPrice))),
                 blockchain.getRepository().getBalance(deployer));
     }
@@ -327,12 +331,6 @@ public class TransactionExecutorTest {
         blockchain.tryToConnect(context.block);
 
         return TxUtil.calculateContractAddress(tx);
-    }
-
-    private AionAddress getNewRecipient(boolean isContractCreation) {
-        return (isContractCreation)
-                ? null
-                : new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
     }
 
     private byte[] extractActualOutput(byte[] rawOutput) {

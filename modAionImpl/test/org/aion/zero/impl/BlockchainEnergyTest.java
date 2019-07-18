@@ -63,8 +63,6 @@ public class BlockchainEnergyTest {
         // TODO: where is the 21000 defined? bad to define magic variables
         int amount = (int) (bc.getGenesis().getNrgLimit() / DEFAULT_TX_AMOUNT);
 
-        // (byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data, byte[] nrg, byte[]
-        // nrgPrice)
         List<AionTransaction> txs = new ArrayList<>();
         ECKey key = bundle.privateKeys.get(0);
         for (int i = 0; i < amount; i++) {

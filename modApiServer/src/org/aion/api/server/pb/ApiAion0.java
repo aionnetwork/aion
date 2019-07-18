@@ -2729,7 +2729,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setTxIndex(txIndex)
                         .setTimestamp(ByteUtil.byteArrayToLong(t.getTimestamp()))
                         .setError(error)
-                        .setType(ByteString.copyFrom(new byte[] {t.getTargetVM()}))
+                        .setType(ByteString.copyFrom(new byte[] {t.getType()}))
                         .addAllLogs(tles);
 
         if (contract != null) {
@@ -3044,7 +3044,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                 ByteString.copyFrom(
                                                                                         new byte[] {
                                                                                             tx
-                                                                                                    .getTargetVM()
+                                                                                                    .getType()
                                                                                         }))
                                                                         .addAllLogs(tles);
 
