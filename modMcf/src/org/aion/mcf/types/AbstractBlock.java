@@ -1,5 +1,6 @@
 package org.aion.mcf.types;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +22,10 @@ public abstract class AbstractBlock implements Block {
     
     // set from BlockInfos in index database
     protected byte[] antiparentHash;
+
+    protected BigInteger miningDifficulty = null;
+    protected BigInteger stakingDifficulty = null;
+    protected BigInteger totalDifficulty = null;
 
     protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -80,4 +85,45 @@ public abstract class AbstractBlock implements Block {
         this.antiparentHash = antiparentHash;
     }
 
+    public BigInteger getMiningDifficulty() {
+        if (miningDifficulty == null) {
+            return BigInteger.ZERO;
+        } else {
+            return miningDifficulty;
+        }
+    }
+
+    public void setMiningDifficulty(BigInteger miningDifficulty) {
+        this.miningDifficulty = miningDifficulty;
+        if (this.miningDifficulty != null && this.stakingDifficulty != null) {
+            this.totalDifficulty = stakingDifficulty.multiply(miningDifficulty);
+        }    
+    }
+
+    public BigInteger getStakingDifficulty() {
+        if (stakingDifficulty == null) {
+            return BigInteger.ZERO;
+        } else {
+            return stakingDifficulty;
+        }
+    }
+
+    public void setStakingDifficulty(BigInteger stakingDifficulty) {
+        this.stakingDifficulty = stakingDifficulty;
+        if (this.miningDifficulty != null && this.stakingDifficulty != null) {
+            this.totalDifficulty = stakingDifficulty.multiply(miningDifficulty);
+        }
+    }
+
+    public BigInteger getCumulativeDifficulty() {
+        if (totalDifficulty == null) {
+            return BigInteger.ZERO;
+        } else {
+            return totalDifficulty;
+        }
+    }
+
+    public void setCumulativeDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
+    }
 }

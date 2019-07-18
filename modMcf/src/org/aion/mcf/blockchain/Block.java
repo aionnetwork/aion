@@ -37,7 +37,9 @@ public interface Block {
     long getTimestamp();
 
     BigInteger getDifficultyBI();
-    
+
+    void setMiningDifficulty(BigInteger totalDifficulty);
+    void setStakingDifficulty(BigInteger totalDifficulty);
     void setCumulativeDifficulty(BigInteger totalDifficulty);
     
     void setMainChain();
@@ -50,6 +52,8 @@ public interface Block {
 
     void setStateRoot(byte[] stateRoot);
 
+    BigInteger getMiningDifficulty();
+    BigInteger getStakingDifficulty();
     BigInteger getCumulativeDifficulty();
     
     byte[] getTxTrieRoot();

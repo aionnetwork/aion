@@ -26,7 +26,6 @@ public class StakingBlock extends AbstractBlock implements Block {
     /* Private */
     private byte[] rlpEncoded;
     private volatile boolean parsed = false;
-    private BigInteger td = null;
     private StakedBlockHeader header;
 
     /* Constructors */
@@ -229,14 +228,6 @@ public class StakingBlock extends AbstractBlock implements Block {
     public BigInteger getDifficultyBI() {
         parseRLP();
         return this.header.getDifficultyBI();
-    }
-
-    public BigInteger getCumulativeDifficulty() {
-        if (td == null) {
-            return BigInteger.ZERO;
-        } else {
-            return td;
-        }
     }
 
     public long getTimestamp() {
@@ -536,9 +527,5 @@ public class StakingBlock extends AbstractBlock implements Block {
         }
         // not an AionBlock encoding
         return null;
-    }
-
-    public void setCumulativeDifficulty(BigInteger _td) {
-        td = _td;
     }
 }

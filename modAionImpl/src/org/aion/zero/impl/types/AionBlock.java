@@ -28,7 +28,6 @@ public class AionBlock extends AbstractBlock implements Block {
     /* Private */
     private byte[] rlpEncoded;
     private volatile boolean parsed = false;
-    private BigInteger td = null;
     private A0BlockHeader header;
 
     /* Constructors */
@@ -238,14 +237,6 @@ public class AionBlock extends AbstractBlock implements Block {
         return this.header.getDifficultyBI();
     }
 
-    public BigInteger getCumulativeDifficulty() {
-        if (td == null) {
-            return BigInteger.ZERO;
-        } else {
-            return td;
-        }
-    }
-
     public long getTimestamp() {
         parseRLP();
         return this.header.getTimestamp();
@@ -361,8 +352,8 @@ public class AionBlock extends AbstractBlock implements Block {
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
-        if (td != null) {
-            toStringBuff.append("  cumulative difficulty=").append(td).append("\n");
+        if (totalDifficulty != null) {
+            toStringBuff.append("  cumulative difficulty=").append(totalDifficulty).append("\n");
         }
 
         if (mainChain != null) {
@@ -547,9 +538,5 @@ public class AionBlock extends AbstractBlock implements Block {
         }
         // not an AionBlock encoding
         return null;
-    }
-
-    public void setCumulativeDifficulty(BigInteger _td) {
-        td = _td;
     }
 }
