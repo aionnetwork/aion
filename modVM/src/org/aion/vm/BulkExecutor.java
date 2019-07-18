@@ -491,7 +491,7 @@ public final class BulkExecutor {
     private static boolean transactionIsForAionVirtualMachine(
             RepositoryCache repository, AionTransaction transaction) {
         if (transaction.isContractCreationTransaction()) {
-            return TransactionTypeRule.isValidAVMContractDeployment(transaction.getTargetVM());
+            return TransactionTypeRule.isValidAVMContractDeployment(transaction.getType());
         } else {
             AionAddress destination = transaction.getDestinationAddress();
             return destinationIsAvmContract(repository, destination)
@@ -520,7 +520,7 @@ public final class BulkExecutor {
             // CREATE can only be for avm or fvm, since fvm isn't defined as precisely as avm by any
             // of our helpers, we consider it not avm.
             // TODO: we should have a valid helper for isValidFVMContractDeployment()
-            return !TransactionTypeRule.isValidAVMContractDeployment(transaction.getTargetVM());
+            return !TransactionTypeRule.isValidAVMContractDeployment(transaction.getType());
         } else {
             AionAddress destination = transaction.getDestinationAddress();
             return destinationIsFvmContract(repository, destination);

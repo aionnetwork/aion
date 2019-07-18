@@ -38,8 +38,6 @@ public class AionTransaction {
     /** rlpEncoding is saved because it is needed to calculate the transactionHash */
     private final byte[] rlpEncoding;
 
-    private long nrgConsume = 0;
-
     /** Constructor for AionTransaction */
     private AionTransaction(
             byte[] nonce,
@@ -203,7 +201,7 @@ public class AionTransaction {
     }
 
     /** Factory method used by some tests to create multiple transactions with the same timestamp */
-    public static AionTransaction newAionTransactionGivenTimestamp(
+    public static AionTransaction createGivenTimestamp(
             ECKey key,
             byte[] nonce,
             AionAddress destination,
@@ -357,7 +355,7 @@ public class AionTransaction {
         return transaction.copyOfTransactionData();
     }
 
-    public byte getTargetVM() {
+    public byte getType() {
         return type;
     }
 
@@ -371,14 +369,6 @@ public class AionTransaction {
 
     public AionAddress getSenderAddress() {
         return transaction.senderAddress;
-    }
-
-    public long nrgPrice() {
-        return transaction.energyPrice;
-    }
-
-    public long nrgLimit() {
-        return transaction.energyLimit;
     }
 
     @Override
@@ -409,13 +399,5 @@ public class AionTransaction {
             AionTransaction otherObject = (AionTransaction)obj;
             return Arrays.equals(this.getTransactionHash(), otherObject.getTransactionHash());
         }
-    }
-
-    public long getNrgConsume() {
-        return this.nrgConsume;
-    }
-
-    public void setNrgConsume(long consume) {
-        this.nrgConsume = consume;
     }
 }

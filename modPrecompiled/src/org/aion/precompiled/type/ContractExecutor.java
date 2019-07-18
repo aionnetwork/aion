@@ -183,7 +183,7 @@ public final class ContractExecutor {
             return;
         }
 
-        BigInteger transferValue = new BigInteger(1, transaction.getValue());
+        BigInteger transferValue = transaction.getValueBI();
         BigInteger transactionCost =
                 energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transferValue);
         if (!externalState.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {
