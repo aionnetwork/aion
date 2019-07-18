@@ -43,7 +43,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.TransactionStore;
@@ -378,7 +377,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public static Set<ByteArrayWrapper> getAncestors(
-            IBlockStorePow blockStore,
+            IBlockStoreBase blockStore,
             Block testedBlock,
             int limitNum,
             boolean isParentBlock) {

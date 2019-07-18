@@ -22,7 +22,6 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.p2p.Handler;
