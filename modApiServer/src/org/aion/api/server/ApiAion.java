@@ -458,20 +458,9 @@ public abstract class ApiAion extends Api {
         return new TxRecpt(block, txInfo, cumulateNrg, true);
     }
 
-    protected byte[] doCall(ArgTxCall _params) {
-        AionTransaction tx =
-                new AionTransaction(
-                        ECKeyFac.inst().create(),
-                        _params.getNonce().toByteArray(),
-                        _params.getTo(),
-                        _params.getValue().toByteArray(),
-                        _params.getData(),
-                        _params.getNrg(),
-                        _params.getNrgPrice(),
-                        _params.getType());
-        AionTxReceipt rec =
-                this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
-        return rec.getTransactionOutput();
+    protected byte[] doCall(AionTransaction tx) {
+        AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
+        return receipt.getTransactionOutput();
     }
 
     protected long estimateNrg(ArgTxCall params) {

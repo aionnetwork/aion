@@ -324,17 +324,17 @@ public class ApiAionTest {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        ArgTxCall txcall =
-                new ArgTxCall(
-                        addr,
+        AionTransaction tx =
+                new AionTransaction(
+                        key,
+                        repo.getNonce(AddressUtils.ZERO_ADDRESS).toByteArray(),
                         AddressUtils.ZERO_ADDRESS,
+                        BigInteger.ONE.toByteArray(),
                         msg,
-                        repo.getNonce(addr),
-                        BigInteger.ONE,
                         100000,
                         100000);
 
-        assertNotNull(api.doCall(txcall));
+        assertNotNull(api.doCall(tx));
     }
 
     @Test

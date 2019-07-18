@@ -38,4 +38,8 @@ public class TransactionUtil {
         byte[] plainMsg = TransactionRlpCodec.encodeWithoutSignature(tx);
         return HashUtil.h256(plainMsg);
     }
+
+    static byte[] hashTransaction(AionTransaction tx) {
+        return HashUtil.h256(TransactionRlpCodec.encode(tx));
+    }
 }

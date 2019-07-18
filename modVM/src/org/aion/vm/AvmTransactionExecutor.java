@@ -1,6 +1,5 @@
 package org.aion.vm;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -234,8 +233,8 @@ public final class AvmTransactionExecutor {
                 txs[i] =
                         Transaction.contractCreateTransaction(
                                 tx.getSenderAddress(),
-                                new BigInteger(1, tx.getNonce()),
-                                new BigInteger(1, tx.getValue()),
+                                tx.getNonceBI(),
+                                tx.getValueBI(),
                                 tx.getData(),
                                 tx.getEnergyLimit(),
                                 tx.getEnergyPrice());
@@ -244,8 +243,8 @@ public final class AvmTransactionExecutor {
                         Transaction.contractCallTransaction(
                                 tx.getSenderAddress(),
                                 tx.getDestinationAddress(),
-                                new BigInteger(1, tx.getNonce()),
-                                new BigInteger(1, tx.getValue()),
+                                tx.getNonceBI(),
+                                tx.getValueBI(),
                                 tx.getData(),
                                 tx.getEnergyLimit(),
                                 tx.getEnergyPrice());

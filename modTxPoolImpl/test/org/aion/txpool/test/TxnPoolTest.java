@@ -13,11 +13,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.time.TimeInstant;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Assert;
@@ -169,8 +172,7 @@ public class TxnPoolTest {
         return new AionTransaction(
                 key.get(0),
                 nonce,
-                AddressUtils.wrapAddress(
-                        "0000000000000000000000000000000000000000000000000000000000000001"),
+                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -181,12 +183,24 @@ public class TxnPoolTest {
         return new AionTransaction(
                 key.get(_index),
                 nonce,
-                AddressUtils.wrapAddress(
-                        "0000000000000000000000000000000000000000000000000000000000000001"),
+                AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
                 1L);
+    }
+
+    private AionTransaction genTransactionWithTimestamp(byte[] nonce, ECKey key, byte[] timeStamp) {
+        return new AionTransaction(
+            key,
+            nonce,
+            AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
+            ByteUtils.fromHexString("1"),
+            ByteUtils.fromHexString("1"),
+            10000L,
+            1L,
+            TransactionTypes.DEFAULT,
+            timeStamp);
     }
 
     private AionTransaction genTransactionRandomPrice(byte[] nonce, long price, ECKey key) {
@@ -292,7 +306,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -321,7 +335,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -353,7 +367,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -385,7 +399,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -418,7 +432,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -451,7 +465,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -567,6 +581,7 @@ public class TxnPoolTest {
     }
 
     @Test
+    // TODO Check if this is the right behaviour
     public void snapshotWithSameTransactionTimestamp() {
         Properties config = new Properties();
         config.put("tx-timeout", "100");
@@ -575,46 +590,47 @@ public class TxnPoolTest {
 
         List<AionTransaction> txnl = new ArrayList<>();
         Map<ByteArrayWrapper, AionTransaction> txMap = new HashMap<>();
-        int cnt = 16;
+
+        byte[] timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        final int cnt = 16;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
-        for (int i = 16; i < 16 + cnt; i++) {
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 0);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(0));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
 
-        for (int i = 16; i < 16 + cnt; i++) {
+        timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
+        for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            AionTransaction txn = genTransaction(nonce, 1);
+            AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.signWithSecTimeStamp(key.get(1));
             txn.setNrgConsume(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);

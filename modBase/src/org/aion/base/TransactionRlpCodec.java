@@ -81,7 +81,8 @@ public class TransactionRlpCodec {
                 nrgPrice,
                 type,
                 signature,
-                timeStamp);
+                timeStamp,
+                0);
     }
 
     /** For signatures you have to keep also RLP of the transaction without any signature data */

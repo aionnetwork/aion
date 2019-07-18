@@ -40,7 +40,9 @@ import org.aion.api.server.types.TxPendingStatus;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
+import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -942,22 +944,23 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         AionAddress from = new AionAddress(req.getFrom().toByteArray());
                         AionAddress to = new AionAddress(req.getTo().toByteArray());
 
-                        BigInteger value = new BigInteger(req.getValue().toByteArray());
-                        byte[] d = req.getData().toByteArray();
+                        byte[] value = req.getValue().toByteArray();
+                        byte[] dat = req.getData().toByteArray();
 
-                        ArgTxCall params =
-                                new ArgTxCall(
+                        AionTransaction tx =
+                                new AionTransaction(
+                                        this.getAccountKey(from.toString()),
+                                        BigInteger.ZERO.toByteArray(),
                                         from,
-                                        to,
-                                        d,
-                                        BigInteger.ZERO,
                                         value,
+                                        dat,
                                         req.getNrg(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        TransactionTypes.DEFAULT);
                         Message.rsp_call rsp =
                                 Message.rsp_call
                                         .newBuilder()
-                                        .setResult(ByteString.copyFrom(this.doCall(params)))
+                                        .setResult(ByteString.copyFrom(this.doCall(tx)))
                                         .build();
 
                         byte[] retHeader =
@@ -2585,13 +2588,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
                 .setData(
                         ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
-                .setNonce(ByteString.copyFrom(tx.getNonceBI().toByteArray()))
+                .setNonce(ByteString.copyFrom(tx.getNonce()))
                 .setTo(
                         ByteString.copyFrom(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
                                         : tx.getDestinationAddress().toByteArray()))
-                .setValue(ByteString.copyFrom(tx.getValueBI().toByteArray()))
+                .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int) txInfo.txIndexInBlock)
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimestamp()))
                 .build();
@@ -2721,8 +2724,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 ? EMPTY_BYTE_ARRAY
                                                 : t.getDestinationAddress().toByteArray()))
                         .setFrom(ByteString.copyFrom(t.getSenderAddress().toByteArray()))
-                        .setNonce(ByteString.copyFrom(t.getNonceBI().toByteArray()))
-                        .setValue(ByteString.copyFrom(t.getValueBI().toByteArray()))
+                        .setNonce(ByteString.copyFrom(t.getNonce()))
+                        .setValue(ByteString.copyFrom(t.getValue()))
                         .setNrgConsumed(nrgConsumed)
                         .setNrgPrice(t.getEnergyPrice())
                         .setTxHash(ByteString.copyFrom(t.getTransactionHash()))
@@ -2892,7 +2895,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + b.getTimestamp()
                 + ","
                 + "'"
-                + ByteUtil.toHexString(t.getValueBI().toByteArray())
+                + ByteUtil.toHexString(t.getValue())
                 + "',"
                 + "'"
                 + logs.toString()
@@ -2901,7 +2904,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(t.getData())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(t.getNonceBI().toByteArray())
+                + ByteUtil.toHexString(t.getNonce())
                 + "'";
     }
 
@@ -3024,12 +3027,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .toByteArray()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getNonceBI()
-                                                                                                .toByteArray()))
+                                                                                        tx
+                                                                                                .getNonce()))
                                                                         .setValue(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getValueBI()
-                                                                                                .toByteArray()))
+                                                                                        tx
+                                                                                                .getValue()))
                                                                         .setNrgConsumed(
                                                                                 ti.getReceipt()
                                                                                         .getEnergyUsed())
