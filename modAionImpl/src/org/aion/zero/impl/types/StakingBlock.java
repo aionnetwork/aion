@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -19,7 +18,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.types.StakedBlockHeader;
 
-public class StakingBlock extends AbstractBlock implements Block {
+public class StakingBlock extends AbstractBlock {
 
 
 

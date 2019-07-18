@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
-import org.aion.mcf.blockchain.Block;
+
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -23,7 +23,8 @@ import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.slf4j.Logger;
 
 /** */
-public class AionBlock extends AbstractBlock implements Block {
+//TODO: [Unity] Rename this to MinedBlock
+public class AionBlock extends AbstractBlock {
 
     /* Private */
     private byte[] rlpEncoded;
@@ -311,12 +312,12 @@ public class AionBlock extends AbstractBlock implements Block {
      * blockchain before handing it off to miner. This step is necessary to add post-execution
      * states:
      *
-     * <p>{@link A0BlockHeader#txTrieRoot} {@link A0BlockHeader#receiptTrieRoot} {@link
-     * A0BlockHeader#stateRoot} {@link A0BlockHeader#logsBloom} {@link this#transactionsList} {@link
-     * A0BlockHeader#energyConsumed}
+     * <p>{@link A0BlockHeader#getTxTrieRoot()} {@link A0BlockHeader#getReceiptsRoot()} {@link
+     * A0BlockHeader#getStateRoot()} {@link A0BlockHeader#getLogsBloom()} {@link this#transactionsList} {@link
+     * A0BlockHeader#getEnergyConsumed()}
      *
      * <p>The (as of now) unenforced contract by using this function is that the user should not
-     * modify any fields set except for {@link A0BlockHeader#solution} after this function is
+     * modify any fields set except for {@link A0BlockHeader#getSolution()} after this function is
      * called.
      *
      * @param txs list of transactions input to the block (final)
