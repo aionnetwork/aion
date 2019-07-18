@@ -199,13 +199,14 @@ public class ContractIntegTest {
                     value);
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
+            assertEquals(226186, summary.getReceipt().getEnergyUsed());
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
+            assertEquals(1000000, summary.getReceipt().getEnergyUsed());
         }
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
     }
 
     @Test
@@ -237,7 +238,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
+            assertEquals(221000, summary.getReceipt().getEnergyUsed());
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
@@ -489,7 +490,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
-            assertEquals(0, tx.getNrgConsume());
+            assertEquals(tx.getEnergyLimit(), summary.getReceipt().getEnergyUsed());
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
@@ -503,7 +504,7 @@ public class ContractIntegTest {
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Rejected: insufficient balance", summary.getReceipt().getError());
-            assertEquals(0, tx.getNrgConsume());
+            assertEquals(tx.getEnergyLimit(), summary.getReceipt().getEnergyUsed());
             checkStateOfDeployerOnBadDeploy(repo);
         }
     }
@@ -1333,6 +1334,7 @@ public class ContractIntegTest {
         AionBlock block = blockchain.createBlock(parent, ls, false, parent.getTimestamp());
 
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
+        AionBlockSummary summary = result.getRight();
         assertTrue(result.getLeft().isSuccessful());
 
         AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
@@ -1341,10 +1343,10 @@ public class ContractIntegTest {
                 senderBalance
                         .subtract(BigInteger.TEN)
                         .subtract(
-                                BigInteger.valueOf(tx.getNrgConsume())
+                                BigInteger.valueOf(summary.getReceipts().get(0).getEnergyUsed())
                                         .multiply(BigInteger.valueOf(nrgPrice)))
                         .subtract(
-                                BigInteger.valueOf(tx2.getNrgConsume())
+                                BigInteger.valueOf(summary.getReceipts().get(1).getEnergyUsed())
                                         .multiply(BigInteger.valueOf(nrgPrice))),
                 blockchain.getRepository().getBalance(deployer));
 
@@ -1492,8 +1494,7 @@ public class ContractIntegTest {
             deployerNonce = deployerNonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, deployerNonce);
         }
-
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
+        assertEquals(1000000, summary.getReceipt().getEnergyUsed());
     }
 
     @Test
@@ -1585,8 +1586,7 @@ public class ContractIntegTest {
             deployerNonce = deployerNonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, deployerNonce);
         }
-
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
+        assertEquals(225787, summary.getReceipt().getEnergyUsed());
     }
 
     @Test
