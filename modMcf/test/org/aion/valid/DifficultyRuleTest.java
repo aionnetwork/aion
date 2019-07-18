@@ -13,7 +13,6 @@ import org.aion.mcf.blockchain.valid.IValidRule.RuleError;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
@@ -30,7 +29,7 @@ public class DifficultyRuleTest {
     private A0BlockHeader grandParentHeader;
     private A0BlockHeader parentHeader;
     private A0BlockHeader currentHeader;
-    @Mock IChainCfg<AionBlock> mockChainCfg;
+    @Mock IChainCfg mockChainCfg;
     @Mock IDifficultyCalculator mockDiffCalculator;
 
     @Before

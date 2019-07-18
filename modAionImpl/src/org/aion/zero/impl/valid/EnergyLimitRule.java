@@ -24,7 +24,7 @@ public class EnergyLimitRule extends DependentBlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
+    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors, Object... extraValidationArg) {
         long energyLimit = header.getEnergyLimit();
         long parentEnergyLimit = parent.getEnergyLimit();
         long parentEnergyQuotient = parentEnergyLimit / this.energyLimitDivisor;

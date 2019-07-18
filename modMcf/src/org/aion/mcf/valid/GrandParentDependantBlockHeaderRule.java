@@ -11,5 +11,5 @@ public abstract class GrandParentDependantBlockHeaderRule
      * A separate class of rules that infer a relationship between the current block, the block
      * preceding (parent) and the block preceding that block (grandparent)
      */
-    public abstract boolean validate(BlockHeader grandParent, BlockHeader parent, BlockHeader current, List<RuleError> errors);
+    public abstract boolean validate(BlockHeader grandParent, BlockHeader parent, BlockHeader current, List<RuleError> errors, Object... extraValidationArg);
 }

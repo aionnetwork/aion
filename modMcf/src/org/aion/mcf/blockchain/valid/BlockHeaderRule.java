@@ -9,5 +9,5 @@ import org.aion.mcf.blockchain.BlockHeader;
  *
  */
 public abstract class BlockHeaderRule extends AbstractValidRule {
-    public abstract boolean validate(BlockHeader header, List<RuleError> errors);
+    public abstract boolean validate(BlockHeader header, List<RuleError> errors, Object... extraValidationArg);
 }

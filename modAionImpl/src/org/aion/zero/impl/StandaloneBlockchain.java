@@ -45,7 +45,7 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
-import org.aion.zero.impl.valid.AionHeaderVersionRule;
+import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -360,7 +360,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                             this.constants
                                                                     .getMaximumExtraDataSize()),
                                                     new EnergyConsumedRule(),
-                                                    new AionHeaderVersionRule()));
+                                                    new HeaderSealTypeRule()));
                                 }
                             };
                 } else {

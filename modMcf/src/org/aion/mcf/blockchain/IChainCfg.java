@@ -7,7 +7,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 
 /** Chain configuration interface. */
-public interface IChainCfg<Blk extends Block> {
+public interface IChainCfg {
 
     boolean acceptTransactionSignature(AionTransaction tx);
 
@@ -22,4 +22,12 @@ public interface IChainCfg<Blk extends Block> {
     BlockHeaderValidator createBlockHeaderValidator();
 
     ParentBlockHeaderValidator createParentHeaderValidator();
+
+    // TODO: [unity] separate these methods from the ChainCfg impl class.
+
+    IDifficultyCalculator getStakingDifficultyCalculator();
+
+    BlockHeaderValidator createStakingBlockHeaderValidator();
+
+    ParentBlockHeaderValidator createStakingParentHeaderValidator();
 }

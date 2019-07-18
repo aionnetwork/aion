@@ -7,7 +7,11 @@ import org.aion.mcf.blockchain.BlockHeader;
 public class TimeStampRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
+    public boolean validate(
+            BlockHeader header,
+            BlockHeader dependency,
+            List<RuleError> errors,
+            Object... extraValidationArg) {
         if (header.getTimestamp() <= dependency.getTimestamp()) {
             addError(
                     "timestamp ("

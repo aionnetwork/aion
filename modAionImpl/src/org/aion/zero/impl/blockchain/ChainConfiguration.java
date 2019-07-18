@@ -4,6 +4,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -19,14 +22,18 @@ import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.core.StakeBlockDiffCalculator;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.valid.AionExtraDataRule;
-import org.aion.zero.impl.valid.AionHeaderVersionRule;
+import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.AionPOWRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
+import org.aion.zero.impl.valid.SignatureRule;
+import org.aion.zero.impl.valid.StakingBlockTimeStampRule;
+import org.aion.zero.impl.valid.StakingDifficultyRule;
+import org.aion.zero.impl.valid.StakingSeedRule;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the
@@ -35,14 +42,28 @@ import org.aion.zero.impl.valid.EquihashSolutionRule;
  *
  * @author yao
  */
-public class ChainConfiguration implements IChainCfg<AionBlock> {
+public class ChainConfiguration implements IChainCfg {
 
     protected BlockConstants constants;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
+    protected IDifficultyCalculator stakingDifficultyCalculator;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
+    // TODO: [unity] to implement the key reading/setting logic
+    private static byte[] privateKey =
+            ByteUtil.hexStringToBytes(
+                    "0xcc76648ce8798bc18130bc9d637995e5c42a922ebeab78795fac58081b9cf9d4069346ca77152d3e42b1630826feef365683038c3b00ff20b0ea42d7c121fa9f");
+
+    private static ECKey key = ECKeyFac.inst().fromPrivate(privateKey);
+
     protected AionAddress tokenBridgingOwnerAddress;
+    protected static AionAddress stakingContractAddress =
+            new AionAddress(
+                    HashUtil.calcNewAddr(
+                            ByteUtil.hexStringToBytes(
+                                    "0xa04e84bdc25561f1bad0ae43b2ceb8f36c66d4392fedf5bb410b0d8ebb259985"),
+                            BigInteger.ZERO.toByteArray()));
 
     public ChainConfiguration(final Long monetaryUpdateBlkNum, final BigInteger initialSupply) {
         this(new BlockConstants(), monetaryUpdateBlkNum, initialSupply);
@@ -56,6 +77,8 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
             BlockConstants constants, Long monetaryUpdateBlkNum, BigInteger initialSupply) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
+
+        StakeBlockDiffCalculator stakeCalc = new StakeBlockDiffCalculator(constants);
 
         RewardsCalculator rewardsCalcInternal =
                 new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
@@ -73,6 +96,16 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
                             parent.getDifficultyBI());
                 };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
+
+        stakingDifficultyCalculator =
+                (parent, grandParent) -> {
+                    // special case to handle the corner case for first block
+                    if (parent.getNumber() == 0L || parent.isGenesis()) {
+                        return parent.getDifficultyBI();
+                    }
+
+                    return stakeCalc.calcDifficulty(parent, grandParent);
+                };
     }
 
     public IBlockConstants getConstants() {
@@ -113,7 +146,7 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
                         new EnergyConsumedRule(),
                         new AionPOWRule(),
                         new EquihashSolutionRule(this.getEquihashValidator()),
-                        new AionHeaderVersionRule()));
+                        new HeaderSealTypeRule()));
     }
 
     @Override
@@ -130,5 +163,46 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
     public GrandParentBlockHeaderValidator createGrandParentHeaderValidator() {
         return new GrandParentBlockHeaderValidator(
                 Collections.singletonList(new AionDifficultyRule(this)));
+    }
+
+    @Override
+    public IDifficultyCalculator getStakingDifficultyCalculator() {
+        return stakingDifficultyCalculator;
+    }
+
+    @Override
+    public BlockHeaderValidator createStakingBlockHeaderValidator() {
+        return new BlockHeaderValidator(
+                Arrays.asList(
+                        new HeaderSealTypeRule(),
+                        new SignatureRule(),
+                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                        new EnergyConsumedRule()));
+    }
+
+    @Override
+    public ParentBlockHeaderValidator createStakingParentHeaderValidator() {
+        return new ParentBlockHeaderValidator(
+                Arrays.asList(
+                        new BlockNumberRule(),
+                        new StakingBlockTimeStampRule(),
+                        new StakingSeedRule(),
+                        new EnergyLimitRule(
+                                this.getConstants().getEnergyDivisorLimitLong(),
+                                this.getConstants().getEnergyLowerBoundLong())));
+    }
+
+    public GrandParentBlockHeaderValidator createStakingGrandParentHeaderValidator() {
+        return new GrandParentBlockHeaderValidator(
+            Collections.singletonList(new StakingDifficultyRule(this)));
+    }
+
+    // TODO : [unity] these 2 methods might move to the other proper class
+    public static AionAddress getStakingContractAddress() {
+        return stakingContractAddress;
+    }
+
+    public static ECKey getStakerKey() {
+        return key;
     }
 }

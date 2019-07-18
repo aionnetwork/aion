@@ -20,7 +20,7 @@ public class ParentBlockHeaderValidator
     public boolean validate(BlockHeader header, BlockHeader parent, Logger logger) {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
-        for (IBlockHeaderValidRule rule : rules) {
+        for (DependentBlockHeaderRule rule : rules) {
             if (!rule.validate(header, parent, errors)) {
                 if (logger != null) logErrors(logger, errors);
                 return false;

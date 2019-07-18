@@ -11,11 +11,12 @@ import org.aion.zero.impl.types.A0BlockHeader;
 public class AionPOWRule extends BlockHeaderRule {
 
     @Override
-    public boolean validate(BlockHeader header, List<RuleError> errors) {
+    public boolean validate(
+            BlockHeader header, List<RuleError> errors, Object... extraValidationArg) {
         A0BlockHeader minedHeader = (A0BlockHeader) header;
         return (validate(minedHeader, errors));
     }
-    
+
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
 

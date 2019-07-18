@@ -27,7 +27,7 @@ public class AionBlockHeaderVersionTest {
 
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
-        AionHeaderVersionRule rule = new AionHeaderVersionRule();
+        HeaderSealTypeRule rule = new HeaderSealTypeRule();
         boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isTrue();
@@ -40,7 +40,7 @@ public class AionBlockHeaderVersionTest {
 
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
-        AionHeaderVersionRule rule = new AionHeaderVersionRule();
+        HeaderSealTypeRule rule = new HeaderSealTypeRule();
         boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isFalse();
