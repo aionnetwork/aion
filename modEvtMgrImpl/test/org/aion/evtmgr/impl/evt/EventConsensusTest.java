@@ -4,6 +4,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 
 import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK;
 import org.junit.Test;
 
 public class EventConsensusTest {
@@ -39,7 +40,8 @@ public class EventConsensusTest {
         assertEquals(
                 EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE, EventConsensus.CALLBACK.GETCALLBACK(1));
         assertEquals(EventConsensus.CALLBACK.ON_SOLUTION, EventConsensus.CALLBACK.GETCALLBACK(2));
+        assertEquals(CALLBACK.ON_STAKE_SIG, EventConsensus.CALLBACK.GETCALLBACK(3));
         assertNull(EventConsensus.CALLBACK.GETCALLBACK(-1));
-        assertNull(EventConsensus.CALLBACK.GETCALLBACK(3));
+        assertNull(EventConsensus.CALLBACK.GETCALLBACK(4));
     }
 }
