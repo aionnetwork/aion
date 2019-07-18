@@ -298,7 +298,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -327,7 +327,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -359,7 +359,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -391,7 +391,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -425,7 +425,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 
@@ -459,7 +459,7 @@ public class TxnPoolTest {
 
         long nonce = 0;
         for (AionTransaction tx : txl) {
-            Assert.assertEquals((new BigInteger(tx.getNonce())).longValue(), nonce++);
+            Assert.assertEquals(tx.getNonceBI().longValue(), nonce++);
         }
     }
 

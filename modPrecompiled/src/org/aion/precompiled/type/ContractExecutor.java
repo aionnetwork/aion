@@ -151,14 +151,14 @@ public final class ContractExecutor {
             }
         }
 
-        BigInteger txNonce = new BigInteger(1, transaction.getNonce());
+        BigInteger txNonce = transaction.getNonceBI();
         if (!kernel.accountNonceEquals(transaction.getSenderAddress(), txNonce)) {
             result.setResultCode(PrecompiledResultCode.INVALID_NONCE);
             result.setEnergyRemaining(0);
             return;
         }
 
-        BigInteger transferValue = new BigInteger(1, transaction.getValue());
+        BigInteger transferValue = transaction.getValueBI();
         BigInteger transactionCost =
                 energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transferValue);
         if (!kernel.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {

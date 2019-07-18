@@ -2585,13 +2585,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
                 .setData(
                         ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
-                .setNonce(ByteString.copyFrom(tx.getNonceBI().toByteArray()))
+                .setNonce(ByteString.copyFrom(tx.getNonce()))
                 .setTo(
                         ByteString.copyFrom(
                                 tx.getDestinationAddress() == null
                                         ? EMPTY_BYTE_ARRAY
                                         : tx.getDestinationAddress().toByteArray()))
-                .setValue(ByteString.copyFrom(tx.getValueBI().toByteArray()))
+                .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int) txInfo.txIndexInBlock)
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimestamp()))
                 .build();
@@ -2721,8 +2721,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 ? EMPTY_BYTE_ARRAY
                                                 : t.getDestinationAddress().toByteArray()))
                         .setFrom(ByteString.copyFrom(t.getSenderAddress().toByteArray()))
-                        .setNonce(ByteString.copyFrom(t.getNonceBI().toByteArray()))
-                        .setValue(ByteString.copyFrom(t.getValueBI().toByteArray()))
+                        .setNonce(ByteString.copyFrom(t.getNonce()))
+                        .setValue(ByteString.copyFrom(t.getValue()))
                         .setNrgConsumed(nrgConsumed)
                         .setNrgPrice(t.getEnergyPrice())
                         .setTxHash(ByteString.copyFrom(t.getTransactionHash()))
@@ -2892,7 +2892,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + b.getTimestamp()
                 + ","
                 + "'"
-                + ByteUtil.toHexString(t.getValueBI().toByteArray())
+                + ByteUtil.toHexString(t.getValue())
                 + "',"
                 + "'"
                 + logs.toString()
@@ -2901,7 +2901,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(t.getData())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(t.getNonceBI().toByteArray())
+                + ByteUtil.toHexString(t.getNonce())
                 + "'";
     }
 
@@ -3024,12 +3024,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .toByteArray()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getNonceBI()
-                                                                                                .toByteArray()))
+                                                                                        tx.getNonce()))
                                                                         .setValue(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getValueBI()
-                                                                                                .toByteArray()))
+                                                                                        tx.getValue()))
                                                                         .setNrgConsumed(
                                                                                 ti.getReceipt()
                                                                                         .getEnergyUsed())
