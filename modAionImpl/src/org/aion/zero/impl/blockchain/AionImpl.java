@@ -16,6 +16,8 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.mcf.stake.StakeRunnerInterface;
+import org.aion.stake.StakeRunner;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -86,6 +88,11 @@ public class AionImpl implements IAionChain {
             LOG_GEN.info("Miner address is not set");
             return null;
         }
+    }
+
+    @Override
+    public StakeRunnerInterface getStakeRunner() {
+        return StakeRunner.inst();
     }
 
     @Override

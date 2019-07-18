@@ -42,6 +42,7 @@ import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.mcf.stake.StakeRunnerInterface;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
 import org.aion.vm.LongLivedAvm;
@@ -205,13 +206,22 @@ public class Aion {
         IAionChain ac = AionFactory.create();
 
         IMineRunner nm = null;
+        StakeRunnerInterface stakeRunner = null;
 
         if (!cfg.getConsensus().isSeed()) {
             nm = ac.getBlockMiner();
+
+            if (cfg.getConsensus().getStaking()) {
+                stakeRunner = ac.getStakeRunner();
+            }
         }
 
         if (nm != null) {
             nm.delayedStartMining(10);
+        }
+
+        if (stakeRunner != null) {
+            stakeRunner.delayedStartStaking(10);
         }
 
         /*
@@ -316,17 +326,19 @@ public class Aion {
             private final IMineRunner miner;
             private final ProtocolProcessor pp;
             private final RpcServer rpc;
+            private final StakeRunnerInterface sr;
 
             private ShutdownThreadHolder(
-                    Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc) {
+                    Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc, StakeRunnerInterface _sr) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
                 this.rpc = rpc;
+                sr = _sr;
             }
         }
 
-        ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
+        ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer, stakeRunner);
 
         Runtime.getRuntime()
                 .addShutdownHook(
@@ -371,6 +383,13 @@ public class Aion {
                                         holder.miner.stopMining();
                                         holder.miner.shutdown();
                                         genLog.info("Shutdown sealer... Done!");
+                                    }
+
+                                    if (holder.sr != null) {
+                                        genLog.info("Shutting down staker");
+                                        holder.sr.stopStaking();
+                                        holder.sr.shutdown();
+                                        genLog.info("Shutdown staker... Done!");
                                     }
 
                                     genLog.info("Shutting down the AionHub...");
