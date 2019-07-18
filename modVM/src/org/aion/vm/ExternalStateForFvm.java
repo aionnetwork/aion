@@ -46,16 +46,6 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
         this.blockEnergyLimit = blockEnergyLimit;
     }
 
-    /**
-     * TEMPORARY!
-     *
-     * @return the underlying repo.
-     */
-    @Override
-    public RepositoryCache getUnderlyingRepository() {
-        return this.repository;
-    }
-
     /** Commits the changes in this world state to its parent world state. */
     @Override
     public void commit() {
