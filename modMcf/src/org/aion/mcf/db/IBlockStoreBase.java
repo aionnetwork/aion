@@ -1,5 +1,6 @@
 package org.aion.mcf.db;
 
+import java.math.BigInteger;
 import java.util.List;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
@@ -46,4 +47,10 @@ public interface IBlockStoreBase {
     void rollback(long blockNumber);
 
     Block getBlockWithAntiParentByHash(byte[] hash);
+    
+    BigInteger getTotalDifficultyForHash(byte[] hash);
+
+    void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
+
+    BigInteger getTotalDifficulty();
 }
