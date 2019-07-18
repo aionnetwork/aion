@@ -61,7 +61,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
-        assertThat(header.getSealType() == (byte) 0x01);
+        assertThat(header.getSealType().getSealId() == (byte) 0x01);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
-        assertThat(header.getSealType() == (byte) 0x01);
+        assertThat(header.getSealType().getSealId() == (byte) 0x01);
     }
 
     // Test is a self referencing

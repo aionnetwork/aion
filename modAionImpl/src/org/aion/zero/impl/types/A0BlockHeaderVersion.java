@@ -15,6 +15,7 @@ public class A0BlockHeaderVersion {
             };
 
     public static boolean isActive(byte version) {
+        // TODO: [unity] this should receive a sealtype
         return active.contains(version);
     }
 

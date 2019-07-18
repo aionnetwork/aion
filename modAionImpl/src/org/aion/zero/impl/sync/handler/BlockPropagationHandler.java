@@ -8,6 +8,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.types.ByteArrayWrapper;
@@ -127,11 +128,11 @@ public class BlockPropagationHandler {
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
-        if (block.getHeader().getSealType() == 0x01) {
+        if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
             if (!this.miningBlockHeaderValidator.validate(block.getHeader(), log)) {
                 return PropStatus.DROPPED;
             }
-        } else if (block.getHeader().getSealType() == 0x02) {
+        } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
             if (!stakingBlockHeaderValidator.validate(block.getHeader(), log)) {
                 return PropStatus.DROPPED;
             }

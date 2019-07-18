@@ -35,15 +35,37 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         RLP_BH_NRG_CONSUMED = 10,
         RLP_BH_NRG_LIMIT = 11,
         RLP_BH_TIMESTAMP = 12;
+    
+    //TODO: [Unity] We should probably move this enum somewhere else
 
     public enum BlockSealType {
-        SEAL_NA,
-        SEAL_POW_BLOCK,
-        SEAL_POS_BLOCK
+        SEAL_NA((byte) 0),
+        SEAL_POW_BLOCK((byte) 1),
+        SEAL_POS_BLOCK((byte) 2);
+        
+        byte sealId;
+        
+        BlockSealType(byte sealId) {
+            this.sealId = sealId;
+        }
+
+        public byte getSealId() {
+            return sealId;
+        }
+        
+        public static BlockSealType byteToSealType(byte id) {
+            if (id == SEAL_POW_BLOCK.sealId) {
+                return SEAL_POW_BLOCK;
+            } else if (id == SEAL_POS_BLOCK.sealId) {
+                return SEAL_POS_BLOCK;
+            } else {
+                return SEAL_NA;
+            }
+        }
     }
 
 
-    protected byte sealType;
+    protected BlockSealType sealType;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     protected byte[] parentHash;
@@ -127,7 +149,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         long _energyConsumed,
         long _energyLimit,
         long _timestamp) {
-        sealType = _sealType;
+        sealType = BlockSealType.byteToSealType(_sealType);
         if (_coinbase == null) {
             throw new IllegalArgumentException("Invalid coinbase!");
         } else {
@@ -249,11 +271,11 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return number == 0;
     }
 
-    public byte getSealType() {
+    public BlockSealType getSealType() {
         return sealType;
     }
 
-    public void setSealType(byte _sealType) {
+    public void setSealType(BlockSealType _sealType) {
         sealType = _sealType;
     }
 
@@ -274,7 +296,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         JSONObject obj = new JSONObject();
         obj.putOpt(
             "version",
-            oneByteToHexString(sealType)); // TODO: require to check the pool protocol specs.
+            oneByteToHexString(sealType.sealId)); // TODO: require to check the pool protocol specs.
         obj.putOpt("number", toHexString(longToBytes(number)));
         obj.putOpt("parentHash", toHexString(parentHash));
         obj.putOpt("coinBase", toHexString(coinbase.toByteArray()));
@@ -296,7 +318,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         if (_sealType.length != 1) {
             throw new IllegalArgumentException("The length of the seal type is not correct!");
         }
-        sealType = _sealType[0];
+        sealType = BlockSealType.byteToSealType(_sealType[0]);
 
         byte[] nrBytes = header.get(RLP_BH_NUMBER).getRLPData();
         number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
@@ -399,7 +421,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
             + getHash().length
             + suffix
             + "  sealType="
-            + Integer.toHexString(sealType)
+            + Integer.toHexString(sealType.sealId)
             + "  Length: "
             + suffix
             + "  number="
@@ -463,7 +485,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
 
     protected byte[] getHeaderForMine() {
         return merge(
-            new byte[] {sealType},
+            new byte[] {sealType.sealId},
             longToBytes(number),
             parentHash,
             coinbase.toByteArray(),

@@ -144,7 +144,7 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
 
     public byte[] getEncoded(boolean withSignature) {
 
-        byte[] rlpVersion = RLP.encodeElement(new byte[] {sealType});
+        byte[] rlpVersion = RLP.encodeElement(new byte[] {sealType.getSealId()});
         byte[] rlpNumber = RLP.encodeBigInteger(BigInteger.valueOf(number));
         byte[] rlpParentHash = RLP.encodeElement(parentHash);
         byte[] rlpCoinbase = RLP.encodeElement(coinbase.toByteArray());

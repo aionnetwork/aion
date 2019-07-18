@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
+import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.StakedBlockHeader;
 
@@ -12,7 +13,7 @@ public class HeaderSealTypeRule extends BlockHeaderRule {
     public boolean validate(BlockHeader header, List<RuleError> errors) {
 
         if (header instanceof A0BlockHeader) {
-            if (header.getSealType() != 0x01) {
+            if (!header.getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
                 addError(
                         "Invalid header sealtype for the PoW block header, found sealType "
                                 + header.getSealType(),
@@ -20,7 +21,7 @@ public class HeaderSealTypeRule extends BlockHeaderRule {
                 return false;
             }
         } else if (header instanceof StakedBlockHeader) {
-            if (header.getSealType() != 0x02) {
+            if (!header.getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
                 addError(
                         "Invalid header sealtype for the PoS block header, found sealType "
                                 + header.getSealType(),

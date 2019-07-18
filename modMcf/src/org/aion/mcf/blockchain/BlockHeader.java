@@ -1,6 +1,8 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
+
+import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.types.AionAddress;
 import org.json.JSONObject;
 
@@ -67,5 +69,5 @@ public interface BlockHeader {
 
     JSONObject toJSON();
 
-    byte getSealType();
+    AbstractBlockHeader.BlockSealType getSealType();
 }

@@ -104,7 +104,8 @@ public class A0BlockHeader extends AbstractBlockHeader {
         long _timestamp,
         byte[] _nonce,
         byte[] _solution) {
-        sealType = _sealType;
+        // TODO: [Unity] This can be set to Mined without being received as a param
+        sealType = BlockSealType.byteToSealType(_sealType);
         if (_coinbase == null) {
             throw new IllegalArgumentException("Invalid coinbase!");
         } else {
@@ -170,7 +171,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
 
     public byte[] getEncoded(boolean withNonce) {
 
-        byte[] rlpVersion = RLP.encodeElement(new byte[] {sealType});
+        byte[] rlpVersion = RLP.encodeElement(new byte[] {sealType.getSealId()});
         byte[] rlpNumber = RLP.encodeBigInteger(BigInteger.valueOf(number));
         byte[] rlpParentHash = RLP.encodeElement(parentHash);
         byte[] rlpCoinbase = RLP.encodeElement(coinbase.toByteArray());
