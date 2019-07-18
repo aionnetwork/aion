@@ -9,9 +9,8 @@ import org.aion.zero.types.StakedBlockHeader;
 
 public class SignatureRule extends BlockHeaderRule {
 
-    @Override
     public boolean validate(
-            BlockHeader header, List<RuleError> errors, Object... extraValidationArg) {
+            BlockHeader header, List<RuleError> errors) {
 
         if (!(header instanceof StakedBlockHeader)) {
             throw new IllegalStateException("Invalid header input");

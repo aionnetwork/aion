@@ -26,15 +26,4 @@ public class BlockHeaderValidator extends AbstractBlockHeaderValidator {
         }
         return true;
     }
-
-    public boolean validate(BlockHeader header, Logger logger, Object... extraValidationArg) {
-        List<IValidRule.RuleError> errors = new LinkedList<>();
-        for (BlockHeaderRule rule : rules) {
-            if (!rule.validate(header, errors, extraValidationArg)) {
-                if (logger != null) logErrors(logger, errors);
-                return false;
-            }
-        }
-        return true;
-    }
 }

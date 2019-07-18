@@ -112,6 +112,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         return this.chainConfiguration.createBlockHeaderValidator();
     }
 
+    public BlockHeaderValidator getStakingBlockHeaderValidator() {
+        return chainConfiguration.createStakingBlockHeaderValidator();
+    }
+
     public static class Bundle {
         public final List<ECKey> privateKeys;
         public final StandaloneBlockchain bc;

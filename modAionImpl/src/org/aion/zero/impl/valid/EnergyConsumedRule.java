@@ -11,9 +11,8 @@ import org.aion.mcf.blockchain.valid.BlockHeaderRule;
  */
 public class EnergyConsumedRule extends BlockHeaderRule {
 
-    @Override
     public boolean validate(
-            BlockHeader blockHeader, List<RuleError> error, Object... extraValidationArg) {
+            BlockHeader blockHeader, List<RuleError> error) {
         if (blockHeader.getEnergyConsumed() > blockHeader.getEnergyLimit()) {
             addError(
                     formatError(blockHeader.getEnergyConsumed(), blockHeader.getEnergyLimit()),

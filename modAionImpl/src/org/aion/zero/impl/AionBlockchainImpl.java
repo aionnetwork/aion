@@ -123,6 +123,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
 
+    private final GrandParentBlockHeaderValidator grandParentStakingBlockHeaderValidator;
+    private final ParentBlockHeaderValidator parentStakingHeaderValidator;
+    private final BlockHeaderValidator stakingBlockHeaderValidator;
+
     private StakingContractHelper stakingContractHelper;
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
@@ -193,6 +197,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 this.chainConfiguration.createGrandParentHeaderValidator();
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
         this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
+
+        grandParentStakingBlockHeaderValidator = chainConfig.createStakingGrandParentHeaderValidator();
+        parentStakingHeaderValidator = chainConfig.createStakingParentHeaderValidator();
+        stakingBlockHeaderValidator = chainConfig.createStakingBlockHeaderValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
 
@@ -1344,28 +1352,51 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public boolean isValid(BlockHeader header) {
 
-        /*
-         * Header should already be validated at this point, no need to check again
-         * 1. Block came in from network; validated by P2P before processing further
-         * 2. Block was submitted locally - adding invalid data to your own chain
-         */
-        //        if (!this.blockHeaderValidator.validate(header, LOG)) {
-        //            return false;
-        //        }
+        if (header.getSealType() == 0x01) {
+            /*
+             * Header should already be validated at this point, no need to check again
+             * 1. Block came in from network; validated by P2P before processing further
+             * 2. Block was submitted locally - adding invalid data to your own chain
+             */
+            //        if (!this.blockHeaderValidator.validate(header, LOG)) {
+            //            return false;
+            //        }
 
-        Block parent = this.getParent(header);
+            Block parent = this.getParent(header);
 
-        if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+            if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+                return false;
+            }
+
+            Block grandParent = this.getParent(parent.getHeader());
+
+            return this.grandParentBlockHeaderValidator.validate(
+                    grandParent == null ? null : grandParent.getHeader(),
+                    parent.getHeader(),
+                    header,
+                    LOG);
+        } else if (header.getSealType() == 0x02) {
+            if (stakingBlockHeaderValidator.validate(header, LOG)) {
+                return false;
+            }
+
+            Block parent = getParent(header);
+            if (!parentStakingHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+                return false;
+            }
+
+            Block grandParent = getParent(parent.getHeader());
+            long stakeAmount = getStakingContractHelper().callGetVote(header.getCoinbase());
+            // TODO: [unity] remove hard code stakes
+            BigInteger stake = BigInteger.valueOf(stakeAmount == 0 ? 1_000_000L : stakeAmount);
+
+            return !grandParentBlockHeaderValidator.validate(
+                    grandParent.getHeader(), parent.getHeader(), header, LOG, stake);
+
+        } else {
+            LOG.debug("Invalid header seal type!");
             return false;
         }
-
-        Block grandParent = this.getParent(parent.getHeader());
-
-        return this.grandParentBlockHeaderValidator.validate(
-                grandParent == null ? null : grandParent.getHeader(),
-                parent.getHeader(),
-                header,
-                LOG);
     }
 
     /**

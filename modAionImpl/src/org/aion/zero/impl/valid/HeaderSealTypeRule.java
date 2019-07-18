@@ -9,9 +9,7 @@ import org.aion.zero.types.StakedBlockHeader;
 
 public class HeaderSealTypeRule extends BlockHeaderRule {
 
-    @Override
-    public boolean validate(
-            BlockHeader header, List<RuleError> errors, Object... extraValidationArg) {
+    public boolean validate(BlockHeader header, List<RuleError> errors) {
 
         if (header instanceof A0BlockHeader) {
             if (header.getSealType() != 0x01) {

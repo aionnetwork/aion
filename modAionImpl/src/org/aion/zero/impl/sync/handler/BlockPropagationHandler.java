@@ -45,7 +45,9 @@ public class BlockPropagationHandler {
 
     private final IP2pMgr p2pManager;
 
-    private final BlockHeaderValidator blockHeaderValidator;
+    private final BlockHeaderValidator miningBlockHeaderValidator;
+
+    private final BlockHeaderValidator stakingBlockHeaderValidator;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -62,7 +64,8 @@ public class BlockPropagationHandler {
             final IAionBlockchain blockchain,
             final SyncStats syncStats,
             final IP2pMgr p2pManager,
-            BlockHeaderValidator headerValidator,
+            BlockHeaderValidator powHeaderValidator,
+            BlockHeaderValidator posHeaderValidator,
             final boolean isSyncOnlyNode,
             final byte apiVersion,
             final IPendingStateInternal pendingState) {
@@ -85,7 +88,8 @@ public class BlockPropagationHandler {
         // record our own nodeId to cover corner case
         this.p2pManager = p2pManager;
 
-        this.blockHeaderValidator = headerValidator;
+        this.miningBlockHeaderValidator = powHeaderValidator;
+        stakingBlockHeaderValidator = posHeaderValidator;
 
         this.isSyncOnlyNode = isSyncOnlyNode;
         this.apiVersion = apiVersion;
@@ -124,7 +128,21 @@ public class BlockPropagationHandler {
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
-        if (!this.blockHeaderValidator.validate(block.getHeader(), log)) return PropStatus.DROPPED;
+        if (block.getHeader().getSealType() == 0x01) {
+            if (!this.miningBlockHeaderValidator.validate(block.getHeader(), log)) {
+                return PropStatus.DROPPED;
+            }
+        } else if (block.getHeader().getSealType() == 0x02) {
+            if (!stakingBlockHeaderValidator.validate(block.getHeader(), log)) {
+                return PropStatus.DROPPED;
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Invalid block header type {}!, Drop the block", block.getHeader().getSealType());
+            }
+            return PropStatus.DROPPED;
+        }
+
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized (this.cacheMap) {

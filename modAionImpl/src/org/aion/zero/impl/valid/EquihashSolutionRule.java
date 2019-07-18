@@ -16,7 +16,7 @@ public class EquihashSolutionRule extends BlockHeaderRule {
     }
 
     @Override
-    public boolean validate(BlockHeader header, List<RuleError> errors, Object... extraValidationArg) {
+    public boolean validate(BlockHeader header, List<RuleError> errors) {
         A0BlockHeader minedHeader = (A0BlockHeader) header;
         return (validate(minedHeader, errors));
     }

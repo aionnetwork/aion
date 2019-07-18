@@ -18,7 +18,7 @@ public class AionExtraDataRule extends BlockHeaderRule {
 
     @Override
     public boolean validate(
-            BlockHeader header, List<RuleError> errors, Object... extraValidationArg) {
+            BlockHeader header, List<RuleError> errors) {
         if (header.getExtraData() != null
                 && header.getExtraData().length > this.maximumExtraDataSize) {
             addError(
