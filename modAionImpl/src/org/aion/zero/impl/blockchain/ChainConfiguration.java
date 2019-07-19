@@ -149,7 +149,6 @@ public class ChainConfiguration implements IChainCfg {
     public ParentBlockHeaderValidator createParentHeaderValidator() {
         return new ParentBlockHeaderValidator(
                 Arrays.asList(
-                        new BlockNumberRule(),
                         new TimeStampRule(),
                         new EnergyLimitRule(
                                 this.getConstants().getEnergyDivisorLimitLong(),
@@ -177,10 +176,14 @@ public class ChainConfiguration implements IChainCfg {
     }
 
     @Override
+    public ParentBlockHeaderValidator createChainHeaderValidator() {
+        return new ParentBlockHeaderValidator(Collections.singletonList(new BlockNumberRule()));
+    }
+
+    @Override
     public ParentBlockHeaderValidator createStakingParentHeaderValidator() {
         return new ParentBlockHeaderValidator(
                 Arrays.asList(
-                        new BlockNumberRule(),
                         new StakingSeedRule(),
                         new EnergyLimitRule(
                                 this.getConstants().getEnergyDivisorLimitLong(),

@@ -30,4 +30,6 @@ public interface IChainCfg {
     BlockHeaderValidator createStakingBlockHeaderValidator();
 
     ParentBlockHeaderValidator createStakingParentHeaderValidator();
+
+    ParentBlockHeaderValidator createChainHeaderValidator();
 }
