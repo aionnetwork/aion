@@ -24,7 +24,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected int detailsInMemoryStorageLimit;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    private byte[] performCode;
+    protected byte[] performCode;
     // classes extending this rely on this value starting off as null
     protected byte[] objectGraph = null;
 
