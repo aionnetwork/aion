@@ -53,8 +53,6 @@ public class AionPoS {
 
     private EventExecuteService ees;
 
-    private static BigInteger stakeAmount = new BigInteger("1000000");
-
     private byte[] seed = new byte[64];
 
     private final class EpPOS implements Runnable {
@@ -121,7 +119,10 @@ public class AionPoS {
 
                                         long now = System.currentTimeMillis();
 
-                                        if (((now - lastUpdate.get()) >= delta.get())) {
+                                        if (((now - lastUpdate.get()) >= delta.get())
+                                                && blockchain
+                                                        .getStakingContractHelper()
+                                                        .isContractDeployed()) {
                                             seed =
                                                     ChainConfiguration.getStakerKey()
                                                             .sign(
@@ -140,6 +141,10 @@ public class AionPoS {
                                                                     AddressUtils.wrapAddress(
                                                                             config.getConsensus()
                                                                                     .getStakerAddress()));
+                                            // TODO: [unity] might change the threshold.
+                                            if (votes < 1) {
+                                                continue;
+                                            }
 
                                             double newDelta =
                                                     newBlock.getDifficultyBI().doubleValue()
@@ -153,9 +158,7 @@ public class AionPoS {
                                                                                                     .h256(
                                                                                                             seed)))
                                                                             .doubleValue())
-                                                            / (votes == 0
-                                                                    ? stakeAmount.doubleValue()
-                                                                    : (double) votes);
+                                                            / votes;
 
                                             delta.set(Math.max((long) (newDelta * 1000), 100));
                                         }
@@ -178,7 +181,7 @@ public class AionPoS {
         eventMgr.registerEvent(txEvts);
 
         List<IEvent> events = new ArrayList<>();
-        events.add(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
+        events.add(new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE));
         events.add(new EventConsensus(CALLBACK.ON_STAKE_SIG));
         eventMgr.registerEvent(events);
     }
@@ -290,7 +293,7 @@ public class AionPoS {
 
             StakingBlock newBlock = (StakingBlock) blockchain.createNewBlock(bestBlock, txs, seed);
 
-            EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
+            EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));
             eventMgr.newEvent(ev);
 

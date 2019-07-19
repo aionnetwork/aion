@@ -1,5 +1,6 @@
 package org.aion.zero.impl.blockchain;
 
+import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.zero.impl.blockchain.AionImpl.keyForCallandEstimate;
 
 import avm.Address;
@@ -12,6 +13,8 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -34,8 +37,9 @@ public class StakingContractHelper {
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     private static byte[] abiGetVote = ABIEncoder.encodeOneString("getVote");
-    private static byte[] abiTotalStaking = ABIEncoder.encodeOneString("totalStaking");
     private static byte[] abiRegister = ABIEncoder.encodeOneString("register");
+
+    private static boolean deployed = false;
 
     public StakingContractHelper(
             AionAddress contractDestination, ECKey key, AionBlockchainImpl _chain) {
@@ -56,6 +60,18 @@ public class StakingContractHelper {
         stakerKey = key;
         stakerAddress = new AionAddress(stakerKey.getAddress());
         chain = _chain;
+    }
+
+    public boolean isContractDeployed() {
+
+        if (!deployed) {
+            Repository r = chain.getRepository().startTracking();
+            AccountState as = (AccountState) r.getAccountState(stakingContractAddr);
+            deployed = !Arrays.equals(as.getCodeHash(), EMPTY_DATA_HASH);
+        }
+
+        //Once found contract has been deployed, no need to ask the db again.
+        return deployed;
     }
 
     static AionAddress getStakingContractAddress() {
@@ -82,27 +98,6 @@ public class StakingContractHelper {
         AionTxReceipt receipt = callConstant(callTx);
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
-            // TODO: [unity] handle the error case.
-            return 0;
-        }
-
-        return new ABIDecoder(receipt.getTransactionOutput()).decodeOneLong();
-    }
-
-    public long callTotalStaking() {
-        AionTransaction callTx =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        stakerAddress,
-                        stakingContractAddr,
-                        BigInteger.ZERO.toByteArray(),
-                        abiTotalStaking,
-                        2_000_000,
-                        TransactionTypes.DEFAULT);
-
-        AionTxReceipt receipt = callConstant(callTx);
-
-        if (receipt == null) {
             // TODO: [unity] handle the error case.
             return 0;
         }

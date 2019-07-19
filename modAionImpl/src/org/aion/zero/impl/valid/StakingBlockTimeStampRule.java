@@ -6,18 +6,15 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.valid.DependentBlockHeaderRule;
+import org.aion.mcf.valid.DependentBlockHeaderRuleWithArg;
 import org.aion.zero.types.StakedBlockHeader;
 
-public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
+public class StakingBlockTimeStampRule extends DependentBlockHeaderRuleWithArg {
 
     private static BigInteger boundry = BigInteger.TWO.pow(256);
 
     @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object... extraArgs) {
-        if (extraArgs == null || extraArgs.length < 1) {
-            return false;
-        }
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object _stake) {
 
         if (!(header instanceof StakedBlockHeader)) {
             throw new IllegalStateException("Invalid header input");
@@ -27,13 +24,13 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
             throw new IllegalStateException("Invalid parent header input");
         }
 
-        long parentTimeStamp = dependency.getTimestamp();
-
-        BigInteger stake = (BigInteger) extraArgs[0];
-        if (stake == null) {
-            throw new IllegalStateException("Invalid stake input");
+        if (_stake == null) {
+            throw  new IllegalStateException("InValid arg input");
         }
 
+        long parentTimeStamp = dependency.getTimestamp();
+
+        BigInteger stake = (BigInteger) _stake;
         long timeStamp = header.getTimestamp();
         BigInteger blockDifficulty = header.getDifficultyBI();
 

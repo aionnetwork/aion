@@ -16,7 +16,8 @@ public class EventConsensus extends AbstractEvent implements IEvent {
         ON_BLOCK_TEMPLATE(1),
 
         ON_SOLUTION(2),
-        ON_STAKE_SIG(3);
+        ON_STAKE_SIG(3),
+        ON_STAKING_BLOCK_TEMPLATE(4);
 
         static final int MAX = 127;
         static final int MIN = 0;

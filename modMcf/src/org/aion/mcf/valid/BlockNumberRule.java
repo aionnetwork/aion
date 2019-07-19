@@ -6,11 +6,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 public class BlockNumberRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(
-            BlockHeader header,
-            BlockHeader parent,
-            List<RuleError> errors,
-            Object... extraValidationArg) {
+    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
         if (header.getNumber() != (parent.getNumber() + 1)) {
             addError(formatError(header.getNumber(), parent.getNumber()), errors);
             return false;

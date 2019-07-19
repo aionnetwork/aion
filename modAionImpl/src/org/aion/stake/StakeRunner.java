@@ -58,7 +58,7 @@ public class StakeRunner implements StakeRunnerInterface {
                 IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
                         && e.getCallbackType()
-                                == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
+                                == EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE.getValue()) {
                     StakeRunner.this.onBlockTemplate((StakingBlock) e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
@@ -100,7 +100,7 @@ public class StakeRunner implements StakeRunnerInterface {
         Set<Integer> eventSN = new HashSet<>();
 
         int sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
-        eventSN.add(sn + EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue());
+        eventSN.add(sn + EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE.getValue());
 
         return eventSN;
     }

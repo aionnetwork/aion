@@ -1,5 +1,7 @@
 package org.aion.mcf.valid;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
@@ -12,12 +14,21 @@ public class ParentBlockHeaderValidator
         extends AbstractBlockHeaderValidator {
 
     private List<DependentBlockHeaderRule> rules;
+    private List<DependentBlockHeaderRuleWithArg> argRules;
+
 
     public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> rules) {
         this.rules = rules;
+        argRules = new ArrayList<>();
     }
 
-    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger) {
+    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> _rules, List<DependentBlockHeaderRuleWithArg> _argRules) {
+        rules = _rules;
+        argRules = _argRules;
+    }
+
+
+    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger, BigInteger stake) {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
         for (DependentBlockHeaderRule rule : rules) {
@@ -26,6 +37,14 @@ public class ParentBlockHeaderValidator
                 return false;
             }
         }
+
+        for (DependentBlockHeaderRuleWithArg rule : argRules) {
+            if (!rule.validate(header, parent, errors, stake)) {
+                if (logger != null) logErrors(logger, errors);
+                return false;
+            }
+        }
+
         return true;
     }
 }

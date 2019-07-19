@@ -1364,7 +1364,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             Block parent = this.getParent(header);
 
-            if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+            if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
                 return false;
             }
 
@@ -1381,17 +1381,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             Block parent = getParent(header);
-            if (!parentStakingHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+            long stakeAmount = getStakingContractHelper().callGetVote(header.getCoinbase());
+            BigInteger stake = BigInteger.valueOf(stakeAmount);
+
+            if (!parentStakingHeaderValidator.validate(header, parent.getHeader(), LOG, stake)) {
                 return false;
             }
 
             Block grandParent = getParent(parent.getHeader());
-            long stakeAmount = getStakingContractHelper().callGetVote(header.getCoinbase());
-            // TODO: [unity] remove hard code stakes
-            BigInteger stake = BigInteger.valueOf(stakeAmount == 0 ? 1_000_000L : stakeAmount);
-
-            return !grandParentBlockHeaderValidator.validate(
-                    grandParent.getHeader(), parent.getHeader(), header, LOG, stake);
+            return !grandParentStakingBlockHeaderValidator.validate(
+                    grandParent.getHeader(), parent.getHeader(), header, LOG);
 
         } else {
             LOG.debug("Invalid header seal type!");

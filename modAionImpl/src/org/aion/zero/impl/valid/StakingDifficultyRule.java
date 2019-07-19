@@ -31,8 +31,7 @@ public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
             BlockHeader grandParent,
             BlockHeader parent,
             BlockHeader current,
-            List<RuleError> errors,
-            Object... extraArgs) {
+            List<RuleError> errors) {
 
         if (!(current instanceof StakedBlockHeader)) {
             throw new IllegalStateException("Invalid header input");

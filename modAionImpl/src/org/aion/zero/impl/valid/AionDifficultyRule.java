@@ -32,8 +32,7 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
             BlockHeader grandParent,
             BlockHeader parent,
             BlockHeader current,
-            List<RuleError> errors,
-            Object... extraValidationArg) {
+            List<RuleError> errors) {
 
         BigInteger currDiff = current.getDifficultyBI();
 

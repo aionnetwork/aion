@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -57,13 +56,10 @@ public class ChainConfiguration implements IChainCfg {
 
     private static ECKey key = ECKeyFac.inst().fromPrivate(privateKey);
 
-    protected AionAddress tokenBridgingOwnerAddress;
-    protected static AionAddress stakingContractAddress =
+    private static AionAddress stakingContractAddress =
             new AionAddress(
-                    HashUtil.calcNewAddr(
-                            ByteUtil.hexStringToBytes(
-                                    "0xa04e84bdc25561f1bad0ae43b2ceb8f36c66d4392fedf5bb410b0d8ebb259985"),
-                            BigInteger.ZERO.toByteArray()));
+                    ByteUtil.hexStringToBytes(
+                            "a056337bb14e818f3f53e13ab0d93b6539aa570cba91ce65c716058241989be9"));
 
     public ChainConfiguration(final Long monetaryUpdateBlkNum, final BigInteger initialSupply) {
         this(new BlockConstants(), monetaryUpdateBlkNum, initialSupply);
@@ -185,11 +181,11 @@ public class ChainConfiguration implements IChainCfg {
         return new ParentBlockHeaderValidator(
                 Arrays.asList(
                         new BlockNumberRule(),
-                        new StakingBlockTimeStampRule(),
                         new StakingSeedRule(),
                         new EnergyLimitRule(
                                 this.getConstants().getEnergyDivisorLimitLong(),
-                                this.getConstants().getEnergyLowerBoundLong())));
+                                this.getConstants().getEnergyLowerBoundLong())),
+                Collections.singletonList(new StakingBlockTimeStampRule()));
     }
 
     public GrandParentBlockHeaderValidator createStakingGrandParentHeaderValidator() {

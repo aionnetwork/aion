@@ -3,7 +3,6 @@ package org.aion.mcf.valid;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
-import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 
 /** A class of rules that requires memory of the previous block */
 public abstract class DependentBlockHeaderRule extends AbstractValidRule {
@@ -13,5 +12,5 @@ public abstract class DependentBlockHeaderRule extends AbstractValidRule {
      * dependency} represents the {@code memory} required to validate whether the current block is
      * correct. Most likely the {@code memory} refers to the previous block
      */
-    public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object... extraValidationArg);
+    public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors);
 }

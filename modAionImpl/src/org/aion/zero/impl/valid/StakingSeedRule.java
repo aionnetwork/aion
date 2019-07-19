@@ -1,5 +1,6 @@
 package org.aion.zero.impl.valid;
 
+import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.BlockHeader;
@@ -10,14 +11,7 @@ import org.aion.zero.types.StakedBlockHeader;
 public class StakingSeedRule extends DependentBlockHeaderRule {
 
     @Override
-    public boolean validate(
-            BlockHeader header,
-            BlockHeader dependency,
-            List<RuleError> errors,
-            Object... extraArgs) {
-        if (extraArgs == null || extraArgs.length < 1) {
-            return false;
-        }
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
 
         if (!(header instanceof StakedBlockHeader)) {
             throw new IllegalStateException("Invalid header input");

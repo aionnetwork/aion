@@ -41,7 +41,8 @@ public class EventConsensusTest {
                 EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE, EventConsensus.CALLBACK.GETCALLBACK(1));
         assertEquals(EventConsensus.CALLBACK.ON_SOLUTION, EventConsensus.CALLBACK.GETCALLBACK(2));
         assertEquals(CALLBACK.ON_STAKE_SIG, EventConsensus.CALLBACK.GETCALLBACK(3));
+        assertEquals(CALLBACK.ON_STAKING_BLOCK_TEMPLATE, EventConsensus.CALLBACK.GETCALLBACK(4));
         assertNull(EventConsensus.CALLBACK.GETCALLBACK(-1));
-        assertNull(EventConsensus.CALLBACK.GETCALLBACK(4));
+        assertNull(EventConsensus.CALLBACK.GETCALLBACK(5));
     }
 }

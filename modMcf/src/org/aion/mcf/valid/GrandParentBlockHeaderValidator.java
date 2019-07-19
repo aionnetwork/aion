@@ -27,16 +27,4 @@ public class GrandParentBlockHeaderValidator
         }
         return true;
     }
-
-    public boolean validate(BlockHeader grandParent, BlockHeader parent, BlockHeader current, Logger logger, BigInteger stake) {
-        List<IValidRule.RuleError> errors = new LinkedList<>();
-
-        for (GrandParentDependantBlockHeaderRule rule : rules) {
-            if (!rule.validate(grandParent, parent, current, errors, stake)) {
-                if (logger != null) logErrors(logger, errors);
-                return false;
-            }
-        }
-        return true;
-    }
 }
