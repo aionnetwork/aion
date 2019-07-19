@@ -11,7 +11,7 @@ configparser==3.5.0
 crcmod==1.7
 cryptography==2.5
 enum34==1.1.6
-Flask==0.12.2
+Flask==1.0
 google-auth==1.6.2
 idna==2.8
 ipaddress==1.0.22
