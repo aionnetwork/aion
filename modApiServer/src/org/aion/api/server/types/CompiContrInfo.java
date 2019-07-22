@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.solidity.Abi.Entry;
+import org.aion.solidity.Entry;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

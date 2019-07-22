@@ -668,7 +668,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                                 CompiledContr _contr = entry.getValue();
                                 JSONArray abi = new JSONArray();
-                                for (Abi.Entry f : _contr.info.abiDefinition) {
+                                for (org.aion.solidity.Entry f : _contr.info.abiDefinition) {
                                     abi.put(f.toJSON());
                                 }
 
@@ -744,7 +744,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                                 CompiledContr _contr = entry.getValue();
                                 JSONArray abi = new JSONArray();
-                                for (Abi.Entry f : _contr.info.abiDefinition) {
+                                for (org.aion.solidity.Entry f : _contr.info.abiDefinition) {
                                     abi.put(f.toJSON());
                                 }
 
