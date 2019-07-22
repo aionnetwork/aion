@@ -73,4 +73,8 @@ public interface Block {
     void setExtraData(byte[] data);
     
     byte[] getExtraData();
+
+    byte[] getAntiparentHash();
+
+    void setAntiparentHash(byte[] antiparentHash);
 }

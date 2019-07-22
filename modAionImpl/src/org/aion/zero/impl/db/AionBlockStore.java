@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -190,7 +191,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
             }
         }
 
-        blockInfos.add(new BlockInfo(block.getHash(), cummDifficulty, mainChain));
+        blockInfos.add(new BlockInfo(block.getHash(), block.getAntiparentHash(), cummDifficulty, mainChain));
 
         blocks.put(block.getHash(), block);
         index.set(block.getNumber(), blockInfos);
@@ -248,6 +249,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                     Block block = blocks.get(hash);
                     if (block != null) {
                         block.setCumulativeDifficulty(blockInfo.cummDifficulty);
+                        block.setAntiparentHash(blockInfo.getSealAntiparentHash());
                         return block;
                     }
                 }
@@ -287,6 +289,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 }
 
                 b.setCumulativeDifficulty(blockInfo.cummDifficulty);
+                b.setAntiparentHash(blockInfo.getSealAntiparentHash());
                 blockList.add(b);
             }
 
@@ -882,6 +885,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                         blockInfo =
                                 new BlockInfo(
                                         bestLine.getHash(),
+                                        bestLine.getAntiparentHash(),
                                         getTotalDifficultyForHash(bestLine.getParentHash())
                                                 .add(bestLine.getHeader().getDifficultyBI()),
                                         true);
@@ -978,7 +982,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
         }
 
         // set new block info with total difficulty = block difficulty
-        blockInfo = new BlockInfo(blockHash, block.getHeader().getDifficultyBI(), true);
+        blockInfo = new BlockInfo(blockHash, block.getAntiparentHash(), block.getHeader().getDifficultyBI(), true);
 
         levelBlocks = new ArrayList<>();
         levelBlocks.add(blockInfo);
@@ -1002,6 +1006,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
             levelBlocks.add(
                     new BlockInfo(
                             blockInfo.getHash(),
+                            blockInfo.getSealAntiparentHash(),
                             blockInfo.getCummDifficulty().add(parentTotalDifficulty),
                             blockInfo.isMainChain()));
             setBlockInfoForLevel(level, levelBlocks);
@@ -1025,6 +1030,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
             BlockInfo blockInfo =
                     new BlockInfo(
                             block.getHash(),
+                            block.getAntiparentHash(),
                             block.getDifficultyBI().add(parentTotalDifficulty),
                             false);
 
@@ -1308,21 +1314,27 @@ public class AionBlockStore extends AbstractPowBlockstore {
     }
 
     public static class BlockInfo implements Serializable {
-
         /**
-         * Constructor of the BlockInfo instead of the default constructor, requires 3 arguments
+         * Constructor of the BlockInfo instead of the default constructor, requires 4 arguments
          * input.
          *
          * @param hash block hash
+         * @param sealAntiparentHash block hash of the sealAntiparent (the ancestor block of opposite sealType)
          * @param cummDifficulty the cummulateDifficulty of this block
          * @param mainChain is belong to mainchain block
          */
-        public BlockInfo(byte[] hash, BigInteger cummDifficulty, boolean mainChain) {
+        public BlockInfo(byte[] hash, byte[] sealAntiparentHash, BigInteger cummDifficulty, boolean mainChain) {
             if (hash == null || cummDifficulty == null || cummDifficulty.signum() == -1) {
                 throw new IllegalArgumentException();
             }
 
             this.hash = hash;
+            if (sealAntiparentHash != null) {
+                this.sealAntiparentHash = sealAntiparentHash;
+            } else {
+                //TODO: [Unity] This case should likely never happen by the end of Unity work
+                this.sealAntiparentHash = HashUtil.EMPTY_DATA_HASH;
+            }
             this.cummDifficulty = cummDifficulty;
             this.mainChain = mainChain;
         }
@@ -1342,11 +1354,14 @@ public class AionBlockStore extends AbstractPowBlockstore {
             byte[] boolData = list.get(2).getRLPData();
             this.mainChain =
                     !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
+            this.sealAntiparentHash = list.get(3).getRLPData();
         }
 
         private static final long serialVersionUID = 7279277944605144671L;
 
         private byte[] hash;
+        
+        private byte[] sealAntiparentHash;
 
         private BigInteger cummDifficulty;
 
@@ -1354,6 +1369,10 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
         public byte[] getHash() {
             return hash;
+        }
+
+        public byte[] getSealAntiparentHash() {
+            return sealAntiparentHash;
         }
 
         public BigInteger getCummDifficulty() {
@@ -1377,7 +1396,8 @@ public class AionBlockStore extends AbstractPowBlockstore {
             byte[] hashElement = RLP.encodeElement(hash);
             byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
             byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
-            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement);
+            byte[] antiParentElement = RLP.encodeElement(sealAntiparentHash);
+            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement, antiParentElement);
         }
     }
 
@@ -1600,7 +1620,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
                 for (BlockInfo bi : infos) {
                     block = getBlockByHash(bi.getHash());
-                    bi = new BlockInfo(block.getHash(), block.getDifficultyBI(), bi.isMainChain());
+                    bi = new BlockInfo(block.getHash(), block.getAntiparentHash(), block.getDifficultyBI(), bi.isMainChain());
                     LOG_CONS.info(
                             "Correcting total difficulty for block hash: {} number: {} to {}.",
                             block.getShortHash(),
@@ -1627,6 +1647,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                         bi =
                                 new BlockInfo(
                                         block.getHash(),
+                                        block.getAntiparentHash(),
                                         block.getDifficultyBI()
                                                 .add(
                                                         getTotalDifficultyForHash(

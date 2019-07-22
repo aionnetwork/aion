@@ -5,12 +5,14 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
+import org.aion.stake.GenesisStakingBlock;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
@@ -334,6 +336,17 @@ public class AionGenesis extends AionBlock {
             // temporary solution, so as not to disrupt the constructors
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
+
+            /**
+             * Corresponds to {@link Block#getAntiparentHash()}, for purposes of the genesis
+             * blocks, this value is the "virtual" staking genesis block, on top of which the first real staking block is based.
+             */
+            try {
+              byte[] antiParenthHash = new GenesisStakingBlock(null).getHash();
+              genesis.setAntiparentHash(antiParenthHash);
+            } catch (HeaderStructureException e) {
+                e.printStackTrace(); 
+            }
 
             byte[] rootHash = generateRootHash();
 

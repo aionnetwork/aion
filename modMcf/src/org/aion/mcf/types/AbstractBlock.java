@@ -18,6 +18,9 @@ public abstract class AbstractBlock implements Block {
 
     /** use for cli tooling */
     protected Boolean mainChain;
+    
+    // set from BlockInfos in index database
+    protected byte[] antiparentHash;
 
     protected List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -68,4 +71,13 @@ public abstract class AbstractBlock implements Block {
     public void setMainChain() {
         mainChain = true;
     }
+
+    public byte[] getAntiparentHash() {
+        return antiparentHash;
+    }
+
+    public void setAntiparentHash(byte[] antiparentHash) {
+        this.antiparentHash = antiparentHash;
+    }
+
 }
