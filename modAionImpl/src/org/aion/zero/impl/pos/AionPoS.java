@@ -126,9 +126,8 @@ public class AionPoS {
                                             seed =
                                                     ChainConfiguration.getStakerKey()
                                                             .sign(
-                                                                    ((StakingBlock)
-                                                                                    blockchain
-                                                                                            .getBestBlock())
+                                                                    (blockchain
+                                                                                    .getBestStakingBlock())
                                                                             .getSeed())
                                                             .getSignature();
 
@@ -285,13 +284,13 @@ public class AionPoS {
                 LOG.debug("Creating a new block template");
             }
 
-            StakingBlock bestBlock =
-                    (StakingBlock)
-                            blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
+            long bestBlockNumber = blockchain.getBestBlock().getNumber();
+
+            StakingBlock bestStakingBlock = blockchain.getBestStakingBlock();
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            StakingBlock newBlock = (StakingBlock) blockchain.createNewBlock(bestBlock, txs, seed);
+            StakingBlock newBlock = (StakingBlock) blockchain.createNewStakingBlock(bestStakingBlock, txs, seed);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

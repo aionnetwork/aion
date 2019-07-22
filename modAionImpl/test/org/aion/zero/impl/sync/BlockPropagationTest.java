@@ -300,7 +300,7 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        AionBlock block =
+        Block block =
                 bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
@@ -356,7 +356,7 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        AionBlock block =
+        Block block =
                 bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
@@ -426,7 +426,7 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        AionBlock block =
+        Block block =
                 bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
@@ -494,7 +494,7 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        AionBlock block =
+        Block block =
                 bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 

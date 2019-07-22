@@ -26,7 +26,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.mcf.types.AionTxExecSummary;
@@ -102,7 +101,7 @@ public class AvmBulkTransactionTest {
                         TransactionTypes.AVM_CREATE_CODE);
 
         Block parentBlock = blockchain.getBestBlock();
-        AionBlock block =
+        Block block =
                 blockchain.createBlock(
                         parentBlock,
                         List.of(deployEmptyContractTx),
@@ -455,7 +454,7 @@ public class AvmBulkTransactionTest {
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
             List<AionTransaction> transactions) {
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block =
+        Block block =
                 this.blockchain.createBlock(
                         parentBlock, transactions, false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult =

@@ -27,7 +27,6 @@ import org.aion.util.types.Hash256;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,7 +41,7 @@ public class BlockchainConcurrentImportTest {
 
     private static StandaloneBlockchain testChain;
     private static StandaloneBlockchain sourceChain;
-    private static List<AionBlock> knownBlocks = new ArrayList<>();
+    private static List<Block> knownBlocks = new ArrayList<>();
 
     private static final List<ECKey> accounts = generateAccounts(10);
     private static final int MAX_TX_PER_BLOCK = 60;
@@ -78,7 +77,7 @@ public class BlockchainConcurrentImportTest {
         System.out.format("%nGenerating %d input blocks...%n", CONCURRENT_THREADS_PER_TYPE);
 
         Random rand = new Random();
-        AionBlock parent, block, mainChain;
+        Block parent, block, mainChain;
         mainChain = sourceChain.getGenesis();
         knownBlocks.add(mainChain);
 
@@ -143,7 +142,7 @@ public class BlockchainConcurrentImportTest {
      * @param _block the block to import
      */
     private void addThread_tryToConnect(
-            List<Runnable> _threads, StandaloneBlockchain _chain, AionBlock _block) {
+            List<Runnable> _threads, StandaloneBlockchain _chain, Block _block) {
         _threads.add(
                 () -> {
                     testChain.assertEqualTotalDifficulty();
@@ -199,13 +198,13 @@ public class BlockchainConcurrentImportTest {
     private void addThread_tryToConnect(
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
-            ConcurrentLinkedQueue<AionBlock> _queue,
-            ConcurrentLinkedQueue<AionBlock> _imported) {
+            ConcurrentLinkedQueue<Block> _queue,
+            ConcurrentLinkedQueue<Block> _imported) {
         _threads.add(
                 () -> {
 
                     // get next block from queue
-                    AionBlock _block = _queue.poll();
+                    Block _block = _queue.poll();
 
                     if (_block != null) {
 
@@ -273,9 +272,9 @@ public class BlockchainConcurrentImportTest {
     private void addThread_createNewBlock(
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
-            AionBlock _parent,
+            Block _parent,
             int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue) {
+            ConcurrentLinkedQueue<Block> _queue) {
         _threads.add(
                 () -> {
 
@@ -290,7 +289,7 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
+                        Block block = _chain.createNewBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 
@@ -339,7 +338,7 @@ public class BlockchainConcurrentImportTest {
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
             int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue,
+            ConcurrentLinkedQueue<Block> _queue,
             int _startHeight) {
         _threads.add(
                 () -> {
@@ -357,7 +356,7 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
+                        Block block = _chain.createNewBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 
@@ -389,11 +388,11 @@ public class BlockchainConcurrentImportTest {
         List<Runnable> threads = new ArrayList<>();
 
         int start = (int) sourceChain.getBestBlock().getNumber() - 1;
-        ConcurrentLinkedQueue<AionBlock> queue = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<AionBlock> imported = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Block> queue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Block> imported = new ConcurrentLinkedQueue<>();
 
         int blockCount = CONCURRENT_THREADS_PER_TYPE + 1;
-        for (AionBlock blk : knownBlocks) {
+        for (Block blk : knownBlocks) {
             // connect to known blocks
             addThread_tryToConnect(threads, testChain, blk);
 
@@ -426,7 +425,7 @@ public class BlockchainConcurrentImportTest {
 
         // adding new blocks to source chain
         System.out.format("%nAdding new blocks to source chain for testing...%n");
-        AionBlock block = imported.poll();
+        Block block = imported.poll();
 
         while (block != null) {
             ImportResult result = sourceChain.tryToConnect(block);
@@ -453,7 +452,7 @@ public class BlockchainConcurrentImportTest {
         AionBlockStore sourceStore = sourceChain.getBlockStore();
 
         // comparing total diff for each block of the two chains
-        for (AionBlock blk : knownBlocks) {
+        for (Block blk : knownBlocks) {
             assertThat(testChain.getBlockStore().getTotalDifficultyForHash(blk.getHash()))
                     .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
             Hash256 hash = new Hash256(blk.getHash());

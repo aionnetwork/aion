@@ -10,21 +10,33 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.blockchain.StakingContractHelper;
 import org.aion.zero.impl.sync.DatabaseType;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.StakingBlock;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain extends IBlockchain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 
+    //TODO : [unity] remove it cause might dont need this call anymore.
     Block createNewBlock(
-            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+        Block parent,
+            List<AionTransaction> transactions,
+            boolean waitUntilBlockTime);
 
-    Block createNewBlock(
-        Block parent, List<AionTransaction> transactions, byte[] seed);
+    Block createNewMiningBlock(
+            Block parent,
+            List<AionTransaction> transactions,
+            boolean waitUntilBlockTime);
+
+    Block createNewStakingBlock(
+            Block parent, List<AionTransaction> transactions, byte[] seed);
 
     BlockContext createNewBlockContext(
-            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+        Block parent,
+        List<AionTransaction> transactions,
+        boolean waitUntilBlockTime);
 
     Block getBestBlock();
 
@@ -94,4 +106,18 @@ public interface IAionBlockchain extends IBlockchain {
             byte[] value, int limit, DatabaseType dbType);
 
     StakingContractHelper getStakingContractHelper();
+
+    StakingBlock getBestStakingBlock();
+
+    AionBlock getBestMiningBlock();
+
+    void setBestStakingBlock(StakingBlock block);
+
+    void setBestMiningBlock(AionBlock block);
+
+    void loadBestMiningBlock();
+
+    void loadBestStakingBlock();
+
+
 }

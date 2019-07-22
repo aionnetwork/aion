@@ -15,6 +15,7 @@ import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -22,7 +23,6 @@ import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.AvmLogTarget;
 import org.aion.mcf.types.AionTxReceipt;
@@ -127,7 +127,7 @@ public class AvmLogAndInternalTransactionTest {
                         1,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block =
+        Block block =
                 this.blockchain.createBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
@@ -150,7 +150,7 @@ public class AvmLogAndInternalTransactionTest {
                         1,
                         TransactionTypes.AVM_CREATE_CODE);
 
-        AionBlock block =
+        Block block =
                 this.blockchain.createBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),

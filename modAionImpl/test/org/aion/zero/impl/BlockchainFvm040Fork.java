@@ -12,11 +12,11 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -196,7 +196,7 @@ public class BlockchainFvm040Fork {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block1 =
+        Block block1 =
                 bc.createNewBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
 
         Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(block1);
@@ -217,7 +217,7 @@ public class BlockchainFvm040Fork {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
+        Block block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block2);
         assertSame(result.getLeft(), ImportResult.IMPORTED_BEST);
         assertEquals(
@@ -236,7 +236,7 @@ public class BlockchainFvm040Fork {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
+        Block block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block3);
 
         assertSame(result.getLeft(), ImportResult.IMPORTED_BEST);

@@ -16,6 +16,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.TransactionTypeRule;
@@ -26,7 +27,6 @@ import org.aion.util.time.TimeInstant;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.mcf.types.AionTxReceipt;
@@ -158,7 +158,7 @@ public class PendingStateTest {
 
         assertEquals(pendingState.addPendingTransaction(createTransaction), TxResponse.SUCCESS);
 
-        AionBlock block =
+        Block block =
                 blockchain.createNewBlock(
                         blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult =
@@ -371,7 +371,7 @@ public class PendingStateTest {
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 
-        AionBlock block =
+        Block block =
             blockchain.createNewBlock(
                 blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
@@ -723,7 +723,7 @@ public class PendingStateTest {
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 
-        AionBlock block =
+        Block block =
             blockchain.createNewBlock(
                 blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);

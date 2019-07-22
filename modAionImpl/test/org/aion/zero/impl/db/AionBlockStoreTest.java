@@ -141,9 +141,9 @@ public class AionBlockStoreTest {
 
     @Test
     public void testGetBlocksByRange_withAscendingOrder() {
-        Block first = consecutiveBlocks.get(0);
+        Block first =  consecutiveBlocks.get(0);
         Block middle = consecutiveBlocks.get(1);
-        Block last = consecutiveBlocks.get(2);
+        Block last =  consecutiveBlocks.get(2);
 
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);

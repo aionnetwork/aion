@@ -23,7 +23,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.mcf.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
@@ -101,7 +100,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getParentHash()).isEqualTo(bc.getGenesis().getHash());
     }
 
@@ -132,7 +131,8 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+
+        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
         assertThat(block.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
@@ -170,7 +170,7 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(1);
         assertThat(block.getTransactionsList().get(0)).isEqualTo(tx);
@@ -198,7 +198,7 @@ public class BlockchainIntegrationTest {
                         .build();
         StandaloneBlockchain bc = bundle.bc;
         Block parent = bc.getBestBlock();
-        AionBlock block =
+        Block block =
                 bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
         // set the block to be created 1 month in the future
@@ -240,7 +240,7 @@ public class BlockchainIntegrationTest {
                         TransactionTypes.DEFAULT);
 
         // create a new block containing a single transaction (tx)
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         // import the block to our blockchain
         ImportResult connection = bc.tryToConnect(block);
@@ -276,7 +276,7 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block =
+        Block block =
                 blockchain.createNewBlock(
                         blockchain.getGenesis(), Arrays.asList(contractDeploymentTx), true);
 
@@ -319,7 +319,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain bc = bundle.bc;
 
         // store this as the best block,
-        AionBlock block = bundle.bc.createNewBlock(bc.getGenesis(), Collections.emptyList(), true);
+        Block block = bundle.bc.createNewBlock(bc.getGenesis(), Collections.emptyList(), true);
         byte[] block1Hash = block.getHash();
 
         // now modify this block to have a different value after connecting
@@ -327,14 +327,14 @@ public class BlockchainIntegrationTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now modify the block in some way
-        block.getHeader().setEnergyConsumed(42L);
+        ((A0BlockHeader)block.getHeader()).setEnergyConsumed(42L);
 
         // now try submitting the block again
         result = bundle.bc.tryToConnect(block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // now try creating a new block
-        AionBlock newBlock =
+        Block newBlock =
                 bundle.bc.createNewBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
 
         // gets the first main-chain block

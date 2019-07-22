@@ -17,7 +17,6 @@ import org.aion.zero.impl.sync.SyncStats;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
-import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
@@ -123,7 +122,7 @@ public class BlockPropagationHandler {
     }
 
     public PropStatus processIncomingBlock(
-            final int nodeId, final String displayId, final AionBlock block) {
+            final int nodeId, final String displayId, final Block block) {
         if (block == null) return PropStatus.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
@@ -269,7 +268,7 @@ public class BlockPropagationHandler {
         return PropStatus.DROPPED;
     }
 
-    private boolean send(AionBlock block, int nodeId) {
+    private boolean send(Block block, int nodeId) {
         if (isSyncOnlyNode) return true;
 
         // current proposal is to send to all peers with lower blockNumbers

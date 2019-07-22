@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
@@ -34,7 +35,7 @@ public class BlockchainRewardTest {
                         .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         ImportResult res = bc.tryToConnect(block);
         assertThat(res).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -43,7 +44,7 @@ public class BlockchainRewardTest {
 
         // first block already sealed
         for (int i = 2; i < 99999; i++) {
-            AionBlock b = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+            Block b = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
             ImportResult r = bc.tryToConnect(b);
             assertThat(r).isEqualTo(ImportResult.IMPORTED_BEST);
 

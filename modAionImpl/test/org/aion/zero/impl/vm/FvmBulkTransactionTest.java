@@ -18,7 +18,6 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.mcf.types.AionTxExecSummary;
@@ -133,7 +132,7 @@ public class FvmBulkTransactionTest {
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
             List<AionTransaction> transactions) {
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block =
+        Block block =
                 this.blockchain.createBlock(
                         parentBlock, transactions, false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult =

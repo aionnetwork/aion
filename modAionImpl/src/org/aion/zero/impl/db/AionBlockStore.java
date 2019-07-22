@@ -332,6 +332,8 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
                 for (long i = first - 1; i >= (last > 0 ? last : 1); i--) {
                     block = getBlockByHash(block.getParentHash());
+                    //TODO : [unity] might need to fix it.
+                    //block = getChainBlockByNumber(i);
                     if (block == null) {
                         // the block should have been stored but null was returned above
                         LOG.error(
@@ -378,6 +380,8 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 long newLast = lastBlock.getNumber();
                 for (long i = newLast - 1; i > first; i--) {
                     lastBlock = getBlockByHash(lastBlock.getParentHash());
+                    //TODO : [unity] might need to fix it.
+                    //lastBlock = getChainBlockByNumber(i);
                     if (lastBlock == null) {
                         LOG.error(
                                 "Encountered a kernel database corruption: cannot find block at level {} in block data store.",
