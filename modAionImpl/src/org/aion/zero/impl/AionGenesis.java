@@ -342,7 +342,7 @@ public class AionGenesis extends AionBlock {
              * blocks, this value is the "virtual" staking genesis block, on top of which the first real staking block is based.
              */
             try {
-              byte[] antiParenthHash = new GenesisStakingBlock(null).getHash();
+              byte[] antiParenthHash = new GenesisStakingBlock(extraData).getHash();
               genesis.setAntiparentHash(antiParenthHash);
             } catch (HeaderStructureException e) {
                 e.printStackTrace(); 

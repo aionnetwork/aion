@@ -51,6 +51,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.types.BlockIdentifier;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
@@ -730,19 +731,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
     public void loadBestMiningBlock() {
-        long previousBlockNumber = bestBlock.getNumber() - 1;
-        while (bestMiningBlock == null) {
-            Block b = getBlockStore().getChainBlockByNumber(previousBlockNumber--);
-            if (b instanceof AionBlock) {
-                bestMiningBlock = (AionBlock) b;
-            }
+        if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+            bestMiningBlock = (AionBlock) bestBlock;
+        } else {
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
         }
     }
 
     @Override
     public void loadBestStakingBlock() {
         long bestBlockNumber = bestBlock.getNumber();
-        while (bestStakingBlock == null) {
+
+        if (bestStakingBlock == null) {
             if (bestBlockNumber == 0) {
                 try {
                     bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
@@ -750,9 +750,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     throw new IllegalStateException(e);
                 }
             } else {
-                Block b = getBlockStore().getChainBlockByNumber(--bestBlockNumber);
-                if (b instanceof StakingBlock) {
-                    bestStakingBlock = (StakingBlock) b;
+                if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+                    bestStakingBlock = (StakingBlock) bestBlock;
+                } else {
+                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
                 }
             }
         }
@@ -1124,17 +1125,32 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new RuntimeException(e);
         }
 
-        Block grandParent = this.getParent(parentHdr);
+        Block grandParentStakingBlock = null;
+        BlockHeader parentStakingBlockHeader = null;
+
+        if (parentHdr.getSealType() ==  BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+            parentStakingBlockHeader = parentHdr;
+            grandParentStakingBlock = getParentBlock(parentHdr);
+        } else if (parentHdr.getSealType() ==  BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+            Block parentMiningBlock = getParentBlock(parentHdr);
+            if (parentMiningBlock != null) {
+                parentStakingBlockHeader = parentMiningBlock.getHeader();
+                grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
+            }
+        } else {
+            throw new IllegalStateException("Invalid block type");
+        }
+
         block.getHeader()
                 .setDifficulty(
                         ByteUtil.bigIntegerToBytes(
                                 this.chainConfiguration
                                         .getStakingDifficultyCalculator()
                                         .calculateDifficulty(
-                                                parentHdr,
-                                                grandParent == null
+                                                parentStakingBlockHeader,
+                                                grandParentStakingBlock == null
                                                         ? null
-                                                        : grandParent.getHeader()),
+                                                        : grandParentStakingBlock.getHeader()),
                                 DIFFICULTY_BYTES));
 
         // TODO: [unity] refactor the following process with the pow block create.
@@ -1237,17 +1253,32 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new RuntimeException(e);
         }
 
-        Block grandParent = this.getParent(parentHdr);
+        Block grandParentMiningBlock = null;
+        BlockHeader parentMiningBlockHeader = null;
+
+        if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+            parentMiningBlockHeader = parentHdr;
+            grandParentMiningBlock = getParentBlock(parentHdr);
+        } else if (parentHdr.getSealType() == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+            Block parentMiningBlock = getParentBlock(parentHdr);
+            if (parentMiningBlock != null) {
+                parentMiningBlockHeader = parentMiningBlock.getHeader();
+                grandParentMiningBlock = getParentBlock(parentMiningBlock.getHeader());
+            }
+        } else {
+            throw new IllegalStateException("Invalid block type");
+        }
+
         block.getHeader()
                 .setDifficulty(
                         ByteUtil.bigIntegerToBytes(
                                 this.chainConfiguration
                                         .getDifficultyCalculator()
                                         .calculateDifficulty(
-                                                parent.getHeader(),
-                                                grandParent == null
+                                                parentMiningBlockHeader,
+                                                grandParentMiningBlock == null
                                                         ? null
-                                                        : grandParent.getHeader()),
+                                                        : grandParentMiningBlock.getHeader()),
                                 DIFFICULTY_BYTES));
         /*
          * Begin execution phase
@@ -1449,6 +1480,24 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getBlockStore().getBlockByHash(header.getParentHash());
     }
 
+    private Block getParentBlock(BlockHeader header) {
+        if (header.isGenesis()) {
+            return null;
+        }
+
+        Block parent = getParent(header);
+        if (parent.getHeader().getSealType() == header.getSealType()) {
+            return parent;
+        } else {
+            Block antiParentBlock = getBlockStore().getBlockByHash(parent.getAntiparentHash());
+            if (antiParentBlock == null) {
+                return null;
+            }
+
+            return getBlockStore().getBlockByHash(antiParentBlock.getAntiparentHash());
+        }
+    }
+
     public boolean isValid(BlockHeader header) {
 
         // TODO: [unity] find the best place to apply the block number rule
@@ -1456,7 +1505,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 //            return false;
 //        }
 
-        if (header.getSealType() == 0x01) {
+        if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
             /*
              * Header should already be validated at this point, no need to check again
              * 1. Block came in from network; validated by P2P before processing further
@@ -1466,35 +1515,38 @@ public class AionBlockchainImpl implements IAionBlockchain {
             //            return false;
             //        }
 
-            Block parent = this.getParent(header);
+            Block parent = this.getParentBlock(header);
 
-            if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
+            if (!this.parentHeaderValidator.validate(header, parent == null ? null : parent.getHeader(), LOG, null)) {
                 return false;
             }
 
-            Block grandParent = this.getParent(parent.getHeader());
+            Block grandParent = parent == null ? null : getParentBlock(parent.getHeader());
 
             return this.grandParentBlockHeaderValidator.validate(
                     grandParent == null ? null : grandParent.getHeader(),
-                    parent.getHeader(),
+                    parent == null ? null : parent.getHeader(),
                     header,
                     LOG);
-        } else if (header.getSealType() == 0x02) {
+        } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
             if (stakingBlockHeaderValidator.validate(header, LOG)) {
                 return false;
             }
 
-            Block parent = getParent(header);
+            Block parent = getParentBlock(header);
             long stakeAmount = getStakingContractHelper().callGetVote(header.getCoinbase());
             BigInteger stake = BigInteger.valueOf(stakeAmount);
 
-            if (!parentStakingHeaderValidator.validate(header, parent.getHeader(), LOG, stake)) {
+            if (!parentStakingHeaderValidator.validate(header, parent == null ? null : parent.getHeader(), LOG, stake)) {
                 return false;
             }
 
-            Block grandParent = getParent(parent.getHeader());
+            Block grandParent = parent == null ? null : getParentBlock(parent.getHeader());
             return !grandParentStakingBlockHeaderValidator.validate(
-                    grandParent.getHeader(), parent.getHeader(), header, LOG);
+                    grandParent == null ? null : grandParent.getHeader(),
+                    parent == null ? null : parent.getHeader(),
+                    header,
+                    LOG);
 
         } else {
             LOG.debug("Invalid header seal type!");

@@ -164,6 +164,19 @@ public class AionBlockStore extends AbstractPowBlockstore {
     public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain) {
         lock.lock();
         try {
+
+            if (!block.getHeader().isGenesis()) {
+                Block parent = blocks.get(block.getParentHash());
+                // TODO : [unity] fix the aionblockstore test suite.
+                if (parent != null) {
+                    if (block.getHeader().getSealType() == parent.getHeader().getSealType()) {
+                        block.setAntiparentHash(parent.getAntiparentHash());
+                    } else {
+                        block.setAntiparentHash(parent.getHash());
+                    }
+                }
+            }
+
             addInternalBlock(block, cummDifficulty, mainChain);
         } finally {
             lock.unlock();
