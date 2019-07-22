@@ -110,7 +110,7 @@ public class TransactionRlpCodec {
         byte[] timeStamp = RLP.encodeElement(tx.getTimestamp());
         byte[] nrg = RLP.encodeLong(tx.getEnergyLimit());
         byte[] nrgPrice = RLP.encodeLong(tx.getEnergyPrice());
-        byte[] type = RLP.encodeByte(tx.getTargetVM());
+        byte[] type = RLP.encodeByte(tx.getType());
 
         if (withSignature) {
             if (tx.getSignature() == null) {

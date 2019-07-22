@@ -201,7 +201,8 @@ public class AvmBulkTransactionTest {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(contractCode),
                         5_000_000L,
-                        energyPrice);
+                        energyPrice,
+                        TransactionTypes.DEFAULT);
         AionAddress fvmContract = TransactionUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
@@ -221,7 +222,8 @@ public class AvmBulkTransactionTest {
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("62eb702a00000000000000000000000000000006"),
                         2_000_000L,
-                        energyPrice);
+                        energyPrice,
+                        TransactionTypes.DEFAULT);
         transactions.add(contractCallTx);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 

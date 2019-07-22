@@ -42,7 +42,6 @@ import org.aion.api.server.types.TxRecptLg;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
-import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -951,7 +950,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 new AionTransaction(
                                         this.getAccountKey(from.toString()),
                                         BigInteger.ZERO.toByteArray(),
-                                        from,
+                                        to,
                                         value,
                                         dat,
                                         req.getNrg(),
@@ -2732,7 +2731,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setTxIndex(txIndex)
                         .setTimestamp(ByteUtil.byteArrayToLong(t.getTimestamp()))
                         .setError(error)
-                        .setType(ByteString.copyFrom(new byte[] {t.getTargetVM()}))
+                        .setType(ByteString.copyFrom(new byte[] {t.getType()}))
                         .addAllLogs(tles);
 
         if (contract != null) {
@@ -3047,7 +3046,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                 ByteString.copyFrom(
                                                                                         new byte[] {
                                                                                             tx
-                                                                                                    .getTargetVM()
+                                                                                                    .getType()
                                                                                         }))
                                                                         .addAllLogs(tles);
 

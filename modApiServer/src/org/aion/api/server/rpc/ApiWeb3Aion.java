@@ -43,6 +43,7 @@ import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -820,7 +821,8 @@ public class ApiWeb3Aion extends ApiAion {
                         txParams.getValue().toByteArray(),
                         txParams.getData(),
                         txParams.getNrg(),
-                        txParams.getNrgPrice());
+                        txParams.getNrgPrice(),
+                        TransactionTypes.DEFAULT);
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 

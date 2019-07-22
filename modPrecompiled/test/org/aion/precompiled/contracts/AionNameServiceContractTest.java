@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -1064,7 +1065,9 @@ public class AionNameServiceContractTest {
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
+                            1,
+                            TransactionTypes.DEFAULT);
+
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

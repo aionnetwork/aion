@@ -118,8 +118,8 @@ public class BenchmarkTest {
         //                ContractFactory.getKeccakHashContractAddress(),
         //                origin,
         //                caller,
-        //                nrgPrice,
-        //                nrgLimit,
+        //                getEnergyPrice,
+        //                getEnergyLimit,
         //                callValue,
         //                callData,
         //                depth,
@@ -135,13 +135,13 @@ public class BenchmarkTest {
         //        // warm up
         //        for (int i = 0; i < WARMUP; i++) {
         //            ct = cf.getPrecompiledContract(ctx, null);
-        //            ct.execute(txHash, ctx.nrgLimit());
+        //            ct.execute(txHash, ctx.getEnergyLimit());
         //        }
         //
         //        long t1 = System.currentTimeMillis();
         //        for (int i = 0; i<BENCH; i++) {
         //            ct = cf.getPrecompiledContract(ctx, null);
-        //            ct.execute(txHash, ctx.nrgLimit());
+        //            ct.execute(txHash, ctx.getEnergyLimit());
         //        }
         //        System.out.println("Bench keccak: " + String.valueOf(System.currentTimeMillis() -
         // t1) + "ms");

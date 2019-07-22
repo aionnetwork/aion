@@ -199,7 +199,7 @@ public final class AvmTransactionExecutor {
         AionTxExecSummary summary = builder.build();
 
         if (!isLocalCall && !summary.isRejected()) {
-            transaction.setNrgConsume(result.energyUsed);
+            transaction.setEnergyConsumed(result.energyUsed);
         }
 
         return summary;

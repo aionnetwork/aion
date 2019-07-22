@@ -484,14 +484,14 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
                         byte[] encodedItx = TransactionRlpCodec.encode(itx);
                         cnt_txSz += encodedItx.length;
-                        cnt_nrg += itx.getNrgConsume();
+                        cnt_nrg += itx.getEnergyConsumed();
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                     itx.getSenderAddress().toString(),
                                     itx.getNonceBI().toString(),
                                     encodedItx.length,
-                                    itx.getNrgConsume());
+                                    itx.getEnergyConsumed());
                         }
 
                         if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
@@ -532,14 +532,14 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
                             byte[] encodedItx = TransactionRlpCodec.encode(itx);
                             cnt_txSz += encodedItx.length;
-                            cnt_nrg += itx.getNrgConsume();
+                            cnt_nrg += itx.getEnergyConsumed();
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
                                         itx.getSenderAddress().toString(),
                                         itx.getNonceBI().toString(),
                                         encodedItx.length,
-                                        itx.getNrgConsume());
+                                        itx.getEnergyConsumed());
                             }
 
                             if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {

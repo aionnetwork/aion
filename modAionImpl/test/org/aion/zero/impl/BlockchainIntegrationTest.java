@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -128,7 +129,8 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         1L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -165,7 +167,8 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -233,7 +236,8 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         // create a new block containing a single transaction (tx)
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -269,7 +273,8 @@ public class BlockchainIntegrationTest {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block =
                 blockchain.createNewBlock(

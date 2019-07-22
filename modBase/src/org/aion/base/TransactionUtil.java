@@ -3,7 +3,7 @@ package org.aion.base;
 import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 
-public class TransactionUtil {
+public final class TransactionUtil {
     public static long calculateTransactionCost(AionTransaction tx) {
         long zeroes = zeroBytesInData(tx.getData());
         long nonZeroes = tx.getData().length - zeroes;
@@ -27,11 +27,10 @@ public class TransactionUtil {
     }
 
     public static AionAddress calculateContractAddress(AionTransaction tx) {
-        if (tx.getDestinationAddress() != null) {
+        if (!tx.isContractCreationTransaction()) {
             return null;
         }
-        return new AionAddress(
-                HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+        return new AionAddress(HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
     }
 
     public static byte[] hashWithoutSignature(AionTransaction tx) {

@@ -194,6 +194,7 @@ public final class ContractExecutor {
         byte[] transactionHash = transaction.getTransactionHash();
         long blockNumber = kernel.getBlockNumber();
         long energyRemaining = transaction.getEnergyLimit() - TransactionUtil.calculateTransactionCost(transaction);
+
         AionAddress destinationAddress =
                 transaction.isContractCreationTransaction()
                         ? TransactionUtil.calculateContractAddress(transaction)

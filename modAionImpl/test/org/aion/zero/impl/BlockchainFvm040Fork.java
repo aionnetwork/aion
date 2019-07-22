@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
@@ -192,7 +193,8 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(deepContractCode),
                         1000000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block1 =
                 bc.createNewBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
@@ -212,7 +214,8 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block2);
@@ -230,7 +233,8 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block3);

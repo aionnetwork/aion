@@ -167,8 +167,7 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes
-                                .AVM_CREATE_CODE); // illegal type for the balance transfer after
+                        TransactionTypes.AVM_CREATE_CODE); // illegal type for the balance transfer after
         // the fork
 
         // check that the transaction is not valid
@@ -372,6 +371,7 @@ public class BalanceTransferConsensusTest {
     private static AionTransaction makeBalanceTransferTransaction(
             AionAddress recipient, BigInteger amount, BigInteger nonce) {
         org.aion.crypto.ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
+
         return new AionTransaction(
                 key,
                 nonce.toByteArray(),
@@ -379,7 +379,8 @@ public class BalanceTransferConsensusTest {
                 amount.toByteArray(),
                 new byte[] {0x1, 0x2, 0x3},
                 2_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private BigInteger getBalance(AionAddress address) {

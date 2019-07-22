@@ -1,6 +1,8 @@
 package org.aion.base;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Objects;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ISignature;
 import org.aion.types.AionAddress;
@@ -11,9 +13,9 @@ import org.aion.util.time.TimeInstant;
 /** Aion transaction class. */
 public class AionTransaction implements Cloneable {
 
-    public final Transaction transaction;
-    public final byte[] value;
-    public final byte[] nonce;
+    private final Transaction transaction;
+    private final byte[] value;
+    private final byte[] nonce;
 
     /* define transaction type. */
     private final byte type;
@@ -28,27 +30,7 @@ public class AionTransaction implements Cloneable {
     private final byte[] transactionHash;
 
     // TODO This is used in TxPoolA0, but probably doesn't belong in this class. See AKI-265
-    private long nrgConsume = 0;
-
-    public AionTransaction(
-            ECKey key,
-            byte[] nonce,
-            AionAddress destinationAddress,
-            byte[] value,
-            byte[] transactionData,
-            long energyLimit,
-            long energyPrice) {
-
-        this(
-                key,
-                nonce,
-                destinationAddress,
-                value,
-                transactionData,
-                energyLimit,
-                energyPrice,
-                TransactionTypes.DEFAULT);
-    }
+    private long energyConsumed = 0;
 
     // constructor for explicitly setting a transaction type.
     public AionTransaction(
@@ -121,7 +103,7 @@ public class AionTransaction implements Cloneable {
         this.transactionHash = TransactionUtil.hashTransaction(this); // This has to come last
     }
 
-    // Only for creating a transaction from and RLP encoding
+    // Only for creating a transaction from an RLP encoding
     public AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
@@ -133,7 +115,7 @@ public class AionTransaction implements Cloneable {
             byte txType,
             ISignature signature,
             byte[] timeStamp,
-            long nrgConsume) {
+            long energyConsumed) {
 
         if (nonce == null) {
             throw new NullPointerException("No Nonce");
@@ -153,7 +135,7 @@ public class AionTransaction implements Cloneable {
         if (timeStamp == null) {
             throw new NullPointerException("No Timestamp");
         }
-        if (nrgConsume < 0) {
+        if (energyConsumed < 0) {
             throw new IllegalArgumentException("Negative energyConsumed");
         }
 
@@ -183,7 +165,7 @@ public class AionTransaction implements Cloneable {
         this.type = txType;
         this.signature = signature;
         this.timeStamp = timeStamp;
-        this.nrgConsume = nrgConsume;
+        this.energyConsumed = energyConsumed;
         this.transactionHash = TransactionUtil.hashTransaction(this);
     }
 
@@ -200,7 +182,7 @@ public class AionTransaction implements Cloneable {
                 type,
                 signature,
                 timeStamp,
-                nrgConsume);
+                energyConsumed);
     }
 
     public byte[] getTransactionHash() {
@@ -247,7 +229,7 @@ public class AionTransaction implements Cloneable {
         return transaction.copyOfTransactionData();
     }
 
-    public byte getTargetVM() {
+    public byte getType() {
         return type;
     }
 
@@ -263,20 +245,16 @@ public class AionTransaction implements Cloneable {
         return transaction.senderAddress;
     }
 
-    public long nrgPrice() {
-        return transaction.energyPrice;
+    public long getEnergyConsumed() {
+        return energyConsumed;
     }
 
-    public long nrgLimit() {
-        return transaction.energyLimit;
+    public void setEnergyConsumed(long consumed) {
+        energyConsumed = consumed;
     }
 
-    public long getNrgConsume() {
-        return this.nrgConsume;
-    }
-
-    public void setNrgConsume(long consume) {
-        this.nrgConsume = consume;
+    public Transaction getAionTypesTransaction() {
+        return transaction;
     }
 
     @Override
@@ -284,38 +262,39 @@ public class AionTransaction implements Cloneable {
         return "TransactionData ["
                 + transaction.toString()
                 + "hash="
-                + ByteUtil.toHexString(getTransactionHash())
+                + ByteUtil.toHexString(transactionHash)
                 + ", txType="
                 + type
                 + ", timeStamp="
                 + ByteUtil.byteArrayToLong(timeStamp)
-                + ", sig="
+                + ", signature="
                 + ((signature == null) ? "null" : signature.toString())
+                + ", energyConsumed="
+                + energyConsumed
                 + "]";
     }
 
-    // TODO is there a reason for this to be different than the transactionHash?
     @Override
     public int hashCode() {
-
-        byte[] hash = this.getTransactionHash();
-        int hashCode = 0;
-
-        for (int i = 0; i < hash.length; ++i) {
-            hashCode += hash[i] * i;
-        }
-
-        return hashCode;
+        return 31 * Arrays.hashCode(transactionHash) + (int)energyConsumed;
     }
 
     @Override
     public boolean equals(Object obj) {
-
-        if (!(obj instanceof AionTransaction)) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AionTransaction)) {
             return false;
+        } else {
+            AionTransaction otherObject = (AionTransaction)obj;
+            return this.getAionTypesTransaction().equals(otherObject.getAionTypesTransaction())
+                && Arrays.equals(this.value, otherObject.value)
+                && Arrays.equals(this.nonce, otherObject.nonce)
+                && this.energyConsumed == otherObject.energyConsumed
+                && this.type == otherObject.type
+                && Arrays.equals(this.timeStamp, otherObject.timeStamp)
+                && Arrays.equals(this.transactionHash, otherObject.transactionHash)
+                && Objects.equals(this.signature, otherObject.signature);
         }
-        AionTransaction tx = (AionTransaction) obj;
-
-        return tx.hashCode() == this.hashCode();
     }
 }

@@ -88,7 +88,8 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
                         10000L,
-                        1L));
+                        1L,
+                        TransactionTypes.DEFAULT));
     }
 
     @Test
@@ -119,7 +120,7 @@ public class TxnPoolTest {
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
             AionTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray());
-            tx.setNrgConsume(5000L);
+            tx.setEnergyConsumed(5000L);
             txl.add(tx);
             if (i < 10) {
                 txlrm.add(tx);
@@ -148,7 +149,7 @@ public class TxnPoolTest {
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
             AionTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray());
-            tx.setNrgConsume(5000L);
+            tx.setEnergyConsumed(5000L);
             txl.add(tx);
             if (i < 10) {
                 txlrm.add(tx);
@@ -176,7 +177,8 @@ public class TxnPoolTest {
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
-                1L);
+                1L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction genTransaction(byte[] nonce, int _index) {
@@ -187,7 +189,8 @@ public class TxnPoolTest {
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
-                1L);
+                1L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction genTransactionWithTimestamp(byte[] nonce, ECKey key, byte[] timeStamp) {
@@ -211,7 +214,8 @@ public class TxnPoolTest {
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
-                price);
+                price,
+                TransactionTypes.DEFAULT);
     }
 
     @Test
@@ -221,7 +225,7 @@ public class TxnPoolTest {
 
         ITxPool tp = new TxPoolA0(config);
         List<AionTransaction> txnl = getMockTransaction();
-        txnl.get(0).setNrgConsume(30000L);
+        txnl.get(0).setEnergyConsumed(30000L);
         tp.add(txnl);
 
         Thread.sleep(10999);
@@ -237,7 +241,7 @@ public class TxnPoolTest {
 
         ITxPool tp = new TxPoolA0(config);
         List<AionTransaction> txnl = getMockTransaction();
-        txnl.get(0).setNrgConsume(30000L);
+        txnl.get(0).setEnergyConsumed(30000L);
         tp.add(txnl);
 
         Thread.sleep(8999);
@@ -269,7 +273,7 @@ public class TxnPoolTest {
         int cnt = 26;
         for (int i = 0; i < cnt; i++) {
             AionTransaction txe = genTransaction(BigInteger.valueOf(i).toByteArray());
-            txe.setNrgConsume(5000L);
+            txe.setEnergyConsumed(5000L);
             txl.add(txe);
         }
 
@@ -295,7 +299,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(i + 1);
+            txn.setEnergyConsumed(i + 1);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -324,7 +328,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(50 - i);
+            txn.setEnergyConsumed(50 - i);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -354,7 +358,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(r.nextInt(1000));
+            txn.setEnergyConsumed(r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -386,7 +390,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000), key.get(0));
-            txn.setNrgConsume(r.nextInt(1000));
+            txn.setEnergyConsumed(r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -419,7 +423,7 @@ public class TxnPoolTest {
 
             AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000), key.get(0));
 
-            txn.setNrgConsume(r.nextInt(1000));
+            txn.setEnergyConsumed(r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -452,7 +456,7 @@ public class TxnPoolTest {
 
             AionTransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000), key.get(0));
 
-            txn.setNrgConsume(r.nextInt(1000));
+            txn.setEnergyConsumed(r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -485,7 +489,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 0);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -498,7 +502,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 1);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl2.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -531,7 +535,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 0);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -541,7 +545,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 1);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -551,7 +555,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 0);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -561,7 +565,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransaction(nonce, 1);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -598,7 +602,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -609,7 +613,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -620,7 +624,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(0), timeStamp);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -631,7 +635,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
             AionTransaction txn = genTransactionWithTimestamp(nonce, key.get(1), timeStamp);
 
-            txn.setNrgConsume(1);
+            txn.setEnergyConsumed(1);
             txnl.add(txn);
             txMap.put(ByteArrayWrapper.wrap(txn.getTransactionHash()), txn);
         }
@@ -664,7 +668,8 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
                         10000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         List<AionTransaction> txnl = new ArrayList<>();
         txnl.add(txn);
@@ -688,7 +693,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(50);
+            txn.setEnergyConsumed(50);
             txnl.add(txn);
         }
 
@@ -698,7 +703,7 @@ public class TxnPoolTest {
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
         AionTransaction txn = genTransaction(nonce);
-        txn.setNrgConsume(500);
+        txn.setEnergyConsumed(500);
         tp.add(txn);
 
         List<AionTransaction> snapshot = tp.snapshot();
@@ -721,7 +726,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) i;
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(50);
+            txn.setEnergyConsumed(50);
             txnl.add(txn);
         }
 
@@ -732,7 +737,7 @@ public class TxnPoolTest {
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
         AionTransaction txn = genTransaction(nonce);
-        txn.setNrgConsume(500);
+        txn.setEnergyConsumed(500);
         tp.add(txn);
 
         List<AionTransaction> snapshot = tp.snapshot();
@@ -749,9 +754,9 @@ public class TxnPoolTest {
         ITxPool tp = new TxPoolA0(config);
 
         AionTransaction txn = genTransaction(BigInteger.ONE.toByteArray());
-        txn.setNrgConsume(100);
+        txn.setEnergyConsumed(100);
         AionTransaction txn2 = genTransaction(BigInteger.ONE.toByteArray());
-        txn2.setNrgConsume(100);
+        txn2.setEnergyConsumed(100);
 
         List<AionTransaction> txnl = new ArrayList<>();
 
@@ -793,8 +798,9 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
-            txn.setNrgConsume(100L);
+                            1L,
+                            TransactionTypes.DEFAULT);
+            txn.setEnergyConsumed(100L);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -833,8 +839,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -876,9 +883,10 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
 
-            txn.setNrgConsume(i + 1);
+            txn.setEnergyConsumed(i + 1);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -911,7 +919,7 @@ public class TxnPoolTest {
 
             AionTransaction txn = genTransaction(nonce);
 
-            txn.setNrgConsume(i + 1);
+            txn.setEnergyConsumed(i + 1);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -940,7 +948,7 @@ public class TxnPoolTest {
             nonce[Long.BYTES - 1] = (byte) (i + 1);
 
             AionTransaction txn = genTransaction(nonce);
-            txn.setNrgConsume(i + 1);
+            txn.setEnergyConsumed(i + 1);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -978,8 +986,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -1023,8 +1032,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -1050,8 +1060,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -1098,8 +1109,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -1150,8 +1162,9 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
-            txn.setNrgConsume(100L);
+                            1L,
+                            TransactionTypes.DEFAULT);
+            txn.setEnergyConsumed(100L);
             txnl.add(txn);
 
             if (i < rmCnt) {
@@ -1213,8 +1226,9 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
                                 10000L,
-                                1L);
-                txn.setNrgConsume(100L);
+                                1L,
+                                TransactionTypes.DEFAULT);
+                txn.setEnergyConsumed(100L);
                 txnl.add(txn);
             }
         }
@@ -1257,8 +1271,9 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
-            tx.setNrgConsume(1);
+                            1L,
+                            TransactionTypes.DEFAULT);
+            tx.setEnergyConsumed(1);
             txs.add(tx);
         }
 
@@ -1290,8 +1305,9 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
-            tx.setNrgConsume(1);
+                            1L,
+                            TransactionTypes.DEFAULT);
+            tx.setEnergyConsumed(1);
             txs.add(tx);
         }
 
@@ -1319,8 +1335,9 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
                             10000L,
-                            1L);
-            tx.setNrgConsume(100L);
+                            1L,
+                            TransactionTypes.DEFAULT);
+            tx.setEnergyConsumed(100L);
             txs.add(tx);
         }
 

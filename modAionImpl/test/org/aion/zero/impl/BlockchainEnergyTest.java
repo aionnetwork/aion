@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
@@ -62,8 +63,6 @@ public class BlockchainEnergyTest {
         // TODO: where is the 21000 defined? bad to define magic variables
         int amount = (int) (bc.getGenesis().getNrgLimit() / DEFAULT_TX_AMOUNT);
 
-        // (byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data, byte[] nrg, byte[]
-        // nrgPrice)
         List<AionTransaction> txs = new ArrayList<>();
         ECKey key = bundle.privateKeys.get(0);
         for (int i = 0; i < amount; i++) {
@@ -76,7 +75,8 @@ public class BlockchainEnergyTest {
                             BigInteger.ONE.toByteArray(),
                             ByteUtil.EMPTY_BYTE_ARRAY,
                             21000L,
-                            BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue());
+                            BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue(),
+                            TransactionTypes.DEFAULT);
             txs.add(atx);
         }
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);

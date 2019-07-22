@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -111,7 +112,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -155,7 +157,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -195,7 +198,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -244,7 +248,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -266,7 +272,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -288,7 +296,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(E, tx.getDestinationAddress());
 
@@ -323,7 +333,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -368,7 +380,9 @@ public class OpcodeIntegTest {
                         value.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -413,7 +427,9 @@ public class OpcodeIntegTest {
                         value.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -435,7 +451,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -456,7 +474,9 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(E, tx.getDestinationAddress());
 
@@ -491,7 +511,9 @@ public class OpcodeIntegTest {
                         value.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -538,7 +560,9 @@ public class OpcodeIntegTest {
                         value.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -581,7 +605,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -631,7 +656,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -676,7 +702,8 @@ public class OpcodeIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -719,7 +746,9 @@ public class OpcodeIntegTest {
                         value.toByteArray(),
                         deployCode,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         AionAddress contract =
                 deployContract(
                         repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce);

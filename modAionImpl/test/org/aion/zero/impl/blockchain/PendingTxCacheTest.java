@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.types.AionAddress;
@@ -50,7 +51,8 @@ public class PendingTxCacheTest {
                             ByteUtil.hexStringToBytes("1"),
                             ByteUtil.hexStringToBytes("1"),
                             10000L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
 
             txn.add(tx);
         }
@@ -79,7 +81,8 @@ public class PendingTxCacheTest {
                             ByteUtil.hexStringToBytes("1"),
                             ByteUtil.hexStringToBytes(data),
                             10000L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
 
             txn.add(tx);
         }

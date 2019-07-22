@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -68,7 +69,8 @@ public class BlockchainTestUtils {
                                 BigInteger.ONE.toByteArray(),
                                 ZERO_BYTE,
                                 NRG,
-                                NRG_PRICE);
+                                NRG_PRICE,
+                                TransactionTypes.DEFAULT);
                 transactions.add(newTx);
                 accountNonce = accountNonce.add(BigInteger.ONE);
                 nonces.put(key, accountNonce);

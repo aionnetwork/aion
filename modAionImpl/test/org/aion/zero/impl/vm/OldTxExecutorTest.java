@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -123,7 +124,15 @@ public class OldTxExecutorTest {
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx =
-                new AionTransaction(deployerKey, txNonce, to, value, data, nrg, nrgPrice);
+                new AionTransaction(
+                        deployerKey,
+                        txNonce,
+                        to,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = createDummyBlock();
 
@@ -162,13 +171,21 @@ public class OldTxExecutorTest {
         long nrg = 500_000L;
         long nrgPrice = 1;
         AionTransaction tx =
-                new AionTransaction(deployerKey, txNonce, to, value, data, nrg, nrgPrice);
+                new AionTransaction(
+                        deployerKey,
+                        txNonce,
+                        to,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache<AccountState, IBlockStoreBase> repo = repoTop.startTracking();
-        repo.addBalance(tx.getSenderAddress(), BigInteger.valueOf(500_000L).multiply(BigInteger.valueOf(tx.nrgPrice())));
+        repo.addBalance(tx.getSenderAddress(), BigInteger.valueOf(500_000L).multiply(BigInteger.valueOf(tx.getEnergyPrice())));
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
@@ -198,7 +215,15 @@ public class OldTxExecutorTest {
         long nrgPrice = DataWordImpl.ONE.longValue();
         ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
-                new AionTransaction(key, txNonce, to, value, data, nrg, nrgPrice);
+                new AionTransaction(
+                        key,
+                        txNonce,
+                        to,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = createDummyBlock();
 
@@ -233,7 +258,15 @@ public class OldTxExecutorTest {
         long nrgPrice = DataWordImpl.ONE.longValue();
         ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
-                new AionTransaction(key, txNonce, to, value, data, nrg, nrgPrice);
+                new AionTransaction(
+                        key,
+                        txNonce,
+                        to,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block = createDummyBlock();
 

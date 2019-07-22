@@ -17,6 +17,7 @@ import java.util.Collections;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
@@ -479,7 +480,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -608,7 +610,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -661,7 +664,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -714,7 +718,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -765,7 +770,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -816,7 +822,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -865,7 +872,8 @@ public class ApiAion0Test {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -1063,7 +1071,8 @@ public class ApiAion0Test {
                         val,
                         msg,
                         1000,
-                        5000);
+                        5000,
+                        TransactionTypes.DEFAULT);
 
         assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
 

@@ -743,7 +743,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             fireTxUpdate(txSum.getReceipt(), PendingTransactionState.DROPPED, best.get());
             return TxResponse.DROPPED;
         } else {
-            tx.setNrgConsume(txSum.getReceipt().getEnergyUsed());
+            tx.setEnergyConsumed(txSum.getReceipt().getEnergyUsed());
 
             if (LOGGER_TX.isTraceEnabled()) {
                 LOGGER_TX.trace("addPendingTransactionImpl validTx {}", tx.toString());

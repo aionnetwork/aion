@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -92,15 +93,19 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = BigInteger.ZERO.toByteArray();
-        AionAddress to =
-                new AionAddress(
-                        Hex.decode(
-                                "2222222222222222222222222222222222222222222222222222222222222222"));
+        AionAddress to = new AionAddress(Hex.decode("2222222222222222222222222222222222222222222222222222222222222222"));
         byte[] value = BigInteger.ZERO.toByteArray();
-        byte[] data = callData;
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
-        return new AionTransaction(deployerKey, txNonce, to, value, data, nrg, nrgPrice);
+        return new AionTransaction(
+                deployerKey,
+                txNonce,
+                to,
+                value,
+                callData,
+                nrg,
+                nrgPrice,
+                TransactionTypes.DEFAULT);
     }
 
     private RepositoryCache createRepository(AionTransaction tx) throws IOException {
@@ -115,7 +120,7 @@ public class SolidityTypeTest {
         RepositoryCache track = repo.startTracking();
         track.addBalance(
                 tx.getSenderAddress(),
-                BigInteger.valueOf(tx.nrgPrice()).multiply(BigInteger.valueOf(500_000L)));
+                BigInteger.valueOf(tx.getEnergyPrice()).multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM);

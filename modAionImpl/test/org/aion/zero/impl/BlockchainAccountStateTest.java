@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
@@ -47,7 +48,6 @@ public class BlockchainAccountStateTest {
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
-        // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
@@ -58,7 +58,8 @@ public class BlockchainAccountStateTest {
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -111,7 +112,6 @@ public class BlockchainAccountStateTest {
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
-        // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
@@ -122,7 +122,8 @@ public class BlockchainAccountStateTest {
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
         }
 

@@ -66,7 +66,8 @@ public class PendingStateTest {
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
                         1_000_000L,
-                        10_000_000_000L);
+                        10_000_000_000L,
+                        TransactionTypes.DEFAULT);
 
         assertEquals(hub.getPendingState().addPendingTransaction(tx), TxResponse.SUCCESS);
     }
@@ -98,7 +99,8 @@ public class PendingStateTest {
                         BigInteger.ZERO.toByteArray(),
                         new byte[0],
                         1_000_000L,
-                        1L);
+                        1L,
+                        TransactionTypes.DEFAULT);
 
         assertEquals(
                 hub.getPendingState().addPendingTransaction(tx), TxResponse.INVALID_TX_NRG_PRICE);

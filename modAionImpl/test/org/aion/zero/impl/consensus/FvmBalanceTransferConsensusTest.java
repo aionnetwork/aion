@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
@@ -86,7 +87,8 @@ public class FvmBalanceTransferConsensusTest {
                         amount.toByteArray(),
                         new byte[] {},
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -144,10 +146,10 @@ public class FvmBalanceTransferConsensusTest {
                         BigInteger.ZERO.toByteArray(),
                         bridge,
                         BigInteger.ZERO.toByteArray(),
-                        Hex.decode(
-                                "a6f9dae1a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0"),
+                        Hex.decode("a6f9dae1a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0"),
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -206,7 +208,8 @@ public class FvmBalanceTransferConsensusTest {
                         amount.toByteArray(),
                         new byte[] {},
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -271,7 +274,8 @@ public class FvmBalanceTransferConsensusTest {
                         amount.toByteArray(),
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -339,7 +343,8 @@ public class FvmBalanceTransferConsensusTest {
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
-                        ENERGY_PRICE);
+                        ENERGY_PRICE,
+                        TransactionTypes.DEFAULT);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -787,7 +792,8 @@ public class FvmBalanceTransferConsensusTest {
                 amount.toByteArray(),
                 getNonpayableConstructorContractBytes(),
                 5_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCreateAndTransferToFvmPayableConstructorContractTx(
@@ -800,7 +806,8 @@ public class FvmBalanceTransferConsensusTest {
                 amount.toByteArray(),
                 getPayableConstructorContractBytes(),
                 5_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCreatePayableFallbackContractTx() {
@@ -812,7 +819,8 @@ public class FvmBalanceTransferConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 getPayableFallbackContractBytes(),
                 5_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCreateNonpayableFallbackContractTx() {
@@ -824,7 +832,8 @@ public class FvmBalanceTransferConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 getNonpayableFallbackContractBytes(),
                 5_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCreatePayableContractTx() {
@@ -836,7 +845,8 @@ public class FvmBalanceTransferConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 getPayableContractBytes(),
                 5_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCallNonpayableFunctionTx(
@@ -849,7 +859,8 @@ public class FvmBalanceTransferConsensusTest {
                 amount.toByteArray(),
                 callNonpayableFunctionEncoding(),
                 2_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCallFallbackFunctionTx(
@@ -862,7 +873,8 @@ public class FvmBalanceTransferConsensusTest {
                 amount.toByteArray(),
                 new byte[0],
                 2_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private static AionTransaction makeCallPayableFunctionTx(
@@ -875,7 +887,8 @@ public class FvmBalanceTransferConsensusTest {
                 amount.toByteArray(),
                 callPayableFunctionEncoding(),
                 2_000_000,
-                ENERGY_PRICE);
+                ENERGY_PRICE,
+                TransactionTypes.DEFAULT);
     }
 
     private Pair<ImportResult, AionBlockSummary> processTransaction(

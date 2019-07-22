@@ -205,7 +205,7 @@ public class ContractIntegTest {
             nonce = nonce.add(BigInteger.ONE);
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
         }
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
+        assertEquals(tx.getEnergyConsumed(), summary.getReceipt().getEnergyUsed());
     }
 
     @Test
@@ -237,7 +237,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
-            assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
+            assertEquals(tx.getEnergyConsumed(), summary.getNrgUsed().longValue());
 
             AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             assertArrayEquals(new byte[0], summary.getResult());
@@ -489,7 +489,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
-            assertEquals(0, tx.getNrgConsume());
+            assertEquals(0, tx.getEnergyConsumed());
 
             AionAddress contract = TransactionUtil.calculateContractAddress(tx);
             checkStateOfNewContract(
@@ -503,7 +503,7 @@ public class ContractIntegTest {
 
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Rejected: insufficient balance", summary.getReceipt().getError());
-            assertEquals(0, tx.getNrgConsume());
+            assertEquals(0, tx.getEnergyConsumed());
             checkStateOfDeployerOnBadDeploy(repo);
         }
     }
@@ -629,7 +629,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -1090,7 +1091,7 @@ public class ContractIntegTest {
     public void testCallPrecompiledContract() {
         //        String tagToSend = "Soo cool!";
         //        long nrg = Constants.NRG_TRANSACTION_MAX;
-        //        long nrgPrice = 1;
+        //        long getEnergyPrice = 1;
         //        BigInteger value = BigInteger.ZERO;
         //        BigInteger nonce = BigInteger.ZERO;
         //        AionTransaction tx =
@@ -1100,7 +1101,7 @@ public class ContractIntegTest {
         //                        value.toByteArray(),
         //                        tagToSend.getBytes(),
         //                        nrg,
-        //                        nrgPrice);
+        //                        getEnergyPrice);
         //        RepositoryCache repo = blockchain.getRepository().startTracking();
         //
         //        tx.sign(deployerKey);
@@ -1122,8 +1123,8 @@ public class ContractIntegTest {
         //        exec.execute();
         //        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
         //        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
-        //        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
-        //        assertNotEquals(nrg, tx.getNrgConsume());
+        //        assertEquals(nrg - tx.getEnergyConsumed(), result.getEnergyRemaining());
+        //        assertNotEquals(nrg, tx.getEnergyConsumed());
         //
         //        // Check that we actually did call the contract and received its output.
         //        String expectedMsg = CallMePrecompiledContract.head + tagToSend;
@@ -1338,10 +1339,10 @@ public class ContractIntegTest {
                 senderBalance
                         .subtract(BigInteger.TEN)
                         .subtract(
-                                BigInteger.valueOf(tx.getNrgConsume())
+                                BigInteger.valueOf(tx.getEnergyConsumed())
                                         .multiply(BigInteger.valueOf(nrgPrice)))
                         .subtract(
-                                BigInteger.valueOf(tx2.getNrgConsume())
+                                BigInteger.valueOf(tx2.getEnergyConsumed())
                                         .multiply(BigInteger.valueOf(nrgPrice))),
                 blockchain.getRepository().getBalance(deployer));
 
@@ -1427,7 +1428,7 @@ public class ContractIntegTest {
         // feature.
         AionTransaction tx =
                 new AionTransaction(
-                        deployerKey,
+                        senderKey,
                         senderNonce.toByteArray(),
                         destinationAddr,
                         value.toByteArray(),
@@ -1490,7 +1491,7 @@ public class ContractIntegTest {
             checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, deployerNonce);
         }
 
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
+        assertEquals(tx.getEnergyConsumed(), summary.getReceipt().getEnergyUsed());
     }
 
     @Test
@@ -1583,7 +1584,7 @@ public class ContractIntegTest {
             checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, deployerNonce);
         }
 
-        assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
+        assertEquals(tx.getEnergyConsumed(), summary.getReceipt().getEnergyUsed());
     }
 
     @Test
@@ -1675,17 +1676,17 @@ public class ContractIntegTest {
         //        String contractName = "MultiFeatureCaller";
         //        byte[] deployCode = getDeployCode(contractName);
         //        long nrg = 1_000_000;
-        //        long nrgPrice = 1;
+        //        long getEnergyPrice = 1;
         //        BigInteger value = BigInteger.ZERO;
         //        BigInteger nonce = BigInteger.ZERO;
         //        AionTransaction tx =
         //                new AionTransaction(
         //                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg,
-        // nrgPrice);
+        // getEnergyPrice);
         //        RepositoryCache repo = blockchain.getRepository().startTracking();
         //        nonce = nonce.add(BigInteger.ONE);
         //        Address contract =
-        //                deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
+        //                deployContract(repo, tx, contractName, null, value, nrg, getEnergyPrice, nonce);
         //
         //        deployerBalance = repo.getBalance(deployer);
         //        deployerNonce = repo.getNonce(deployer);
@@ -1708,7 +1709,7 @@ public class ContractIntegTest {
         //                        BigInteger.ZERO.toByteArray(),
         //                        input,
         //                        nrg,
-        //                        nrgPrice);
+        //                        getEnergyPrice);
         //        tx.sign(deployerKey);
         //        assertFalse(tx.isContractCreationTransaction());
         //
@@ -1724,12 +1725,12 @@ public class ContractIntegTest {
         //        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
         //
         //        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
-        //        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
-        //        assertNotEquals(nrg, tx.getNrgConsume());
+        //        assertEquals(nrg - tx.getEnergyConsumed(), result.getEnergyRemaining());
+        //        assertNotEquals(nrg, tx.getEnergyConsumed());
         //
         //        BigInteger txCost =
         //
-        // BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+        // BigInteger.valueOf(tx.getEnergyConsumed()).multiply(BigInteger.valueOf(getEnergyPrice));
         //        assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
         //        assertTrue(CallMePrecompiledContract.youCalledMe);
     }

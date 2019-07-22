@@ -18,6 +18,7 @@ import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.impl.evt.EventBlock;
@@ -87,7 +88,9 @@ public class ApiAionTest {
                             new byte[0],
                             new byte[0],
                             0L,
-                            1L);
+                            1L,
+                            TransactionTypes.DEFAULT);
+
             List<AionTransaction> l1 = new ArrayList<>();
             l1.add(tx);
             l1.add(tx);
@@ -288,7 +291,8 @@ public class ApiAionTest {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         Block blk =
                 impl.getAionHub()
@@ -332,7 +336,8 @@ public class ApiAionTest {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         assertNotNull(api.doCall(tx));
     }
@@ -353,7 +358,8 @@ public class ApiAionTest {
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
-                        100000);
+                        100000,
+                        TransactionTypes.DEFAULT);
 
         ArgTxCall txcall =
                 new ArgTxCall(

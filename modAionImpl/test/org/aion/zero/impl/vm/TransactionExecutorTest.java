@@ -33,6 +33,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -101,7 +102,9 @@ public class TransactionExecutorTest {
                         value.toByteArray(),
                         deployCode,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
+
         assertTrue(tx.isContractCreationTransaction());
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
@@ -150,9 +153,10 @@ public class TransactionExecutorTest {
                         value.toByteArray(),
                         deployCode,
                         nrg,
-                        nrgPrice);
-        assertTrue(tx.isContractCreationTransaction());
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
+        assertTrue(tx.isContractCreationTransaction());
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
@@ -176,7 +180,7 @@ public class TransactionExecutorTest {
         assertEquals(BigInteger.ONE, blockchain.getRepository().getNonce(deployer));
         assertEquals(
                 Builder.DEFAULT_BALANCE.subtract(
-                        BigInteger.valueOf(tx.getNrgConsume())
+                        BigInteger.valueOf(tx.getEnergyConsumed())
                                 .multiply(BigInteger.valueOf(nrgPrice))),
                 blockchain.getRepository().getBalance(deployer));
     }
@@ -194,7 +198,9 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1);
+                        1,
+                        TransactionTypes.DEFAULT);
+
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -223,7 +229,9 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1);
+                        1,
+                        TransactionTypes.DEFAULT);
+
         assertFalse(tx.isContractCreationTransaction());
 
         context =
@@ -273,7 +281,9 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1);
+                        1,
+                        TransactionTypes.DEFAULT);
+
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -308,9 +318,10 @@ public class TransactionExecutorTest {
                         value.toByteArray(),
                         deployCode,
                         nrg,
-                        nrgPrice);
-        assertTrue(tx.isContractCreationTransaction());
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
+        assertTrue(tx.isContractCreationTransaction());
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
@@ -320,12 +331,6 @@ public class TransactionExecutorTest {
         blockchain.tryToConnect(context.block);
 
         return TransactionUtil.calculateContractAddress(tx);
-    }
-
-    private AionAddress getNewRecipient(boolean isContractCreation) {
-        return (isContractCreation)
-                ? null
-                : new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
     }
 
     private byte[] extractActualOutput(byte[] rawOutput) {

@@ -176,7 +176,7 @@ public abstract class AbstractTxPool {
 
                                 BigInteger nrgCharge =
                                         BigInteger.valueOf(tx.getEnergyPrice())
-                                                .multiply(BigInteger.valueOf(tx.getNrgConsume()));
+                                                .multiply(BigInteger.valueOf(tx.getEnergyConsumed()));
 
                                 if (LOG.isTraceEnabled()) {
                                     LOG.trace(

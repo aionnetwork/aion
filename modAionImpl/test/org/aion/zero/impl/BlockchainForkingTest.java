@@ -716,7 +716,8 @@ public class BlockchainForkingTest {
                 BigInteger.ZERO.toByteArray(),
                 ByteUtil.hexStringToBytes(contractCode),
                 5_000_000L,
-                10_123_456_789L);
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction callSetValue(
@@ -735,7 +736,8 @@ public class BlockchainForkingTest {
                 BigInteger.ZERO.toByteArray(),
                 Hex.decode(contractCode),
                 2_000_000L,
-                10_123_456_789L);
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     private AionTransaction callSetValue2(
@@ -758,7 +760,8 @@ public class BlockchainForkingTest {
                 BigInteger.ZERO.toByteArray(),
                 Hex.decode(contractCode),
                 2_000_000L,
-                10_123_456_789L);
+                10_123_456_789L,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -1008,7 +1011,8 @@ public class BlockchainForkingTest {
                             BigInteger.ZERO.toByteArray(),
                             ABIUtil.encodeMethodArguments("incrementCounter"),
                             2_000_000L,
-                            10_123_456_789L);
+                            10_123_456_789L,
+                            TransactionTypes.DEFAULT);
             txs.add(transaction);
             // increment nonce
             nonce = nonce.add(BigInteger.ONE);
@@ -1023,7 +1027,8 @@ public class BlockchainForkingTest {
                         BigInteger.ZERO.toByteArray(),
                         ABIUtil.encodeMethodArguments("getCount"),
                         2_000_000L,
-                        10_123_456_789L);
+                        10_123_456_789L,
+                        TransactionTypes.DEFAULT);
         txs.add(transaction);
 
         return txs;

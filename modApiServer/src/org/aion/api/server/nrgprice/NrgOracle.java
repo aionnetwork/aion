@@ -96,7 +96,7 @@ public class NrgOracle {
      *
      * <p>Not an important enough computation to be a consumer on the event system.
      *
-     * <p>If multiple consumers want nrgPrice simultaneously, all will be blocked until the
+     * <p>If multiple consumers want getEnergyPrice simultaneously, all will be blocked until the
      * recommendation is built and cached. Future consumers read the cached value until cache flush.
      */
     private static final long CACHE_FLUSH_BLKS = 2;

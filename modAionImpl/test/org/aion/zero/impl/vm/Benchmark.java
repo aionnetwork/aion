@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -96,7 +97,17 @@ public class Benchmark {
         byte[] value = BigInteger.ZERO.toByteArray();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
-        AionTransaction tx = new AionTransaction(key, nonce, to, value, deployer, nrg, nrgPrice);
+
+        AionTransaction tx =
+                new AionTransaction(
+                        key,
+                        nonce,
+                        to,
+                        value,
+                        deployer,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         // save contract address
         contract = TransactionUtil.calculateContractAddress(tx);
@@ -130,7 +141,17 @@ public class Benchmark {
                             BigInteger.ONE.toByteArray());
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
-            AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
+
+            AionTransaction tx =
+                    new AionTransaction(
+                            key,
+                            nonce,
+                            to,
+                            value,
+                            data,
+                            nrg,
+                            nrgPrice,
+                            TransactionTypes.DEFAULT);
 
             list.add(tx);
         }
@@ -208,7 +229,17 @@ public class Benchmark {
                             Hex.decode("70a08231" + "000000000000000000000000"), recipients.get(i));
             long nrg = 1_000_000L;
             long nrgPrice = 1L;
-            AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
+
+            AionTransaction tx =
+                    new AionTransaction(
+                            key,
+                            nonce,
+                            to,
+                            value,
+                            data,
+                            nrg,
+                            nrgPrice,
+                            TransactionTypes.DEFAULT);
 
             AionTxExecSummary summary = executeTransaction(tx);
             assertFalse(summary.isFailed());

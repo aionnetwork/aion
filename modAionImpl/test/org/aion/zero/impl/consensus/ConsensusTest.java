@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -369,7 +370,8 @@ public class ConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 getContractCode(),
                 2_000_000,
-                1);
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /** Calls the function: addOwner(Address) in Wallet.sol */
@@ -383,7 +385,8 @@ public class ConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 callData,
                 2_000_000,
-                1);
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -401,7 +404,8 @@ public class ConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 callData,
                 2_000_000,
-                1);
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -420,7 +424,8 @@ public class ConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 callData,
                 24_460,
-                1);
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /**
@@ -439,7 +444,8 @@ public class ConsensusTest {
                 BigInteger.ZERO.toByteArray(),
                 callData,
                 22_326,
-                2);
+                2,
+                TransactionTypes.DEFAULT);
     }
 
     /** Transfers the specified amount of value from OWNER account to OTHER. */
@@ -452,7 +458,8 @@ public class ConsensusTest {
                 amount.toByteArray(),
                 new byte[0],
                 21_000,
-                1);
+                1,
+                TransactionTypes.DEFAULT);
     }
 
     /** The binary of the contract: Wallet.sol */

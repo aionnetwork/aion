@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import java.math.BigInteger;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionRlpCodec;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -25,7 +26,7 @@ public class AionTransactionTest {
         assertArrayEquals(tx.getData(), tx2.getData());
         assertEquals(tx.getEnergyLimit(), tx2.getEnergyLimit());
         assertEquals(tx.getEnergyPrice(), tx2.getEnergyPrice());
-        assertEquals(tx.getTargetVM(), tx2.getTargetVM());
+        assertEquals(tx.getType(), tx2.getType());
 
         assertArrayEquals(tx.getTimestamp(), tx2.getTimestamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());
@@ -42,7 +43,7 @@ public class AionTransactionTest {
         byte[] data = RandomUtils.nextBytes(64);
         long nrg = 0;
         long nrgPrice = 0;
-        byte type = 0;
+        byte type = TransactionTypes.DEFAULT;
 
         AionTransaction tx =
                 new AionTransaction(
@@ -104,7 +105,8 @@ public class AionTransactionTest {
                         value,
                         data,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         long expected = 21000;
         for (byte b : data) {
@@ -116,13 +118,21 @@ public class AionTransactionTest {
     @Test
     public void testTransactionCost2() {
         byte[] nonce = BigInteger.ONE.toByteArray();
-        AionAddress to = null;
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
         long nrg = new DataWordImpl(1000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
 
-        AionTransaction tx = new AionTransaction(key, nonce, to, value, data, nrg, nrgPrice);
+        AionTransaction tx =
+                new AionTransaction(
+                        key,
+                        nonce,
+                        null,
+                        value,
+                        data,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
 
         long expected = 200000 + 21000;
         for (byte b : data) {

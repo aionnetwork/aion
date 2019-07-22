@@ -116,7 +116,7 @@ public final class PrecompiledTransactionExecutor {
             TxExecSummary summary,
             AionTransaction transaction,
             PrecompiledTransactionResult result) {
-        transaction.setNrgConsume(computeEnergyUsed(transaction.getEnergyLimit(), result));
+        transaction.setEnergyConsumed(computeEnergyUsed(transaction.getEnergyLimit(), result));
 
         // Refund energy if transaction was successfully or reverted.
         if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {

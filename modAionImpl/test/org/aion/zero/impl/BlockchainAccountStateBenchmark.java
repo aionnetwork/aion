@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TransactionUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -170,7 +171,6 @@ public class BlockchainAccountStateBenchmark {
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
-        // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
             AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
@@ -181,7 +181,8 @@ public class BlockchainAccountStateBenchmark {
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -250,7 +251,8 @@ public class BlockchainAccountStateBenchmark {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
                         1000000,
-                        1);
+                        1,
+                        TransactionTypes.DEFAULT);
 
         AionBlock block =
                 bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
@@ -277,7 +279,6 @@ public class BlockchainAccountStateBenchmark {
 
         byte[] callData = Hex.decode("26121ff0");
 
-        // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < repeat; i++) {
             AionTransaction sendTransaction =
                     new AionTransaction(
@@ -287,7 +288,8 @@ public class BlockchainAccountStateBenchmark {
                             BigInteger.ZERO.toByteArray(),
                             callData,
                             200000,
-                            1);
+                            1,
+                            TransactionTypes.DEFAULT);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
