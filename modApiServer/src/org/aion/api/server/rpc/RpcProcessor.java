@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.aion.api.server.rpc2.RpcProcessor2;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -25,16 +26,19 @@ public class RpcProcessor {
     private CompletionService<JSONObject> batchCallCompletionService;
     private final int SHUTDOWN_WAIT_SECONDS = 5;
 
-    public RpcProcessor(
-            final List<String> enabledGroups,
-            final List<String> enabledMethods,
-            final List<String> disabledMethods) {
+    private final RpcProcessor2 rpcProcessor2;
 
+    public RpcProcessor(
+        final List<String> enabledGroups,
+        final List<String> enabledMethods,
+        final List<String> disabledMethods,
+        final RpcProcessor2 rpcProcessor2) {
         this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
         executor =
                 Executors.newFixedThreadPool(
                         Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
         batchCallCompletionService = new ExecutorCompletionService<>(executor);
+        this.rpcProcessor2 = rpcProcessor2;
     }
 
     public String process(String _requestBody) {
@@ -171,6 +175,14 @@ public class RpcProcessor {
     private String handleSingle(String _reqBody) {
         try {
             JSONObject obj = new JSONObject(_reqBody);
+
+            // This is a hook to to help transition to the new RPC server (TODO AKI-XXX).
+            // If the new RPC server supports this method, delegate processing to the new RPC server
+            String method = obj.optString("method");
+            if(method != null  && RpcProcessor2.supportsMethod(method)) {
+                return rpcProcessor2.process(obj);
+            }
+
             return composeRpcResponse(processObject(obj).toString());
         } catch (Exception e) {
             // rpc call with invalid JSON
