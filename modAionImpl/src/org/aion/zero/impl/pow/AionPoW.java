@@ -259,7 +259,7 @@ public class AionPoW {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            Block newBlock = blockchain.createNewMiningBlock(blockchain.getBestBlock(), txs, false);
+            Block newBlock = blockchain.createNewBlock(blockchain.getBestBlock(), txs, false, null);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

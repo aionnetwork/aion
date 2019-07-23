@@ -25,13 +25,11 @@ public interface IAionBlockchain extends IBlockchain {
             List<AionTransaction> transactions,
             boolean waitUntilBlockTime);
 
-    Block createNewMiningBlock(
-            Block parent,
-            List<AionTransaction> transactions,
-            boolean waitUntilBlockTime);
-
-    Block createNewStakingBlock(
-            Block parent, List<AionTransaction> transactions, byte[] seed);
+    Block createNewBlock(
+        Block parent,
+        List<AionTransaction> transactions,
+        boolean waitUntilBlockTime,
+        byte[] seed);
 
     BlockContext createNewBlockContext(
         Block parent,

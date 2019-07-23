@@ -141,6 +141,7 @@ public class AionPoS {
                                                                     AddressUtils.wrapAddress(
                                                                             config.getConsensus()
                                                                                     .getStakerAddress()));
+
                                             // TODO: [unity] might change the threshold.
                                             if (votes < 1) {
                                                 continue;
@@ -289,7 +290,7 @@ public class AionPoS {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            StakingBlock newBlock = (StakingBlock) blockchain.createNewStakingBlock(bestBlock, txs, seed);
+            StakingBlock newBlock = (StakingBlock) blockchain.createNewBlock(bestBlock, txs, false, seed);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

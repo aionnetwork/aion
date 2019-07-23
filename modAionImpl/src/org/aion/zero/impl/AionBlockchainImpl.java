@@ -1095,19 +1095,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return new block
      */
     public synchronized Block createNewBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
-        return createNewBlockInternal(
-            parent, transactions, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
-            .block;
+        return createNewBlock(parent, transactions, waitUntilBlockTime, null);
     }
 
-    public synchronized AionBlock createNewMiningBlock(
-            Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        return createNewBlockInternal(
-                        parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
+    @Override
+    public synchronized Block createNewBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime, byte[] seed) {
+        if (seed == null) {
+            return createNewBlockInternal(
+                parent, transactions, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
                 .block;
+        } else {
+            return createNewStakingBlock(parent, transactions, seed);
+        }
     }
 
-    public synchronized Block createNewStakingBlock(Block parent, List<AionTransaction> txs, byte[] seed) {
+    private Block createNewStakingBlock(Block parent, List<AionTransaction> txs, byte[] seed) {
         long time = System.currentTimeMillis() / THOUSAND_MS;
 
         BlockHeader parentHdr = parent.getHeader();

@@ -14,7 +14,7 @@ public class GenesisStakingBlock extends StakingBlock {
                 new byte[32],
                 AddressUtils.ZERO_ADDRESS,
                 new byte[256],
-                BigInteger.valueOf(1048576).toByteArray(),
+                BigInteger.valueOf(2_000_000_000L).toByteArray(),
                 0L,
                 0L,
                 extraData,
