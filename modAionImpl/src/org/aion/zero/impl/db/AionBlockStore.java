@@ -1061,6 +1061,14 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 levelBlocks = new ArrayList<>();
             }
 
+            Block parent = getBlockWithAntiParentByHash(block.getParentHash());
+            if (parent.getHeader().getSealType() == block.getHeader().getSealType()) {
+                block.setAntiparentHash(parent.getAntiparentHash());
+            } else {
+                parent = getBlockWithAntiParentByHash(block.getParentHash());
+                block.setAntiparentHash(parent.getAntiparentHash());
+            }
+
             // correct block info
             // assuming side chain, with warnings upon encountered issues
             BlockInfo blockInfo =
