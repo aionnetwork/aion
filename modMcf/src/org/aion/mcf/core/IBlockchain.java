@@ -93,7 +93,7 @@ public interface IBlockchain extends IPowChain {
 
     AionAddress getMinerCoinbase();
 
-    boolean isBlockExist(byte[] hash);
+    boolean isBlockStored(byte[] hash, long number);
 
     List<BlockHeader> getListOfHeadersStartFrom(long number, int limit);
 

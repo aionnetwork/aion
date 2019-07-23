@@ -280,7 +280,7 @@ public class BlockchainConcurrentImportTest {
                 () -> {
 
                     // creating block only if parent already imported
-                    if (_chain.isBlockExist(_parent.getHash())) {
+                    if (_chain.isBlockStored(_parent.getHash(), _parent.getNumber())) {
 
                         testChain.assertEqualTotalDifficulty();
 
@@ -295,7 +295,7 @@ public class BlockchainConcurrentImportTest {
                         testChain.assertEqualTotalDifficulty();
 
                         // checking if the new block was already imported
-                        if (!_chain.isBlockExist(block.getHash())) {
+                        if (!_chain.isBlockStored(block.getHash(), block.getNumber())) {
                             // still adding this block
                             _queue.add(block);
 

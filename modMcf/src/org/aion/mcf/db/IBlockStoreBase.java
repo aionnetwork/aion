@@ -18,7 +18,7 @@ public interface IBlockStoreBase {
 
     Block getBlockByHash(byte[] hash);
 
-    boolean isBlockExist(byte[] hash);
+    boolean isBlockStored(byte[] hash, long number);
 
     List<byte[]> getListHashesEndWith(byte[] hash, long qty);
 

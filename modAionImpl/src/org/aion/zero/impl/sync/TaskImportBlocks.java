@@ -32,7 +32,6 @@ import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.sync.PeerState.Mode;
 import org.aion.zero.impl.sync.statistics.BlockType;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -536,7 +535,7 @@ final class TaskImportBlocks implements Runnable {
      *     old blocks, for example when blocks are imported in {@link PeerState.Mode#FORWARD} mode.
      */
     static boolean isAlreadyStored(AionBlockStore store, Block block) {
-        return store.getMaxNumber() >= block.getNumber() && store.isBlockExist(block.getHash());
+        return store.getMaxNumber() >= block.getNumber() && store.isBlockStored(block.getHash(), block.getNumber());
     }
 
     private ImportResult importBlock(Block b, String displayId, PeerState state) {

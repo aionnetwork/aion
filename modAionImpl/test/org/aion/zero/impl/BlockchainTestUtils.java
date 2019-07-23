@@ -226,7 +226,7 @@ public class BlockchainTestUtils {
      */
     public static Block generateNewBlock(
             StandaloneBlockchain chain, Block parent, List<ECKey> accounts, int txCount) {
-        if (!chain.getBlockStore().isBlockExist(parent.getHash())) return null;
+        if (!chain.getBlockStore().isBlockStored(parent.getHash(), parent.getNumber())) return null;
 
         Block block;
         AionRepositoryImpl repo = chain.getRepository();

@@ -435,8 +435,18 @@ public class AionBlockStore extends AbstractPowBlockstore {
     }
 
     @Override
-    public boolean isBlockExist(byte[] hash) {
-        return getBlockByHash(hash) != null;
+    public boolean isBlockStored(byte[] hash, long number) {
+        lock.readLock().lock();
+        try {
+            // the index size is cached, making this check faster than reading from the db
+            if (number >= index.size()) {
+                return false;
+            } else {
+                return blocks.get(hash) != null;
+            }
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
