@@ -22,21 +22,19 @@ import org.json.JSONObject;
 public abstract class AbstractBlockHeader implements BlockHeader {
 
     private static final int MAX_DIFFICULTY_LENGTH = 16;
-    private static final int RLP_BH_SEALTYPE = 0,
-        RLP_BH_NUMBER = 1,
-        RLP_BH_PARENTHASH = 2,
-        RLP_BH_COINBASE = 3,
-        RLP_BH_STATEROOT = 4,
-        RLP_BH_TXTRIE = 5,
-        RLP_BH_RECEIPTTRIE = 6,
-        RLP_BH_LOGSBLOOM = 7,
-        RLP_BH_DIFFICULTY = 8,
-        RLP_BH_EXTRADATA = 9,
-        RLP_BH_NRG_CONSUMED = 10,
-        RLP_BH_NRG_LIMIT = 11,
-        RLP_BH_TIMESTAMP = 12;
-    
-    //TODO: [Unity] We should probably move this enum somewhere else
+    public static final int RLP_BH_SEALTYPE = 0;
+    private static final int RLP_BH_NUMBER = 1;
+    private static final int RLP_BH_PARENTHASH = 2;
+    private static final int RLP_BH_COINBASE = 3;
+    private static final int RLP_BH_STATEROOT = 4;
+    private static final int RLP_BH_TXTRIE = 5;
+    private static final int RLP_BH_RECEIPTTRIE = 6;
+    private static final int RLP_BH_LOGSBLOOM = 7;
+    private static final int RLP_BH_DIFFICULTY = 8;
+    private static final int RLP_BH_EXTRADATA = 9;
+    private static final int RLP_BH_NRG_CONSUMED = 10;
+    private static final int RLP_BH_NRG_LIMIT = 11;
+    private static final int RLP_BH_TIMESTAMP = 12;
 
     public enum BlockSealType {
         SEAL_NA((byte) 0),

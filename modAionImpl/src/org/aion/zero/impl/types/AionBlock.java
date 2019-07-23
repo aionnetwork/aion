@@ -503,12 +503,10 @@ public class AionBlock extends AbstractBlock {
         return block;
     }
 
-    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
-        RLPList params = RLP.decode2(rlpEncoded);
-
+    public static AionBlock fromRLPList(RLPList rlpdecodedList, boolean isUnsafe) {
         // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
+        if (rlpdecodedList.get(0) instanceof RLPList) {
+            RLPList blockRLP = (RLPList) rlpdecodedList.get(0);
 
             if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
 
@@ -539,5 +537,14 @@ public class AionBlock extends AbstractBlock {
         }
         // not an AionBlock encoding
         return null;
+    }
+
+    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+        RLPList params = RLP.decode2(rlpEncoded);
+        return fromRLPList(params, isUnsafe);
+    }
+
+    public void setCumulativeDifficulty(BigInteger _td) {
+        td = _td;
     }
 }

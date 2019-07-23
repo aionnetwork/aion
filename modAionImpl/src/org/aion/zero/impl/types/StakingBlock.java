@@ -9,6 +9,7 @@ import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -303,14 +304,14 @@ public class StakingBlock extends AbstractBlock {
      * blockchain before handing it off to miner. This step is necessary to add post-execution
      * states:
      *
-     * <p>{@link org.aion.mcf.types.AbstractBlockHeader#txTrieRoot} {@link
-     * org.aion.mcf.types.AbstractBlockHeader#receiptTrieRoot} {@link
-     * org.aion.mcf.types.AbstractBlockHeader#stateRoot} {@link
-     * org.aion.mcf.types.AbstractBlockHeader#logsBloom} {@link this#transactionsList} {@link
-     * org.aion.mcf.types.AbstractBlockHeader#energyConsumed}
+     * <p>{@link AbstractBlockHeader#getTxTrieRoot()} {@link
+     * AbstractBlockHeader#getReceiptsRoot()} {@link
+     * AbstractBlockHeader#getStateRoot()} {@link
+     * AbstractBlockHeader#getLogsBloom()} {@link this#transactionsList} {@link
+     * AbstractBlockHeader#getEnergyConsumed()}
      *
      * <p>The (as of now) unenforced contract by using this function is that the user should not
-     * modify any fields set except for {@link StakedBlockHeader#signature} after this function is
+     * modify any fields set except for {@link StakedBlockHeader#getSignature()} after this function is
      * called.
      *
      * @param txs list of transactions input to the block (final)
@@ -489,13 +490,10 @@ public class StakingBlock extends AbstractBlock {
 
         return block;
     }
-
-    public static StakingBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
-        RLPList params = RLP.decode2(rlpEncoded);
-
+    public static StakingBlock fromRLPList(RLPList rlpdecodedList, boolean isUnsafe) {
         // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
+        if (rlpdecodedList.get(0) instanceof RLPList) {
+            RLPList blockRLP = (RLPList) rlpdecodedList.get(0);
 
             if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
 
@@ -526,5 +524,11 @@ public class StakingBlock extends AbstractBlock {
         }
         // not an AionBlock encoding
         return null;
+
+}
+
+    public static StakingBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+        RLPList params = RLP.decode2(rlpEncoded);
+        return fromRLPList(params, isUnsafe);
     }
 }

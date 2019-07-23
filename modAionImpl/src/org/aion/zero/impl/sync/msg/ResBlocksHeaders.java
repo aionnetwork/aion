@@ -1,9 +1,12 @@
 package org.aion.zero.impl.sync.msg;
 
+import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -12,6 +15,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.StakedBlockHeader;
 
 /** @author chris */
 public final class ResBlocksHeaders extends Msg {
@@ -31,7 +35,13 @@ public final class ResBlocksHeaders extends Msg {
                 List<BlockHeader> blockHeaders = new ArrayList<>();
                 for (RLPElement aList : list) {
                     RLPList rlpData = ((RLPList) aList);
-                    blockHeaders.add(A0BlockHeader.fromRLP(rlpData, true));
+
+                    byte[] type = rlpData.get(RLP_BH_SEALTYPE).getRLPData();
+                    if (type[0] == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+                        blockHeaders.add(A0BlockHeader.fromRLP(rlpData, true));
+                    } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+                        blockHeaders.add(StakedBlockHeader.fromRLP(rlpData, true));
+                    }
                 }
                 return new ResBlocksHeaders(blockHeaders);
             } catch (Exception ex) {

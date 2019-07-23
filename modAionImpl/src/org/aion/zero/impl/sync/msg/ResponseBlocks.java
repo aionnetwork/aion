@@ -1,10 +1,13 @@
 package org.aion.zero.impl.sync.msg;
 
+import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -13,6 +16,9 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.StakedBlockHeader;
 
 /**
  * Response message to a request for a block range.
@@ -60,10 +66,23 @@ public final class ResponseBlocks extends Msg {
             }
 
             List<Block> blocks = new ArrayList<>();
-            AionBlock current;
+            Block current = null;
             for (RLPElement encoded : list) {
                 try { // preventative try-catch: it's unlikely that exceptions can pass up to here
-                    current = AionBlock.fromRLP(encoded.getRLPData(), true);
+
+                    RLPList params = RLP.decode2(encoded.getRLPData());
+                    RLPList blockRLP = (RLPList) params.get(0);
+                    if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
+                        // Parse Header
+                        RLPList headerRLP = (RLPList) blockRLP.get(0);
+
+                        byte[] type = headerRLP.get(RLP_BH_SEALTYPE).getRLPData();
+                        if (type[0] == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+                            current = AionBlock.fromRLPList(params, true);
+                        } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+                            current = StakingBlock.fromRLPList(params, true);
+                        }
+                    }
                 } catch (Exception e) {
                     return null;
                 }
