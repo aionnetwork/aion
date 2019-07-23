@@ -33,6 +33,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.types.StakedBlockHeader;
 import org.slf4j.Logger;
 
 public class AionPoS {
@@ -42,19 +43,19 @@ public class AionPoS {
 
     protected IAionBlockchain blockchain;
     protected IPendingState pendingState;
-    protected IEventMgr eventMgr;
+    private IEventMgr eventMgr;
 
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected AtomicLong lastUpdate = new AtomicLong(0);
-    protected AtomicLong delta = new AtomicLong(100);
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    private AtomicLong lastUpdate = new AtomicLong(0);
+    private AtomicLong delta = new AtomicLong(100);
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
 
     private EventExecuteService ees;
 
-    private byte[] seed = new byte[64];
+    private byte[] seed;
 
     private final class EpPOS implements Runnable {
         boolean go = true;
@@ -106,7 +107,7 @@ public class AionPoS {
             }
 
             setupHandler();
-            ees = new EventExecuteService(100_000, "EpPos", Thread.NORM_PRIORITY, LOG);
+            ees = new EventExecuteService(10_000, "EpPos", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
             registerCallback();
@@ -116,7 +117,7 @@ public class AionPoS {
                             () -> {
                                 while (!shutDown.get()) {
                                     try {
-                                        Thread.sleep(10);
+                                        Thread.sleep(100);
 
                                         long now = System.currentTimeMillis();
 
@@ -207,7 +208,7 @@ public class AionPoS {
      * Registers callback for the {@link
      * org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK#ON_SOLUTION} event.
      */
-    public void registerCallback() {
+    private void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
         consensusHandler.eventCallback(new EventCallback(ees, LOG));
 
@@ -223,7 +224,7 @@ public class AionPoS {
      *
      * @param signedBlock the block has been signed.
      */
-    protected synchronized void finalizeBlock(StakingBlock signedBlock) {
+    private void finalizeBlock(StakingBlock signedBlock) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
@@ -239,14 +240,14 @@ public class AionPoS {
             if (importResult.isSuccessful()) {
                 if (importResult == IMPORTED_BEST) {
                     LOG.info(
-                            "block sealed <num={}, hash={}, diff={}, tx={}>",
+                            "Staking block sealed <num={}, hash={}, diff={}, tx={}>",
                             signedBlock.getNumber(),
                             signedBlock.getShortHash(),
                             signedBlock.getHeader().getDifficultyBI().toString(),
                             signedBlock.getTransactionsList().size());
                 } else {
-                    LOG.debug(
-                            "block sealed <num={}, hash={}, diff={}, td={}, tx={}, result={}>",
+                    LOG.info(
+                            "Staking block sealed <num={}, hash={}, diff={}, td={}, tx={}, result={}>",
                             signedBlock.getNumber(),
                             signedBlock.getShortHash(),
                             signedBlock.getHeader().getDifficultyBI().toString(),
@@ -267,7 +268,7 @@ public class AionPoS {
     }
 
     /** Creates a new block template. */
-    protected synchronized StakingBlock createNewBlockTemplate(byte[] seed) {
+    private StakingBlock createNewBlockTemplate(byte[] seed) {
 
         if (!shutDown.get()) {
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
@@ -277,7 +278,7 @@ public class AionPoS {
                 return null;
             }
 
-            if (seed == null || seed.length != 64) {
+            if (seed == null || seed.length != StakedBlockHeader.SEED_LENGTH) {
                 LOG.error("Invalid seed info.");
                 return null;
             }
@@ -303,7 +304,7 @@ public class AionPoS {
         return null;
     }
 
-    public synchronized void shutdown() {
+    public void shutdown() {
         if (ees != null) {
             ees.shutdown();
         }

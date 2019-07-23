@@ -44,11 +44,11 @@ public class AionPoW {
 
     protected IAionBlockchain blockchain;
     protected IPendingState pendingState;
-    protected IEventMgr eventMgr;
+    private IEventMgr eventMgr;
 
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected AtomicLong lastUpdate = new AtomicLong(0);
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    private AtomicLong lastUpdate = new AtomicLong(0);
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
@@ -108,7 +108,7 @@ public class AionPoW {
             if (!config.getConsensus().getMining()) return;
 
             setupHandler();
-            ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+            ees = new EventExecuteService(10_000, "EpPow", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
             registerCallback();
@@ -173,7 +173,7 @@ public class AionPoW {
      * Registers callback for the {@link
      * org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK#ON_SOLUTION} event.
      */
-    public void registerCallback() {
+    private void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
         consensusHandler.eventCallback(new EventCallback(ees, LOG));
 
@@ -189,7 +189,7 @@ public class AionPoW {
      *
      * @param solution The generated equihash solution
      */
-    protected synchronized void processSolution(AionPowSolution solution) {
+    private synchronized void processSolution(AionPowSolution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
@@ -244,7 +244,7 @@ public class AionPoW {
     }
 
     /** Creates a new block template. */
-    protected synchronized void createNewBlockTemplate() {
+    private synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?

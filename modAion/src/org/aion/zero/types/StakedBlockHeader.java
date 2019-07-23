@@ -21,6 +21,10 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
     // 0 ~ 12 has been defined in the AbstractClass
     private static final int RLP_BH_SEED = 13, RLP_BH_SIGNATURE = 14, RLP_BH_PUBKEY = 15;
 
+    public static int SIG_LENGTH = 64;
+    public static int SEED_LENGTH = 64;
+    public static int PUBKEY_LENGTH = 32;
+
     /*
      * The seed of this block. It should be a verifiable signature of the seed of the previous PoS block.
      */
@@ -292,9 +296,7 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
         /*
          * Builder parameters, not related to header data structure
          */
-        private static int SIG_LENGTH = 64;
-        private static int SEED_LENGTH = 64;
-        private static int PUBKEY_LENGTH = 32;
+
 
         public Builder fromUnsafeSource() {
             return (Builder) super.fromUnsafeSource();
