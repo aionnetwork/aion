@@ -41,10 +41,6 @@ public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
             throw new IllegalStateException("Invalid parent header input");
         }
 
-        if (!(grandParent instanceof StakedBlockHeader)) {
-            throw new IllegalStateException("Invalid grandParent header input");
-        }
-
         BigInteger currDiff = current.getDifficultyBI();
         if (currDiff.equals(BigInteger.ZERO)) {
             return false;
@@ -56,6 +52,10 @@ public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
                 return false;
             }
             return true;
+        }
+
+        if (!(grandParent instanceof StakedBlockHeader)) {
+            throw new IllegalStateException("Invalid grandParent header input");
         }
 
         BigInteger calcDifficulty = this.diffCalc.calculateDifficulty(parent, grandParent);

@@ -20,7 +20,7 @@ public class HeaderSealTypeRule extends BlockHeaderRule {
                 return false;
             }
         } else if (header instanceof StakedBlockHeader) {
-            if (header.getSealType() != 0x01) {
+            if (header.getSealType() != 0x02) {
                 addError(
                         "Invalid header sealtype for the PoS block header, found sealType "
                                 + header.getSealType(),

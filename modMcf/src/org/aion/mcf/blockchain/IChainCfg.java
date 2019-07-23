@@ -21,7 +21,7 @@ public interface IChainCfg {
 
     BlockHeaderValidator createBlockHeaderValidator();
 
-    ParentBlockHeaderValidator createParentHeaderValidator();
+    ParentBlockHeaderValidator createMiningParentHeaderValidator();
 
     // TODO: [unity] separate these methods from the ChainCfg impl class.
 
@@ -32,4 +32,6 @@ public interface IChainCfg {
     ParentBlockHeaderValidator createStakingParentHeaderValidator();
 
     ParentBlockHeaderValidator createChainHeaderValidator();
+
+    ParentBlockHeaderValidator createBlockParentHeaderValidator();
 }

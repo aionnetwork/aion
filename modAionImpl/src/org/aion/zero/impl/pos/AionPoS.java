@@ -22,6 +22,7 @@ import org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.conversions.Hex;
@@ -254,7 +255,7 @@ public class AionPoS {
                 }
                 // TODO: fire block mined event
             } else {
-                LOG.info(
+                LOG.debug(
                         "Unable to import a new mined block; restarting mining.\n"
                                 + "Mined block import result is "
                                 + importResult
@@ -284,13 +285,11 @@ public class AionPoS {
                 LOG.debug("Creating a new block template");
             }
 
-            long bestBlockNumber = blockchain.getBestBlock().getNumber();
-
-            StakingBlock bestStakingBlock = blockchain.getBestStakingBlock();
+            Block bestBlock = blockchain.getBestBlock();
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            StakingBlock newBlock = (StakingBlock) blockchain.createNewStakingBlock(bestStakingBlock, txs, seed);
+            StakingBlock newBlock = (StakingBlock) blockchain.createNewStakingBlock(bestBlock, txs, seed);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

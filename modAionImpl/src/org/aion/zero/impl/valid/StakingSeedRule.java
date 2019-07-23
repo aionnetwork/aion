@@ -1,6 +1,5 @@
 package org.aion.zero.impl.valid;
 
-import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.BlockHeader;

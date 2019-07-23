@@ -44,4 +44,6 @@ public interface IBlockStoreBase {
     void close();
 
     void rollback(long blockNumber);
+
+    Block getBlockWithAntiParentByHash(byte[] hash);
 }

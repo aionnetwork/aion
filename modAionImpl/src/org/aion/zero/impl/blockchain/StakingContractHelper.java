@@ -13,6 +13,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -22,7 +23,6 @@ import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.types.AionTxReceipt;
 import org.slf4j.Logger;
 
@@ -111,7 +111,7 @@ public class StakingContractHelper {
             tx.sign(keyForCallandEstimate);
         }
 
-        StakingBlock block = (StakingBlock) chain.getBestBlock();
+        Block block = chain.getBestBlock();
 
         RepositoryCache repository =
                 chain.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();

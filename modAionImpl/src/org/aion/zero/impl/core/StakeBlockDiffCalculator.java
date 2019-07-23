@@ -8,8 +8,8 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IBlockConstants;
 
 public class StakeBlockDiffCalculator {
-    private static double controlRateBrake = 1.0 + 0.05;
-    private static double controlRateSpeed = 1.0 - 0.05;
+    private static double controlRateSpeed = 1.0 + 0.05;
+    private static double controlRateBrake = 1.0 - 0.05;
 
     // choise barrier = 14 because lambda =~ −13.862943611
     private static long barrier = 14;
@@ -43,9 +43,9 @@ public class StakeBlockDiffCalculator {
         if (timeDelta == barrier) {
             newDiff = pd;
         } else if (timeDelta > barrier) {
-            newDiff = BigDecimal.valueOf(pd.doubleValue() / controlRateBrake).toBigInteger();
+            newDiff = BigDecimal.valueOf(pd.doubleValue() * controlRateBrake).toBigInteger();
         } else {
-            newDiff = BigDecimal.valueOf(pd.doubleValue() / controlRateSpeed).toBigInteger();
+            newDiff = BigDecimal.valueOf(pd.doubleValue() * controlRateSpeed).toBigInteger();
         }
 
         return max(constants.getMinimumDifficulty(), newDiff);

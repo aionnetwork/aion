@@ -62,7 +62,7 @@ public class BlockConstants implements IBlockConstants {
     private static final BigInteger RAMP_UP_END_VALUE = BLOCK_REWARD;
 
     /** Desired block time */
-    private static final long EXPECTED_BLOCK_TIME = 10;
+    private static final long EXPECTED_BLOCK_TIME = 20;
 
     /**
      * Desired future elapsed time, when receiving a block, allow for at most this amount of seconds
