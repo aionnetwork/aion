@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -111,9 +112,8 @@ public class OldTxExecutorTest {
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        AionAddress from =
-                AddressUtils.wrapAddress(
-                        "1111111111111111111111111111111111111111111111111111111111111111");
+        ECKey senderKey = ECKeyFac.inst().create();
+        AionAddress from = new AionAddress(senderKey.getAddress());
         AionAddress to =
                 AddressUtils.wrapAddress(
                         "2222222222222222222222222222222222222222222222222222222222222222");
@@ -122,6 +122,7 @@ public class OldTxExecutorTest {
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(senderKey);
 
         AionBlock block = createDummyBlock();
 
@@ -152,15 +153,15 @@ public class OldTxExecutorTest {
         System.out.println(deployer);
 
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        AionAddress from =
-                AddressUtils.wrapAddress(
-                        "1111111111111111111111111111111111111111111111111111111111111111");
+        ECKey senderKey = ECKeyFac.inst().create();
+        AionAddress from = new AionAddress(senderKey.getAddress());
         AionAddress to = null;
         byte[] value = DataWordImpl.ZERO.getData();
         byte[] data = Hex.decode(deployer);
         long nrg = 500_000L;
         long nrgPrice = 1;
         AionTransaction tx = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        tx.sign(senderKey);
 
         AionBlock block = createDummyBlock();
 

@@ -1,5 +1,6 @@
 package org.aion.vm;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
+import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTxExecSummary;
@@ -93,7 +95,7 @@ public final class FvmTransactionExecutor {
         // Process the results of the transactions.
         for (AionTransaction transaction : transactions) {
             FastVmTransactionResult result =
-                    FastVirtualMachine.run(externalState, new ExternalCapabilitiesForFvm(), transaction, fork040enabled);
+                    FastVirtualMachine.run(externalState, new ExternalCapabilitiesForFvm(), toAionTypesTransaction(transaction), fork040enabled);
 
             if (result.getResultCode().isFatal()) {
                 throw new VMException(result.toString());
@@ -237,5 +239,13 @@ public final class FvmTransactionExecutor {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
         return FvmDataWord.fromBytes(diff);
+    }
+
+    private static Transaction toAionTypesTransaction(AionTransaction transaction) {
+        if (transaction.isContractCreationTransaction()) {
+            return Transaction.contractCreateTransaction(transaction.getSenderAddress(), transaction.getTransactionHash(), transaction.getNonceBI(), new BigInteger(1, transaction.getValue()), transaction.getData(), transaction.getEnergyLimit(), transaction.getEnergyPrice());
+        } else {
+            return Transaction.contractCallTransaction(transaction.getSenderAddress(), transaction.getDestinationAddress(), transaction.getTransactionHash(), transaction.getNonceBI(), new BigInteger(1, transaction.getValue()), transaction.getData(), transaction.getEnergyLimit(), transaction.getEnergyPrice());
+        }
     }
 }

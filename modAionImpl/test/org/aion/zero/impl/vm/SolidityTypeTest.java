@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -89,10 +91,8 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = DataWordImpl.ZERO.getData();
-        AionAddress from =
-                new AionAddress(
-                        Hex.decode(
-                                "1111111111111111111111111111111111111111111111111111111111111111"));
+        ECKey senderKey = ECKeyFac.inst().create();
+        AionAddress from = new AionAddress(senderKey.getAddress());
         AionAddress to =
                 new AionAddress(
                         Hex.decode(
@@ -101,7 +101,9 @@ public class SolidityTypeTest {
         byte[] data = callData;
         long nrg = new DataWordImpl(100000L).longValue();
         long nrgPrice = DataWordImpl.ONE.longValue();
-        return new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        AionTransaction transaction = new AionTransaction(txNonce, from, to, value, data, nrg, nrgPrice);
+        transaction.sign(senderKey);
+        return transaction;
     }
 
     private RepositoryCache createRepository(AionTransaction tx) throws IOException {
