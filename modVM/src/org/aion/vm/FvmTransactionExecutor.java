@@ -93,7 +93,7 @@ public final class FvmTransactionExecutor {
         // Process the results of the transactions.
         for (AionTransaction transaction : transactions) {
             FastVmTransactionResult result =
-                    FastVirtualMachine.run(externalState, transaction, fork040enabled);
+                    FastVirtualMachine.run(externalState, new ExternalCapabilitiesForFvm(), transaction, fork040enabled);
 
             if (result.getResultCode().isFatal()) {
                 throw new VMException(result.toString());

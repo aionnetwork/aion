@@ -144,7 +144,7 @@ public abstract class Api {
             ret.info.language = "Solidity";
             ret.info.languageVersion = "0";
             ret.info.compilerVersion = result.version;
-            ret.info.abiDefinition = Abi.fromJSON(Contract.abi).getEntries();
+            ret.info.abiDefinition = Abi.fromJSON(Contract.abi, new ExternalCapabilities()).getEntries();
             compiledContracts.put(stringContractEntry.getKey(), ret);
         }
         return compiledContracts;
