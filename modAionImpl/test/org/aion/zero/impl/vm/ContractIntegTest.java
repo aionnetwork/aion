@@ -1021,7 +1021,8 @@ public class ContractIntegTest {
         deployerNonce = repo.getNonce(deployer);
 
         // First recurse 1 time less than the max and verify this is ok.
-        int numRecurses = Constants.MAX_CALL_DEPTH - 1;
+        // Note that 128 == FvmConstants.MAX_CALL_DEPTH
+        int numRecurses = 127;
         byte[] input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         tx =
@@ -1052,7 +1053,8 @@ public class ContractIntegTest {
         repo = blockchain.getRepository().startTracking();
 
         // Now recurse the max amount of times and ensure we fail.
-        numRecurses = Constants.MAX_CALL_DEPTH;
+        // Note that 128 == FvmConstants.MAX_CALL_DEPTH
+        numRecurses = 128;
         input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
         input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
         nonce = nonce.add(BigInteger.ONE);

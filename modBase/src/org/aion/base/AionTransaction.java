@@ -16,6 +16,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
 import org.aion.util.types.AddressUtils;
 import org.slf4j.Logger;
+import org.aion.fastvm.FvmConstants;
 
 /** Aion transaction class. */
 public class AionTransaction implements Cloneable {
@@ -550,10 +551,10 @@ public class AionTransaction implements Cloneable {
         long nonZeroes = nonZeroBytesInData();
         long zeroes = zeroBytesInData();
 
-        return (this.isContractCreationTransaction() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
-                + Constants.NRG_TRANSACTION_MIN
-                + zeroes * Constants.NRG_TX_DATA_ZERO
-                + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
+        return (this.isContractCreationTransaction() ? FvmConstants.CREATE_TRANSACTION_FEE : 0)
+                + FvmConstants.TRANSACTION_BASE_FEE
+                + zeroes * FvmConstants.ZERO_BYTE_FEE
+                + nonZeroes * FvmConstants.NONZERO_BYTE_FEE;
     }
 
     public long nonZeroBytesInData() {

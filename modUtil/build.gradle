@@ -20,6 +20,7 @@ def getCommitHash = { ->
 }
 
 dependencies {
+    compile project(':aion_fastvm')
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
