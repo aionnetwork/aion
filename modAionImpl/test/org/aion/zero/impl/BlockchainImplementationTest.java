@@ -243,7 +243,7 @@ public class BlockchainImplementationTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testGetListOfHashesEndWith_wNullHash() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =

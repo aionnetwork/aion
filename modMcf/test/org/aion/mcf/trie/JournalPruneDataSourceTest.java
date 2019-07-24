@@ -720,7 +720,7 @@ public class JournalPruneDataSourceTest {
         db.deleteBatch(list);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testGet_wNullKey() {
         assertThat(source_db.open()).isTrue();
 
@@ -728,7 +728,7 @@ public class JournalPruneDataSourceTest {
         db.get(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testPut_wNullKey() {
         assertThat(source_db.open()).isTrue();
 
@@ -736,7 +736,7 @@ public class JournalPruneDataSourceTest {
         db.put(null, randomBytes(32));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testPut_wNullValue() {
         assertThat(source_db.open()).isTrue();
 
@@ -744,7 +744,7 @@ public class JournalPruneDataSourceTest {
         db.put(randomBytes(32), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testDelete_wNullKey() {
         assertThat(source_db.open()).isTrue();
 
@@ -752,7 +752,7 @@ public class JournalPruneDataSourceTest {
         db.delete(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testPutBatch_wNullKey() {
         assertThat(source_db.open()).isTrue();
 
@@ -765,7 +765,7 @@ public class JournalPruneDataSourceTest {
         db.putBatch(map);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testPutBatch_wNullValue() {
         assertThat(source_db.open()).isTrue();
 
@@ -778,7 +778,7 @@ public class JournalPruneDataSourceTest {
         db.putBatch(map);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testDeleteBatch_wNullKey() {
         assertThat(source_db.open()).isTrue();
 

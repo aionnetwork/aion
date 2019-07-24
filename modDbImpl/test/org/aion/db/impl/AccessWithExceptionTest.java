@@ -239,7 +239,7 @@ public class AccessWithExceptionTest {
         db.approximateSize();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testGetWithNullKey(Properties dbDef) {
         // create database
@@ -255,7 +255,7 @@ public class AccessWithExceptionTest {
         db.get(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithNullKey(Properties dbDef) {
         // create database
@@ -271,7 +271,7 @@ public class AccessWithExceptionTest {
         db.put(null, DatabaseTestUtils.randomBytes(32));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithNullValue(Properties dbDef) {
         // create database
@@ -287,7 +287,7 @@ public class AccessWithExceptionTest {
         db.put(DatabaseTestUtils.randomBytes(32), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutToBatchWithNullKey(Properties dbDef) {
         // create database
@@ -303,7 +303,7 @@ public class AccessWithExceptionTest {
         db.putToBatch(null, DatabaseTestUtils.randomBytes(32));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutToBatchWithNullValue(Properties dbDef) {
         // create database
@@ -319,7 +319,7 @@ public class AccessWithExceptionTest {
         db.putToBatch(DatabaseTestUtils.randomBytes(32), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteWithNullKey(Properties dbDef) {
         // create database
@@ -335,7 +335,7 @@ public class AccessWithExceptionTest {
         db.delete(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteInBatchWithNullKey(Properties dbDef) {
         // create database
@@ -351,7 +351,7 @@ public class AccessWithExceptionTest {
         db.deleteInBatch(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithNullKey(Properties dbDef) {
         // create database
@@ -372,7 +372,7 @@ public class AccessWithExceptionTest {
         db.putBatch(map);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithNullValue(Properties dbDef) {
         // create database
@@ -393,7 +393,7 @@ public class AccessWithExceptionTest {
         db.putBatch(map);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteBatchWithNullKey(Properties dbDef) {
         // create database

@@ -105,22 +105,22 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
     }
 
     /**
-     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
+     * Checks that the given key is not null. Throws a {@link NullPointerException} if the key
      * is null.
      */
     public static void check(byte[] keyOrValue) {
         if (keyOrValue == null) {
-            throw new IllegalArgumentException("The database does not accept null keys or values.");
+            throw new NullPointerException("The database does not accept null keys or values.");
         }
     }
 
     /**
      * Checks that the given collection of keys does not contain null values. Throws a {@link
-     * IllegalArgumentException} if a null key is present.
+     * NullPointerException} if a null key is present.
      */
     public static void check(Collection<byte[]> keysOrValues) {
         if (keysOrValues.contains(null)) {
-            throw new IllegalArgumentException("The database does not accept null keys or values.");
+            throw new NullPointerException("The database does not accept null keys or values.");
         }
     }
 

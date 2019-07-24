@@ -42,7 +42,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *
      * @param key the key for the new entry
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the key is {@code null}
+     * @throws NullPointerException if the key is {@code null}
      */
     Optional<ValueT> get(KeyT key);
 
@@ -53,7 +53,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      * @param key the key for the new entry
      * @param value the value for the new entry
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if either the key or the value is {@code null}
+     * @throws NullPointerException if either the key or the value is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      * @apiNote Put must have the following properties:
@@ -72,7 +72,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *
      * @param key the key of the entry to be deleted
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if the key is {@code null}
+     * @throws NullPointerException if the key is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
@@ -88,7 +88,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      * @param key the key for the new entry
      * @param value the value for the new entry
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if either the key or the value is {@code null}
+     * @throws NullPointerException if either the key or the value is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      * @apiNote Put must have the following properties:
@@ -110,7 +110,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *
      * @param key the key of the entry to be deleted
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if the key is {@code null}
+     * @throws NullPointerException if the key is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
@@ -133,7 +133,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *
      * @param input a {@link Map} of key-value pairs to be updated in the database
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the map contains a {@code null} key
+     * @throws NullPointerException if the map contains a {@code null} key
      * @apiNote To delete a set of keys one must explicitly call {@link #deleteBatch(Collection)}.
      */
     void putBatch(Map<KeyT, ValueT> input);
@@ -144,7 +144,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *
      * @param keys a {@link Collection} of keys to be deleted form storage
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the collection contains a {@code null} key
+     * @throws NullPointerException if the collection contains a {@code null} key
      */
     void deleteBatch(Collection<KeyT> keys);
 

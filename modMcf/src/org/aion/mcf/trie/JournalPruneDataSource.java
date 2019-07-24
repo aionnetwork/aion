@@ -421,22 +421,22 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     }
 
     /**
-     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
+     * Checks that the given key is not null. Throws a {@link NullPointerException} if the key
      * is null.
      */
     public static void checkNotNull(byte[] k) {
         if (k == null) {
-            throw new IllegalArgumentException("The data store does not accept null keys.");
+            throw new NullPointerException("The data store does not accept null keys.");
         }
     }
 
     /**
      * Checks that the given collection of keys does not contain null values. Throws a {@link
-     * IllegalArgumentException} if a null key is present.
+     * NullPointerException} if a null key is present.
      */
     public static void checkNotNull(Collection<byte[]> keys) {
         if (keys.contains(null)) {
-            throw new IllegalArgumentException("The data store does not accept null keys.");
+            throw new NullPointerException("The data store does not accept null keys.");
         }
     }
 }
