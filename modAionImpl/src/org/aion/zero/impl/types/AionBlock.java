@@ -545,6 +545,6 @@ public class AionBlock extends AbstractBlock {
     }
 
     public void setCumulativeDifficulty(BigInteger _td) {
-        td = _td;
+        totalDifficulty = _td;
     }
 }

@@ -365,9 +365,9 @@ public final class SyncMgr {
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             BlockHeader header = headerIt.next();
             Block block = null;
-            if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+            if (header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
                 block = AionBlock.createBlockFromNetwork(header, bodyIt.next());
-            } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+            } else if (header.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
                 block = StakingBlock.createBlockFromNetwork((StakedBlockHeader) header, bodyIt.next());
             }
 
