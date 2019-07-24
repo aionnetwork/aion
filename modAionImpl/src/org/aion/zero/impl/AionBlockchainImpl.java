@@ -1577,7 +1577,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     header,
                     LOG);
         } else if (header.getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
-            if (stakingBlockHeaderValidator.validate(header, LOG)) {
+            if (!stakingBlockHeaderValidator.validate(header, LOG)) {
                 return false;
             }
 
