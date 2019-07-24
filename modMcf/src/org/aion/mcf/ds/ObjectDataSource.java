@@ -29,12 +29,6 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
 
     public void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);
-        /*
-         * src.put(key, bytes); if (cacheOnWrite) { cache.put(new
-         * ByteArrayWrapper(key), value); }
-         */
-        // TODO @yao - Don't know if just writing to cache is correct logic
-        // or what this was intended to be. Why do a flush then?
         src.put(key, bytes);
     }
 
@@ -56,6 +50,11 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
     }
 
     public V get(byte[] key) {
+        return getFromDatabase(key);
+    }
+
+    // used by inheriting classes when automatically loading entries from the database
+    protected V getFromDatabase(byte[] key) {
         // Fetch the results from cache or database. Return null if doesn't exist.
         Optional<byte[]> val = src.get(key);
         return val.map(serializer::deserialize).orElse(null);

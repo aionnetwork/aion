@@ -4,6 +4,7 @@ package org.aion.log;
 public enum LogEnum {
     GEN,
     CONS,
+    CACHE,
     SYNC,
     API,
     VM,
