@@ -236,7 +236,7 @@ public abstract class ApiAion extends Api {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return Map.entry(
                     new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()),
-                    genBlk.getDifficultyBI());
+                    genBlk.getCumulativeDifficulty());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;

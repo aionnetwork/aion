@@ -10,6 +10,10 @@ import org.aion.util.types.Hash256;
 @SuppressWarnings("rawtypes")
 public interface IPowChain extends IGenericChain {
 
+    BigInteger getTotalMiningDifficulty();
+    
+    BigInteger getTotalStakingDifficulty();
+    
     BigInteger getTotalDifficulty();
 
     void setTotalDifficulty(BigInteger totalDifficulty);

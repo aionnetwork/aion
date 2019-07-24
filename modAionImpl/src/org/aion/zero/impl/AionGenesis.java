@@ -337,13 +337,16 @@ public class AionGenesis extends AionBlock {
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
 
-            /**
-             * Corresponds to {@link Block#getAntiparentHash()}, for purposes of the genesis
-             * blocks, this value is the "virtual" staking genesis block, on top of which the first real staking block is based.
-             */
             try {
-              byte[] antiParenthHash = new GenesisStakingBlock(extraData).getHash();
-              genesis.setAntiparentHash(antiParenthHash);
+                GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(null);
+                byte[] antiParentHash = genesisStakingBlock.getHash();
+                genesis.setAntiparentHash(antiParentHash);
+
+                BigInteger miningDifficulty = genesis.getDifficultyBI();
+
+                genesis.setMiningDifficulty(miningDifficulty);
+                genesis.setStakingDifficulty(BigInteger.ONE);
+                genesis.setCumulativeDifficulty(miningDifficulty);
             } catch (HeaderStructureException e) {
                 e.printStackTrace(); 
             }

@@ -231,9 +231,12 @@ public class BlockchainConcurrentImportTest {
 
                             BigInteger tdFromStore =
                                     store.getTotalDifficultyForHash(_block.getHash());
-                            BigInteger tdCalculated =
-                                    store.getTotalDifficultyForHash(_block.getParentHash())
-                                            .add(_block.getDifficultyBI());
+                            
+                            // Assuming all added blocks are PoW blocks
+                            Block parentBlockWithDifficulties = store.getBlockByHashWithInfo(_block.getParentHash());
+                            BigInteger tdCalculated = parentBlockWithDifficulties
+                                    .getCumulativeDifficulty()
+                                    .add(_block.getDifficultyBI().multiply(parentBlockWithDifficulties.getStakingDifficulty()));
 
                             assertThat(tdFromStore).isEqualTo(tdCalculated);
                             assertThat(tdCalculated)

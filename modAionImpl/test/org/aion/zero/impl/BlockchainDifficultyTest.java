@@ -84,12 +84,18 @@ public class BlockchainDifficultyTest {
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts()
                         .build();
+        
+        BigInteger genesisStakingDifficulty = bundle.bc.genesis.getStakingDifficulty();
 
         Block preBlock =
                 bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(preBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
-        BigInteger td = bundle.bc.getGenesis().getDifficultyBI().add(preBlock.getDifficultyBI());
+        
+        // Assuming we added a PoW block
+        BigInteger miningDifficulty = bundle.bc.getGenesis().getDifficultyBI().add(preBlock.getDifficultyBI());
+        BigInteger td = miningDifficulty.multiply(genesisStakingDifficulty);
+
         assertThat(td).isEqualTo(bundle.bc.getCacheTD());
         System.out.println(
                 "new block: "
@@ -105,7 +111,10 @@ public class BlockchainDifficultyTest {
             Block newBlock = bundle.bc.createNewBlock(preBlock, Collections.emptyList(), true);
 
             assertThat(bundle.bc.tryToConnect(newBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
-            td = td.add(newBlock.getDifficultyBI());
+            
+            // The total difficulty increase upon adding a PoW block to a PoW-only chain
+            // is the blockDifficulty * genesisStakingDifficulty
+            td = td.add(newBlock.getDifficultyBI().multiply(genesisStakingDifficulty));
             assertThat(td).isEqualTo(bundle.bc.getCacheTD());
             System.out.println(
                     "new block: "

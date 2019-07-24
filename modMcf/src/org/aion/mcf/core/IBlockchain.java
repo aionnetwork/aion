@@ -81,6 +81,10 @@ public interface IBlockchain extends IPowChain {
 
     void close();
 
+    void setTotalMiningDifficulty(BigInteger miningDifficulty);
+    
+    void setTotalStakingDifficulty(BigInteger stakingDifficulty);
+    
     void setTotalDifficulty(BigInteger totalDifficulty);
 
     byte[] getBestBlockHash();

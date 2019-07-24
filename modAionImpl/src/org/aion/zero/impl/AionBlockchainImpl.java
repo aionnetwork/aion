@@ -163,6 +163,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private volatile Block pubBestBlock;
 
     private volatile BigInteger totalDifficulty = ZERO;
+    private volatile BigInteger totalMiningDifficulty = ZERO;
+    private volatile BigInteger totalStakingDifficulty = ZERO;
     private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
@@ -605,7 +607,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid best block data!");
         }
 
-        this.totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
+        Block blockWithDifficulties = getBlockStore().getBlockByHashWithInfo(bestBlockHash);
+        this.totalMiningDifficulty = blockWithDifficulties.getMiningDifficulty();
+        this.totalStakingDifficulty = blockWithDifficulties.getStakingDifficulty();
+        this.totalDifficulty = blockWithDifficulties.getCumulativeDifficulty();
         this.repository =
                 (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
@@ -624,7 +629,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid best block data!");
         }
 
-        this.totalDifficulty = state.savedTD;
+        this.totalMiningDifficulty = state.savedMiningDifficulty;
+        this.totalStakingDifficulty = state.savedStakingDifficulty;
+        this.totalDifficulty = state.savedTotalDifficulty;
     }
 
     private void dropState() {
@@ -651,7 +658,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             this.fork = false;
         }
 
-        if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTD)) {
+        if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTotalDifficulty)) {
 
             if (LOG.isInfoEnabled()) {
                 LOG.info(
@@ -736,8 +743,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public void loadBestMiningBlock() {
         if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
             bestMiningBlock = (AionBlock) bestBlock;
-        } else {
+        } else if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
             bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+        } else {
+            throw new IllegalStateException("Invalid block type");
         }
     }
 
@@ -842,7 +851,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.NO_CHILD;
         } else {
             // the total difficulty will be updated after the chain is complete
-            getBlockStore().saveBlock(block, ZERO, true);
+            getBlockStore().saveBlock(block, ZERO, ZERO,true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1504,7 +1513,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private Block getParent(BlockHeader header) {
-        return getBlockStore().getBlockWithAntiParentByHash(header.getParentHash());
+        return getBlockStore().getBlockByHashWithInfo(header.getParentHash());
     }
 
     private Block getParentBlock(BlockHeader header) {
@@ -1525,7 +1534,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 e.printStackTrace();
             }
 
-            Block antiParentBlock = getBlockStore().getBlockWithAntiParentByHash(parent.getAntiparentHash());
+            Block antiParentBlock = getBlockStore().getBlockByHashWithInfo(parent.getAntiparentHash());
             if (antiParentBlock == null) {
                 return null;
             }
@@ -1879,9 +1888,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
         if (fork) {
-            getBlockStore().saveBlock(block, totalDifficulty, false);
+            getBlockStore().saveBlock(block, totalMiningDifficulty, totalStakingDifficulty, false);
         } else {
-            getBlockStore().saveBlock(block, totalDifficulty, true);
+            getBlockStore().saveBlock(block, totalMiningDifficulty, totalStakingDifficulty, true);
         }
 
         AionTxInfo info;
@@ -2001,6 +2010,32 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    public BigInteger getTotalMiningDifficulty() {
+        return getBestBlock().getMiningDifficulty();
+    }
+
+    @Override
+    public void setTotalMiningDifficulty(BigInteger totalMiningDifficulty) {
+        this.totalMiningDifficulty = totalMiningDifficulty;
+        if (this.totalMiningDifficulty != null && this.totalStakingDifficulty != null) {
+            this.totalDifficulty = totalStakingDifficulty.multiply(totalMiningDifficulty);
+        }        
+    }
+
+    @Override
+    public BigInteger getTotalStakingDifficulty() {
+        return getBestBlock().getStakingDifficulty();
+    }
+
+    @Override
+    public void setTotalStakingDifficulty(BigInteger totalStakingDifficulty) {
+        this.totalStakingDifficulty = totalStakingDifficulty;
+        if (this.totalMiningDifficulty != null && this.totalStakingDifficulty != null) {
+            this.totalDifficulty = totalStakingDifficulty.multiply(totalMiningDifficulty);
+        }         
+    }
+
+    @Override
     public BigInteger getTotalDifficulty() {
         return getBestBlock().getCumulativeDifficulty();
     }
@@ -2012,7 +2047,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     // this method is for the testing purpose
     protected BigInteger getCacheTD() {
-        return totalDifficulty;
+        return totalMiningDifficulty.multiply(totalStakingDifficulty);
     }
 
     private BigInteger getInternalTD() {
@@ -2020,7 +2055,31 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private void updateTotalDifficulty(Block block) {
-        totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
+        if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+            totalMiningDifficulty = totalMiningDifficulty.add(block.getDifficultyBI());
+        } else if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+
+            byte[] sealAntiparentHash = repository.getBlockStore().getBlockByHashWithInfo(block.getParentHash()).getAntiparentHash();
+            
+            if (sealAntiparentHash == null) {
+                return;
+            } else {
+                try {
+                    if (Arrays.equals(sealAntiparentHash, CfgAion.inst().getGenesisStakingBlock().getHash())){
+                        // We are about to add the first staking block to this chain
+                        totalStakingDifficulty = CfgAion.inst().getGenesisStakingBlock().getStakingDifficulty();
+                    }
+                } catch (HeaderStructureException e) {
+                    e.printStackTrace();
+                    return;
+                }
+            }
+            
+            totalStakingDifficulty = totalStakingDifficulty.add(block.getDifficultyBI());
+        } else {
+            throw new IllegalStateException("Invalid block type");
+        }
+        totalDifficulty = totalMiningDifficulty.multiply(totalStakingDifficulty);
         block.setCumulativeDifficulty(totalDifficulty);
         if (LOG.isDebugEnabled()) {
             LOG.debug("TD: updated to {}", totalDifficulty);
@@ -2446,13 +2505,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         getBlockStore().correctSize(maxNumber, LOG);
 
         // remove the last added block because it has a correct world state
-        BigInteger totalDiff =
-                getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
-
+        Block parentBlock = repo.getBlockStore().getBlockByHashWithInfo(dirtyBlocks.pop().getHash());
+        
         LOG.info(
                 "Valid index found at block hash: {}, number: {}.",
-                other.getShortHash(),
-                other.getNumber());
+                parentBlock.getShortHash(),
+                parentBlock.getNumber());
 
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
@@ -2462,8 +2520,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getShortHash(),
                     other.getNumber(),
                     other.getTransactionsList().size());
-            totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff);
+            parentBlock = repo.getBlockStore().correctIndexEntry(other, parentBlock.getMiningDifficulty(), parentBlock.getStakingDifficulty());
         }
+        
+        BigInteger totalDiff = parentBlock.getCumulativeDifficulty();
 
         // update the repository
         repo.flush();
@@ -2526,7 +2586,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionRepositoryImpl savedRepo = repository;
         Block savedBest = bestBlock;
-        BigInteger savedTD = totalDifficulty;
+        BigInteger savedMiningDifficulty = totalMiningDifficulty;
+        BigInteger savedStakingDifficulty = totalStakingDifficulty;
+        BigInteger savedTotalDifficulty = totalDifficulty;
     }
 
     /**

@@ -35,7 +35,7 @@ public class DataSourceArrayTest {
 
     static {
         AionBlockStore.BlockInfo info =
-                new AionBlockStore.BlockInfo(HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH, BigInteger.TEN, true);
+                new AionBlockStore.BlockInfo(HashUtil.EMPTY_DATA_HASH, HashUtil.EMPTY_DATA_HASH, BigInteger.TEN, BigInteger.TEN, true);
 
         infoList = new ArrayList<>();
         infoList.add(info);

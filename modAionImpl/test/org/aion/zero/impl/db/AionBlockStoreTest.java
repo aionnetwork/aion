@@ -264,8 +264,8 @@ public class AionBlockStoreTest {
                         1);
         AionBlockStore store = new AionBlockStore(index, blocks, false);
 
-        store.saveBlock(blk1, BigInteger.TEN, true);
-        store.saveBlock(blk2, BigInteger.TEN.add(BigInteger.ONE), true);
+        store.saveBlock(blk1, BigInteger.TEN, BigInteger.TEN, true);
+        store.saveBlock(blk2, BigInteger.TEN.add(BigInteger.ONE), BigInteger.TEN, true);
 
         store.rollback(1);
 
@@ -279,7 +279,7 @@ public class AionBlockStoreTest {
     private void addThread_saveBlock(List<Runnable> threads, AionBlockStore store, Block block) {
         threads.add(
                 () -> {
-                    store.saveBlock(block, block.getDifficultyBI(), true);
+                    store.saveBlock(block, block.getMiningDifficulty(), block.getStakingDifficulty(), true);
                     assertThat(store.getBlockByHash(block.getHash())).isNotNull();
                 });
     }

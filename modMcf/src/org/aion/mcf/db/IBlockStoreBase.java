@@ -11,6 +11,8 @@ import org.aion.mcf.blockchain.BlockHeader;
  */
 public interface IBlockStoreBase {
 
+    Block getBestBlockWithInfo();
+
     byte[] getBlockHashByNumber(long blockNumber);
 
     byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash);
@@ -45,12 +47,12 @@ public interface IBlockStoreBase {
     void close();
 
     void rollback(long blockNumber);
-
-    Block getBlockWithAntiParentByHash(byte[] hash);
     
     BigInteger getTotalDifficultyForHash(byte[] hash);
 
-    void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
+    void saveBlock(Block block, BigInteger miningDifficulty, BigInteger stakingDifficulty, boolean mainChain);
 
     BigInteger getTotalDifficulty();
+
+    Block getBlockByHashWithInfo(byte[] hash);
 }
