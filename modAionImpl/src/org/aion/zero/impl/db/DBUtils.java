@@ -534,7 +534,6 @@ public class DBUtils {
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
-        cfg.getDb().setHeapCacheEnabled(true);
 
         System.out.println("\nImporting stored blocks INITIATED...\n");
 
@@ -617,9 +616,14 @@ public class DBUtils {
                     try {
                         // clear the index entry and prune side-chain blocks
                         store.redoIndexWithoutSideChains(block);
+                        long t1 = System.currentTimeMillis();
                         result =
                                 chain.tryToConnectAndFetchSummary(
                                         block, System.currentTimeMillis() / THOUSAND_MS, false);
+                        long t2 = System.currentTimeMillis();
+                        System.out.println("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
+                                               + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()
+                                               + ", time elapsed = " + (t2 - t1) + " ms, td = " + chain.getTotalDifficulty() + ">");
                     } catch (Throwable t) {
                         // we want to see the exception and the block where it occurred
                         t.printStackTrace();
@@ -692,6 +696,7 @@ public class DBUtils {
 
                     currentBlock++;
                 }
+                System.out.println("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
             }
 
             if (fail) {
