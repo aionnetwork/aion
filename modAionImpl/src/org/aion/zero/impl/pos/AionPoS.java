@@ -125,6 +125,20 @@ public class AionPoS {
                                                 && blockchain
                                                         .getStakingContractHelper()
                                                         .isContractDeployed()) {
+
+                                            long votes =
+                                                blockchain
+                                                    .getStakingContractHelper()
+                                                    .callGetVote(
+                                                        AddressUtils.wrapAddress(
+                                                            config.getConsensus()
+                                                                .getStakerAddress()));
+
+                                            // TODO: [unity] might change the threshold.
+                                            if (votes < 1) {
+                                                continue;
+                                            }
+
                                             seed =
                                                     ChainConfiguration.getStakerKey()
                                                             .sign(
@@ -134,19 +148,6 @@ public class AionPoS {
                                                             .getSignature();
 
                                             StakingBlock newBlock = createNewBlockTemplate(seed);
-
-                                            long votes =
-                                                    blockchain
-                                                            .getStakingContractHelper()
-                                                            .callGetVote(
-                                                                    AddressUtils.wrapAddress(
-                                                                            config.getConsensus()
-                                                                                    .getStakerAddress()));
-
-                                            // TODO: [unity] might change the threshold.
-                                            if (votes < 1) {
-                                                continue;
-                                            }
 
                                             double newDelta =
                                                     newBlock.getDifficultyBI().doubleValue()
