@@ -59,6 +59,9 @@ public class AionRepositoryImpl
     // inferred contract information not used for consensus
     private ObjectDataSource<ContractInformation> contractInfoSource;
 
+    // TODO: include in the repository config after the FVM is decoupled or remove RepositoryConfig and pass individual parameters
+    private int blockCacheSize;
+
     /**
      * used by getSnapShotTo
      *
@@ -67,7 +70,8 @@ public class AionRepositoryImpl
      */
     protected AionRepositoryImpl() {}
 
-    protected AionRepositoryImpl(RepositoryConfig repoConfig) {
+    protected AionRepositoryImpl(RepositoryConfig repoConfig, int blockCacheSize) {
+        this.blockCacheSize = blockCacheSize;
         this.cfg = repoConfig;
         init();
     }
@@ -77,7 +81,7 @@ public class AionRepositoryImpl
     }
 
     public static AionRepositoryImpl createForTesting(RepositoryConfig repoConfig) {
-        return new AionRepositoryImpl(repoConfig);
+        return new AionRepositoryImpl(repoConfig, 0);
     }
 
     private void init() {
@@ -90,7 +94,7 @@ public class AionRepositoryImpl
                             transactionDatabase, AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
-            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
+            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
             this.contractInfoSource =
@@ -1208,6 +1212,7 @@ public class AionRepositoryImpl
                         new RepositoryConfigImpl(
                                 config.getDatabasePath(),
                                 ContractDetailsAion.getInstance(),
-                                config.getDb()));
+                                config.getDb()),
+                        10);
     }
 }

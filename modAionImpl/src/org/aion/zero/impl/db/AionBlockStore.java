@@ -30,6 +30,8 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.db.AbstractPowBlockstore;
+import org.aion.mcf.ds.DataSource;
+import org.aion.mcf.ds.DataSource.Type;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
@@ -57,38 +59,33 @@ public class AionBlockStore extends AbstractPowBlockstore {
             preBranchingBlk = new ArrayDeque<>();
     private long branchingLevel;
 
-    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks) {
-        init(index, blocks);
+    @VisibleForTesting
+    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity) {
+        this(index, blocks, checkIntegrity, 0);
     }
 
-    public AionBlockStore(
-            ByteArrayKeyValueDatabase index,
-            ByteArrayKeyValueDatabase blocks,
-            boolean checkIntegrity) {
-        this(index, blocks);
+    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize) {
+        this.index = new DataSourceArray<>(new ObjectDataSource(index, BLOCK_INFO_SERIALIZER));
+        this.blocks =
+                new DataSource<>(blocks, BLOCK_SERIALIZER)
+                        .withCache(blockCacheSize, Type.LRU)
+                        .buildObjectSource();
         this.checkIntegrity = checkIntegrity;
     }
 
-    private void init(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks) {
+    private static final Serializer<Block, byte[]> BLOCK_SERIALIZER =
+        new Serializer<>() {
+            @Override
+            public byte[] serialize(Block block) {
+                return block.getEncoded();
+            }
 
-        this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
-
-        this.blocks =
-                new ObjectDataSource<>(
-                        blocks,
-                        new Serializer<Block, byte[]>() {
-                            @Override
-                            public byte[] serialize(Block block) {
-                                return block.getEncoded();
-                            }
-
-                            @Override
-                            // TODO: This will have to change to support PoS blocks
-                            public AionBlock deserialize(byte[] bytes) {
-                                return new AionBlock(bytes);
-                            }
-                        });
-    }
+            @Override
+            // TODO: This will have to change to support PoS blocks
+            public AionBlock deserialize(byte[] bytes) {
+                return new AionBlock(bytes);
+            }
+        };
 
     public Block getBestBlock() {
         lock.readLock().lock();
