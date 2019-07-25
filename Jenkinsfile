@@ -8,6 +8,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                cleanWs()
                 echo "Building branch: ${env.BRANCH_NAME}"
                 sh "git lfs install"
                 sh "./gradlew pack" 
@@ -61,7 +62,6 @@ pipeline {
         always {
             sh('([ -d FunctionalTests ] && cp -r FunctionalTests/report/FunctionalTests report/) || true')
             junit "report/**/*.xml"
-            cleanWs()
     }
 
     success {
