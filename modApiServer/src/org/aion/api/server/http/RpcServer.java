@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.aion.api.server.rpc.RpcProcessor;
-import org.aion.api.server.rpc2.RpcProcessor2;
+import org.aion.api.server.rpc2.Rpc2Shim;
 
 public abstract class RpcServer {
 
@@ -51,7 +51,7 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
         List<String> disabledMethods =
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
-        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new RpcProcessor2());
+        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim());
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {
