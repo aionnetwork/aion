@@ -24,7 +24,7 @@ public class HeapDumper {
      * @param fileName name of the heap dump file
      * @param live flag that tells whether to dump only the live objects
      */
-    static void dumpHeap(String fileName, boolean live) {
+    public static void dumpHeap(String fileName, boolean live) {
         // initialize hotspot diagnostic MBean
         initHotspotMBean();
         try {

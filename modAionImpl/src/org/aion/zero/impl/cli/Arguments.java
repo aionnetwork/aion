@@ -189,6 +189,13 @@ public class Arguments {
             description = "retrieve account information")
     private String accountDetails = null;
 
+    @Option(
+            names = {"xs", "--xx-stop-at"},
+            arity = "1",
+            paramLabel = "<block_number>",
+            description = "ONLY FOR TESTS: dumps the heap and shuts down after the specified block is imported")
+    private long stopAt = Long.MAX_VALUE;
+
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
         List<String> list = new ArrayList<>();
@@ -315,5 +322,9 @@ public class Arguments {
 
     public String getAccountDetails() {
         return accountDetails;
+    }
+
+    public long getStopAt() {
+        return stopAt;
     }
 }

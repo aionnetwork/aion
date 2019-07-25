@@ -29,6 +29,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.DBUtils;
@@ -610,6 +611,15 @@ public class Cli {
                 }
             }
 
+            if (options.getStopAt() != Long.MAX_VALUE) {
+                if (options.getStopAt() <= 0){
+                    System.out.println("Invalid parameter value for --xx-stop-at.");
+                    return ERROR;
+                }
+                System.out.println("Shutdown hook set at block " + options.getStopAt());
+                AionBlockchainImpl.shutdownHook = options.getStopAt();
+            }
+
             // if no return happened earlier, run the kernel
             return RUN;
         } catch (Exception e) {
@@ -689,6 +699,7 @@ public class Cli {
                 usage.replaceFirst(
                         "<slow_import>([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
         System.out.println(usage);
+        System.out.println("Note that options prefixed with --xx are used only for testing purposes.");
     }
 
     private void printInfo(Cfg cfg) {

@@ -12,6 +12,7 @@ import static org.aion.mcf.core.ImportResult.NO_PARENT;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -63,6 +64,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
+import org.aion.utils.HeapDumper;
 import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionLogic;
@@ -747,7 +749,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
+    public static long shutdownHook = Long.MAX_VALUE;
+
     public synchronized ImportResult tryToConnect(final Block block) {
+        if (bestBlock.getNumber() == shutdownHook) {
+            LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
+
+            try {
+                HeapDumper.dumpHeap(new File(System.currentTimeMillis() + "-heap-report.hprof").getAbsolutePath(), true);
+            } catch (Exception e) {
+                LOG.error("Unable to dump heap due to exception:", e);
+            }
+
+            System.exit(0);
+        }
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
 
