@@ -81,6 +81,7 @@ public final class Node implements INode {
         this.port = port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
+        updateHashAndDisplayId();
     }
 
     /** constructor for initial stage of boot nodes from config */
@@ -90,15 +91,18 @@ public final class Node implements INode {
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
-        if (_id != null && _id.length == 36) {
-            this.idHash = Arrays.hashCode(getUniqueId());
-            this.idShort =
-                    new String(Arrays.copyOfRange(_id, 0, 6))
-                            + "-"
-                            + BigInteger.valueOf(idHash).toString(60);
-        }
+        updateHashAndDisplayId();
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
+    }
+
+    private void updateHashAndDisplayId() {
+        idHash = Arrays.hashCode(getUniqueId());
+        if (id != null && id.length == 36) {
+            idShort = new String(Arrays.copyOfRange(id, 0, 6)) + ":" + Integer.toString(Math.abs(idHash), 36);
+        } else {
+            idShort = "id_tbd:" + ":" + Integer.toString(Math.abs(idHash), 36);
+        }
     }
 
     /**
@@ -222,14 +226,7 @@ public final class Node implements INode {
     @Override
     public void setPort(final int _port) {
         this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
-        // need to reset the hash
-        this.idHash = Arrays.hashCode(getUniqueId());
-        if (id != null && id.length == 36) {
-            this.idShort =
-                    new String(Arrays.copyOfRange(id, 0, 6))
-                            + "-"
-                            + BigInteger.valueOf(idHash).toString(60);
-        }
+        updateHashAndDisplayId();
     }
 
     @Override
@@ -272,13 +269,7 @@ public final class Node implements INode {
     @Override
     public void setId(final byte[] _id) {
         this.id = _id;
-        if (_id != null && _id.length == 36) {
-            this.idHash = Arrays.hashCode(getUniqueId());
-            this.idShort =
-                    new String(Arrays.copyOfRange(_id, 0, 6))
-                            + "-"
-                            + BigInteger.valueOf(idHash).toString(60);
-        }
+        updateHashAndDisplayId();
     }
 
     @Override
@@ -300,7 +291,10 @@ public final class Node implements INode {
 
     @Override
     public String getIdShort() {
-        return this.idShort == null ? "" : this.idShort;
+        if (idShort == null) {
+            updateHashAndDisplayId();
+        }
+        return idShort;
     }
 
     @Override

@@ -124,7 +124,7 @@ public class NodeTest {
 
         assertEquals(Arrays.hashCode(buffer.array()), validNode.getIdHash());
 
-        String idShort = new String(Arrays.copyOfRange(id.getBytes(), 0, 6));
+        String idShort = new String(Arrays.copyOfRange(id.getBytes(), 0, 6)) + ":" + Integer.toString(Math.abs(validNode.getIdHash()), 36);
         assertEquals(idShort, validNode.getIdShort());
 
         long bestBlockNum = ThreadLocalRandom.current().nextLong();
