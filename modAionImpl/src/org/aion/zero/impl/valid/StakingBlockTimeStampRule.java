@@ -25,12 +25,17 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRuleWithArg {
         }
 
         if (_stake == null) {
-            throw  new IllegalStateException("InValid arg input");
+            throw  new IllegalStateException("Invalid arg input");
         }
 
         long parentTimeStamp = dependency.getTimestamp();
 
         BigInteger stake = (BigInteger) _stake;
+
+        if (stake.compareTo(BigInteger.ONE) < 0) {
+            return false;
+        }
+
         long timeStamp = header.getTimestamp();
         BigInteger blockDifficulty = header.getDifficultyBI();
 
@@ -55,7 +60,7 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRuleWithArg {
     private static String formatError(long timeStamp, long parantTimeStamp, double delta) {
         return "block timestamp output ("
                 + timeStamp
-                + ") violates boundary condition ( paraentTimeStamp:"
+                + ") violates boundary condition ( parentTimeStamp:"
                 + parantTimeStamp
                 + " delta:"
                 + delta
