@@ -26,7 +26,7 @@ pipeline {
                 archiveArtifacts artifacts: 'pack/aion-v*.tar.bz2'
             }
         }
-        
+       
         stage('Unit test') {
             steps {
                 timeout(60) {
@@ -61,6 +61,7 @@ pipeline {
         always {
             sh('([ -d FunctionalTests ] && cp -r FunctionalTests/report/FunctionalTests report/) || true')
             junit "report/**/*.xml"
+            sh 'bash script/jenkins-dump-heapfiles.sh'
             cleanWs()
     }
 
