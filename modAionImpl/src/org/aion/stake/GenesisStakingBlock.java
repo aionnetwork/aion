@@ -7,7 +7,7 @@ import org.aion.zero.impl.types.StakingBlock;
 
 public class GenesisStakingBlock extends StakingBlock {
 
-    public static BigInteger genesisDifficulty = BigInteger.valueOf(2_000_000_000L);
+    private final static BigInteger genesisDifficulty = BigInteger.valueOf(2_000_000_000L);
 
     //TODO: [unity] Hard code the genesis staking block, might refactor it before the feature release.
     public GenesisStakingBlock(byte[] extraData) throws HeaderStructureException {
@@ -27,5 +27,9 @@ public class GenesisStakingBlock extends StakingBlock {
 
     public StakingBlock build() {
         return new StakingBlock(this);
+    }
+
+    public static BigInteger getGenesisDifficulty() {
+        return genesisDifficulty;
     }
 }
