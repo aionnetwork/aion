@@ -36,7 +36,7 @@ public class AionHubUtils {
         }
         track.flush();
 
-        repository.commitBlock(genesis.getHeader());
+        repository.commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
         repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
     }
 

@@ -208,7 +208,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         return cnt;
     }
 
-    public void storeBlockChanges(byte[] blockHash, long blockNumber) {
+    public void storeBlockChanges(ByteArrayWrapper blockHash, long blockNumber) {
         if (!enabled.get()) {
             return;
         }
@@ -216,17 +216,16 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         lock.writeLock().lock();
 
         try {
-            ByteArrayWrapper hash = ByteArrayWrapper.wrap(blockHash);
-            currentUpdates.blockHeader = hash;
+            currentUpdates.blockHeader = blockHash;
             currentUpdates.blockNumber = blockNumber;
-            blockUpdates.put(hash, currentUpdates);
+            blockUpdates.put(blockHash, currentUpdates);
             currentUpdates = new Updates();
         } finally {
             lock.writeLock().unlock();
         }
     }
 
-    public void prune(byte[] blockHash, long blockNumber) {
+    public void prune(ByteArrayWrapper blockHash, long blockNumber) {
         if (!enabled.get()) {
             return;
         }
@@ -234,8 +233,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         lock.writeLock().lock();
 
         try {
-            ByteArrayWrapper blockHashW = ByteArrayWrapper.wrap(blockHash);
-            Updates updates = blockUpdates.remove(blockHashW);
+            Updates updates = blockUpdates.remove(blockHash);
             if (updates != null) {
                 for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
                     decRef(insertedKey).dbRef = true;

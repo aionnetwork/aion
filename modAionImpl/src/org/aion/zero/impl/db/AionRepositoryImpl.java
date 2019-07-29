@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetails;
@@ -577,47 +577,66 @@ public class AionRepositoryImpl
         }
     }
 
-    public long getPruneBlockCount() {
+    public int getPruneBlockCount() {
         return this.pruneBlockCount;
     }
 
-    public void commitBlock(BlockHeader blockHeader) {
+    public void commitBlock(ByteArrayWrapper blockHash, long blockNumber, byte[] blockStateRoot) {
         rwLock.writeLock().lock();
 
         try {
             worldState.sync();
 
             if (pruneEnabled) {
-                if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {
-                    // archive block
-                    worldState.saveDiffStateToDatabase(
-                            blockHeader.getStateRoot(), stateDSPrune.getArchiveSource());
+                // cache the block number & hash for retrieval during pruneBlocks
+                if (cacheForBlockPruning.containsKey(blockNumber)) {
+                    cacheForBlockPruning.get(blockNumber).add(blockHash);
+                } else {
+                    Set<ByteArrayWrapper> hashes = new HashSet<>();
+                    hashes.add(blockHash);
+                    cacheForBlockPruning.put(blockNumber, hashes);
                 }
-                stateDSPrune.storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
-                detailsDS
-                        .getStorageDSPrune()
-                        .storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
-                pruneBlocks(blockHeader);
+
+                if (stateDSPrune.isArchiveEnabled() && blockNumber % archiveRate == 0) {
+                    // archive block
+                    worldState.saveDiffStateToDatabase(blockStateRoot, stateDSPrune.getArchiveSource());
+                }
+                stateDSPrune.storeBlockChanges(blockHash, blockNumber);
+                detailsDS.getStorageDSPrune().storeBlockChanges(blockHash, blockNumber);
+                pruneBlocks(blockNumber);
             }
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
-    private void pruneBlocks(BlockHeader curBlock) {
-        if (curBlock.getNumber() > bestBlockNumber) {
-            // pruning only on increasing blocks
-            long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
+    private void pruneBlocks(long currentBlockNumber) {
+        if (currentBlockNumber > bestBlockNumber) {
+            // Prune only on increasing blocks
+            long pruneBlockNumber = currentBlockNumber - pruneBlockCount;
+
             if (pruneBlockNumber >= 0) {
-                byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
-                if (pruneBlockHash != null) {
-                    BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
-                    stateDSPrune.prune(header.getHash(), header.getNumber());
-                    detailsDS.getStorageDSPrune().prune(header.getHash(), header.getNumber());
+                // If the cacheForBlockPruning does not contain the block neither will the trie cache
+                if (cacheForBlockPruning.containsKey(pruneBlockNumber)) {
+                    // Prune all the blocks at that level
+                    Set<ByteArrayWrapper> hashes = cacheForBlockPruning.remove(pruneBlockNumber);
+                    for (ByteArrayWrapper hash : hashes) {
+                        stateDSPrune.prune(hash, pruneBlockNumber);
+                        detailsDS.getStorageDSPrune().prune(hash, pruneBlockNumber);
+                    }
+                } else {
+                    // Unlikely case where the block was evicted from the cache due to too many side chains
+                    // In this case we do not attempt to prune blocks on side chains.
+                    byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
+                    if (pruneBlockHash != null) {
+                        ByteArrayWrapper hash = ByteArrayWrapper.wrap(pruneBlockHash);
+                        stateDSPrune.prune(hash, pruneBlockNumber);
+                        detailsDS.getStorageDSPrune().prune(hash, pruneBlockNumber);
+                    }
                 }
             }
         }
-        bestBlockNumber = curBlock.getNumber();
+        bestBlockNumber = currentBlockNumber;
     }
 
     /**
@@ -645,6 +664,7 @@ public class AionRepositoryImpl
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
             repo.stateDSPrune = this.stateDSPrune;
+            repo.cacheForBlockPruning = this.cacheForBlockPruning;
 
             // pruning config
             repo.pruneEnabled = this.pruneEnabled;

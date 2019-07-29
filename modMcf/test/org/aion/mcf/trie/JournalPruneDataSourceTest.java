@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
+import org.aion.util.types.ByteArrayWrapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -312,7 +313,7 @@ public class JournalPruneDataSourceTest {
 
     // Pruning enabled tests ----------------------------------------------------
 
-    private static final byte[] b0 = "block0".getBytes();
+    private static final ByteArrayWrapper b0 = ByteArrayWrapper.wrap("block0".getBytes());
 
     @Test
     public void testPut_wPrune() {
@@ -913,7 +914,7 @@ public class JournalPruneDataSourceTest {
             List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
         threads.add(
                 () -> {
-                    db.storeBlockChanges(hash.getBytes(), number);
+                    db.storeBlockChanges(ByteArrayWrapper.wrap(hash.getBytes()), number);
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
                                 Thread.currentThread().getName()
@@ -930,7 +931,7 @@ public class JournalPruneDataSourceTest {
             List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
         threads.add(
                 () -> {
-                    db.prune(hash.getBytes(), number);
+                    db.prune(ByteArrayWrapper.wrap(hash.getBytes()), number);
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
                                 Thread.currentThread().getName()
@@ -1147,9 +1148,9 @@ public class JournalPruneDataSourceTest {
 
     // Pruning tests ----------------------------------------------------
 
-    private static final byte[] b1 = "block1".getBytes();
-    private static final byte[] b2 = "block2".getBytes();
-    private static final byte[] b3 = "block3".getBytes();
+    private static final ByteArrayWrapper b1 = ByteArrayWrapper.wrap("block1".getBytes());
+    private static final ByteArrayWrapper b2 = ByteArrayWrapper.wrap("block2".getBytes());
+    private static final ByteArrayWrapper b3 = ByteArrayWrapper.wrap("block3".getBytes());
 
     private static final byte[] k4 = "key4".getBytes();
     private static final byte[] v4 = "value4".getBytes();

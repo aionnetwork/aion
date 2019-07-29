@@ -7,8 +7,11 @@ import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
@@ -20,6 +23,8 @@ import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
+import org.aion.util.types.ByteArrayWrapper;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
@@ -78,13 +83,14 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
     protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
     protected DetailsDataStore detailsDS;
+    protected Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
 
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     // Block related parameters.
     protected long bestBlockNumber = 0;
-    protected long pruneBlockCount;
+    protected int pruneBlockCount;
     protected long archiveRate;
     protected boolean pruneEnabled = true;
 
@@ -307,6 +313,10 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
 
                 stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
                 stateDSPrune = new JournalPruneDataSource(stateWithArchive);
+                // the size is defined assuming for two side chain blocks at each level
+                // since the pruned blocks are removed according to their level
+                // in practice the cache is likely to be one third the allocated size
+                cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
 
                 LOGGEN.info(
                         "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
@@ -319,6 +329,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
 
                 if (pruneEnabled) {
                     LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
+                    cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
                 }
             }
 

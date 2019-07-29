@@ -403,7 +403,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
             track.flush();
 
-            bc.getRepository().commitBlock(genesis.getHeader());
+            bc.getRepository().commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
             bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             bc.setBestBlock(genesis);
             bc.setTotalDifficulty(genesis.getDifficultyBI());

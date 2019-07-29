@@ -66,7 +66,7 @@ public class BlockchainImplementationTest {
     @Test
     public void testIsPruneRestricted_wTopState() {
         // number of blocks stored by the blockchain
-        int stored = 150;
+        int stored = 130; // note that min is 128
         // the maximum height considered by this test
         int height = 200;
 
@@ -79,16 +79,31 @@ public class BlockchainImplementationTest {
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
-        BlockContext context;
+        AionBlock importBlock, sidechainBlock;
         List<AionTransaction> txs;
 
         // creating (height) blocks
         long time = System.currentTimeMillis();
-        for (int i = 0; i < height; i++) {
+        for (int i = 0; i < stored; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
-            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            importBlock = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L).block;
+            assertThat(chain.tryToConnectInternal(importBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+        }
+
+        Block fork = chain.getBestBlock();
+
+        for (int i = stored; i < height; i++) {
+            txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+            importBlock = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L).block;
+            assertThat(chain.tryToConnectInternal(importBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+
+            // create the sidechain block
+            repo.syncToRoot(fork.getStateRoot());
+            txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+            repo.syncToRoot(chain.getBestBlock().getStateRoot());
+            sidechainBlock =chain.createNewBlockInternal(fork, txs, true, (time - 10) / 10000L).block;
+            assertThat(chain.tryToConnectInternal(sidechainBlock, (time + 1))).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+            fork = sidechainBlock;
         }
 
         // testing restriction for unrestricted blocks: height to (height - stored + 1)

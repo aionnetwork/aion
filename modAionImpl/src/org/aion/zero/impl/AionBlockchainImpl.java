@@ -1199,7 +1199,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
             transactionStore.flushBatch();
 
-            repository.commitBlock(block.getHeader());
+            repository.commitBlock(block.getHashWrapper(), block.getNumber(), block.getStateRoot());
 
             if (LOG.isDebugEnabled())
                 LOG.debug(
@@ -1532,7 +1532,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         transactionStore.flushBatch();
 
-        repository.commitBlock(block.getHeader());
+        repository.commitBlock(block.getHashWrapper(), block.getNumber(), block.getStateRoot());
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(
