@@ -55,7 +55,7 @@ public class NativeLoader {
      * @param module module name
      */
     public static void loadLibrary(String module) {
-        File dir = buildPath("native", getOS(), module);
+        File dir = buildPath("/home/geoffrey/aion/javaKernel/aion/native", getOS(), module);
 
         try (Scanner s = new Scanner(new File(dir, "file.list"))) {
             while (s.hasNextLine()) {

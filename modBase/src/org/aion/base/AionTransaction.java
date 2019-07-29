@@ -17,10 +17,10 @@ public class AionTransaction implements Cloneable {
     private final byte[] value;
     private final byte[] nonce;
 
-    /* define transaction type. */
+    /* AVM_CREATE_CODE for AVM contract creation. DEFAULT otherwise */
     private final byte type;
 
-    /* timeStamp is a 8-bytes array shown the time of the transaction signed by the kernel, the unit is nanosecond. */
+    /* timeStamp is a 8-byte array showing the time the transaction is signed by the kernel, in nanoseconds. */
     private final byte[] timeStamp;
 
     /* the elliptic curve signature
@@ -32,7 +32,9 @@ public class AionTransaction implements Cloneable {
     // TODO This is used in TxPoolA0, but probably doesn't belong in this class. See AKI-265
     private long energyConsumed = 0;
 
-    // constructor for explicitly setting a transaction type.
+    /**
+     * Main constructor for AionTransaction.
+     */
     public AionTransaction(
             ECKey key,
             byte[] nonce,
@@ -55,7 +57,9 @@ public class AionTransaction implements Cloneable {
                 ByteUtil.longToBytes(TimeInstant.now().toEpochMicro()));
     }
 
-    // constructor for testing to explicitly set the timestamp
+    /**
+     * Constructor used only for testing what happens when two transactions are submitted with the same timestamp.
+     */
     public AionTransaction(
         ECKey key,
         byte[] nonce,
@@ -103,7 +107,9 @@ public class AionTransaction implements Cloneable {
         this.transactionHash = TransactionUtil.hashTransaction(this); // This has to come last
     }
 
-    // Only for creating a transaction from an RLP encoding
+    /**
+     * Constructor used for creating an AionTransaction from an RLP encoding.
+     */
     public AionTransaction(
             byte[] nonce,
             AionAddress senderAddress,
@@ -169,6 +175,7 @@ public class AionTransaction implements Cloneable {
         this.transactionHash = TransactionUtil.hashTransaction(this);
     }
 
+    // TODO this can be removed if we can make energyConsumed final
     @Override
     public AionTransaction clone() {
         return new AionTransaction(
@@ -269,8 +276,6 @@ public class AionTransaction implements Cloneable {
                 + ByteUtil.byteArrayToLong(timeStamp)
                 + ", signature="
                 + ((signature == null) ? "null" : signature.toString())
-                + ", energyConsumed="
-                + energyConsumed
                 + "]";
     }
 
@@ -290,7 +295,6 @@ public class AionTransaction implements Cloneable {
             return this.getAionTypesTransaction().equals(otherObject.getAionTypesTransaction())
                 && Arrays.equals(this.value, otherObject.value)
                 && Arrays.equals(this.nonce, otherObject.nonce)
-                && this.energyConsumed == otherObject.energyConsumed
                 && this.type == otherObject.type
                 && Arrays.equals(this.timeStamp, otherObject.timeStamp)
                 && Arrays.equals(this.transactionHash, otherObject.transactionHash)

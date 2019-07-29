@@ -17,6 +17,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.aion.base.AionTransaction;
+import org.aion.base.PooledTransaction;
 import org.aion.base.TransactionRlpCodec;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.common.AbstractTxPool;
@@ -91,8 +92,8 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
     }
 
     @Override
-    public AionTransaction add(AionTransaction tx) {
-        List<AionTransaction> rtn = this.add(Collections.singletonList(tx));
+    public PooledTransaction add(PooledTransaction tx) {
+        List<PooledTransaction> rtn = this.add(Collections.singletonList(tx));
         return rtn.isEmpty() ? null : rtn.get(0);
     }
 
@@ -110,13 +111,13 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
     }
 
     @Override
-    public List<AionTransaction> add(List<AionTransaction> txl) {
+    public List<PooledTransaction> add(List<PooledTransaction> txl) {
 
-        List<AionTransaction> newPendingTx = new ArrayList<>();
+        List<PooledTransaction> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
-        for (AionTransaction tx : txl) {
+        for (PooledTransaction pendingTx : txl) {
 
-            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
+            ByteArrayWrapper bw = ByteArrayWrapper.wrap(pendingTx.getTransactionHash());
             if (this.getMainMap().get(bw) != null) {
                 if (LOG.isWarnEnabled()) {
                     LOG.warn(
@@ -130,13 +131,13 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 LOG.trace(
                         "Put tx into mainMap: hash:[{}] tx:[{}]",
                         ByteUtil.toHexString(bw.getData()),
-                        tx.toString());
+                        pendingTx.toString());
             }
 
-            mainMap.put(bw, new TXState(tx));
+            mainMap.put(bw, new TXState(pendingTx));
 
-            BigInteger txNonce = tx.getNonceBI();
-            BigInteger bn = getBestNonce(tx.getSenderAddress());
+            BigInteger txNonce = pendingTx.getNonceBI();
+            BigInteger bn = getBestNonce(pendingTx.getSenderAddress());
 
             if (bn != null && txNonce.compareTo(bn) < 1) {
                 if (LOG.isDebugEnabled()) {
@@ -146,27 +147,24 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
             }
 
             AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry =
-                    this.getAccView(tx.getSenderAddress()).getMap().get(txNonce);
+                    this.getAccView(pendingTx.getSenderAddress()).getMap().get(txNonce);
             if (entry != null) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("repay tx, remove previous tx!");
                 }
-                List oldTx =
-                        remove(
-                                Collections.singletonList(
-                                        this.getMainMap().get(entry.getKey()).getTx()));
+                PooledTransaction oldTx = remove(this.getMainMap().get(entry.getKey()).getTx());
 
-                if (oldTx != null && !oldTx.isEmpty()) {
-                    newPendingTx.add((AionTransaction) oldTx.get(0));
+                if (oldTx != null) {
+                    newPendingTx.add(oldTx);
                 }
             } else {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("new tx! n[{}]", tx.getNonceBI().toString());
+                    LOG.trace("new tx! n[{}]", pendingTx.getNonceBI().toString());
                 }
-                newPendingTx.add(tx);
+                newPendingTx.add(pendingTx);
             }
 
-            setBestNonce(tx.getSenderAddress(), txNonce);
+            setBestNonce(pendingTx.getSenderAddress(), txNonce);
         }
 
         this.getMainMap().putAll(mainMap);
@@ -182,12 +180,12 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
         return newPendingTx;
     }
 
-    public List<AionTransaction> getOutdatedList() {
+    public List<PooledTransaction> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
 
     @Override
-    public List<AionTransaction> remove(Map<AionAddress, BigInteger> accNonce) {
+    public List<PooledTransaction> remove(Map<AionAddress, BigInteger> accNonce) {
 
         List<ByteArrayWrapper> bwList = new ArrayList<>();
         for (Map.Entry<AionAddress, BigInteger> en1 : accNonce.entrySet()) {
@@ -238,12 +236,12 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
             as.setDirty();
         }
 
-        List<AionTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
+        List<PooledTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
         bwList.parallelStream()
                 .forEach(
                         bw -> {
                             if (this.getMainMap().get(bw) != null) {
-                                AionTransaction tx = this.getMainMap().get(bw).getTx().clone();
+                                PooledTransaction tx = this.getMainMap().get(bw).getTx();
                                 removedTxl.add(tx);
 
                                 long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
@@ -278,13 +276,18 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
     }
 
     @Override
-    @Deprecated
-    public List<AionTransaction> remove(List<AionTransaction> txs) {
+    public PooledTransaction remove(PooledTransaction tx) {
+        return remove(Collections.singletonList(tx)).get(0);
+    }
 
-        List<AionTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
+    @Override
+    @Deprecated
+    public List<PooledTransaction> remove(List<PooledTransaction> txs) {
+
+        List<PooledTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());
         Set<AionAddress> checkedAddress = Collections.synchronizedSet(new HashSet<>());
 
-        for (AionTransaction tx : txs) {
+        for (PooledTransaction tx : txs) {
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
             lock.writeLock().lock();
             try {
@@ -296,7 +299,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
             }
 
             //noinspection unchecked
-            removedTxl.add(tx.clone());
+            removedTxl.add(tx);
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
@@ -392,7 +395,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
     }
 
     @Override
-    public AionTransaction getPoolTx(AionAddress from, BigInteger txNonce) {
+    public PooledTransaction getPoolTx(AionAddress from, BigInteger txNonce) {
         if (from == null || txNonce == null) {
             LOG.error("TxPoolA0.getPoolTx null args");
             return null;
@@ -424,7 +427,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                     continue;
                 }
 
-                rtn.add(this.getMainMap().get(txMap.getKey()).getTx().clone());
+                rtn.add(this.getMainMap().get(txMap.getKey()).getTx().getAionTransaction());
             }
         }
 
@@ -480,23 +483,23 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 if (dependTx == null || snapshotSet.contains(dependTx)) {
                     boolean firstTx = true;
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
-                        AionTransaction itx = this.getMainMap().get(bw).getTx();
+                        PooledTransaction pendingTx = this.getMainMap().get(bw).getTx();
 
-                        byte[] encodedItx = TransactionRlpCodec.encode(itx);
+                        byte[] encodedItx = TransactionRlpCodec.encode(pendingTx.getAionTransaction());
                         cnt_txSz += encodedItx.length;
-                        cnt_nrg += itx.getEnergyConsumed();
+                        cnt_nrg += pendingTx.getEnergyConsumed();
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                    itx.getSenderAddress().toString(),
-                                    itx.getNonceBI().toString(),
+                                    pendingTx.getSenderAddress().toString(),
+                                    pendingTx.getNonceBI().toString(),
                                     encodedItx.length,
-                                    itx.getEnergyConsumed());
+                                    pendingTx.getEnergyConsumed());
                         }
 
                         if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                             try {
-                                rtn.add(itx.clone());
+                                rtn.add(pendingTx.getAionTransaction());
                                 if (firstTx) {
                                     snapshotSet.add(bw);
                                     firstTx = false;
@@ -528,23 +531,23 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                         firstTx = true;
                         for (ByteArrayWrapper bw :
                                 nonPickedTx.get(ancestor).getValue().getTxList()) {
-                            AionTransaction itx = this.getMainMap().get(bw).getTx();
+                            PooledTransaction pendingTx = this.getMainMap().get(bw).getTx();
 
-                            byte[] encodedItx = TransactionRlpCodec.encode(itx);
+                            byte[] encodedItx = TransactionRlpCodec.encode(pendingTx.getAionTransaction());
                             cnt_txSz += encodedItx.length;
-                            cnt_nrg += itx.getEnergyConsumed();
+                            cnt_nrg += pendingTx.getEnergyConsumed();
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                        itx.getSenderAddress().toString(),
-                                        itx.getNonceBI().toString(),
+                                        pendingTx.getSenderAddress().toString(),
+                                        pendingTx.getNonceBI().toString(),
                                         encodedItx.length,
-                                        itx.getEnergyConsumed());
+                                        pendingTx.getEnergyConsumed());
                             }
 
                             if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                                 try {
-                                    rtn.add((AionTransaction) itx.clone());
+                                    rtn.add(pendingTx.getAionTransaction());
                                     if (firstTx) {
                                         snapshotSet.add(bw);
                                         firstTx = false;
@@ -603,7 +606,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
     private void removeTimeoutTxn() {
 
         long ts = TimeInstant.now().toEpochSec() - txn_timeout;
-        List<AionTransaction> txl = Collections.synchronizedList(new ArrayList<>());
+        List<PooledTransaction> txl = Collections.synchronizedList(new ArrayList<>());
 
         this.getTimeView()
                 .entrySet()
