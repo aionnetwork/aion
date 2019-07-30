@@ -61,6 +61,7 @@ import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
+import org.aion.stake.GenesisStakingBlock;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -122,9 +123,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
-    private static long fork050BlockNumber = -1L;
+    private static long FORK_5_BLOCK_NUMBER = -1L;
     private static boolean fork040Enable;
-    private static boolean FORK050ENABLE = false;
     private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
@@ -274,7 +274,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Long unityForkNumber = unityUpdateBlkNum(cfgAion.getFork().getProperties());
         if (unityForkNumber != null) {
-            fork050BlockNumber = unityForkNumber;
+            LOG.info("Unity enabled at fork number " + unityForkNumber);
+            FORK_5_BLOCK_NUMBER = unityForkNumber;
         }
 
         BigInteger initialSupply = ZERO;
@@ -1035,14 +1036,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
-
-            //Check 050 Fork
-            if (!FORK050ENABLE) {
-                if (fork050BlockNumber == 0 || (bestBlock.getHeader().getNumber() == (fork050BlockNumber - 1))) {
-                    LOG.info("Unity protocol enabled at {}!", fork050BlockNumber);
-                    FORK050ENABLE = true;
-                }
-            }
         }
 
         // fire block events
@@ -1320,7 +1313,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid block type");
         }
 
-        if (FORK050ENABLE) {
+        if (block.getNumber() >= FORK_5_BLOCK_NUMBER) {
             block.getHeader()
                     .setDifficulty(
                             ByteUtil.bigIntegerToBytes(
@@ -1605,7 +1598,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             Block grandSealParent = sealParent == null ? null : getParentBlock(sealParent.getHeader());
 
-            if (FORK050ENABLE) {
+            if (header.getNumber() >= FORK_5_BLOCK_NUMBER) {
                 return grandParentUnityDifficultyBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
                     sealParent.getHeader(),
@@ -1620,7 +1613,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         } else if (header.getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
 
-            if (!FORK050ENABLE) {
+            if (header.getNumber() < FORK_5_BLOCK_NUMBER) {
                 return false;
             }
 
@@ -2089,21 +2082,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private void updateTotalDifficulty(Block block) {
+        
+        if(block.getNumber() == FORK_5_BLOCK_NUMBER) {
+            totalStakingDifficulty = GenesisStakingBlock.getGenesisDifficulty();
+        }
+        
         if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
             totalMiningDifficulty = totalMiningDifficulty.add(block.getDifficultyBI());
         } else if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-
-            byte[] sealAntiparentHash = repository.getBlockStore().getBlockByHashWithInfo(block.getParentHash()).getAntiparentHash();
-            
-            if (sealAntiparentHash == null) {
-                return;
-            } else {
-                if (Arrays.equals(sealAntiparentHash, CfgAion.inst().getGenesisStakingBlock().getHash())){
-                    // We are about to add the first staking block to this chain
-                    totalStakingDifficulty = CfgAion.inst().getGenesisStakingBlock().getStakingDifficulty();
-                }
-            }
-            
             totalStakingDifficulty = totalStakingDifficulty.add(block.getDifficultyBI());
         } else {
             throw new IllegalStateException("Invalid block type");
@@ -2778,17 +2764,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
     void resetPubBestBlock(Block blk) {
         pubBestBlock = blk;
     }
-
-    void setUnityEnable() {
-        FORK050ENABLE = true;
-    }
-
+    
     @VisibleForTesting
-    void setUnityDisable() {
-        FORK050ENABLE = false;
+    void setUnityForkNumber(long unityForkNumber) {
+        LOG.info("Unity enabled at fork number " + unityForkNumber);
+        FORK_5_BLOCK_NUMBER = unityForkNumber;
     }
 
     long getUnityForkNumber() {
-        return fork050BlockNumber;
+        return FORK_5_BLOCK_NUMBER;
     }
 }

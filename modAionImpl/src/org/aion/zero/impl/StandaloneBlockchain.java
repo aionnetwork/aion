@@ -208,6 +208,13 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
+        private long unityForkNumber = Long.MAX_VALUE;
+        
+        public Builder withUnityForkNumber(long unityForkNumber) {
+            this.unityForkNumber = unityForkNumber;
+            return this;
+        }
+
         private AionBlock best = null, parentBest = null;
         private byte[] trieData = null;
         private BigInteger totalMiningDifficulty = null, totalMiningDifficultyParent = null;
@@ -448,6 +455,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.setTotalMiningDifficulty(genesis.getMiningDifficulty());
             bc.setTotalStakingDifficulty(genesis.getStakingDifficulty());
             bc.setTotalDifficulty(genesis.getDifficultyBI());
+            bc.setUnityForkNumber(unityForkNumber);
             
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value

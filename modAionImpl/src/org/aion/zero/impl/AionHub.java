@@ -520,16 +520,6 @@ public class AionHub {
         }
 
         long unityForkNumber = ((AionBlockchainImpl)blockchain).getUnityForkNumber();
-
-        if (unityForkNumber == 0) {
-            ((AionBlockchainImpl)blockchain).setUnityEnable();
-            genLOG.info("Unity protocol enabled");
-        } else if (unityForkNumber > 0) {
-            if (blockchain.getBestBlock().getHeader().getNumber() >= (unityForkNumber - 1)) {
-                ((AionBlockchainImpl)blockchain).setUnityEnable();
-                genLOG.info("Unity protocol enabled");
-            }
-        }
     }
 
     public void close() {
