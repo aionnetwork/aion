@@ -7,7 +7,7 @@ import org.aion.zero.impl.types.StakingBlock;
 
 public class GenesisStakingBlock extends StakingBlock {
 
-    private final static BigInteger genesisDifficulty = BigInteger.valueOf(2_000_000_000L);
+    public final static BigInteger GENESIS_DIFFICULTY = BigInteger.valueOf(2_000_000_000L);
 
     //TODO: [unity] Hard code the genesis staking block, might refactor it before the feature release.
     public GenesisStakingBlock(byte[] extraData) throws HeaderStructureException {
@@ -15,14 +15,14 @@ public class GenesisStakingBlock extends StakingBlock {
                 new byte[32],
                 AddressUtils.ZERO_ADDRESS,
                 new byte[256],
-                genesisDifficulty.toByteArray(),
+                GENESIS_DIFFICULTY.toByteArray(),
                 0L,
                 0L,
                 extraData,
                 15_000_000L,
                 new byte[64]);
-        this.setStakingDifficulty(genesisDifficulty);
-        this.setCumulativeDifficulty(genesisDifficulty);
+        this.setStakingDifficulty(GENESIS_DIFFICULTY);
+        this.setCumulativeDifficulty(GENESIS_DIFFICULTY);
     }
 
     public StakingBlock build() {
@@ -30,6 +30,6 @@ public class GenesisStakingBlock extends StakingBlock {
     }
 
     public static BigInteger getGenesisDifficulty() {
-        return genesisDifficulty;
+        return GENESIS_DIFFICULTY;
     }
 }

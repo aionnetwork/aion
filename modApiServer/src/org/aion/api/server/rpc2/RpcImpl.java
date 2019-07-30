@@ -1,41 +1,102 @@
 package org.aion.api.server.rpc2;
 
-import org.aion.api.server.rpc.RpcError;
-import org.aion.api.server.rpc.RpcMsg;
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
 import org.aion.api.server.rpc2.autogen.pod.Transaction;
-import org.aion.api.server.types.Tx;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.math.BigInteger;
+import org.aion.zero.impl.types.StakedBlockHeader;
+import org.aion.zero.impl.types.StakingBlock;
+import org.apache.commons.collections4.map.LRUMap;
 
 public class RpcImpl implements Rpc {
 
-    /* Test impls only to check RpcProcessor2 works properly */
+    private IAionChain ac;
+    //TODO : [unity] find the proper number for chaching the template.
+    private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
+        .synchronizedMap(new LRUMap<>(64));
+    private ReentrantLock blockTemplateLock;
+
+    RpcImpl(final IAionChain _ac) {
+        if (_ac == null) {
+            throw  new NullPointerException();
+        }
+
+        ac = _ac;
+        blockTemplateLock = new ReentrantLock();
+    }
 
     @Override
     public byte[] getseed() {
-        return ByteUtil.hexStringToBytes("0xc0ffee000000000000000000000000000000000000000000000000000000cafec0ffee000000000000000000000000000000000000000000000000000000cafe");
+        return ac.getBlockchain().getSeed();
     }
 
     @Override
-    public byte[] submitseed(byte[] var0, byte[] var1) {
-        return var1;
+    public byte[] submitseed(byte[] newSeed, byte[] pubKey) throws Exception {
+        if (newSeed == null || pubKey == null) {
+            throw new NullPointerException();
+        }
+
+        if (newSeed.length != StakedBlockHeader.SEED_LENGTH
+                || pubKey.length != StakedBlockHeader.PUBKEY_LENGTH) {
+            throw new IllegalArgumentException("Invalid arguments length");
+        }
+
+        blockTemplateLock.lock();
+        try {
+            StakingBlock template =
+                    (StakingBlock)
+                            ac.getBlockchain()
+                                    .createStakingBlockTemplate(
+                                            ac.getAionHub()
+                                                    .getPendingState()
+                                                    .getPendingTransactions(),
+                                            pubKey,
+                                            newSeed);
+
+            if (template == null) {
+                throw new Exception("GetStakingBlockTemplate failed!");
+            }
+
+            byte[] sealhash = template.getHeader().getMineHash();
+            stakingBlockTemplate.put(ByteArrayWrapper.wrap(sealhash), template);
+
+            return sealhash;
+        } finally {
+            blockTemplateLock.unlock();
+        }
     }
 
     @Override
-    public boolean submitsignature(byte[] var0, byte[] var1) {
-        return false; //TODO
+    public boolean submitsignature(byte[] signature, byte[] sealhash) {
+        if (signature == null || sealhash == null) {
+            throw new NullPointerException();
+        }
+
+        if (signature.length != StakedBlockHeader.SIG_LENGTH
+            || sealhash.length != 32) {
+            throw new IllegalArgumentException("Invalid arguments length");
+        }
+
+        StakingBlock block = stakingBlockTemplate.get(ByteArrayWrapper.wrap(sealhash));
+        if (block == null) {
+            return false;
+        }
+
+        block.getHeader().setSignature(signature);
+
+        return AionImpl.inst().addNewMinedBlock(block).isBest();
     }
 
     @Override

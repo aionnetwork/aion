@@ -17,6 +17,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.types.StakedBlockHeader;
 
 public class StakingBlock extends AbstractBlock {
@@ -406,8 +407,14 @@ public class StakingBlock extends AbstractBlock {
         return true;
     }
 
+    @Override
     public boolean isGenesis() {
-        return this.header.isGenesis();
+        try {
+            return Arrays.equals(
+                    header.getHash(), CfgAion.inst().getGenesisStakingBlock().getHash());
+        } catch (HeaderStructureException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public boolean isEqual(StakingBlock block) {

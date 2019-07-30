@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc2;
 
 import org.aion.api.server.rpc2.autogen.RpcProcessor2;
+import org.aion.zero.impl.blockchain.AionImpl;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
  * the transition is complete.
  */
 public class Rpc2Shim {
-    private AbstractRpcProcessor rpc = new RpcProcessor2(new RpcImpl());
+    private AbstractRpcProcessor rpc = new RpcProcessor2(new RpcImpl(AionImpl.inst()));
 
     public static final List<String> SUPPORTED_METHOD_NAMES = List.of(
             // For Unity

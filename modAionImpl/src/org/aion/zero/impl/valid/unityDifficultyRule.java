@@ -8,14 +8,15 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
+import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.StakedBlockHeader;
 
-public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
+public class unityDifficultyRule extends GrandParentDependantBlockHeaderRule {
 
     private IDifficultyCalculator diffCalc;
 
-    public StakingDifficultyRule(IChainCfg configuration) {
-        diffCalc = configuration.getStakingDifficultyCalculator();
+    public unityDifficultyRule(IChainCfg configuration) {
+        diffCalc = configuration.getUnityDifficultyCalculator();
     }
 
     private static String formatError(BigInteger expectedDifficulty, BigInteger actualDifficulty) {
@@ -33,13 +34,26 @@ public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
             BlockHeader current,
             List<RuleError> errors) {
 
-        if (!(current instanceof StakedBlockHeader)) {
-            throw new IllegalStateException("Invalid header input");
+        if (current instanceof StakedBlockHeader) {
+            if (!(parent instanceof StakedBlockHeader)) {
+                throw new IllegalStateException("Invalid parent header input");
+            }
+
+            if (grandParent != null && !(grandParent instanceof StakedBlockHeader)) {
+                throw new IllegalStateException("Invalid grandParent header input");
+            }
+        } else if (current instanceof A0BlockHeader) {
+            if (!(parent instanceof A0BlockHeader)) {
+                throw new IllegalStateException("Invalid parent header input");
+            }
+
+            if (grandParent != null && !(grandParent instanceof A0BlockHeader)) {
+                throw new IllegalStateException("Invalid grandParent header input");
+            }
+        } else {
+            throw  new IllegalStateException("Invalid BlockHeader Type!");
         }
 
-        if (!(parent instanceof StakedBlockHeader)) {
-            throw new IllegalStateException("Invalid parent header input");
-        }
 
         BigInteger currDiff = current.getDifficultyBI();
         if (currDiff.equals(BigInteger.ZERO)) {
@@ -52,10 +66,6 @@ public class StakingDifficultyRule extends GrandParentDependantBlockHeaderRule {
                 return false;
             }
             return true;
-        }
-
-        if (!(grandParent instanceof StakedBlockHeader)) {
-            throw new IllegalStateException("Invalid grandParent header input");
         }
 
         BigInteger calcDifficulty = this.diffCalc.calculateDifficulty(parent, grandParent);

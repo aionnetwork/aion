@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IBlockConstants;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.stake.GenesisStakingBlock;
 
-public class StakeBlockDiffCalculator {
+public class UnityBlockDiffCalculator {
     private static double controlRate = 1.0 + 0.05;
 
     // choise barrier = 14 because lambda =~ −13.862943611
@@ -15,7 +17,7 @@ public class StakeBlockDiffCalculator {
 
     private IBlockConstants constants;
 
-    public StakeBlockDiffCalculator(IBlockConstants _constants) {
+    public UnityBlockDiffCalculator(IBlockConstants _constants) {
         constants = _constants;
     }
 
@@ -23,7 +25,7 @@ public class StakeBlockDiffCalculator {
 
         // If not parent pos block, return the initial difficulty
         if (parent == null) {
-            return BigInteger.ONE;
+            return constants.getMinimumDifficulty();
         }
 
         BigInteger pd = parent.getDifficultyBI();
@@ -42,8 +44,20 @@ public class StakeBlockDiffCalculator {
             newDiff = BigDecimal.valueOf(pd.doubleValue() / controlRate).toBigInteger();
         } else {
             newDiff = BigDecimal.valueOf(pd.doubleValue() * controlRate).toBigInteger();
+
+            // Unity protocol, increasing one difficulty if the difficulty changes too small can not
+            // be adjusted by the controlRate.
+            if (newDiff.equals(pd)) {
+                newDiff = newDiff.add(BigInteger.ONE);
+            }
         }
 
-        return max(constants.getMinimumDifficulty(), newDiff);
+        if (parent.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+            return max(GenesisStakingBlock.GENESIS_DIFFICULTY, newDiff);
+        } else if (parent.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+            return max(constants.getMinimumDifficulty() , newDiff);
+        } else {
+            throw  new IllegalStateException("Invalid block seal type!");
+        }
     }
 }

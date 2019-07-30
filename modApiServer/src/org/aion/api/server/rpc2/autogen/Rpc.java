@@ -16,6 +16,11 @@ public interface Rpc {
     byte[] submitseed(
         byte[] var0,
         byte[] var1
+    ) throws Exception;
+
+    boolean submitsignature(
+        byte[] var0,
+        byte[] var1
     );
 
     boolean submitsignature(

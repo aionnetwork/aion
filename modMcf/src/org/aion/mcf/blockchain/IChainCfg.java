@@ -25,7 +25,7 @@ public interface IChainCfg {
 
     // TODO: [unity] separate these methods from the ChainCfg impl class.
 
-    IDifficultyCalculator getStakingDifficultyCalculator();
+    IDifficultyCalculator getUnityDifficultyCalculator();
 
     BlockHeaderValidator createStakingBlockHeaderValidator();
 

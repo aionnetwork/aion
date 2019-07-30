@@ -21,7 +21,7 @@ import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
-import org.aion.zero.impl.core.StakeBlockDiffCalculator;
+import org.aion.zero.impl.core.UnityBlockDiffCalculator;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
@@ -31,7 +31,7 @@ import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.StakingBlockTimeStampRule;
-import org.aion.zero.impl.valid.StakingDifficultyRule;
+import org.aion.zero.impl.valid.unityDifficultyRule;
 import org.aion.zero.impl.valid.StakingSeedRule;
 
 /**
@@ -45,7 +45,7 @@ public class ChainConfiguration implements IChainCfg {
 
     protected BlockConstants constants;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
-    protected IDifficultyCalculator stakingDifficultyCalculator;
+    protected IDifficultyCalculator unityDifficultyCalculator;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
@@ -74,7 +74,7 @@ public class ChainConfiguration implements IChainCfg {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
 
-        StakeBlockDiffCalculator stakeCalc = new StakeBlockDiffCalculator(constants);
+        UnityBlockDiffCalculator unityCalc = new UnityBlockDiffCalculator(constants);
 
         RewardsCalculator rewardsCalcInternal =
                 new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
@@ -93,14 +93,14 @@ public class ChainConfiguration implements IChainCfg {
                 };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
 
-        stakingDifficultyCalculator =
+        unityDifficultyCalculator =
                 (parent, grandParent) -> {
                     // special case to handle the corner case for first block
                     if (parent.getNumber() == 0L || parent.isGenesis()) {
                         return parent.getDifficultyBI();
                     }
 
-                    return stakeCalc.calcDifficulty(parent, grandParent);
+                    return unityCalc.calcDifficulty(parent, grandParent);
                 };
     }
 
@@ -156,8 +156,8 @@ public class ChainConfiguration implements IChainCfg {
     }
 
     @Override
-    public IDifficultyCalculator getStakingDifficultyCalculator() {
-        return stakingDifficultyCalculator;
+    public IDifficultyCalculator getUnityDifficultyCalculator() {
+        return unityDifficultyCalculator;
     }
 
     @Override
@@ -193,7 +193,7 @@ public class ChainConfiguration implements IChainCfg {
 
     public GrandParentBlockHeaderValidator createStakingGrandParentHeaderValidator() {
         return new GrandParentBlockHeaderValidator(
-            Collections.singletonList(new StakingDifficultyRule(this)));
+            Collections.singletonList(new unityDifficultyRule(this)));
     }
 
     // TODO : [unity] these 2 methods might move to the other proper class

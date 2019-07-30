@@ -50,11 +50,13 @@ public class UnityTotalDifficultyTest {
                 builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
 
         bc = spy(bundle.bc);
+        bc.setUnityEnable();
         doReturn(stakingContractHelper).when(bc).getStakingContractHelper();
     }
 
     @After
     public void shutdown() {
+        bc.setUnityDisable();
         LongLivedAvm.destroy();
     }
 
@@ -108,7 +110,7 @@ public class UnityTotalDifficultyTest {
         BigInteger blockOnePOSStakingDifficulty = blockInfoPOS.getStakingDifficulty();
 
         // calculated through StakeBlockDiffCalculator
-        BigInteger expectedBlockDifficulty = BigInteger.valueOf(1904761904);
+        BigInteger expectedBlockDifficulty = BigInteger.valueOf(2000000000);
 
         blockInfoPOS = bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockThreePOS.getHash());
 
@@ -163,7 +165,7 @@ public class UnityTotalDifficultyTest {
         Block blockThreeInfo = bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockThreePOW.getHash());
 
         // Calculated through DiffCalc
-        Assert.assertEquals(BigInteger.valueOf(925), blockThreeInfo.getDifficultyBI());
+        Assert.assertEquals(BigInteger.valueOf(975), blockThreeInfo.getDifficultyBI());
         // mining difficulty is parent + current block's difficulty
         Assert.assertEquals(blockThreeInfo.getDifficultyBI().add(blockTwoPOWInfo.getMiningDifficulty()), blockThreeInfo.getMiningDifficulty());
         // staking difficulty is from parent
@@ -251,7 +253,7 @@ public class UnityTotalDifficultyTest {
         assertThat(bc.tryToConnectInternal(blockThreePOS_Chain2, time)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // Calculated through StakeBlockDiffCalculator
-        BigInteger expectedStakingDifficultyBlockThreePOS = BigInteger.valueOf(1904761904);
+        BigInteger expectedStakingDifficultyBlockThreePOS = BigInteger.valueOf(2000000000);
 
         Block blockTwoPOS_Chain2_Info = bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockTwoPOS_Chain2.getHash());
         Assert.assertEquals(
@@ -259,7 +261,7 @@ public class UnityTotalDifficultyTest {
                         blockTwoPOS_Chain2_Info.getStakingDifficulty().add(expectedStakingDifficultyBlockThreePOS)),
                 blockThreePOS_Chain2.getCumulativeDifficulty());
 
-        double newDelta = 1.3301350026714224E10;
+        double newDelta = 1.4664738411858124E10;
         StakingBlock blockFourPOS_Chain2 = createNewStakingBlock(blockThreePOS_Chain2, blockThreePOS_Chain2.getSeed());
         blockFourPOS_Chain2.getHeader().setTimestamp(time += newDelta);
         assertThat(bc.tryToConnectInternal(blockFourPOS_Chain2, time)).isEqualTo(ImportResult.IMPORTED_BEST);
