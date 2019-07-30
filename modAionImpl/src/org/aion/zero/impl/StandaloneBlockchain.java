@@ -36,6 +36,7 @@ import org.aion.util.types.Hash256;
 import org.aion.vm.BlockCachingContext;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
@@ -415,6 +416,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             AionGenesis genesis;
             try {
                 genesis = genesisBuilder.build();
+                CfgAion.inst().setGenesis(genesis);
             } catch (HeaderStructureException e) {
                 throw new RuntimeException(e);
             }

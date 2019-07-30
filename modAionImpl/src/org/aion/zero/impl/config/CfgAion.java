@@ -35,8 +35,6 @@ public final class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
 
-    private GenesisStakingBlock genesisStakingBlock;
-
     protected static final int N = 210;
 
     private static final int K = 9;
@@ -97,23 +95,19 @@ public final class CfgAion extends Cfg {
         return (CfgConsensusPow) this.consensus;
     }
 
-    public synchronized AionGenesis getGenesis() {
+    public AionGenesis getGenesis() {
         if (this.genesis == null) setGenesis();
         return this.genesis;
     }
 
-    public GenesisStakingBlock getGenesisStakingBlock() throws HeaderStructureException {
+    public GenesisStakingBlock getGenesisStakingBlock() {
 
         // We need the extraData from the PoWGenesis block
         if (genesis == null) {
             setGenesis();
         }
 
-        if(genesisStakingBlock == null) {
-            genesisStakingBlock = new GenesisStakingBlock(genesis.getExtraData());
-        }
-
-        return genesisStakingBlock;
+        return genesis.getGenesisStakingBlock();
     }
 
     public static int getN() {

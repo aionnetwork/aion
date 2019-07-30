@@ -775,11 +775,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (bestStakingBlock == null) {
             if (bestBlockNumber == 0) {
-                try {
-                    bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
-                } catch (HeaderStructureException e) {
-                    throw new IllegalStateException(e);
-                }
+                bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
             } else {
                 if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
                     bestStakingBlock = (StakingBlock) bestBlock;
@@ -787,11 +783,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
 
                     if (bestStakingBlock == null) {
-                        try {
-                            bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
-                        } catch (HeaderStructureException e) {
-                            throw new IllegalStateException(e);
-                        }
+                        bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
                     }
                 }
             }
@@ -1181,20 +1173,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             parentStakingBlockHeader = parentHdr;
             grandParentStakingBlock = getParentBlock(parentHdr);
         } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-
-            try {
-                if (Arrays.equals(parent.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
-                    parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
-                    grandParentStakingBlock = null;
-                } else {
-                    Block parentMiningBlock = getBlockByHash(parent.getAntiparentHash());
-                    if (parentMiningBlock != null) {
-                        parentStakingBlockHeader = parentMiningBlock.getHeader();
-                        grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
-                    }
+            
+            if (Arrays.equals(parent.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
+                grandParentStakingBlock = null;
+            } else {
+                Block parentMiningBlock = getBlockByHash(parent.getAntiparentHash());
+                if (parentMiningBlock != null) {
+                    parentStakingBlockHeader = parentMiningBlock.getHeader();
+                    grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
                 }
-            } catch (HeaderStructureException e) {
-                e.printStackTrace();
             }
 
 
@@ -1567,13 +1555,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (parent.getHeader().getSealType() == header.getSealType()) {
             return parent;
         } else {
-
-            try {
-                if (Arrays.equals(parent.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
-                    return CfgAion.inst().getGenesisStakingBlock();
-                }
-            } catch (HeaderStructureException e) {
-                e.printStackTrace();
+            if (Arrays.equals(parent.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                return CfgAion.inst().getGenesisStakingBlock();
             }
 
             Block antiParentBlock = getBlockStore().getBlockByHashWithInfo(parent.getAntiparentHash());
@@ -1656,11 +1639,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (parent.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
                 sealParent = getBlockByHash(parent.getAntiparentHash());
                 if (sealParent == null) {
-                    try {
-                        sealParent = CfgAion.inst().getGenesisStakingBlock();
-                    } catch (HeaderStructureException e) {
-                        e.printStackTrace();
-                    }
+                    sealParent = CfgAion.inst().getGenesisStakingBlock();
                 }
             } else {
                 sealParent = parent;
@@ -2119,14 +2098,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (sealAntiparentHash == null) {
                 return;
             } else {
-                try {
-                    if (Arrays.equals(sealAntiparentHash, CfgAion.inst().getGenesisStakingBlock().getHash())){
-                        // We are about to add the first staking block to this chain
-                        totalStakingDifficulty = CfgAion.inst().getGenesisStakingBlock().getStakingDifficulty();
-                    }
-                } catch (HeaderStructureException e) {
-                    e.printStackTrace();
-                    return;
+                if (Arrays.equals(sealAntiparentHash, CfgAion.inst().getGenesisStakingBlock().getHash())){
+                    // We are about to add the first staking block to this chain
+                    totalStakingDifficulty = CfgAion.inst().getGenesisStakingBlock().getStakingDifficulty();
                 }
             }
             
@@ -2675,22 +2649,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
             grandParentStakingBlock = getParentBlock(parentHdr);
         } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
 
-            try {
-                if (Arrays.equals(
-                        parentBlock.getAntiparentHash(),
-                        CfgAion.inst().getGenesisStakingBlock().getHash())) {
-                    parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
-                    grandParentStakingBlock = null;
-                } else {
-                    Block parentStakingBlock = getBlockByHash(parentBlock.getAntiparentHash());
-                    if (parentStakingBlock != null) {
-                        parentStakingBlockHeader = parentStakingBlock.getHeader();
-                        grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
-                    }
+            if (Arrays.equals(
+                    parentBlock.getAntiparentHash(),
+                    CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
+                grandParentStakingBlock = null;
+            } else {
+                Block parentStakingBlock = getBlockByHash(parentBlock.getAntiparentHash());
+                if (parentStakingBlock != null) {
+                    parentStakingBlockHeader = parentStakingBlock.getHeader();
+                    grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
                 }
-            } catch (HeaderStructureException e) {
-                e.printStackTrace();
-                return null;
             }
         } else {
             throw new IllegalStateException("Invalid block type");

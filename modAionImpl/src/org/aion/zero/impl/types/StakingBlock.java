@@ -409,12 +409,7 @@ public class StakingBlock extends AbstractBlock {
 
     @Override
     public boolean isGenesis() {
-        try {
-            return Arrays.equals(
-                    header.getHash(), CfgAion.inst().getGenesisStakingBlock().getHash());
-        } catch (HeaderStructureException e) {
-            throw new IllegalStateException(e);
-        }
+        return Arrays.equals(header.getHash(), CfgAion.inst().getGenesisStakingBlock().getHash());
     }
 
     public boolean isEqual(StakingBlock block) {

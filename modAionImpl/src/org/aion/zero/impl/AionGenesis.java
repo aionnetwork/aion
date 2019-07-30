@@ -131,6 +131,12 @@ public class AionGenesis extends AionBlock {
      */
     private Map<AionAddress, AccountState> premine = new HashMap<>();
 
+    /**
+     * The virtual staking block, which is the sealParent of the first PoS block is built, and the sealAntiparent
+     * of all PoW blocks until the first PoS block.
+     */
+    private GenesisStakingBlock genesisStakingBlock;
+
     // TODO: verify whether setting the solution to null is okay
     // TODO: set energyLimit to a correct value (after genesis loader is
     // completed)
@@ -171,6 +177,14 @@ public class AionGenesis extends AionBlock {
 
     public Map<Integer, BigInteger> getNetworkBalances() {
         return this.networkBalances;
+    }
+
+    public GenesisStakingBlock getGenesisStakingBlock() {
+        return this.genesisStakingBlock;
+    }
+
+    private void setGenesisStakingBlock(GenesisStakingBlock genesisStakingBlock) {
+        this.genesisStakingBlock = genesisStakingBlock;
     }
 
     /**
@@ -338,9 +352,9 @@ public class AionGenesis extends AionBlock {
             genesis.setNetworkBalance(this.networkBalance);
 
             try {
-                GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(null);
-                byte[] antiParentHash = genesisStakingBlock.getHash();
-                genesis.setAntiparentHash(antiParentHash);
+                GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(extraData);
+                genesis.setGenesisStakingBlock(genesisStakingBlock);
+                genesis.setAntiparentHash(genesisStakingBlock.getHash());
 
                 BigInteger miningDifficulty = genesis.getDifficultyBI();
 

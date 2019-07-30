@@ -53,7 +53,7 @@ public class UnityBlockDiffCalculator {
         }
 
         if (parent.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-            return max(GenesisStakingBlock.GENESIS_DIFFICULTY, newDiff);
+            return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
         } else if (parent.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
             return max(constants.getMinimumDifficulty() , newDiff);
         } else {

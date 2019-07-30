@@ -449,12 +449,8 @@ public class AionHub {
                 genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
             }
 
-            try {
-                blockchain.setBestStakingBlock(cfg.getGenesisStakingBlock());
-                genLOG.info("load genesis Staking block!");
-            } catch (HeaderStructureException e) {
-                throw new IllegalStateException(e);
-            }
+            blockchain.setBestStakingBlock(cfg.getGenesisStakingBlock());
+            genLOG.info("load genesis Staking block!");
 
             genLOG.info(
                     "loaded genesis block <num={}, root={}>",
