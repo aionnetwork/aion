@@ -1046,7 +1046,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             //Check 050 Fork
             if (!FORK050ENABLE) {
-                if (bestBlock.getHeader().getNumber() == (fork050BlockNumber - 1)) {
+                if (fork050BlockNumber == 0 || (bestBlock.getHeader().getNumber() == (fork050BlockNumber - 1))) {
                     LOG.info("Unity protocol enabled at {}!", fork050BlockNumber);
                     FORK050ENABLE = true;
                 }
