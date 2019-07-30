@@ -8,7 +8,7 @@
 
 package org.aion.api.server.rpc2.autogen;
 import org.aion.api.server.rpc2.AbstractRpcProcessor;
-import org.aion.api.envelope.JsonRpcRequest;
+import org.aion.api.serialization.JsonRpcRequest;
 
 public class RpcProcessor2 extends AbstractRpcProcessor {
     private final Rpc rpc;

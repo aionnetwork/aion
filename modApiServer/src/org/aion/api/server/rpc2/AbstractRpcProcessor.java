@@ -1,10 +1,10 @@
 package org.aion.api.server.rpc2;
 
 import java.io.IOException;
-import org.aion.api.envelope.JsonRpcRequest;
-import org.aion.api.envelope.JsonRpcResponse;
-import org.aion.api.schema.RequestDeserializer;
-import org.aion.api.schema.ResponseSerializer;
+import org.aion.api.serialization.JsonRpcRequest;
+import org.aion.api.serialization.JsonRpcResponse;
+import org.aion.api.serialization.RequestDeserializer;
+import org.aion.api.serialization.ResponseSerializer;
 
 public abstract class AbstractRpcProcessor {
     private RequestDeserializer reqDeserializer;
