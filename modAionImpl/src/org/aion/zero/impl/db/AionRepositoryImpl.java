@@ -740,10 +740,10 @@ public class AionRepositoryImpl
             }
 
             try {
-                if (contractIndexDatabase != null) {
-                    contractIndexDatabase.close();
-                    LOGGEN.info("contractIndexDatabase store closed.");
-                    contractIndexDatabase = null;
+                if (contractInfoSource != null) {
+                    contractInfoSource.close();
+                    LOGGEN.info("contractInfoSource closed.");
+                    contractInfoSource = null;
                 }
             } catch (Exception e) {
                 LOGGEN.error(
@@ -771,10 +771,10 @@ public class AionRepositoryImpl
             }
 
             try {
-                if (transactionDatabase != null) {
-                    transactionDatabase.close();
-                    LOGGEN.info("Transaction database closed.");
-                    transactionDatabase = null;
+                if (transactionStore != null) {
+                    transactionStore.close();
+                    LOGGEN.info("Transaction store closed.");
+                    transactionStore = null;
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the transaction database.", e);
