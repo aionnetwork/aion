@@ -27,6 +27,8 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
+import org.aion.mcf.ds.DataSource;
+import org.aion.mcf.ds.DataSource.Type;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -98,8 +100,9 @@ public class AionRepositoryImpl
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
             this.contractInfoSource =
-                    new ObjectDataSource<>(
-                            contractIndexDatabase, ContractInformation.RLP_SERIALIZER);
+                    new DataSource<>(contractIndexDatabase, ContractInformation.RLP_SERIALIZER)
+                            .withCache(10, Type.LRU)
+                            .buildObjectSource();
 
             // Setup world trie.
             worldState = createStateTrie();
@@ -1177,12 +1180,18 @@ public class AionRepositoryImpl
                 // block has not been committed yet
                 return cachedContractIndex.get(contract).getRight();
             } else {
-                ContractInformation ci = getIndexedContractInformation(contract);
-                if (ci == null) {
-                    // signals that the value is not set
-                    return InternalVmType.UNKNOWN;
+                // when there is no code the transaction can be processed as a balance transfer by either VM
+                // skipping the database lookup in this case
+                if (Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
+                    return InternalVmType.EITHER;
                 } else {
-                    return ci.getVmUsed(codeHash);
+                    ContractInformation ci = getIndexedContractInformation(contract);
+                    if (ci == null) {
+                        // signals that the value is not set
+                        return InternalVmType.UNKNOWN;
+                    } else {
+                        return ci.getVmUsed(codeHash);
+                    }
                 }
             }
         }
