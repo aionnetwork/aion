@@ -1,13 +1,20 @@
 package org.aion.zero.impl.sync.handler;
 
+import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
 /** @author jay handler for new block broadcasted from network */
@@ -43,22 +50,41 @@ public final class BroadcastNewBlockHandler extends Handler {
             return;
         }
 
-        AionBlock block = new AionBlock(rawdata);
+        try { // preventative try-catch: it's unlikely that exceptions can pass up to here
+            Block block;
+            RLPList params = RLP.decode2(rawdata);
+            RLPList blockRLP = (RLPList) params.get(0);
+            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
+                // Parse Header
+                RLPList headerRLP = (RLPList) blockRLP.get(0);
 
-        BlockPropagationHandler.PropStatus result =
-                this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
+                byte[] type = headerRLP.get(RLP_BH_SEALTYPE).getRLPData();
+                if (type[0] == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
+                    block = AionBlock.fromRLPList(params, true);
+                } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
+                    block = StakingBlock.fromRLPList(params, true);
+                } else {
+                    throw new IllegalStateException("Invalid block seal type!");
+                }
 
-        if (this.log.isDebugEnabled()) {
-            String hash = block.getShortHash();
-            hash = hash != null ? hash : "null";
-            this.log.debug(
-                    "<block-prop node="
+                BlockPropagationHandler.PropStatus result =
+                    this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
+
+                if (this.log.isDebugEnabled()) {
+                    String hash = block.getShortHash();
+                    hash = hash != null ? hash : "null";
+                    this.log.debug(
+                        "<block-prop node="
                             + _displayId
                             + " block-hash="
                             + hash
                             + " status="
                             + result.name()
                             + ">");
+                }
+            }
+        } catch (Exception e) {
+            log.error("RLP decode error!" , e);
         }
     }
 }
