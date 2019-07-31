@@ -617,20 +617,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
+        this.bestBlock = getBlockStore().getBlockByHashWithInfo(bestBlockHash);
 
         if (bestBlock instanceof AionBlock) {
             bestMiningBlock = (AionBlock) bestBlock;
+            bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
         } else if (bestBlock instanceof StakingBlock) {
             bestStakingBlock = (StakingBlock) bestBlock;
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
         } else {
             throw new IllegalStateException("Invalid best block data!");
         }
 
-        Block blockWithDifficulties = getBlockStore().getBlockByHashWithInfo(bestBlockHash);
-        this.totalMiningDifficulty = blockWithDifficulties.getMiningDifficulty();
-        this.totalStakingDifficulty = blockWithDifficulties.getStakingDifficulty();
-        this.totalDifficulty = blockWithDifficulties.getCumulativeDifficulty();
+        this.totalMiningDifficulty = bestBlock.getMiningDifficulty();
+        this.totalStakingDifficulty = bestBlock.getStakingDifficulty();
+        this.totalDifficulty = bestBlock.getCumulativeDifficulty();
         this.repository =
                 (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
@@ -641,13 +642,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.repository = state.savedRepo;
         this.bestBlock = state.savedBest;
 
-        if (bestBlock instanceof AionBlock) {
-            bestMiningBlock = (AionBlock) bestBlock;
-        } else if (bestBlock instanceof StakingBlock) {
-            bestStakingBlock = (StakingBlock) bestBlock;
-        } else {
-            throw new IllegalStateException("Invalid best block data!");
-        }
+        bestMiningBlock = state.savedBestMining;
+        bestStakingBlock = state.savedBestStaking;
 
         this.totalMiningDifficulty = state.savedMiningDifficulty;
         this.totalStakingDifficulty = state.savedStakingDifficulty;
@@ -2752,6 +2748,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionRepositoryImpl savedRepo = repository;
         Block savedBest = bestBlock;
+        AionBlock savedBestMining = bestMiningBlock;
+        StakingBlock savedBestStaking = bestStakingBlock;
         BigInteger savedMiningDifficulty = totalMiningDifficulty;
         BigInteger savedStakingDifficulty = totalStakingDifficulty;
         BigInteger savedTotalDifficulty = totalDifficulty;
