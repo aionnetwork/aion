@@ -44,7 +44,7 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRuleWithArg {
 
         double delta =
                 blockDifficulty.doubleValue()
-                        * Math.log(boundry.divide(dividend).doubleValue())
+                        * (Math.log(boundry.doubleValue()) - Math.log(dividend.doubleValue()))
                         / stake.doubleValue();
 
         long offset = max((long) delta, 1);
