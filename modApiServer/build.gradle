@@ -23,7 +23,7 @@ dependencies {
 
     compile project(':modAion')
     compile project(':modAionImpl')
-    compile project(':aion_fastvm')
+    compile files("${rootProject.projectDir}/lib/fastvm-658171d.jar")
     compile project(':modMcf')
     compile project(':modP2p')
     compile project(':modEvtMgr')

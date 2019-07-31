@@ -9,7 +9,7 @@ dependencies {
     compile project(':modAion')
     compile project(':modMcf')
     compile project(':modPrecompiled')
-    compile project(':aion_fastvm')
+    compile files("${rootProject.projectDir}/lib/fastvm-658171d.jar")
     compile files('../lib/org-aion-avm-core.jar')
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
     compile 'com.google.code.findbugs:jsr305:3.0.2'

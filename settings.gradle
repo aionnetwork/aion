@@ -13,10 +13,7 @@ include 'modAion', 'modAionImpl',
     'modPrecompiled',
     'modVM',
     'modApiServer',
-    'aion_fastvm/modFastVM',
     'modBoot'
-
-project(":aion_fastvm/modFastVM").name = "aion_fastvm"
 
 // only build and distribute modGui only if explicitly specified
 if (hasProperty('modGuiPath') && !modGuiPath.empty) {
