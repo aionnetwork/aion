@@ -17,4 +17,9 @@ public class RpcImpl implements Rpc {
     public byte[] submitseed(byte[] var0, byte[] var1) {
         return var1;
     }
+
+    @Override
+    public boolean submitsignature(byte[] var0, byte[] var1) {
+        return false; //TODO
+    }
 }

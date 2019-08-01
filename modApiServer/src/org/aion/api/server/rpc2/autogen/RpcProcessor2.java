@@ -17,7 +17,7 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
         this.rpc = rpc;
     }
 
-    public Object execute(JsonRpcRequest req) {
+    public Object execute(JsonRpcRequest req) throws Exception {
         Object[] params = req.getParams();
         switch(req.getMethod()) {
             case "getseed":
@@ -25,6 +25,11 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
                 );
             case "submitseed":
                 return (byte[]) rpc.submitseed(
+                    (byte[]) params[0],
+                    (byte[]) params[1]
+                );
+            case "submitsignature":
+                return (boolean) rpc.submitsignature(
                     (byte[]) params[0],
                     (byte[]) params[1]
                 );
