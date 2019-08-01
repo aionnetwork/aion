@@ -6,7 +6,7 @@ import org.aion.mcf.stake.StakeRunnerInterface;
 /** Chain instance pow interface. */
 public interface IChainInstancePOW extends IChainInstanceBase {
 
-    IPowChain getBlockchain();
+    UnityChain getBlockchain();
 
     IMineRunner getBlockMiner();
 

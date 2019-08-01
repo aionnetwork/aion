@@ -1,8 +1,6 @@
 package org.aion.api.server.rpc2;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
@@ -11,21 +9,16 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.StakedBlockHeader;
 import org.aion.zero.impl.types.StakingBlock;
-import org.apache.commons.collections4.map.LRUMap;
 
 public class RpcImpl implements Rpc {
 
     private IAionChain ac;
-    //TODO : [unity] find the proper number for chaching the template.
-    private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
-        .synchronizedMap(new LRUMap<>(64));
     private ReentrantLock blockTemplateLock;
 
     RpcImpl(final IAionChain _ac) {
@@ -39,11 +32,19 @@ public class RpcImpl implements Rpc {
 
     @Override
     public byte[] getseed() {
+        if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+            throw new IllegalStateException("UnityForkNotEnabled!");
+        }
+
         return ac.getBlockchain().getSeed();
     }
 
     @Override
     public byte[] submitseed(byte[] newSeed, byte[] pubKey) throws Exception {
+        if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+            throw new IllegalStateException("UnityForkNotEnabled!");
+        }
+
         if (newSeed == null || pubKey == null) {
             throw new NullPointerException();
         }
@@ -56,23 +57,18 @@ public class RpcImpl implements Rpc {
         blockTemplateLock.lock();
         try {
             StakingBlock template =
-                    (StakingBlock)
-                            ac.getBlockchain()
-                                    .createStakingBlockTemplate(
-                                            ac.getAionHub()
-                                                    .getPendingState()
-                                                    .getPendingTransactions(),
-                                            pubKey,
-                                            newSeed);
+                (StakingBlock)
+                    ac.getBlockchain()
+                        .createStakingBlockTemplate(
+                            ac.getAionHub().getPendingState().getPendingTransactions()
+                            , pubKey
+                            , newSeed);
 
             if (template == null) {
                 throw new Exception("GetStakingBlockTemplate failed!");
             }
 
-            byte[] sealhash = template.getHeader().getMineHash();
-            stakingBlockTemplate.put(ByteArrayWrapper.wrap(sealhash), template);
-
-            return sealhash;
+            return template.getHeader().getMineHash();
         } finally {
             blockTemplateLock.unlock();
         }
@@ -80,6 +76,10 @@ public class RpcImpl implements Rpc {
 
     @Override
     public boolean submitsignature(byte[] signature, byte[] sealhash) {
+        if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+            throw new IllegalStateException("UnityForkNotEnabled!");
+        }
+
         if (signature == null || sealhash == null) {
             throw new NullPointerException();
         }
@@ -89,14 +89,14 @@ public class RpcImpl implements Rpc {
             throw new IllegalArgumentException("Invalid arguments length");
         }
 
-        StakingBlock block = stakingBlockTemplate.get(ByteArrayWrapper.wrap(sealhash));
+        StakingBlock block = (StakingBlock) ac.getBlockchain().getCachingStakingBlockTemplate(sealhash);
         if (block == null) {
             return false;
         }
 
         block.getHeader().setSignature(signature);
 
-        return AionImpl.inst().addNewMinedBlock(block).isBest();
+        return true;
     }
 
     @Override

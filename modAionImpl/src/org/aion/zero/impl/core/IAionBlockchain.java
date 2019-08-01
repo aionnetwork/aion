@@ -117,5 +117,7 @@ public interface IAionBlockchain extends IBlockchain {
 
     void loadBestStakingBlock();
 
+    boolean isUnityForkEnabled();
 
+    StakingBlock trySealStakingBlock();
 }

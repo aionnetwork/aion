@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.blockchain.UnityChain;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -13,7 +13,7 @@ import org.aion.util.types.ByteArrayWrapper;
  * Blockchain interface.
  */
 @SuppressWarnings("rawtypes")
-public interface IBlockchain extends IPowChain {
+public interface IBlockchain extends UnityChain {
 
     long getSize();
 

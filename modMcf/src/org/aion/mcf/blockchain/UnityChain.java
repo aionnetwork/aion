@@ -10,7 +10,7 @@ import org.aion.util.types.Hash256;
  *
  */
 @SuppressWarnings("rawtypes")
-public interface IPowChain extends IGenericChain {
+public interface UnityChain extends IGenericChain {
 
     BigInteger getTotalMiningDifficulty();
     
@@ -23,6 +23,11 @@ public interface IPowChain extends IGenericChain {
     BigInteger getTotalDifficultyByHash(Hash256 hash);
 
     Block createStakingBlockTemplate(List<AionTransaction> pendingTransactions, byte[] publicKey, byte[] seed);
+
+    Block getCachingStakingBlockTemplate(byte[] hash);
+
+    boolean putSealedNewStakingBlock(Block block);
+
 
     byte[] getSeed();
 }

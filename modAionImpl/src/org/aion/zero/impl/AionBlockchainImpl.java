@@ -22,12 +22,17 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.AionTransaction;
@@ -96,6 +101,7 @@ import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.mcf.types.AionTxExecSummary;
 import org.aion.mcf.types.AionTxReceipt;
 import org.aion.zero.impl.types.StakedBlockHeader;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,6 +195,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long forkLevel = NO_FORK_LEVEL;
 
     private final boolean storeInternalTransactions;
+    //TODO : [unity] find the proper number for chaching the template.
+    private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
+        .synchronizedMap(new LRUMap<>(64));
+
+    private final SortedMap<Long, LinkedHashSet<StakingBlock>> sealednewStakingBlock =
+        Collections.synchronizedSortedMap(new TreeMap<>());
+
+    private int stakingBlockCandidateTimeout = 3600;
 
     private AionBlockchainImpl() {
         this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
@@ -2726,6 +2740,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 totalEnergyUsed);
 
 
+        stakingBlockTemplate.put(ByteArrayWrapper.wrap(block.getHeader().getMineHash()) , block);
 
         return block;
     }
@@ -2771,5 +2786,88 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     long getUnityForkNumber() {
         return FORK_5_BLOCK_NUMBER;
+    }
+
+    public StakingBlock getCachingStakingBlockTemplate(byte[] hash) {
+        if (hash == null) {
+            throw new NullPointerException();
+        }
+
+        return stakingBlockTemplate.get(ByteArrayWrapper.wrap(hash));
+    }
+
+
+    public boolean putSealedNewStakingBlock(Block block) {
+        if (block == null) {
+            throw new NullPointerException();
+        }
+
+        if (!(block instanceof StakingBlock)) {
+            throw new IllegalArgumentException();
+        }
+
+        if (block.getHeader().getNumber() != bestBlock.getHeader().getNumber() + 1) {
+            LOG.debug("Invalid block number. {}", block.toString());
+            return false;
+        }
+
+        long timeStamp = block.getTimestamp();
+
+        // Can not submit a future block
+        if (timeStamp > (System.currentTimeMillis() / 1000 + stakingBlockCandidateTimeout)) {
+            LOG.debug("Block timestamp exceed the threshold. {}", block.toString());
+            return false;
+        }
+
+        LinkedHashSet<StakingBlock> blocks = sealednewStakingBlock.get(timeStamp);
+        if (blocks == null) {
+            LinkedHashSet<StakingBlock> sets = new LinkedHashSet<>();
+            sets.add((StakingBlock) block);
+            sealednewStakingBlock.put(block.getHeader().getTimestamp(), sets);
+            return true;
+        } else {
+            boolean exist = blocks.add((StakingBlock) block);
+            sealednewStakingBlock.put(block.getHeader().getTimestamp(), blocks);
+            return exist;
+        }
+    }
+
+    public boolean isUnityForkEnabled() {
+        return bestBlockNumber.get() >= FORK_5_BLOCK_NUMBER;
+    }
+
+    public StakingBlock trySealStakingBlock() {
+        long currentTime = System.currentTimeMillis() / 1000;
+        StakingBlock bestBlock = null;
+        List<Long> removeTimeStamp = new ArrayList<>();
+        for (Entry<Long, LinkedHashSet<StakingBlock>> e : sealednewStakingBlock.entrySet()) {
+            if (e.getKey() <= currentTime) {
+                removeTimeStamp.add(e.getKey());
+                for (StakingBlock b : e.getValue()) {
+                    if (b != null
+                        && (b.getHeader().getNumber()
+                            == getBestBlock().getHeader().getNumber() + 1)) {
+
+                        ImportResult result = tryToConnect(b);
+                        if (result.isBest()) {
+                            bestBlock = new StakingBlock(b);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (bestBlock != null) {
+            sealednewStakingBlock.clear();
+        } else {
+            for (Long timeStamp : removeTimeStamp) {
+                sealednewStakingBlock.remove(timeStamp);
+            }
+        }
+
+        return bestBlock;
     }
 }

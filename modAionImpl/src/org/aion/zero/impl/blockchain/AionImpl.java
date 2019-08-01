@@ -10,7 +10,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.blockchain.UnityChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
@@ -45,6 +45,28 @@ public class AionImpl implements IAionChain {
 
     private TxCollector collector;
 
+    private SealedBlockPicker  sealedBlockPicker;
+    private final class SealedBlockPicker extends Thread {
+
+        @Override
+        public void run() {
+            while (!isInterrupted()) {
+                if (aionHub.getBlockchain().isUnityForkEnabled()) {
+                    Block sealedBlock = aionHub.getBlockchain().trySealStakingBlock();
+                    if (sealedBlock != null) {
+                        aionHub.getPropHandler().propagateNewBlock(sealedBlock);
+                    }
+                }
+
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private AionImpl() {
         this.cfg = CfgAion.inst();
         aionHub = new AionHub();
@@ -58,6 +80,11 @@ public class AionImpl implements IAionChain {
                         + ">");
 
         collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
+
+        sealedBlockPicker = new SealedBlockPicker();
+        sealedBlockPicker.setName("seal-stk");
+        sealedBlockPicker.setPriority(Thread.NORM_PRIORITY);
+        sealedBlockPicker.start();
     }
 
     public static AionImpl inst() {
@@ -65,7 +92,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IPowChain getBlockchain() {
+    public UnityChain getBlockchain() {
         return aionHub.getBlockchain();
     }
 
@@ -96,7 +123,9 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public void close() {
+    public void close() throws InterruptedException {
+        sealedBlockPicker.interrupt();
+        sealedBlockPicker.join();
         aionHub.close();
     }
 
