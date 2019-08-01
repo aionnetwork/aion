@@ -23,11 +23,6 @@ public interface Rpc {
         byte[] var1
     );
 
-    boolean submitsignature(
-        byte[] var0,
-        byte[] var1
-    );
-
     Transaction eth_getTransactionByHash2(
         byte[] var0
     );
