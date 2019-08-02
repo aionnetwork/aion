@@ -2669,10 +2669,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     grandParentStakingBlock == null ? null : grandParentStakingBlock.getHeader());
 
         long newDelta =
-            max((long)(newDiff.doubleValue()
-                * Math.log( BigInteger.TWO.pow(256)
-                        .divide( new BigInteger(1, HashUtil.h256(newSeed))).doubleValue())
-                / votes), 1);
+            max(
+            (long)
+                (newDiff.doubleValue()
+                    * (Math.log(BigInteger.TWO.pow(256).doubleValue())
+                        - Math.log(new BigInteger(1, HashUtil.h256(newSeed)).doubleValue()))
+                    / (double) votes),
+            1);
 
         long newTime =
             max(sealParentBlock.getTimestamp() + newDelta
@@ -2847,9 +2850,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     if (b != null
                         && (b.getHeader().getNumber()
                             == getBestBlock().getHeader().getNumber() + 1)) {
-
                         ImportResult result = tryToConnect(b);
                         if (result.isBest()) {
+                            LOG.info(
+                                    "NewStakingBlock Sealed. blk#:{} hash:{} difficulty:{} txn:{}",
+                                    b.getNumber(),
+                                    b.getShortHash(),
+                                    b.getDifficultyBI(),
+                                    b.getTransactionsList().size());
                             bestBlock = new StakingBlock(b);
                             break;
                         }
