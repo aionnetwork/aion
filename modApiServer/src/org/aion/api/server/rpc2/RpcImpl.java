@@ -95,6 +95,7 @@ public class RpcImpl implements Rpc {
         }
 
         block.getHeader().setSignature(signature);
+        ac.getBlockchain().putSealedNewStakingBlock(block);
 
         return true;
     }
