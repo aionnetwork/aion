@@ -2609,7 +2609,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BlockHeader parentHdr = parentBlock.getHeader();
         StakingBlock sealParentBlock;
         if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-            sealParentBlock = (StakingBlock) getBlockByHash(parentBlock.getAntiparentHash());
+            if (Arrays.equals(parentBlock.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                sealParentBlock = CfgAion.inst().getGenesisStakingBlock();
+            } else {
+                sealParentBlock = (StakingBlock) getBlockByHash(parentBlock.getAntiparentHash());
+            }
         } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
             sealParentBlock = (StakingBlock) parentBlock;
         } else {
@@ -2687,7 +2691,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 new StakedBlockHeader.Builder()
                     .withSealType(BlockSealType.SEAL_POS_BLOCK.getSealId())
                     .withParentHash(parentBlock.getHash())
-                    .withCoinbase(stakerCoinbase)
+                    .withCoinbase(staker)
                     .withNumber(parentHdr.getNumber() + 1)
                     .withTimestamp(newTime)
                     .withExtraData(minerExtraData)
@@ -2744,6 +2748,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
 
         stakingBlockTemplate.put(ByteArrayWrapper.wrap(block.getHeader().getMineHash()) , block);
+
+        LOG.debug("GetBlockTemp: {}", block.toString());
 
         return block;
     }
