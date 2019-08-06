@@ -22,10 +22,10 @@ module aion.apiserver {
     requires libnzmq;
     requires aion.types;
     requires aion.base;
-    requires jackson.annotations;
-    requires jackson.core;
-    requires jackson.databind;
-    requires RpcGenerator;
+    //requires jackson.annotations;
+    //requires jackson.core;
+    //requires jackson.databind;
+    requires AionRpc;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
