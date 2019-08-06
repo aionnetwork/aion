@@ -17,8 +17,7 @@ pipeline {
         stage('Archive build output') {
             when {
                 expression { 
-                    GIT_BRANCH == 'master' ||
-                        GIT_BRANCH == 'master-pre-merge' 
+                    GIT_BRANCH == 'master'
                 }
             }
 
@@ -39,8 +38,8 @@ pipeline {
             when { 
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
-                // - this branch is master or master-pre-merge
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_BRANCH == 'master-pre-merge' } 
+                // - this branch is master
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master' }
             }
             steps { 
                     dir('FunctionalTests') {

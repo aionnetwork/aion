@@ -1,6 +1,6 @@
 ## Notice
 
-It is not allowed to submit your PR to the 'master' branch directly, please submit your PR to the 'master-pre-merge' branch and rebase your PR to 'master-pre-merge' branch.
+Please submit your PR to the `master` branch and rebase your code on `master` before opening the pull request.
 
 ## Description
 
