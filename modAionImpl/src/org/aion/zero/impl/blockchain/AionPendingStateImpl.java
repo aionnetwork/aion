@@ -44,6 +44,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.mcf.valid.TxNrgRule;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.Constant;
@@ -120,6 +121,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private boolean bufferEnable;
 
+    private boolean test;
+
     private boolean dumpPool;
 
     private boolean isSeed;
@@ -135,9 +138,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
     private ScheduledExecutorService ex;
 
     private boolean closeToNetworkBest = true;
-
-    private static long NRGPRICE_MIN = 10_000_000_000L; // 10 PLAT  (10 * 10 ^ -9 AION)
-    private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L; //  9 AION
 
     private long fork040Block = -1;
     private boolean fork040Enable = false;
@@ -351,6 +351,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
         this.blockchain = blockchain;
         this.best = new AtomicReference<>();
+        this.test = test;
 
         if (!this.isSeed) {
             this.transactionStore = blockchain.getTransactionStore();
@@ -385,7 +386,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                 }
             }
 
-            this.bufferEnable = CfgAion.inst().getTx().getBuffer();
+            this.bufferEnable = !test && CfgAion.inst().getTx().getBuffer();
             if (bufferEnable) {
                 LOGGER_TX.info("TxBuf enable!");
                 this.ex = Executors.newSingleThreadScheduledExecutor();
@@ -632,7 +633,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                 if (!newLargeNonceTx.isEmpty()) {
                     AionImpl.inst().broadcastTransactions(newLargeNonceTx);
                 }
-            } else if (!newPending.isEmpty() || !newLargeNonceTx.isEmpty()) {
+            } else if (!test && (!newPending.isEmpty() || !newLargeNonceTx.isEmpty())) {
                 AionImpl.inst()
                         .broadcastTransactions(
                                 Stream.concat(newPending.stream(), newLargeNonceTx.stream())
@@ -710,7 +711,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             return TxResponse.INVALID_TX;
         }
 
-        if (invalidTxNrgPrice(tx)) {
+        if (!TxNrgRule.isValidTxNrgPrice(tx.getEnergyPrice())) {
             LOGGER_TX.error("invalid Tx Nrg price [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX_NRG_PRICE");
             return TxResponse.INVALID_TX_NRG_PRICE;
@@ -775,10 +776,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
             return TxResponse.SUCCESS;
         }
-    }
-
-    private boolean invalidTxNrgPrice(AionTransaction tx) {
-        return tx.getEnergyPrice() < NRGPRICE_MIN || tx.getEnergyPrice() > NRGPRICE_MAX;
     }
 
     private void fireDroppedTx(AionTransaction tx, String error) {
