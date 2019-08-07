@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc2;
 
 import org.aion.api.server.rpc2.autogen.Rpc;
+import org.aion.util.bytes.ByteUtil;
 
 public class RpcImpl implements Rpc {
 
@@ -8,9 +9,7 @@ public class RpcImpl implements Rpc {
 
     @Override
     public byte[] getseed() {
-        return new byte[] { 0x0, 0x1, 0x2, 0x3, 0x4,
-                            0x5, 0x6, 0x7, 0x8, 0x9,
-                            0xa};
+        return ByteUtil.hexStringToBytes("0xc0ffee000000000000000000000000000000000000000000000000000000cafec0ffee000000000000000000000000000000000000000000000000000000cafe");
     }
 
     @Override
