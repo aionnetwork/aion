@@ -161,19 +161,6 @@ public class BlockPropagationHandler {
                         block.getTimestamp(),
                         result);
             }
-            boolean stored = blockchain.storePendingStatusBlock(block);
-            if (stored) {
-                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.STORED);
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug(
-                        "Block hash = {}, number = {}, txs = {} was {}.",
-                        block.getShortHash(),
-                        block.getNumber(),
-                        block.getTransactionsList().size(),
-                        stored ? "STORED" : "NOT STORED");
-            }
         } else {
             result = this.blockchain.tryToConnect(block);
 

@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -37,7 +36,6 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
@@ -91,8 +89,7 @@ public class PendingBlockStore implements Closeable {
     private ByteArrayKeyValueDatabase indexSource;
 
     // tracking the status: with access managed by the `internalLock`
-    private Map<ByteArrayWrapper, QueueInfo> status;
-    private long maxRequest = 0L, minStatus = Long.MAX_VALUE, maxStatus = 0L;
+    private long maxRequest = 0L, maxHeight = 0L;
 
     private static final int FORWARD_SKIP = STEP_COUNT * LARGE_REQUEST_SIZE;
 
@@ -129,9 +126,6 @@ public class PendingBlockStore implements Closeable {
      *     opened.
      */
     private void init(Properties props) throws InvalidFilePathException {
-        // initialize status
-        this.status = new HashMap<>();
-
         // create the level source
         props.setProperty(Props.DB_NAME, LEVEL_DB_NAME);
         this.levelDatabase = connectAndOpen(props, LOG);
@@ -174,10 +168,7 @@ public class PendingBlockStore implements Closeable {
         databaseLock.readLock().lock();
 
         try {
-            return status != null
-                    && levelSource.isOpen()
-                    && queueSource.isOpen()
-                    && indexSource.isOpen();
+            return levelSource.isOpen() && queueSource.isOpen() && indexSource.isOpen();
         } finally {
             databaseLock.readLock().unlock();
             internalLock.unlock();
@@ -246,141 +237,6 @@ public class PendingBlockStore implements Closeable {
                     return res;
                 }
             };
-
-    /**
-     * Stores a single block in the pending block store for importing later when the chain reaches
-     * the needed height and the parent block gets imported. Is used by the functionality receiving
-     * status blocks.
-     *
-     * @param block a future block that cannot be imported due to height
-     * @return {@code true} when the block was imported, {@code false} if the block is {@code null}
-     *     or is already stored and saving it was not necessary.
-     * @implNote The status blocks received impact the functionality of the base value generation
-     *     {@link #nextBase(long, long)} for requesting blocks ahead of import time.
-     */
-    public boolean addStatusBlock(Block block) {
-
-        // nothing to do with null parameter
-        if (block == null) {
-            return false;
-        }
-
-        internalLock.lock();
-        databaseLock.writeLock().lock();
-
-        try {
-            // skip if already stored
-            if (!indexSource.get(block.getHash()).isPresent()) {
-
-                // find parent queue hash
-                Optional<byte[]> existingQueueHash = indexSource.get(block.getParentHash());
-                byte[] currentQueueHash = null;
-                List<Block> currentQueue = null;
-
-                // get existing queue if present
-                if (existingQueueHash.isPresent()) {
-                    // using parent queue hash
-                    currentQueueHash = existingQueueHash.get();
-
-                    // append block to queue
-                    currentQueue = queueSource.get(currentQueueHash);
-                } // do not add else here!
-
-                // when no queue exists OR problem with existing queue
-                if (currentQueue == null || currentQueue.isEmpty()) {
-                    // start new queue
-
-                    // queue hash = the node hash
-                    currentQueueHash = block.getHash();
-                    currentQueue = new ArrayList<>();
-
-                    // add (to) level
-                    byte[] levelKey = ByteUtil.longToBytes(block.getNumber());
-                    List<byte[]> levelData = levelSource.get(levelKey);
-
-                    if (levelData == null) {
-                        levelData = new ArrayList<>();
-                    }
-
-                    levelData.add(currentQueueHash);
-                    levelSource.put(levelKey, levelData);
-                }
-
-                // NOTE: at this point the currentQueueHash was initialized
-                // either with a previous hash OR the block hash
-
-                // index block with queue hash
-                indexSource.put(block.getHash(), currentQueueHash);
-
-                // add element to queue
-                currentQueue.add(block);
-                queueSource.put(currentQueueHash, currentQueue);
-
-                // update status tracking
-                ByteArrayWrapper hash = ByteArrayWrapper.wrap(currentQueueHash);
-                QueueInfo info = status.get(hash);
-                if (info == null) {
-                    if (Arrays.equals(currentQueueHash, block.getHash())) {
-                        info = QueueInfo.completeInstance(currentQueueHash, block.getNumber());
-                    } else {
-                        info = QueueInfo.partialInstance(currentQueueHash, block.getNumber());
-                    }
-                } else {
-                    info.setLast(block.getNumber());
-                }
-                status.put(hash, info);
-
-                minStatus = Math.min(minStatus, block.getNumber());
-
-                maxStatus = Math.max(maxStatus, block.getNumber());
-
-                // the block was added
-                return true;
-            } else {
-                // block already stored
-                return false;
-            }
-        } catch (Exception e) {
-            LOG.error("Unable to store status block due to: ", e);
-            return false;
-        } finally {
-            databaseLock.writeLock().unlock();
-            internalLock.unlock();
-        }
-    }
-
-    /**
-     * @return the number of elements stored in the status map. * @implNote This method is package
-     *     private because it is meant to be used for testing.
-     */
-    @VisibleForTesting
-    int getStatusSize() {
-        internalLock.lock();
-        try {
-            return status == null ? -1 : status.size();
-        } finally {
-            internalLock.unlock();
-        }
-    }
-
-    /**
-     * @param hash the identifier of a queue of blocks stored in the status map
-     * @return the information for that queue if it exists, {@code null} otherwise. * @implNote This
-     *     method is package private because it is meant to be used for testing.
-     */
-    @VisibleForTesting
-    QueueInfo getStatusItem(byte[] hash) {
-        internalLock.lock();
-        try {
-            if (hash == null) {
-                return null;
-            } else {
-                return status.get(ByteArrayWrapper.wrap(hash));
-            }
-        } finally {
-            internalLock.unlock();
-        }
-    }
 
     /**
      * Attempts to store a range of blocks in the pending block store for importing later when the
@@ -599,7 +455,7 @@ public class PendingBlockStore implements Closeable {
      *
      * @param level the block height of the queue starting point
      * @param queues the identifiers for the queues to be deleted
-     * @param blocks the queue to blocks mappings to me deleted (used to ensure that if the queues
+     * @param blocks the queue to blocks mappings to be deleted (used to ensure that if the queues
      *     have been expanded, only the relevant blocks get deleted)
      */
     public void dropPendingQueues(
@@ -612,46 +468,14 @@ public class PendingBlockStore implements Closeable {
         try {
             // delete imported queues & blocks
             for (ByteArrayWrapper q : queues) {
-                // load the queue from disk
-                List<Block> currentQ = queueSource.get(q.getData());
-
                 // delete imported blocks
                 for (Block b : blocks.get(q)) {
                     // delete index
                     indexSource.deleteInBatch(b.getHash());
-                    currentQ.remove(b);
                 }
 
                 // delete queue
                 queueSource.deleteInBatch(q.getData());
-
-                // the queue has been updated since the import read
-                if (!currentQ.isEmpty()) {
-                    // get first block in remaining queue
-                    Block first = currentQ.get(0);
-
-                    // update queue hash to first remaining element
-                    byte[] currentQueueHash = first.getHash();
-
-                    // put in queue database
-                    queueSource.putToBatch(currentQueueHash, currentQ);
-
-                    // update block index
-                    for (Block b : currentQ) {
-                        indexSource.putToBatch(b.getHash(), currentQueueHash);
-                    }
-
-                    // add (to) level
-                    byte[] levelKey = ByteUtil.longToBytes(first.getNumber());
-                    List<byte[]> levelData = levelSource.get(levelKey);
-
-                    if (levelData == null) {
-                        levelData = new ArrayList<>();
-                    }
-
-                    levelData.add(currentQueueHash);
-                    levelSource.putToBatch(levelKey, levelData);
-                }
             }
 
             // update level
@@ -696,8 +520,8 @@ public class PendingBlockStore implements Closeable {
     /**
      * Generates a number greater or equal to the given {@code current} number representing the base
      * value for a subsequent LIGHTNING request. The returned base is generated taking into
-     * consideration the status updates from {@link #addStatusBlock(Block)} and the {@code
-     * knownBest} value for the peer for which this functionality is requested.
+     * consideration the current {@code knownBest} value for the peer for which this functionality
+     * is requested and the maximum recorded best throughout calls.
      *
      * <p>The bases are generated in an optimistic continuous manner based on the following
      * assumptions:
@@ -719,44 +543,18 @@ public class PendingBlockStore implements Closeable {
         try {
             long base = -1;
 
-            if (knownBest > maxStatus) {
-                maxStatus = knownBest;
+            if (knownBest > maxHeight) {
+                maxHeight = knownBest;
             }
 
-            if (maxStatus == 0) {
+            if (maxHeight == 0) {
                 // optimistic jump forward
                 base = current > maxRequest ? current : maxRequest;
                 base += FORWARD_SKIP;
             } else {
-                // try to fill in the gaps between status imports
-                if (current > minStatus) {
-
-                    if (LOG_SYNC.isDebugEnabled()) {
-                        LOG_SYNC.debug(
-                                "Searching for last > " + current + " in " + statusToString());
-                    }
-
-                    // find first gap
-                    Optional<QueueInfo> info =
-                            status.values().stream().filter(s -> s.getLast() > current).findFirst();
-
-                    if (info.isPresent()) {
-                        // update base to gap
-                        base = info.get().getLast() + 1;
-
-                        // update minimum status value
-                        // since this request will take us that far forward
-                        // NOTE: minStatus does not need to be < maxStatus
-                        minStatus = base - 1 + FORWARD_SKIP;
-                    } else {
-                        // since we've already passed the last min status
-                        minStatus = current;
-                    }
-                }
-
                 // same as initialization => no change from gap fill functionality
                 if (base == -1) {
-                    if (maxStatus < current + LARGE_REQUEST_SIZE) {
+                    if (maxHeight < current + LARGE_REQUEST_SIZE) {
                         // signal to switch back to / stay in NORMAL mode
                         base = current;
                     } else {
@@ -769,9 +567,8 @@ public class PendingBlockStore implements Closeable {
 
             if (LOG_SYNC.isDebugEnabled()) {
                 LOG_SYNC.debug(
-                        "min status = {}, max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
-                        minStatus,
-                        maxStatus,
+                        "max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
+                        maxHeight,
                         knownBest,
                         maxRequest,
                         current,
@@ -815,95 +612,8 @@ public class PendingBlockStore implements Closeable {
             } catch (Exception e) {
                 LOG.error("Not able to close the pending blocks index database:", e);
             }
-
-            if (status != null) {
-                status.clear();
-                status = null;
-            }
         } finally {
             databaseLock.writeLock().unlock();
-        }
-    }
-
-    /** @implNote Any method calling this functionality must first acquire the needed read lock. */
-    private String statusToString() {
-        StringBuilder sb = new StringBuilder("Current status queues:\n");
-        for (QueueInfo i : status.values()) {
-            sb.append(i.toString());
-            sb.append('\n');
-        }
-        return sb.toString();
-    }
-
-    @VisibleForTesting
-    static class QueueInfo {
-
-        private static final long UNKNOWN = -1;
-
-        private QueueInfo(byte[] _hash, long _last) {
-            this.hash = _hash;
-            this.last = _last;
-        }
-
-        static QueueInfo completeInstance(byte[] _hash, long _last) {
-            QueueInfo info = new QueueInfo(_hash, _last);
-            info.first = _last;
-            return info;
-        }
-
-        static QueueInfo partialInstance(byte[] _hash, long _last) {
-            QueueInfo info = new QueueInfo(_hash, _last);
-            info.first = UNKNOWN;
-            return info;
-        }
-
-        //        /** For future functionality to store to disk. */
-        //        public QueueInfo(byte[] data) {
-        //            RLPList outerList = RLP.decode2(data);
-        //
-        //            if (outerList.isEmpty()) {
-        //                throw new IllegalArgumentException(
-        //                        "The given data does not correspond to a QueueInfo object.");
-        //            }
-        //
-        //            RLPList list = (RLPList) outerList.get(0);
-        //            this.hash = list.get(0).getRLPData();
-        //            this.first = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
-        //            this.last = ByteUtil.byteArrayToLong(list.get(2).getRLPData());
-        //        }
-
-        // the hash identifying the queue
-        private final byte[] hash;
-        // the number of the first block in the queue
-        private long first;
-        // the number of the last block in the queue
-        private long last;
-
-        long getLast() {
-            return last;
-        }
-
-        void setLast(long last) {
-            this.last = last;
-        }
-
-        //        /** For future functionality to store to disk. */
-        //        public byte[] getEncoded() {
-        //            byte[] hashElement = RLP.encodeElement(hash);
-        //            byte[] firstElement = RLP.encodeElement(ByteUtil.longToBytes(first));
-        //            byte[] lastElement = RLP.encodeElement(ByteUtil.longToBytes(last));
-        //            return RLP.encodeList(hashElement, firstElement, lastElement);
-        //        }
-
-        @Override
-        public String toString() {
-            return "[ short hash: "
-                    + Hex.toHexString(hash).substring(0, 6)
-                    + " first: "
-                    + first
-                    + " last: "
-                    + last
-                    + " ]";
         }
     }
 }

@@ -1987,16 +1987,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public boolean storePendingStatusBlock(Block block) {
-        try {
-            return repository.getPendingBlockStore().addStatusBlock(block);
-        } catch (Exception e) {
-            LOG.error("Unable to store status block in " + repository.toString() + " due to: ", e);
-            return false;
-        }
-    }
-
-    @Override
     public int storePendingBlockRange(List<Block> blocks) {
         try {
             return repository.getPendingBlockStore().addBlockRange(blocks);

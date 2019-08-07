@@ -98,17 +98,6 @@ public interface IAionBlockchain extends UnityChain {
     long getSize();
 
     /**
-     * Attempts to store the given block in the pending block store, saving it to be imported later
-     * when the chain has reached the required height.
-     *
-     * @param block a future block that cannot be imported due to height
-     * @return {@code true} when the block was imported, {@code false} if the block is already
-     *     stored and saving it was not necessary.
-     * @apiNote Functionality used to store blocks coming from <b>status requests</b>.
-     */
-    boolean storePendingStatusBlock(Block block);
-
-    /**
      * Attempts to store the given range of blocks in the pending block store, saving them to be
      * imported later when the chain has reached the required height or has imported the needed
      * parent block. The blocks from the range that are already stored with be skipped.
