@@ -18,7 +18,7 @@ pipeline {
             when {
                 expression { 
                     GIT_BRANCH == 'master' ||
-                        GIT_BRANCH == 'master-pre-merge' 
+                        GIT_BRANCH == 'v0.4.1.x' 
                 }
             }
 
@@ -47,7 +47,7 @@ pipeline {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master or master-pre-merge
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_BRANCH == 'master-pre-merge' } 
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_BRANCH == 'v0.4.1.x' } 
             }
             steps { 
                     dir('FunctionalTests') {
