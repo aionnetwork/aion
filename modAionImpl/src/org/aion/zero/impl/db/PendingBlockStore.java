@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -59,6 +61,7 @@ import org.slf4j.Logger;
 public class PendingBlockStore implements Closeable {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    private static final Logger LOG_CACHE = AionLoggerFactory.getLogger(LogEnum.CACHE.name());
 
     private final ReadWriteLock databaseLock = new ReentrantReadWriteLock();
     private final Lock internalLock = new ReentrantLock();
@@ -82,6 +85,8 @@ public class PendingBlockStore implements Closeable {
     private ByteArrayKeyValueDatabase queueDatabase;
     /** Used to maps a block hash to its current queue identifier. */
     private ByteArrayKeyValueDatabase indexSource;
+
+    private SortedSet<Long> knownLevels;
 
     /**
      * Constructor. Initializes the databases used for storage. If the database configuration used
@@ -123,6 +128,18 @@ public class PendingBlockStore implements Closeable {
             throw newException(LEVEL_DB_NAME, props);
         }
         this.levelSource = Stores.newObjectStore(levelDatabase, HASH_LIST_RLP_SERIALIZER);
+
+        knownLevels = new TreeSet<>();
+        Iterator<byte[]> iterator = levelDatabase.keys();
+        byte[] currentKey;
+        while (iterator.hasNext()) {
+            currentKey = iterator.next();
+            knownLevels.add(ByteUtil.byteArrayToLong(currentKey));
+        }
+
+        if (LOG_CACHE.isInfoEnabled()) {
+            LOG_CACHE.info(knownLevels.size() + " level entries were loaded.");
+        }
 
         // create the queue source
         props.setProperty(Props.DB_NAME, QUEUE_DB_NAME);
@@ -225,6 +242,14 @@ public class PendingBlockStore implements Closeable {
                 }
             };
 
+    private List<byte[]> getFromLevelSource(long key, byte[] levelKey) {
+        if (!knownLevels.contains(key)) {
+            return null;
+        } else {
+            return levelSource.get(levelKey);
+        }
+    }
+
     /**
      * Attempts to store a range of blocks in the pending block store for importing later when the
      * chain reaches the needed height and the parent blocks gets imported.
@@ -303,6 +328,7 @@ public class PendingBlockStore implements Closeable {
 
         levelData.add(currentQueueHash);
         levelSource.putToBatch(levelKey, levelData);
+        knownLevels.add(first.getNumber());
 
         // index block with queue hash
         indexSource.putToBatch(first.getHash(), currentQueueHash);
@@ -486,9 +512,11 @@ public class PendingBlockStore implements Closeable {
                 if (updatedLevelData.isEmpty()) {
                     // delete level
                     levelSource.deleteInBatch(levelKey);
+                    knownLevels.remove(level);
                 } else {
                     // update level
                     levelSource.putToBatch(levelKey, updatedLevelData);
+                    knownLevels.add(level);
                 }
             }
 
@@ -506,6 +534,9 @@ public class PendingBlockStore implements Closeable {
     @Override
     public void close() {
         databaseLock.writeLock().lock();
+        if (LOG_CACHE.isInfoEnabled()) {
+            LOG_CACHE.info(knownLevels.size() + " level entries remain at shutdown.");
+        }
 
         try {
             try {
