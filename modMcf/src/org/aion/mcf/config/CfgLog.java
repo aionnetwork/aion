@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -22,7 +23,7 @@ public class CfgLog {
     String logPath;
 
     public CfgLog() {
-        modules = new HashMap<>();
+        modules = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         modules.put(LogEnum.ROOT.name(), LogLevel.WARN.name());
         modules.put(LogEnum.CONS.name(), LogLevel.INFO.name());
         modules.put(LogEnum.GEN.name(), LogLevel.INFO.name());
@@ -39,7 +40,7 @@ public class CfgLog {
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
-        this.modules = new HashMap<>();
+        this.modules = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
@@ -129,6 +130,16 @@ public class CfgLog {
 
     public Map<String, String> getModules() {
         return this.modules;
+    }
+
+    public boolean updateModule(String logEnum, String logLevel){
+        if (modules.containsKey(logEnum) && !modules.get(logEnum).equalsIgnoreCase(logLevel)){
+            modules.replace(logEnum, logLevel);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public void setLogPath(String value) {

@@ -260,6 +260,22 @@ public class CfgDb {
         }
     }
 
+    public PruneOption getPrune_option(){
+        return prune_option;
+    }
+
+    public void setPrune_option(PruneOption prune_option) {
+        this.prune_option = prune_option;
+    }
+
+    public void setCompression(boolean compression) {
+        this.compression = compression;
+    }
+
+    public boolean isCompression() {
+        return compression;
+    }
+
     public boolean isFileBased() {
         DBVendor vendor = DBVendor.fromString(this.vendor);
         return vendor.isFileBased();
@@ -277,6 +293,9 @@ public class CfgDb {
         this.vendor = vendor;
     }
 
+    public String getVendor(){
+        return vendor;
+    }
     public CfgPrune getPrune() {
         return this.prune;
     }

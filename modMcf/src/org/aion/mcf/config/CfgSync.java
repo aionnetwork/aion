@@ -225,6 +225,10 @@ public final class CfgSync {
         return this.blocksQueueMax;
     }
 
+    public void setShowStatus(boolean showStatus) {
+        this.showStatus = showStatus;
+    }
+
     public boolean getShowStatus() {
         return this.showStatus;
     }

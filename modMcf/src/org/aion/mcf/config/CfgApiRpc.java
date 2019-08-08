@@ -277,6 +277,10 @@ public final class CfgApiRpc {
         }
     }
 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public boolean isActive() {
         return this.active;
     }
