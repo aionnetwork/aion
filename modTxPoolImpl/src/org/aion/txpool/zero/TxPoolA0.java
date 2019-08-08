@@ -111,6 +111,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
 
     @Override
     public List<PooledTransaction> add(List<PooledTransaction> txl) {
+        if (txl == null || txl.isEmpty()) return new ArrayList<>();
 
         List<PooledTransaction> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
@@ -183,8 +184,9 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
         return this.getOutdatedListImpl();
     }
 
+    /** For each address in map, removes any tx with a smaller nonce for that address */
     @Override
-    public List<PooledTransaction> remove(Map<AionAddress, BigInteger> accNonce) {
+    public List<PooledTransaction> removeTxsWithNonceLessThan(Map<AionAddress, BigInteger> accNonce) {
 
         List<ByteArrayWrapper> bwList = new ArrayList<>();
         for (Map.Entry<AionAddress, BigInteger> en1 : accNonce.entrySet()) {
@@ -279,8 +281,8 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
         return remove(Collections.singletonList(tx)).get(0);
     }
 
+    /** Removes only txs whose transactionHash the given transactions (disregards energyUsed) */
     @Override
-    @Deprecated
     public List<PooledTransaction> remove(List<PooledTransaction> pooledTxs) {
 
         List<PooledTransaction> removedTxl = Collections.synchronizedList(new ArrayList<>());

@@ -1020,7 +1020,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
             }
 
             if (!accountNonce.isEmpty()) {
-                this.txPool.remove(accountNonce);
+                this.txPool.removeTxsWithNonceLessThan(accountNonce);
             }
         }
     }

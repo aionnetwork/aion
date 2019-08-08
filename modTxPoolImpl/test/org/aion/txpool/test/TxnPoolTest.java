@@ -80,6 +80,32 @@ public class TxnPoolTest {
         Assert.assertEquals(1, tp.size());
     }
 
+    @Test
+    public void add2() {
+        Properties config = new Properties();
+        config.put("tx-timeout", "100");
+
+        ITxPool tp = new TxPoolA0(config);
+        PooledTransaction pooledTx = genTransaction(new byte[0], 0);
+
+        tp.add(pooledTx);
+
+        Assert.assertEquals(1, tp.size());
+    }
+
+    @Test
+    public void add3() {
+        Properties config = new Properties();
+        config.put("tx-timeout", "100");
+
+        ITxPool tp = new TxPoolA0(config);
+        List<PooledTransaction> txl = null;
+
+        tp.add(txl);
+
+        Assert.assertEquals(0, tp.size());
+    }
+
     private List<PooledTransaction> getMockTransaction(long energyConsumed) {
         AionTransaction tx =
                 AionTransaction.create(
@@ -105,9 +131,6 @@ public class TxnPoolTest {
         List<PooledTransaction> txnl = getMockTransaction(0);
         tp.add(txnl);
         Assert.assertEquals(1, tp.size());
-
-        // must snapshot the insert transaction before remove
-        tp.snapshot();
 
         tp.remove(txnl);
         Assert.assertEquals(0, tp.size());
@@ -146,29 +169,54 @@ public class TxnPoolTest {
         Properties config = new Properties();
         config.put("tx-timeout", "100"); // 100 sec
 
-        ITxPool tp = new TxPoolA0(config);
+        ITxPool txPool = new TxPoolA0(config);
         List<PooledTransaction> txl = new ArrayList<>();
-        List<PooledTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
             PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), 5000L);
             txl.add(tx);
-            if (i < 10) {
-                txlrm.add(tx);
-            }
         }
 
-        List rtn = tp.add(txl);
-        Assert.assertEquals(rtn.size(), txl.size());
+        List added = txPool.add(txl);
+        Assert.assertEquals(added.size(), txl.size());
 
-        List<AionTransaction> snapshot = tp.snapshot();
+        List<AionTransaction> snapshot = txPool.snapshot();
         Assert.assertEquals(snapshot.size(), cnt);
 
-        Map<AionAddress, BigInteger> account = new HashMap<>();
-        account.put(snapshot.get(0).getSenderAddress(), BigInteger.valueOf(10));
-        rtn = tp.remove(account);
-        Assert.assertEquals(10, rtn.size());
-        Assert.assertEquals(10, tp.size());
+        // We pass nonce 11 to the remove function, which should also remove any tx from the same sender with a lower nonce
+        Map<AionAddress, BigInteger> txWithNonceEleven = new HashMap<>();
+        txWithNonceEleven.put(snapshot.get(0).getSenderAddress(), BigInteger.valueOf(11));
+        List removed = txPool.removeTxsWithNonceLessThan(txWithNonceEleven);
+        assertEquals(11, removed.size());
+        assertEquals(9, txPool.size());
+        assertEquals(txPool.snapshot().get(0), txl.get(11).tx);
+        assertEquals(txPool.snapshot().get(0).getNonceBI(), BigInteger.valueOf(11));
+    }
+
+    @Test
+    public void remove4() {
+        Properties config = new Properties();
+        config.put("tx-timeout", "100"); // 100 sec
+
+        ITxPool txPool = new TxPoolA0(config);
+        List<PooledTransaction> txl = new ArrayList<>();
+        int cnt = 20;
+        for (int i = 0; i < cnt; i++) {
+            PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), 5000L);
+            txl.add(tx);
+        }
+
+        List rtn = txPool.add(txl);
+        Assert.assertEquals(rtn.size(), txl.size());
+
+        List<AionTransaction> snapshot = txPool.snapshot();
+        Assert.assertEquals(snapshot.size(), cnt);
+
+        // We will remove the tx with nonce 10, which should only remove the given tx
+        PooledTransaction txWithNonceTen = txl.get(10);
+        PooledTransaction removed = txPool.remove(txWithNonceTen);
+        assertEquals(txWithNonceTen, removed);
+        assertEquals(19, txPool.size());
     }
 
     private PooledTransaction genTransaction(byte[] nonce, long energyConsumed) {
@@ -732,7 +780,6 @@ public class TxnPoolTest {
     }
 
     @Test
-    // TODO Both transactions will be added to the pool if they are added at the same time. Is this okay?
     public void addTxWithSameNonce() {
         Properties config = new Properties();
         config.put("tx-timeout", "10");
@@ -741,20 +788,16 @@ public class TxnPoolTest {
         PooledTransaction pooledTx = genTransaction(BigInteger.ONE.toByteArray(), 100);
         PooledTransaction pooledTx2 = genTransaction(BigInteger.ONE.toByteArray(), 100);
 
-        List<PooledTransaction> txnl = new ArrayList<>();
-
-        txnl.add(pooledTx);
-        tp.add(txnl);
-
-        txnl.clear();
-        txnl.add(pooledTx2);
-        tp.add(txnl);
+        tp.add(Collections.singletonList(pooledTx));
+        tp.add(Collections.singletonList(pooledTx2));
 
         Assert.assertEquals(1, tp.size());
 
         List<AionTransaction> txl = tp.snapshot();
         Assert.assertEquals(1, txl.size());
-        Assert.assertArrayEquals(txl.get(0).getTimestamp(), pooledTx2.tx.getTimestamp()); // TODO Check this is the expected behaviour
+
+        // This isn't the behaviour we want in the PendingState, but it is the correct behaviour for the TxPool
+        Assert.assertArrayEquals(txl.get(0).getTimestamp(), pooledTx2.tx.getTimestamp());
     }
 
     @Test

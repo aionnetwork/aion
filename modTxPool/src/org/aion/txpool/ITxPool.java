@@ -25,7 +25,7 @@ public interface ITxPool {
 
     PooledTransaction remove(PooledTransaction tx);
 
-    List<PooledTransaction> remove(Map<AionAddress, BigInteger> accNonce);
+    List<PooledTransaction> removeTxsWithNonceLessThan(Map<AionAddress, BigInteger> accNonce);
 
     int size();
 
