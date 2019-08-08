@@ -2645,8 +2645,7 @@ public class ApiWeb3Aion extends ApiAion {
                 // Grab copy of best block
                 AionBlock bestBlock = templateMap.get(key);
                 if (bestBlock != null) {
-                    bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
-                    bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
+                    bestBlock.sealHeader(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
 
                     // Directly submit to chain for new due to delays using event, explore event
                     // submission again

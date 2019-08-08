@@ -2037,6 +2037,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid Block instance");
         }
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BestBlock {}", bestBlock.toString());
+            if (bestMiningBlock != null) {
+                LOG.debug("BestMiningBlock {}", bestMiningBlock.toString());
+            }
+
+            if (bestStakingBlock != null) {
+                LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
+            }
+        }
+
         updateBestKnownBlock(block);
         bestBlockNumber.set(bestBlock.getNumber());
     }
@@ -2858,12 +2869,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             == getBestBlock().getHeader().getNumber() + 1)) {
                         ImportResult result = tryToConnect(b);
                         if (result.isBest()) {
-                            LOG.info(
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("NewStakingBlock Sealed. {}", b.toString());
+                            } else if (LOG.isInfoEnabled()) {
+                                LOG.info(
                                     "NewStakingBlock Sealed. blk#:{} hash:{} difficulty:{} txn:{}",
                                     b.getNumber(),
                                     b.getShortHash(),
                                     b.getDifficultyBI(),
                                     b.getTransactionsList().size());
+                            }
+
                             bestBlock = new StakingBlock(b);
                             break;
                         }

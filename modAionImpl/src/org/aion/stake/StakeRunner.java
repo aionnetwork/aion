@@ -153,9 +153,7 @@ public class StakeRunner implements StakeRunnerInterface {
             } else {
 
                 byte[] sig = key.sign(block.getHeader().getMineHash()).getSignature();
-
-                block.getHeader().setSignature(sig);
-                block.getHeader().setPubKey(key.getPubKey());
+                block.sealHeader(sig, key.getPubKey());
 
                 IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKE_SIG);
                 ev.setFuncArgs(Collections.singletonList(block));

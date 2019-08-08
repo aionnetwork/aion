@@ -205,9 +205,7 @@ public class AionPoW {
                 return;
             }
 
-            // set the nonce and solution
-            block.getHeader().setNonce(solution.getNonce());
-            block.getHeader().setSolution(solution.getSolution());
+            block.sealHeader(solution.getNonce(), solution.getSolution());
 
             // This can be improved
             ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
@@ -215,12 +213,16 @@ public class AionPoW {
             // Check that the new block was successfully added
             if (importResult.isSuccessful()) {
                 if (importResult == IMPORTED_BEST) {
-                    LOG.info(
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("block sealed {}", block.toString());
+                    } else if (LOG.isInfoEnabled()) {
+                        LOG.info(
                             "block sealed <num={}, hash={}, diff={}, tx={}>",
                             block.getNumber(),
                             block.getShortHash(),
                             block.getHeader().getDifficultyBI().toString(),
                             block.getTransactionsList().size());
+                    }
                 } else {
                     LOG.debug(
                             "block sealed <num={}, hash={}, diff={}, td={}, tx={}, result={}>",
@@ -260,6 +262,10 @@ public class AionPoW {
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
             Block newBlock = blockchain.createNewBlock(blockchain.getBestBlock(), txs, false, null);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("New mining block temp {}", newBlock.toString());
+            }
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

@@ -361,6 +361,10 @@ public class AionBlock extends AbstractBlock {
             toStringBuff.append("  mainChain=").append(mainChain ? "yes" : "no").append("\n");
         }
 
+        if (antiparentHash != null) {
+            toStringBuff.append("  antiparentHash=").append(ByteUtil.toHexString(antiparentHash)).append("\n");
+        }
+
         if (!getTransactionsList().isEmpty()) {
             toStringBuff
                     .append("  transactions=")
@@ -439,13 +443,7 @@ public class AionBlock extends AbstractBlock {
 
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
-            byte[] header = this.header.getEncoded();
-
-            List<byte[]> block = getBodyElements();
-            block.add(0, header);
-            byte[][] elements = block.toArray(new byte[block.size()][]);
-
-            this.rlpEncoded = RLP.encodeList(elements);
+            updateRlpEncoded();
         }
         return rlpEncoded;
     }
@@ -546,5 +544,25 @@ public class AionBlock extends AbstractBlock {
 
     public void setCumulativeDifficulty(BigInteger _td) {
         totalDifficulty = _td;
+    }
+
+    private void updateRlpEncoded() {
+        byte[] headerRlpEncoded = header.getEncoded();
+
+        List<byte[]> block = getBodyElements();
+        block.add(0, headerRlpEncoded);
+        byte[][] elements = block.toArray(new byte[block.size()][]);
+
+        rlpEncoded = RLP.encodeList(elements);
+    }
+
+    public void sealHeader(byte[] _nonce, byte[] _sol) {
+        if (_nonce == null || _sol == null) {
+            throw new NullPointerException();
+        }
+
+        header.setNonce(_nonce);
+        header.setSolution(_sol);
+        updateRlpEncoded();
     }
 }

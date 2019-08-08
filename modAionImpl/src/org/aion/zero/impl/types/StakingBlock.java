@@ -169,6 +169,16 @@ public class StakingBlock extends AbstractBlock {
         }
     }
 
+    private void updateRlpEncoded() {
+        byte[] headerRlpEncoded = header.getEncoded();
+
+        List<byte[]> block = getBodyElements();
+        block.add(0, headerRlpEncoded);
+        byte[][] elements = block.toArray(new byte[block.size()][]);
+
+        rlpEncoded = RLP.encodeList(elements);
+    }
+
     public int size() {
         return getEncoded().length;
     }
@@ -349,6 +359,10 @@ public class StakingBlock extends AbstractBlock {
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
+        if (antiparentHash != null) {
+            toStringBuff.append("antiparentHash=").append(ByteUtil.toHexString(antiparentHash)).append("\n");
+        }
+
         if (!getTransactionsList().isEmpty()) {
             toStringBuff.append("Txs [\n");
             for (AionTransaction tx : getTransactionsList()) {
@@ -435,13 +449,7 @@ public class StakingBlock extends AbstractBlock {
 
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
-            byte[] header = this.header.getEncoded();
-
-            List<byte[]> block = getBodyElements();
-            block.add(0, header);
-            byte[][] elements = block.toArray(new byte[block.size()][]);
-
-            this.rlpEncoded = RLP.encodeList(elements);
+            updateRlpEncoded();
         }
         return rlpEncoded;
     }
@@ -532,5 +540,16 @@ public class StakingBlock extends AbstractBlock {
     public static StakingBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
         RLPList params = RLP.decode2(rlpEncoded);
         return fromRLPList(params, isUnsafe);
+    }
+
+    public void sealHeader(byte[] sig, byte[] pubKey) {
+        if (sig == null || pubKey == null) {
+            throw new NullPointerException();
+        }
+
+        header.setSignature(sig);
+        header.setPubKey(pubKey);
+
+        updateRlpEncoded();
     }
 }

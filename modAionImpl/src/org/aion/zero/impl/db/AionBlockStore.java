@@ -216,6 +216,11 @@ public class AionBlockStore implements IBlockStoreBase {
                 Block parent = getBlockByHashWithInfo(block.getHeader().getParentHash());
                 // TODO : [unity] fix the aionblockstore test suite.
                 if (parent != null) {
+
+                    if (LOG_CONS.isDebugEnabled()) {
+                        LOG_CONS.debug("saveBlock: block {} parent {}", block.toString(), parent.toString());
+                    }
+
                     if (block.getHeader().getSealType() == parent.getHeader().getSealType()) {
                         block.setAntiparentHash(parent.getAntiparentHash());
                     } else {
