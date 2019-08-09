@@ -31,7 +31,7 @@ dependencies {
     compile project(':modTxPool')
     compile files("${rootProject.projectDir}/lib/fastvm-658171d.jar")
     compile 'org.json:json:20180813'
-    compile 'info.picocli:picocli:3.6.1'
+    compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
 
     testCompile project(path: ':modTxPoolImpl')

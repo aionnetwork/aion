@@ -51,7 +51,14 @@ public class Cli {
             new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     private final Arguments options = new Arguments();
-    private final CommandLine parser = new CommandLine(options);
+    private final CommandLine parser;
+    private final EditCli editCli;
+
+    public Cli() {
+        editCli = new EditCli();
+        parser = new CommandLine(options)
+                .addSubcommand("edit",editCli);
+    }
 
     public enum ReturnType {
         RUN(2),
@@ -95,10 +102,11 @@ public class Cli {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public ReturnType call(final String[] args, Cfg cfg) {
+        final CommandLine.ParseResult parseResult;
         try {
             // the pre-process method handles arguments that are separated by space
             // parsing populates the options object
-            parser.parse(Arguments.preProcess(args));
+            parseResult = parser.parseArgs(Arguments.preProcess(args));
         } catch (Exception e) {
             System.out.println("Unable to parse the input arguments due to: ");
             if (e.getMessage() != null) {
@@ -181,6 +189,13 @@ public class Cli {
             boolean overwrite = cfg.fromXML(configFile);
 
             // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
+
+
+            if (parseResult.subcommand() != null &&
+                    parseResult.subcommand().commandSpec().userObject().getClass() == EditCli.class &&
+                    editCli.runCommand(cfg)){
+                overwrite = true;
+            }
 
             if (options.getPort() != null) {
 
