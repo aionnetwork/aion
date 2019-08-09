@@ -97,6 +97,7 @@ public class EditCli {
     private boolean updatePort(CfgNetP2p net) {
         if (port != null && net.getPort() != port) {
             net.setPort(port);
+            System.out.println("Updated p2p port to: " + port);
             return true;
         } else {
             return false;
@@ -106,6 +107,7 @@ public class EditCli {
     private boolean updatePrune(CfgDb cfgDb) {
         if (pruneOption != null && !pruneOption.equals(cfgDb.getPrune_option())) {
             cfgDb.setPrune_option(pruneOption);
+            System.out.println("Updated state storage to: " + pruneOption.toString().toLowerCase());
             return true;
         } else return false;
     }
@@ -113,15 +115,20 @@ public class EditCli {
     private boolean updateVendor(CfgDb cfgDb) {
         if (vendor != null && !vendor.equals(DBVendor.fromString(cfgDb.getVendor()))) {
             cfgDb.setVendor(vendor.name());
+            System.out.println("Updated database vendor to: " + vendor.toString().toLowerCase());
             return true;
         } else {
             return false;
         }
     }
+    private static String boolToMessage(boolean bool){
+        return bool? "Enabled":"Disabled";
+    }
 
     private boolean updateJavaApi(CfgApiZmq cfgApiZmq) {
         if (javaApi !=null && javaApi != cfgApiZmq.getActive()) {
             cfgApiZmq.setActive(javaApi);
+            System.out.println(boolToMessage(javaApi) + " java api.");
             return true;
         } else {
             return false;
@@ -131,6 +138,7 @@ public class EditCli {
     private boolean updateJsonRPC(CfgApiRpc cfgApiRpc) {
         if (jsonRPC != null && jsonRPC != cfgApiRpc.isActive()) {
             cfgApiRpc.setActive(jsonRPC);
+            System.out.println(boolToMessage(jsonRPC) + " jsonRPC.");
             return true;
         } else {
             return false;
@@ -140,6 +148,7 @@ public class EditCli {
     private boolean updateMining(CfgConsensus cfgConsensus) {
         if (cfgConsensus instanceof CfgConsensusPow) {
             if (mining != null && mining != ((CfgConsensusPow) cfgConsensus).getMining()) {
+                System.out.println(boolToMessage(mining) + " mining.");
 
                 ((CfgConsensusPow) cfgConsensus).setMining(mining);
                 return true;
@@ -151,6 +160,7 @@ public class EditCli {
 
     private boolean updateStatus(CfgSync cfgSync) {
         if (showStatus != null && cfgSync.getShowStatus() != showStatus) {
+            System.out.println((showStatus ? "Showing" : "Hiding") + " sync status.");
             cfgSync.setShowStatus(showStatus);
             return true;
         } else {
@@ -161,6 +171,7 @@ public class EditCli {
     private boolean updateCompression(CfgDb cfgDb) {
         if (compression != null && cfgDb.isCompression() != compression) {
             cfgDb.setCompression(compression);
+            System.out.println(boolToMessage(compression) + " database compression.");
             return true;
         } else {
             return false;
@@ -173,6 +184,7 @@ public class EditCli {
             for (Object[] objects : log) {
 
                 if (cfgLog.updateModule(((LogEnum) objects[0]).name().toLowerCase(), ((LogLevel) objects[1]).name())) {
+                    System.out.println("Changed loglevel of "+objects[0].toString().toLowerCase() +" logger to " + objects[1].toString()  );
                     res = true;
                 }
             }
