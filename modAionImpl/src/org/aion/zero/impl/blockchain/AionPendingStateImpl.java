@@ -151,7 +151,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
     }
 
     private synchronized void processTxBuffer() {
-        if (!txBuffer.isEmpty()) {
+        if (bufferEnable && !txBuffer.isEmpty()) {
 
             List<PooledTransaction> txs = new ArrayList<>();
             try {
@@ -362,7 +362,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                     new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUp);
             this.pendingState = repository.startTracking();
 
-            this.dumpPool = CfgAion.inst().getTx().getPoolDump();
+            this.dumpPool = test || CfgAion.inst().getTx().getPoolDump();
 
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOGGER_TX);
             ees.setFilter(setEvtFilter());
@@ -981,47 +981,49 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     @SuppressWarnings("unchecked")
     private void clearPending(Block block, List<AionTxReceipt> receipts) {
+        List<AionTransaction> txsInBlock = block.getTransactionsList();
 
-        if (block.getTransactionsList() != null) {
-            if (LOGGER_TX.isDebugEnabled()) {
-                LOGGER_TX.debug(
-                        "clearPending block#[{}] tx#[{}]",
-                        block.getNumber(),
-                        block.getTransactionsList().size());
+        if (txsInBlock == null) return;
+
+        if (LOGGER_TX.isDebugEnabled()) {
+            LOGGER_TX.debug(
+                    "clearPending block#[{}] tx#[{}]",
+                    block.getNumber(),
+                    txsInBlock.size());
+        }
+
+        Map<AionAddress, BigInteger> accountNonce = new HashMap<>();
+        int cnt = 0;
+        for (AionTransaction tx : block.getTransactionsList()) {
+            accountNonce.computeIfAbsent(
+                    tx.getSenderAddress(),
+                    k -> this.repository.getNonce(tx.getSenderAddress()));
+
+            if (LOGGER_TX.isTraceEnabled()) {
+                LOGGER_TX.trace(
+                        "Clear pending transaction, addr: {} hash: {}",
+                        tx.getSenderAddress().toString(),
+                        Hex.toHexString(tx.getTransactionHash()));
             }
 
-            Map<AionAddress, BigInteger> accountNonce = new HashMap<>();
-            int cnt = 0;
-            for (AionTransaction tx : block.getTransactionsList()) {
-                accountNonce.computeIfAbsent(
-                        tx.getSenderAddress(),
-                        k -> this.repository.getNonce(tx.getSenderAddress()));
-
-                if (LOGGER_TX.isTraceEnabled()) {
-                    LOGGER_TX.trace(
-                            "Clear pending transaction, addr: {} hash: {}",
-                            tx.getSenderAddress().toString(),
-                            Hex.toHexString(tx.getTransactionHash()));
-                }
-
-                AionTxReceipt receipt;
-                if (receipts != null) {
-                    receipt = receipts.get(cnt);
-                } else {
-                    AionTxInfo info = getTransactionInfo(tx.getTransactionHash(), block.getHash());
-                    receipt = info.getReceipt();
-                }
-
-                if (poolBackUp) {
-                    backupPendingPoolRemove.add(tx.getTransactionHash().clone());
-                }
-                fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
-                cnt++;
+            AionTxReceipt receipt;
+            if (receipts != null) {
+                receipt = receipts.get(cnt);
+            } else {
+                AionTxInfo info = getTransactionInfo(tx.getTransactionHash(), block.getHash());
+                receipt = info.getReceipt();
             }
 
-            if (!accountNonce.isEmpty()) {
-                this.txPool.removeTxsWithNonceLessThan(accountNonce);
+            if (poolBackUp) {
+                backupPendingPoolRemove.add(tx.getTransactionHash().clone());
             }
+            fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
+
+            cnt++;
+        }
+
+        if (!accountNonce.isEmpty()) {
+            this.txPool.removeTxsWithNonceLessThan(accountNonce);
         }
     }
 
