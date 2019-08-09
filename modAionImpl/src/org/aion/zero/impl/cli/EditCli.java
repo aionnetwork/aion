@@ -120,7 +120,7 @@ public class EditCli {
     }
 
     private boolean updateJavaApi(CfgApiZmq cfgApiZmq) {
-        if (javaApi != cfgApiZmq.getActive() && javaApi != null) {
+        if (javaApi !=null && javaApi != cfgApiZmq.getActive()) {
             cfgApiZmq.setActive(javaApi);
             return true;
         } else {
@@ -169,16 +169,18 @@ public class EditCli {
 
     private boolean updateLog(CfgLog cfgLog) {
         boolean res = false;
-        for (Object[] objects : log) {
+        if (log != null) {
+            for (Object[] objects : log) {
 
-            if (cfgLog.updateModule(((LogEnum) objects[0]).name().toLowerCase(), ((LogLevel) objects[1]).name())) {
-                res = true;
+                if (cfgLog.updateModule(((LogEnum) objects[0]).name().toLowerCase(), ((LogLevel) objects[1]).name())) {
+                    res = true;
+                }
             }
         }
         return res;
     }
 
-    private void checkOptions() {
+    void checkOptions() {
         if (port == null &&
                 pruneOption == null &&
                 vendor == null &&

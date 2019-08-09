@@ -28,8 +28,12 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.db.impl.DBVendor;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgDb;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.aion.zero.impl.cli.Cli.TaskPriority;
@@ -2094,6 +2098,94 @@ public class CliTest {
         assertThat(mockCli.call(new String[] {option, ""}, cfg)).isEqualTo(ERROR);
     }
 
+
+
+    @Test
+    @Parameters(method = "parametersForTestEdit")
+    public void testEdit(String[] options){
+        Arguments args = new Arguments();
+        EditCli editCli = new EditCli();
+
+        CommandLine parser = new CommandLine(args).addSubcommand(editCli);
+        final CommandLine.ParseResult parseResult = parser.parseArgs(options).subcommand();
+        editCli.checkOptions();
+        assertThat(parseResult).isNotNull();
+        assertThat(parseResult.commandSpec().userObject().getClass()).isEqualTo(EditCli.class);
+
+        assertThat(mockCli.call(options, cfg)).isEqualTo(RUN);
+    }
+
+    @Test(expected = RuntimeException.class)
+    @Parameters(method = "parametersForTestFailedParse")
+    public void testFailedParse(String[] options){
+        Arguments args = new Arguments();
+        EditCli editCli = new EditCli();
+
+        CommandLine parser = new CommandLine(args).addSubcommand(editCli);
+        parser.parseArgs(options).subcommand();
+        editCli.checkOptions();
+    }
+
+    public Object[] parametersForTestEdit(){
+        List<Object> parameters = new ArrayList<>();
+
+        parameters.add("edit port=30000 state-storage=TOP vendor=h2 java=on rpc=off mining=on show-status=on compression=on log GEN=TRACE".split("\\s"));
+        List<String[]> parameters2 = new ArrayList<>();
+        String[] enableDisableArr = new String[]{"on", "off"};
+        String[] settings = new String[]{"java", "rpc", "mining", "show-status","compression"};
+        for (int i =0; i<enableDisableArr.length; i++){
+            for (int j=0; j<settings.length;j++){
+                parameters2.add(new String[]{"edit",settings[j] + "=" + enableDisableArr[i]});
+            }
+        }
+
+        String[] vendors = new String[]{"h2", "leveldb", "rocksdb"};
+        for (int i = 0; i< vendors.length; i++){
+            parameters.add(new String[]{"edit", "vendor="+vendors[i]});
+        }
+
+        for (int i=0; i< LogLevel.values().length; i++){
+            StringBuilder builder = new StringBuilder();
+            builder.append("edit log ");
+            for(int j=0; j< LogEnum.values().length; j++){
+                builder.append(LogEnum.values()[j].name().toLowerCase())
+                        .append("=")
+                        .append(LogLevel.values()[i].name().toLowerCase()).append(" ");
+
+            }
+
+            parameters2.add(builder.toString().trim().split("\\s"));
+        }
+
+
+        for (int i = 0; i< CfgDb.PruneOption.values().length; i++){
+            parameters.add(new String[]{"edit", "state-storage="+ CfgDb.PruneOption.values()[i].name().toLowerCase()});
+        }
+        parameters.addAll(parameters2);
+        parameters.add("edit port=30000 state-storage=TOP vendor=h2 java=on rpc=off mining=on show-status=on compression=on log GEN=TRACE CONS=TRACE SYNC=TRACE API=TRACE VM=TRACE NET=TRACE DB=TRACE P2P=TRACE".split("\\s"));
+        parameters.add("-n mainnet edit port=30000 state-storage=TOP vendor=h2 java=on rpc=off mining=on show-status=off compression=on log GEN=TRACE CONS=TRACE SYNC=TRACE API=TRACE VM=TRACE NET=TRACE DB=TRACE P2P=TRACE".split("\\s"));
+
+        return parameters.toArray();
+    }
+
+    public Object[] parametersForTestFailedParse(){
+        List<Object> parameters = new ArrayList<>();
+
+        parameters.add("edit port=30000 state-storage=TOP -n mainnet vendor=h2 java=on rpc=off mining=on show-status=on compression=on log GEN=TRACE".split("\\s"));
+        parameters.add("edit port=30000 state-storage=TOP vendor=h2 java=on rpc=off mining=on show-status=on compression=on log GEN=TRACE CONS=TRACE SYNC=TRACE API=TRACE VM=TRACE NET=TRACE DB=TRACE P2P=TRACE -n mainnet".split("\\s"));
+        List<String[]> parameters2 = new ArrayList<>();
+        String[] settings = new String[]{"java", "rpc", "mining", "show-status","compression", "port", "state-storage", "vendor", "log"};
+        for (int j=0; j<settings.length;j++){
+            parameters2.add(new String[]{"edit",settings[j]});
+        }
+
+        parameters.add("edit port=-100".split("\\n"));
+        parameters.add("edit port=10000000000".split("\\n"));
+        parameters.add("edit");
+
+        parameters.addAll(parameters2);
+        return parameters.toArray();
+    }
     // Methods below taken from FileUtils class
     private static boolean copyRecursively(File src, File target) {
         if (src.isDirectory()) {
