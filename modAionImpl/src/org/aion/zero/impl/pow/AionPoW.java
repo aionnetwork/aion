@@ -261,7 +261,7 @@ public class AionPoW {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            Block newBlock = blockchain.createNewBlock(blockchain.getBestBlock(), txs, false, null);
+            Block newBlock = blockchain.createNewMiningBlock(blockchain.getBestBlock(), txs, false);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("New mining block temp {}", newBlock.toString());

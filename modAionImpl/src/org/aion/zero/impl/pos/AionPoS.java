@@ -292,7 +292,7 @@ public class AionPoS {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            StakingBlock newBlock = (StakingBlock) blockchain.createNewBlock(bestBlock, txs, false, seed);
+            StakingBlock newBlock = blockchain.createNewStakingBlock(bestBlock, txs, seed);
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_STAKING_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

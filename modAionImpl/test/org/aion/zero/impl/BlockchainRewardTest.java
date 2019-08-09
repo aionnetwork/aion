@@ -35,7 +35,7 @@ public class BlockchainRewardTest {
                         .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        Block block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        Block block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         ImportResult res = bc.tryToConnect(block);
         assertThat(res).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -44,7 +44,7 @@ public class BlockchainRewardTest {
 
         // first block already sealed
         for (int i = 2; i < 99999; i++) {
-            Block b = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+            Block b = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
             ImportResult r = bc.tryToConnect(b);
             assertThat(r).isEqualTo(ImportResult.IMPORTED_BEST);
 

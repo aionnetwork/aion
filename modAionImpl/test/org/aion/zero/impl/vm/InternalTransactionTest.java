@@ -133,7 +133,7 @@ public class InternalTransactionTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
+                bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -158,7 +158,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -185,7 +185,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx4), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx4), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -213,7 +213,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx6), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx6), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -263,7 +263,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -288,7 +288,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx2), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx2);
 
         assertEquals(2, summary.getInternalTransactions().size());
@@ -336,7 +336,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
 
         System.out.println(summary.getReceipt());
@@ -442,7 +442,7 @@ public class InternalTransactionTest {
 
         System.out.println("contractaddr: " + TxUtil.calculateContractAddress(tx));
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx);
 
         System.out.println(summary.getReceipt());

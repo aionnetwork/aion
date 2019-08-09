@@ -109,7 +109,7 @@ public class TransactionExecutorTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
         RepositoryCache repo = blockchain.getRepository().startTracking();
@@ -161,7 +161,7 @@ public class TransactionExecutorTest {
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(context.block);
         AionBlockSummary summary = result.getRight();
@@ -205,7 +205,7 @@ public class TransactionExecutorTest {
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionTxExecSummary summary = executeTransaction(repo, context, tx);
@@ -235,7 +235,7 @@ public class TransactionExecutorTest {
         assertFalse(tx.isContractCreationTransaction());
 
         context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
         summary = executeTransaction(repo, context, tx);
@@ -286,7 +286,7 @@ public class TransactionExecutorTest {
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         RepositoryCache repo = blockchain.getRepository().startTracking();
 
@@ -325,7 +325,7 @@ public class TransactionExecutorTest {
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         blockchain.tryToConnect(context.block);
 

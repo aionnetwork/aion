@@ -127,7 +127,7 @@ public class BlockchainTestUtils {
             txs = generateTransactions(txCount, accounts, repo);
             repo.syncToRoot(originalRoot);
 
-            block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
             block.setExtraData(String.valueOf(i).getBytes());
 
             ImportResult result = chain.tryToConnectInternal(block, (time += 10));
@@ -180,7 +180,7 @@ public class BlockchainTestUtils {
                 }
             }
 
-            block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
             block.setExtraData(String.valueOf(i).getBytes());
 
             ImportResult result = chain.tryToConnectInternal(block, (time += 10));
@@ -212,7 +212,7 @@ public class BlockchainTestUtils {
         List<AionTransaction> txs = generateTransactions(txCount, accounts, repo);
 
         long time = System.currentTimeMillis();
-        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
         block.setExtraData(String.valueOf(time).getBytes());
         return block;
     }
@@ -239,7 +239,7 @@ public class BlockchainTestUtils {
         repo.syncToRoot(originalRoot);
 
         long time = System.currentTimeMillis();
-        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
         block.setExtraData(String.valueOf(time).getBytes());
         return block;
     }

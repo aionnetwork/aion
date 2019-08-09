@@ -116,7 +116,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
@@ -161,7 +161,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
@@ -202,7 +202,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
 
@@ -254,7 +254,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -277,7 +277,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         BigInteger inStore =
                 new BigInteger(executeTransaction(tx, context.block, repo).getResult());
@@ -300,7 +300,7 @@ public class OpcodeIntegTest {
         assertEquals(E, tx.getDestinationAddress());
 
         context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(BigInteger.ZERO, inStore);
@@ -336,7 +336,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -382,7 +382,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -428,7 +428,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -451,7 +451,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         BigInteger inStore =
                 new BigInteger(executeTransaction(tx, context.block, repo).getResult());
@@ -473,7 +473,7 @@ public class OpcodeIntegTest {
         assertEquals(E, tx.getDestinationAddress());
 
         context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         inStore = new BigInteger(executeTransaction(tx, context.block, repo).getResult());
         assertEquals(BigInteger.ZERO, inStore);
@@ -509,7 +509,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -557,7 +557,7 @@ public class OpcodeIntegTest {
         assertEquals(D, tx.getDestinationAddress());
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -599,7 +599,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -650,7 +650,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -696,7 +696,7 @@ public class OpcodeIntegTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);
         assertEquals("", summary.getReceipt().getError());
@@ -767,7 +767,7 @@ public class OpcodeIntegTest {
         assertEquals(expectedNonce, repo.getNonce(deployer));
 
         BlockContext context =
-                blockchain.createNewBlockContext(
+                blockchain.createNewMiningBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
         AionTxExecSummary summary = executeTransaction(tx, context.block, repo);

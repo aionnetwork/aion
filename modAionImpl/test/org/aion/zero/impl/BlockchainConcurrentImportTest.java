@@ -102,7 +102,7 @@ public class BlockchainConcurrentImportTest {
             txs = generateTransactions(MAX_TX_PER_BLOCK, accounts, sourceRepo);
             sourceRepo.syncToRoot(originalRoot);
 
-            block = sourceChain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = sourceChain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
             block.setExtraData(String.valueOf(i).getBytes());
 
             ImportResult result = sourceChain.tryToConnectInternal(block, (time += 10));
@@ -292,7 +292,7 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        Block block = _chain.createNewBlock(_parent, txs, true);
+                        Block block = _chain.createNewMiningBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 
@@ -359,7 +359,7 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        Block block = _chain.createNewBlock(_parent, txs, true);
+                        Block block = _chain.createNewMiningBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 

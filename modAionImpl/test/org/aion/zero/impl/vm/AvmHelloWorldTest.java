@@ -79,7 +79,7 @@ public class AvmHelloWorldTest {
                         TransactionTypes.AVM_CREATE_CODE);
 
         Block block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -114,7 +114,7 @@ public class AvmHelloWorldTest {
                         TransactionTypes.AVM_CREATE_CODE);
 
         Block block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -143,7 +143,7 @@ public class AvmHelloWorldTest {
                         TransactionTypes.DEFAULT);
 
         block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -188,7 +188,7 @@ public class AvmHelloWorldTest {
 
         ls.add(transaction2);
 
-        Block block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), ls, false);
+        Block block = this.blockchain.createNewMiningBlock(this.blockchain.getBestBlock(), ls, false);
         Pair<ImportResult, AionBlockSummary> connectResult =
                 this.blockchain.tryToConnectAndFetchSummary(block);
 

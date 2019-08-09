@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -849,7 +848,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.INVALID_BLOCK;
         }
         if (block.getTimestamp()
-                > (System.currentTimeMillis() / THOUSAND_MS
+                > (getSystemCurrentTimeBySec()
                         + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -933,7 +932,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // requested shutdown
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+        return tryToConnectInternal(block, getSystemCurrentTimeBySec());
     }
 
     public synchronized void compactState() {
@@ -1113,62 +1112,44 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return tryToConnectAndFetchSummary(block, currTimeSeconds, true).getLeft();
     }
 
-    @Override
     /**
-     * Creates a new block, if you require more context refer to the blockContext creation method,
+     * Creates a new mining block, if you require more context refer to the blockContext creation method,
      * which allows us to add metadata not usually associated with the block itself.
      *
      * @param parent block
-     * @param txs to be added into the block
+     * @param transactions to be added into the block
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new
      *     block
      * @see #createNewMiningBlock(Block, List, boolean)
      * @return new block
      */
-    public synchronized Block createNewBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
-        return createNewBlock(parent, transactions, waitUntilBlockTime, null);
+    public synchronized AionBlock createNewMiningBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
+        return createNewMiningBlockContext(parent, transactions, waitUntilBlockTime).block;
     }
 
-    @Override
-    public synchronized Block createNewBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime, byte[] seed) {
-        if (seed == null) {
-            return createNewBlockInternal(
-                parent, transactions, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
-                .block;
-        } else {
-            return createNewStakingBlock(parent, transactions, seed);
+    /**
+     * A method for creating a new staking block template for the internal staker.
+     *
+     * @param parent the parent block of the chain, it is not equal to the seal parent block.
+     * @param transactions to be added into the block.
+     * @param seed the data decide the weight of the sealing difficulty.
+     * @see #createNewStakingBlock(Block, List, byte[], byte[])
+     * @return staking block template
+     */
+    public StakingBlock createNewStakingBlock(Block parent, List<AionTransaction> transactions, byte[] seed) {
+        if (parent == null || transactions == null || seed == null) {
+            throw new NullPointerException();
         }
+
+        return createNewStakingBlock(parent, transactions, seed, null);
     }
 
-    private Block createNewStakingBlock(Block parent, List<AionTransaction> txs, byte[] seed) {
-        long time = System.currentTimeMillis() / THOUSAND_MS;
+    private synchronized StakingBlock createNewStakingBlock(Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] publicKey) {
+        if (parent == null || txs == null || newSeed == null) {
+            throw new NullPointerException();
+        }
 
         BlockHeader parentHdr = parent.getHeader();
-
-        if (parentHdr.getTimestamp() >= time) {
-            time = parentHdr.getTimestamp() + 1;
-        }
-
-        long energyLimit = this.energyLimitStrategy.getEnergyLimit(parentHdr);
-
-        StakingBlock block;
-        try {
-            StakedBlockHeader.Builder headerBuilder =
-                    new StakedBlockHeader.Builder()
-                            .withSealType((byte) 2)
-                            .withParentHash(parent.getHash())
-                            .withCoinbase(stakerCoinbase)
-                            .withNumber(parentHdr.getNumber() + 1)
-                            .withTimestamp(time)
-                            .withExtraData(minerExtraData)
-                            .withTxTrieRoot(calcTxTrie(txs))
-                            .withEnergyLimit(energyLimit)
-                            .withSeed(seed);
-            block = new StakingBlock(headerBuilder.build(), txs);
-        } catch (HeaderStructureException e) {
-            throw new RuntimeException(e);
-        }
-
         Block grandParentStakingBlock = null;
         BlockHeader parentStakingBlockHeader = null;
 
@@ -1176,8 +1157,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             parentStakingBlockHeader = parentHdr;
             grandParentStakingBlock = getParentBlock(parentHdr);
         } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-            
-            if (Arrays.equals(parent.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
+
+            if (Arrays.equals(
+                    parent.getAntiparentHash(),
+                    CfgAion.inst().getGenesisStakingBlock().getHash())) {
                 parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
                 grandParentStakingBlock = null;
             } else {
@@ -1187,26 +1170,115 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
                 }
             }
-
-
         } else {
             throw new IllegalStateException("Invalid block type");
         }
 
-        block.getHeader()
-                .setDifficulty(
-                        ByteUtil.bigIntegerToBytes(
-                                this.chainConfiguration
-                                        .getUnityDifficultyCalculator()
-                                        .calculateDifficulty(
-                                                parentStakingBlockHeader,
-                                                grandParentStakingBlock == null
-                                                        ? null
-                                                        : grandParentStakingBlock.getHeader()),
-                                DIFFICULTY_BYTES));
+        if (parentStakingBlockHeader == null) {
+            throw new IllegalStateException(
+                    "Can't find the parent staking block, the Database might be corrupted!");
+        }
 
-        // TODO: [unity] refactor the following process with the pow block create.
+        AionAddress staker = stakerCoinbase;
+        long newTimestamp;
 
+        BigInteger newDiff =
+                chainConfiguration
+                        .getUnityDifficultyCalculator()
+                        .calculateDifficulty(
+                                parentStakingBlockHeader,
+                                grandParentStakingBlock == null
+                                        ? null
+                                        : grandParentStakingBlock.getHeader());
+
+        if (publicKey != null) { // Create block template for the external stakers.
+            staker = new AionAddress(AddressSpecs.computeA0Address(publicKey));
+
+            byte[] seed = ((StakedBlockHeader) parentStakingBlockHeader).getSeed();
+            if (!ECKeyEd25519.verify(seed, newSeed, publicKey)) {
+                LOG.debug(
+                        "Seed verification failed! oldSeed:{} newSeed{} pKey{}",
+                        ByteUtil.toHexString(seed),
+                        ByteUtil.toHexString(newSeed),
+                        ByteUtil.toHexString(publicKey));
+                return null;
+            }
+
+            long votes = stakingContractHelper.callGetVote(staker);
+            if (votes < 1) {
+                LOG.debug("The caller {} has no vote ", staker.toString());
+                return null;
+            }
+
+            long newDelta =
+                    max(
+                            (long)
+                                    (newDiff.doubleValue()
+                                            * (Math.log(BigInteger.TWO.pow(256).doubleValue())
+                                                    - Math.log(
+                                                            new BigInteger(
+                                                                            1,
+                                                                            HashUtil.h256(
+                                                                                    newSeed))
+                                                                    .doubleValue()))
+                                            / (double) votes),
+                            1);
+
+            newTimestamp =
+                    max(
+                            parentStakingBlockHeader.getTimestamp() + newDelta,
+                            parent.getHeader().getTimestamp() + 1);
+        } else {
+            newTimestamp = getSystemCurrentTimeBySec();
+
+            if (parentHdr.getTimestamp() >= newTimestamp) {
+                newTimestamp = parentHdr.getTimestamp() + 1;
+            }
+        }
+
+        if (staker == null) {
+            throw new NullPointerException(
+                    "Invalid staker address, please check your stakerCoinbase settings or the public key of the external staker ");
+        }
+
+        StakingBlock block;
+        try {
+            StakedBlockHeader.Builder headerBuilder =
+                    new StakedBlockHeader.Builder()
+                            .withSealType(BlockSealType.SEAL_POS_BLOCK.getSealId())
+                            .withParentHash(parent.getHash())
+                            .withCoinbase(staker)
+                            .withNumber(parentHdr.getNumber() + 1)
+                            .withTimestamp(newTimestamp)
+                            .withExtraData(minerExtraData)
+                            .withTxTrieRoot(calcTxTrie(txs))
+                            .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
+                            .withDifficulty(
+                                    ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
+                            .withSeed(newSeed);
+            if (publicKey != null) {
+                headerBuilder.withPubKey(publicKey);
+            }
+            block = new StakingBlock(headerBuilder.build(), txs);
+        } catch (HeaderStructureException e) {
+            throw new RuntimeException(e);
+        }
+
+        blockPreSeal(parentHdr, block);
+
+        if (publicKey != null) {
+            stakingBlockTemplate.put(
+                    ByteArrayWrapper.wrap(block.getHeader().getMineHash()), block);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("GetBlockTemp: {}", block.toString());
+        }
+
+        return block;
+    }
+
+    private BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
         /*
          * Begin execution phase
          */
@@ -1239,48 +1311,57 @@ public class AionBlockchainImpl implements IAionBlockchain {
             logBloom.or(receipt.getBloomFilter());
         }
 
-        block.seal(
+        if (block instanceof AionBlock) {
+            ((AionBlock)block).seal(
                 preBlock.txs,
                 calcTxTrie(preBlock.txs),
                 stateRoot,
                 logBloom.getBloomFilterBytes(),
                 calcReceiptsTrie(preBlock.receipts),
                 totalEnergyUsed);
+        } else if (block instanceof StakingBlock) {
+            ((StakingBlock)block).seal(
+                preBlock.txs,
+                calcTxTrie(preBlock.txs),
+                stateRoot,
+                logBloom.getBloomFilterBytes(),
+                calcReceiptsTrie(preBlock.receipts),
+                totalEnergyUsed);
+        } else {
+            throw new IllegalStateException("Invalid block class!" + block.getClass().getName());
+        }
 
-        return block;
+        return totalTransactionFee;
     }
 
     /**
-     * Creates a new block, adding in context/metadata about the block
+     * Creates a new mining block, adding in context/metadata about the block
      *
-     * @param parent block
+     * @param parent the parent block
      * @param txs to be added into the block
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new
      *     block
-     * @see #createNewBlockContext(Block, List, boolean)
-     * @return new block
+     * @see #createNewMiningBlockContext(Block, List, boolean)
+     * @return a context with new mining block
      */
-    public synchronized BlockContext createNewBlockContext(
+    public BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        return createNewBlockInternal(
-                parent,
-                txs,
-                waitUntilBlockTime,
-                System.currentTimeMillis() / THOUSAND_MS);
+            return createNewMiningBlockInternal(
+                parent, txs, waitUntilBlockTime, getSystemCurrentTimeBySec());
     }
 
-    BlockContext createNewBlockInternal(
+    BlockContext createNewMiningBlockInternal(
             Block parent,
             List<AionTransaction> txs,
             boolean waitUntilBlockTime,
             long currTimeSeconds) {
-        long time = currTimeSeconds;
 
         BlockHeader parentHdr = parent.getHeader();
 
+        long time = currTimeSeconds;
         if (parentHdr.getTimestamp() >= time) {
             time = parentHdr.getTimestamp() + 1;
-            while (waitUntilBlockTime && System.currentTimeMillis() / THOUSAND_MS <= time) {
+            while (waitUntilBlockTime && getSystemCurrentTimeBySec() <= time) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -1294,7 +1375,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         try {
             A0BlockHeader.Builder headerBuilder =
                     new A0BlockHeader.Builder()
-                            .withSealType((byte) 1)
+                            .withSealType(BlockSealType.SEAL_POW_BLOCK.getSealId())
                             .withParentHash(parent.getHash())
                             .withCoinbase(minerCoinbase)
                             .withNumber(parentHdr.getNumber() + 1)
@@ -1333,7 +1414,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                                     parentMiningBlockHeader,
                                                     grandParentMiningBlock == null
                                                             ? null
-                                                            : grandParentMiningBlock.getHeader()),
+                                                            : grandParentMiningBlock
+                                                                    .getHeader()),
                                     DIFFICULTY_BYTES));
         } else {
             block.getHeader()
@@ -1345,49 +1427,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                                     parentMiningBlockHeader,
                                                     grandParentMiningBlock == null
                                                             ? null
-                                                            : grandParentMiningBlock.getHeader()),
+                                                            : grandParentMiningBlock
+                                                                    .getHeader()),
                                     DIFFICULTY_BYTES));
         }
 
-        /*
-         * Begin execution phase
-         */
-        pushState(parentHdr.getHash());
-
-        track = repository.startTracking();
-
-        RetValidPreBlock preBlock = generatePreBlock(block);
-
-        track.flush();
-
-        /*
-         * Calculate the gas used for the included transactions
-         */
-        long totalEnergyUsed = 0;
-        BigInteger totalTransactionFee = BigInteger.ZERO;
-        for (AionTxExecSummary summary : preBlock.summaries) {
-            totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
-            totalTransactionFee = totalTransactionFee.add(summary.getFee());
-        }
-
-        byte[] stateRoot = getRepository().getRoot();
-        popState();
-
-        /*
-         * End execution phase
-         */
-        Bloom logBloom = new Bloom();
-        for (AionTxReceipt receipt : preBlock.receipts) {
-            logBloom.or(receipt.getBloomFilter());
-        }
-
-        block.seal(
-                preBlock.txs,
-                calcTxTrie(preBlock.txs),
-                stateRoot,
-                logBloom.getBloomFilterBytes(),
-                calcReceiptsTrie(preBlock.receipts),
-                totalEnergyUsed);
+        BigInteger totalTransactionFee = blockPreSeal(parentHdr, block);
 
         // derive base block reward
         BigInteger baseBlockReward =
@@ -2609,160 +2654,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return this.getBlockStore().getTotalDifficultyForHash(hash.toBytes());
     }
 
+    /**
+     * A method for creating a new staking block template for the external staker.
+     *
+     * @param pendingTransactions to be added into the block.
+     * @param publicKey the staker's public key.
+     * @param newSeed the data decide the weight of the sealing difficulty.
+     * @see #createNewStakingBlock(Block, List, byte[], byte[])
+     * @return staking block template
+     */
     @Override
-    public synchronized Block createStakingBlockTemplate(
+    public Block createStakingBlockTemplate(
             List<AionTransaction> pendingTransactions, byte[] publicKey, byte[] newSeed) {
         if (pendingTransactions == null || publicKey == null || newSeed == null) {
             throw new NullPointerException();
         }
 
-        Block parentBlock = getBestBlock();
-        BlockHeader parentHdr = parentBlock.getHeader();
-        StakingBlock sealParentBlock;
-        if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-            if (Arrays.equals(parentBlock.getAntiparentHash(), CfgAion.inst().getGenesisStakingBlock().getHash())) {
-                sealParentBlock = CfgAion.inst().getGenesisStakingBlock();
-            } else {
-                sealParentBlock = (StakingBlock) getBlockByHash(parentBlock.getAntiparentHash());
-            }
-        } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-            sealParentBlock = (StakingBlock) parentBlock;
-        } else {
-            throw new IllegalStateException("Invalid parent block type!");
-        }
-
-        byte[] seed = sealParentBlock.getHeader().getSeed();
-
-        if (!ECKeyEd25519.verify(seed, newSeed, publicKey)) {
-            LOG.debug(
-                    "Seed verification failed! oldSeed:{} newSeed{} pKey{}",
-                    ByteUtil.toHexString(seed),
-                    ByteUtil.toHexString(newSeed),
-                    ByteUtil.toHexString(publicKey));
-            return null;
-        }
-
-        AionAddress staker = new AionAddress(AddressSpecs.computeA0Address(publicKey));
-
-        long votes = stakingContractHelper.callGetVote(staker);
-        if (votes < 1) {
-            LOG.debug("The caller {} has no vote ", staker.toString());
-            return null;
-        }
-
-        long energyLimit = energyLimitStrategy.getEnergyLimit(parentHdr);
-
-        Block grandParentStakingBlock = null;
-        BlockHeader parentStakingBlockHeader = null;
-
-        if (parentHdr.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-            parentStakingBlockHeader = parentHdr;
-            grandParentStakingBlock = getParentBlock(parentHdr);
-        } else if (parentHdr.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-
-            if (Arrays.equals(
-                    parentBlock.getAntiparentHash(),
-                    CfgAion.inst().getGenesisStakingBlock().getHash())) {
-                parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
-                grandParentStakingBlock = null;
-            } else {
-                Block parentStakingBlock = getBlockByHash(parentBlock.getAntiparentHash());
-                if (parentStakingBlock != null) {
-                    parentStakingBlockHeader = parentStakingBlock.getHeader();
-                    grandParentStakingBlock = getParentBlock(parentStakingBlockHeader);
-                }
-            }
-        } else {
-            throw new IllegalStateException("Invalid block type");
-        }
-
-        BigInteger newDiff =
-            chainConfiguration
-                .getUnityDifficultyCalculator()
-                .calculateDifficulty(
-                    parentStakingBlockHeader,
-                    grandParentStakingBlock == null ? null : grandParentStakingBlock.getHeader());
-
-        long newDelta =
-            max(
-            (long)
-                (newDiff.doubleValue()
-                    * (Math.log(BigInteger.TWO.pow(256).doubleValue())
-                        - Math.log(new BigInteger(1, HashUtil.h256(newSeed)).doubleValue()))
-                    / (double) votes),
-            1);
-
-        long newTime =
-            max(sealParentBlock.getTimestamp() + newDelta
-                ,parentBlock.getHeader().getTimestamp() + 1);
-
-        StakingBlock block;
-        try {
-            StakedBlockHeader.Builder headerBuilder =
-                new StakedBlockHeader.Builder()
-                    .withSealType(BlockSealType.SEAL_POS_BLOCK.getSealId())
-                    .withParentHash(parentBlock.getHash())
-                    .withCoinbase(staker)
-                    .withNumber(parentHdr.getNumber() + 1)
-                    .withTimestamp(newTime)
-                    .withExtraData(minerExtraData)
-                    .withTxTrieRoot(calcTxTrie(pendingTransactions))
-                    .withEnergyLimit(energyLimit)
-                    .withSeed(newSeed)
-                    .withPubKey(publicKey);
-            block = new StakingBlock(headerBuilder.build(), pendingTransactions);
-        } catch (HeaderStructureException e) {
-            throw new RuntimeException(e);
-        }
-
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES));
-
-        /*
-         * Begin execution phase
-         */
-        pushState(parentHdr.getHash());
-
-        track = repository.startTracking();
-
-        RetValidPreBlock preBlock = generatePreBlock(block);
-
-        track.flush();
-
-        /*
-         * Calculate the gas used for the included transactions
-         */
-        long totalEnergyUsed = 0;
-        BigInteger totalTransactionFee = BigInteger.ZERO;
-        for (AionTxExecSummary summary : preBlock.summaries) {
-            totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
-            totalTransactionFee = totalTransactionFee.add(summary.getFee());
-        }
-
-        byte[] stateRoot = getRepository().getRoot();
-        popState();
-
-        /*
-         * End execution phase
-         */
-        Bloom logBloom = new Bloom();
-        for (AionTxReceipt receipt : preBlock.receipts) {
-            logBloom.or(receipt.getBloomFilter());
-        }
-
-        block.seal(
-                preBlock.txs,
-                calcTxTrie(preBlock.txs),
-                stateRoot,
-                logBloom.getBloomFilterBytes(),
-                calcReceiptsTrie(preBlock.receipts),
-                totalEnergyUsed);
-
-
-        stakingBlockTemplate.put(ByteArrayWrapper.wrap(block.getHeader().getMineHash()) , block);
-
-        LOG.debug("GetBlockTemp: {}", block.toString());
-
-        return block;
+        return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, publicKey);
     }
 
     @Override
@@ -2834,7 +2742,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long timeStamp = block.getTimestamp();
 
         // Can not submit a future block
-        if (timeStamp > (System.currentTimeMillis() / 1000 + stakingBlockCandidateTimeout)) {
+        if (timeStamp > (getSystemCurrentTimeBySec() + stakingBlockCandidateTimeout)) {
             LOG.debug("Block timestamp exceed the threshold. {}", block.toString());
             return false;
         }
@@ -2857,11 +2765,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public StakingBlock trySealStakingBlock() {
-        long currentTime = System.currentTimeMillis() / 1000;
         StakingBlock bestBlock = null;
         List<Long> removeTimeStamp = new ArrayList<>();
         for (Entry<Long, LinkedHashSet<StakingBlock>> e : sealednewStakingBlock.entrySet()) {
-            if (e.getKey() <= currentTime) {
+            if (e.getKey() <= getSystemCurrentTimeBySec()) {
                 removeTimeStamp.add(e.getKey());
                 for (StakingBlock b : e.getValue()) {
                     if (b != null
@@ -2899,5 +2806,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return bestBlock;
+    }
+
+    private static long getSystemCurrentTimeBySec() {
+        return System.currentTimeMillis() / 1000;
     }
 }

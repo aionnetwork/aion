@@ -29,7 +29,6 @@ import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
 /** Unit tests for block propagation */
@@ -301,7 +300,7 @@ public class BlockPropagationTest {
                         .build();
 
         Block block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -357,7 +356,7 @@ public class BlockPropagationTest {
                         .build();
 
         Block block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -427,7 +426,7 @@ public class BlockPropagationTest {
                         .build();
 
         Block block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -495,7 +494,7 @@ public class BlockPropagationTest {
                         .build();
 
         Block block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());

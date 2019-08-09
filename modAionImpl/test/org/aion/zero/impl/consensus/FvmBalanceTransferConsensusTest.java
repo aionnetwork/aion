@@ -895,7 +895,7 @@ public class FvmBalanceTransferConsensusTest {
             AionTransaction transaction, int numNonRejectedTransactions) {
         Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         List<AionTransaction> transactions = Collections.singletonList(transaction);
-        Block block = this.blockchain.createNewBlock(parentBlock, transactions, false);
+        Block block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());

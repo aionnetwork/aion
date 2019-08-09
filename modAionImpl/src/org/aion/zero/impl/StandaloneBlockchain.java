@@ -560,7 +560,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000, true);
     }
 
-    /** Uses the createNewBlockInternal functionality to avoid time-stamping issues. */
+    /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */
     public Block createBlock(
             Block parent,
             List<AionTransaction> txs,
@@ -573,7 +573,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
         }
 
-        return createNewBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
+        return createNewMiningBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
     }
 
     /**

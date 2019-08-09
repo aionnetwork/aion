@@ -19,19 +19,17 @@ public interface IAionBlockchain extends IBlockchain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 
-    //TODO : [unity] remove it cause might dont need this call anymore.
-    Block createNewBlock(
+    AionBlock createNewMiningBlock(
         Block parent,
             List<AionTransaction> transactions,
             boolean waitUntilBlockTime);
 
-    Block createNewBlock(
+    StakingBlock createNewStakingBlock(
         Block parent,
         List<AionTransaction> transactions,
-        boolean waitUntilBlockTime,
         byte[] seed);
 
-    BlockContext createNewBlockContext(
+    BlockContext createNewMiningBlockContext(
         Block parent,
         List<AionTransaction> transactions,
         boolean waitUntilBlockTime);

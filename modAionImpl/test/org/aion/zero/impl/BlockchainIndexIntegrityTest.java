@@ -17,7 +17,6 @@ import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -52,7 +51,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             Block next =
-                    chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+                    chain.createNewMiningBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -94,7 +93,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             Block next =
-                    chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+                    chain.createNewMiningBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -132,12 +131,12 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            Block next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
-            next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             next.setExtraData("other".getBytes());
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
@@ -185,12 +184,12 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            Block next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
-            next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             next.setExtraData("other".getBytes());
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);

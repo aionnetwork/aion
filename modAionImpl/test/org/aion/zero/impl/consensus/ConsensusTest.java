@@ -199,7 +199,7 @@ public class ConsensusTest {
         List<AionTransaction> transactions = Collections.singletonList(deployTransaction);
 
         // Run the transaction.
-        Block block = blockchain.createNewBlock(parentBlock, transactions, false);
+        Block block = blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());
@@ -230,7 +230,7 @@ public class ConsensusTest {
                 getTransactionThatOnlyTransfersValue(BigInteger.valueOf(1_000_000_000))); // success
 
         // Runs the block of transactions.
-        block = blockchain.createNewBlock(parentBlock, transactions, false);
+        block = blockchain.createNewMiningBlock(parentBlock, transactions, false);
         results = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());
         assertEquals(7, results.getRight().getSummaries().size());

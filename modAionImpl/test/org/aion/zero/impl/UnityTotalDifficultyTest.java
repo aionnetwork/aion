@@ -68,7 +68,7 @@ public class UnityTotalDifficultyTest {
 
         Block genesis = bc.getBestBlock();
 
-        Block blockOnePOW = bc.createNewBlock(genesis, Collections.emptyList(), true);
+        Block blockOnePOW = bc.createNewMiningBlock(genesis, Collections.emptyList(), true);
 
         ImportResult result = bc.tryToConnect(blockOnePOW);
         assertThat(bc.getBestBlock() == blockOnePOW).isTrue();
@@ -145,7 +145,7 @@ public class UnityTotalDifficultyTest {
         Assert.assertEquals(GenesisStakingBlock.getGenesisDifficulty().add(blockOnePOSInfo.getDifficultyBI()), blockOnePOSInfo.getStakingDifficulty());
         Assert.assertEquals(blockOnePOSInfo.getMiningDifficulty().multiply(blockOnePOSInfo.getStakingDifficulty()), blockOnePOSInfo.getCumulativeDifficulty());
 
-        Block blockTwoPOW = bc.createNewBlock(blockOnePOS, Collections.emptyList(), true);
+        Block blockTwoPOW = bc.createNewMiningBlock(blockOnePOS, Collections.emptyList(), true);
         result = bc.tryToConnect(blockTwoPOW);
         assertThat(bc.getBestBlock() == blockTwoPOW).isTrue();
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -160,7 +160,7 @@ public class UnityTotalDifficultyTest {
         Assert.assertEquals(blockOnePOSInfo.getStakingDifficulty(), blockTwoPOWInfo.getStakingDifficulty());
         Assert.assertEquals(blockTwoPOWInfo.getStakingDifficulty().multiply(blockTwoPOWInfo.getMiningDifficulty()), blockTwoPOWInfo.getCumulativeDifficulty());
 
-        Block blockThreePOW = bc.createNewBlock(blockTwoPOW, Collections.emptyList(), true);
+        Block blockThreePOW = bc.createNewMiningBlock(blockTwoPOW, Collections.emptyList(), true);
         result = bc.tryToConnect(blockThreePOW);
         assertThat(bc.getBestBlock() == blockThreePOW).isTrue();
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -184,13 +184,13 @@ public class UnityTotalDifficultyTest {
 
         long time = System.currentTimeMillis();
 
-        Block blockOnePOW = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L).block;
+        Block blockOnePOW = bc.createNewMiningBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockOnePOW, (time += 100))).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Block blockTwoPOW = bc.createNewBlockInternal(blockOnePOW, Collections.emptyList(), true, time / 1000L).block;
+        Block blockTwoPOW = bc.createNewMiningBlockInternal(blockOnePOW, Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockTwoPOW, time += 100)).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Block blockThreePOW = bc.createNewBlockInternal(blockTwoPOW, Collections.emptyList(), true, time / 1000L).block;
+        Block blockThreePOW = bc.createNewMiningBlockInternal(blockTwoPOW, Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockThreePOW, time += 100)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now we diverge with one block having higher TD than the other
@@ -225,13 +225,13 @@ public class UnityTotalDifficultyTest {
 
         long time = System.currentTimeMillis();
 
-        Block blockOnePOW = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L).block;
+        Block blockOnePOW = bc.createNewMiningBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockOnePOW, (time += 100))).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Block blockTwoPOW_Chain1 = bc.createNewBlockInternal(blockOnePOW, Collections.emptyList(), true, time / 1000L).block;
+        Block blockTwoPOW_Chain1 = bc.createNewMiningBlockInternal(blockOnePOW, Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockTwoPOW_Chain1, time += 100)).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Block blockThreePOW_Chain1 = bc.createNewBlockInternal(blockTwoPOW_Chain1, Collections.emptyList(), true, time / 1000L).block;
+        Block blockThreePOW_Chain1 = bc.createNewMiningBlockInternal(blockTwoPOW_Chain1, Collections.emptyList(), true, time / 1000L).block;
         assertThat(bc.tryToConnectInternal(blockThreePOW_Chain1, time += 100)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now we diverge with one block having higher TD than the other
@@ -303,7 +303,7 @@ public class UnityTotalDifficultyTest {
         
         bc.setUnityForkNumber(1);
 
-        Block blockOnePOW = bc.createNewBlockInternal(genesis, Collections.emptyList(), true, time / 1000L).block;
+        Block blockOnePOW = bc.createNewMiningBlockInternal(genesis, Collections.emptyList(), true, time / 1000L).block;
         StakingBlock blockOnePOS = createNewStakingBlock(genesis, new byte[64]);
 
         assertThat(bc.tryToConnectInternal(blockOnePOW, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -315,7 +315,7 @@ public class UnityTotalDifficultyTest {
 
     private StakingBlock createNewStakingBlock(Block parent, byte[] parentSeed) {
         byte[] seedBlockOne = key.sign(parentSeed).getSignature();
-        StakingBlock blockOnePOS = (StakingBlock) bc.createNewBlock(parent, Collections.emptyList(), true, seedBlockOne);
+        StakingBlock blockOnePOS = bc.createNewStakingBlock(parent, Collections.emptyList(), seedBlockOne);
         blockOnePOS.getHeader().setPubKey(key.getPubKey());
         byte[] mineHashSig = key.sign(blockOnePOS.getHeader().getMineHash()).getSignature();
         blockOnePOS.getHeader().setSignature(mineHashSig);

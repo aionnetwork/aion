@@ -72,7 +72,7 @@ public class InvalidBlockTest {
         List<AionTransaction> transactions = makeTransactions(20, nonce);
 
         Block parent = this.blockchain.getBestBlock();
-        Block block = this.blockchain.createNewBlock(parent, transactions, false);
+        Block block = this.blockchain.createNewMiningBlock(parent, transactions, false);
 
         Pair<ImportResult, AionBlockSummary> res =
                 this.blockchain.tryToConnectAndFetchSummary(block);

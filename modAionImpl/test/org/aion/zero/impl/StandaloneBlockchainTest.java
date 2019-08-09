@@ -38,7 +38,7 @@ public class StandaloneBlockchainTest {
                 .isEqualTo(bundle.bc.genesis.getStateRoot());
 
         Block block =
-                bundle.bc.createNewBlock(bundle.bc.getBestBlock(), Collections.emptyList(), false);
+                bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), false);
         assertThat(block).isNotNull();
         assertThat(block.getNumber()).isEqualTo(BLOCK_NUMBER + 1);
     }
