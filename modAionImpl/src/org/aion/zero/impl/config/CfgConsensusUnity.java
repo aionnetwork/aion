@@ -8,19 +8,23 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.crypto.AddressSpecs;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
+import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 
-public final class CfgConsensusPow extends CfgConsensus {
+public final class CfgConsensusUnity extends CfgConsensus {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
-    CfgConsensusPow() {
+    CfgConsensusUnity() {
         this.mining = false;
         staking = false;
         this.minerAddress = AddressUtils.ZERO_ADDRESS.toString();
-        stakerAddress = AddressUtils.ZERO_ADDRESS.toString();
         this.cpuMineThreads =
                 (byte)
                         (Runtime.getRuntime().availableProcessors()
@@ -40,6 +44,8 @@ public final class CfgConsensusPow extends CfgConsensus {
     private String minerAddress;
 
     private String stakerAddress;
+
+    private ECKey stakerKey;
 
     private byte cpuMineThreads;
 
@@ -64,8 +70,9 @@ public final class CfgConsensusPow extends CfgConsensus {
                         case "miner-address":
                             this.minerAddress = Cfg.readValue(sr);
                             break;
-                        case "staker-address":
-                            stakerAddress = Cfg.readValue(sr);
+                        case "staker-key":
+                            String sk = Cfg.readValue(sr);
+                            convertToStakerKeyAndAddress(sk);
                             break;
                         case "cpu-mine-threads":
                             this.cpuMineThreads = Byte.valueOf(Cfg.readValue(sr));
@@ -85,6 +92,15 @@ public final class CfgConsensusPow extends CfgConsensus {
                     break loop;
             }
         }
+    }
+
+    private void convertToStakerKeyAndAddress(String sk) {
+        if (sk == null) {
+            throw  new NullPointerException();
+        }
+
+        stakerKey = ECKeyFac.inst().fromPrivate(ByteUtil.hexStringToBytes(sk));
+        stakerAddress = new AionAddress(AddressSpecs.computeA0Address(stakerKey.getPubKey())).toString();
     }
 
     String toXML() {
@@ -113,10 +129,12 @@ public final class CfgConsensusPow extends CfgConsensus {
             xmlWriter.writeCharacters(this.getMinerAddress());
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("staker-address");
-            xmlWriter.writeCharacters(getStakerAddress());
-            xmlWriter.writeEndElement();
+            if (getStakerKey() != null) {
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("staker-key");
+                xmlWriter.writeCharacters(ByteUtil.toHexString(getStakerKey().getPrivKeyBytes()));
+                xmlWriter.writeEndElement();
+            }
 
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("cpu-mine-threads");
@@ -166,6 +184,10 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     public String getStakerAddress() {
         return stakerAddress;
+    }
+
+    public ECKey getStakerKey() {
+        return stakerKey;
     }
 
     public byte getCpuMineThreads() {

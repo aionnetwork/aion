@@ -30,19 +30,16 @@ import org.slf4j.Logger;
 // TODO: [unity] It require avm libs, might consider to remove the dependency later
 public class StakingContractHelper {
     private static AionAddress stakingContractAddr;
-    private static ECKey stakerKey;
-    private static AionAddress stakerAddress;
     private AionBlockchainImpl chain;
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     private static byte[] abiGetVote = ABIEncoder.encodeOneString("getVote");
-    private static byte[] abiRegister = ABIEncoder.encodeOneString("register");
 
     private static boolean deployed = false;
 
     public StakingContractHelper(
-            AionAddress contractDestination, ECKey key, AionBlockchainImpl _chain) {
+            AionAddress contractDestination, AionBlockchainImpl _chain) {
 
         if (contractDestination == null) {
             throw new IllegalStateException("The contract destination can't be null");
@@ -52,13 +49,7 @@ public class StakingContractHelper {
             throw new IllegalStateException("The chain instance can't be null");
         }
 
-        if (key == null) {
-            throw new IllegalStateException("The stakerKey can't be null");
-        }
-
         stakingContractAddr = contractDestination;
-        stakerKey = key;
-        stakerAddress = new AionAddress(stakerKey.getAddress());
         chain = _chain;
     }
 
@@ -146,21 +137,5 @@ public class StakingContractHelper {
         } finally {
             repository.rollback();
         }
-    }
-
-    public byte[] callRegister() {
-
-        AionTransaction callTx =
-                new AionTransaction(
-                        chain.getRepository().getNonce(stakerAddress).toByteArray(),
-                        stakingContractAddr,
-                        BigInteger.ZERO.toByteArray(),
-                        abiRegister,
-                        2_000_000,
-                        10_000_000_000L);
-
-        callTx.sign(stakerKey);
-
-        return callTx.getEncoded();
     }
 }

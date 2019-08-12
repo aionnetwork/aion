@@ -49,12 +49,7 @@ public class ChainConfiguration implements IChainCfg {
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
-    // TODO: [unity] to implement the key reading/setting logic
-    private static byte[] privateKey =
-            ByteUtil.hexStringToBytes(
-                    "0xcc76648ce8798bc18130bc9d637995e5c42a922ebeab78795fac58081b9cf9d4069346ca77152d3e42b1630826feef365683038c3b00ff20b0ea42d7c121fa9f");
-
-    private static ECKey key = ECKeyFac.inst().fromPrivate(privateKey);
+    private static ECKey key = CfgAion.inst().getConsensus().getStakerKey();
 
     private static AionAddress stakingContractAddress =
             new AionAddress(

@@ -106,6 +106,11 @@ public class AionPoS {
                 return;
             }
 
+            //Check the staker's key has been setup properly, otherwise, just return for avoiding to create useless thread.
+            if (config.getConsensus().getStakerKey() == null) {
+                return;
+            }
+
             setupHandler();
             ees = new EventExecuteService(10_000, "EpPos", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
@@ -163,7 +168,7 @@ public class AionPoS {
                                                                             .doubleValue())
                                                             / votes;
 
-                                            delta.set(Math.max((long) (newDelta * 1000), 100));
+                                            delta.set(Math.max((long) (newDelta * 1000), 500));
                                         }
                                     } catch (InterruptedException e) {
                                         break;

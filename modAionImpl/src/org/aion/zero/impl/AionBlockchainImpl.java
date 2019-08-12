@@ -264,10 +264,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
 
         stakingContractHelper =
-                new StakingContractHelper(
-                        ChainConfiguration.getStakingContractAddress(),
-                        ChainConfiguration.getStakerKey(),
-                        this);
+                new StakingContractHelper(ChainConfiguration.getStakingContractAddress(), this);
     }
 
     /**
@@ -321,6 +318,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public AionAddress getStakerCoinbase() {
+                if (cfgAion.getConsensus().getStakerAddress() == null) {
+                    return null;
+                }
+
                 return AddressUtils.wrapAddress(cfgAion.getConsensus().getStakerAddress());
             }
 

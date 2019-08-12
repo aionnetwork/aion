@@ -42,12 +42,7 @@ public class StakeRunner implements StakeRunnerInterface {
 
     private Thread thread = null;
 
-    // TODO: [unity] hard code private key
-    private byte[] privateKey =
-            ByteUtil.hexStringToBytes(
-                    "0xcc76648ce8798bc18130bc9d637995e5c42a922ebeab78795fac58081b9cf9d4069346ca77152d3e42b1630826feef365683038c3b00ff20b0ea42d7c121fa9f");
-
-    private ECKey key = ECKeyFac.inst().fromPrivate(privateKey);
+    private ECKey key = CfgAion.inst().getConsensus().getStakerKey();
 
     private final class EpMiner implements Runnable {
         boolean go = true;
@@ -107,6 +102,13 @@ public class StakeRunner implements StakeRunnerInterface {
 
     @Override
     public void startStaking() {
+
+        if (key == null) {
+            LOG.warn("The staker's key does not set properly. Please check your config settings.");
+            return;
+        }
+
+
         if (!isStaking) {
             isStaking = true;
             fireRunnerStarted();
@@ -184,17 +186,20 @@ public class StakeRunner implements StakeRunnerInterface {
     public void delayedStartStaking(int sec) {
         if (cfg.getConsensus().getStaking()) {
             LOG.info("<delayed-start-staking>");
-            Timer t = new Timer();
-            t.schedule(
+
+            if (cfg.getConsensus().getStakerKey() != null) {
+                Timer t = new Timer();
+                t.schedule(
                     new TimerTask() {
                         @Override
                         public void run() {
-                            if (cfg.getConsensus().getStaking()) {
-                                startStaking();
-                            }
+                            startStaking();
                         }
                     },
                     sec * 1000);
+            } else {
+                LOG.error("The staker's key does not setup properly. Please check your node's config settings.");
+            }
         } else {
             LOG.info("<staking-disabled>");
         }
