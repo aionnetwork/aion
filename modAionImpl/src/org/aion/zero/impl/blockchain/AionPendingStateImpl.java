@@ -101,7 +101,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
 
     private IAionBlockchain blockchain;
 
-    private TransactionStore<AionTxReceipt> transactionStore;
+    private TransactionStore transactionStore;
 
     private Repository repository;
 

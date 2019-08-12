@@ -5,7 +5,6 @@ import static org.aion.util.string.StringUtils.toJsonHex;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -67,13 +66,13 @@ public final class TxRecpt {
     // indicates whether the transaction was successfully processed by the network
     public boolean successful;
 
-    public <TXR extends AbstractTxReceipt> TxRecpt(
+    public TxRecpt(
             Block block,
             AionTxInfo txInfo,
             long cumulativeNrgUsed,
             boolean isMainchain) {
 
-        AbstractTxReceipt receipt = txInfo.getReceipt();
+        AionTxReceipt receipt = txInfo.getReceipt();
         if (block != null) {
             this.blockHash = toJsonHex(txInfo.getBlockHash());
             this.blockNumber = block.getNumber();
@@ -93,9 +92,9 @@ public final class TxRecpt {
         }
 
         this.cumulativeNrgUsed = cumulativeNrgUsed;
-        this.nrgUsed = ((AionTxReceipt) receipt).getEnergyUsed();
-        this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getEnergyPrice();
-        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getEnergyLimit();
+        this.nrgUsed = receipt.getEnergyUsed();
+        this.gasPrice = receipt.getTransaction().getEnergyPrice();
+        this.nrgLimit = receipt.getTransaction().getEnergyLimit();
 
         AionTransaction tx = receipt.getTransaction();
         this.contractAddress =

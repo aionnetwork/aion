@@ -45,14 +45,13 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl
         extends AbstractRepository<AionBlockStore> {
 
-    private TransactionStore<AionTxReceipt> transactionStore;
+    private TransactionStore transactionStore;
 
     // pending block store
     private PendingBlockStore pendingStore;
@@ -87,7 +86,7 @@ public class AionRepositoryImpl
 
             // Setup the cache for transaction data source.
             this.transactionStore =
-                    new TransactionStore<>(
+                    new TransactionStore(
                             transactionDatabase, AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
@@ -113,7 +112,7 @@ public class AionRepositoryImpl
     }
 
     /** @implNote The transaction store is not locked within the repository implementation. */
-    public TransactionStore<AionTxReceipt> getTransactionStore() {
+    public TransactionStore getTransactionStore() {
         return this.transactionStore;
     }
 

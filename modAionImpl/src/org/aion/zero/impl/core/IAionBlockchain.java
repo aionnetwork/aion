@@ -13,8 +13,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
-public interface IAionBlockchain
-        extends IBlockchain<AionTxReceipt> {
+public interface IAionBlockchain extends IBlockchain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 

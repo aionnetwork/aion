@@ -12,13 +12,11 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.mcf.db.Flushable;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.collections4.map.LRUMap;
 
-public class TransactionStore<TXR extends AbstractTxReceipt>
-        implements Flushable, Closeable {
+public class TransactionStore implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final ObjectDataSource<List<AionTxInfo>> source;
 

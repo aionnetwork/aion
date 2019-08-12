@@ -7,18 +7,14 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockSummary;
-import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Blockchain interface.
- *
- * @param <TR>
  */
 @SuppressWarnings("rawtypes")
-public interface IBlockchain<TR extends AbstractTxReceipt>
-        extends IPowChain {
+public interface IBlockchain extends IPowChain {
 
     long getSize();
 
@@ -27,8 +23,6 @@ public interface IBlockchain<TR extends AbstractTxReceipt>
     AbstractBlockSummary add(Block block, boolean rebuild);
 
     ImportResult tryToConnect(Block block);
-
-    void storeBlock(Block block, List<TR> receipts);
 
     /**
      * Attempts to store the given block in the pending block store, saving it to be imported later

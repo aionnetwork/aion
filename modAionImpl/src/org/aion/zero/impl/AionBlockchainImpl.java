@@ -131,7 +131,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
     private RepositoryCache<AccountState, IBlockStoreBase> track;
-    private TransactionStore<AionTxReceipt> transactionStore;
+    private TransactionStore transactionStore;
     private Block bestBlock;
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
@@ -1499,8 +1499,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return chainConfiguration;
     }
 
-    @Override
-    public synchronized void storeBlock(Block block, List<AionTxReceipt> receipts) {
+    private void storeBlock(Block block, List<AionTxReceipt> receipts) {
 
         if (fork) {
             getBlockStore().saveBlock(block, totalDifficulty, false);
@@ -1589,7 +1588,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getParent(block.getHeader()) != null;
     }
 
-    public TransactionStore<AionTxReceipt> getTransactionStore() {
+    public TransactionStore getTransactionStore() {
         return transactionStore;
     }
 
