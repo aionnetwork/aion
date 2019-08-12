@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
@@ -23,6 +24,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
 import org.aion.vm.LongLivedAvm;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -39,7 +41,7 @@ public class PendingStateTest {
     private StandaloneBlockchain.Bundle bundle;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private IPendingStateInternal pendingState;
+    private AionPendingStateImpl pendingState;
 
     @BeforeClass
     public static void setup() {
@@ -70,7 +72,7 @@ public class PendingStateTest {
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
 
-        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository()).getPendingState();
+        pendingState = (AionPendingStateImpl)AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository()).getPendingState();
     }
 
     @Test
@@ -377,6 +379,333 @@ public class PendingStateTest {
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.ALREADY_SEALED);
         assertEquals(pendingState.addPendingTransaction(tx2), TxResponse.ALREADY_SEALED);
+    }
+
+    @Test
+    public void replayTransactionWithLessThanDoubleEnergyPrice() {
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                19_999_999_999L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.REPAYTX_LOWPRICE, pendingState.addPendingTransaction(tx2));
+        assertEquals(1, pendingState.getPendingTxSize());
+    }
+
+    @Test
+    public void replayTransactionWithDoubleEnergyPrice() {
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                20_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx2));
+        assertEquals(1, pendingState.getPendingTxSize());
+        // tx2 will get cached and will replace tx1 if tx1 is not included in the next block.
+        assertEquals(pendingState.getPendingTransactions().get(0), tx1);
+
+        AionBlock block =
+            blockchain.createNewBlock(
+                blockchain.getBestBlock(), Collections.emptyList(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        (pendingState).processBest(block, connectResult.getRight().getReceipts());
+        assertEquals(pendingState.getPendingTransactions().get(0), tx2);
+    }
+
+    @Test
+    public void replayTransactionWithDoubleEnergyPriceAfterSealing() {
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                1000_000L,
+                20_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx2));
+        assertEquals(1, pendingState.getPendingTxSize());
+        // tx2 will get cached and will replace tx1 if tx1 is not included in the next block.
+        assertEquals(pendingState.getPendingTransactions().get(0), tx1);
+
+        AionBlock block =
+            blockchain.createNewBlock(
+                blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        assertEquals(0, pendingState.getPendingTxSize());
+    }
+
+    @Test
+    public void replayTransactionThatUsesEntireBalance() {
+        BigInteger balance = blockchain.getRepository().getBalance(new AionAddress(deployerKey.getAddress()));
+        BigInteger value = balance.subtract(BigInteger.valueOf(21000*3).multiply(BigInteger.valueOf(10_000_000_000L)));
+
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                value.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        /* tx1 and tx3 should use the entire balance. If tx2 is removed properly, tx3 should be
+         * able to replace it in the pending state */
+        AionTransaction tx3 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                20_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        // This would execute fine on top of tx2, but should have insufficient balance on top of tx3
+        AionTransaction tx4 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.TWO.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
+        assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx3));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx4));
+        assertEquals(3, pendingState.getPendingTxSize());
+
+        AionBlock block =
+            blockchain.createNewBlock(
+                blockchain.getBestBlock(), Collections.emptyList(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        // tx3 should replace tx2, and tx4 will now have insufficient funds so it will get dropped
+        assertEquals(2, pendingState.getPendingTxSize());
+        assertEquals(pendingState.getPendingTransactions().get(1), tx3);
+    }
+
+    @Test
+    public void replayTransactionThatThatInvalidatesMiddleTx() {
+        BigInteger balance = blockchain.getRepository().getBalance(new AionAddress(deployerKey.getAddress()));
+        BigInteger value = balance.subtract(BigInteger.valueOf(21000*7).multiply(BigInteger.valueOf(10_000_000_000L)));
+
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                value.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        /* tx1 and tx3 should use the entire balance. If tx2 is removed properly, tx3 should be
+         * able to replace it in the pending state */
+        AionTransaction tx3 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                40_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        // This would execute fine on top of tx2, but should have insufficient balance on top of tx3
+        AionTransaction tx4 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.TWO.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                40_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx5 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.valueOf(3).toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
+        assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx3));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx4));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx5));
+        assertEquals(4, pendingState.getPendingTxSize());
+
+        AionBlock block =
+            blockchain.createNewBlock(
+                blockchain.getBestBlock(), Collections.emptyList(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        // tx3 should replace tx2, and tx4 will now have insufficient funds so it will get dropped
+        assertEquals(2, pendingState.getPendingTxSize());
+        assertEquals(pendingState.getPendingTransactions().get(1), tx3);
+    }
+
+    @Test
+    public void replayInvalidTransactionInMiddle() {
+        BigInteger balance = blockchain.getRepository().getBalance(new AionAddress(deployerKey.getAddress()));
+        BigInteger value = balance.subtract(BigInteger.valueOf(21000*3).multiply(BigInteger.valueOf(10_000_000_000L)));
+
+        AionTransaction tx1 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                value.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTransaction tx3 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ONE.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                40_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        // This tx will get dropped after tx3 is rejected
+        AionTransaction tx4 =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.TWO.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                new byte[0],
+                21000,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
+        assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx3));
+        assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx4));
+        assertEquals(3, pendingState.getPendingTxSize());
+
+        AionBlock block =
+            blockchain.createNewBlock(
+                blockchain.getBestBlock(), Collections.emptyList(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        assertEquals(1, pendingState.getPendingTxSize());
     }
 
     @Test

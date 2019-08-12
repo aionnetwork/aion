@@ -99,6 +99,8 @@ public class AionPendingStateImpl implements IPendingStateInternal {
 
     private final int MAX_TXCACHE_FLUSH_SIZE = MAX_VALIDATED_PENDING_TXS >> 2;
 
+    private final int MAX_REPLAY_TX_BUFFER_SIZE = MAX_VALIDATED_PENDING_TXS >> 2;
+
     private IAionBlockchain blockchain;
 
     private TransactionStore transactionStore;
@@ -118,6 +120,12 @@ public class AionPendingStateImpl implements IPendingStateInternal {
     private EventExecuteService ees;
 
     private List<AionTxExecSummary> txBuffer;
+
+    /**
+     * This buffer stores txs that come in with double the energy price as an existing tx with the same nonce
+     *  They will be applied between blocks so it is easier for us to manage the state of the repo.
+     */
+    private List<AionTransaction> replayTxBuffer;
 
     private boolean bufferEnable;
 
@@ -358,6 +366,7 @@ public class AionPendingStateImpl implements IPendingStateInternal {
 
             this.evtMgr = blockchain.getEventMgr();
             this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
+            this.replayTxBuffer = new ArrayList<>();
             this.pendingTxCache =
                     new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUp);
             this.pendingState = repository.startTracking();
@@ -730,7 +739,12 @@ public class AionPendingStateImpl implements IPendingStateInternal {
             } else {
                 long price = (poolTx.tx.getEnergyPrice() << 1);
                 if (price > 0 && price <= tx.getEnergyPrice()) {
-                    txSum = executeTx(tx, true);
+                    if (replayTxBuffer.size() < MAX_REPLAY_TX_BUFFER_SIZE) {
+                        replayTxBuffer.add(tx);
+                        return TxResponse.REPAID;
+                    } else {
+                        return TxResponse.DROPPED;
+                    }
                 } else {
                     fireDroppedTx(tx, "REPAYTX_LOWPRICE");
                     return TxResponse.REPAYTX_LOWPRICE;
@@ -1041,6 +1055,12 @@ public class AionPendingStateImpl implements IPendingStateInternal {
     private List<AionTransaction> rerunTxsInPool(Block block) {
 
         pendingState = repository.startTracking();
+
+        for (AionTransaction tx : replayTxBuffer) {
+            // Add a junk energyConsumed value because it will get rerun soon after it is added
+            txPool.add(new PooledTransaction(tx, tx.getEnergyLimit()));
+        }
+        replayTxBuffer.clear();
 
         processTxBuffer();
         List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
