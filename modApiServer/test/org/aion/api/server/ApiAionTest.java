@@ -301,7 +301,7 @@ public class ApiAionTest {
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         assertTrue(blk.isEqual(api.getBlockByHash(blk.getHash())));
         assertEquals(tx, api.getTransactionByBlockHashAndIndex(blk.getHash(), 0).tx);

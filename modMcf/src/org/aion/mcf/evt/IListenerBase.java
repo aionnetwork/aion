@@ -2,14 +2,12 @@ package org.aion.mcf.evt;
 
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /** Listener base interface. */
 public interface IListenerBase<
         BLK extends Block,
-        TXR extends AbstractTxReceipt,
-        BS extends AbstractBlockSummary<?, ?>> {
+        TXR extends AbstractTxReceipt> {
 
     enum PendingTransactionState {
         /**

@@ -6,7 +6,6 @@ import java.util.Map;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IPowChain;
-import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -17,10 +16,6 @@ import org.aion.util.types.ByteArrayWrapper;
 public interface IBlockchain extends IPowChain {
 
     long getSize();
-
-    AbstractBlockSummary add(Block block);
-
-    AbstractBlockSummary add(Block block, boolean rebuild);
 
     ImportResult tryToConnect(Block block);
 

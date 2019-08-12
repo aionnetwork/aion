@@ -9,8 +9,8 @@ import org.aion.mcf.db.Repository;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain extends IBlockchain {

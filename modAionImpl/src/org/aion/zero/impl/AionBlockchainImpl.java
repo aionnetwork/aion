@@ -1071,8 +1071,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
-    @Override
-    public AionBlockSummary add(Block block) {
+    private AionBlockSummary add(Block block) {
         // typical use without rebuild
         AionBlockSummary summary = add(block, false);
 
@@ -1090,7 +1089,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return summary;
     }
 
-    public AionBlockSummary add(Block block, boolean rebuild) {
+    private AionBlockSummary add(Block block, boolean rebuild) {
         return add(block, rebuild, true).getLeft();
     }
 

@@ -488,7 +488,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getTransactionReceipt reqBody =
                 Message.req_getTransactionReceipt
@@ -618,7 +618,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getTransactionByBlockHashAndIndex reqBody =
                 Message.req_getTransactionByBlockHashAndIndex
@@ -672,7 +672,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getTransactionByBlockNumberAndIndex reqBody =
                 Message.req_getTransactionByBlockNumberAndIndex
@@ -726,7 +726,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getBlockTransactionCountByNumber reqBody =
                 Message.req_getBlockTransactionCountByNumber
@@ -778,7 +778,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getTransactionCountByHash reqBody =
                 Message.req_getTransactionCountByHash
@@ -830,7 +830,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
 
         Message.req_getTransactionByHash reqBody =
                 Message.req_getTransactionByHash
@@ -880,7 +880,7 @@ public class ApiAion0Test {
                         .getBlockchain()
                         .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
-        impl.getAionHub().getBlockchain().add(blk);
+        impl.getAionHub().getBlockchain().tryToConnect(blk);
         blk = api.getBlockByHash(blk.getHash());
 
         Message.req_getTransactionCount reqBody =
