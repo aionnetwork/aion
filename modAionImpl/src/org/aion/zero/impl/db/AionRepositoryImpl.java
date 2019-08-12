@@ -27,7 +27,6 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
-import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -46,7 +45,6 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -54,7 +52,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class AionRepositoryImpl
         extends AbstractRepository<AionBlockStore> {
 
-    private TransactionStore<AionTxReceipt, AionTxInfo> transactionStore;
+    private TransactionStore<AionTxReceipt> transactionStore;
 
     // pending block store
     private PendingBlockStore pendingStore;
@@ -115,7 +113,7 @@ public class AionRepositoryImpl
     }
 
     /** @implNote The transaction store is not locked within the repository implementation. */
-    public TransactionStore<AionTxReceipt, AionTxInfo> getTransactionStore() {
+    public TransactionStore<AionTxReceipt> getTransactionStore() {
         return this.transactionStore;
     }
 

@@ -5,14 +5,13 @@ import static org.aion.util.string.StringUtils.toJsonHex;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -70,7 +69,7 @@ public final class TxRecpt {
 
     public <TXR extends AbstractTxReceipt> TxRecpt(
             Block block,
-            AbstractTxInfo<TXR> txInfo,
+            AionTxInfo txInfo,
             long cumulativeNrgUsed,
             boolean isMainchain) {
 

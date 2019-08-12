@@ -6,7 +6,6 @@ import java.util.Map;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IPowChain;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.types.AionAddress;
@@ -16,11 +15,9 @@ import org.aion.util.types.ByteArrayWrapper;
  * Blockchain interface.
  *
  * @param <TR>
- * @param <INFO>
  */
 @SuppressWarnings("rawtypes")
-public interface IBlockchain<TR extends AbstractTxReceipt,
-                INFO extends AbstractTxInfo>
+public interface IBlockchain<TR extends AbstractTxReceipt>
         extends IPowChain {
 
     long getSize();
@@ -102,8 +99,6 @@ public interface IBlockchain<TR extends AbstractTxReceipt,
     List<byte[]> getListOfHashesEndWith(byte[] hash, int qty);
 
     List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
-
-    INFO getTransactionInfo(byte[] hash);
 
     void setExitOn(long exitOn);
 

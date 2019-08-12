@@ -30,7 +30,6 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -47,7 +46,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.db.TransactionStore;
+import org.aion.zero.impl.db.TransactionStore;
 import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -132,7 +131,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
     private RepositoryCache<AccountState, IBlockStoreBase> track;
-    private TransactionStore<AionTxReceipt, org.aion.zero.impl.types.AionTxInfo> transactionStore;
+    private TransactionStore<AionTxReceipt> transactionStore;
     private Block bestBlock;
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
@@ -451,9 +450,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    /* NOTE: only returns receipts from the main chain
-     */
-    @SuppressWarnings("Duplicates")
+    /* NOTE: only returns receipts from the main chain */
     public AionTxInfo getTransactionInfo(byte[] hash) {
 
         List<AionTxInfo> infos = transactionStore.get(hash);
@@ -493,7 +490,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return txInfo;
     }
 
-    @SuppressWarnings("Duplicates")
     // returns transaction info (tx receipt) without the transaction embedded in it.
     // saves on db reads for api when processing large transactions
     public AionTxInfo getTransactionInfoLite(byte[] txHash, byte[] blockHash) {
@@ -1593,7 +1589,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getParent(block.getHeader()) != null;
     }
 
-    public TransactionStore<AionTxReceipt, AionTxInfo> getTransactionStore() {
+    public TransactionStore<AionTxReceipt> getTransactionStore() {
         return transactionStore;
     }
 

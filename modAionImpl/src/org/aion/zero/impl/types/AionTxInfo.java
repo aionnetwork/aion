@@ -2,14 +2,17 @@ package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.types.AionTxReceipt;
 
-public class AionTxInfo extends AbstractTxInfo<AionTxReceipt> {
+public class AionTxInfo {
+    private AionTxReceipt receipt;
+    private byte[] blockHash;
+    private int index;
+
     public AionTxInfo(AionTxReceipt receipt, byte[] blockHash, int index) {
         this.receipt = receipt;
         this.blockHash = blockHash;
@@ -37,7 +40,6 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt> {
         }
     }
 
-    @Override
     public void setTransaction(AionTransaction tx) {
         receipt.setTransaction(tx);
     }
@@ -60,14 +62,6 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt> {
 
     public byte[] getBlockHash() {
         return blockHash;
-    }
-
-    public byte[] getParentBlockHash() {
-        return parentBlockHash;
-    }
-
-    public void setParentBlockHash(byte[] parentBlockHash) {
-        this.parentBlockHash = parentBlockHash;
     }
 
     public int getIndex() {

@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static org.aion.util.others.Utils.dummy;
 
@@ -9,32 +9,33 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.mcf.core.AbstractTxInfo;
+import org.aion.mcf.db.Flushable;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.collections4.map.LRUMap;
 
-public class TransactionStore<TXR extends AbstractTxReceipt, INFO extends AbstractTxInfo<TXR>>
+public class TransactionStore<TXR extends AbstractTxReceipt>
         implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final ObjectDataSource<List<INFO>> source;
+    private final ObjectDataSource<List<AionTxInfo>> source;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(
-            ByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
+            ByteArrayKeyValueDatabase src, Serializer<List<AionTxInfo>, byte[]> serializer) {
         source = new ObjectDataSource(src, serializer);
     }
 
-    public boolean putToBatch(INFO tx) {
+    public boolean putToBatch(AionTxInfo tx) {
         lock.writeLock().lock();
 
         try {
             byte[] txHash = tx.getReceipt().getTransaction().getTransactionHash();
 
-            List<INFO> existingInfos = null;
+            List<AionTxInfo> existingInfos = null;
             if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null
                     || !lastSavedTxHash.isFull()) {
                 existingInfos = source.get(txHash);
@@ -43,7 +44,7 @@ public class TransactionStore<TXR extends AbstractTxReceipt, INFO extends Abstra
             if (existingInfos == null) {
                 existingInfos = new ArrayList<>();
             } else {
-                for (AbstractTxInfo<TXR> info : existingInfos) {
+                for (AionTxInfo info : existingInfos) {
                     if (Arrays.equals(info.getBlockHash(), tx.getBlockHash())) {
                         return false;
                     }
@@ -62,12 +63,12 @@ public class TransactionStore<TXR extends AbstractTxReceipt, INFO extends Abstra
         source.flushBatch();
     }
 
-    public INFO get(byte[] txHash, byte[] blockHash) {
+    public AionTxInfo get(byte[] txHash, byte[] blockHash) {
         lock.readLock().lock();
 
         try {
-            List<INFO> existingInfos = source.get(txHash);
-            for (INFO info : existingInfos) {
+            List<AionTxInfo> existingInfos = source.get(txHash);
+            for (AionTxInfo info : existingInfos) {
                 if (Arrays.equals(info.getBlockHash(), blockHash)) {
                     return info;
                 }
@@ -78,7 +79,7 @@ public class TransactionStore<TXR extends AbstractTxReceipt, INFO extends Abstra
         }
     }
 
-    public List<INFO> get(byte[] key) {
+    public List<AionTxInfo> get(byte[] key) {
         lock.readLock().lock();
         try {
             return source.get(key);
