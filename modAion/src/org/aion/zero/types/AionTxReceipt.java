@@ -4,10 +4,12 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.aion.mcf.types.AbstractTxReceipt;
+import org.aion.base.AionTransaction;
+import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;
 import org.aion.rlp.RLP;
@@ -17,9 +19,21 @@ import org.aion.rlp.RLPList;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.Bytesable;
 
 /** aion transaction receipt class. */
-public class AionTxReceipt extends AbstractTxReceipt {
+public class AionTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
+    private AionTransaction transaction;
+
+    private byte[] postTxState = EMPTY_BYTE_ARRAY;
+
+    private Bloom bloomFilter = new Bloom();
+    private List<Log> logInfoList = new ArrayList<>();
+
+    private byte[] executionResult = EMPTY_BYTE_ARRAY;
+    private String error = "";
+    /* TX Receipt in encoded form */
+    private byte[] rlpEncoded;
 
     private long energyUsed;
 
@@ -64,6 +78,74 @@ public class AionTxReceipt extends AbstractTxReceipt {
         this.logInfoList = logInfoList;
     }
 
+    public byte[] getPostTxState() {
+        return postTxState;
+    }
+
+    public byte[] getTransactionOutput() {
+        return executionResult;
+    }
+
+    public Bloom getBloomFilter() {
+        return bloomFilter;
+    }
+
+    public List<Log> getLogInfoList() {
+        return logInfoList;
+    }
+
+    public boolean isSuccessful() {
+        return error.isEmpty();
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setPostTxState(byte[] postTxState) {
+        this.postTxState = postTxState;
+        rlpEncoded = null;
+    }
+
+    public void setExecutionResult(byte[] executionResult) {
+        this.executionResult = executionResult;
+        rlpEncoded = null;
+    }
+
+    /**
+     * TX recepit 's error is empty when constructed. it use empty to identify if there are error
+     * msgs instead of null.
+     */
+    public void setError(String error) {
+        if (error == null) {
+            return;
+        }
+        this.error = error;
+    }
+
+    public void setLogs(List<Log> logInfoList) {
+        if (logInfoList == null) {
+            return;
+        }
+        this.logInfoList = logInfoList;
+
+        for (Log loginfo : logInfoList) {
+            bloomFilter.or(LogUtility.createBloomFilterForLog(loginfo));
+        }
+        rlpEncoded = null;
+    }
+
+    public void setTransaction(AionTransaction transaction) {
+        this.transaction = transaction;
+    }
+
+    public AionTransaction getTransaction() {
+        if (transaction == null) {
+            throw new NullPointerException(
+                    "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
+        }
+        return transaction;
+    }
     /**
      * Used for Receipt trie hash calculation. Should contain only the following items encoded:
      * [postTxState, bloomFilter, logInfoList]
