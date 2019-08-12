@@ -41,8 +41,8 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.mcf.types.PendingTransactionState;
 import org.aion.zero.impl.db.TransactionStore;
-import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.p2p.INode;
@@ -69,7 +69,7 @@ import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.slf4j.Logger;
 
-public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
+public class AionPendingStateImpl implements IPendingStateInternal {
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
@@ -815,7 +815,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
         return b1;
     }
 
-    @Override
     public synchronized void processBest(AionBlock newBlock, List receipts) {
 
         if (isSeed) {

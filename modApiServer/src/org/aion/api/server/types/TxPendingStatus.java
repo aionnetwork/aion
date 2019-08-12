@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.mcf.evt.IListenerBase;
+import org.aion.mcf.types.PendingTransactionState;
 import org.aion.util.types.ByteArrayWrapper;
 
 public class TxPendingStatus {
@@ -13,7 +13,7 @@ public class TxPendingStatus {
     private static final int txRetCodeOffset = 102;
 
     /*  */
-    /** @see IListenerBase DROPPED(0) NEW_PENDING(1) PENDING(2) INCLUDED(3) */
+    /** @see PendingTransactionState DROPPED(0) NEW_PENDING(1) PENDING(2) INCLUDED(3) */
     int state;
 
     public TxPendingStatus(

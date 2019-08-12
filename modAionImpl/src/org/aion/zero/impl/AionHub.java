@@ -42,8 +42,6 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
 public class AionHub {
@@ -60,7 +58,7 @@ public class AionHub {
 
     private BlockPropagationHandler propHandler;
 
-    private IPendingStateInternal<AionBlock> mempool;
+    private IPendingStateInternal mempool;
 
     private IAionBlockchain blockchain;
 
@@ -278,7 +276,7 @@ public class AionHub {
         return this.repository.getBlockStore();
     }
 
-    public IPendingStateInternal<AionBlock> getPendingState() {
+    public IPendingStateInternal getPendingState() {
         return mempool;
     }
 
