@@ -217,6 +217,7 @@ public class RpcMethods {
                     Map.entry(
                             "eth_getTransactionByHash",
                             (params) -> api.eth_getTransactionByHash(params)),
+                    Map.entry("eth_getInternalTransactionsByHash", (params) -> api.eth_getInternalTransactionsByHash(params)),
                     Map.entry(
                             "eth_getTransactionByBlockHashAndIndex",
                             (params) -> api.eth_getTransactionByBlockHashAndIndex(params)),

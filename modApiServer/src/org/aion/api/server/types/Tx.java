@@ -2,14 +2,17 @@ package org.aion.api.server.types;
 
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
+import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.TxUtil;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -61,6 +64,55 @@ public class Tx {
         json.put("input", StringUtils.toJsonHex(tx.getData()));
         json.put("blockNumber", StringUtils.toJsonHex(b.getNumber()));
         json.put("blockHash", StringUtils.toJsonHex(b.getHash()));
+
+        return json;
+    }
+
+    public static JSONObject internalTxsToJSON(List<InternalTransaction> internalTransactions, byte[] txHash, boolean isCreatedWithInternalTransactions) {
+        if (txHash == null) return null;
+
+        JSONObject json = new JSONObject();
+
+        json.put("hash", StringUtils.toJsonHex(txHash));
+        if (isCreatedWithInternalTransactions) {
+            JSONArray tx = new JSONArray();
+            if (internalTransactions == null || internalTransactions.isEmpty()) {
+                // empty when no internal transactions were created
+                json.put("internal_transactions", tx);
+            } else {
+                for (int i = 0; i < internalTransactions.size(); i++) {
+                    InternalTransaction itx = internalTransactions.get(i);
+                    tx.put(internalTransactionToJSON(itx));
+                }
+                // populated with all the stored internal transactions
+                json.put("internal_transactions", tx);
+            }
+        } else {
+            // null when the internal transactions were not stored by the kernel
+            json.put("internal_transactions", JSONObject.NULL);
+        }
+        return json;
+    }
+
+    public static JSONObject internalTransactionToJSON(InternalTransaction itx) {
+        if (itx == null) return null;
+
+        JSONObject json = new JSONObject();
+
+        json.put("kind", itx.isCreate ? "CREATE" : "CALL");
+        json.put("from", itx.sender.toString());
+        if (itx.isCreate) {
+            AionAddress contractAddress = TxUtil.calculateContractAddress(itx);
+            json.put("contractAddress", contractAddress.toString());
+        } else {
+            json.put("to", itx.destination.toString());
+        }
+        json.put("nonce", itx.senderNonce);
+        json.put("value", itx.value);
+        json.put("data", StringUtils.toJsonHex(itx.copyOfData()));
+        json.put("nrgLimit", itx.energyLimit);
+        json.put("nrgPrice", itx.energyPrice);
+        json.put("rejected", String.valueOf(itx.isRejected));
 
         return json;
     }

@@ -10,6 +10,7 @@ import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.slf4j.Logger;
 
 public final class TxUtil {
@@ -47,6 +48,13 @@ public final class TxUtil {
             return null;
         }
         return new AionAddress(HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+    }
+
+    public static AionAddress calculateContractAddress(InternalTransaction itx) {
+        if (itx.destination != null) {
+            return null;
+        }
+        return new AionAddress(HashUtil.calcNewAddr(itx.sender.toByteArray(), itx.senderNonce.toByteArray()));
     }
 
     private static final int RLP_TX_NONCE = 0,

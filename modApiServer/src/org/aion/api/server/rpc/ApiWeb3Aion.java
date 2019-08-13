@@ -964,6 +964,39 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(Tx.InfoToJSON(txInfo, b));
     }
 
+    public RpcMsg eth_getInternalTransactionsByHash(Object _params) {
+        String _hash;
+        try {
+            if (_params instanceof JSONArray) {
+                _hash = ((JSONArray) _params).get(0) + "";
+            } else if (_params instanceof JSONObject) {
+                _hash = ((JSONObject) _params).get("transactionHash") + "";
+            } else {
+                throw new Exception("Invalid input object provided");
+            }
+        } catch (Exception e) {
+            LOG.debug("Error processing json input arguments", e);
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] txHash = ByteUtil.hexStringToBytes(_hash);
+        if (_hash.equals("null") || txHash == null) {
+            return null;
+        }
+
+        AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
+        if (txInfo == null) {
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
+
+        Block b = this.ac.getBlockchain().getBlockByHash(txInfo.getBlockHash());
+        if (b == null) {
+            return null; // this is actually an internal error
+        }
+
+        return new RpcMsg(Tx.internalTxsToJSON(txInfo.getInternalTransactions(), txHash, txInfo.isCreatedWithInternalTransactions()));
+    }
+
     public RpcMsg eth_getTransactionByBlockHashAndIndex(Object _params) {
         String _hash;
         String _index;
