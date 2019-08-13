@@ -1,6 +1,5 @@
 package org.aion.mcf.valid;
 
-import java.math.BigInteger;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 
@@ -20,5 +19,11 @@ public class TimeStampRule extends DependentBlockHeaderRule {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors,
+        Object arg) {
+        return validate(header, dependency, errors);
     }
 }

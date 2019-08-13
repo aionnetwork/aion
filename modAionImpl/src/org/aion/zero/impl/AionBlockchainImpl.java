@@ -124,26 +124,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
-    private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
     private static long FORK_5_BLOCK_NUMBER = Long.MAX_VALUE;
     private static boolean fork040Enable;
-    private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
-    private final ParentBlockHeaderValidator parentHeaderValidator;
+
+    private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
+    private final GrandParentBlockHeaderValidator unityGrandParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator chainParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
-
-    private final GrandParentBlockHeaderValidator grandParentUnityDifficultyBlockHeaderValidator;
-    private final ParentBlockHeaderValidator parentStakingHeaderValidator;
-    private final BlockHeaderValidator stakingBlockHeaderValidator;
-    private final ParentBlockHeaderValidator blockParentHeaderValidator;
-
-
-    private final ParentBlockHeaderValidator chainHeaderValidator;
-
-
-    private StakingContractHelper stakingContractHelper;
+    private final StakingContractHelper stakingContractHelper;
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
      * being executed. This is simple for now but in the future we may have to create a "chain
@@ -223,17 +215,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        this.grandParentBlockHeaderValidator =
-                this.chainConfiguration.createGrandParentHeaderValidator();
-        this.parentHeaderValidator = this.chainConfiguration.createMiningParentHeaderValidator();
-        this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
 
-        grandParentUnityDifficultyBlockHeaderValidator = chainConfig.createStakingGrandParentHeaderValidator();
-        parentStakingHeaderValidator = chainConfig.createStakingParentHeaderValidator();
-        stakingBlockHeaderValidator = chainConfig.createStakingBlockHeaderValidator();
-        blockParentHeaderValidator = chainConfig.createBlockParentHeaderValidator();
 
-        chainHeaderValidator = chainConfig.createChainHeaderValidator();
+        blockHeaderValidator = chainConfiguration.createBlockHeaderValidator();
+        sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
+        chainParentBlockHeaderValidator = chainConfig.createChainParentBlockHeaderValidator();
+
+        preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
+        unityGrandParentBlockHeaderValidator = chainConfiguration.createUnityGrandParentHeaderValidator();
+
 
         this.transactionStore = this.repository.getTransactionStore();
 
@@ -1618,12 +1608,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public boolean isValid(BlockHeader header) {
-
-        // TODO: [unity] find the best place to apply the block number rule
-//        if (!chainHeaderValidator.validate(header, getBestBlock().getHeader(), LOG, null)) {
-//            return false;
-//        }
-
         if (header.getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
             /*
              * Header should already be validated at this point, no need to check again
@@ -1635,9 +1619,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             //        }
 
             Block parent = getParent(header);
-
-            if (!blockParentHeaderValidator.validate(
-                    header, parent == null ? null : parent.getHeader(), LOG, null)) {
+            if (parent == null) {
                 return false;
             }
 
@@ -1648,20 +1630,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 sealParent = parent;
             }
 
-            if (!parentHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
+            if (!chainParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
                 return false;
             }
 
             Block grandSealParent = sealParent == null ? null : getParentBlock(sealParent.getHeader());
 
             if (header.getNumber() >= FORK_5_BLOCK_NUMBER) {
-                return grandParentUnityDifficultyBlockHeaderValidator.validate(
+                return unityGrandParentBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
-                    sealParent.getHeader(),
+                    sealParent != null ? sealParent.getHeader() : null,
                     header,
                     LOG);
             } else {
-                return this.grandParentBlockHeaderValidator.validate(
+                return preUnityGrandParentBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
                     sealParent == null ? null : sealParent.getHeader(),
                     header,
@@ -1673,14 +1655,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return false;
             }
 
-            if (!stakingBlockHeaderValidator.validate(header, LOG)) {
+            Block parent = getParent(header);
+            if (parent == null) {
                 return false;
             }
 
-            Block parent = getParent(header);
-
-            if (!blockParentHeaderValidator.validate(
-                header, parent == null ? null : parent.getHeader(), LOG, null)) {
+            if (!chainParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
                 return false;
             }
 
@@ -1697,12 +1677,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             long stakeAmount = getStakingContractHelper().callGetVote(header.getCoinbase());
             BigInteger stake = BigInteger.valueOf(stakeAmount);
 
-            if (!parentStakingHeaderValidator.validate(header, sealParent.getHeader(), LOG, stake)) {
+            if (!sealParentBlockHeaderValidator.validate(header, sealParent.getHeader(), LOG, stake)) {
                 return false;
             }
 
             Block grandSealParent = parent.isGenesis() ? null : getParentBlock(sealParent.getHeader());
-            return grandParentUnityDifficultyBlockHeaderValidator.validate(
+            return unityGrandParentBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
                     sealParent.getHeader(),
                     header,

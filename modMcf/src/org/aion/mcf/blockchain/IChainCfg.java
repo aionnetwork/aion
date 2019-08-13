@@ -17,21 +17,13 @@ public interface IChainCfg {
 
     IDifficultyCalculator getDifficultyCalculator();
 
+    IDifficultyCalculator getUnityDifficultyCalculator();
+
     IRewardsCalculator getRewardsCalculator();
 
     BlockHeaderValidator createBlockHeaderValidator();
 
-    ParentBlockHeaderValidator createMiningParentHeaderValidator();
+    ParentBlockHeaderValidator createSealParentBlockHeaderValidator();
 
-    // TODO: [unity] separate these methods from the ChainCfg impl class.
-
-    IDifficultyCalculator getUnityDifficultyCalculator();
-
-    BlockHeaderValidator createStakingBlockHeaderValidator();
-
-    ParentBlockHeaderValidator createStakingParentHeaderValidator();
-
-    ParentBlockHeaderValidator createChainHeaderValidator();
-
-    ParentBlockHeaderValidator createBlockParentHeaderValidator();
+    ParentBlockHeaderValidator createChainParentBlockHeaderValidator();
 }

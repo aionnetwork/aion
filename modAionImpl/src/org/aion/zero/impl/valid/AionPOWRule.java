@@ -14,7 +14,7 @@ public class AionPOWRule extends BlockHeaderRule {
     public boolean validate(
             BlockHeader header, List<RuleError> errors) {
         A0BlockHeader minedHeader = (A0BlockHeader) header;
-        return (validate(minedHeader, errors));
+        return validate(minedHeader, errors);
     }
 
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {

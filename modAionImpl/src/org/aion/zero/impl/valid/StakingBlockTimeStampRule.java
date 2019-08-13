@@ -6,12 +6,17 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.valid.DependentBlockHeaderRuleWithArg;
+import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.StakedBlockHeader;
 
-public class StakingBlockTimeStampRule extends DependentBlockHeaderRuleWithArg {
+public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
 
     private static BigInteger boundry = BigInteger.TWO.pow(256);
+
+    @Override
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
+        throw new IllegalStateException("Incorrect validate method call!");
+    }
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object _stake) {

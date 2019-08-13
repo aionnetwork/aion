@@ -84,8 +84,7 @@ public final class SyncMgr {
     private Thread syncGs = null;
     private Thread syncSs = null;
 
-    private BlockHeaderValidator miningBlockHeaderValidator;
-    private BlockHeaderValidator stakingBlockHeaderValidator;
+    private BlockHeaderValidator unityBlockHeaderValidator;
     private volatile long timeUpdated = 0;
     private AtomicBoolean queueFull = new AtomicBoolean(false);
 
@@ -181,8 +180,7 @@ public final class SyncMgr {
 
         blocksQueueMax = _blocksQueueMax;
 
-        miningBlockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
-        stakingBlockHeaderValidator = new ChainConfiguration().createStakingBlockHeaderValidator();
+        unityBlockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
         stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
@@ -286,32 +284,16 @@ public final class SyncMgr {
         BlockHeader prev = null;
         for (BlockHeader current : _headers) {
 
-            if (current instanceof A0BlockHeader) {
-                // ignore this batch if any invalidated header
-                if (!this.miningBlockHeaderValidator.validate(current, log)) {
-                    log.debug(
-                            "<invalid-header num={} hash={}>",
-                            current.getNumber(),
-                            current.getHash());
+            if (!unityBlockHeaderValidator.validate(current, log)) {
+                log.debug(
+                    "<invalid-header num={} hash={}>",
+                    current.getNumber(),
+                    current.getHash());
 
-                    // Print header to allow debugging
-                    log.debug("Invalid header: {}", current.toString());
+                // Print header to allow debugging
+                log.debug("Invalid header: {}", current.toString());
 
-                    return;
-                }
-            } else if (current instanceof StakedBlockHeader) {
-                // ignore this batch if any invalidated header
-                if (!this.stakingBlockHeaderValidator.validate(current, log)) {
-                    log.debug(
-                        "<invalid-header num={} hash={}>",
-                        current.getNumber(),
-                        current.getHash());
-
-                    // Print header to allow debugging
-                    log.debug("Invalid header: {}", current.toString());
-
-                    return;
-                }
+                return;
             }
 
             // break if not consisting

@@ -1,47 +1,44 @@
 package org.aion.mcf.valid;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */
 public class ParentBlockHeaderValidator
         extends AbstractBlockHeaderValidator {
 
-    private List<DependentBlockHeaderRule> rules;
-    private List<DependentBlockHeaderRuleWithArg> argRules;
 
+    private Map<BlockSealType, List<DependentBlockHeaderRule>> chainRules;
 
-    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> rules) {
-        this.rules = rules;
-        argRules = new ArrayList<>();
+    public ParentBlockHeaderValidator(Map<BlockSealType, List<DependentBlockHeaderRule>> rules) {
+        if (rules == null) {
+            throw new NullPointerException();
+        }
+        chainRules = rules;
     }
 
-    public ParentBlockHeaderValidator(List<DependentBlockHeaderRule> _rules, List<DependentBlockHeaderRuleWithArg> _argRules) {
-        rules = _rules;
-        argRules = _argRules;
+    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger) {
+        return validate(header, parent, logger, null);
     }
 
-
-    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger, BigInteger stake) {
+    public boolean validate(BlockHeader header, BlockHeader parent, Logger logger, Object extraArg) {
         List<IValidRule.RuleError> errors = new LinkedList<>();
 
-        for (DependentBlockHeaderRule rule : rules) {
-            if (!rule.validate(header, parent, errors)) {
-                if (logger != null) logErrors(logger, errors);
-                return false;
-            }
-        }
+        List<DependentBlockHeaderRule> rules = chainRules.get(header.getSealType());
 
-        for (DependentBlockHeaderRuleWithArg rule : argRules) {
-            if (!rule.validate(header, parent, errors, stake)) {
-                if (logger != null) logErrors(logger, errors);
-                return false;
+        if (rules == null) {
+            return false;
+        } else {
+            for (DependentBlockHeaderRule rule : rules) {
+                if (!rule.validate(header, parent, errors, extraArg)) {
+                    if (logger != null) logErrors(logger, errors);
+                    return false;
+                }
             }
         }
 

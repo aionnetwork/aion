@@ -3,17 +3,23 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
+import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.BlockNumberRule;
+import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
+import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TimeStampRule;
 import org.aion.types.AionAddress;
@@ -131,64 +137,94 @@ public class ChainConfiguration implements IChainCfg {
 
     @Override
     public BlockHeaderValidator createBlockHeaderValidator() {
-        return new BlockHeaderValidator(
-                Arrays.asList(
-                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
-                        new EnergyConsumedRule(),
-                        new AionPOWRule(),
-                        new EquihashSolutionRule(this.getEquihashValidator()),
-                        new HeaderSealTypeRule()));
+        List<BlockHeaderRule> powRules = Arrays.asList(
+            new HeaderSealTypeRule(),
+            new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+            new EnergyConsumedRule(),
+            new AionPOWRule(),
+            new EquihashSolutionRule(this.getEquihashValidator()));
+
+        List<BlockHeaderRule> posRules = Arrays.asList(
+            new HeaderSealTypeRule(),
+            new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+            new EnergyConsumedRule(),
+            new SignatureRule());
+
+        Map<BlockSealType, List<BlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new BlockHeaderValidator(unityRules);
     }
 
     @Override
-    public ParentBlockHeaderValidator createMiningParentHeaderValidator() {
-        return new ParentBlockHeaderValidator(Collections.singletonList(new TimeStampRule()));
+    public ParentBlockHeaderValidator createSealParentBlockHeaderValidator() {
+        List<DependentBlockHeaderRule> posRules = Arrays.asList(
+            new StakingSeedRule(),
+            new StakingBlockTimeStampRule());
+
+        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new ParentBlockHeaderValidator(unityRules);
     }
 
-    public GrandParentBlockHeaderValidator createGrandParentHeaderValidator() {
-        return new GrandParentBlockHeaderValidator(
-                Collections.singletonList(new AionDifficultyRule(this)));
+    public GrandParentBlockHeaderValidator createPreUnityGrandParentHeaderValidator() {
+
+        List<GrandParentDependantBlockHeaderRule> powRules = Collections.singletonList(
+            new AionDifficultyRule(this));
+
+        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+
+        return new GrandParentBlockHeaderValidator(unityRules);
+    }
+
+    public GrandParentBlockHeaderValidator createUnityGrandParentHeaderValidator() {
+
+        //Unity fork require 2 kinds of difficulty rules for pow block.
+
+        List<GrandParentDependantBlockHeaderRule> powRules = Collections.singletonList(
+            new unityDifficultyRule(this));
+
+        List<GrandParentDependantBlockHeaderRule> posRules = Collections.singletonList(
+            new unityDifficultyRule(this));
+
+        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new GrandParentBlockHeaderValidator(unityRules);
+    }
+
+    @Override
+    public ParentBlockHeaderValidator createChainParentBlockHeaderValidator() {
+        List<DependentBlockHeaderRule> powRules =
+            Arrays.asList(
+                new BlockNumberRule(),
+                new TimeStampRule(),
+                new EnergyLimitRule(
+                    getConstants().getEnergyDivisorLimitLong(),
+                    getConstants().getEnergyLowerBoundLong()));
+
+        List<DependentBlockHeaderRule> posRules =
+            Arrays.asList(
+                new BlockNumberRule(),
+                new TimeStampRule(),
+                new EnergyLimitRule(
+                    getConstants().getEnergyDivisorLimitLong(),
+                    getConstants().getEnergyLowerBoundLong()));
+
+        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new ParentBlockHeaderValidator(unityRules);
     }
 
     @Override
     public IDifficultyCalculator getUnityDifficultyCalculator() {
         return unityDifficultyCalculator;
-    }
-
-    @Override
-    public BlockHeaderValidator createStakingBlockHeaderValidator() {
-        return new BlockHeaderValidator(
-                Arrays.asList(
-                        new HeaderSealTypeRule(),
-                        new SignatureRule(),
-                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
-                        new EnergyConsumedRule()));
-    }
-
-    @Override
-    public ParentBlockHeaderValidator createChainHeaderValidator() {
-        return new ParentBlockHeaderValidator(Collections.singletonList(new BlockNumberRule()));
-    }
-
-    @Override
-    public ParentBlockHeaderValidator createBlockParentHeaderValidator() {
-        return new ParentBlockHeaderValidator(
-                Collections.singletonList(
-                        new EnergyLimitRule(
-                                this.getConstants().getEnergyDivisorLimitLong(),
-                                this.getConstants().getEnergyLowerBoundLong())));
-    }
-
-    @Override
-    public ParentBlockHeaderValidator createStakingParentHeaderValidator() {
-        return new ParentBlockHeaderValidator(
-                Collections.singletonList(new StakingSeedRule()),
-                Collections.singletonList(new StakingBlockTimeStampRule()));
-    }
-
-    public GrandParentBlockHeaderValidator createStakingGrandParentHeaderValidator() {
-        return new GrandParentBlockHeaderValidator(
-            Collections.singletonList(new unityDifficultyRule(this)));
     }
 
     // TODO : [unity] these 2 methods might move to the other proper class

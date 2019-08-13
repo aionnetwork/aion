@@ -18,6 +18,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
@@ -26,6 +27,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
@@ -46,8 +48,11 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.AionPOWRule;
+import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
@@ -111,10 +116,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public BlockHeaderValidator getBlockHeaderValidator() {
         return this.chainConfiguration.createBlockHeaderValidator();
-    }
-
-    public BlockHeaderValidator getStakingBlockHeaderValidator() {
-        return chainConfiguration.createStakingBlockHeaderValidator();
     }
 
     public static class Bundle {
@@ -393,13 +394,21 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 @Override
                                 public BlockHeaderValidator
                                         createBlockHeaderValidator() {
-                                    return new BlockHeaderValidator(
-                                            Arrays.asList(
-                                                    new AionExtraDataRule(
-                                                            this.constants
-                                                                    .getMaximumExtraDataSize()),
-                                                    new EnergyConsumedRule(),
-                                                    new HeaderSealTypeRule()));
+                                    List<BlockHeaderRule> powRules = Arrays.asList(
+                                        new HeaderSealTypeRule(),
+                                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                                        new EnergyConsumedRule());
+
+                                    List<BlockHeaderRule> posRules = Arrays.asList(
+                                        new HeaderSealTypeRule(),
+                                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                                        new EnergyConsumedRule());
+
+                                    Map<BlockSealType, List<BlockHeaderRule>> unityRules= new HashMap<>();
+                                    unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+                                    unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+                                    return new BlockHeaderValidator(unityRules);
                                 }
                             };
                 } else {

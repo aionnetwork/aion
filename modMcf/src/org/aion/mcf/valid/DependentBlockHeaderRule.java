@@ -13,4 +13,7 @@ public abstract class DependentBlockHeaderRule extends AbstractValidRule {
      * correct. Most likely the {@code memory} refers to the previous block
      */
     public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors);
+
+    public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg);
+
 }
