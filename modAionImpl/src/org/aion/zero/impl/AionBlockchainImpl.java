@@ -1180,7 +1180,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {
-                transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));
+                transactionStore.putToBatch(AionTxInfo.newInstance(receipts.get(i), block.getHash(), i));
             }
             transactionStore.flushBatch();
 
@@ -1507,7 +1507,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         for (int i = 0; i < receipts.size(); i++) {
-            transactionStore.putToBatch(new AionTxInfo(receipts.get(i), block.getHash(), i));
+            transactionStore.putToBatch(AionTxInfo.newInstance(receipts.get(i), block.getHash(), i));
         }
         transactionStore.flushBatch();
 

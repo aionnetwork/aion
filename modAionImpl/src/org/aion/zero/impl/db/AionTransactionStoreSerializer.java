@@ -9,6 +9,7 @@ import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionTxInfo;
 
 public class AionTransactionStoreSerializer {
+    // TODO: AKI-317: Refactor TransactionStore serializer
     public static final Serializer<List<AionTxInfo>, byte[]> serializer =
             new Serializer<>() {
                 @Override
@@ -27,13 +28,13 @@ public class AionTransactionStoreSerializer {
                         RLPList infoList = (RLPList) params.get(0);
                         List<AionTxInfo> ret = new ArrayList<>();
                         for (int i = 0; i < infoList.size(); i++) {
-                            ret.add(new AionTxInfo(infoList.get(i).getRLPData()));
+                            ret.add(AionTxInfo.newInstanceFromEncoding(infoList.get(i).getRLPData()));
                         }
                         return ret;
                     } catch (Exception e) {
                         // fallback to previous DB version
                         e.printStackTrace();
-                        return Collections.singletonList(new AionTxInfo(stream));
+                        return Collections.singletonList(AionTxInfo.newInstanceFromEncoding(stream));
                     }
                 }
             };
