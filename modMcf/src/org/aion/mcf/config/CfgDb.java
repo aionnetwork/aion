@@ -47,6 +47,7 @@ public class CfgDb {
     private boolean check_integrity;
     private CfgPrune prune;
     private PruneOption prune_option;
+    private boolean internalTxStorage;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -88,6 +89,9 @@ public class CfgDb {
                             break;
                         case "state-storage":
                             setPrune(Cfg.readValue(sr));
+                            break;
+                        case "internal-tx-storage":
+                            this.internalTxStorage = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                             // parameter considered only when expert==false
                         case "vendor":
@@ -221,6 +225,13 @@ public class CfgDb {
             xmlWriter.writeCharacters(this.prune_option.toString());
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Data storage behavior for the transaction database. Boolean value used to enable/disable internal transaction storage.");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("internal-tx-storage");
+            xmlWriter.writeCharacters(String.valueOf(internalTxStorage));
+            xmlWriter.writeEndElement();
+
             if (!expert) {
                 xmlWriter.writeCharacters("\r\n\t\t");
                 xmlWriter.writeComment(
@@ -296,6 +307,11 @@ public class CfgDb {
     public String getVendor(){
         return vendor;
     }
+
+    public boolean isInternalTxStorageEnabled() {
+        return internalTxStorage;
+    }
+
     public CfgPrune getPrune() {
         return this.prune;
     }

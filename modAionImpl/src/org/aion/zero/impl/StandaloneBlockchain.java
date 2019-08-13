@@ -322,6 +322,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                     .getEnergyDivisorLimitLong(),
                                             10_000_000L);
                                 }
+
+                                public boolean isInternalTransactionStorageEnabled() {
+                                    return true;
+                                }
                             }
                             : this.a0Config;
 

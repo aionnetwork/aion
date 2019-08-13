@@ -35,4 +35,7 @@ public interface A0BCConfig {
 
     /** Retrieves the selected energy strategy algorithm */
     AbstractEnergyStrategyLimit getEnergyLimitStrategy();
+
+    /** Retrieves the desired behavior for internal transactions */
+    boolean isInternalTransactionStorageEnabled();
 }

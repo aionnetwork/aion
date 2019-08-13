@@ -1033,7 +1033,7 @@ public class AionPendingStateImpl implements IPendingStateInternal {
                         .getBlockByHash(info.getBlockHash())
                         .getTransactionsList()
                         .get(info.getIndex());
-        info.getReceipt().setTransaction(tx);
+        info.setTransaction(tx);
         return info;
     }
 

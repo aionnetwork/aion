@@ -6,6 +6,7 @@ import static org.aion.zero.impl.consensus.MasteryConsensusTest.hexEncodedStateD
 import java.io.File;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.AccountState;
@@ -13,6 +14,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.AionAddress;
+import org.aion.types.InternalTransaction;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -545,14 +547,19 @@ public class MainnetConsensusTest {
                     Hex.decode(
                             "f90125a0a7ce7d4adb083485bad984bb69ed6e5f822672fdaeed5eac04707fbaca5e9cf6b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0")
                 };
+        int[] expectedIntTxSizes = new int[] {0, 9, 0, 0};
 
         // check the receipts
         for (int i = 0; i < postTxStates.length; i++) {
             AionTxReceipt receipt = blockSummary.getSummaries().get(i).getReceipt();
+            byte[] txHash = receipt.getTransaction().getTransactionHash();
             assertThat(receipt.isSuccessful()).isTrue();
             assertThat(receipt.getEnergyUsed()).isEqualTo(energyPerTx[i]);
             assertThat(receipt.getPostTxState()).isEqualTo(postTxStates[i]);
             assertThat(receipt.getReceiptTrieEncoded()).isEqualTo(txReceiptTrie[i]);
+            List<InternalTransaction> internal = blockSummary.getSummaries().get(i).getInternalTransactions();
+            assertThat(internal.size()).isEqualTo(expectedIntTxSizes[i]);
+            assertThat(blockchain.getTransactionInfo(txHash).getInternalTransactions()).isEqualTo(internal.size() == 0 ? null : internal);
         }
 
         byte[] stateRoot = blockSummary.getBlock().getStateRoot();

@@ -162,6 +162,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final long NO_FORK_LEVEL = -1L;
     private long forkLevel = NO_FORK_LEVEL;
 
+    private final boolean storeInternalTransactions;
+
     private AionBlockchainImpl() {
         this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
     }
@@ -170,9 +172,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             final A0BCConfig config,
             final AionRepositoryImpl repository,
             final ChainConfiguration chainConfig) {
+
+        // TODO AKI-318: this specialized class is very cumbersome to maintain; could be replaced with CfgAion
         this.config = config;
         this.repository = repository;
         this.chainStats = new ChainStatistics();
+        this.storeInternalTransactions = config.isInternalTransactionStorageEnabled();
 
         /**
          * Because we dont have any hardforks, later on chain configuration must be determined by
@@ -263,6 +268,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         cfgAion.getConsensus().getEnergyStrategy().getStrategy(),
                         cfgAion.getConsensus().getEnergyStrategy(),
                         config);
+            }
+
+            @Override
+            public boolean isInternalTransactionStorageEnabled() {
+                return cfgAion.inst().getDb().isInternalTxStorageEnabled();
             }
         };
     }
@@ -1076,12 +1086,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionBlockSummary summary = add(block, false);
 
         if (summary != null) {
-            List<AionTxReceipt> receipts = summary.getReceipts();
-
             updateTotalDifficulty(block);
             summary.setTotalDifficulty(block.getCumulativeDifficulty());
 
-            storeBlock(block, receipts);
+            storeBlock(block, summary.getReceipts(), summary.getSummaries());
 
             flush();
         }
@@ -1179,8 +1187,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         if (rebuild) {
+            List<AionTxExecSummary> execSummaries = summary.getSummaries();
+            AionTxInfo info;
             for (int i = 0; i < receipts.size(); i++) {
-                transactionStore.putToBatch(AionTxInfo.newInstance(receipts.get(i), block.getHash(), i));
+                if (storeInternalTransactions) {
+                    info = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, execSummaries.get(i).getInternalTransactions());
+                } else {
+                    info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                }
+                transactionStore.putToBatch(info);
             }
             transactionStore.flushBatch();
 
@@ -1498,7 +1513,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return chainConfiguration;
     }
 
-    private void storeBlock(Block block, List<AionTxReceipt> receipts) {
+    private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
         if (fork) {
             getBlockStore().saveBlock(block, totalDifficulty, false);
@@ -1506,8 +1521,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
             getBlockStore().saveBlock(block, totalDifficulty, true);
         }
 
+        AionTxInfo info;
         for (int i = 0; i < receipts.size(); i++) {
-            transactionStore.putToBatch(AionTxInfo.newInstance(receipts.get(i), block.getHash(), i));
+            if (storeInternalTransactions) {
+                info = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, summaries.get(i).getInternalTransactions());
+            } else {
+                info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+            }
+            transactionStore.putToBatch(info);
         }
         transactionStore.flushBatch();
 
