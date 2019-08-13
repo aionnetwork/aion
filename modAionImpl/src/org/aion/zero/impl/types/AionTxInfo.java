@@ -19,11 +19,6 @@ public class AionTxInfo {
         this.index = index;
     }
 
-    /** Creates a pending tx info */
-    public AionTxInfo(AionTxReceipt receipt) {
-        this.receipt = receipt;
-    }
-
     public AionTxInfo(byte[] rlp) {
         RLPList params = RLP.decode2(rlp);
         RLPList txInfo = (RLPList) params.get(0);
@@ -66,10 +61,6 @@ public class AionTxInfo {
 
     public int getIndex() {
         return index;
-    }
-
-    public boolean isPending() {
-        return blockHash == null;
     }
 
     @Override
