@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.ECKey;
@@ -2186,6 +2187,118 @@ public class CliTest {
         parameters.addAll(parameters2);
         return parameters.toArray();
     }
+
+    @Parameters(method = "parametersFortestCommandSpec")
+    @Test
+    public void testCommandSpec(String[] args, Object[] expectedClasses){
+        CommandLine cli = new CommandLine(new Arguments()).addSubcommand("edit",new EditCli());
+
+        CommandLine.ParseResult result = cli.parseArgs(args);
+
+        for(Object expected: expectedClasses){
+            CommandLine.Model.CommandSpec spec = Cli.findCommandSpec(result, (Class<?>) expected);
+            assertThat(spec).isNotNull();
+            assertThat(spec.userObject().getClass()).isEqualTo(expected);
+        }
+
+    }
+
+    @Parameters(method = "parametersForTestCommandSpecFail")
+    @Test(expected = RuntimeException.class)
+    public void testCommandSpecFail(String[] args, Object[] expectedClasses){
+        CommandLine cli = new CommandLine(new Arguments()).addSubcommand("edit",new EditCli());
+
+        CommandLine.ParseResult result = cli.parseArgs(args);
+
+        for(Object expected: expectedClasses){
+            CommandLine.Model.CommandSpec spec = Cli.findCommandSpec(result, (Class<?>) expected);
+            Objects.requireNonNull(spec);
+        }
+
+    }
+
+    public Object parametersForTestCommandSpecFail(){
+        Object[] arr1 = new Object[]{"editt port=1000 devv --help".split("\\s"), List.of(EditCli.class, DevCLI.class).toArray()};
+        Object[] arr2 = new Object[]{"DEV --help".split("\\s"), List.of(DevCLI.class).toArray()};
+        Object[] arr3 = new Object[]{"EDIT port=1000".split("\\s"), List.of(EditCli.class).toArray()};
+        Object[] arr4 = new Object[]{"dev --help".split("\\s"), List.of(DevCLI.class, EditCli.class).toArray()};
+        Object[] arr5 = new Object[]{"edit port=1000".split("\\s"), List.of( EditCli.class, DevCLI.class).toArray()};
+        Object[] arr6 = new Object[]{"".split("\\s"), List.of(DevCLI.class, EditCli.class).toArray()};
+        Object[] arr7 = new Object[]{"".split("\\s"), List.of(EditCli.class, DevCLI.class).toArray()};
+        Object[] arr8 = new Object[]{"dev --help edit port=1000".split("\\s"), List.of(EditCli.class, DevCLI.class).toArray()};
+
+        return List.of(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8).toArray();
+    }
+
+    public Object parametersFortestCommandSpec(){
+        Object[] arr1 = new Object[]{"edit port=1000 dev --help".split("\\s"), List.of(EditCli.class, DevCLI.class).toArray()};
+        Object[] arr2 = new Object[]{"dev --help".split("\\s"), List.of(DevCLI.class).toArray()};
+        Object[] arr3 = new Object[]{"edit port=1000".split("\\s"), List.of(EditCli.class).toArray()};
+
+        return List.of(arr1, arr2, arr3).toArray();
+    }
+
+    @Parameters(method = "parametersForTestParseDev")
+    @Test
+    public void  testParseDev(String[] command){
+        CommandLine commandLine  = new CommandLine(new Arguments()).addSubcommand(EditCli.class);
+        final CommandLine.ParseResult result = commandLine.parseArgs(command);
+
+        CommandLine.Model.CommandSpec spec = Cli.findCommandSpec(result, DevCLI.class);
+
+        assertThat(spec).isNotNull();
+        assertThat(spec.userObject()).isNotNull();
+        assertThat(((DevCLI) spec.userObject()).getArgs()).isNotNull();
+        ((DevCLI) spec.userObject()).getArgs().checkOptions();
+    }
+
+
+
+    public Object parametersForTestParseDev(){
+        String[] options = new String[]{"-h", "--help", "write-blocks=1","wb=1",  "cs=1","print-state-size=1", "print-state=1","ps=1",
+                "print-for-test 10 true str1 str2", "pf 10 true str1 str2","pb=4","print-block=4", "pt=str1", "print-tx=str2", "pa=str1", "print-account=str2", "xs=10", "stop-at=10"};
+
+        String[] commands = new String[]{"edit port 100 dev", "dev", "d"};
+        List<String[]> strings = new ArrayList<>();
+        for (String option: options){
+            for (String command: commands){
+                String tmp = command + " "+ option;
+                strings.add(tmp.split("\\s"));
+            }
+        }
+        return strings.toArray();
+    }
+
+    /*
+    Ensure that the dev command only accepts one param within the mutually exclusive group of params
+     */
+    @Parameters(method = "parametersForTestParseDevFail")
+    @Test(expected = RuntimeException.class)
+    public void testParseDevFail(String[] arr){
+        CommandLine commandLine  = new CommandLine(new Arguments()).addSubcommand(EditCli.class);
+        commandLine.parseArgs(arr);
+    }
+
+
+    public Object[] parametersForTestParseDevFail(){
+        String[] options = new String[]{"-h", "--help", "write-blocks=1","wb=1",  "cs=1","print-state-size=1", "print-state=1","ps=1",
+            "print-for-test 10 true str1 str2", "pt 10 true str1 str2","pb=4","print-block=4", "pt=str1", "print-tx=str2", "pa=str1", "print-account=str2", "xs=10", "stop-at=10"};
+
+        String[] commands = new String[]{"edit port 100 dev", "dev"};
+        List<String[]> strings = new ArrayList<>();
+        for (String option: options){
+            for (String command: commands) {
+                for (String option1: options) {
+                    String tmp = command + " " + option + " " + option1;
+                    strings.add(tmp.split("\\s"));
+
+                }
+            }
+        }
+
+        return strings.toArray();
+    }
+
     // Methods below taken from FileUtils class
     private static boolean copyRecursively(File src, File target) {
         if (src.isDirectory()) {

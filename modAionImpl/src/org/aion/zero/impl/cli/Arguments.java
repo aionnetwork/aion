@@ -10,7 +10,7 @@ import picocli.CommandLine.Option;
  *
  * @author Alexandra Roatis
  */
-@Command(name = "./aion.sh", separator = " ", sortOptions = false, abbreviateSynopsis = true)
+@Command(name = "./aion.sh", separator = " ", sortOptions = false, abbreviateSynopsis = true, subcommands = {DevCLI.class})
 public class Arguments {
 
     // usage information

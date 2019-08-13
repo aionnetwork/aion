@@ -1347,4 +1347,13 @@ public class Cli {
         }
         return ImmutableList.copyOf(files);
     }
+
+    public static CommandLine.Model.CommandSpec findCommandSpec(CommandLine.ParseResult result, Class<?> clazz){
+        CommandLine.ParseResult sub = result;
+        while (sub.hasSubcommand()){
+            sub = sub.subcommand();
+            if (sub.commandSpec().userObject().getClass().equals(clazz)) return sub.commandSpec();
+        }
+        return null;
+    }
 }

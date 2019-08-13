@@ -14,6 +14,7 @@ import static picocli.CommandLine.*;
 
 @Command(name = "edit",
         aliases = {"e"},
+        subcommands = {DevCLI.class},
         description = "Changes the kernel configuration at runtime. This subcommand needs to be issued after " +
                 "all options to \"aion.sh\" has been added." +
                 "\nOptions\n" +
