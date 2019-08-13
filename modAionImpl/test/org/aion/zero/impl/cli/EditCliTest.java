@@ -50,6 +50,7 @@ public class EditCliTest {
                                   Boolean mining,
                                   Boolean showStatus,
                                   Boolean compression,
+                                  Boolean internalTxStorage,
                                   Object[] objects){
 
         EditCli cli = new EditCli();
@@ -71,6 +72,7 @@ public class EditCliTest {
         cli.setLog(logs);
         cli.setMining(mining);
         cli.setPruneOption(prune);
+        cli.setInternalTxStorage(internalTxStorage);
         cli.setShowStatus(showStatus);
         cli.setVendor(vendor);
         cli.setPort(port);
@@ -84,6 +86,7 @@ public class EditCliTest {
         assertThat(cfg.getApi().getZmq().getActive()).isEqualTo(javaAPI);
         assertThat(cfg.getDb().getVendor()).ignoringCase().isEqualTo(vendor.name());
         assertThat(cfg.getDb().getPrune_option()).isEqualTo(prune);
+        assertThat(cfg.getDb().isInternalTxStorageEnabled()).isEqualTo(internalTxStorage);
         assertThat(cfg.getNet().getP2p().getPort()).isEqualTo(port);
         assertThat(cfg.getSync().getShowStatus()).isEqualTo(showStatus);
 
@@ -95,21 +98,21 @@ public class EditCliTest {
 
     public Object[] updateCommandParams(){
         return new Object[] {
-                new Object[]{30300, CfgDb.PruneOption.TOP, DBVendor.H2, false, false, false, false, false, new Object[]{LogEnum.API, LogLevel.DEBUG}},
-                new Object[]{30301, CfgDb.PruneOption.SPREAD, DBVendor.LEVELDB, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.SPREAD, DBVendor.LEVELDB, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.LEVELDB, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, true, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.API, LogLevel.INFO}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.API, LogLevel.DEBUG}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG,LogEnum.DB, LogLevel.DEBUG,LogEnum.CONS, LogLevel.DEBUG}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG,LogEnum.DB, LogLevel.DEBUG,LogEnum.CONS, LogLevel.DEBUG,LogEnum.P2P, LogLevel.DEBUG,LogEnum.VM, LogLevel.DEBUG}},
-                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.INFO,LogEnum.SYNC, LogLevel.INFO,LogEnum.DB, LogLevel.INFO,LogEnum.CONS, LogLevel.INFO,LogEnum.P2P, LogLevel.INFO,LogEnum.VM, LogLevel.INFO}}
+                new Object[]{30300, CfgDb.PruneOption.TOP, DBVendor.H2, false, false, false, false, false, true, new Object[]{LogEnum.API, LogLevel.DEBUG}},
+                new Object[]{30301, CfgDb.PruneOption.SPREAD, DBVendor.LEVELDB, true, true, true, true, true, false, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.SPREAD, DBVendor.LEVELDB, true, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.LEVELDB, true, true, true, true, true, false, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, true, true, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, true, true, true, true, false, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, true, true, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, true, true, false, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, true, true, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, false, new Object[]{LogEnum.API, LogLevel.INFO}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, true, new Object[]{LogEnum.API, LogLevel.DEBUG}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, true, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG,LogEnum.DB, LogLevel.DEBUG,LogEnum.CONS, LogLevel.DEBUG}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, false, new Object[]{LogEnum.GEN, LogLevel.DEBUG,LogEnum.SYNC, LogLevel.DEBUG,LogEnum.DB, LogLevel.DEBUG,LogEnum.CONS, LogLevel.DEBUG,LogEnum.P2P, LogLevel.DEBUG,LogEnum.VM, LogLevel.DEBUG}},
+                new Object[]{30302, CfgDb.PruneOption.TOP, DBVendor.ROCKSDB, false, false, false, false, false, true, new Object[]{LogEnum.GEN, LogLevel.INFO,LogEnum.SYNC, LogLevel.INFO,LogEnum.DB, LogLevel.INFO,LogEnum.CONS, LogLevel.INFO,LogEnum.P2P, LogLevel.INFO,LogEnum.VM, LogLevel.INFO}}
         };
     }
 

@@ -312,6 +312,10 @@ public class CfgDb {
         return internalTxStorage;
     }
 
+    public void setInternTxStorage(boolean isEnabled) {
+        this.internalTxStorage = isEnabled;
+    }
+
     public CfgPrune getPrune() {
         return this.prune;
     }

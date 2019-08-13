@@ -45,6 +45,13 @@ public class EditCli {
             arity = "1"
     )
     private CfgDb.PruneOption pruneOption = null;
+    @Option(names = {"itx", "internal-tx-storage"},
+        paramLabel = "<setting>",
+        description = "Enables/disables the storage of internal transactions api. Settings on and off.",
+        converter = EnabledConverter.class,
+        arity = "1"
+    )
+    private Boolean internalTxStorage = null;
     @Option(names = {"vendor"},
             paramLabel = "<setting>",
             description = "Changes the database implementation. Settings: h2, rocksdb, leveldb.",
@@ -111,6 +118,16 @@ public class EditCli {
             System.out.println("Updated state storage to: " + pruneOption.toString().toLowerCase());
             return true;
         } else return false;
+    }
+
+    private boolean updateInternalTx(CfgDb cfgDb) {
+        if (internalTxStorage != null && internalTxStorage != cfgDb.isInternalTxStorageEnabled()) {
+            cfgDb.setInternTxStorage(internalTxStorage);
+            System.out.println(boolToMessage(internalTxStorage) + " storage of internal transactions.");
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private boolean updateVendor(CfgDb cfgDb) {
@@ -196,6 +213,7 @@ public class EditCli {
     void checkOptions() {
         if (port == null &&
                 pruneOption == null &&
+                internalTxStorage == null &&
                 vendor == null &&
                 javaApi == null &&
                 jsonRPC == null &&
@@ -223,11 +241,12 @@ public class EditCli {
         final boolean updateMining = updateMining(cfg.getConsensus());
         final boolean updatePort = updatePort(cfg.getNet().getP2p());
         final boolean updatePrune = updatePrune(cfg.getDb());
+        final boolean updateInternalTx = updateInternalTx(cfg.getDb());
         final boolean updateStatus = updateStatus(cfg.getSync());
         final boolean updateVendor = updateVendor(cfg.getDb());
 
         //Indicate whether any of the configs were updated
-        return updateCompression || updateJavaApi || updateJsonRPC || updateLog || updateMining || updatePort || updatePrune || updateStatus || updateVendor;
+        return updateCompression || updateJavaApi || updateJsonRPC || updateLog || updateMining || updatePort || updatePrune || updateInternalTx || updateStatus || updateVendor;
     }
 
     public void setPort(Integer port) {
@@ -236,6 +255,10 @@ public class EditCli {
 
     public void setPruneOption(CfgDb.PruneOption pruneOption) {
         this.pruneOption = pruneOption;
+    }
+
+    public void setInternalTxStorage(Boolean internalTxStorage) {
+        this.internalTxStorage = internalTxStorage;
     }
 
     public void setVendor(DBVendor vendor) {
