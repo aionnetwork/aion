@@ -598,7 +598,7 @@ public class MasteryConsensusTest {
 
         // check the receipt
         AionTxReceipt receipt = blockSummary.getSummaries().get(0).getReceipt();
-        assertThat(receipt.getError()).isEqualTo("REVERT");
+        assertThat(receipt.getError()).isEqualTo("reverted");
         assertThat(receipt.getEnergyUsed()).isEqualTo(801005);
         assertThat(receipt.getPostTxState())
                 .isEqualTo(

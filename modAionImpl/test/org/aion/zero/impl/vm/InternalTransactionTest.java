@@ -423,7 +423,7 @@ public class InternalTransactionTest {
                         parentBlock.getTimestamp());
         result = bc.tryToConnectAndFetchSummary(newBlock);
         assertTrue(result.getLeft().isSuccessful());
-        assertEquals("REVERT", result.getRight().getReceipts().get(0).getError());
+        assertEquals("reverted", result.getRight().getReceipts().get(0).getError());
         nonce = nonce.add(BigInteger.ONE);
 
         bc.set040ForkNumber(0);

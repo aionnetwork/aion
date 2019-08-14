@@ -6,11 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;
-import org.aion.fastvm.FastVmResultCode;
-import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
+import org.aion.fastvm.FvmWrappedTransactionResult;
 import org.aion.fastvm.IExternalStateForFvm;
-import org.aion.fastvm.SideEffects;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
@@ -18,6 +16,8 @@ import org.aion.mcf.tx.TxExecSummary;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;
+import org.aion.types.TransactionResult;
+import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.exception.VMException;
 import org.aion.mcf.types.AionTxExecSummary;
@@ -94,27 +94,27 @@ public final class FvmTransactionExecutor {
 
         // Process the results of the transactions.
         for (AionTransaction transaction : transactions) {
-            FastVmTransactionResult result =
+            FvmWrappedTransactionResult wrappedResult =
                     FastVirtualMachine.run(externalState, new ExternalCapabilitiesForFvm(), toAionTypesTransaction(transaction), fork040enabled);
 
-            if (result.getResultCode().isFatal()) {
+            TransactionResult result = wrappedResult.result;
+            List<AionAddress> deletedAddresses = wrappedResult.deletedAddresses;
+
+            if (result.transactionStatus.isFatal()) {
                 throw new VMException(result.toString());
             }
 
             // Check the block energy limit & reject if necessary.
-            long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
-            if (energyUsed > blockRemainingEnergy) {
-                result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
-                result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-                result.setEnergyRemaining(0);
+            if (result.energyUsed > blockRemainingEnergy) {
+                TransactionStatus status = TransactionStatus.rejection("Invalid Energy Limit");
+                result = new TransactionResult(status, result.logs, result.internalTransactions, 0, ByteUtil.EMPTY_BYTE_ARRAY);
             }
 
             // Build the transaction summary.
-            SideEffects sideEffects = new SideEffects();
-            AionTxExecSummary summary = buildTransactionSummary(transaction, result, sideEffects);
+            AionTxExecSummary summary = buildTransactionSummary(transaction, result, deletedAddresses);
 
             // If the transaction was not rejected, then commit the state changes.
-            if (!result.getResultCode().isRejected()) {
+            if (!result.transactionStatus.isRejected()) {
                 externalState.commit();
             }
 
@@ -124,7 +124,7 @@ public final class FvmTransactionExecutor {
 
                 refundSender(repositoryTracker, summary, transaction, result);
                 payMiner(repositoryTracker, blockCoinbase, summary);
-                deleteAccountsMarkedForDeletion(repositoryTracker, sideEffects, result);
+                deleteAccountsMarkedForDeletion(repositoryTracker, summary.getDeletedAccounts(), result);
 
                 repositoryTracker.flush();
             }
@@ -135,9 +135,8 @@ public final class FvmTransactionExecutor {
             }
 
             // Update the remaining block energy.
-            if (!result.getResultCode().isRejected()) {
-                blockRemainingEnergy -=
-                        ((decrementBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
+            if (!result.transactionStatus.isRejected() && decrementBlockEnergyLimit) {
+                blockRemainingEnergy -= summary.getReceipt().getEnergyUsed();
             }
 
             if (logger.isDebugEnabled()) {
@@ -153,36 +152,23 @@ public final class FvmTransactionExecutor {
 
     private static AionTxExecSummary buildTransactionSummary(
             AionTransaction transaction,
-            FastVmTransactionResult result,
-            SideEffects transactionSideEffects) {
-        if (result.getReturnData() == null) {
-            result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-        }
+            TransactionResult result,
+            List<AionAddress> deletedAddresses) {
 
-        if (result.getResultCode().isSuccess()) {
-            transactionSideEffects.addLogs(result.getLogs());
-            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
-            transactionSideEffects.addAllToDeletedAddresses(result.getDeletedAddresses());
-        } else {
-            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
-        }
-
-        // We have to do this for now, because the kernel uses the log serialization, which is not
-        // implemented in the Avm, and this type may become a POD type anyway..
-        List<Log> logs = transactionSideEffects.getExecutionLogs();
+        boolean success = result.transactionStatus.isSuccess();
+        List<Log> logs = success ? result.logs : new ArrayList<>();
+        List<AionAddress> addressesToBeDeleted = success ? deletedAddresses : new ArrayList<>();
 
         AionTxExecSummary.Builder builder =
                 AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
                         .logs(logs)
-                        .deletedAccounts(transactionSideEffects.getAddressesToBeDeleted())
-                        .internalTransactions(transactionSideEffects.getInternalTransactions())
-                        .result(result.getReturnData());
+                        .deletedAccounts(addressesToBeDeleted)
+                        .internalTransactions(result.internalTransactions)
+                        .result(result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY));
 
-        FastVmResultCode resultCode = result.getResultCode();
-
-        if (resultCode.isRejected()) {
+        if (result.transactionStatus.isRejected()) {
             builder.markAsRejected();
-        } else if (resultCode.isFailed()) {
+        } else if (result.transactionStatus.isFailed()) {
             builder.markAsFailed();
         }
 
@@ -193,10 +179,10 @@ public final class FvmTransactionExecutor {
             RepositoryCache repository,
             TxExecSummary summary,
             AionTransaction transaction,
-            FastVmTransactionResult result) {
+            TransactionResult result) {
 
         // Refund energy if transaction was successful or reverted.
-        if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
+        if (result.transactionStatus.isSuccess() || result.transactionStatus.isReverted()) {
             repository.addBalance(transaction.getSenderAddress(), summary.getRefund());
         }
     }
@@ -207,28 +193,24 @@ public final class FvmTransactionExecutor {
     }
 
     private static void deleteAccountsMarkedForDeletion(
-            RepositoryCache repository, SideEffects sideEffects, FastVmTransactionResult result) {
-        if (result.getResultCode().isSuccess()) {
-            for (AionAddress addr : sideEffects.getAddressesToBeDeleted()) {
+            RepositoryCache repository, List<AionAddress> addressesToBeDeleted, TransactionResult result) {
+        if (result.transactionStatus.isSuccess()) {
+            for (AionAddress addr : addressesToBeDeleted) {
                 repository.deleteAccount(addr);
             }
         }
     }
 
     private static AionTxReceipt makeReceipt(
-            AionTransaction transaction, List<Log> logs, FastVmTransactionResult result) {
+            AionTransaction transaction, List<Log> logs, TransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
-        receipt.setExecutionResult(result.getReturnData());
-        receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
+        receipt.setNrgUsed(result.energyUsed);
+        receipt.setExecutionResult(result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY));
+        receipt.setError(result.transactionStatus.isSuccess() ? "" : result.transactionStatus.causeOfError);
 
         return receipt;
-    }
-
-    private static long computeEnergyUsed(long limit, FastVmTransactionResult result) {
-        return limit - result.getEnergyRemaining();
     }
 
     // TODO -- this has been marked as a temporary solution for a long time, someone should

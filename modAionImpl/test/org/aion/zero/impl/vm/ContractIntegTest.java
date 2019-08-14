@@ -387,7 +387,7 @@ public class ContractIntegTest {
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         if (txType == TransactionTypes.DEFAULT) {
 
-            assertEquals("REVERT", summary.getReceipt().getError());
+            assertEquals("reverted", summary.getReceipt().getError());
             assertNotEquals(nrg, summary.getNrgUsed().longValue()); // all energy is not used up.
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
@@ -693,7 +693,7 @@ public class ContractIntegTest {
 
         AionBlock block = makeBlock(tx);
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
-        assertEquals("REVERT", summary.getReceipt().getError());
+        assertEquals("reverted", summary.getReceipt().getError());
         assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         System.out.println("DEP: " + deployerBalance);
@@ -1079,7 +1079,7 @@ public class ContractIntegTest {
 
         block = makeBlock(tx);
         summary = executeTransaction(tx, block, repo);
-        assertEquals("REVERT", summary.getReceipt().getError());
+        assertEquals("reverted", summary.getReceipt().getError());
         assertNotEquals(nrg, summary.getNrgUsed().longValue());
 
         txCost =
@@ -1406,7 +1406,7 @@ public class ContractIntegTest {
         AionTxExecSummary summary = executeTransaction(tx, block, repo);
         // The evmjit only return the the transaction success or failed when performing the function
         // call.
-        assertEquals("REVERT", summary.getReceipt().getError());
+        assertEquals("reverted", summary.getReceipt().getError());
         assertNotEquals(nrg, summary.getNrgUsed().longValue());
         Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(block);
         assertTrue(result.getLeft().isSuccessful());

@@ -47,7 +47,7 @@ public final class ContractExecutor {
      * @param transaction The transaction.
      * @return the execution result.
      */
-    public static PrecompiledTransactionResult executeExternalCall(
+    public static PrecompiledWrappedTransactionResult executeExternalCall(
             IExternalStateForPrecompiled externalState, AionTransaction transaction) {
         if (externalState == null) {
             throw new NullPointerException("Cannot run using a null externalState!");
@@ -68,7 +68,9 @@ public final class ContractExecutor {
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childExternalState, transaction, result);
         if (!result.getResultCode().isSuccess()) {
-            return result;
+            return PrecompiledTransactionResultUtil.createWithCodeAndEnergyRemaining(
+                result.getResultCode(),
+                transaction.getEnergyLimit() - result.getEnergyRemaining());
         }
 
         incrementNonceAndDeductEnergyCost(childExternalState, transaction);
@@ -92,12 +94,13 @@ public final class ContractExecutor {
             childExternalState.commit();
         }
 
-        // Propagate any side-effects.
-        result.addLogs(context.getLogs());
-        result.addInternalTransactions(context.getInternalTransactions());
-        result.addDeletedAddresses(context.getDeletedAddresses());
-
-        return result;
+        return PrecompiledTransactionResultUtil.createPrecompiledWrappedTransactionResult(
+            result.getResultCode(),
+            context.getInternalTransactions(),
+            context.getLogs(),
+            transaction.getEnergyLimit() - result.getEnergyRemaining(),
+            result.getReturnData(),
+            context.getDeletedAddresses());
     }
 
     /**

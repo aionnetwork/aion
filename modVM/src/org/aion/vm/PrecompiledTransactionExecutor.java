@@ -12,8 +12,11 @@ import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.ContractExecutor;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
+import org.aion.precompiled.type.PrecompiledWrappedTransactionResult;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
+import org.aion.types.TransactionResult;
+import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.mcf.types.AionTxExecSummary;
 import org.aion.mcf.types.AionTxReceipt;
@@ -46,22 +49,22 @@ public final class PrecompiledTransactionExecutor {
         for (AionTransaction transaction : transactions) {
 
             // Execute the contract.
-            PrecompiledTransactionResult result = ContractExecutor.executeExternalCall(externalState, transaction);
+            PrecompiledWrappedTransactionResult wrappedResult = ContractExecutor.executeExternalCall(externalState, transaction);
+
+            TransactionResult result = wrappedResult.result;
+            List<AionAddress> deletedAddresses = wrappedResult.deletedAddresses;
 
             // Check the block energy limit & reject if necessary.
-            long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
-            if (energyUsed > blockRemainingEnergy) {
-                result.setResultCode(PrecompiledResultCode.INVALID_NRG_LIMIT);
-                result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-                result.setEnergyRemaining(0);
+            if (result.energyUsed > blockRemainingEnergy) {
+                TransactionStatus status = TransactionStatus.rejection("Invalid Energy Limit");
+                result = new TransactionResult(status, result.logs, result.internalTransactions, 0, ByteUtil.EMPTY_BYTE_ARRAY);
             }
 
             // Build the transaction summary.
-            SideEffects sideEffects = new SideEffects();
-            AionTxExecSummary summary = buildTransactionSummary(transaction, result, sideEffects);
+            AionTxExecSummary summary = buildTransactionSummary(transaction, result, deletedAddresses);
 
             // If the transaction was not rejected, then commit the state changes.
-            if (!result.getResultCode().isRejected()) {
+            if (!result.transactionStatus.isRejected()) {
                 externalState.commit();
             }
 
@@ -71,7 +74,7 @@ public final class PrecompiledTransactionExecutor {
 
                 refundSender(repositoryTracker, summary, transaction, result);
                 payMiner(repositoryTracker, blockCoinbase, summary);
-                deleteAccountsMarkedForDeletion(repositoryTracker, sideEffects, result);
+                deleteAccountsMarkedForDeletion(repositoryTracker, summary.getDeletedAccounts(), result);
 
                 repositoryTracker.flush();
             }
@@ -82,9 +85,8 @@ public final class PrecompiledTransactionExecutor {
             }
 
             // Update the remaining block energy.
-            if (!result.getResultCode().isRejected()) {
-                blockRemainingEnergy -=
-                        ((decrementBlockEnergyLimit) ? summary.getReceipt().getEnergyUsed() : 0);
+            if (!result.transactionStatus.isRejected() && decrementBlockEnergyLimit) {
+                blockRemainingEnergy -= summary.getReceipt().getEnergyUsed();
             }
 
             if (logger.isDebugEnabled()) {
@@ -102,10 +104,10 @@ public final class PrecompiledTransactionExecutor {
             RepositoryCache repository,
             TxExecSummary summary,
             AionTransaction transaction,
-            PrecompiledTransactionResult result) {
+            TransactionResult result) {
 
         // Refund energy if transaction was successful or reverted.
-        if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
+        if (result.transactionStatus.isSuccess() || result.transactionStatus.isReverted()) {
             repository.addBalance(transaction.getSenderAddress(), summary.getRefund());
         }
     }
@@ -117,47 +119,34 @@ public final class PrecompiledTransactionExecutor {
 
     private static void deleteAccountsMarkedForDeletion(
             RepositoryCache repository,
-            SideEffects sideEffects,
-            PrecompiledTransactionResult result) {
-        if (result.getResultCode().isSuccess()) {
-            for (AionAddress addr : sideEffects.getAddressesToBeDeleted()) {
+            List<AionAddress> addressesToBeDeleted,
+            TransactionResult result) {
+        if (result.transactionStatus.isSuccess()) {
+            for (AionAddress addr : addressesToBeDeleted) {
                 repository.deleteAccount(addr);
             }
         }
     }
 
     private static AionTxExecSummary buildTransactionSummary(
-            AionTransaction transaction,
-            PrecompiledTransactionResult result,
-            SideEffects transactionSideEffects) {
-        if (result.getReturnData() == null) {
-            result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
-        }
+        AionTransaction transaction,
+        TransactionResult result,
+        List<AionAddress> deletedAddresses) {
 
-        if (result.getResultCode().isSuccess()) {
-            transactionSideEffects.addLogs(result.getLogs());
-            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
-            transactionSideEffects.addAllToDeletedAddresses(result.getDeletedAddresses());
-        } else {
-            transactionSideEffects.addInternalTransactions(result.getInternalTransactions());
-        }
-
-        // We have to do this for now, because the kernel uses the log serialization, which is not
-        // implemented in the Avm, and this type may become a POD type anyway..
-        List<Log> logs = transactionSideEffects.getExecutionLogs();
+        boolean success = result.transactionStatus.isSuccess();
+        List<Log> logs = success ? result.logs : new ArrayList<>();
+        List<AionAddress> addressesToBeDeleted = success ? deletedAddresses : new ArrayList<>();
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
-                        .logs(logs)
-                        .deletedAccounts(transactionSideEffects.getAddressesToBeDeleted())
-                        .internalTransactions(transactionSideEffects.getInternalTransactions())
-                        .result(result.getReturnData());
+            AionTxExecSummary.builderFor(makeReceipt(transaction, logs, result))
+                .logs(logs)
+                .deletedAccounts(addressesToBeDeleted)
+                .internalTransactions(result.internalTransactions)
+                .result(result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY));
 
-        PrecompiledResultCode resultCode = result.getResultCode();
-
-        if (resultCode.isRejected()) {
+        if (result.transactionStatus.isRejected()) {
             builder.markAsRejected();
-        } else if (resultCode.isFailed()) {
+        } else if (result.transactionStatus.isFailed()) {
             builder.markAsFailed();
         }
 
@@ -165,18 +154,14 @@ public final class PrecompiledTransactionExecutor {
     }
 
     private static AionTxReceipt makeReceipt(
-            AionTransaction transaction, List<Log> logs, PrecompiledTransactionResult result) {
+            AionTransaction transaction, List<Log> logs, TransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
-        receipt.setExecutionResult(result.getReturnData());
-        receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
+        receipt.setNrgUsed(result.energyUsed);
+        receipt.setExecutionResult(result.copyOfTransactionOutput().orElse(ByteUtil.EMPTY_BYTE_ARRAY));
+        receipt.setError(result.transactionStatus.isSuccess() ? "" : result.transactionStatus.causeOfError);
 
         return receipt;
-    }
-
-    private static long computeEnergyUsed(long limit, PrecompiledTransactionResult result) {
-        return limit - result.getEnergyRemaining();
     }
 }

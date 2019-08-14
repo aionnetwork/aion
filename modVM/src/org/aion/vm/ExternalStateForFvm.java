@@ -495,10 +495,6 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     private static FastVmTransactionResult precompiledToFvmResult(PrecompiledTransactionResult precompiledResult) {
         FastVmTransactionResult fvmResult = new FastVmTransactionResult();
 
-        fvmResult.addLogs(precompiledResult.getLogs());
-        fvmResult.addInternalTransactions(precompiledResult.getInternalTransactions());
-        fvmResult.addDeletedAddresses(precompiledResult.getDeletedAddresses());
-
         fvmResult.setEnergyRemaining(precompiledResult.getEnergyRemaining());
         fvmResult.setResultCode(precompiledToFvmResultCode(precompiledResult.getResultCode()));
         fvmResult.setReturnData(precompiledResult.getReturnData());

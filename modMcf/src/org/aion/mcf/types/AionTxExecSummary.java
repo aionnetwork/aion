@@ -49,7 +49,7 @@ public class AionTxExecSummary implements TxExecSummary {
     private List<Log> logs;
 
     /** Indicates whether the transaction failed */
-    private TransactionStatus failed;
+    private TransactionSummaryStatus failed;
 
     /** RLP related, parsed indicates whether the class has already been deserialized. */
     private byte[] rlpEncoded;
@@ -83,7 +83,7 @@ public class AionTxExecSummary implements TxExecSummary {
         this.logs = decodeLogs((RLPList) summary.get(5));
         byte[] failed = summary.get(6).getRLPData();
         int value = RLP.decodeInt(failed, 0);
-        this.failed = TransactionStatus.getStatus(value);
+        this.failed = TransactionSummaryStatus.getStatus(value);
 
         this.parsed = true;
     }
@@ -244,28 +244,28 @@ public class AionTxExecSummary implements TxExecSummary {
     /**
      * Indicates whether the transaction was rejected.
      *
-     * @see TransactionStatus
+     * @see TransactionSummaryStatus
      * @return
      */
     public boolean isRejected() {
         if (!parsed) {
             rlpParse();
         }
-        return failed == TransactionStatus.REJECTED;
+        return failed == TransactionSummaryStatus.REJECTED;
     }
 
     /**
      * To keep compatibility with any previously written code, isFailed() now returns true both when
      * the transaction was rejected or the VM failed.
      *
-     * @see TransactionStatus
+     * @see TransactionSummaryStatus
      * @return
      */
     public boolean isFailed() {
         if (!parsed) {
             rlpParse();
         }
-        return failed == TransactionStatus.FAILED || failed == TransactionStatus.REJECTED;
+        return failed == TransactionSummaryStatus.FAILED || failed == TransactionSummaryStatus.REJECTED;
     }
 
     public byte[] getResult() {
@@ -369,12 +369,12 @@ public class AionTxExecSummary implements TxExecSummary {
         }
 
         public Builder markAsRejected() {
-            summary.failed = TransactionStatus.REJECTED;
+            summary.failed = TransactionSummaryStatus.REJECTED;
             return this;
         }
 
         public Builder markAsFailed() {
-            summary.failed = TransactionStatus.FAILED;
+            summary.failed = TransactionSummaryStatus.FAILED;
             return this;
         }
 
@@ -403,7 +403,7 @@ public class AionTxExecSummary implements TxExecSummary {
                 summary.internalTransactions = Collections.emptyList();
             }
 
-            if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
+            if (summary.failed != null && summary.failed != TransactionSummaryStatus.SUCCESS) {
                 summary.internalTransactions =
                         InternalTransactionUtil.createRejectedTransactionList(
                                 summary.internalTransactions);
@@ -412,7 +412,7 @@ public class AionTxExecSummary implements TxExecSummary {
         }
     }
 
-    public enum TransactionStatus {
+    public enum TransactionSummaryStatus {
 
         /**
          * Rejected indicates the transaction was not valid for processing this indicates the
@@ -436,7 +436,7 @@ public class AionTxExecSummary implements TxExecSummary {
 
         private int code;
 
-        TransactionStatus(int code) {
+        TransactionSummaryStatus(int code) {
             this.code = code;
         }
 
@@ -444,7 +444,7 @@ public class AionTxExecSummary implements TxExecSummary {
             return this.code;
         }
 
-        public static TransactionStatus getStatus(int code) {
+        public static TransactionSummaryStatus getStatus(int code) {
             switch (code) {
                 case 0:
                     return REJECTED;

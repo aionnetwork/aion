@@ -14,9 +14,6 @@ public class PrecompiledTransactionResult {
     private PrecompiledResultCode code;
     private byte[] output;
     private long energyRemaining;
-    private List<Log> logs;
-    private List<InternalTransaction> internalTransactions;
-    private List<AionAddress> deletedAddresses;
 
     /**
      * Constructs a new {@code TransactionResult} with no side-effects, with zero energy remaining,
@@ -27,9 +24,6 @@ public class PrecompiledTransactionResult {
         this.code = PrecompiledResultCode.SUCCESS;
         this.output = new byte[0];
         this.energyRemaining = 0;
-        this.logs = new ArrayList<>();
-        this.internalTransactions = new ArrayList<>();
-        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
@@ -43,9 +37,6 @@ public class PrecompiledTransactionResult {
         this.code = code;
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
-        this.logs = new ArrayList<>();
-        this.internalTransactions = new ArrayList<>();
-        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
@@ -61,9 +52,6 @@ public class PrecompiledTransactionResult {
         this.code = code;
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
-        this.logs = new ArrayList<>();
-        this.internalTransactions = new ArrayList<>();
-        this.deletedAddresses = new ArrayList<>();
     }
 
     /**
@@ -134,30 +122,6 @@ public class PrecompiledTransactionResult {
 
     public long getEnergyRemaining() {
         return this.energyRemaining;
-    }
-
-    public void addLogs(List<Log> logs) {
-        this.logs.addAll(logs);
-    }
-
-    public void addInternalTransactions(List<InternalTransaction> internalTransactions) {
-        this.internalTransactions.addAll(internalTransactions);
-    }
-
-    public void addDeletedAddresses(List<AionAddress> deletedAddresses) {
-        this.deletedAddresses.addAll(deletedAddresses);
-    }
-
-    public List<Log> getLogs() {
-        return this.logs;
-    }
-
-    public List<InternalTransaction> getInternalTransactions() {
-        return this.internalTransactions;
-    }
-
-    public List<AionAddress> getDeletedAddresses() {
-        return this.deletedAddresses;
     }
 
     @Override
