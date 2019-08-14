@@ -124,36 +124,6 @@ public class Arguments {
             description = "reorganize the state storage\noptions: FULL, TOP, SPREAD")
     private String pruntStateOption = null;
 
-    // print info from db
-    @Option(
-            names = {"--dump-blocks"},
-            arity = "0..1",
-            paramLabel = "<block_count>",
-            description = "print top blocks from database")
-    private String dumpBlocksCount = null;
-
-    @Option(
-            names = {"--dump-state-size"},
-            arity = "0..1",
-            paramLabel = "<block_count>",
-            description = "retrieves the state size (node count) for the top blocks")
-    private String dumpStateSizeCount = null;
-
-    @Option(
-            names = {"--dump-state"},
-            arity = "0..1",
-            paramLabel = "<block_count>",
-            description = "retrieves the state for the top main chain blocks")
-    private String dumpStateCount = null;
-
-    @Option(
-            names = {"--dump-for-test"},
-            arity = "1..*",
-            paramLabel = "<block_to_import> [skip-state] [<contr_1>]  [<contr_2>] ",
-            description =
-                    "retrieves block and multiple contract data from the blockchain to be used for consensus unit tests; the skip-state option can be used to retrieve the data only for contracts")
-    private String[] dumpForTest = null;
-
     @Option(
             names = {"--db-compact"},
             description = "if using leveldb, it triggers its database compaction processes")
@@ -166,35 +136,6 @@ public class Arguments {
             description =
                     "drops all databases except for block and index when not given a parameter or starting from 0 and redoes import of all known main chain blocks")
     private String redoImport = null;
-
-    // data query
-    @Option(
-            names = {"qb", "--query-block"},
-            arity = "1",
-            paramLabel = "<block_number>",
-            description = "retrieve block information")
-    private String blockDetails = null;
-
-    @Option(
-            names = {"qt", "--query-tx"},
-            arity = "1",
-            paramLabel = "<transaction_hash>",
-            description = "retrieve transaction information")
-    private String transactionDetails = null;
-
-    @Option(
-            names = {"qa", "--query-account"},
-            arity = "1",
-            paramLabel = "<account_address>",
-            description = "retrieve account information")
-    private String accountDetails = null;
-
-    @Option(
-            names = {"xs", "--xx-stop-at"},
-            arity = "1",
-            paramLabel = "<block_number>",
-            description = "ONLY FOR TESTS: dumps the heap and shuts down after the specified block is imported")
-    private long stopAt = Long.MAX_VALUE;
 
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
@@ -288,43 +229,11 @@ public class Arguments {
         return pruntStateOption;
     }
 
-    public String getDumpBlocksCount() {
-        return dumpBlocksCount;
-    }
-
-    public String getDumpStateSizeCount() {
-        return dumpStateSizeCount;
-    }
-
-    public String getDumpStateCount() {
-        return dumpStateCount;
-    }
-
-    public String[] getDumpForTest() {
-        return dumpForTest;
-    }
-
     public boolean isDbCompact() {
         return dbCompact;
     }
 
     public String isRedoImport() {
         return redoImport;
-    }
-
-    public String getBlockDetails() {
-        return blockDetails;
-    }
-
-    public String getTransactionDetails() {
-        return transactionDetails;
-    }
-
-    public String getAccountDetails() {
-        return accountDetails;
-    }
-
-    public long getStopAt() {
-        return stopAt;
     }
 }

@@ -1961,12 +1961,6 @@ public class CliTest {
         skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
-        input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
-        skippedTasks = new HashSet<>();
-        skippedTasks.add("--dump-blocks");
-        skippedTasks.add("--dump-state");
-        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
-
         input = new String[] {"ac", "ae", "account"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--account export");
@@ -2010,47 +2004,24 @@ public class CliTest {
         skippedTasks.add("--prune-blocks");
         parameters.add(new Object[] {input, TaskPriority.SSL, skippedTasks});
 
-        input = new String[] {"-r", "100", "--state", "FULL", "--dump-state-size", "--db-compact"};
+        input = new String[] {"-r", "100", "--state", "FULL", "--db-compact"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
-        skippedTasks.add("--dump-state-size");
         skippedTasks.add("--db-compact");
         parameters.add(new Object[] {input, TaskPriority.REVERT, skippedTasks});
 
         input =
                 new String[] {
-                    "--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"
+                    "--state", "FULL", "--db-compact"
                 };
         skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
-        skippedTasks.add("--dump-state-size");
-        skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.PRUNE_STATE, skippedTasks});
 
-        input = new String[] {"--dump-state-size", "--dump-state"};
-        skippedTasks = new HashSet<>();
-        skippedTasks.add("--dump-state");
-        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
-
-        input = new String[] {"--dump-state", "--dump-blocks"};
-        skippedTasks = new HashSet<>();
-        skippedTasks.add("--dump-blocks");
-        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE, skippedTasks});
-
-        input = new String[] {"--dump-blocks", "--db-compact"};
+        input = new String[] { "--db-compact","dev","print-state-size","4"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
-        parameters.add(new Object[] {input, TaskPriority.DUMP_BLOCKS, skippedTasks});
-
-        input =
-                new String[] {
-                    "--query-block", "100", "--query-tx", "0xa0", "--query-account", "0xa0"
-                };
-        skippedTasks = new HashSet<>();
-        skippedTasks.add("--query-tx");
-        skippedTasks.add("--query-account");
-        parameters.add(new Object[] {input, TaskPriority.QUERY_BLOCK, skippedTasks});
-
+        parameters.add(new Object[] {input, TaskPriority.DEV, skippedTasks});
         return parameters.toArray();
     }
 
@@ -2060,11 +2031,11 @@ public class CliTest {
             String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
         Arguments options = new Arguments();
         CommandLine parser = new CommandLine(options);
-        parser.parse(input);
+        CommandLine.ParseResult result = parser.parseArgs(input);
 
-        TaskPriority breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        TaskPriority breakingTaskPriority = cli.getBreakingTaskPriority(options, result);
         assertEquals(expectedPriority, breakingTaskPriority);
-        Set<String> skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        Set<String> skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority, result);
         assertEquals(expectedTasks, skippedTasks);
     }
 
@@ -2074,9 +2045,10 @@ public class CliTest {
      * input.
      */
     @Test
-    @Parameters({"qt", "--query-tx"})
+    @Parameters({"dev qt", "dev query-tx"})
     public void testQueryTransaction(String option) {
-        assertThat(mockCli.call(new String[] {option, "0xa0"}, cfg)).isEqualTo(ERROR);
+        String[] options = option.split("\\s");
+        assertThat(mockCli.call(new String[] {options[0], options[1], "0xa0"}, cfg)).isEqualTo(ERROR);
     }
 
     /**
@@ -2084,9 +2056,10 @@ public class CliTest {
      * supplied.
      */
     @Test
-    @Parameters({"qb", "--query-block"})
+    @Parameters({"dev qb", "dev query-block"})
     public void testQueryBlock(String option) {
-        assertThat(mockCli.call(new String[] {option, ""}, cfg)).isEqualTo(ERROR);
+        String[] options = option.split("\\s");
+        assertThat(mockCli.call(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
     }
 
     /**
@@ -2094,9 +2067,10 @@ public class CliTest {
      * address is supplied.
      */
     @Test
-    @Parameters({"qa", "--query-account"})
+    @Parameters({"dev query-account", "dev query-account"})
     public void testQueryAccount(String option) {
-        assertThat(mockCli.call(new String[] {option, ""}, cfg)).isEqualTo(ERROR);
+        String[] options = option.split("\\s");
+        assertThat(mockCli.call(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
     }
 
 
@@ -2295,6 +2269,8 @@ public class CliTest {
                 }
             }
         }
+        strings.add(new String[]{"dev"});
+        strings.add("edit port 100 dev".split("\\s"));
 
         return strings.toArray();
     }

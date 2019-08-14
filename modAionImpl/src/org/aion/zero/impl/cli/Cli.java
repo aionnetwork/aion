@@ -81,9 +81,6 @@ public class Cli {
         VERSION,
         CONFIG,
         INFO,
-        QUERY_BLOCK,
-        QUERY_TX,
-        QUERY_ACCOUNT,
         CREATE_ACCOUNT,
         LIST_ACCOUNTS,
         EXPORT_ACCOUNT,
@@ -92,10 +89,7 @@ public class Cli {
         PRUNE_BLOCKS,
         REVERT,
         PRUNE_STATE,
-        DUMP_STATE_SIZE,
-        DUMP_STATE,
-        DUMP_STATE_TEST,
-        DUMP_BLOCKS,
+        DEV,
         DB_COMPACT,
         REDO_IMPORT
     }
@@ -121,7 +115,7 @@ public class Cli {
         }
 
         // make sure that there is no conflicting arguments; otherwise send warning
-        checkArguments(options);
+        checkArguments(options, parseResult);
 
         try {
             // 1. the first set of options don't mix with -d and -n
@@ -349,37 +343,6 @@ public class Cli {
             // set correct keystore directory
             Keystore.setKeystorePath(cfg.getKeystoreDir().getAbsolutePath());
 
-            if (options.getBlockDetails() != null) {
-                if (SUCCESS != getBlockDetails(options.getBlockDetails())) {
-                    System.out.println("Invalid block query! Please check your input argument.");
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
-            if (options.getTransactionDetails() != null) {
-                if (SUCCESS != getTransactionDetails(options.getTransactionDetails())) {
-                    System.out.println(
-                            "Invalid transaction query! Please check your input argument.");
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
-            // TODO: implement it when the worldstate setRoot has been fixed.
-            if (options.getAccountDetails() != null) {
-                // System.out.println("Function has not been implemented yet.");
-                // return EXIT;
-                if (SUCCESS != getAccountDetails(options.getAccountDetails())) {
-                    System.out.println("Invalid account query! Please check your input argument.");
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
             if (options.isCreateAccount()) {
                 if (!createAccount()) {
                     return ERROR;
@@ -479,122 +442,13 @@ public class Cli {
                     return ERROR;
                 }
             }
-
-            if (options.getDumpStateSizeCount() != null) {
-                long block_count = 2L;
-                String parameter = options.getDumpStateSizeCount();
-
-                if (parameter.isEmpty()) {
-                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
-                    DBUtils.printStateTrieSize(block_count);
-                    return EXIT;
-                } else {
-                    try {
-                        block_count = Long.parseLong(parameter);
-                    } catch (NumberFormatException e) {
-                        System.out.println(
-                                "The given argument «"
-                                        + parameter
-                                        + "» cannot be converted to a number.");
-                        return ERROR;
-                    }
-                    if (block_count < 1) {
-                        System.out.println("The given argument «" + parameter + "» is not valid.");
-                        block_count = 2L;
-                    }
-
-                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
-                    DBUtils.printStateTrieSize(block_count);
-                    return EXIT;
+            CommandLine.Model.CommandSpec spec = findCommandSpec(parseResult, DevCLI.class);
+            if (spec!=null){
+                ReturnType returnType = ((DevCLI) spec.userObject()).runCommand();
+                if (returnType !=RUN){
+                    return returnType;
                 }
             }
-
-            if (options.getDumpStateCount() != null) {
-                long level = -1L;
-                String parameter = options.getDumpStateCount();
-
-                if (parameter.isEmpty()) {
-                    System.out.println("Retrieving state for top main chain block...");
-                    DBUtils.printStateTrieDump(level);
-                    return EXIT;
-                } else {
-                    try {
-                        level = Long.parseLong(parameter);
-                    } catch (NumberFormatException e) {
-                        System.out.println(
-                                "The given argument «"
-                                        + parameter
-                                        + "» cannot be converted to a number.");
-                        return ERROR;
-                    }
-                    if (level == -1L) {
-                        System.out.println("Retrieving state for top main chain block...");
-                    } else {
-                        System.out.println(
-                                "Retrieving state for main chain block at level " + level + "...");
-                    }
-                    DBUtils.printStateTrieDump(level);
-                    return EXIT;
-                }
-            }
-
-            if (options.getDumpForTest() != null) {
-                long level;
-                String[] parameters = options.getDumpForTest();
-
-                try {
-                    level = Long.parseLong(parameters[0]);
-                } catch (NumberFormatException e) {
-                    System.out.println(
-                            "The given argument «"
-                                    + parameters[0]
-                                    + "» cannot be converted to a number.");
-                    return ERROR;
-                }
-                if (level < 2) { // requires a parent and grandparent
-                    System.out.println(
-                            "Negative block values are not legal input values for this functionality.");
-                    return ERROR;
-                } else {
-                    System.out.println(
-                            "Retrieving consensus data for unit tests for the main chain block at level "
-                                    + level
-                                    + "...");
-
-                    DBUtils.dumpTestData(level, parameters);
-                    return EXIT;
-                }
-            }
-
-            if (options.getDumpBlocksCount() != null) {
-                long count = 10L;
-                String parameter = options.getDumpBlocksCount();
-
-                if (parameter.isEmpty()) {
-                    System.out.println("Printing top " + count + " blocks from database.");
-                    DBUtils.dumpBlocks(count);
-                    return EXIT;
-                } else {
-                    try {
-                        count = Long.parseLong(parameter);
-                    } catch (NumberFormatException e) {
-                        System.out.println(
-                                "The given argument «"
-                                        + parameter
-                                        + "» cannot be converted to a number.");
-                        return ERROR;
-                    }
-                    if (count < 1) {
-                        System.out.println("The given argument «" + parameter + "» is not valid.");
-                        count = 10L;
-                    }
-
-                    System.out.println("Printing top " + count + " blocks from database.");
-                    DBUtils.dumpBlocks(count);
-                    return EXIT;
-                }
-            }
-
             if (options.isDbCompact()) {
                 DBUtils.dbCompact();
                 return EXIT;
@@ -627,14 +481,6 @@ public class Cli {
                 }
             }
 
-            if (options.getStopAt() != Long.MAX_VALUE) {
-                if (options.getStopAt() <= 0){
-                    System.out.println("Invalid parameter value for --xx-stop-at.");
-                    return ERROR;
-                }
-                System.out.println("Shutdown hook set at block " + options.getStopAt());
-                AionBlockchainImpl.shutdownHook = options.getStopAt();
-            }
 
             // if no return happened earlier, run the kernel
             return RUN;
@@ -1010,16 +856,16 @@ public class Cli {
         return new String(console.readPassword(prompt));
     }
 
-    private void checkArguments(Arguments options) {
+    private void checkArguments(Arguments options, CommandLine.ParseResult result) {
         // Find priority of breaking task
-        TaskPriority breakingTaskPriority = getBreakingTaskPriority(options);
+        TaskPriority breakingTaskPriority = getBreakingTaskPriority(options, result);
         // Ensure that there is at least one breaking task
         if (breakingTaskPriority == TaskPriority.NONE) {
             // No breaking tasks; everything will be executed
             return;
         }
         // Get list of tasks that won't be executed
-        Set<String> skippedTasks = getSkippedTasks(options, breakingTaskPriority);
+        Set<String> skippedTasks = getSkippedTasks(options, breakingTaskPriority,  result);
         // Check that there are skipped tasks
         if (skippedTasks.isEmpty()) {
             return;
@@ -1031,7 +877,7 @@ public class Cli {
         System.out.println(errorMessage);
     }
 
-    TaskPriority getBreakingTaskPriority(Arguments options) {
+    TaskPriority getBreakingTaskPriority(Arguments options, CommandLine.ParseResult result){
         if (options.isHelp()) {
             return TaskPriority.HELP;
         }
@@ -1044,14 +890,8 @@ public class Cli {
         if (options.isInfo()) {
             return TaskPriority.INFO;
         }
-        if (options.getBlockDetails() != null) {
-            return TaskPriority.QUERY_BLOCK;
-        }
-        if (options.getTransactionDetails() != null) {
-            return TaskPriority.QUERY_TX;
-        }
-        if (options.getAccountDetails() != null) {
-            return TaskPriority.QUERY_ACCOUNT;
+        if(findCommandSpec(result, DevCLI.class) !=null){
+            return TaskPriority.DEV;
         }
         if (options.isCreateAccount()) {
             return TaskPriority.CREATE_ACCOUNT;
@@ -1077,29 +917,18 @@ public class Cli {
         if (options.getPruneStateOption() != null) {
             return TaskPriority.PRUNE_STATE;
         }
-        if (options.getDumpStateSizeCount() != null) {
-            return TaskPriority.DUMP_STATE_SIZE;
-        }
-        if (options.getDumpStateCount() != null) {
-            return TaskPriority.DUMP_STATE;
-        }
-        if (options.getDumpForTest() != null) {
-            return TaskPriority.DUMP_STATE_TEST;
-        }
-        if (options.getDumpBlocksCount() != null) {
-            return TaskPriority.DUMP_BLOCKS;
-        }
         if (options.isDbCompact()) {
             return TaskPriority.DB_COMPACT;
         }
         if (options.isRedoImport() != null) {
             return TaskPriority.REDO_IMPORT;
         }
-
         return TaskPriority.NONE;
     }
 
-    Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority) {
+
+
+    Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority, CommandLine.ParseResult parseResult) {
         Set<String> skippedTasks = new HashSet<String>();
         if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0) {
             if (options.isVersion()) {
@@ -1129,17 +958,8 @@ public class Cli {
         if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0 && options.isInfo()) {
             skippedTasks.add("--info");
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_BLOCK) < 0
-                && options.getBlockDetails() != null) {
-            skippedTasks.add("--query-block");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_TX) < 0
-                && options.getTransactionDetails() != null) {
-            skippedTasks.add("--query-tx");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.QUERY_ACCOUNT) < 0
-                && options.getAccountDetails() != null) {
-            skippedTasks.add("--query-account");
+        if (breakingTaskPriority.compareTo(TaskPriority.DEV) < 0 && findCommandSpec(parseResult, DevCLI.class) != null){
+            skippedTasks.add("dev");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
                 && options.isCreateAccount()) {
@@ -1171,22 +991,6 @@ public class Cli {
         if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_STATE) < 0
                 && options.getPruneStateOption() != null) {
             skippedTasks.add("--state");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_SIZE) < 0
-                && options.getDumpStateSizeCount() != null) {
-            skippedTasks.add("--dump-state-size");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
-                && options.getDumpStateCount() != null) {
-            skippedTasks.add("--dump-state");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_TEST) < 0
-                && options.getDumpForTest() != null) {
-            skippedTasks.add("--dump-for-test");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
-                && options.getDumpBlocksCount() != null) {
-            skippedTasks.add("--dump-blocks");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
