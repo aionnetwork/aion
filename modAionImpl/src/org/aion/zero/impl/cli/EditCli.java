@@ -4,11 +4,11 @@ import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.config.*;
-import org.aion.zero.impl.config.CfgConsensusPow;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.aion.zero.impl.config.CfgConsensusUnity;
 
 import static picocli.CommandLine.*;
 
@@ -164,11 +164,11 @@ public class EditCli {
     }
 
     private boolean updateMining(CfgConsensus cfgConsensus) {
-        if (cfgConsensus instanceof CfgConsensusPow) {
-            if (mining != null && mining != ((CfgConsensusPow) cfgConsensus).getMining()) {
+        if (cfgConsensus instanceof CfgConsensusUnity) {
+            if (mining != null && mining != ((CfgConsensusUnity) cfgConsensus).getMining()) {
                 System.out.println(boolToMessage(mining) + " mining.");
 
-                ((CfgConsensusPow) cfgConsensus).setMining(mining);
+                ((CfgConsensusUnity) cfgConsensus).setMining(mining);
                 return true;
             }
         }

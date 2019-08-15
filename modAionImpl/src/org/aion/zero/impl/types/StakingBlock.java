@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -35,9 +36,7 @@ public class StakingBlock extends AbstractBlock {
     // copy constructor
     public StakingBlock(StakingBlock block) {
         this.header = new StakedBlockHeader(block.getHeader());
-        for (AionTransaction tx : block.getTransactionsList()) {
-            this.transactionsList.add(tx.clone());
-        }
+        this.transactionsList.addAll(block.getTransactionsList());
         this.parsed = true;
     }
 
@@ -401,7 +400,7 @@ public class StakingBlock extends AbstractBlock {
         Trie txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
-            this.transactionsList.add(new AionTransaction(transactionRaw.getRLPData()));
+            this.transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
             txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
         return txsState.getRootHash().clone();

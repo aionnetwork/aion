@@ -134,7 +134,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator unityGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator chainParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
-    private final BlockHeaderValidator blockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
@@ -216,8 +215,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         this.chainConfiguration = chainConfig;
 
-
-        blockHeaderValidator = chainConfiguration.createBlockHeaderValidator();
         sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
         chainParentBlockHeaderValidator = chainConfig.createChainParentBlockHeaderValidator();
 
@@ -1141,6 +1138,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         BlockHeader parentHdr = parent.getHeader();
+
+        if (parentHdr.getNumber() + 1 < FORK_5_BLOCK_NUMBER) {
+            LOG.debug("Unity fork has not been enabled! Can't create the staking blocks");
+            return null;
+        }
+
         Block grandParentStakingBlock = null;
         BlockHeader parentStakingBlockHeader = null;
 
@@ -1335,7 +1338,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @see #createNewMiningBlockContext(Block, List, boolean)
      * @return a context with new mining block
      */
-    public BlockContext createNewMiningBlockContext(
+    public synchronized BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
             return createNewMiningBlockInternal(
                 parent, txs, waitUntilBlockTime, getSystemCurrentTimeBySec());
@@ -1630,22 +1633,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 sealParent = parent;
             }
 
+            if (sealParent == null) {
+                throw new IllegalStateException("Can't find the sealParent block, the database might corrupt!");
+            }
+
             if (!chainParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
                 return false;
             }
 
-            Block grandSealParent = sealParent == null ? null : getParentBlock(sealParent.getHeader());
+            Block grandSealParent = getParentBlock(sealParent.getHeader());
 
             if (header.getNumber() >= FORK_5_BLOCK_NUMBER) {
                 return unityGrandParentBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
-                    sealParent != null ? sealParent.getHeader() : null,
+                    sealParent.getHeader(),
                     header,
                     LOG);
             } else {
                 return preUnityGrandParentBlockHeaderValidator.validate(
                     grandSealParent == null ? null : grandSealParent.getHeader(),
-                    sealParent == null ? null : sealParent.getHeader(),
+                    sealParent.getHeader(),
                     header,
                     LOG);
             }
@@ -2035,7 +2042,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } catch (Exception e) {
             LOG.error(
                     "Unable to delete used blocks from " + repository.toString() + " due to: ", e);
-            return;
         }
     }
 

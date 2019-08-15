@@ -77,14 +77,15 @@ public class StakingContractHelper {
                         ABIEncoder.encodeOneAddress(new Address(stakerAddress.toByteArray())));
 
         AionTransaction callTx =
-                new AionTransaction(
-                        BigInteger.ZERO.toByteArray(),
-                        stakerAddress,
-                        stakingContractAddr,
-                        BigInteger.ZERO.toByteArray(),
-                        abi,
-                        2_000_000,
-                        TransactionTypes.DEFAULT);
+                AionTransaction.create(
+                    keyForCallandEstimate,
+                    BigInteger.ZERO.toByteArray(),
+                    stakingContractAddr,
+                    BigInteger.ZERO.toByteArray(),
+                    abi,
+                    2_000_000L,
+                    10_000_000_000L,
+                    TransactionTypes.DEFAULT);
 
         AionTxReceipt receipt = callConstant(callTx);
 
@@ -97,11 +98,6 @@ public class StakingContractHelper {
     }
 
     private AionTxReceipt callConstant(AionTransaction tx) {
-
-        if (tx.getSignature() == null) {
-            tx.sign(keyForCallandEstimate);
-        }
-
         Block block = chain.getBestBlock();
 
         RepositoryCache repository =
