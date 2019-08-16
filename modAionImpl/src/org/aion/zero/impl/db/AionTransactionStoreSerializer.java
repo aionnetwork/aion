@@ -1,15 +1,18 @@
 package org.aion.zero.impl.db;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.aion.db.store.Serializer;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.slf4j.Logger;
 
 public class AionTransactionStoreSerializer {
-    // TODO: AKI-317: Refactor TransactionStore serializer
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.toString());
+
     public static final Serializer<List<AionTxInfo>> serializer =
             new Serializer<>() {
                 @Override
@@ -32,9 +35,8 @@ public class AionTransactionStoreSerializer {
                         }
                         return ret;
                     } catch (Exception e) {
-                        // fallback to previous DB version
-                        e.printStackTrace();
-                        return Collections.singletonList(AionTxInfo.newInstanceFromEncoding(stream));
+                        LOG.error("The given RLP encoding is not a valid list of AionTxInfo objects.", e);
+                        return null;
                     }
                 }
             };

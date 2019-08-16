@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AionTransaction;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -13,9 +15,12 @@ import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
 import org.aion.util.conversions.Hex;
 import org.aion.base.AionTxReceipt;
+import org.slf4j.Logger;
 
 public class AionTxInfo {
     // TODO AKI-316: refactor AionTxInfo instance variable access
+
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.toString());
 
     // note that the receipt is modified to set the transaction
     private final AionTxReceipt receipt;
@@ -71,6 +76,15 @@ public class AionTxInfo {
      * </ol>
      */
     public static AionTxInfo newInstanceFromEncoding(byte[] rlp) {
+        try {
+            return decode(rlp);
+        } catch (Exception e) {
+            LOG.error("The given RLP encoding is not a valid AionTxInfo object.", e);
+            return null;
+        }
+    }
+
+    private static AionTxInfo decode(byte[] rlp) {
         RLPList params = RLP.decode2(rlp);
         RLPList txInfo = (RLPList) params.get(0);
 
