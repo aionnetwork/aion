@@ -6,6 +6,8 @@ import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.config.CfgDb.PruneOption;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Test;
@@ -18,6 +20,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.mcf.config.CfgDb.SPREAD_PRUNE_ARCHIVE_RATE;
+import static org.aion.mcf.config.CfgDb.SPREAD_PRUNE_BLOCK_COUNT;
+import static org.aion.mcf.config.CfgDb.TOP_PRUNE_BLOCK_COUNT;
 import static org.aion.util.TestResources.TEST_RESOURCE_DIR;
 
 @RunWith(JUnitParamsRunner.class)
@@ -87,6 +92,7 @@ public class EditCliTest {
         assertThat(cfg.getDb().getVendor()).ignoringCase().isEqualTo(vendor.name());
         assertThat(cfg.getDb().getPrune_option()).isEqualTo(prune);
         assertThat(cfg.getDb().isInternalTxStorageEnabled()).isEqualTo(internalTxStorage);
+        assertThat(cfg.getDb().getPrune()).isEqualTo(pruneFromEnum(prune));
         assertThat(cfg.getNet().getP2p().getPort()).isEqualTo(port);
         assertThat(cfg.getSync().getShowStatus()).isEqualTo(showStatus);
 
@@ -95,6 +101,17 @@ public class EditCliTest {
         }
     }
 
+    private CfgPrune pruneFromEnum(PruneOption pruneOption){
+        switch (pruneOption){
+            case TOP:
+                return new CfgPrune(TOP_PRUNE_BLOCK_COUNT);
+            case SPREAD:
+                return new CfgPrune(SPREAD_PRUNE_BLOCK_COUNT, SPREAD_PRUNE_ARCHIVE_RATE);
+            case FULL:
+            default:
+                return new CfgPrune(false);
+        }
+    }
 
     public Object[] updateCommandParams(){
         return new Object[] {

@@ -114,7 +114,7 @@ public class EditCli {
 
     private boolean updatePrune(CfgDb cfgDb) {
         if (pruneOption != null && !pruneOption.equals(cfgDb.getPrune_option())) {
-            cfgDb.setPrune_option(pruneOption);
+            cfgDb.setPrune(pruneOption.toString());
             System.out.println("Updated state storage to: " + pruneOption.toString().toLowerCase());
             return true;
         } else return false;

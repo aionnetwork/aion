@@ -275,10 +275,6 @@ public class CfgDb {
         return prune_option;
     }
 
-    public void setPrune_option(PruneOption prune_option) {
-        this.prune_option = prune_option;
-    }
-
     public void setCompression(boolean compression) {
         this.compression = compression;
     }
