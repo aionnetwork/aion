@@ -95,13 +95,18 @@ public class ExternalStateForAvm implements IExternalState {
 
     @Override
     public void putCode(AionAddress address, byte[] code) {
+        if (code.length == 0) {
+            throw new IllegalArgumentException("The AVM does not allow the concept of empty code.");
+        }
         this.repositoryCache.saveCode(address, code);
         setVmType(address);
     }
 
     @Override
     public byte[] getCode(AionAddress address) {
-        return this.repositoryCache.getCode(address);
+        byte[] code = this.repositoryCache.getCode(address);
+        // the notion of empty code is not a valid concept for the AVM
+        return code.length == 0 ? null : code;
     }
 
     @Override
@@ -231,7 +236,7 @@ public class ExternalStateForAvm implements IExternalState {
         }
 
         // If address has no code then it is always safe.
-        if (getCode(address).length == 0) {
+        if (getCode(address) == null) {
             return true;
         }
 
