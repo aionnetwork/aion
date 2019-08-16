@@ -860,7 +860,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // a child must be present to import the parent
         Block child = getBlockStore().getChainBlockByNumber(block.getNumber() + 1);
-        //TODO : [unity] the unity block settings will break this check.
         if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
             return FastImportResult.NO_CHILD;
         } else {
@@ -1277,7 +1276,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return block;
     }
 
-    private BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
+    private synchronized BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
         /*
          * Begin execution phase
          */

@@ -11,12 +11,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.aion.base.AionTransaction;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK;
 import org.aion.evtmgr.impl.evt.EventTx;
@@ -25,6 +27,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -60,10 +63,10 @@ public class AionPoS {
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
+    private ECKey stakerKey;
+    private AionAddress stakerAddress;
 
     private EventExecuteService ees;
-
-    private byte[] seed;
 
     private final class EpPOS implements Runnable {
         boolean go = true;
@@ -76,7 +79,13 @@ public class AionPoS {
                 if (e.getEventType() == IHandler.TYPE.TX0.getValue()
                         && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
                     newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
+                    && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate(getNewSeed());
+                }
+                else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
                         && e.getCallbackType() == CALLBACK.ON_STAKE_SIG.getValue()) {
                     finalizeBlock((StakingBlock) e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
@@ -84,6 +93,16 @@ public class AionPoS {
                 }
             }
         }
+    }
+
+    private byte[] getNewSeed() {
+        if (stakerKey == null) {
+            return null;
+        }
+
+        return ChainConfiguration.getStakerKey()
+                .sign((blockchain.getBestStakingBlock()).getSeed())
+                .getSignature();
     }
 
     private final CfgAion config = CfgAion.inst();
@@ -115,9 +134,12 @@ public class AionPoS {
             }
 
             //Check the staker's key has been setup properly, otherwise, just return for avoiding to create useless thread.
-            if (config.getConsensus().getStakerKey() == null) {
+            stakerKey = config.getConsensus().getStakerKey();
+            if (stakerKey == null) {
                 return;
             }
+
+            stakerAddress = AddressUtils.wrapAddress(config.getConsensus().getStakerAddress());
 
             setupHandler();
             ees = new EventExecuteService(10_000, "EpPos", Thread.NORM_PRIORITY, LOG);
@@ -127,64 +149,57 @@ public class AionPoS {
             ees.start(new EpPOS());
 
             new Thread(
-                            () -> {
-                                while (!shutDown.get()) {
-                                    try {
-                                        Thread.sleep(100);
+                () -> {
+                    while (!shutDown.get()) {
+                        try {
+                            Thread.sleep(100);
 
-                                        long now = System.currentTimeMillis();
+                            long now = System.currentTimeMillis();
 
-                                        if (((now - lastUpdate.get()) >= delta.get())
-                                                && blockchain
-                                                        .getStakingContractHelper()
-                                                        .isContractDeployed()) {
+                            if (((now - lastUpdate.get()) >= delta.get())
+                                    && blockchain
+                                            .getStakingContractHelper()
+                                            .isContractDeployed()) {
 
-                                            long votes =
-                                                blockchain
-                                                    .getStakingContractHelper()
-                                                    .callGetVote(
-                                                        AddressUtils.wrapAddress(
-                                                            config.getConsensus()
-                                                                .getStakerAddress()));
+                                long votes =
+                                    blockchain
+                                        .getStakingContractHelper()
+                                        .callGetVote(
+                                            AddressUtils.wrapAddress(
+                                                config.getConsensus()
+                                                    .getStakerAddress()));
 
-                                            // TODO: [unity] might change the threshold.
-                                            if (votes < 1) {
-                                                continue;
-                                            }
-
-                                            seed =
-                                                    ChainConfiguration.getStakerKey()
-                                                            .sign(
-                                                                    (blockchain
-                                                                                    .getBestStakingBlock())
-                                                                            .getSeed())
-                                                            .getSignature();
-
-                                            StakingBlock newBlock = createNewBlockTemplate(seed);
-
-                                            double newDelta =
-                                                    newBlock.getDifficultyBI().doubleValue()
-                                                            * Math.log(
-                                                                    BigInteger.TWO
-                                                                            .pow(256)
-                                                                            .divide(
-                                                                                    new BigInteger(
-                                                                                            1,
-                                                                                            HashUtil
-                                                                                                    .h256(
-                                                                                                            seed)))
-                                                                            .doubleValue())
-                                                            / votes;
-
-                                            delta.set(Math.max((long) (newDelta * 1000), 500));
-                                        }
-                                    } catch (InterruptedException e) {
-                                        break;
-                                    }
+                                // TODO: [unity] might change the threshold.
+                                if (votes < 1) {
+                                    continue;
                                 }
-                            },
-                            "pos")
-                    .start();
+
+                                byte[] newSeed = getNewSeed();
+                                if (newSeed == null) {
+                                    continue;
+                                }
+
+                                StakingBlock newBlock = createNewBlockTemplate(newSeed);
+                                if (newBlock == null) {
+                                    continue;
+                                }
+
+                                double newDelta =
+                                    newBlock.getDifficultyBI().doubleValue()
+                                        * Math.log(
+                                            BigInteger.TWO
+                                                .pow(256)
+                                                .divide(new BigInteger(1, HashUtil.h256(newSeed)))
+                                                .doubleValue())
+                                        / votes;
+
+                                delta.set(Math.max((long) (newDelta * 1000), 500));
+                            }
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }, "pos").start();
         }
     }
 
@@ -210,10 +225,8 @@ public class AionPoS {
         sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
         eventSN.add(sn + EventConsensus.CALLBACK.ON_STAKE_SIG.getValue());
 
-        //TODO : [unity] check do we really need this event?
-
-        //        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
-        //        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
+        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
 
         return eventSN;
     }
@@ -303,6 +316,12 @@ public class AionPoS {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Creating a new block template");
+            }
+
+            long vote = blockchain.getStakingContractHelper().callGetVote(stakerAddress);
+            if (vote < 1) {
+                LOG.warn("No stake for the internal staker creating the blockTemplate!");
+                return null;
             }
 
             Block bestBlock = blockchain.getBestBlock();
