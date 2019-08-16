@@ -24,7 +24,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected int detailsInMemoryStorageLimit;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    protected byte[] performCode;
+    protected byte[] transformedCode;
     // classes extending this rely on this value starting off as null
     protected byte[] objectGraph = null;
 
@@ -56,14 +56,14 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     @Override
     public byte[] getTransformedCode() {
-        return performCode;
+        return transformedCode;
     }
 
     @Override
     public void setTransformedCode(byte[] transformedCode) {
         // ensures that the object is not set to dirty when copied
-        if (!Arrays.equals(performCode, transformedCode)) {
-            performCode = transformedCode;
+        if (!Arrays.equals(this.transformedCode, transformedCode)) {
+            this.transformedCode = transformedCode;
             setDirty(true);
         }
     }

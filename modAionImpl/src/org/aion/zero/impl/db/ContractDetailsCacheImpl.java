@@ -144,10 +144,10 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     @Override
     public byte[] getTransformedCode() {
-        if (performCode == null && this.origContract != null) {
-            performCode = origContract.getTransformedCode();
+        if (transformedCode == null && this.origContract != null) {
+            transformedCode = origContract.getTransformedCode();
         }
-        return performCode;
+        return transformedCode;
     }
 
     /**
