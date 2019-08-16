@@ -18,6 +18,7 @@ public class RpcTest {
     @Before
     public void setup() {
         impl = AionImpl.inst();
+        impl.aionHub.getBlockchain().setUnityForkNumber(0);
         api = new RpcImpl(impl);
         LongLivedAvm.createAndStartLongLivedAvm();
     }

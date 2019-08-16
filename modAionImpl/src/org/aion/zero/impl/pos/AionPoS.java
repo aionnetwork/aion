@@ -36,6 +36,14 @@ import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.types.StakedBlockHeader;
 import org.slf4j.Logger;
 
+/**
+ * @implNote This class is mainly for generating the staking block template for the internal miner use.
+ * Therefore, the node operator should set the staker private key in the config files then this class
+ * instant can be initiated during the AionHub construct.
+ *
+ * @author Jay Tseng
+ */
+
 public class AionPoS {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
@@ -273,7 +281,11 @@ public class AionPoS {
         }
     }
 
-    /** Creates a new block template. */
+    /**
+     * Creates a new block template by given block seed
+     * @param seed 64 bytes seed given by the output of the staker's signed oldSeed.
+     * @return a staking block template.
+     */
     private StakingBlock createNewBlockTemplate(byte[] seed) {
 
         if (!shutDown.get()) {

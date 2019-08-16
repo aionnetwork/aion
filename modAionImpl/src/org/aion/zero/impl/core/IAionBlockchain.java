@@ -1,5 +1,6 @@
 package org.aion.zero.impl.core;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
@@ -118,4 +119,7 @@ public interface IAionBlockchain extends IBlockchain {
     boolean isUnityForkEnabled();
 
     StakingBlock trySealStakingBlock();
+
+    @VisibleForTesting
+    void setUnityForkNumber(long blockNumber);
 }

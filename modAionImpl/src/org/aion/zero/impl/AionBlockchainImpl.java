@@ -21,14 +21,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -59,7 +57,6 @@ import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
-import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TransactionTypeRule;
@@ -163,9 +160,35 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private volatile Block pubBestBlock;
 
-    private volatile BigInteger totalDifficulty = ZERO;
-    private volatile BigInteger totalMiningDifficulty = ZERO;
-    private volatile BigInteger totalStakingDifficulty = ZERO;
+
+    class UnityDifficulty {
+        private final BigInteger totalDifficulty;
+        private final BigInteger totalMiningDifficulty;
+        private final BigInteger totalStakingDifficulty;
+
+        UnityDifficulty() {
+            totalDifficulty = ZERO;
+            totalMiningDifficulty = ZERO;
+            totalStakingDifficulty = ZERO;
+        }
+
+        UnityDifficulty(UnityDifficulty ud) {
+            totalDifficulty = ud.totalDifficulty;
+            totalMiningDifficulty = ud.totalMiningDifficulty;
+            totalStakingDifficulty = ud.totalStakingDifficulty;
+        }
+
+        UnityDifficulty(BigInteger td, BigInteger tmd, BigInteger tsd) {
+            totalDifficulty = td;
+            totalMiningDifficulty = tmd;
+            totalStakingDifficulty = tsd;
+        }
+    }
+
+    /** use AtomicReference to make sure the difficulty update at the same time */
+    private AtomicReference<UnityDifficulty> unityDifficulty = new AtomicReference<>(new UnityDifficulty());
+
+
     private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
@@ -179,8 +202,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     // fields used to manage AVM caching
     // TODO: if refactoring the add(Block) method, these should be used as parameters
-    protected BlockCachingContext executionTypeForAVM = BlockCachingContext.MAINCHAIN;
-    protected long cachedBlockNumberForAVM = 0L;
+    BlockCachingContext executionTypeForAVM = BlockCachingContext.MAINCHAIN;
+    long cachedBlockNumberForAVM = 0L;
     private static final long NO_FORK_LEVEL = -1L;
     private long forkLevel = NO_FORK_LEVEL;
 
@@ -191,8 +214,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private final SortedMap<Long, LinkedHashSet<StakingBlock>> sealednewStakingBlock =
         Collections.synchronizedSortedMap(new TreeMap<>());
-
-    private int stakingBlockCandidateTimeout = 3600;
 
     private AionBlockchainImpl() {
         this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
@@ -397,24 +418,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return retBloomFilter.getBloomFilterBytes();
-    }
-
-    public static Set<ByteArrayWrapper> getAncestors(
-            IBlockStoreBase blockStore,
-            Block testedBlock,
-            int limitNum,
-            boolean isParentBlock) {
-        Set<ByteArrayWrapper> ret = new HashSet<>();
-        limitNum = (int) max(0, testedBlock.getNumber() - limitNum);
-        Block it = testedBlock;
-        if (!isParentBlock) {
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        while (it != null && it.getNumber() >= limitNum) {
-            ret.add(new ByteArrayWrapper(it.getHash()));
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        return ret;
     }
 
     /**
@@ -630,9 +633,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid best block data!");
         }
 
-        this.totalMiningDifficulty = bestBlock.getMiningDifficulty();
-        this.totalStakingDifficulty = bestBlock.getStakingDifficulty();
-        this.totalDifficulty = bestBlock.getCumulativeDifficulty();
+        unityDifficulty.set(
+                new UnityDifficulty(
+                        bestBlock.getCumulativeDifficulty(),
+                        bestBlock.getMiningDifficulty(),
+                        bestBlock.getStakingDifficulty()));
+
         this.repository =
                 (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
@@ -646,9 +652,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         bestMiningBlock = state.savedBestMining;
         bestStakingBlock = state.savedBestStaking;
 
-        this.totalMiningDifficulty = state.savedMiningDifficulty;
-        this.totalStakingDifficulty = state.savedStakingDifficulty;
-        this.totalDifficulty = state.savedTotalDifficulty;
+        unityDifficulty.set(state.ud);
     }
 
     private void dropState() {
@@ -675,7 +679,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             this.fork = false;
         }
 
-        if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTotalDifficulty)) {
+        if (summary != null && isMoreThan(unityDifficulty.get().totalDifficulty, savedState.ud.totalDifficulty)) {
 
             if (LOG.isInfoEnabled()) {
                 LOG.info(
@@ -1519,9 +1523,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         track.flush();
-        if (summary != null) {
-            repository.commitCachedVMs(block.getHashWrapper());
-        }
+        repository.commitCachedVMs(block.getHashWrapper());
 
         if (!rebuild) {
             byte[] blockStateRootHash = block.getStateRoot();
@@ -1957,10 +1959,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
+        UnityDifficulty ud = unityDifficulty.get();
+
         if (fork) {
-            getBlockStore().saveBlock(block, totalMiningDifficulty, totalStakingDifficulty, false);
+            getBlockStore()
+                    .saveBlock(block, ud.totalMiningDifficulty, ud.totalStakingDifficulty, false);
         } else {
-            getBlockStore().saveBlock(block, totalMiningDifficulty, totalStakingDifficulty, true);
+            getBlockStore()
+                    .saveBlock(block, ud.totalMiningDifficulty, ud.totalStakingDifficulty, true);
         }
 
         AionTxInfo info;
@@ -1981,7 +1987,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     "Block saved: number: {}, hash: {}, TD: {}",
                     block.getNumber(),
                     block.getShortHash(),
-                    totalDifficulty);
+                    ud.totalDifficulty);
 
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
         }
@@ -2090,67 +2096,59 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public BigInteger getTotalMiningDifficulty() {
-        return getBestBlock().getMiningDifficulty();
-    }
-
-    @Override
-    public void setTotalMiningDifficulty(BigInteger totalMiningDifficulty) {
-        this.totalMiningDifficulty = totalMiningDifficulty;
-        if (this.totalMiningDifficulty != null && this.totalStakingDifficulty != null) {
-            this.totalDifficulty = totalStakingDifficulty.multiply(totalMiningDifficulty);
-        }        
-    }
-
-    @Override
-    public BigInteger getTotalStakingDifficulty() {
-        return getBestBlock().getStakingDifficulty();
-    }
-
-    @Override
-    public void setTotalStakingDifficulty(BigInteger totalStakingDifficulty) {
-        this.totalStakingDifficulty = totalStakingDifficulty;
-        if (this.totalMiningDifficulty != null && this.totalStakingDifficulty != null) {
-            this.totalDifficulty = totalStakingDifficulty.multiply(totalMiningDifficulty);
-        }         
-    }
-
-    @Override
     public BigInteger getTotalDifficulty() {
         return getBestBlock().getCumulativeDifficulty();
     }
 
     @Override
-    public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.totalDifficulty = totalDifficulty;
+    public void setUnityTotalDifficulty(BigInteger totalDifficulty, BigInteger miningDifficulty,
+        BigInteger stakingDifficulty) {
+        if (totalDifficulty == null || miningDifficulty == null || stakingDifficulty == null) {
+            throw new NullPointerException();
+        }
+
+        unityDifficulty.set(
+                new UnityDifficulty(totalDifficulty, miningDifficulty, stakingDifficulty));
     }
 
-    // this method is for the testing purpose
-    protected BigInteger getCacheTD() {
-        return totalMiningDifficulty.multiply(totalStakingDifficulty);
+    @VisibleForTesting
+    BigInteger getCacheTD() {
+        UnityDifficulty ud = unityDifficulty.get();
+        return ud.totalMiningDifficulty.multiply(ud.totalStakingDifficulty);
     }
 
     private BigInteger getInternalTD() {
-        return totalDifficulty;
+        return unityDifficulty.get().totalDifficulty;
     }
 
     private void updateTotalDifficulty(Block block) {
-        
+
+        UnityDifficulty ud = unityDifficulty.get();
+
         if(block.getNumber() == FORK_5_BLOCK_NUMBER) {
-            totalStakingDifficulty = GenesisStakingBlock.getGenesisDifficulty();
+            unityDifficulty.set(
+                    new UnityDifficulty(
+                            ud.totalDifficulty,
+                            ud.totalMiningDifficulty,
+                            GenesisStakingBlock.getGenesisDifficulty()));
+            ud = unityDifficulty.get();
         }
-        
+
+        BigInteger tmd = ud.totalMiningDifficulty;
+        BigInteger tsd = ud.totalStakingDifficulty;
         if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
-            totalMiningDifficulty = totalMiningDifficulty.add(block.getDifficultyBI());
+            tmd = tmd.add(block.getDifficultyBI());
         } else if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-            totalStakingDifficulty = totalStakingDifficulty.add(block.getDifficultyBI());
+            tsd = tsd.add(block.getDifficultyBI());
         } else {
             throw new IllegalStateException("Invalid block type");
         }
-        totalDifficulty = totalMiningDifficulty.multiply(totalStakingDifficulty);
-        block.setCumulativeDifficulty(totalDifficulty);
+
+        unityDifficulty.set(new UnityDifficulty(tmd.multiply(tsd), tmd, tsd));
+
+        block.setCumulativeDifficulty(unityDifficulty.get().totalDifficulty);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("TD: updated to {}", totalDifficulty);
+            LOG.debug("TD: updated to {}", unityDifficulty.get().totalDifficulty);
         }
     }
 
@@ -2399,21 +2397,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //
     //        return block.getHash();
     //    }
-
-    @Override
-    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
-        List<byte[]> bodies = new ArrayList<>(hashes.size());
-
-        for (byte[] hash : hashes) {
-            Block block = getBlockStore().getBlockByHash(hash);
-            if (block == null) {
-                break;
-            }
-            bodies.add(block.getEncodedBody());
-        }
-
-        return bodies;
-    }
 
     private void updateBestKnownBlock(Block block) {
         updateBestKnownBlock(block.getHeader());
@@ -2680,9 +2663,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Block savedBest = bestBlock;
         AionBlock savedBestMining = bestMiningBlock;
         StakingBlock savedBestStaking = bestStakingBlock;
-        BigInteger savedMiningDifficulty = totalMiningDifficulty;
-        BigInteger savedStakingDifficulty = totalStakingDifficulty;
-        BigInteger savedTotalDifficulty = totalDifficulty;
+        UnityDifficulty ud = new UnityDifficulty(unityDifficulty.get());
     }
 
     /**
@@ -2694,7 +2675,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
     
     @VisibleForTesting
-    void setUnityForkNumber(long unityForkNumber) {
+    @Override
+    public void setUnityForkNumber(long unityForkNumber) {
         LOG.info("Unity enabled at fork number " + unityForkNumber);
         FORK_5_BLOCK_NUMBER = unityForkNumber;
     }
@@ -2729,6 +2711,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long timeStamp = block.getTimestamp();
 
         // Can not submit a future block
+        int stakingBlockCandidateTimeout = 3600;
         if (timeStamp > (getSystemCurrentTimeBySec() + stakingBlockCandidateTimeout)) {
             LOG.debug("Block timestamp exceed the threshold. {}", block.toString());
             return false;

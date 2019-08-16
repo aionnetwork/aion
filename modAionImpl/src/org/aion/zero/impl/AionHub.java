@@ -438,11 +438,12 @@ public class AionHub {
             AionHubUtils.buildGenesis(genesis, repository);
 
             blockchain.setBestBlock(genesis);
-            
-            blockchain.setTotalMiningDifficulty(genesis.getMiningDifficulty());
-            blockchain.setTotalStakingDifficulty(genesis.getStakingDifficulty());
-            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
-            
+
+            blockchain.setUnityTotalDifficulty(
+                    genesis.getDifficultyBI(),
+                    genesis.getMiningDifficulty(),
+                    genesis.getStakingDifficulty());
+
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
                 genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
@@ -467,9 +468,11 @@ public class AionHub {
 
 
             Block blockWithDifficulties = getBlockStore().getBestBlockWithInfo();
-            blockchain.setTotalMiningDifficulty(blockWithDifficulties.getMiningDifficulty());
-            blockchain.setTotalStakingDifficulty(blockWithDifficulties.getStakingDifficulty());
-            blockchain.setTotalDifficulty(blockWithDifficulties.getCumulativeDifficulty());
+
+            blockchain.setUnityTotalDifficulty(
+                    blockWithDifficulties.getCumulativeDifficulty(),
+                    blockWithDifficulties.getMiningDifficulty(),
+                    blockWithDifficulties.getStakingDifficulty());
 
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value

@@ -287,7 +287,8 @@ public class UnityTotalDifficultyTest {
         long time = System.currentTimeMillis();
 
         Block genesis = bc.getGenesis();
-        bc.setTotalStakingDifficulty(genesis.getDifficultyBI());
+
+        bc.setUnityTotalDifficulty(genesis.getDifficultyBI(), genesis.getDifficultyBI(), genesis.getDifficultyBI());
 
         GenesisStakingBlock genesisStakingBlock = spy(new GenesisStakingBlock(null));
         BlockHeader genesisBlockHeader = genesisStakingBlock.getHeader();

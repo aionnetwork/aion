@@ -48,11 +48,8 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
-import org.aion.zero.impl.valid.AionPOWRule;
-import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
-import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
@@ -460,10 +457,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.getRepository().commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
             bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getMiningDifficulty(), genesis.getStakingDifficulty(), true);
             bc.setBestBlock(genesis);
-            
-            bc.setTotalMiningDifficulty(genesis.getMiningDifficulty());
-            bc.setTotalStakingDifficulty(genesis.getStakingDifficulty());
-            bc.setTotalDifficulty(genesis.getDifficultyBI());
+
+            bc.setUnityTotalDifficulty(
+                    genesis.getDifficultyBI(),
+                    genesis.getMiningDifficulty(),
+                    genesis.getStakingDifficulty());
+
             bc.setUnityForkNumber(unityForkNumber);
             
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
@@ -488,9 +487,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 bc.getRepository().getBlockStore().saveBlock(parentBest, totalMiningDifficultyParent, totalStakingDifficultyParent, true);
                 bc.getRepository().getBlockStore().saveBlock(best, totalMiningDifficulty, totalStakingDifficulty, true);
                 bc.setBestBlock(best);
-                bc.setTotalMiningDifficulty(totalMiningDifficulty);
-                bc.setTotalStakingDifficulty(totalStakingDifficulty);
-                bc.setTotalDifficulty(totalMiningDifficulty.multiply(totalStakingDifficulty));
+
+                bc.setUnityTotalDifficulty(
+                    totalMiningDifficulty.multiply(totalStakingDifficulty),
+                    totalMiningDifficulty,
+                    totalStakingDifficulty);
+
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
                 bc.getRepository().getWorldState().setRoot(best.getStateRoot());
                 bc.getRepository().getWorldState().sync(false);

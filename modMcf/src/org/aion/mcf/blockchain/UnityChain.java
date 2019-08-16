@@ -11,14 +11,8 @@ import org.aion.util.types.Hash256;
  */
 @SuppressWarnings("rawtypes")
 public interface UnityChain extends IGenericChain {
-
-    BigInteger getTotalMiningDifficulty();
-    
-    BigInteger getTotalStakingDifficulty();
     
     BigInteger getTotalDifficulty();
-
-    void setTotalDifficulty(BigInteger totalDifficulty);
 
     BigInteger getTotalDifficultyByHash(Hash256 hash);
 

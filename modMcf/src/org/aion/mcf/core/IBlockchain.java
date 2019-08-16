@@ -77,15 +77,9 @@ public interface IBlockchain extends UnityChain {
 
     void setBestBlock(Block block);
 
-    boolean hasParentOnTheChain(Block block);
-
     void close();
 
-    void setTotalMiningDifficulty(BigInteger miningDifficulty);
-    
-    void setTotalStakingDifficulty(BigInteger stakingDifficulty);
-    
-    void setTotalDifficulty(BigInteger totalDifficulty);
+    void setUnityTotalDifficulty(BigInteger totalDifficulty, BigInteger miningDifficulty, BigInteger stakingDifficulty);
 
     byte[] getBestBlockHash();
 
@@ -100,12 +94,4 @@ public interface IBlockchain extends UnityChain {
     boolean isBlockStored(byte[] hash, long number);
 
     List<BlockHeader> getListOfHeadersStartFrom(long number, int limit);
-
-    // /** Returns the list of headers for the main chain.
-    //  *  Returns emptyList() for side chain blocks.
-    //  */
-    // List<BH> getListOfHeadersStartFrom(
-    //         BlockIdentifierImpl identifier, int skip, int limit, boolean reverse);
-
-    List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 }
