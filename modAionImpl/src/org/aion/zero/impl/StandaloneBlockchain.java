@@ -32,6 +32,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
+import org.aion.util.time.TimeUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
@@ -555,7 +556,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     @Override
     public synchronized ImportResult tryToConnect(final Block block) {
-        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
+        ImportResult result = tryToConnectInternal(block, TimeUtils.currentTimeSecs());
 
         if (result == ImportResult.IMPORTED_BEST) {
             BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
@@ -568,7 +569,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     // TEMPORARY: here to support the ConsensusTest
     public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
             Block block) {
-        return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000, true);
+        return tryToConnectAndFetchSummary(block, TimeUtils.currentTimeSecs(), true);
     }
 
     /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */

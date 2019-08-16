@@ -38,6 +38,10 @@ public class TimeUtils {
         return formatter.format(date);
     }
 
+    public static long currentTimeSecs() {
+        return System.currentTimeMillis() / 1000;
+    }
+
     /*
      * Converts millis to minutes
      *

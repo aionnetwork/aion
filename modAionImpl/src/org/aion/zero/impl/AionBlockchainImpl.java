@@ -50,6 +50,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.util.time.TimeUtils;
 import org.aion.zero.impl.db.TransactionStore;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -840,7 +841,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.INVALID_BLOCK;
         }
         if (block.getTimestamp()
-                > (getSystemCurrentTimeBySec()
+                > (TimeUtils.currentTimeSecs()
                         + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -924,7 +925,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // requested shutdown
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectInternal(block, getSystemCurrentTimeBySec());
+        return tryToConnectInternal(block, TimeUtils.currentTimeSecs());
     }
 
     public synchronized void compactState() {
@@ -1227,7 +1228,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             parentStakingBlockHeader.getTimestamp() + newDelta,
                             parent.getHeader().getTimestamp() + 1);
         } else {
-            newTimestamp = getSystemCurrentTimeBySec();
+            newTimestamp = TimeUtils.currentTimeSecs();
 
             if (parentHdr.getTimestamp() >= newTimestamp) {
                 newTimestamp = parentHdr.getTimestamp() + 1;
@@ -1345,7 +1346,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public synchronized BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
             return createNewMiningBlockInternal(
-                parent, txs, waitUntilBlockTime, getSystemCurrentTimeBySec());
+                parent, txs, waitUntilBlockTime, TimeUtils.currentTimeSecs());
     }
 
     BlockContext createNewMiningBlockInternal(
@@ -1359,7 +1360,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long time = currTimeSeconds;
         if (parentHdr.getTimestamp() >= time) {
             time = parentHdr.getTimestamp() + 1;
-            while (waitUntilBlockTime && getSystemCurrentTimeBySec() <= time) {
+            while (waitUntilBlockTime && TimeUtils.currentTimeSecs() <= time) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -2712,7 +2713,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // Can not submit a future block
         int stakingBlockCandidateTimeout = 3600;
-        if (timeStamp > (getSystemCurrentTimeBySec() + stakingBlockCandidateTimeout)) {
+        if (timeStamp > (TimeUtils.currentTimeSecs() + stakingBlockCandidateTimeout)) {
             LOG.debug("Block timestamp exceed the threshold. {}", block.toString());
             return false;
         }
@@ -2738,7 +2739,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         StakingBlock bestBlock = null;
         List<Long> removeTimeStamp = new ArrayList<>();
         for (Entry<Long, LinkedHashSet<StakingBlock>> e : sealednewStakingBlock.entrySet()) {
-            if (e.getKey() <= getSystemCurrentTimeBySec()) {
+            if (e.getKey() <= TimeUtils.currentTimeSecs()) {
                 removeTimeStamp.add(e.getKey());
                 for (StakingBlock b : e.getValue()) {
                     if (b != null
@@ -2776,9 +2777,5 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return bestBlock;
-    }
-
-    private static long getSystemCurrentTimeBySec() {
-        return System.currentTimeMillis() / 1000;
     }
 }
