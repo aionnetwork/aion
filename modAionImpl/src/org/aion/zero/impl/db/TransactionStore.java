@@ -4,10 +4,9 @@ import static org.aion.util.others.Utils.dummy;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,13 +21,12 @@ import org.apache.commons.collections4.map.LRUMap;
 
 public class TransactionStore implements Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final ObjectStore<List<AionTxInfo>> txInfoSource;
+    private final ObjectStore<Map<ByteArrayWrapper, AionTxInfo>> txInfoSource;
     private final ObjectStore<Set<ByteArrayWrapper>> aliasSource;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public TransactionStore(
-        ByteArrayKeyValueDatabase txInfoSrc, Serializer<List<AionTxInfo>> serializer) {
+    public TransactionStore(ByteArrayKeyValueDatabase txInfoSrc, Serializer<Map<ByteArrayWrapper, AionTxInfo>> serializer) {
         txInfoSource = Stores.newObjectStore(txInfoSrc, serializer);
         aliasSource = Stores.newObjectStore(txInfoSrc, aliasSerializer);
     }
@@ -40,22 +38,21 @@ public class TransactionStore implements Closeable {
         try {
             byte[] txHash = tx.getReceipt().getTransaction().getTransactionHash();
 
-            List<AionTxInfo> existingInfos = null;
+            Map<ByteArrayWrapper, AionTxInfo> existingInfos = null;
             if (lastSavedTxHash.put(ByteArrayWrapper.wrap(txHash), dummy) != null
                     || !lastSavedTxHash.isFull()) {
                 existingInfos = txInfoSource.get(txHash);
             }
 
             if (existingInfos == null) {
-                existingInfos = new ArrayList<>();
+                existingInfos = new HashMap<>();
             } else {
-                for (AionTxInfo info : existingInfos) {
-                    if (Arrays.equals(info.getBlockHash(), tx.getBlockHash())) {
-                        return false;
-                    }
+                // TODO: switch to an overwrite policy
+                if (existingInfos.containsKey(tx.blockHash)) {
+                    return false;
                 }
             }
-            existingInfos.add(tx);
+            existingInfos.put(tx.blockHash, tx);
             txInfoSource.putToBatch(txHash, existingInfos);
 
             return true;
@@ -94,22 +91,19 @@ public class TransactionStore implements Closeable {
     }
 
     public AionTxInfo getTxInfo(byte[] txHash, byte[] blockHash) {
+        // ensuring non-null input since this can be called with input from the API
+        if (txHash == null || blockHash == null) return null;
+
         lock.readLock().lock();
 
         try {
-            List<AionTxInfo> existingInfos = txInfoSource.get(txHash);
-            for (AionTxInfo info : existingInfos) {
-                if (Arrays.equals(info.getBlockHash(), blockHash)) {
-                    return info;
-                }
-            }
-            return null;
+            return txInfoSource.get(txHash).get(ByteArrayWrapper.wrap(blockHash));
         } finally {
             lock.readLock().unlock();
         }
     }
 
-    public List<AionTxInfo> getTxInfo(byte[] key) {
+    public Map<ByteArrayWrapper, AionTxInfo> getTxInfo(byte[] key) {
         lock.readLock().lock();
         try {
             return txInfoSource.get(key);

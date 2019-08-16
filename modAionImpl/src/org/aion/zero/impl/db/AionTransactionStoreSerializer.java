@@ -1,37 +1,41 @@
 package org.aion.zero.impl.db;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.aion.db.store.Serializer;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.slf4j.Logger;
 
 public class AionTransactionStoreSerializer {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.toString());
 
-    public static final Serializer<List<AionTxInfo>> serializer =
+    public static final Serializer<Map<ByteArrayWrapper, AionTxInfo>> serializer =
             new Serializer<>() {
                 @Override
-                public byte[] serialize(List<AionTxInfo> object) {
+                public byte[] serialize(Map<ByteArrayWrapper, AionTxInfo> object) {
                     byte[][] txsRlp = new byte[object.size()][];
-                    for (int i = 0; i < txsRlp.length; i++) {
-                        txsRlp[i] = object.get(i).getEncoded();
+                    int i = 0;
+                    for (AionTxInfo info : object.values()) {
+                        txsRlp[i] = info.getEncoded();
+                        i++;
                     }
                     return RLP.encodeList(txsRlp);
                 }
 
                 @Override
-                public List<AionTxInfo> deserialize(byte[] stream) {
+                public Map<ByteArrayWrapper, AionTxInfo> deserialize(byte[] stream) {
                     try {
                         RLPList params = RLP.decode2(stream);
                         RLPList infoList = (RLPList) params.get(0);
-                        List<AionTxInfo> ret = new ArrayList<>();
+                        Map<ByteArrayWrapper, AionTxInfo> ret = new HashMap<>();
                         for (int i = 0; i < infoList.size(); i++) {
-                            ret.add(AionTxInfo.newInstanceFromEncoding(infoList.get(i).getRLPData()));
+                            AionTxInfo info = AionTxInfo.newInstanceFromEncoding(infoList.get(i).getRLPData());
+                            ret.put(info.blockHash, info);
                         }
                         return ret;
                     } catch (Exception e) {

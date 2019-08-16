@@ -513,7 +513,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public AionTxInfo getTransactionInfo(byte[] hash) {
 
         // Try to get info if the hash is from an invokable transaction
-        List<AionTxInfo> infos = getTransactionInfoByAlias(hash);
+        Map<ByteArrayWrapper, AionTxInfo> infos = getTransactionInfoByAlias(hash);
 
         // If we didn't find the alias for an invokable
         if (infos == null || infos.isEmpty()) {
@@ -525,21 +525,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         AionTxInfo txInfo = null;
-        if (infos.size() == 1) {
-            txInfo = infos.get(0);
-        } else {
-            // pick up the receipt from the block on the main chain
-            for (AionTxInfo info : infos) {
-                Block block = getBlockStore().getBlockByHash(info.getBlockHash());
-                if (block == null) continue;
-
-                Block mainBlock = getBlockStore().getChainBlockByNumber(block.getNumber());
-                if (mainBlock == null) continue;
-
-                if (Arrays.equals(info.getBlockHash(), mainBlock.getHash())) {
-                    txInfo = info;
-                    break;
-                }
+        // pick up the receipt from the block on the main chain
+        for (ByteArrayWrapper blockHash : infos.keySet()) {
+            if (!isMainChain(blockHash.toBytes())) {
+                continue;
+            } else {
+                txInfo = infos.get(blockHash);
+                break;
             }
         }
         if (txInfo == null) {
@@ -561,16 +553,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return transactionStore.getTxInfo(txHash, blockHash);
     }
 
-    private List<AionTxInfo> getTransactionInfoByAlias(byte[] innerHash) {
+    private Map<ByteArrayWrapper, AionTxInfo> getTransactionInfoByAlias(byte[] innerHash) {
         Set<ByteArrayWrapper> metaTxHashes = transactionStore.getAliases(innerHash);
 
         if (metaTxHashes == null) return null; // No aliases found
 
-        List<AionTxInfo> infoList = new ArrayList<>();
+        Map<ByteArrayWrapper, AionTxInfo> infoList = new HashMap<>();
         for (ByteArrayWrapper metaTxHash : metaTxHashes) {
-            List<AionTxInfo> metaTxInfos = transactionStore.getTxInfo(metaTxHash.toBytes());
+            Map<ByteArrayWrapper, AionTxInfo> metaTxInfos = transactionStore.getTxInfo(metaTxHash.toBytes());
             if (metaTxInfos != null) {
-                infoList.addAll(metaTxInfos);
+                infoList.putAll(metaTxInfos);
             }
         }
         return infoList; // Had metaTx hash, but was not found in mainchain

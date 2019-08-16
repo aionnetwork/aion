@@ -14,6 +14,7 @@ import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.config.CfgDb;
 import org.aion.base.AccountState;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -702,16 +703,16 @@ public class DBUtils {
         AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
 
         try {
-            List<AionTxInfo> txInfoList = blockchain.getTransactionStore().getTxInfo(txHash);
+            Map<ByteArrayWrapper, AionTxInfo> txInfoList = blockchain.getTransactionStore().getTxInfo(txHash);
 
             if (txInfoList == null || txInfoList.isEmpty()) {
                 System.out.println("Can not find the transaction with given hash.");
                 return Status.FAILURE;
             }
 
-            for (AionTxInfo info : txInfoList) {
+            for (Map.Entry<ByteArrayWrapper, AionTxInfo> entry : txInfoList.entrySet()) {
 
-                Block block = blockchain.getBlockStore().getBlockByHash(info.getBlockHash());
+                Block block = blockchain.getBlockStore().getBlockByHash(entry.getKey().toBytes());
                 if (block == null) {
                     System.out.println(
                             "Can not find the block data with given block hash of the transaction info.");
@@ -720,7 +721,7 @@ public class DBUtils {
                     return Status.FAILURE;
                 }
 
-                AionTransaction tx = block.getTransactionsList().get(info.getIndex());
+                AionTransaction tx = block.getTransactionsList().get(entry.getValue().getIndex());
 
                 if (tx == null) {
                     System.out.println("Can not find the transaction data with given hash.");
@@ -730,7 +731,7 @@ public class DBUtils {
                 }
 
                 System.out.println(tx.toString());
-                System.out.println(info.toString());
+                System.out.println(entry.getValue());
                 System.out.println();
             }
 

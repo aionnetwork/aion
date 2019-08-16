@@ -25,7 +25,7 @@ public class AionTxInfo {
 
     // note that the receipt is modified to set the transaction
     private final AionTxReceipt receipt;
-    private final ByteArrayWrapper blockHash;
+    public final ByteArrayWrapper blockHash;
     private final int index;
     private final List<InternalTransaction> internalTransactions;
     private final boolean createdWithInternalTransactions;
