@@ -81,7 +81,7 @@ public class TxTest {
                         nrgLimit);
         byte[] hash = block.getHash();
 
-        JSONObject object = Tx.aionTxInfoToDetailsJSON(AionTxInfo.newInstance(txReceipt,hash,0), block);
+        JSONObject object = Tx.aionTxInfoToDetailsJSON(AionTxInfo.newInstance(txReceipt,block.getHashWrapper(),0), block);
         assertNotNull(object);
         assertEquals(ByteUtil.byteArrayToLong(txNonce), object.get("nonce"));
         assertEquals(StringUtils.toJsonHex(data), object.get("input"));
@@ -134,9 +134,8 @@ public class TxTest {
                 solution,
                 nrgConsumed,
                 nrgLimit);
-        byte[] hashWithLog = block.getHash();
 
-        JSONObject jsonWithLogs = Tx.aionTxInfoToDetailsJSON(AionTxInfo.newInstance(txReceiptWithLog, hashWithLog, 0), blockWithLog);
+        JSONObject jsonWithLogs = Tx.aionTxInfoToDetailsJSON(AionTxInfo.newInstance(txReceiptWithLog, blockWithLog.getHashWrapper(), 0), blockWithLog);
 
         assertNotNull(jsonWithLogs);
         List<Object> jsonArray = jsonWithLogs.getJSONArray("logs").toList();

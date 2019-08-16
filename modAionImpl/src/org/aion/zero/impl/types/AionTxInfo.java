@@ -15,6 +15,7 @@ import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
 import org.aion.util.conversions.Hex;
 import org.aion.base.AionTxReceipt;
+import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 public class AionTxInfo {
@@ -24,13 +25,13 @@ public class AionTxInfo {
 
     // note that the receipt is modified to set the transaction
     private final AionTxReceipt receipt;
-    private final byte[] blockHash;
+    private final ByteArrayWrapper blockHash;
     private final int index;
     private final List<InternalTransaction> internalTransactions;
     private final boolean createdWithInternalTransactions;
 
     /** @implNote Instance creation should be done through the static factory methods. */
-    private AionTxInfo(AionTxReceipt receipt, byte[] blockHash, int index, List<InternalTransaction> internalTransactions, boolean createdWithInternalTransactions) {
+    private AionTxInfo(AionTxReceipt receipt, ByteArrayWrapper blockHash, int index, List<InternalTransaction> internalTransactions, boolean createdWithInternalTransactions) {
         this.receipt = receipt;
         this.blockHash = blockHash;
         this.index = index;
@@ -42,12 +43,12 @@ public class AionTxInfo {
      * Creates an instance with the base data: receipt, block hash and index. Does not stored
      * information regarding internal transactions.
      */
-    public static AionTxInfo newInstance(AionTxReceipt receipt, byte[] blockHash, int index) {
+    public static AionTxInfo newInstance(AionTxReceipt receipt, ByteArrayWrapper blockHash, int index) {
         return new AionTxInfo(receipt, blockHash, index, null, false);
     }
 
     /** Creates an instance with receipt, block hash, index and internal transactions. */
-    public static AionTxInfo newInstanceWithInternalTransactions(AionTxReceipt receipt, byte[] blockHash, int index, List<InternalTransaction> internalTransactions) {
+    public static AionTxInfo newInstanceWithInternalTransactions(AionTxReceipt receipt, ByteArrayWrapper blockHash, int index, List<InternalTransaction> internalTransactions) {
         return new AionTxInfo(receipt, blockHash, index, internalTransactions, true);
     }
 
@@ -89,7 +90,7 @@ public class AionTxInfo {
         RLPList txInfo = (RLPList) params.get(0);
 
         AionTxReceipt receipt = new AionTxReceipt(txInfo.get(INDEX_RECEIPT).getRLPData());
-        byte[] blockHash = txInfo.get(INDEX_BLOCK_HASH).getRLPData();
+        ByteArrayWrapper blockHash = ByteArrayWrapper.wrap(txInfo.get(INDEX_BLOCK_HASH).getRLPData());
 
         int index;
         RLPItem indexRLP = (RLPItem) txInfo.get(INDEX_TX_INDEX);
@@ -139,7 +140,7 @@ public class AionTxInfo {
     public byte[] getEncoded() {
 
         byte[] receiptRLP = this.receipt.toBytes();
-        byte[] blockHashRLP = RLP.encodeElement(blockHash);
+        byte[] blockHashRLP = RLP.encodeElement(blockHash.toBytes());
         byte[] indexRLP = RLP.encodeInt(index);
         byte[] completeRLP = RLP.encodeByte(createdWithInternalTransactions ? (byte) 1 : (byte) 0);
 
@@ -163,7 +164,7 @@ public class AionTxInfo {
     }
 
     public byte[] getBlockHash() {
-        return blockHash;
+        return blockHash.toBytes();
     }
 
     public int getIndex() {

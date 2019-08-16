@@ -1462,12 +1462,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             List<AionTxExecSummary> execSummaries = summary.getSummaries();
 
             for (int i = 0; i < receipts.size(); i++) {
-                AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, execSummaries.get(i).getInternalTransactions());
+                AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHashWrapper(), i, execSummaries.get(i).getInternalTransactions());
 
                 if (storeInternalTransactions) {
                     transactionStore.putTxInfoToBatch(infoWithInternalTxs);
                 } else {
-                    AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                    AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHashWrapper(), i);
                     transactionStore.putTxInfoToBatch(info);
                 }
 
@@ -1843,12 +1843,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         getBlockStore().saveBlock(block, td, !fork);
 
         for (int i = 0; i < receipts.size(); i++) {
-            AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, summaries.get(i).getInternalTransactions());
+            AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHashWrapper(), i, summaries.get(i).getInternalTransactions());
 
             if (storeInternalTransactions) {
                 transactionStore.putTxInfoToBatch(infoWithInternalTxs);
             } else {
-                AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHashWrapper(), i);
                 transactionStore.putTxInfoToBatch(info);
             }
 
