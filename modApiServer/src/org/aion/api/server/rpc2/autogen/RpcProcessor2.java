@@ -1,15 +1,15 @@
 // === RpcProcessor2.java ===
+package org.aion.api.server.rpc2.autogen;
+import org.aion.api.server.rpc2.AbstractRpcProcessor;
+import org.aion.api.serialization.JsonRpcRequest;
+import org.aion.api.server.rpc2.autogen.pod.*;
+
 /******************************************************************************
  *
  * AUTO-GENERATED SOURCE FILE.  DO NOT EDIT MANUALLY -- YOUR CHANGES WILL
  * BE WIPED OUT WHEN THIS FILE GETS RE-GENERATED OR UPDATED.
  *
  *****************************************************************************/
-
-package org.aion.api.server.rpc2.autogen;
-import org.aion.api.server.rpc2.AbstractRpcProcessor;
-import org.aion.api.serialization.JsonRpcRequest;
-
 public class RpcProcessor2 extends AbstractRpcProcessor {
     private final Rpc rpc;
 
@@ -21,17 +21,25 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
         Object[] params = req.getParams();
         switch(req.getMethod()) {
             case "getseed":
-                return (byte[]) rpc.getseed(
+                return rpc.getseed(
                 );
             case "submitseed":
-                return (byte[]) rpc.submitseed(
+                return rpc.submitseed(
                     (byte[]) params[0],
                     (byte[]) params[1]
                 );
             case "submitsignature":
-                return (boolean) rpc.submitsignature(
+                return rpc.submitsignature(
                     (byte[]) params[0],
                     (byte[]) params[1]
+                );
+            case "eth_getTransactionByHash2":
+                return rpc.eth_getTransactionByHash2(
+                    (byte[]) params[0]
+                );
+            case "eth_call2":
+                return rpc.eth_call2(
+                    (CallRequest) params[0]
                 );
             default: throw new UnsupportedOperationException("Not a valid method.");
         }
