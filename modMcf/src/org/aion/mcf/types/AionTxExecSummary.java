@@ -1,34 +1,22 @@
 package org.aion.mcf.types;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 import static org.aion.util.biginteger.BIUtil.toBI;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.tx.TxReceipt;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.InternalTransactionUtil;
-import org.aion.mcf.vm.types.LogUtility;
-import org.aion.rlp.RLP;
-import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
-import org.apache.commons.lang3.ArrayUtils;
 
 public class AionTxExecSummary implements TxExecSummary {
 
@@ -42,8 +30,6 @@ public class AionTxExecSummary implements TxExecSummary {
 
     private List<AionAddress> deletedAccounts = emptyList();
     private List<InternalTransaction> internalTransactions = emptyList();
-    private Map<DataWordImpl, DataWordImpl> storageDiff = emptyMap();
-    private TxTouchedStorage touchedStorage = new TxTouchedStorage();
 
     private byte[] result;
     private List<Log> logs;
@@ -51,159 +37,12 @@ public class AionTxExecSummary implements TxExecSummary {
     /** Indicates whether the transaction failed */
     private TransactionSummaryStatus failed;
 
-    /** RLP related, parsed indicates whether the class has already been deserialized. */
-    private byte[] rlpEncoded;
-
-    private boolean parsed;
-
     public AionTxExecSummary(AionTxReceipt receipt) {
-        this.parsed = true;
         this.receipt = receipt;
         this.value = toBI(this.getReceipt().getTransaction().getValue());
     }
 
-    public AionTxExecSummary(byte[] rlpEncoded) {
-        this.rlpEncoded = rlpEncoded;
-        this.parsed = false;
-    }
-
-    public void rlpParse() {
-        if (parsed) {
-            return;
-        }
-
-        RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList summary = (RLPList) decodedTxList.get(0);
-
-        this.receipt = new AionTxReceipt(summary.get(0).getRLPData());
-        this.value = decodeBigInteger(summary.get(1).getRLPData());
-        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(2));
-        this.touchedStorage = decodeTouchedStorage(summary.get(3));
-        this.result = summary.get(4).getRLPData();
-        this.logs = decodeLogs((RLPList) summary.get(5));
-        byte[] failed = summary.get(6).getRLPData();
-        int value = RLP.decodeInt(failed, 0);
-        this.failed = TransactionSummaryStatus.getStatus(value);
-
-        this.parsed = true;
-    }
-
-    private static BigInteger decodeBigInteger(byte[] encoded) {
-        return ArrayUtils.isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
-    }
-
-    public byte[] getEncoded() {
-        if (rlpEncoded != null) {
-            return rlpEncoded;
-        }
-
-        // Note that the returned encoding does not have any information about internal transactions
-        // TODO: Figure out whether we should remove internal txs from this entirely class entirely
-        this.rlpEncoded =
-                RLP.encodeList(
-                        this.receipt.getEncoded(),
-                        RLP.encodeBigInteger(this.value),
-                        encodeDeletedAccounts(this.deletedAccounts),
-                        encodeTouchedStorage(this.touchedStorage),
-                        RLP.encodeElement(this.result),
-                        encodeLogs(this.logs),
-                        RLP.encodeInt(this.failed.getCode()));
-
-        return rlpEncoded;
-    }
-
-    public static byte[] encodeTouchedStorage(TxTouchedStorage touchedStorage) {
-        Collection<TxTouchedStorage.Entry> entries = touchedStorage.getEntries();
-        byte[][] result = new byte[entries.size()][];
-
-        int i = 0;
-        for (TxTouchedStorage.Entry entry : entries) {
-            byte[] key = RLP.encodeElement(entry.getKey().getData());
-            byte[] value = RLP.encodeElement(entry.getValue().getData());
-            byte[] changed = RLP.encodeInt(entry.isChanged() ? 1 : 0);
-
-            result[i++] = RLP.encodeList(key, value, changed);
-        }
-
-        return RLP.encodeList(result);
-    }
-
-    protected static TxTouchedStorage decodeTouchedStorage(RLPElement encoded) {
-        TxTouchedStorage result = new TxTouchedStorage();
-
-        for (RLPElement entry : (RLPList) encoded) {
-            RLPList asList = (RLPList) entry;
-
-            DataWordImpl key = new DataWordImpl(asList.get(0).getRLPData());
-            DataWordImpl value = new DataWordImpl(asList.get(1).getRLPData());
-            byte[] changedBytes = asList.get(2).getRLPData();
-            boolean changed = ArrayUtils.isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
-
-            result.add(new TxTouchedStorage.Entry(key, value, changed));
-        }
-
-        return result;
-    }
-
-    private static List<Log> decodeLogs(RLPList logs) {
-        ArrayList<Log> result = new ArrayList<>();
-        for (RLPElement log : logs) {
-            result.add(LogUtility.decodeLog(log.getRLPData()));
-        }
-        return result;
-    }
-
-    private static byte[] encodeLogs(List<Log> logs) {
-        byte[][] result = new byte[logs.size()][];
-        for (int i = 0; i < logs.size(); i++) {
-            Log log = logs.get(i);
-            result[i] = LogUtility.encodeLog(log);
-        }
-
-        return RLP.encodeList(result);
-    }
-
-    private static byte[] encodeStorageDiff(Map<DataWordImpl, DataWordImpl> storageDiff) {
-        byte[][] result = new byte[storageDiff.size()][];
-        int i = 0;
-        for (Map.Entry<DataWordImpl, DataWordImpl> entry : storageDiff.entrySet()) {
-            byte[] key = RLP.encodeElement(entry.getKey().getData());
-            byte[] value = RLP.encodeElement(entry.getValue().getData());
-            result[i++] = RLP.encodeList(key, value);
-        }
-        return RLP.encodeList(result);
-    }
-
-    private static Map<DataWordImpl, DataWordImpl> decodeStorageDiff(RLPList storageDiff) {
-        Map<DataWordImpl, DataWordImpl> result = new HashMap<>();
-        for (RLPElement entry : storageDiff) {
-            DataWordImpl key = new DataWordImpl(((RLPList) entry).get(0).getRLPData());
-            DataWordImpl value = new DataWordImpl(((RLPList) entry).get(1).getRLPData());
-            result.put(key, value);
-        }
-        return result;
-    }
-
-    private static byte[] encodeDeletedAccounts(List<AionAddress> deletedAccounts) {
-        byte[][] result = new byte[deletedAccounts.size()][];
-        for (int i = 0; i < deletedAccounts.size(); i++) {
-            result[i] = RLP.encodeElement(deletedAccounts.get(i).toByteArray());
-        }
-        return RLP.encodeList(result);
-    }
-
-    private static List<AionAddress> decodeDeletedAccounts(RLPList deletedAccounts) {
-        List<AionAddress> result = new ArrayList<>();
-        for (RLPElement deletedAccount : deletedAccounts) {
-            result.add(new AionAddress(deletedAccount.getRLPData()));
-        }
-        return result;
-    }
-
     public AionTransaction getTransaction() {
-        if (!parsed) {
-            rlpParse();
-        }
         return this.getReceipt().getTransaction();
     }
 
@@ -212,33 +51,15 @@ public class AionTxExecSummary implements TxExecSummary {
     }
 
     public BigInteger getValue() {
-        if (!parsed) {
-            rlpParse();
-        }
         return value;
     }
 
     public List<AionAddress> getDeletedAccounts() {
-        if (!parsed) {
-            rlpParse();
-        }
         return deletedAccounts;
     }
 
     public List<InternalTransaction> getInternalTransactions() {
-        if (!parsed) {
-            rlpParse();
-        }
         return internalTransactions;
-    }
-
-    @Deprecated
-    /* Use getTouchedStorage().getAll() instead */
-    public Map<DataWordImpl, DataWordImpl> getStorageDiff() {
-        if (!parsed) {
-            rlpParse();
-        }
-        return storageDiff;
     }
 
     /**
@@ -248,9 +69,6 @@ public class AionTxExecSummary implements TxExecSummary {
      * @return
      */
     public boolean isRejected() {
-        if (!parsed) {
-            rlpParse();
-        }
         return failed == TransactionSummaryStatus.REJECTED;
     }
 
@@ -262,39 +80,22 @@ public class AionTxExecSummary implements TxExecSummary {
      * @return
      */
     public boolean isFailed() {
-        if (!parsed) {
-            rlpParse();
-        }
         return failed == TransactionSummaryStatus.FAILED || failed == TransactionSummaryStatus.REJECTED;
     }
 
     public byte[] getResult() {
-        if (!parsed) {
-            rlpParse();
-        }
         return result;
     }
 
     public List<Log> getLogs() {
-        if (!parsed) {
-            rlpParse();
-        }
         return logs;
     }
 
     public AionTxReceipt getReceipt() {
-        if (!parsed) {
-            rlpParse();
-        }
-
         return this.receipt;
     }
 
     public BigInteger getRefund() {
-        if (!parsed) {
-            rlpParse();
-        }
-
         BigInteger energyLimit = BigInteger.valueOf(this.getTransaction().getEnergyLimit());
         BigInteger energyUsed = BigInteger.valueOf(this.getReceipt().getEnergyUsed());
         return energyLimit
@@ -303,19 +104,12 @@ public class AionTxExecSummary implements TxExecSummary {
     }
 
     public BigInteger getFee() {
-        if (!parsed) {
-            rlpParse();
-        }
         return BigInteger.valueOf(this.getReceipt().getEnergyUsed())
                 .multiply(BigInteger.valueOf(this.getTransaction().getEnergyPrice()));
     }
 
     public BigInteger getNrgUsed() {
         return BigInteger.valueOf(this.getReceipt().getEnergyUsed());
-    }
-
-    public TxTouchedStorage getTouchedStorage() {
-        return touchedStorage;
     }
 
     public static Builder builderFor(AionTxReceipt receipt) {
@@ -356,18 +150,6 @@ public class AionTxExecSummary implements TxExecSummary {
             return this;
         }
 
-        public Builder storageDiff(Map<DataWordImpl, DataWordImpl> storageDiff) {
-            summary.storageDiff = unmodifiableMap(storageDiff);
-            return this;
-        }
-
-        public Builder touchedStorage(
-                Map<DataWordImpl, DataWordImpl> touched, Map<DataWordImpl, DataWordImpl> changed) {
-            summary.touchedStorage.addReading(touched);
-            summary.touchedStorage.addWriting(changed);
-            return this;
-        }
-
         public Builder markAsRejected() {
             summary.failed = TransactionSummaryStatus.REJECTED;
             return this;
@@ -389,8 +171,6 @@ public class AionTxExecSummary implements TxExecSummary {
         }
 
         public AionTxExecSummary build() {
-            summary.parsed = true;
-
             Objects.requireNonNull(summary.getResult());
             Objects.requireNonNull(summary.getReceipt());
             Objects.requireNonNull(summary.getReceipt().getTransaction());

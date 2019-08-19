@@ -51,7 +51,7 @@ import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.types.BlockIdentifierImpl;
+import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
@@ -146,7 +146,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private volatile BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
-    private AtomicReference<BlockIdentifierImpl> bestKnownBlock = new AtomicReference<>();
+    private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
     private AionAddress minerCoinbase;
     private byte[] minerExtraData;
@@ -1923,7 +1923,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void updateBestKnownBlock(BlockHeader header) {
         if (bestKnownBlock.get() == null || header.getNumber() > bestKnownBlock.get().getNumber()) {
-            bestKnownBlock.set(new BlockIdentifierImpl(header.getHash(), header.getNumber()));
+            bestKnownBlock.set(new BlockIdentifier(header.getHash(), header.getNumber()));
         }
     }
 
