@@ -401,7 +401,6 @@ task ciBuild {
     dependsOn build
     def ciModules = [
             'modBase',
-            'modAion',
             'modAionImpl',
             'modApiServer',
             'modBoot',

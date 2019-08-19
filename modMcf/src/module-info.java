@@ -13,6 +13,7 @@ module aion.mcf {
     requires aion.types;
     requires aion.base;
     requires aion.fastvm;
+    requires commons.lang3;
     requires org.json;
 
     exports org.aion.mcf.account;

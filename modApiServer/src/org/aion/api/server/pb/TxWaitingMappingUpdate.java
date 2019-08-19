@@ -1,7 +1,7 @@
 package org.aion.api.server.pb;
 
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 
 public class TxWaitingMappingUpdate {
     ByteArrayWrapper txHash;

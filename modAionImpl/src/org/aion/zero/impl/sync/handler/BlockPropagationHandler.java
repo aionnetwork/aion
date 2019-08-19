@@ -18,7 +18,6 @@ import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

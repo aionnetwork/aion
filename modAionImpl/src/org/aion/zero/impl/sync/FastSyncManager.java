@@ -27,7 +27,6 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

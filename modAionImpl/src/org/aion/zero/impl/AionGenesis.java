@@ -15,10 +15,10 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
 
 public class AionGenesis extends AionBlock {
     /**

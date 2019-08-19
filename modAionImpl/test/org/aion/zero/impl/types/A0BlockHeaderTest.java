@@ -5,8 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.junit.Test;
 
 public class A0BlockHeaderTest {

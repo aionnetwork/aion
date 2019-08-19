@@ -10,7 +10,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.util.TestResources;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

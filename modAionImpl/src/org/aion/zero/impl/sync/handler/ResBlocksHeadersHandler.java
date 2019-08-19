@@ -12,7 +12,6 @@ import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.impl.sync.statistics.RequestType;
-import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
 /** @author chris handler for block headers response from network */

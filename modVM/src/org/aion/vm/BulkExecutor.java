@@ -13,7 +13,7 @@ import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.AionTxExecSummary;
+import org.aion.mcf.types.AionTxExecSummary;
 import org.slf4j.Logger;
 
 /**

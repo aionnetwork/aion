@@ -8,7 +8,7 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.db.Repository;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.query.QueryInterface;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 
 /** Aion chain interface. */
 public interface IAionChain extends IChainInstancePOW, QueryInterface {

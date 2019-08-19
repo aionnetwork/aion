@@ -1,4 +1,4 @@
-package org.aion.zero.types;
+package org.aion.mcf.types;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.types.AionTxReceipt;
 import org.aion.types.Log;
 import org.junit.Test;
 

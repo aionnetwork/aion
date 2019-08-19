@@ -13,7 +13,6 @@ module aion.zero.impl {
     requires aion.txpool;
     requires aion.crypto;
     requires aion.db.impl;
-    requires aion.zero;
     requires aion.vm;
     requires aion.precompiled;
     requires aion.fastvm;
@@ -28,6 +27,7 @@ module aion.zero.impl {
     requires java.xml;
     requires aion.types;
     requires aion.base;
+    requires core;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

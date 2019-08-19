@@ -4,8 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
-import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

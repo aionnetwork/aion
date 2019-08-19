@@ -5,7 +5,6 @@ import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
-import org.aion.zero.types.A0BlockHeader;
 
 public class AionBlockHeaderWrapper extends AbstractBlockHeaderWrapper<A0BlockHeader> {
 

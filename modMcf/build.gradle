@@ -24,9 +24,9 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'com.google.guava:guava:25.1-jre'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile 'org.json:json:20180813'
 
-    testCompile project(':modAion')
     testCompile project(':modAionImpl')
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.truth:truth:0.42'

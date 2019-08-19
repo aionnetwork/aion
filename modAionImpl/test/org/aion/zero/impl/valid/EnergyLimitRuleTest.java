@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.impl.api.BlockConstants;
-import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
 
 /** Tests for {@link EnergyLimitRule} */

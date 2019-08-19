@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
 
 public class ResBlocksHeadersTest {

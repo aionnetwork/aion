@@ -21,7 +21,6 @@ dependencies {
     compile project(':modLogger')
     compile project(':modCrypto')
 
-    compile project(':modAion')
     compile project(':modAionImpl')
     compile files("${rootProject.projectDir}/lib/fastvm-658171d.jar")
     compile project(':modMcf')

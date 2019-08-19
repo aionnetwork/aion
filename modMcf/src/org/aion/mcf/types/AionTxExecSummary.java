@@ -1,12 +1,10 @@
-package org.aion.zero.types;
+package org.aion.mcf.types;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static org.aion.util.biginteger.BIUtil.toBI;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -30,6 +28,7 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class AionTxExecSummary implements TxExecSummary {
 
@@ -90,7 +89,7 @@ public class AionTxExecSummary implements TxExecSummary {
     }
 
     private static BigInteger decodeBigInteger(byte[] encoded) {
-        return isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
+        return ArrayUtils.isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
     }
 
     public byte[] getEncoded() {
@@ -138,7 +137,7 @@ public class AionTxExecSummary implements TxExecSummary {
             DataWordImpl key = new DataWordImpl(asList.get(0).getRLPData());
             DataWordImpl value = new DataWordImpl(asList.get(1).getRLPData());
             byte[] changedBytes = asList.get(2).getRLPData();
-            boolean changed = isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
+            boolean changed = ArrayUtils.isNotEmpty(changedBytes) && RLP.decodeInt(changedBytes, 0) == 1;
 
             result.add(new TxTouchedStorage.Entry(key, value, changed));
         }

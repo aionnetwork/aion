@@ -12,7 +12,7 @@ import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 
 public class AionTxInfo {
     // TODO AKI-316: refactor AionTxInfo instance variable access

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
 
 /**
  * @author chris SyncAid is created to achive 2 tasks on sync process 1. maintain particially

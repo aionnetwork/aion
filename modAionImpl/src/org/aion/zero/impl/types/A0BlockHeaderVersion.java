@@ -1,4 +1,4 @@
-package org.aion.zero.types;
+package org.aion.zero.impl.types;
 
 import java.util.HashSet;
 import java.util.Iterator;

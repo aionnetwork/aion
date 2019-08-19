@@ -1,7 +1,6 @@
 package org.aion.zero.impl.core.energy;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.types.A0BlockHeader;
 
 public class DecayStrategy extends AbstractEnergyStrategyLimit {
 

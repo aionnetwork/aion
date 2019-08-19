@@ -34,7 +34,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
 import org.aion.vm.BlockCachingContext;
-import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
@@ -48,7 +48,7 @@ import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 

@@ -1,7 +1,6 @@
 module aion.vm {
     requires aion.mcf;
     requires transitive slf4j.api;
-    requires aion.zero;
     requires commons.lang3;
     requires aion.util;
     requires aion.fastvm;

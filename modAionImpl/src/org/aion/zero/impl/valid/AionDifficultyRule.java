@@ -10,7 +10,6 @@ import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 
 /** Checks block's difficulty against calculated difficulty value */
 public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
