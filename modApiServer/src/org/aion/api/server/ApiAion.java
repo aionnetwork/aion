@@ -52,7 +52,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.mcf.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
-    public static final int SYNC_TOLERANCE = 1;
+    static final int SYNC_TOLERANCE = 1;
 
     // these variables get accessed by the api worker threads.
     // need to guarantee one of:
@@ -85,17 +85,32 @@ public abstract class ApiAion extends Api {
     protected EventExecuteService ees;
 
     public ApiAion(final IAionChain _ac) {
-        this.ac = _ac;
-        this.installedFilters = new ConcurrentHashMap<>();
-        this.fltrIndex = new AtomicLong(0);
-        this.blockTemplateLock = new ReentrantLock();
+        if (_ac == null) {
+            throw new NullPointerException();
+        }
 
-        // register events
-        IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
+        init(_ac);
+    }
+
+    private void init(final IAionChain _ac) {
+        ac = _ac;
+        installedFilters = new ConcurrentHashMap<>();
+        fltrIndex = new AtomicLong(0);
+
+        IEventMgr evtMgr = ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(
-                Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
+            Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(
-                Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+            Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+    }
+
+    public ApiAion(final IAionChain _ac, final ReentrantLock _lock) {
+        if (_ac == null || _lock == null) {
+            throw new NullPointerException();
+        }
+
+        blockTemplateLock = _lock;
+        init(_ac);
     }
 
     public final class EpApi implements Runnable {

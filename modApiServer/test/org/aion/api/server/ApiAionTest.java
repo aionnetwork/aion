@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.AionTransaction;
@@ -34,7 +35,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.mcf.types.AionTxReceipt;
@@ -71,8 +71,8 @@ public class ApiAionTest {
             return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
         }
 
-        private ApiAionImpl(AionImpl impl) {
-            super(impl);
+        private ApiAionImpl(AionImpl impl, ReentrantLock lock) {
+            super(impl, lock);
             onBlockFlag = false;
             pendingRcvdFlag = false;
             pendingUpdateFlag = false;
@@ -138,7 +138,7 @@ public class ApiAionTest {
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         impl = AionImpl.inst();
-        api = new ApiAionImpl(impl);
+        api = new ApiAionImpl(impl, new ReentrantLock());
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
 
@@ -152,8 +152,6 @@ public class ApiAionTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
-        if (folder == null) return;
-
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
@@ -163,8 +161,6 @@ public class ApiAionTest {
             if (file.lastModified() >= testStartTime) file.delete();
         }
         folder = new File(DATABASE_PATH);
-
-        if (folder == null) return;
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -214,7 +210,7 @@ public class ApiAionTest {
         // check because blk might be the genesis block
         assertEquals(
                 rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore())
+                impl.getBlockchain().getBlockStore()
                         .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty

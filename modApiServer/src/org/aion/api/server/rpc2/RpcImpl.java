@@ -21,13 +21,13 @@ public class RpcImpl implements Rpc {
     private IAionChain ac;
     private ReentrantLock blockTemplateLock;
 
-    RpcImpl(final IAionChain _ac) {
-        if (_ac == null) {
+    RpcImpl(final IAionChain _ac, final ReentrantLock _lock) {
+        if (_ac == null || _lock == null) {
             throw  new NullPointerException();
         }
 
         ac = _ac;
-        blockTemplateLock = new ReentrantLock();
+        blockTemplateLock = _lock;
     }
 
     @Override

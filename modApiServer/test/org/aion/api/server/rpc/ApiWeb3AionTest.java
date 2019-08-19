@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.types.AionAddress;
@@ -26,7 +27,7 @@ public class ApiWeb3AionTest {
     @Before
     public void setup() {
         impl = AionImpl.inst();
-        web3Api = new ApiWeb3Aion(impl);
+        web3Api = new ApiWeb3Aion(impl, new ReentrantLock());
         LongLivedAvm.createAndStartLongLivedAvm();
     }
 

@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import org.aion.api.server.ApiAion;
@@ -181,11 +182,13 @@ public class ApiWeb3Aion extends ApiAion {
         */
     }
 
+    //TODO: [unity] should add config for enable/disable the cache feature.
     private final LoadingCache<ByteArrayWrapper, Block> blockCache;
     private static final int BLOCK_CACHE_SIZE = 1000;
 
-    public ApiWeb3Aion(final IAionChain _ac) {
-        super(_ac);
+    public ApiWeb3Aion(final IAionChain _ac, final ReentrantLock _lock) {
+        super(_ac, _lock);
+
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();

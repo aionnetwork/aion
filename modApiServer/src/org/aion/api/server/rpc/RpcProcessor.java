@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.rpc2.Rpc2Shim;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -24,7 +25,6 @@ public class RpcProcessor {
 
     private ExecutorService executor;
     private CompletionService<JSONObject> batchCallCompletionService;
-    private final int SHUTDOWN_WAIT_SECONDS = 5;
 
     private final Rpc2Shim rpc2Shim;
 
@@ -32,13 +32,24 @@ public class RpcProcessor {
         final List<String> enabledGroups,
         final List<String> enabledMethods,
         final List<String> disabledMethods,
-        final Rpc2Shim rpc2Shim) {
-        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
+        final Rpc2Shim rpc2Shim,
+        final ReentrantLock lock) {
+
+        if (enabledGroups == null
+                || enabledMethods == null
+                || disabledMethods == null
+                || rpc2Shim == null
+                || lock == null) {
+            throw new NullPointerException();
+        }
+
+        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods, lock);
         executor =
                 Executors.newFixedThreadPool(
                         Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
         batchCallCompletionService = new ExecutorCompletionService<>(executor);
         this.rpc2Shim = rpc2Shim;
+
     }
 
     public String process(String _requestBody) {
@@ -195,7 +206,7 @@ public class RpcProcessor {
     private class BatchCallTask implements Callable<JSONObject> {
         private JSONObject task;
 
-        public BatchCallTask(JSONObject task) {
+        BatchCallTask(JSONObject task) {
             this.task = task;
         }
 
@@ -215,6 +226,7 @@ public class RpcProcessor {
 
         executor.shutdown();
         try {
+            int SHUTDOWN_WAIT_SECONDS = 5;
             executor.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException ignored) {
         }

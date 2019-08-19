@@ -3,6 +3,7 @@ package org.aion.api.server.rpc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,7 +38,7 @@ public class RpcMethodsTest {
 
     @Test
     public void testEmpty() {
-        methods = new RpcMethods(EMPTY, EMPTY, EMPTY);
+        methods = new RpcMethods(EMPTY, EMPTY, EMPTY, new ReentrantLock());
 
         // ping should be the only thing available
         Assert.assertNotNull(methods.get(PING));
@@ -47,7 +48,7 @@ public class RpcMethodsTest {
     @Test
     public void testGroupsOnly() {
         List<String> enabledGroups = Arrays.asList(WEB3);
-        methods = new RpcMethods(enabledGroups, EMPTY, EMPTY);
+        methods = new RpcMethods(enabledGroups, EMPTY, EMPTY, new ReentrantLock());
 
         // Make sure these methods are not available
         Assert.assertNull(methods.get("foo"));
@@ -62,7 +63,7 @@ public class RpcMethodsTest {
     @Test
     public void testInvalidGroup() {
         List<String> enabledGroups = Arrays.asList(INVALID_GROUP, WEB3);
-        methods = new RpcMethods(enabledGroups, EMPTY, EMPTY);
+        methods = new RpcMethods(enabledGroups, EMPTY, EMPTY, new ReentrantLock());
 
         // Make sure that the other methods are still available
         Assert.assertNotNull(methods.get(CLIENT_VERSION));
@@ -72,7 +73,7 @@ public class RpcMethodsTest {
     @Test
     public void testEnableMethods() {
         List<String> enabledMethods = Arrays.asList(BLOCK_NUMBER, CLIENT_VERSION);
-        methods = new RpcMethods(EMPTY, enabledMethods, EMPTY);
+        methods = new RpcMethods(EMPTY, enabledMethods, EMPTY, new ReentrantLock());
 
         Assert.assertEquals(3, methods.enabledEndpoints.size());
         Assert.assertNotNull(methods.get(PING));
@@ -86,7 +87,7 @@ public class RpcMethodsTest {
     public void testDisableMethods() {
         List<String> enabledGroups = Arrays.asList(WEB3);
         List<String> disabledMethods = Arrays.asList(CLIENT_VERSION);
-        methods = new RpcMethods(enabledGroups, EMPTY, disabledMethods);
+        methods = new RpcMethods(enabledGroups, EMPTY, disabledMethods, new ReentrantLock());
 
         // web3_clientVersion should be disabled
         Assert.assertNull(methods.get(CLIENT_VERSION));
@@ -98,7 +99,7 @@ public class RpcMethodsTest {
     @Test
     public void testDisablePing() {
         List<String> disabledMethods = Arrays.asList(PING);
-        methods = new RpcMethods(EMPTY, EMPTY, disabledMethods);
+        methods = new RpcMethods(EMPTY, EMPTY, disabledMethods, new ReentrantLock());
 
         Assert.assertTrue(methods.enabledEndpoints.isEmpty());
     }
@@ -106,7 +107,7 @@ public class RpcMethodsTest {
     @Test
     public void testEnableInvalidMethod() {
         List<String> enabledMethods = Arrays.asList(CLIENT_VERSION, INVALID_METHOD_NAME);
-        methods = new RpcMethods(EMPTY, enabledMethods, EMPTY);
+        methods = new RpcMethods(EMPTY, enabledMethods, EMPTY, new ReentrantLock());
 
         Assert.assertNotNull(methods.get(CLIENT_VERSION));
         Assert.assertNull(methods.get(INVALID_METHOD_NAME));
@@ -116,7 +117,7 @@ public class RpcMethodsTest {
     public void testDisableInvalidMethod() {
         List<String> enabledGroups = Arrays.asList(WEB3);
         List<String> disabledMethods = Arrays.asList(INVALID_METHOD_NAME, CLIENT_VERSION);
-        methods = new RpcMethods(enabledGroups, EMPTY, disabledMethods);
+        methods = new RpcMethods(enabledGroups, EMPTY, disabledMethods, new ReentrantLock());
 
         Assert.assertNull(methods.get(CLIENT_VERSION));
         Assert.assertNotNull(methods.get(SHA3));
