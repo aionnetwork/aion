@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.vm.DataWord;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;

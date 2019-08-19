@@ -47,7 +47,6 @@ import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.TransactionStore;
-import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;

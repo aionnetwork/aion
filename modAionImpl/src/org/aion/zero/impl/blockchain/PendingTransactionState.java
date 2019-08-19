@@ -1,4 +1,4 @@
-package org.aion.mcf.types;
+package org.aion.zero.impl.blockchain;
 
 public enum PendingTransactionState {
     /**

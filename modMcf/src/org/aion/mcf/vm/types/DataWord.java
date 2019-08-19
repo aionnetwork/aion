@@ -1,4 +1,4 @@
-package org.aion.mcf.vm;
+package org.aion.mcf.vm.types;
 
 import java.math.BigInteger;
 import org.aion.util.types.ByteArrayWrapper;
