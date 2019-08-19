@@ -21,8 +21,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
@@ -60,7 +58,7 @@ public final class P2pMgr implements IP2pMgr {
     public static int txBroadCastRoute =
             (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
-    public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
+    public final Logger p2pLOG;
 
     public static final int WORKER = 32;
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
@@ -102,6 +100,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _maxActiveNodes int
      */
     public P2pMgr(
+            final Logger _p2pLog,
             final int _netId,
             final String _revision,
             final String _nodeId,
@@ -114,6 +113,10 @@ public final class P2pMgr implements IP2pMgr {
             final boolean _bootlistSyncOnly,
             final int _errorTolerance) {
 
+        if (_p2pLog == null) {
+            throw new NullPointerException("A non-null logger must be provided in the constructor.");
+        }
+        this.p2pLOG = _p2pLog;
         this.selfNetId = _netId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
@@ -144,7 +147,7 @@ public final class P2pMgr implements IP2pMgr {
 
         // rem out for bug:
         // nodeMgr.loadPersistedNodes();
-        cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
+        cachedResHandshake1 = new ResHandshake1(p2pLOG, true, this.selfRevision);
     }
 
     @Override
@@ -213,7 +216,7 @@ public final class P2pMgr implements IP2pMgr {
 
             if (upnpEnable) {
                 scheduledWorkers.scheduleWithFixedDelay(
-                        new TaskUPnPManager(selfPort),
+                        new TaskUPnPManager(p2pLOG, selfPort),
                         1,
                         PERIOD_UPNP_PORT_MAPPING,
                         TimeUnit.MILLISECONDS);
@@ -440,6 +443,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private TaskInbound getInboundInstance() {
         return new TaskInbound(
+                p2pLOG,
                 this,
                 this.selector,
                 this.start,
@@ -451,23 +455,24 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskSend getSendInstance(int i) {
-        return new TaskSend(this, i, sendMsgQue, start, nodeMgr, selector);
+        return new TaskSend(p2pLOG, this, i, sendMsgQue, start, nodeMgr, selector);
     }
 
     private TaskReceive getReceiveInstance() {
-        return new TaskReceive(start, receiveMsgQue, handlers);
+        return new TaskReceive(p2pLOG, start, receiveMsgQue, handlers);
     }
 
     private TaskStatus getStatusInstance() {
-        return new TaskStatus(start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
+        return new TaskStatus(p2pLOG, start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
     }
 
     private TaskClear getClearInstance() {
-        return new TaskClear(nodeMgr, start);
+        return new TaskClear(p2pLOG, nodeMgr, start);
     }
 
     private TaskConnectPeers getConnectPeersInstance() {
         return new TaskConnectPeers(
+                p2pLOG,
                 this,
                 this.start,
                 this.nodeMgr,

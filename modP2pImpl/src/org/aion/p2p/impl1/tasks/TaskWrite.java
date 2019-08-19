@@ -1,7 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -9,10 +7,12 @@ import java.nio.channels.SocketChannel;
 import org.aion.p2p.Header;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
+import org.slf4j.Logger;
 
 /** @author chris */
 public class TaskWrite implements Runnable {
 
+    private final Logger p2pLOG;
     private final String nodeShortId;
     private final SocketChannel sc;
     private final Msg msg;
@@ -22,11 +22,13 @@ public class TaskWrite implements Runnable {
     private static final long MIN_TRACE_BUFFER_WRITE_TIME = 10_000_000L;
 
     TaskWrite(
+            final Logger p2pLOG,
             final String _nodeShortId,
             final SocketChannel _sc,
             final Msg _msg,
             final ChannelBuffer _cb,
             final IP2pMgr _p2pMgr) {
+        this.p2pLOG = p2pLOG;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;

@@ -7,11 +7,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
@@ -27,16 +22,11 @@ public class TaskRequestActiveNodesTest {
 
     @Mock private INode node;
 
-    private Logger p2pLOG;
+    @Mock private Logger p2pLOG;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
-        AionLoggerFactory.init(logMap);
-        p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
     }
 
     @Test(timeout = 10_000)

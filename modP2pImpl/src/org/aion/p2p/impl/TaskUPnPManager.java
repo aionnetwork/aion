@@ -1,13 +1,12 @@
 package org.aion.p2p.impl;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import fr.free.miniupnp.IGDdatas;
 import fr.free.miniupnp.MiniupnpcLibrary;
 import fr.free.miniupnp.UPNPDev;
 import fr.free.miniupnp.UPNPUrls;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import org.slf4j.Logger;
 
 public class TaskUPnPManager implements Runnable {
 
@@ -16,10 +15,12 @@ public class TaskUPnPManager implements Runnable {
     private static final int DEFAULT_UPNP_PORT_MAPPING_LIFETIME_IN_SECONDS = 3600;
     private static final int UPNP_DELAY = 2000;
 
+    private final Logger p2pLOG;
     private int port;
     private MiniupnpcLibrary miniupnpc;
 
-    public TaskUPnPManager(int port) {
+    public TaskUPnPManager(final Logger p2pLOG, int port) {
+        this.p2pLOG = p2pLOG;
         this.port = port;
         miniupnpc = MiniupnpcLibrary.INSTANCE;
     }

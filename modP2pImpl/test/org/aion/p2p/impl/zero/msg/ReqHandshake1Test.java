@@ -16,8 +16,9 @@ import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author chris */
 public class ReqHandshake1Test {
@@ -30,7 +31,8 @@ public class ReqHandshake1Test {
 
     private int port = ThreadLocalRandom.current().nextInt();
 
-    private static Logger p2pLOG = LoggerFactory.getLogger("P2P");
+    @Mock
+    private Logger p2pLOG;
 
     private String randomIp =
             ThreadLocalRandom.current().nextInt(0, 256)
@@ -47,7 +49,7 @@ public class ReqHandshake1Test {
 
     @Before
     public void reqHandshake2Test() {
-
+        MockitoAnnotations.initMocks(this);
         randomRevision = new byte[Byte.MAX_VALUE];
         ThreadLocalRandom.current().nextBytes(randomRevision);
         randomVersions = new ArrayList<>();
@@ -85,7 +87,7 @@ public class ReqHandshake1Test {
                         randomVersions);
         byte[] bytes = req1.encode();
 
-        ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
+        ReqHandshake1 req2 = ReqHandshake1.decode(bytes, p2pLOG);
         assertNotNull(req2.getNodeId());
         assertArrayEquals(req1.getNodeId(), req2.getNodeId());
         assertArrayEquals(req1.getIp(), req2.getIp());
@@ -108,7 +110,7 @@ public class ReqHandshake1Test {
         byte[] bytes = req1.encode();
         assertNull(bytes);
 
-        ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
+        ReqHandshake1 req2 = ReqHandshake1.decode(bytes, p2pLOG);
         assertNull(req2);
     }
 

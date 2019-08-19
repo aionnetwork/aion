@@ -1,7 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -14,12 +12,14 @@ import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl1.P2pMgr.Dest;
+import org.slf4j.Logger;
 
 public class TaskConnectPeers implements Runnable {
 
     private static final int PERIOD_CONNECT_OUTBOUND = 1000;
     private static final int TIMEOUT_OUTBOUND_CONNECT = 10000;
 
+    private final Logger p2pLOG;
     private final INodeMgr nodeMgr;
     private final int maxActiveNodes;
     private final IP2pMgr mgr;
@@ -29,6 +29,7 @@ public class TaskConnectPeers implements Runnable {
     private final ReqHandshake1 cachedReqHS;
 
     public TaskConnectPeers(
+            final Logger p2pLOG,
             final IP2pMgr _mgr,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
@@ -37,6 +38,7 @@ public class TaskConnectPeers implements Runnable {
             final BlockingQueue<MsgOut> _sendMsgQue,
             final ReqHandshake1 _cachedReqHS) {
 
+        this.p2pLOG = p2pLOG;
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.maxActiveNodes = _maxActiveNodes;
@@ -97,7 +99,7 @@ public class TaskConnectPeers implements Runnable {
 
                         channel.configureBlocking(false);
                         SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
-                        ChannelBuffer rb = new ChannelBuffer();
+                        ChannelBuffer rb = new ChannelBuffer(p2pLOG);
                         rb.setDisplayId(node.getIdShort());
                         rb.setNodeIdHash(nodeIdHash);
                         sk.attach(rb);

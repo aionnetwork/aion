@@ -30,7 +30,7 @@ public class ResHandshakeTest {
 
     @Test
     public void testDecodeNull() {
-        assertNull(ResHandshake1.decode(null));
-        assertNull(ResHandshake1.decode(new byte[1]));
+        assertNull(ResHandshake1.decode(null, null));
+        assertNull(ResHandshake1.decode(new byte[1], null));
     }
 }

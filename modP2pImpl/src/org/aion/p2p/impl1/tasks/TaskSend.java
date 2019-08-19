@@ -1,7 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
@@ -15,9 +13,11 @@ import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
+import org.slf4j.Logger;
 
 public class TaskSend implements Runnable {
 
+    private final Logger p2pLOG;
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
     private final BlockingQueue<MsgOut> sendMsgQue;
@@ -28,6 +28,7 @@ public class TaskSend implements Runnable {
     private static final int THREAD_Q_LIMIT = 20000;
 
     public TaskSend(
+            final Logger p2pLOG,
             final IP2pMgr _mgr,
             final int _lane,
             final BlockingQueue<MsgOut> _sendMsgQue,
@@ -35,6 +36,7 @@ public class TaskSend implements Runnable {
             final INodeMgr _nodeMgr,
             final Selector _selector) {
 
+        this.p2pLOG = p2pLOG;
         this.mgr = _mgr;
         this.lane = _lane;
         this.sendMsgQue = _sendMsgQue;
@@ -92,6 +94,7 @@ public class TaskSend implements Runnable {
                         if (attachment != null) {
                             tpe.execute(
                                     new TaskWrite(
+                                            p2pLOG,
                                             node.getIdShort(),
                                             node.getChannel(),
                                             mo.getMsg(),

@@ -6,20 +6,17 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.INodeMgr;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 public class TaskStatusTest {
+    @Mock private Logger p2pLOG;
 
     @Mock private BlockingQueue<MsgOut> msgOutQue;
 
@@ -30,10 +27,6 @@ public class TaskStatusTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
     }
 
     @Test(timeout = 10_000)
@@ -41,7 +34,7 @@ public class TaskStatusTest {
 
         final AtomicBoolean ab = new AtomicBoolean(true);
 
-        TaskStatus ts = new TaskStatus(ab, nodeMgr, "1", msgOutQue, msgInQue);
+        TaskStatus ts = new TaskStatus(p2pLOG, ab, nodeMgr, "1", msgOutQue, msgInQue);
         assertNotNull(ts);
         when(nodeMgr.dumpNodeInfo(anyString(), anyBoolean())).thenReturn("get Status");
 

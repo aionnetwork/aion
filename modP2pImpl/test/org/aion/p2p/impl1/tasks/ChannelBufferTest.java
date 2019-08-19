@@ -10,21 +10,19 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.Header;
 import org.aion.p2p.impl1.tasks.ChannelBuffer.RouteStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 public class ChannelBufferTest {
+
+    @Mock private Logger p2pLOG;
 
     private ChannelBuffer cb;
     private Random r;
@@ -37,11 +35,7 @@ public class ChannelBufferTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
-
-        cb = new ChannelBuffer();
+        cb = new ChannelBuffer(p2pLOG);
         r = new Random();
     }
 

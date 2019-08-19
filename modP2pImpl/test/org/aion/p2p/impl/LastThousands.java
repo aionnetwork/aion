@@ -8,14 +8,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.aion.p2p.impl1.P2pMgr;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LastThousands {
 
-    private static Logger p2pLOG = LoggerFactory.getLogger("P2P");
+    @Mock private Logger p2pLOG;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     private boolean checkPort(String host, int port) {
         boolean result = true;
@@ -38,7 +45,7 @@ public class LastThousands {
         int maxPort = port + max;
         String[] testerP2p = new String[] {"p2p://" + nodeId + "@" + ip + ":" + port};
         P2pMgr tester =
-                new P2pMgr(0, "", nodeId, ip, port, new String[] {}, false, max, max, false, 50);
+                new P2pMgr(p2pLOG, 0, "", nodeId, ip, port, new String[] {}, false, max, max, false, 50);
 
         List<P2pMgr> examiners = new ArrayList<>();
 
@@ -47,6 +54,7 @@ public class LastThousands {
                 System.out.println("examiner " + i);
                 P2pMgr examiner =
                         new P2pMgr(
+                                p2pLOG,
                                 0,
                                 "",
                                 UUID.randomUUID().toString(),

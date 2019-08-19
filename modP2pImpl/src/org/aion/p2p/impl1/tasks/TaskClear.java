@@ -1,18 +1,19 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INodeMgr;
+import org.slf4j.Logger;
 
 public class TaskClear implements Runnable {
 
     private static final int PERIOD_CLEAR = 10000;
 
+    private final Logger p2pLOG;
     private final INodeMgr nodeMgr;
     private final AtomicBoolean start;
 
-    public TaskClear(final INodeMgr _nodeMgr, final AtomicBoolean _start) {
+    public TaskClear(final Logger p2pLOG, final INodeMgr _nodeMgr, final AtomicBoolean _start) {
+        this.p2pLOG = p2pLOG;
         this.nodeMgr = _nodeMgr;
         this.start = _start;
     }

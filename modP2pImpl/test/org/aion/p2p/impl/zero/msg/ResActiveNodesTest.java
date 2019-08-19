@@ -13,10 +13,20 @@ import org.aion.p2p.INode;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 /** @author chris */
 public class ResActiveNodesTest {
+    @Mock private Logger p2pLOG;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     private Node randomNode() {
         return new Node(
@@ -36,7 +46,7 @@ public class ResActiveNodesTest {
     @Test
     public void testRoute() {
 
-        ResActiveNodes res = new ResActiveNodes(new ArrayList<>());
+        ResActiveNodes res = new ResActiveNodes(p2pLOG, new ArrayList<>());
         assertEquals(Ver.V0, res.getHeader().getVer());
         assertEquals(Ctrl.NET, res.getHeader().getCtrl());
         assertEquals(Act.RES_ACTIVE_NODES, res.getHeader().getAction());
@@ -51,7 +61,7 @@ public class ResActiveNodesTest {
             srcNodes.add(randomNode());
         }
 
-        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
+        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(p2pLOG, srcNodes).encode(), p2pLOG);
         assertEquals(res.getNodes().size(), m);
         List<INode> tarNodes = res.getNodes();
         for (int i = 0; i < m; i++) {
@@ -77,7 +87,7 @@ public class ResActiveNodesTest {
             srcNodes.add(randomNode());
         }
 
-        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
+        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(p2pLOG, srcNodes).encode(), p2pLOG);
         assertEquals(40, res.getNodes().size());
 
         List<INode> tarNodes = res.getNodes();

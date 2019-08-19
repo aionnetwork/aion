@@ -1,6 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -14,15 +13,10 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
@@ -33,8 +27,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 public class TaskConnectPeersTest {
+
+    @Mock private Logger p2pLOG;
 
     @Mock private INodeMgr nodeMgr;
 
@@ -96,7 +93,7 @@ public class TaskConnectPeersTest {
                                 sc.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
 
                                 SelectionKey sk = sc.register(this.selector, SelectionKey.OP_READ);
-                                sk.attach(new ChannelBuffer());
+                                sk.attach(new ChannelBuffer(p2pLOG));
                                 System.out.println("socket connected!");
                             }
                         }
@@ -113,9 +110,6 @@ public class TaskConnectPeersTest {
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         ssc = ServerSocketChannel.open();
@@ -145,7 +139,7 @@ public class TaskConnectPeersTest {
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
@@ -162,7 +156,7 @@ public class TaskConnectPeersTest {
     public void testRun1() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
@@ -202,7 +196,7 @@ public class TaskConnectPeersTest {
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
@@ -240,7 +234,7 @@ public class TaskConnectPeersTest {
     public void testRunException2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);

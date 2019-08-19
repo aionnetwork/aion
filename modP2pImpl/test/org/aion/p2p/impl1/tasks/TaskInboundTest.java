@@ -18,7 +18,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +25,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
 import org.aion.p2p.INode;
@@ -39,8 +35,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 public class TaskInboundTest {
+    @Mock private Logger p2pLOG;
 
     @Mock private INodeMgr nodeMgr;
 
@@ -127,16 +125,13 @@ public class TaskInboundTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
     }
 
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(0);
@@ -155,7 +150,7 @@ public class TaskInboundTest {
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         doThrow(ClosedSelectorException.class).when(selector).selectNow();
@@ -175,7 +170,7 @@ public class TaskInboundTest {
     public void testRunClosedSelectorException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(1);
@@ -195,7 +190,7 @@ public class TaskInboundTest {
     public void testRun2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(false);
@@ -208,7 +203,7 @@ public class TaskInboundTest {
         when(sk3.isValid()).thenReturn(true);
         when(sk3.isAcceptable()).thenReturn(true);
         when(sk3.isReadable()).thenReturn(true);
-        ChannelBuffer cb = new ChannelBuffer();
+        ChannelBuffer cb = new ChannelBuffer(p2pLOG);
 
         when(sk3.attachment()).thenReturn(cb);
 
@@ -234,7 +229,7 @@ public class TaskInboundTest {
     public void testAccept() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -268,7 +263,7 @@ public class TaskInboundTest {
     public void testAccept2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -302,7 +297,7 @@ public class TaskInboundTest {
     public void testAccept3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(true);
@@ -341,7 +336,7 @@ public class TaskInboundTest {
     public void testReadBuffer() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -373,7 +368,7 @@ public class TaskInboundTest {
     public void testReadBuffer2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -409,7 +404,7 @@ public class TaskInboundTest {
     public void testReadBuffer3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
-                new TaskInbound(p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
+                new TaskInbound(p2pLOG, p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer

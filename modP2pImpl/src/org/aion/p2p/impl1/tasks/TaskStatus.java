@@ -1,13 +1,13 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INodeMgr;
+import org.slf4j.Logger;
 
 public class TaskStatus implements Runnable {
 
+    private final Logger p2pLOG;
     private final INodeMgr nodeMgr;
     private final String selfShortId;
     private final BlockingQueue<MsgOut> sendMsgQue;
@@ -17,11 +17,13 @@ public class TaskStatus implements Runnable {
     private final AtomicBoolean start;
 
     public TaskStatus(
+            final Logger p2pLOG,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
             final String _selfShortId,
             final BlockingQueue<MsgOut> _sendMsgQue,
             final BlockingQueue<MsgIn> _receiveMsgQue) {
+        this.p2pLOG = p2pLOG;
         this.nodeMgr = _nodeMgr;
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;

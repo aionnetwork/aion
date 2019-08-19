@@ -22,9 +22,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Before;
@@ -44,7 +41,8 @@ public class NodeMgrTest {
     private String ip1 = "127.0.0.1";
     private String ip2 = "192.168.0.11";
     private int port1 = 30304;
-    private Logger LOGGER;
+
+    @Mock private Logger LOGGER;
 
     @Mock private P2pMgr p2p;
 
@@ -58,11 +56,6 @@ public class NodeMgrTest {
 
     @Before
     public void setup() {
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
-        LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
-
         MockitoAnnotations.initMocks(this);
 
         nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
@@ -538,7 +531,7 @@ public class NodeMgrTest {
         addActiveNode();
 
         String dump2 = nMgr.dumpNodeInfo("testId", true);
-        LOGGER.info(dump2);
+        System.out.println(dump2);
         assertTrue(dump2.length() > dump.length());
     }
 

@@ -1,6 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
 
 import java.io.IOException;
@@ -33,9 +32,11 @@ import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.aion.p2p.impl1.P2pException;
 import org.aion.p2p.impl1.P2pMgr.Dest;
+import org.slf4j.Logger;
 
 public class TaskInbound implements Runnable {
 
+    private final Logger p2pLOG;
     private final IP2pMgr mgr;
     private final Selector selector;
     private final INodeMgr nodeMgr;
@@ -46,6 +47,7 @@ public class TaskInbound implements Runnable {
     private final BlockingQueue<MsgIn> receiveMsgQue;
 
     public TaskInbound(
+            final Logger p2pLOG,
             final IP2pMgr _mgr,
             final Selector _selector,
             final AtomicBoolean _start,
@@ -55,6 +57,7 @@ public class TaskInbound implements Runnable {
             final ResHandshake1 _cachedResHandshake1,
             final BlockingQueue<MsgIn> _receiveMsgQue) {
 
+        this.p2pLOG = p2pLOG;
         this.mgr = _mgr;
         this.selector = _selector;
         this.start = _start;
@@ -160,7 +163,7 @@ public class TaskInbound implements Runnable {
 
             node.setChannel(channel);
             SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
-            sk.attach(new ChannelBuffer());
+            sk.attach(new ChannelBuffer(p2pLOG));
             this.nodeMgr.addInboundNode(node);
 
             if (p2pLOG.isDebugEnabled()) {
@@ -389,7 +392,7 @@ public class TaskInbound implements Runnable {
         switch (_act) {
             case Act.REQ_HANDSHAKE:
                 if (_msgBytes.length > ReqHandshake.LEN) {
-                    ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(_msgBytes);
+                    ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(_msgBytes, p2pLOG);
                     if (reqHandshake1 != null) {
                         handleReqHandshake(
                                 rb,
@@ -405,7 +408,7 @@ public class TaskInbound implements Runnable {
             case Act.RES_HANDSHAKE:
                 if (rb.getNodeIdHash() != 0) {
                     if (_msgBytes.length > ResHandshake.LEN) {
-                        ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes);
+                        ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes, p2pLOG);
                         if (resHandshake1 != null && resHandshake1.getSuccess()) {
                             handleResHandshake(
                                     rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
@@ -422,7 +425,7 @@ public class TaskInbound implements Runnable {
                                 new MsgOut(
                                         node.getIdHash(),
                                         node.getIdShort(),
-                                        new ResActiveNodes(nodeMgr.getActiveNodesList()),
+                                        new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList()),
                                         Dest.ACTIVE));
                     }
                 }
@@ -436,7 +439,7 @@ public class TaskInbound implements Runnable {
                 INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
                 if (node != null) {
                     node.refreshTimestamp();
-                    ResActiveNodes resActiveNodes = ResActiveNodes.decode(_msgBytes);
+                    ResActiveNodes resActiveNodes = ResActiveNodes.decode(_msgBytes, p2pLOG);
                     if (resActiveNodes != null) {
                         List<INode> incomingNodes = resActiveNodes.getNodes();
                         for (INode incomingNode : incomingNodes) {

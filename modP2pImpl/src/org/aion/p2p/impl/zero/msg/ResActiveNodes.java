@@ -1,7 +1,5 @@
 package org.aion.p2p.impl.zero.msg;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +9,12 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
+import org.slf4j.Logger;
 
 /** @author chris */
 public final class ResActiveNodes extends Msg {
 
+    private final Logger p2pLOG;
     private final List<INode> nodes;
 
     private int count;
@@ -25,8 +25,9 @@ public final class ResActiveNodes extends Msg {
     private static final int MAX_NODES = 40;
 
     /** @param _nodes List */
-    public ResActiveNodes(final List<INode> _nodes) {
+    public ResActiveNodes(final Logger p2pLOG, final List<INode> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
+        this.p2pLOG = p2pLOG;
         this.count = Math.min(MAX_NODES, _nodes.size());
         if (this.count > 0) {
             this.nodes = _nodes.subList(0, this.count);
@@ -44,7 +45,7 @@ public final class ResActiveNodes extends Msg {
      * @param _bytes byte[]
      * @return ResActiveNodes
      */
-    public static ResActiveNodes decode(final byte[] _bytes) {
+    public static ResActiveNodes decode(final byte[] _bytes, final Logger p2pLOG) {
         if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0) {
             return null;
         } else {
@@ -69,7 +70,7 @@ public final class ResActiveNodes extends Msg {
                     INode n = new Node(false, nodeIdBytes, ipBytes, port);
                     activeNodes.add(n);
                 }
-                return new ResActiveNodes(activeNodes);
+                return new ResActiveNodes(p2pLOG, activeNodes);
 
             } catch (Exception e) {
                 if (p2pLOG.isDebugEnabled()) {

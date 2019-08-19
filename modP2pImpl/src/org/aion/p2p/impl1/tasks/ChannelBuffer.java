@@ -1,7 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.p2p.Header;
+import org.slf4j.Logger;
 
 /** @author chris */
 class ChannelBuffer {
@@ -26,7 +25,11 @@ class ChannelBuffer {
 
     private Map<Integer, RouteStatus> routes = new HashMap<>();
 
-    ChannelBuffer() {}
+    private final Logger p2pLOG;
+
+    ChannelBuffer(final Logger p2pLOG) {
+        this.p2pLOG = p2pLOG;
+    }
 
     public String getDisplayId() {
         return displayId;

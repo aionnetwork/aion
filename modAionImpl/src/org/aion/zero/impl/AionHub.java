@@ -153,6 +153,7 @@ public class AionHub {
         // there are two p2p implementation , now just point to impl1.
         this.p2pMgr =
                 new P2pMgr(
+                        AionLoggerFactory.getLogger(LogEnum.P2P.name()),
                         this.cfg.getNet().getId(),
                         Version.KERNEL_VERSION,
                         this.cfg.getId(),

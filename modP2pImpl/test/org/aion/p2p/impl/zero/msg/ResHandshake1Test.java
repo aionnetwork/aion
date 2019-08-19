@@ -7,26 +7,24 @@ import static org.junit.Assert.assertNull;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
 
 /** @author chris */
 public class ResHandshake1Test {
+    @Mock
+    private Logger p2pLOG;
 
     @Before
     public void setup() {
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
-        AionLoggerFactory.init(logMap);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
@@ -38,7 +36,7 @@ public class ResHandshake1Test {
         String randomBinaryVersion = new String(randomBytes, "UTF-8");
 
         ResHandshake1 rh1 =
-                new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
+                new ResHandshake1(p2pLOG, ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
 
         // test route
         assertEquals(Ver.V0, rh1.getHeader().getVer());
@@ -47,7 +45,7 @@ public class ResHandshake1Test {
 
         // test encode / decode
         byte[] mhBytes = rh1.encode();
-        ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
+        ResHandshake1 rh2 = ResHandshake1.decode(mhBytes, p2pLOG);
 
         assertEquals(rh1.getSuccess(), rh2.getSuccess());
         assertEquals(rh1.getBinaryVersion().length(), rh2.getBinaryVersion().length());
@@ -68,18 +66,18 @@ public class ResHandshake1Test {
 
     @Test
     public void testDecodeNull() {
-        assertNull(ResHandshake1.decode(null));
-        assertNull(ResHandshake1.decode(new byte[1]));
+        assertNull(ResHandshake1.decode(null, p2pLOG));
+        assertNull(ResHandshake1.decode(new byte[1], p2pLOG));
 
         byte[] msg = new byte[2];
         msg[1] = 2;
-        assertNull(ResHandshake1.decode(msg));
+        assertNull(ResHandshake1.decode(msg, p2pLOG));
     }
 
     @Test
     public void testEncode() {
         String bv = "0.2.9";
-        ResHandshake1 rs1 = new ResHandshake1(true, bv);
+        ResHandshake1 rs1 = new ResHandshake1(p2pLOG, true, bv);
         assertNotNull(rs1);
 
         byte[] ec = rs1.encode();
@@ -103,7 +101,7 @@ public class ResHandshake1Test {
         truncatedBv = bv.toString();
         bv.append("2");
 
-        ResHandshake1 rs1 = new ResHandshake1(true, bv.toString());
+        ResHandshake1 rs1 = new ResHandshake1(p2pLOG, true, bv.toString());
         assertNotNull(rs1);
 
         assertEquals(truncatedBv, rs1.getBinaryVersion());

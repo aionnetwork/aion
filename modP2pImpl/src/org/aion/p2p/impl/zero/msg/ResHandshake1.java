@@ -1,11 +1,10 @@
 package org.aion.p2p.impl.zero.msg;
 
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
+import org.slf4j.Logger;
 
 /** @author chris */
 public final class ResHandshake1 extends ResHandshake {
@@ -13,10 +12,13 @@ public final class ResHandshake1 extends ResHandshake {
     // success(byte) + binary version len (byte)
     private static final int MIN_LEN = 2;
 
+    private final Logger p2pLOG;
     private String binaryVersion;
 
-    public ResHandshake1(boolean _success, @Nonnull final String _binaryVersion) {
+    public ResHandshake1(final Logger p2pLOG, boolean _success, @Nonnull final String _binaryVersion) {
         super(_success);
+
+        this.p2pLOG = p2pLOG;
 
         // truncate string when byte length large then 127
         if (_binaryVersion.getBytes().length > Byte.MAX_VALUE) {
@@ -30,7 +32,7 @@ public final class ResHandshake1 extends ResHandshake {
         }
     }
 
-    public static ResHandshake1 decode(final byte[] _bytes) {
+    public static ResHandshake1 decode(final byte[] _bytes, final Logger p2pLOG) {
         if (_bytes == null || _bytes.length < MIN_LEN) {
             return null;
         } else {
@@ -48,7 +50,7 @@ public final class ResHandshake1 extends ResHandshake {
                         }
                         return null;
                     }
-                    return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
+                    return new ResHandshake1(p2pLOG, _bytes[0] == 0x01, binaryVersion);
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug(
