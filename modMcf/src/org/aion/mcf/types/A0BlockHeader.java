@@ -1,4 +1,4 @@
-package org.aion.zero.types;
+package org.aion.mcf.types;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.util.bytes.ByteUtil.longToBytes;
@@ -10,13 +10,12 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 import java.math.BigInteger;
 import java.util.Objects;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 import org.spongycastle.util.BigIntegers;
 

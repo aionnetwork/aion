@@ -21,7 +21,6 @@ dependencies {
     compile project(':modCrypto')
 
 
-    compile project(':modAion')
     compile project(':modMcf')
     compile project(':modP2pImpl')
     compile project(':modP2p')

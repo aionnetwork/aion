@@ -1,7 +1,6 @@
-package org.aion.zero.types;
+package org.aion.mcf.types;
 
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -20,6 +19,7 @@ import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.Bytesable;
+import org.apache.commons.lang3.ArrayUtils;
 
 /** aion transaction receipt class. */
 public class AionTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
@@ -49,7 +49,7 @@ public class AionTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
         RLPList logs = (RLPList) receipt.get(2);
         RLPItem result = (RLPItem) receipt.get(3);
 
-        postTxState = nullToEmpty(postTxStateRLP.getRLPData());
+        postTxState = ArrayUtils.nullToEmpty(postTxStateRLP.getRLPData());
         bloomFilter = new Bloom(bloomRLP.getRLPData());
         executionResult =
                 (executionResult = result.getRLPData()) == null

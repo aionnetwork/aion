@@ -11,7 +11,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.mcf.types.A0BlockHeader;
 
 /** @author chris */
 public final class ResBlocksHeaders extends Msg {

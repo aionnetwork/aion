@@ -4,8 +4,7 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.A0BlockHeaderVersion;
+import org.aion.mcf.types.A0BlockHeaderVersion;
 
 public class AionHeaderVersionRule extends BlockHeaderRule {
 

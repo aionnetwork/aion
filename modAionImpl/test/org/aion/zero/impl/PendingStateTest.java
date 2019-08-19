@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotEquals;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
@@ -28,7 +27,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.Before;

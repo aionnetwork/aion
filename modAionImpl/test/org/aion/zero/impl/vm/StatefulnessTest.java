@@ -21,7 +21,7 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Statefulness;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;

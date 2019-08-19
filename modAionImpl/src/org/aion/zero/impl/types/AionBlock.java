@@ -20,8 +20,8 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.mcf.types.A0BlockHeader;
 import org.slf4j.Logger;
 
 /** */

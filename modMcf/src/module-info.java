@@ -13,6 +13,8 @@ module aion.mcf {
     requires aion.types;
     requires aion.base;
     requires aion.fastvm;
+    requires commons.lang3;
+    requires org.json;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;
@@ -32,4 +34,5 @@ module aion.mcf {
     exports org.aion.mcf.valid;
     exports org.aion.mcf.vm;
     exports org.aion.mcf.vm.types;
+    exports org.aion.mcf.exceptions;
 }

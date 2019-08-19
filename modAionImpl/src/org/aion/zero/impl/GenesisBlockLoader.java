@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import org.aion.mcf.core.AccountState;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.mcf.exceptions.HeaderStructureException;
 import org.json.JSONException;
 import org.json.JSONObject;
 

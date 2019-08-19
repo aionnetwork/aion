@@ -24,7 +24,7 @@ import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgReports;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
-import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 import org.aion.zero.impl.SystemExitCodes;

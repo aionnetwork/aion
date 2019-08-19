@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
-import org.aion.zero.types.A0BlockHeader;
 
 /**
  * Energy limit rule is defined as the following (no documentation yet)

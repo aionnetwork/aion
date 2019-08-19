@@ -11,7 +11,6 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
-import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
 /**

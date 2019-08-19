@@ -52,7 +52,6 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.p2p.INode;
-import org.aion.solidity.Abi;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -69,7 +68,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 

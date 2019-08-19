@@ -13,7 +13,6 @@ module aion.zero.impl {
     requires aion.txpool;
     requires aion.crypto;
     requires aion.db.impl;
-    requires aion.zero;
     requires aion.vm;
     requires aion.precompiled;
     requires aion.fastvm;

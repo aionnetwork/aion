@@ -10,7 +10,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.mcf.exceptions.HeaderStructureException;
 import org.junit.Test;
 
 /**

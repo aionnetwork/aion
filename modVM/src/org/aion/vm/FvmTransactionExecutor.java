@@ -20,8 +20,8 @@ import org.aion.types.Log;
 import org.aion.types.Transaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.types.AionTxExecSummary;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.mcf.types.AionTxExecSummary;
+import org.aion.mcf.types.AionTxReceipt;
 import org.slf4j.Logger;
 
 /**

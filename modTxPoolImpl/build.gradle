@@ -23,7 +23,6 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-core:1.3'
 
     testCompile project(':modMcf')
-    testCompile project(':modAion')
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 
