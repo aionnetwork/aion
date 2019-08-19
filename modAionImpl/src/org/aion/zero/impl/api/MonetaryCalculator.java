@@ -1,4 +1,4 @@
-package org.aion.zero.api;
+package org.aion.zero.impl.api;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;

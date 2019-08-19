@@ -6,7 +6,7 @@ import static org.aion.util.biginteger.BIUtil.min;
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.api.BlockConstants;
 
 public class DiffCalc {
 

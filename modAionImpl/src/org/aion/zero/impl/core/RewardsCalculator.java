@@ -2,8 +2,8 @@ package org.aion.zero.impl.core;
 
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.zero.api.BlockConstants;
-import org.aion.zero.api.MonetaryCalculator;
+import org.aion.zero.impl.api.BlockConstants;
+import org.aion.zero.impl.api.MonetaryCalculator;
 
 /**
  * Multiple implementations for calculating the rewards

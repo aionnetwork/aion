@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.api.BlockConstants;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

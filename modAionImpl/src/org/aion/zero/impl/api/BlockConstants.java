@@ -1,4 +1,4 @@
-package org.aion.zero.api;
+package org.aion.zero.impl.api;
 
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.IBlockConstants;

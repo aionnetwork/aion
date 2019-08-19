@@ -16,7 +16,7 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TimeStampRule;
 import org.aion.types.AionAddress;
-import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
@@ -28,7 +28,6 @@ import org.aion.zero.impl.valid.AionPOWRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
-import org.aion.zero.types.A0BlockHeader;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the

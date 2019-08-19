@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import org.aion.mcf.blockchain.valid.IValidRule;
-import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.types.A0BlockHeader;

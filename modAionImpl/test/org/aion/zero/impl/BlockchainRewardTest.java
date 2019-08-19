@@ -7,7 +7,7 @@ import java.util.Collections;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.AionAddress;
-import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Ignore;
 import org.junit.Test;

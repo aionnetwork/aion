@@ -1,4 +1,4 @@
-package org.aion.zero.api;
+package org.aion.zero.impl.api;
 
 import static org.junit.Assert.assertEquals;
 

@@ -11,7 +11,6 @@ module aion.zero {
     requires core;
     requires aion.base;
 
-    exports org.aion.zero.api;
     exports org.aion.zero.types;
     exports org.aion.zero.exceptions;
 }
