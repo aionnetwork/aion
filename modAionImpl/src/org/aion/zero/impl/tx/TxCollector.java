@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.slf4j.Logger;
 
