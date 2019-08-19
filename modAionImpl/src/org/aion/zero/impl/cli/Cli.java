@@ -4,7 +4,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.aion.zero.impl.config.Network.determineNetwork;
-import static org.aion.zero.impl.db.DBUtils.Status.SUCCESS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -13,29 +12,24 @@ import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
-import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.DBUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
 
 /**
  * Command line interface.
@@ -53,11 +47,17 @@ public class Cli {
     private final Arguments options = new Arguments();
     private final CommandLine parser;
     private final EditCli editCli;
+    private final PasswordReader passwordReader;
 
     public Cli() {
+        this(PasswordReader.inst());
+    }
+
+    public Cli(PasswordReader reader){
+        this.passwordReader = reader;
         editCli = new EditCli();
         parser = new CommandLine(options)
-                .addSubcommand("edit",editCli);
+            .addSubcommand("edit",editCli);
     }
 
     public enum ReturnType {
@@ -81,10 +81,7 @@ public class Cli {
         VERSION,
         CONFIG,
         INFO,
-        CREATE_ACCOUNT,
-        LIST_ACCOUNTS,
-        EXPORT_ACCOUNT,
-        IMPORT_ACCOUNT,
+        ACCOUNT,
         SSL,
         PRUNE_BLOCKS,
         REVERT,
@@ -342,37 +339,10 @@ public class Cli {
 
             // set correct keystore directory
             Keystore.setKeystorePath(cfg.getKeystoreDir().getAbsolutePath());
-
-            if (options.isCreateAccount()) {
-                if (!createAccount()) {
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
-            if (options.isListAccounts()) {
-                if (!listAccounts()) {
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
-            if (options.getExportAccount() != null) {
-                if (!exportPrivateKey(options.getExportAccount())) {
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
-            }
-
-            if (options.getImportAccount() != null) {
-                if (!importPrivateKey(options.getImportAccount())) {
-                    return ERROR;
-                } else {
-                    return EXIT;
-                }
+            CommandSpec commandSpec = findCommandSpec(parseResult, AccountCli.class);
+            if (commandSpec !=null) {
+                return ((AccountCli)commandSpec.userObject()).runCommand(
+                    passwordReader);
             }
 
             if (options.getSsl() != null) {
@@ -694,168 +664,6 @@ public class Cli {
         }
     }
 
-    /**
-     * Creates a new account.
-     *
-     * @return {@code true} only if the new account was successfully created, {@code false}
-     *     otherwise.
-     */
-    private boolean createAccount() {
-        String password, password2;
-        try (InputStreamReader isr = new InputStreamReader(System.in);
-                BufferedReader reader = new BufferedReader(isr)) {
-            password = readPassword("Please enter a password: ", reader);
-            password2 = readPassword("Please re-enter your password: ", reader);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        if (!password2.equals(password)) {
-            System.out.println("Passwords do not match!");
-            return false;
-        }
-
-        String address = Keystore.create(password);
-        if (!address.equals("0x")) {
-            System.out.println("A new account has been created: " + address);
-            System.out.println(
-                    "The account was stored in: " + getRelativePath(Keystore.getKeystorePath()));
-            return true;
-        } else {
-            System.out.println("Failed to create an account!");
-            return false;
-        }
-    }
-
-    /** List all existing accounts. */
-    @SuppressWarnings("SameReturnValue")
-    private boolean listAccounts() {
-        String[] accounts = Keystore.list();
-
-        if (ArrayUtils.isNotEmpty(accounts)) {
-            System.out.println(
-                    "All accounts from: " + getRelativePath(Keystore.getKeystorePath()) + "\n");
-
-            for (String account : accounts) {
-                System.out.println("\t" + account);
-            }
-        } else {
-            System.out.println(
-                    "No accounts found at: " + getRelativePath(Keystore.getKeystorePath()));
-        }
-        return true;
-    }
-
-    /**
-     * Dumps the private of the given account.
-     *
-     * @param address address of the account
-     * @return {@code true} if the operation was successful, {@code false} otherwise.
-     */
-    private boolean exportPrivateKey(String address) {
-        System.out.println(
-                "Searching for account in: " + getRelativePath(Keystore.getKeystorePath()));
-
-        if (!Keystore.exist(address)) {
-            System.out.println("The account does not exist!");
-            return false;
-        }
-
-        String password;
-        try (InputStreamReader isr = new InputStreamReader(System.in);
-                BufferedReader reader = new BufferedReader(isr)) {
-            password = readPassword("Please enter your password: ", reader);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        ECKey key = Keystore.getKey(address, password);
-
-        if (key != null) {
-            System.out.println("Your private key is: 0x" + Hex.toHexString(key.getPrivKeyBytes()));
-            return true;
-        } else {
-            System.out.println("Failed to unlock the account");
-            return false;
-        }
-    }
-
-    /**
-     * Imports a private key.
-     *
-     * @param privateKey private key in hex string
-     * @return {@code true} if the operation was successful, {@code false} otherwise.
-     */
-    private boolean importPrivateKey(String privateKey) {
-        // TODO: the Hex.decode() method catches all exceptions which may cause
-        // issues for other components
-        byte[] raw = Hex.decode(privateKey.startsWith("0x") ? privateKey.substring(2) : privateKey);
-        if (raw == null) {
-            System.out.println("Invalid private key");
-            return false;
-        }
-
-        ECKey key = ECKeyFac.inst().fromPrivate(raw);
-        if (key == null) {
-            System.out.println(
-                    "Unable to recover private key."
-                            + "Are you sure you did not import a public key?");
-            return false;
-        }
-
-        String password, password2;
-        try (InputStreamReader isr = new InputStreamReader(System.in);
-                BufferedReader reader = new BufferedReader(isr)) {
-            password = readPassword("Please enter a password: ", reader);
-            password2 = readPassword("Please re-enter your password: ", reader);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        if (!password2.equals(password)) {
-            System.out.println("Passwords do not match!");
-            return false;
-        }
-
-        String address = Keystore.create(password, key);
-        if (!address.equals("0x")) {
-            System.out.println(
-                    "The private key was imported to: "
-                            + getRelativePath(Keystore.getKeystorePath())
-                            + "\nThe address is: "
-                            + address);
-            return true;
-        } else {
-            System.out.println(
-                    "Failed to import the private key. It may already exist in: "
-                            + getRelativePath(Keystore.getKeystorePath()));
-            return false;
-        }
-    }
-
-    /**
-     * Returns a password after prompting the user to enter it. This method attempts first to read
-     * user input from a console environment and if one is not available it instead attempts to read
-     * from reader.
-     *
-     * @param prompt The read-password prompt to display to the user.
-     * @return The user-entered password.
-     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
-     */
-    public String readPassword(String prompt, BufferedReader reader) {
-        if (prompt == null) {
-            throw new NullPointerException("readPassword given null prompt.");
-        }
-
-        Console console = System.console();
-        if (console == null) {
-            return readPasswordFromReader(prompt, reader);
-        }
-        return new String(console.readPassword(prompt));
-    }
-
     private void checkArguments(Arguments options, CommandLine.ParseResult result) {
         // Find priority of breaking task
         TaskPriority breakingTaskPriority = getBreakingTaskPriority(options, result);
@@ -893,17 +701,8 @@ public class Cli {
         if(findCommandSpec(result, DevCLI.class) !=null){
             return TaskPriority.DEV;
         }
-        if (options.isCreateAccount()) {
-            return TaskPriority.CREATE_ACCOUNT;
-        }
-        if (options.isListAccounts()) {
-            return TaskPriority.LIST_ACCOUNTS;
-        }
-        if (options.getExportAccount() != null) {
-            return TaskPriority.EXPORT_ACCOUNT;
-        }
-        if (options.getImportAccount() != null) {
-            return TaskPriority.IMPORT_ACCOUNT;
+        if (findCommandSpec(result, AccountCli.class) != null) {
+            return TaskPriority.ACCOUNT;
         }
         if (options.getSsl() != null) {
             return TaskPriority.SSL;
@@ -961,21 +760,9 @@ public class Cli {
         if (breakingTaskPriority.compareTo(TaskPriority.DEV) < 0 && findCommandSpec(parseResult, DevCLI.class) != null){
             skippedTasks.add("dev");
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
-                && options.isCreateAccount()) {
-            skippedTasks.add("--account create");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.LIST_ACCOUNTS) < 0
-                && options.isListAccounts()) {
-            skippedTasks.add("--account list");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.EXPORT_ACCOUNT) < 0
-                && options.getExportAccount() != null) {
-            skippedTasks.add("--account export");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.IMPORT_ACCOUNT) < 0
-                && options.getImportAccount() != null) {
-            skippedTasks.add("--account import");
+        if (breakingTaskPriority.compareTo(TaskPriority.ACCOUNT) < 0
+                && findCommandSpec(parseResult, AccountCli.class) != null) {
+            skippedTasks.add("account");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0 && options.getSsl() != null) {
             skippedTasks.add("-s create");
@@ -1001,29 +788,6 @@ public class Cli {
         }
 
         return skippedTasks;
-    }
-
-    /**
-     * Returns a password after prompting the user to enter it from reader.
-     *
-     * @param prompt The read-password prompt to display to the user.
-     * @param reader The BufferedReader to read input from.
-     * @return The user-entered password.
-     * @throws NullPointerException if reader is null.
-     */
-    private String readPasswordFromReader(String prompt, BufferedReader reader) {
-        if (reader == null) {
-            throw new NullPointerException("readPasswordFromReader given null reader.");
-        }
-        System.out.println(prompt);
-        try {
-            return reader.readLine();
-        } catch (IOException e) {
-            System.err.println("Error reading from BufferedReader: " + reader);
-            e.printStackTrace();
-            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
-        }
-        return null; // Make compiler happy; never get here.
     }
 
     private DBUtils.Status revertTo(String blockNumber) {

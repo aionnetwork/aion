@@ -6,10 +6,14 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -21,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +34,6 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.account.Keystore;
@@ -43,13 +47,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.ParseResult;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
 public class CliTest {
 
-    private final Cli cli = new Cli();
+    private final PasswordReader mockpr = Mockito.mock(PasswordReader.class);
+    private final Cli cli = new Cli(mockpr);
     private final CfgAion cfg = CfgAion.inst();
     private final Cli mockCli = spy(cli);
 
@@ -139,8 +147,7 @@ public class CliTest {
             Cli.copyRecursively(fork, avmtestnetFork);
         }
         cfg.resetInternal();
-
-        doReturn("password").when(mockCli).readPassword(any(), any());
+        doReturn("password").when(mockpr).readPassword(any(), any());
         doCallRealMethod().when(mockCli).call(any(), any());
     }
 
@@ -994,7 +1001,7 @@ public class CliTest {
         // with two parameters
         parameters.add(
                 new Object[] {
-                    new String[] {opCompact, "a", "b"},
+                    new String[] {opCompact, "b", "c"},
                     RUN,
                     expectedPath,
                     false,
@@ -1516,57 +1523,70 @@ public class CliTest {
 
         // only info
         for (String op : options) {
-            // without parameter
-            parameters.add(new Object[] {new String[] {op}, EXIT});
+            String[] params = op.split("\\s");
+            String param1 =params[0];
+            String param2 =params[1];
+
+                // without parameter
+            parameters.add(new Object[] {params, EXIT});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "value"}, ERROR});
+            parameters.add(new Object[] {new String[] {param1, param2, "value"}, ERROR});
         }
 
         // with network
         for (String op : options) {
+            String[] params = op.split("\\s");
+            String param1 =params[0];
+            String param2 =params[1];
             // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT});
-            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT});
+            parameters.add(new Object[] {new String[] {param1, param2, "-n", "mastery"}, ERROR});
+            parameters.add(new Object[] {new String[] {"-n", "mastery", param1, param2}, EXIT});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR});
+            parameters.add(new Object[] {new String[] {param1, param2, "value", "-n", "mastery"}, ERROR});
         }
 
         // with directory
         for (String op : options) {
+            String[] params = op.split("\\s");
+            String param1 =params[0];
+            String param2 =params[1];
             // with relative path
-            parameters.add(new Object[] {new String[] {op, "-d", dataDirectory}, EXIT});
-            parameters.add(new Object[] {new String[] {"-d", dataDirectory, op}, EXIT});
+            parameters.add(new Object[] {new String[] {param1, param2, "-d", dataDirectory}, ERROR});
+            parameters.add(new Object[] {new String[] {"-d", dataDirectory, param1, param2}, EXIT});
             // + invalid parameter
-            parameters.add(new Object[] {new String[] {op, "value", "-d", dataDirectory}, ERROR});
+            parameters.add(new Object[] {new String[] {param1, param2, "value", "-d", dataDirectory}, ERROR});
             // with absolute path
-            parameters.add(new Object[] {new String[] {op, "-d", path.getAbsolutePath()}, EXIT});
-            parameters.add(new Object[] {new String[] {"-d", path.getAbsolutePath(), op}, EXIT});
+            parameters.add(new Object[] {new String[] {param1, param2, "-d", path.getAbsolutePath()}, ERROR});
+            parameters.add(new Object[] {new String[] {"-d", path.getAbsolutePath(), param1, param2}, EXIT});
             // + invalid parameter
             parameters.add(
-                    new Object[] {new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR});
+                    new Object[] {new String[] {param1, param2, "value", "-d", path.getAbsolutePath()}, ERROR});
         }
 
         // with network and directory
         for (String op : options) {
+            String[] params = op.split("\\s");
+            String param1 =params[0];
+            String param2 =params[1];
             // with relative path
             parameters.add(
-                    new Object[] {new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT});
+                    new Object[] {new String[] {param1, param2, "-d", dataDirectory, "-n", "mastery"}, ERROR});
             parameters.add(
-                    new Object[] {new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT});
+                    new Object[] {new String[] {"-n", "mastery", param1, param2, "-d", dataDirectory}, ERROR});
             parameters.add(
-                    new Object[] {new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT});
+                    new Object[] {new String[] {"-n", "mastery", "-d", dataDirectory, param1, param2}, EXIT});
             // with absolute path
             parameters.add(
                     new Object[] {
-                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()}, EXIT
+                        new String[] {param1, param2, "-n", "mastery", "-d", path.getAbsolutePath()}, ERROR
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"}, EXIT
+                        new String[] {"-d", path.getAbsolutePath(), param1, param2, "-n", "mastery"}, ERROR
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op}, EXIT
+                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", param1, param2}, EXIT
                     });
         }
 
@@ -1576,7 +1596,7 @@ public class CliTest {
     /** Parameters for testing {@link #testCreateAccount(String[], ReturnType)}. */
     @SuppressWarnings("unused")
     private Object parametersWithCreateAccount() {
-        return parametersWithAccount(new String[] {"-a create", "ac", "--account create"})
+        return parametersWithAccount(new String[] {"a create", "a c", "account create","account c"})
                 .toArray();
     }
 
@@ -1596,38 +1616,13 @@ public class CliTest {
         }
     }
 
-    @Test
-    public void testCreateAccount_withSplitInput() {
-        // number of accounts before create call
-        int count = Keystore.list().length;
-
-        assertThat(mockCli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
-        // ensure number of accounts is unchanged
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(mockCli.call(new String[] {"-a", "cre"}, cfg)).isEqualTo(ERROR);
-        // ensure number of accounts is unchanged
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(mockCli.call(new String[] {"--acc", "create"}, cfg)).isEqualTo(ERROR);
-        // ensure number of accounts is unchanged
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(mockCli.call(new String[] {"-a", "create"}, cfg)).isEqualTo(EXIT);
-        // ensure number of accounts was incremented
-        assertThat(Keystore.list().length).isEqualTo(count + 1);
-
-        assertThat(mockCli.call(new String[] {"--account", "create"}, cfg)).isEqualTo(EXIT);
-        // ensure number of accounts was incremented
-        assertThat(Keystore.list().length).isEqualTo(count + 2);
-    }
 
     // TODO: add test for create account with old config location
 
     /** Parameters for testing {@link #testListAccounts(String[], ReturnType)}. */
     @SuppressWarnings("unused")
     private Object parametersWithListAccount() {
-        return parametersWithAccount(new String[] {"-a list", "al", "--account list"}).toArray();
+        return parametersWithAccount(new String[] {"a list", "a l", "account l","account list"}).toArray();
     }
 
     /** Ensures that the { <i>-a list</i>, <i>al</i> } arguments work. */
@@ -1637,36 +1632,15 @@ public class CliTest {
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
     }
 
-    @Test
-    public void testListAccounts_withSplitInput() {
-        // used to ensure number of accounts is unchanged
-        int count = Keystore.list().length;
-
-        assertThat(cli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(cli.call(new String[] {"-a", "lis"}, cfg)).isEqualTo(ERROR);
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(cli.call(new String[] {"--acc", "list"}, cfg)).isEqualTo(ERROR);
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(cli.call(new String[] {"-a", "list"}, cfg)).isEqualTo(EXIT);
-        assertThat(Keystore.list().length).isEqualTo(count);
-
-        assertThat(cli.call(new String[] {"--account", "list"}, cfg)).isEqualTo(EXIT);
-        assertThat(Keystore.list().length).isEqualTo(count);
-    }
-
     /** Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work. */
     @Test
-    @Parameters({"-a export", "ae", "--account export"})
-    public void testExportPrivateKey(String option) {
+    @Parameters({"a|export", "a|e", "account|export", "account|e"})
+    public void testExportPrivateKey(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[] {option, account}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {command, option, account}, cfg));
     }
 
     /**
@@ -1674,14 +1648,14 @@ public class CliTest {
      * combination with the data directory option.
      */
     @Test
-    @Parameters({"-a export", "ae", "--account export"})
-    public void testExportPrivateKey_withDataDir(String option) {
+    @Parameters({"a|export", "a|e", "account|export","account|export"})
+    public void testExportPrivateKey_withDataDir(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-d", dataDirectory}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, account}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, "-d", dataDirectory}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, command, option, account}, cfg));
     }
 
     /**
@@ -1689,14 +1663,14 @@ public class CliTest {
      * combination with the network option.
      */
     @Test
-    @Parameters({"-a export", "ae", "--account export"})
-    public void testExportPrivateKey_withNetwork(String option) {
+    @Parameters({"a|export", "a|e", "account|export","account|e"})
+    public void testExportPrivateKey_withNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"ac", "-n", "mastery"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-n", "mastery","a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-n", "mastery"}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, account}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, account, "-n", "mastery"}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", command, option, account}, cfg));
     }
 
     /**
@@ -1704,25 +1678,25 @@ public class CliTest {
      * combination with the data directory and network options.
      */
     @Test
-    @Parameters({"-a export", "ae", "--account export"})
-    public void testExportPrivateKey_withDataDirAndNetwork(String option) {
+    @Parameters({"a|export", "a|e", "account|export", "account|e"})
+    public void testExportPrivateKey_withDataDirAndNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory, "-n", "mastery"}, cfg))
+        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "-n", "mastery" ,"a","c" }, cfg))
                 .isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
         assertEquals(
-                EXIT,
+                ERROR,
                 mockCli.call(
-                        new String[] {"-n", "mastery", option, account, "-d", dataDirectory}, cfg));
+                        new String[] {"-n", "mastery", command, option, account, "-d", dataDirectory}, cfg));
         assertEquals(
                 EXIT,
                 mockCli.call(
-                        new String[] {"-n", "mastery", "-d", dataDirectory, option, account}, cfg));
+                        new String[] {"-n", "mastery", "-d", dataDirectory, command, option, account}, cfg));
         assertEquals(
-                EXIT,
+                ERROR,
                 mockCli.call(
-                        new String[] {option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                        new String[] {command, option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
     }
 
     /**
@@ -1730,47 +1704,29 @@ public class CliTest {
      * the given an incorrect account value (proper substring of a valid account).
      */
     @Test
-    @Parameters({"-a export", "ae", "--account export"})
-    public void testExportPrivateKey_wSubstringOfAccount(String prefix) {
+    @Parameters({"a|export", "a|e", "account|export","account|e"})
+    public void testExportPrivateKey_wSubstringOfAccount(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
 
         String subStrAcc = Keystore.list()[0].substring(1);
 
-        assertEquals(ERROR, cli.call(new String[] {prefix, subStrAcc}, cfg));
-    }
-
-    @Test
-    public void testExportPrivateKey_withSplitInput() {
-        // create account
-        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
-        String account = Keystore.list()[0];
-
-        assertThat(mockCli.call(new String[] {"-a", account}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"-a", "exp", account}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"--acc", "export", account}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"-a", "export", account}, cfg)).isEqualTo(EXIT);
-
-        assertThat(mockCli.call(new String[] {"--account", "export", account}, cfg))
-                .isEqualTo(EXIT);
+        assertEquals(ERROR, cli.call(new String[] {command, option, subStrAcc}, cfg));
     }
 
     /** Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work. */
     @Test
-    @Parameters({"-a import", "ai", "--account import"})
-    public void testImportPrivateKey(String option) {
+    @Parameters({"a|import", "a|i", "account|import","account|i"})
+    public void testImportPrivateKey(String command ,String option) {
         // test 1: successful call
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: error -> known key
-        assertEquals(ERROR, mockCli.call(new String[] {option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1779,25 +1735,25 @@ public class CliTest {
      * combination with the data directory option.
      */
     @Test
-    @Parameters({"-a import", "ai", "--account import"})
-    public void testImportPrivateKey_withDataDir(String option) {
+    @Parameters({"a|import", "a|i", "account|import","account|i"})
+    public void testImportPrivateKey_withDataDir(String command, String option) {
         // test 1: -d last
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-d", dataDirectory}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(0);
 
-        // test 2: known key
-        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
-
-        // test 3: -d first
+        // test 2: -d first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, pKey}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(2);
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 3: known key
+        assertEquals(ERROR, mockCli.call(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
     }
 
     /**
@@ -1805,25 +1761,24 @@ public class CliTest {
      * combination with the network option.
      */
     @Test
-    @Parameters({"-a import", "ai", "--account import"})
-    public void testImportPrivateKey_withNetwork(String option) {
+    @Parameters({"a|import", "a|i", "account|import","account|i"})
+    public void testImportPrivateKey_withNetwork(String command, String option) {
         // test 1: -n last
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(0);
 
-        // test 2: known key
-        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
-
-        // test 3: -n first
+        // test 2: -n first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, pKey}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(2);
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+        // test 3: known key
+        assertEquals(ERROR, mockCli.call(new String[] { "-n", "mastery", command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
     }
 
     /**
@@ -1831,65 +1786,45 @@ public class CliTest {
      * combination with the data directory and network options.
      */
     @Test
-    @Parameters({"-a import", "ai", "--account import"})
-    public void testImportPrivateKey_withDataDirAndNetwork(String option) {
+    @Parameters({"a|import", "a|i", "account|import", "account|i"})
+    public void testImportPrivateKey_withDataDirAndNetwork(String command, String option) {
         // test 1: -d -n last
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-                EXIT,
-                mockCli.call(
-                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
-
-        // test 2: known key
-        assertEquals(
                 ERROR,
                 mockCli.call(
-                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(1);
+                        new String[] {command, option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(0);
 
-        // test 3: -d -n first
+
+        // test 2: -d -n first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-                EXIT,
-                mockCli.call(
-                        new String[] {"-n", "mastery", "-d", dataDirectory, option, pKey}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(2);
+            EXIT,
+            mockCli.call(
+                new String[] {"-n", "mastery", "-d", dataDirectory, command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 3: duplicate key
+        assertEquals(
+            ERROR,
+            mockCli.call(
+                new String[] {"-n", "mastery", "-d", dataDirectory, command, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 4: ai middle
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-                EXIT,
+                ERROR,
                 mockCli.call(
-                        new String[] {"-n", "mastery", option, pKey, "-d", dataDirectory}, cfg));
-        assertThat(Keystore.list().length).isEqualTo(3);
-    }
-
-    @Test
-    public void testImportPrivateKey_withSplitInput() {
-        // create account
-        ECKey key = ECKeyFac.inst().create();
-        String pKey = Hex.toHexString(key.getPrivKeyBytes());
-
-        assertThat(mockCli.call(new String[] {"-a", pKey}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"-a", "imp", pKey}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"--acc", "import", pKey}, cfg)).isEqualTo(ERROR);
-
-        assertThat(mockCli.call(new String[] {"-a", "import", pKey}, cfg)).isEqualTo(EXIT);
+                        new String[] {"-n", "mastery", command, option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
-
-        key = ECKeyFac.inst().create();
-        pKey = Hex.toHexString(key.getPrivKeyBytes());
-        assertThat(mockCli.call(new String[] {"--account", "import", pKey}, cfg)).isEqualTo(EXIT);
-        assertThat(Keystore.list().length).isEqualTo(2);
     }
 
     /**
@@ -1897,13 +1832,13 @@ public class CliTest {
      * a non-private key is supplied.
      */
     @Test
-    @Parameters({"-a import", "ai", "--account import"})
-    public void testImportNonPrivateKey(String option) {
+    @Parameters({"a|import", "a|i", "account|import", "account|i"})
+    public void testImportNonPrivateKey(String command, String option) {
         String fakePKey = Hex.toHexString("random".getBytes());
 
-        assertThat(mockCli.call(new String[] {option, fakePKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {command, option, fakePKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {command, option, "hello"}, cfg)).isEqualTo(ERROR);
     }
 
     /** Parameters for testing {@link #testCheckArguments(String[], TaskPriority, Set<String>)}. */
@@ -1918,10 +1853,10 @@ public class CliTest {
         skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
-        input = new String[] {"--account list", "--account create"};
+        input = new String[] {"-s create", "account","create"};
         skippedTasks = new HashSet<>();
-        skippedTasks.add("--account list");
-        parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
+        skippedTasks.add("-s create");
+        parameters.add(new Object[] {input, TaskPriority.ACCOUNT, skippedTasks});
 
         input = new String[] {"--info", "--config", "mainnet", "-s create"};
         skippedTasks = new HashSet<>();
@@ -1961,11 +1896,6 @@ public class CliTest {
         skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
-        input = new String[] {"ac", "ae", "account"};
-        skippedTasks = new HashSet<>();
-        skippedTasks.add("--account export");
-        parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
-
         input = new String[] {"--prune-blocks", "--state", "FULL"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
@@ -1986,16 +1916,16 @@ public class CliTest {
         skippedTasks.add("--config");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
-        input = new String[] {"-i", "ac"};
+        input = new String[] {"-i", "a", "c"};
         skippedTasks = new HashSet<>();
-        skippedTasks.add("--account create");
+        skippedTasks.add("account");
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
-        input = new String[] {"-c", "ai", pKey};
+        input = new String[] {"-c","mainnet", "account","import", pKey};
         skippedTasks = new HashSet<>();
-        skippedTasks.add("--account import");
+        skippedTasks.add("account");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
         input = new String[] {"-s create", "-r", "100", "pb"};
@@ -2273,6 +2203,99 @@ public class CliTest {
         strings.add("edit port 100 dev".split("\\s"));
 
         return strings.toArray();
+    }
+
+    @Parameters(method = "parametersFortestAccountCliParseAndRun")
+    @Test
+    public void testAccountCliParseAndRun(String[] options, ReturnType expected ){
+
+        CommandLine commandLine = new CommandLine(Arguments.class).addSubcommand(EditCli.class);
+        ParseResult result;
+        try{
+            result = commandLine.parseArgs(options);
+        }catch (Exception e){
+            if (expected.equals(ERROR)) {
+                return;
+            }
+            else {
+                throw e;
+            }
+        }
+        CommandSpec commandSpec = Cli.findCommandSpec(result, AccountCli.class);
+
+        //noinspection ConstantConditions
+        AccountCli spiedAccountCLI = spy((AccountCli) commandSpec.userObject());
+        doReturn(true).when(spiedAccountCLI).exportPrivateKey(anyString(),any());
+        doReturn(true).when(spiedAccountCLI).listAccounts();
+        doReturn(true).when(spiedAccountCLI).createAccount(any());
+        doReturn(true).when(spiedAccountCLI).importPrivateKey(anyString(), any());
+        doCallRealMethod().when(spiedAccountCLI).runCommand(any());
+        assertThat(spiedAccountCLI.runCommand(mockpr)).isEqualTo(expected);
+        if (spiedAccountCLI.getList()) {
+            verify(spiedAccountCLI, times(1)).listAccounts();
+        } else {
+            verify(spiedAccountCLI, times(0)).listAccounts();
+        }
+
+        if (!spiedAccountCLI.getGroup().getImportAcc().isEmpty()) {
+            verify(spiedAccountCLI, times(1)).importPrivateKey(anyString(), any());
+        } else {
+            verify(spiedAccountCLI, times(0)).importPrivateKey(anyString(),any());
+        }
+
+        if (!spiedAccountCLI.getGroup().getExport().isEmpty()) {
+            verify(spiedAccountCLI, times(1)).exportPrivateKey(anyString(),any());
+        } else {
+            verify(spiedAccountCLI, times(0)).exportPrivateKey(anyString(), any());
+        }
+
+        if (spiedAccountCLI.getGroup().getCreate()) {
+            verify(spiedAccountCLI, times(1)).createAccount(any());
+        } else {
+            verify(spiedAccountCLI, times(0)).createAccount(any());
+        }
+        Mockito.clearInvocations(spiedAccountCLI);
+    }
+
+    public Object parametersFortestAccountCliParseAndRun(){
+        List<Object[]> params = new ArrayList<>();
+
+        List<String> exportList = List.of("","export validstring","e validstring");
+        List<String> importList = List.of("", "import validString", "i validString");
+        List<String> create = List.of("", "create", "c");
+        List<String> list = List.of("", "list", "l");
+
+        for (String e: exportList){
+            for (String i: importList){
+                for (String c: create){
+                    for (String l : list) {
+                        String options = String.format("%s %s %s %s", e, i, c, l);
+
+                        ReturnType expected;
+                        if(options.trim().isEmpty()){
+                            expected = ERROR;
+                        } else if (((e.isEmpty() && i.isEmpty())
+                                || (e.isEmpty() && c.isEmpty())
+                                || (i.isEmpty() && c.isEmpty()))) {
+                            expected = EXIT;
+                        } else {
+                            expected = ERROR;
+                        }
+                        String[] commands = new String[] {"a", "-a", "account", "--account"};
+                        for (String command : commands) {
+                            params.add(
+                                    new Object[] {
+                                        Arrays.stream((command + " " + options).trim().split("\\s"))
+                                                .filter(s -> !s.isEmpty())
+                                                .toArray(String[]::new),
+                                        expected
+                                    });
+                        }
+                    }
+                }
+            }
+        }
+        return params.toArray();
     }
 
     // Methods below taken from FileUtils class

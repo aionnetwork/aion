@@ -63,7 +63,7 @@ public class AccountCliTest {
     @Parameters(method = "parametersForReturnType")
     @Test
     public void testReturnType(AccountCli cli, ReturnType returnType) {
-        assertThat(cli.runCommand(null)).isEqualTo(returnType);
+        assertThat(cli.runCommand(PasswordReader.inst())).isEqualTo(returnType);
     }
 
     public Object parametersForReturnType() {

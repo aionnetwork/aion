@@ -1,7 +1,9 @@
 package org.aion.zero.impl.cli;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -10,7 +12,12 @@ import picocli.CommandLine.Option;
  *
  * @author Alexandra Roatis
  */
-@Command(name = "./aion.sh", separator = " ", sortOptions = false, abbreviateSynopsis = true, subcommands = {DevCLI.class})
+@Command(
+    name = "./aion.sh",
+    separator = " ",
+    sortOptions = false,
+    abbreviateSynopsis = true,
+    subcommands = {DevCLI.class, AccountCli.class})
 public class Arguments {
 
     // usage information
@@ -19,29 +26,6 @@ public class Arguments {
             usageHelp = true,
             description = "display help information")
     private boolean help = false;
-
-    // account management
-    @Option(
-            names = {"ac", "-a create", "--account create"},
-            description = "create a new account")
-    private boolean createAccount = false;
-
-    @Option(
-            names = {"al", "-a list", "--account list"},
-            description = "list all existing accounts")
-    private boolean listAccounts = false;
-
-    @Option(
-            names = {"ae", "-a export", "--account export"},
-            paramLabel = "<account>",
-            description = "export private key of an account")
-    private String exportAccount = null;
-
-    @Option(
-            names = {"ai", "-a import", "--account import"},
-            paramLabel = "<key>",
-            description = "import private key")
-    private String importAccount = null;
 
     // config generation
     @Option(
@@ -143,9 +127,7 @@ public class Arguments {
 
         int i = 0;
         while (i < arguments.length) {
-            if (arguments[i].equals("-a")
-                    || arguments[i].equals("--account")
-                    || arguments[i].equals("-s")) {
+            if (arguments[i].equals("-s")) {
                 if (i + 1 < arguments.length) {
                     list.add(arguments[i] + " " + arguments[i + 1]);
                 } else {
@@ -163,22 +145,6 @@ public class Arguments {
 
     public boolean isHelp() {
         return help;
-    }
-
-    public boolean isCreateAccount() {
-        return createAccount;
-    }
-
-    public boolean isListAccounts() {
-        return listAccounts;
-    }
-
-    public String getExportAccount() {
-        return exportAccount;
-    }
-
-    public String getImportAccount() {
-        return importAccount;
     }
 
     public String getConfig() {
