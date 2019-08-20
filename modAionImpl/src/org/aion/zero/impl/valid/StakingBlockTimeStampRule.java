@@ -7,7 +7,7 @@ import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
-import org.aion.zero.types.StakedBlockHeader;
+import org.aion.zero.impl.types.StakedBlockHeader;
 
 public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
 

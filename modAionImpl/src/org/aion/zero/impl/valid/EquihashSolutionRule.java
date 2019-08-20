@@ -6,7 +6,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.impl.types.A0BlockHeader;
 
-/** Checks if {@link A0BlockHeader#solution} is a valid Equihash solution. */
+/** Checks if {@link A0BlockHeader#getSolution()} is a valid Equihash solution. */
 public class EquihashSolutionRule extends BlockHeaderRule {
 
     private OptimizedEquiValidator validator;

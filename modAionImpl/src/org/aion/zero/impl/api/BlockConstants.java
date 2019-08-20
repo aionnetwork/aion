@@ -2,13 +2,13 @@ package org.aion.zero.impl.api;
 
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.impl.types.AbstractBlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 
 public class BlockConstants implements IBlockConstants {
 
-    /** Number of bytes that is allowed in {@link AbstractBlockHeader#extraData} field */
+    /** Number of bytes that is allowed in {@link AbstractBlockHeader#getExtraData()} field */
     private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
 
     /**

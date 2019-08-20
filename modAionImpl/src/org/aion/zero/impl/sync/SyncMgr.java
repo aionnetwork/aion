@@ -27,7 +27,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.StatsType;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.bytes.ByteUtil;
@@ -36,6 +36,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakedBlockHeader;
 import org.aion.zero.impl.types.StakingBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
@@ -347,9 +348,9 @@ public final class SyncMgr {
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             BlockHeader header = headerIt.next();
             Block block = null;
-            if (header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+            if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                 block = AionBlock.createBlockFromNetwork(header, bodyIt.next());
-            } else if (header.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+            } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId() ) {
                 block = StakingBlock.createBlockFromNetwork((StakedBlockHeader) header, bodyIt.next());
             }
 

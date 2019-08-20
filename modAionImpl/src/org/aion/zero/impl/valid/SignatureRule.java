@@ -5,7 +5,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.types.StakedBlockHeader;
+import org.aion.zero.impl.types.StakedBlockHeader;
 
 public class SignatureRule extends BlockHeaderRule {
 
@@ -16,7 +16,7 @@ public class SignatureRule extends BlockHeaderRule {
             throw new IllegalStateException("Invalid header input");
         }
 
-        byte[] mineHash = ((StakedBlockHeader) header).getMineHash();
+        byte[] mineHash = header.getMineHash();
         byte[] pk = ((StakedBlockHeader) header).getPubKey();
         byte[] sig = ((StakedBlockHeader) header).getSignature();
 

@@ -8,8 +8,8 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.StakedBlockHeader;
+import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.StakedBlockHeader;
 
 public class unityDifficultyRule extends GrandParentDependantBlockHeaderRule {
 

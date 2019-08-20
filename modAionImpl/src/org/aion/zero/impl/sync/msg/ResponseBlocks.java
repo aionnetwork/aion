@@ -1,13 +1,13 @@
 package org.aion.zero.impl.sync.msg;
 
-import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+import static org.aion.zero.impl.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -17,8 +17,6 @@ import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.StakedBlockHeader;
 
 /**
  * Response message to a request for a block range.

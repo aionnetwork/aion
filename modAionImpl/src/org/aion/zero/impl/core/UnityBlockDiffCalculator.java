@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.stake.GenesisStakingBlock;
 
 public class UnityBlockDiffCalculator {
@@ -52,9 +52,9 @@ public class UnityBlockDiffCalculator {
             }
         }
 
-        if (parent.getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+        if (parent.getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
             return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
-        } else if (parent.getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+        } else if (parent.getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
             return max(constants.getMinimumDifficulty() , newDiff);
         } else {
             throw  new IllegalStateException("Invalid block seal type!");

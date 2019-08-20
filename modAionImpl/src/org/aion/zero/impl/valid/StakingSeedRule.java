@@ -5,7 +5,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.types.StakedBlockHeader;
+import org.aion.zero.impl.types.StakedBlockHeader;
 
 public class StakingSeedRule extends DependentBlockHeaderRule {
 

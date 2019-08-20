@@ -1,4 +1,4 @@
-package org.aion.mcf.types;
+package org.aion.zero.impl.types;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.util.bytes.ByteUtil.longToBytes;
@@ -12,7 +12,7 @@ import java.util.Objects;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -63,7 +63,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
     }
 
 
-    protected BlockSealType sealType;
+    BlockSealType sealType;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     protected byte[] parentHash;
@@ -129,7 +129,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
      */
     protected long energyLimit;
 
-    protected byte[] mineHashBytes;
+    byte[] mineHashBytes;
 
     public AbstractBlockHeader() {}
 
@@ -205,10 +205,6 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return receiptTrieRoot;
     }
 
-    public void setTransactionsRoot(byte[] _stateRoot) {
-        txTrieRoot = _stateRoot;
-    }
-
     public byte[] getLogsBloom() {
         return logsBloom;
     }
@@ -269,12 +265,8 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return number == 0;
     }
 
-    public BlockSealType getSealType() {
-        return sealType;
-    }
-
-    public void setSealType(BlockSealType _sealType) {
-        sealType = _sealType;
+    public byte getSealType() {
+        return sealType.getSealId();
     }
 
     public long getEnergyConsumed() {
@@ -311,7 +303,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return obj;
     }
 
-    protected void constructCommonHeader(RLPList header) {
+    void constructCommonHeader(RLPList header) {
         byte[] _sealType = header.get(RLP_BH_SEALTYPE).getRLPData();
         if (_sealType.length != 1) {
             throw new IllegalArgumentException("The length of the seal type is not correct!");
@@ -373,8 +365,8 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         }
     }
 
-    protected void copyCommonHeader(AbstractBlockHeader header) {
-        sealType = header.getSealType();
+    void copyCommonHeader(AbstractBlockHeader header) {
+        sealType = BlockSealType.byteToSealType(header.getSealType());
 
         number = header.getNumber();
 
@@ -412,7 +404,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         timestamp = header.getTimestamp();
     }
 
-    protected String commonDataToStringWithSuffix(final String suffix) {
+    String commonDataToStringWithSuffix(final String suffix) {
         return "  hash="
             + toHexString(getHash())
             + "  Length: "
@@ -481,7 +473,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         energyConsumed = _energyConsumed;
     }
 
-    protected byte[] getHeaderForMine() {
+    byte[] getHeaderForMine() {
         return merge(
             new byte[] {sealType.sealId},
             longToBytes(number),
@@ -500,7 +492,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
 
     public static class AbstractBuilder {
 
-        protected byte sealType;
+        byte sealType;
         protected byte[] parentHash;
         protected AionAddress coinbase;
         protected byte[] stateRoot;
@@ -517,8 +509,8 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         /*
          * Builder parameters, not related to header data structure
          */
-        protected boolean isFromUnsafeSource = false;
-        protected static byte[] EMPTY_BLOOM = new byte[256];
+        boolean isFromUnsafeSource = false;
+        static byte[] EMPTY_BLOOM = new byte[256];
 
         /**
          * Indicates that the data is from an unsafe source
@@ -831,7 +823,7 @@ public abstract class AbstractBlockHeader implements BlockHeader {
         return toStringWithSuffix("\n");
     }
 
-    public String toFlatString() {
+    String toFlatString() {
         return toStringWithSuffix("");
     }
 

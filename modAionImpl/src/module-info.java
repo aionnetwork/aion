@@ -38,12 +38,13 @@ module aion.zero.impl {
     exports org.aion.zero.impl.types;
     exports org.aion.zero.impl.config;
     exports org.aion.zero.impl.cli;
-
-    opens org.aion.zero.impl.cli;
-
+    exports org.aion.zero.impl.exceptions;
+    exports org.aion.zero.impl.api;
     exports org.aion.zero.impl.db;
     exports org.aion.zero.impl.sync;
     exports org.aion.zero.impl.config.dynamic;
     exports org.aion.utils;
     exports org.aion.stake;
+
+    opens org.aion.zero.impl.cli;
 }

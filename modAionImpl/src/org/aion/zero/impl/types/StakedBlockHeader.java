@@ -1,9 +1,8 @@
-package org.aion.zero.types;
+package org.aion.zero.impl.types;
 
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
@@ -261,6 +260,16 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
             mineHashBytes = HashUtil.h256(merge(getHeaderForMine(), seed));
         }
         return mineHashBytes;
+    }
+
+    @Override
+    public byte[] getSolution() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public byte[] getNonce() {
+        throw new UnsupportedOperationException();
     }
 
     public static StakedBlockHeader fromRLP(byte[] rawData, boolean isUnsafe) throws Exception {

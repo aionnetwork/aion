@@ -9,6 +9,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.AbstractBlock;
@@ -19,8 +20,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
-import org.slf4j.Logger;
 
 /** */
 //TODO: [Unity] Rename this to MinedBlock

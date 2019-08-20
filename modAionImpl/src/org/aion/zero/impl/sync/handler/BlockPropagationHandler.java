@@ -8,7 +8,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.types.ByteArrayWrapper;

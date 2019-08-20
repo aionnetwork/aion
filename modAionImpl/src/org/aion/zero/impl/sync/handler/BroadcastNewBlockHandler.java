@@ -1,9 +1,9 @@
 package org.aion.zero.impl.sync.handler;
 
-import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+import static org.aion.zero.impl.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;

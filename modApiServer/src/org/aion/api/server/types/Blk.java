@@ -6,7 +6,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.TxUtil;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
@@ -55,16 +55,16 @@ public class Blk {
         obj.put("nrgUsed", StringUtils.toJsonHex(genericBlock.getHeader().getEnergyConsumed()));
         obj.put("nrgLimit", StringUtils.toJsonHex(genericBlock.getHeader().getEnergyLimit()));
         obj.put("extraData", StringUtils.toJsonHex(genericBlock.getHeader().getExtraData()));
-        obj.put("sealType", StringUtils.toJsonHex(genericBlock.getHeader().getSealType().getSealId()));
+        obj.put("sealType", StringUtils.toJsonHex(genericBlock.getHeader().getSealType()));
         obj.put("mainChain", genericBlock.isMainChain() ? "true" : "false");
         obj.put("antiParentHash", genericBlock.getAntiparentHash());
 
-        if (genericBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+        if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
             AionBlock block = (AionBlock) genericBlock;
             obj.put("nonce", StringUtils.toJsonHex(block.getNonce()));
             obj.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
             obj.put("size", new NumericalValue(block.size()).toHexString());
-        } else if (genericBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)){
+        } else if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()){
             StakingBlock block = (StakingBlock) genericBlock;
             obj.put("seed", StringUtils.toJsonHex(block.getHeader().getSeed()));
             obj.put("signature", StringUtils.toJsonHex(block.getHeader().getSignature()));
@@ -145,16 +145,16 @@ public class Blk {
         obj.put("numTransactions", genericBlock.getTransactionsList().size());
         obj.put("extraData", StringUtils.toJsonHex(genericBlock.getExtraData()));
         obj.put("miner", StringUtils.toJsonHex(genericBlock.getHeader().getCoinbase().toString()));
-        obj.put("sealType", StringUtils.toJsonHex(genericBlock.getHeader().getSealType().getSealId()));
+        obj.put("sealType", StringUtils.toJsonHex(genericBlock.getHeader().getSealType()));
         obj.put("mainChain", genericBlock.isMainChain() ? "true" : "false");
         obj.put("antiParentHash", genericBlock.getAntiparentHash());
 
-        if (genericBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+        if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
             AionBlock block = (AionBlock) genericBlock;
-            obj.put("nonce", StringUtils.toJsonHex(block.getNonce()));
+            obj.put("nonce", StringUtils.toJsonHex(block.getHeader().getNonce()));
             obj.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
             obj.put("size", block.size());
-        } else if (genericBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)){
+        } else if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()){
             StakingBlock block = (StakingBlock) genericBlock;
             obj.put("seed", StringUtils.toJsonHex(block.getHeader().getSeed()));
             obj.put("signature", StringUtils.toJsonHex(block.getHeader().getSignature()));

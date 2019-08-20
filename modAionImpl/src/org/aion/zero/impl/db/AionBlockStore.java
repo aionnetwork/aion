@@ -36,8 +36,8 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -948,9 +948,9 @@ public class AionBlockStore implements IBlockStoreBase {
                         BigInteger miningDifficulty = parentInfo.miningDifficulty;
                         BigInteger stakingDifficulty = parentInfo.stakingDifficulty;
 
-                        if (bestLine.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+                        if (bestLine.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                             miningDifficulty = miningDifficulty.add(bestLine.getDifficultyBI());
-                        } else if (bestLine.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
+                        } else if (bestLine.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                             stakingDifficulty = stakingDifficulty.add(bestLine.getDifficultyBI());
                         } else {
                             LOG.error("The database is corrupted. There is a block of impossible sealType.");
@@ -1071,9 +1071,9 @@ public class AionBlockStore implements IBlockStoreBase {
 
         // set new block info with one type of totalDifficulty set to ZERO, and the other set to the block's difficulty
         // These values are corrected in the correctTotalDifficulty() step of pruneAndCorrect()
-        if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+        if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
             blockInfo = new BlockInfo(blockHash, block.getAntiparentHash(), block.getHeader().getDifficultyBI(), ZERO, true);
-        } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
+        } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
             blockInfo = new BlockInfo(blockHash, block.getAntiparentHash(), ZERO, block.getHeader().getDifficultyBI(), true);
         } else {
             LOG.error("The database is corrupted. There is a block of impossible sealType.");
@@ -1135,14 +1135,14 @@ public class AionBlockStore implements IBlockStoreBase {
             // assuming side chain, with warnings upon encountered issues
             BlockInfo blockInfo;
 
-            if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+            if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                 blockInfo = new BlockInfo(
                         block.getHash(),
                         block.getAntiparentHash(),
                         block.getDifficultyBI().add(miningDifficulty),
                         stakingDifficulty,
                         false);
-            } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
+            } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 blockInfo = new BlockInfo(
                         block.getHash(),
                         block.getAntiparentHash(),
@@ -1700,9 +1700,9 @@ public class AionBlockStore implements IBlockStoreBase {
 
                 BigInteger expectedTotalDifficulty = parentBlock.getCumulativeDifficulty();
 
-                if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+                if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                     expectedTotalDifficulty = expectedTotalDifficulty.add(parentBlock.getStakingDifficulty().multiply(block.getDifficultyBI()));
-                } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
+                } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                     expectedTotalDifficulty = expectedTotalDifficulty.add(parentBlock.getMiningDifficulty().multiply(block.getDifficultyBI()));
                 } else {
                     LOG.error("The database is corrupted. There is a block of impossible sealType.");
@@ -1822,9 +1822,10 @@ public class AionBlockStore implements IBlockStoreBase {
                         BigInteger newMiningDifficulty = parentBlockInfo.miningDifficulty;
                         BigInteger newStakingDifficulty = parentBlockInfo.stakingDifficulty;
 
-                        if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
+                        
+                        if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                             newMiningDifficulty = newMiningDifficulty.add(block.getDifficultyBI());
-                        } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
+                        } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                             newStakingDifficulty = newStakingDifficulty.add(block.getDifficultyBI());
                         } else {
                             LOG.error("The database is corrupted. There is a block of impossible sealType.");

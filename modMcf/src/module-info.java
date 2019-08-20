@@ -30,7 +30,6 @@ module aion.mcf {
     exports org.aion.mcf.trie;
     exports org.aion.mcf.tx;
     exports org.aion.mcf.types;
-    exports org.aion.mcf.exceptions;
     exports org.aion.mcf.valid;
     exports org.aion.mcf.vm.types;
     exports org.aion.mcf.stake;

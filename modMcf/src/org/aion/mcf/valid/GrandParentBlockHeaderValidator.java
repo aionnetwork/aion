@@ -5,16 +5,15 @@ import java.util.List;
 import java.util.Map;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.slf4j.Logger;
 
 public class GrandParentBlockHeaderValidator
         extends AbstractBlockHeaderValidator {
 
-    private Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> chainRules;
+    private Map<Byte, List<GrandParentDependantBlockHeaderRule>> chainRules;
 
 
-    public GrandParentBlockHeaderValidator(Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> rules) {
+    public GrandParentBlockHeaderValidator(Map<Byte, List<GrandParentDependantBlockHeaderRule>> rules) {
         if (rules == null) {
             throw new NullPointerException();
         }

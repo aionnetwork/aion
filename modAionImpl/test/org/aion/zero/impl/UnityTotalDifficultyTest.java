@@ -5,7 +5,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.stake.GenesisStakingBlock;
 import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;

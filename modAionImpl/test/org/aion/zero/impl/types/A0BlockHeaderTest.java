@@ -6,6 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.junit.Test;
 
 public class A0BlockHeaderTest {
@@ -61,7 +62,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
-        assertThat(header.getSealType().getSealId() == (byte) 0x01);
+        assertThat(header.getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId());
     }
 
     @Test
@@ -97,7 +98,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
-        assertThat(header.getSealType().getSealId() == (byte) 0x01);
+        assertThat(header.getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId());
     }
 
     // Test is a self referencing
@@ -136,8 +137,6 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
         assertThat(reconstructed.getSealType() == header.getSealType());
-
-        byte[] difficulty = reconstructed.getDifficulty();
     }
 
     // verification tests, test that no properties are being violated

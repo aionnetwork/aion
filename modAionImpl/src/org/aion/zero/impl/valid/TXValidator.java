@@ -38,7 +38,7 @@ public class TXValidator {
         return cache.get(hash) != null;
     }
 
-    public static boolean isValid0(AionTransaction tx) {
+    private static boolean isValid0(AionTransaction tx) {
         byte[] check = tx.getNonce();
         if (check == null || check.length > DataWordImpl.BYTES) {
             LOG.error("invalid tx nonce!");

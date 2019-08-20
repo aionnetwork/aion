@@ -1,8 +1,6 @@
 package org.aion.valid;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.types.A0BlockHeader.NONCE_LENGTH;
-import static org.aion.zero.types.A0BlockHeader.SOLUTIONSIZE;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
@@ -31,6 +29,9 @@ public class DifficultyRuleTest {
     private A0BlockHeader currentHeader;
     @Mock IChainCfg mockChainCfg;
     @Mock IDifficultyCalculator mockDiffCalculator;
+
+    private final int NONCE_LENGTH = 32;
+    private final int SOLUTIONSIZE = 1408;
 
     @Before
     public void setUp() {

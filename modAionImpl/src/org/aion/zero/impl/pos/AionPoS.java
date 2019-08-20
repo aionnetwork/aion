@@ -35,8 +35,8 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.types.StakedBlockHeader;
 import org.aion.zero.impl.types.StakingBlock;
-import org.aion.zero.types.StakedBlockHeader;
 import org.slf4j.Logger;
 
 /**

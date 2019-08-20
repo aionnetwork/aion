@@ -7,14 +7,13 @@ import java.util.Map;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.mcf.blockchain.valid.IValidRule;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.slf4j.Logger;
 
 public class BlockHeaderValidator extends AbstractBlockHeaderValidator {
 
-    private Map<BlockSealType, List<BlockHeaderRule>> chainRules;
+    private Map<Byte, List<BlockHeaderRule>> chainRules;
 
-    public BlockHeaderValidator(Map<BlockSealType, List<BlockHeaderRule>> rules) {
+    public BlockHeaderValidator(Map<Byte, List<BlockHeaderRule>> rules) {
         if (rules == null) {
             throw new NullPointerException();
         }

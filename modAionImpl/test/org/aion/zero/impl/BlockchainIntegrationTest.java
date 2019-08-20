@@ -23,6 +23,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.mcf.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;

@@ -1,12 +1,12 @@
 package org.aion.zero.impl.sync.msg;
 
-import static org.aion.mcf.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
+import static org.aion.zero.impl.types.AbstractBlockHeader.RLP_BH_SEALTYPE;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;

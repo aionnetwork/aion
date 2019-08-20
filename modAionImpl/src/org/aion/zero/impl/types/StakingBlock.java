@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
-import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -19,7 +18,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.types.StakedBlockHeader;
 
 public class StakingBlock extends AbstractBlock {
 

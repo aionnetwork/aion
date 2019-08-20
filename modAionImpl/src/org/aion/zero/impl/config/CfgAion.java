@@ -78,8 +78,8 @@ public final class CfgAion extends Cfg {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
             try {
-                this.genesis = (new AionGenesis.Builder()).build();
-            } catch (HeaderStructureException e2) {
+                genesis = (new AionGenesis.Builder()).build();
+            } catch (Exception e2) {
                 // if this fails, it means our DEFAULT genesis violates header rules
                 // this is catastrophic
                 throw new RuntimeException(e2);

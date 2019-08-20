@@ -1,13 +1,13 @@
 package org.aion.zero.impl.types;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.util.bytes.ByteUtil.longToBytes;
+import static org.aion.util.bytes.ByteUtil.oneByteToHexString;
 import static org.aion.util.bytes.ByteUtil.toHexString;
 
 import java.math.BigInteger;
 import org.aion.crypto.HashUtil;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.exceptions.HeaderStructureException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
@@ -23,8 +23,8 @@ import org.spongycastle.util.BigIntegers;
  */
 public class A0BlockHeader extends AbstractBlockHeader {
 
-    public static final int NONCE_LENGTH = 32;
-    public static final int SOLUTIONSIZE = 1408;
+    private static final int NONCE_LENGTH = 32;
+    private static final int SOLUTIONSIZE = 1408;
 
     // 0 ~ 12 has been defined in the AbstractClass
     private static final int RLP_BH_NONCE = 13, RLP_BH_SOLUTION = 14;
@@ -39,13 +39,11 @@ public class A0BlockHeader extends AbstractBlockHeader {
     // (1344 in 200-9, 1408 in 210,9)
     private byte[] solution; // The equihash solution in compressed format
 
-    private byte[] mineHashBytes;
-
     // TODO: Update this
     @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.putOpt("version", oneByteToHexString(this.version));
+        obj.putOpt("sealType", oneByteToHexString(this.sealType.getSealId()));
         obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("parentHash", toHexString(this.parentHash));
         obj.putOpt("coinBase", toHexString(this.coinbase.toByteArray()));
@@ -165,13 +163,13 @@ public class A0BlockHeader extends AbstractBlockHeader {
         nonce = _nonce;
     }
 
-    public byte[] getEncodedWithoutNonce() {
+    byte[] getEncodedWithoutNonce() {
         return getEncoded(false);
     }
 
     public byte[] getEncoded(boolean withNonce) {
 
-        byte[] rlpVersion = RLP.encodeElement(new byte[] {sealType.getSealId()});
+        byte[] rlpSealType = RLP.encodeElement(new byte[] {sealType.getSealId()});
         byte[] rlpNumber = RLP.encodeBigInteger(BigInteger.valueOf(number));
         byte[] rlpParentHash = RLP.encodeElement(parentHash);
         byte[] rlpCoinbase = RLP.encodeElement(coinbase.toByteArray());
@@ -199,7 +197,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
         if (withNonce) {
             byte[] rlpNonce = RLP.encodeElement(nonce);
             return RLP.encodeList(
-                rlpVersion,
+                rlpSealType,
                 rlpNumber,
                 rlpParentHash,
                 rlpCoinbase,
@@ -216,7 +214,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
                 rlpSolution);
         } else {
             return RLP.encodeList(
-                rlpVersion,
+                rlpSealType,
                 rlpParentHash,
                 rlpCoinbase,
                 rlpStateRoot,
@@ -331,10 +329,6 @@ public class A0BlockHeader extends AbstractBlockHeader {
             return (Builder) super.withRlpHeader(rlpHeader);
         }
 
-        public Builder withSealType(byte _sealType) throws HeaderStructureException {
-            return (Builder) super.withSealType(_sealType);
-        }
-
         public Builder withParentHash(byte[] _parentHash) throws HeaderStructureException {
             return (Builder) super.withParentHash(_parentHash);
         }
@@ -343,7 +337,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
             return (Builder) super.withCoinbase(_coinbase);
         }
 
-        public Builder withStateRoot(byte[] _stateRoot) throws HeaderStructureException {
+        public Builder withStateRoot(byte[] _stateRoot) throws HeaderStructureException  {
             return (Builder) super.withStateRoot(_stateRoot);
         }
 
@@ -400,7 +394,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
             return (Builder) super.withEnergyLimit(_energyLimit);
         }
 
-        public Builder withSolution(byte[] _solution) throws HeaderStructureException {
+        Builder withSolution(byte[] _solution) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
                 if (_solution == null)
@@ -416,7 +410,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
             return this;
         }
 
-        public Builder withNonce(byte[] _nonce) throws HeaderStructureException {
+        Builder withNonce(byte[] _nonce) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
                 if (_nonce == null)
@@ -433,9 +427,8 @@ public class A0BlockHeader extends AbstractBlockHeader {
         }
 
         public A0BlockHeader build() {
-
             // Formalize the data
-            sealType = sealType == 0 ? 1 : sealType;
+            sealType = BlockSealType.SEAL_POW_BLOCK.getSealId();
             parentHash = parentHash == null ? HashUtil.EMPTY_DATA_HASH : parentHash;
             coinbase = coinbase == null ? AddressUtils.ZERO_ADDRESS : coinbase;
             stateRoot = stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : stateRoot;

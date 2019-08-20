@@ -1,7 +1,7 @@
 package org.aion.stake;
 
 import java.math.BigInteger;
-import org.aion.mcf.exceptions.HeaderStructureException;
+import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.StakingBlock;
 

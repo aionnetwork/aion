@@ -14,7 +14,9 @@ import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
+import org.aion.mcf.mine.IMiner;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.BlockNumberRule;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
@@ -128,7 +130,7 @@ public class ChainConfiguration implements IChainCfg {
     }
 
     /** @return */
-    protected OptimizedEquiValidator getEquihashValidator() {
+    private OptimizedEquiValidator getEquihashValidator() {
         if (this.equiValidator == null) {
             this.equiValidator = new OptimizedEquiValidator(CfgAion.getN(), CfgAion.getK());
         }
@@ -150,9 +152,9 @@ public class ChainConfiguration implements IChainCfg {
             new EnergyConsumedRule(),
             new SignatureRule());
 
-        Map<BlockSealType, List<BlockHeaderRule>> unityRules= new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+        Map<Byte, List<BlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
 
         return new BlockHeaderValidator(unityRules);
     }
@@ -163,8 +165,8 @@ public class ChainConfiguration implements IChainCfg {
             new StakingSeedRule(),
             new StakingBlockTimeStampRule());
 
-        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+        Map<Byte, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
 
         return new ParentBlockHeaderValidator(unityRules);
     }
@@ -174,8 +176,8 @@ public class ChainConfiguration implements IChainCfg {
         List<GrandParentDependantBlockHeaderRule> powRules = Collections.singletonList(
             new AionDifficultyRule(this));
 
-        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        Map<Byte, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
 
         return new GrandParentBlockHeaderValidator(unityRules);
     }
@@ -190,9 +192,9 @@ public class ChainConfiguration implements IChainCfg {
         List<GrandParentDependantBlockHeaderRule> posRules = Collections.singletonList(
             new unityDifficultyRule(this));
 
-        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+        Map<Byte, List<GrandParentDependantBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
 
         return new GrandParentBlockHeaderValidator(unityRules);
     }
@@ -215,9 +217,9 @@ public class ChainConfiguration implements IChainCfg {
                     getConstants().getEnergyDivisorLimitLong(),
                     getConstants().getEnergyLowerBoundLong()));
 
-        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+        Map<Byte, List<DependentBlockHeaderRule>> unityRules= new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
 
         return new ParentBlockHeaderValidator(unityRules);
     }
