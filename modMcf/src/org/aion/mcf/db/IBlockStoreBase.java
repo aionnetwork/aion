@@ -52,7 +52,5 @@ public interface IBlockStoreBase {
 
     void saveBlock(Block block, BigInteger miningDifficulty, BigInteger stakingDifficulty, boolean mainChain);
 
-    BigInteger getTotalDifficulty();
-
     Block getBlockByHashWithInfo(byte[] hash);
 }

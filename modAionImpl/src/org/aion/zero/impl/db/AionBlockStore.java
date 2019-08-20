@@ -37,6 +37,7 @@ import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.types.AbstractBlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -91,9 +92,9 @@ public class AionBlockStore implements IBlockStoreBase {
                 RLPList block = (RLPList) params.get(0);
                 RLPList header = (RLPList) block.get(0);
                 byte[] sealType = header.get(0).getRLPData();
-                if (sealType[0] == 0x01) {
+                if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                     return new AionBlock(bytes);
-                } else if (sealType[0] == 0x02) {
+                } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                     return new StakingBlock(bytes);
                 } else {
                     throw new IllegalStateException(
@@ -103,6 +104,12 @@ public class AionBlockStore implements IBlockStoreBase {
             }
         };
 
+    /**
+     *  Get current highest block data, usually use this method when the kernel need to know the
+     *  block information itself.
+     * @return highest block data stored at the block database
+     * @see #getBestBlockWithInfo()
+     */
     public Block getBestBlock() {
         lock.lock();
 
@@ -117,9 +124,22 @@ public class AionBlockStore implements IBlockStoreBase {
                 return bestBlock;
             }
 
-            while (bestBlock == null) {
+            int depth = 0;
+            while (bestBlock == null && depth < 128) {
                 --maxLevel;
                 bestBlock = getChainBlockByNumber(maxLevel);
+                ++depth;
+            }
+
+            if (bestBlock == null) {
+                LOG.error(
+                    "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store. "
+                        + "Or the branch is too deep, it should not happens. "
+                        + "Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
+                    maxLevel,
+                    maxLevel - 1);
+
+                throw new IllegalStateException("Index DB corruption or branch too deep.");
             }
 
             return bestBlock;
@@ -128,9 +148,17 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
+    /**
+     *  Get current highest block data with extra info relate with the forking rule by given block
+     *  hash, usually use this method when the kernel need to know the block data and the forking
+     *  information. this method will try to load 2 databases when doing the query. If the kernel
+     *  does not need the forking information. Just use #getBestBlock() method.
+     * @return highest block data with forking information stored at the block and index database
+     * @see #getBestBlock()
+     */
     @Override
     public Block getBestBlockWithInfo() {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long maxLevel = getMaxNumber();
@@ -144,7 +172,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 --maxLevel;
                 bestBlock = getChainBlockByNumber(maxLevel);
             }
-            
+
             BlockInfo bestBlockInfo = getBlockInfoForHash(bestBlock.getHash());
             bestBlock.setMiningDifficulty(bestBlockInfo.miningDifficulty);
             bestBlock.setStakingDifficulty(bestBlockInfo.stakingDifficulty);
@@ -153,7 +181,7 @@ public class AionBlockStore implements IBlockStoreBase {
 
             return bestBlock;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -212,7 +240,6 @@ public class AionBlockStore implements IBlockStoreBase {
         try {
 
             if (!block.getHeader().isGenesis()) {
-                //Block parent = blocks.get(block.getParentHash());
                 Block parent = getBlockByHashWithInfo(block.getHeader().getParentHash());
                 // TODO : [unity] fix the aionblockstore test suite.
                 if (parent != null) {
@@ -261,12 +288,12 @@ public class AionBlockStore implements IBlockStoreBase {
         index.set(block.getNumber(), blockInfos);
     }
 
-    public List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(
+    public List<Block> getBlocksByNumber(
             long number) {
         lock.lock();
 
         try {
-            List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
+            List<Block> result = new ArrayList<>();
 
             if (number >= index.size()) {
                 return result;
@@ -275,14 +302,13 @@ public class AionBlockStore implements IBlockStoreBase {
             List<BlockInfo> blockInfos = index.get(number);
 
             for (BlockInfo blockInfo : blockInfos) {
-
                 byte[] hash = blockInfo.getHash();
-                Block block = blocks.get(hash);
+                Block block = getBlockByHashWithInfo(hash);
+                if (block == null) {
+                    throw new NullPointerException("Can find the block in the database!");
+                }
 
-                result.add(
-                        Map.entry(
-                                block,
-                                Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
+                result.add(block);
             }
 
             return result;
@@ -314,6 +340,9 @@ public class AionBlockStore implements IBlockStoreBase {
                     if (block != null) {
                         block.setCumulativeDifficulty(blockInfo.cummDifficulty);
                         block.setAntiparentHash(blockInfo.getSealAntiparentHash());
+                        block.setMiningDifficulty(blockInfo.miningDifficulty);
+                        block.setStakingDifficulty(blockInfo.stakingDifficulty);
+                        block.setMainChain();
                         return block;
                     }
                 }
@@ -354,6 +383,8 @@ public class AionBlockStore implements IBlockStoreBase {
 
                 b.setCumulativeDifficulty(blockInfo.cummDifficulty);
                 b.setAntiparentHash(blockInfo.getSealAntiparentHash());
+                b.setMiningDifficulty(blockInfo.miningDifficulty);
+                b.setStakingDifficulty(blockInfo.stakingDifficulty);
                 blockList.add(b);
             }
 
@@ -398,9 +429,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 blocks.add(block);
 
                 for (long i = first - 1; i >= (last > 0 ? last : 1); i--) {
-                    block = getBlockByHash(block.getParentHash());
-                    //TODO : [unity] might need to fix it.
-                    //block = getChainBlockByNumber(i);
+                    block = getBlockByHashWithInfo(block.getParentHash());
                     if (block == null) {
                         // the block should have been stored but null was returned above
                         LOG.error(
@@ -446,9 +475,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 blocks.addFirst(lastBlock);
                 long newLast = lastBlock.getNumber();
                 for (long i = newLast - 1; i > first; i--) {
-                    lastBlock = getBlockByHash(lastBlock.getParentHash());
-                    //TODO : [unity] might need to fix it.
-                    //lastBlock = getChainBlockByNumber(i);
+                    lastBlock = getBlockByHashWithInfo(lastBlock.getParentHash());
                     if (lastBlock == null) {
                         LOG.error(
                                 "Encountered a kernel database corruption: cannot find block at level {} in block data store.",
@@ -473,39 +500,13 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @SuppressWarnings("Duplicates")
-    public Map.Entry<Block, BigInteger> getChainBlockByNumberWithTotalDifficulty(long number) {
-        lock.lock();
-
-        try {
-            if (number < 0L || number >= index.size()) {
-                return null;
-            }
-
-            List<BlockInfo> blockInfos = index.get(number);
-            if (blockInfos == null) {
-                LOG.error(
-                        "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store.",
-                        number);
-                LOG.error(
-                        " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                        number - 1);
-                return null;
-            }
-
-            for (BlockInfo blockInfo : blockInfos) {
-                if (blockInfo.isMainChain()) {
-                    byte[] hash = blockInfo.getHash();
-                    return Map.entry(blocks.get(hash), blockInfo.getCummDifficulty());
-                }
-            }
-
-            return null;
-        } finally {
-            lock.unlock();
-        }
-    }
-
+    /**
+     *  Get block data by given block hash, usually use this method when the kernel need to know the
+     *  block information itself.
+     * @param hash the block hash
+     * @return block data itself stored at the block database
+     * @see #getBlockByHashWithInfo(byte[])
+     */
     @Override
     public Block getBlockByHash(byte[] hash) {
         lock.lock();
@@ -516,6 +517,15 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
+    /**
+     *  Get block data with extra info relate with the forking rule by given block hash, usually use
+     *  this method when the kernel need to know the block data and the forking information. this
+     *  method will try to load 2 databases when doing the query. If the kernel does not need the
+     *  forking information. Just use #getBlockByHash(byte[]) method.
+     * @param hash the block hash
+     * @return block with forking information stored at the block and index database
+     * @see #getBlockByHash(byte[])
+     */
     @Override
     public boolean isBlockStored(byte[] hash, long number) {
         lock.lock();
@@ -532,7 +542,7 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     public Block getBlockByHashWithInfo(byte[] hash) {
-        lock.readLock().lock();
+        lock.lock();
         try {
             Block retBlock = blocks.get(hash);
             if (retBlock == null) {
@@ -551,7 +561,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 return retBlock;
             }
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -564,40 +574,12 @@ public class AionBlockStore implements IBlockStoreBase {
      */
     @Override
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
-        lock.lock();
+        Block b = getBlockByHashWithInfo(hash);
 
-        try {
-            Block block = this.getBlockByHash(hash);
-            if (block == null) {
-                return ZERO;
-            }
-
-            List<BlockInfo> blockInfos = index.get(block.getNumber());
-            if (blockInfos == null) {
-                LOG.error(
-                        "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store.",
-                        block.getNumber());
-                LOG.error(
-                        " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                        block.getNumber() - 1);
-                return ZERO;
-            }
-
-            for (BlockInfo blockInfo : blockInfos) {
-                if (Arrays.equals(blockInfo.getHash(), hash)) {
-                    return blockInfo.getCummDifficulty();
-                }
-            }
-
-            LOG.error(
-                    "Encountered a kernel database corruption: cannot find the matched hash of blockInfos at level {} in index data store.",
-                    block.getNumber());
-            LOG.error(
-                    " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                    block.getNumber() - 1);
+        if (b == null) {
             return ZERO;
-        } finally {
-            lock.unlock();
+        } else {
+            return b.getCumulativeDifficulty();
         }
     }
 
@@ -608,97 +590,37 @@ public class AionBlockStore implements IBlockStoreBase {
      * @return null when the hash info is not matched or database corruption. Otherwise, return the
      *     BlockInfo stored in the index database.
      */
-    public BlockInfo getBlockInfoForHash(byte[] hash) {
-        lock.readLock().lock();
+    private BlockInfo getBlockInfoForHash(byte[] hash) {
 
-        try {
-            Block block = this.getBlockByHash(hash);
-            if (block == null) {
-                return null;
-            }
-
-            List<BlockInfo> blockInfos = index.get(block.getNumber());
-            if (blockInfos == null) {
-                LOG.error(
-                        "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store.",
-                        block.getNumber());
-                LOG.error(
-                        " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                        block.getNumber() - 1);
-                return null;
-            }
-            
-            BlockInfo blockInfo = getBlockInfoForHash(blockInfos, hash);
-            
-            if (blockInfo != null) {
-                return blockInfo;
-            } else {
-
-                LOG.error(
-                        "Encountered a kernel database corruption: cannot find the matched hash of blockInfos at level {} in index data store.",
-                        block.getNumber());
-                LOG.error(
-                        " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                        block.getNumber() - 1);
-                return null;
-            }
-        } finally {
-            lock.readLock().unlock();
+        Block block = this.getBlockByHash(hash);
+        if (block == null) {
+            return null;
         }
-    }
 
-    /**
-     * Retrieve the total difficulty from the index database. Try to look at any mainchain block
-     * info in the highest level. If can't find it, then go backward to find the highest mainchain
-     * block info. after backward 128 blocks still can't find the mainchain block, then we throw the
-     * exception for notice user the database corrupt or branch too deep.
-     *
-     * @exception IllegalStateException reflect the database corrupt or mainchain branch goes too
-     *     deep.
-     * @return the total difficulty of the highest block in the mainchain.
-     */
-    @Override
-    public BigInteger getTotalDifficulty() {
-        lock.lock();
+        List<BlockInfo> blockInfos = index.get(block.getNumber());
+        if (blockInfos == null) {
+            LOG.error(
+                    "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store.",
+                    block.getNumber());
+            LOG.error(
+                    " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
+                    block.getNumber() - 1);
+            return null;
+        }
 
-        try {
-            long maxNumber = getMaxNumber();
+        BlockInfo blockInfo = getBlockInfoForHash(blockInfos, hash);
 
-            List<BlockInfo> blockInfos = index.get(maxNumber);
-            if (blockInfos != null && !blockInfos.isEmpty()) {
-                for (BlockInfo blockInfo : blockInfos) {
-                    if (blockInfo.isMainChain()) {
-                        return blockInfo.getCummDifficulty();
-                    }
-                }
-            }
-
-            // Can't find the mainchain blockInfo in the highest block index. Looking backward to
-            // see
-            // have any mainchain block info in the previous levels.
-            int depth = 0;
-            while (depth < 128) {
-                --maxNumber;
-                List<BlockInfo> infos = getBlockInfoForLevel(maxNumber);
-
-                for (BlockInfo blockInfo : infos) {
-                    if (blockInfo.isMainChain()) {
-                        return blockInfo.getCummDifficulty();
-                    }
-                }
-                ++depth;
-            }
+        if (blockInfo != null) {
+            return blockInfo;
+        } else {
 
             LOG.error(
-                    "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store. "
-                            + "Or the branch is too deep, it should not happens. "
-                            + "Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                    maxNumber,
-                    maxNumber - 1);
-
-            throw new IllegalStateException("Index DB corruption or branch too deep.");
-        } finally {
-            lock.unlock();
+                    "Encountered a kernel database corruption: cannot find the matched hash of blockInfos at level {} in index data store.",
+                    block.getNumber());
+            LOG.error(
+                    " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
+                    block.getNumber() - 1);
+            return null;
         }
     }
 
@@ -1014,9 +936,15 @@ public class AionBlockStore implements IBlockStoreBase {
                                         + previousLevel
                                         + " when data should exist. "
                                         + "Rebuilding information.");
-                        
+
                         BlockInfo parentInfo = getBlockInfoForHash(bestLine.getParentHash());
-                        
+                        if (parentInfo == null) {
+                            LOG.error(
+                                "Could not find the parent Block info {}, the index database might corrupted. Please redo import your database",
+                                bestLine.getHeader().getNumber() - 1);
+                            throw new IllegalStateException("The Index database might corrupt!");
+                        }
+
                         BigInteger miningDifficulty = parentInfo.miningDifficulty;
                         BigInteger stakingDifficulty = parentInfo.stakingDifficulty;
 
@@ -1028,7 +956,7 @@ public class AionBlockStore implements IBlockStoreBase {
                             LOG.error("The database is corrupted. There is a block of impossible sealType.");
                             return;
                         }
-                        
+
                         // recreate missing block info
                         blockInfo =
                                 new BlockInfo(
@@ -1080,12 +1008,20 @@ public class AionBlockStore implements IBlockStoreBase {
                     LOG.error(
                             " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
                             level - 1);
+
+                    throw new IllegalStateException("Missing block from the database.");
                 }
                 level = block.getNumber();
             }
 
             // prune genesis, and save genesisInfo as parentInfo
             BlockInfo parentInfo = pruneSideChains(block);
+            if (parentInfo == null) {
+                LOG.error(
+                    "Could not find the parent Block info {}, the index database might corrupted. Please redo import your database",
+                    block.getHeader().getNumber() - 1);
+                throw new IllegalStateException("The Index database might corrupt!");
+            }
 
             // bottom up repair of information
             level = 1;
@@ -1198,7 +1134,7 @@ public class AionBlockStore implements IBlockStoreBase {
             // correct block info
             // assuming side chain, with warnings upon encountered issues
             BlockInfo blockInfo;
-            
+
             if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
                 blockInfo = new BlockInfo(
                         block.getHash(),
@@ -1237,10 +1173,10 @@ public class AionBlockStore implements IBlockStoreBase {
 
             levelBlocks.add(blockInfo);
             setBlockInfoForLevel(blockNumber, levelBlocks);
-            
+
             block.setMiningDifficulty(blockInfo.miningDifficulty);
             block.setStakingDifficulty(blockInfo.stakingDifficulty);
-            
+
             return block;
         } finally {
             lock.unlock();
@@ -1353,37 +1289,7 @@ public class AionBlockStore implements IBlockStoreBase {
             lock.unlock();
         }
     }
-
-    public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
-        lock.lock();
-
-        try {
-            List<byte[]> result = new ArrayList<>();
-
-            int i;
-            for (i = 0; i < maxBlocks; ++i) {
-                List<BlockInfo> blockInfos = index.get(number);
-                if (blockInfos == null) {
-                    break;
-                }
-
-                for (BlockInfo blockInfo : blockInfos) {
-                    if (blockInfo.isMainChain()) {
-                        result.add(blockInfo.getHash());
-                        break;
-                    }
-                }
-
-                ++number;
-            }
-            maxBlocks -= i;
-
-            return result;
-        } finally {
-            lock.unlock();
-        }
-    }
-
+    
     public boolean isIndexed(byte[] hash, long level) {
         lock.lock();
 
@@ -1419,16 +1325,21 @@ public class AionBlockStore implements IBlockStoreBase {
      * method attempts to correct it by setting it to the given level.
      */
     public void correctSize(long maxNumber, Logger log) {
-        // correcting the size if smaller than should be
-        long storedSize = index.getStoredSize();
-        if (maxNumber >= storedSize) {
-            // can't change size directly, so we do a put + delete the next level to reset it
-            index.set(maxNumber + 1, new ArrayList<>());
-            index.remove(maxNumber + 1);
-            log.info(
+        lock.lock();
+        try {
+            // correcting the size if smaller than should be
+            long storedSize = index.getStoredSize();
+            if (maxNumber >= storedSize) {
+                // can't change size directly, so we do a put + delete the next level to reset it
+                index.set(maxNumber + 1, new ArrayList<>());
+                index.remove(maxNumber + 1);
+                log.info(
                     "Corrupted index size corrected from {} to {}.",
                     storedSize,
                     index.getStoredSize());
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -1479,11 +1390,10 @@ public class AionBlockStore implements IBlockStoreBase {
         lock.lock();
 
         try {
-            Block currentBlock = block;
 
-            if (currentBlock != null) {
+            if (block != null) {
                 byte[] currentHash = block.getHash();
-                List<BlockInfo> level = getBlockInfoForLevel(currentBlock.getNumber());
+                List<BlockInfo> level = getBlockInfoForLevel(block.getNumber());
 
                 // delete all the side-chain blocks
                 for (BlockInfo blockInfo : level) {
@@ -1517,7 +1427,7 @@ public class AionBlockStore implements IBlockStoreBase {
             }
 
             if (miningDifficulty.signum() == -1 || stakingDifficulty.signum() == -1) {
-                throw new IllegalArgumentException("Total Mining and staking difficulties must be non-negatvie");
+                throw new IllegalArgumentException("Total Mining and staking difficulties must be non-negative");
             }
 
             this.hash = hash;
@@ -1526,14 +1436,13 @@ public class AionBlockStore implements IBlockStoreBase {
             } else {
                 //TODO: [Unity] This case should likely never happen by the end of Unity work
                 this.sealAntiparentHash = HashUtil.EMPTY_DATA_HASH;
-            }
-            this.miningDifficulty = miningDifficulty;
+            }            this.miningDifficulty = miningDifficulty;
             this.stakingDifficulty = stakingDifficulty;
             this.cummDifficulty = miningDifficulty.multiply(stakingDifficulty);
             this.mainChain = mainChain;
         }
 
-        public BlockInfo(byte[] ser) {
+        BlockInfo(byte[] ser) {
             RLPList outerList = RLP.decode2(ser);
 
             if (outerList.isEmpty()) {
@@ -1607,13 +1516,14 @@ public class AionBlockStore implements IBlockStoreBase {
             byte[] stakingDifficultyElement = RLP.encodeElement(stakingDifficulty.toByteArray());
             return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement, antiParentElement, miningDifficultyElement, stakingDifficultyElement);
         }
-        
+
         public String toString() {
-            return "Hash: " + Hex.toHexString(hash) + 
+            return "Hash: " + Hex.toHexString(hash) +
                     "\nsealAntiparentHash: " + Hex.toHexString(sealAntiparentHash) +
                     "\nminingDifficulty: " + miningDifficulty +
                     "\nstakingDifficulty: " + stakingDifficulty +
-                    "\ntotalDifficulty: " + cummDifficulty;
+                    "\ntotalDifficulty: " + cummDifficulty +
+                    "\nisMainChain: " + (mainChain ? "true" : "false");
         }
 
         @Override
@@ -1784,12 +1694,12 @@ public class AionBlockStore implements IBlockStoreBase {
             long bestBlockNumber = block.getNumber();
 
             while (correct && block.getNumber() > 0) {
-                
+
                 Block parentBlock = getBlockByHashWithInfo(block.getParentHash());
                 // it is correct if there is no inconsistency wrt to the parent
-                
+
                 BigInteger expectedTotalDifficulty = parentBlock.getCumulativeDifficulty();
-                
+
                 if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
                     expectedTotalDifficulty = expectedTotalDifficulty.add(parentBlock.getStakingDifficulty().multiply(block.getDifficultyBI()));
                 } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
@@ -1798,7 +1708,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     LOG.error("The database is corrupted. There is a block of impossible sealType.");
                     return IntegrityCheckResult.ERROR;
                 }
-                
+
                 correct =
                         getTotalDifficultyForHash(block.getHash()).equals(expectedTotalDifficulty);
 
@@ -1813,7 +1723,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     if (time - round > 4999) {
                         long remaining = block.getNumber();
                         long checked = bestBlockNumber - block.getNumber() + 1;
-                        double duration = (time - start) / 1000;
+                        double duration = (double)(time - start) / 1000;
                         double approx = remaining * (duration / checked);
                         approx = approx >= 1 ? approx : 1;
 
@@ -1833,12 +1743,12 @@ public class AionBlockStore implements IBlockStoreBase {
 
             // check correct TD for genesis block
             if (block.getNumber() == 0) {
-                
+
                 // Assumes genesis block is always a mining block
                 BigInteger genesisTotalDifficulty = getTotalDifficultyForHash(block.getHash());
                 correct = genesisTotalDifficulty.equals(block.getDifficultyBI().multiply(block.getStakingDifficulty()))
                         && genesisTotalDifficulty.signum() > 0;
-                
+
                 System.out.println(getTotalDifficultyForHash(block.getHash()));
                 if (!correct) {
                     LOG_CONS.info(
@@ -1866,10 +1776,10 @@ public class AionBlockStore implements IBlockStoreBase {
 
                 for (BlockInfo bi : infos) {
                     block = getBlockByHash(bi.getHash());
-                    bi = new BlockInfo(block.getHash(), 
-                            block.getAntiparentHash(), 
-                            block.getMiningDifficulty(), 
-                            block.getStakingDifficulty(), 
+                    bi = new BlockInfo(block.getHash(),
+                            block.getAntiparentHash(),
+                            block.getMiningDifficulty(),
+                            block.getStakingDifficulty(),
                             bi.isMainChain());
                     LOG_CONS.info(
                             "Correcting difficulties for block hash: {} number: {} to: miningDifficulty {} : stakingDifficulty : {} totalDifficulty : {}.",
@@ -1899,7 +1809,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     for (BlockInfo bi : infos) {
                         block = getBlockByHash(bi.getHash());
                         BlockInfo parentBlockInfo = getBlockInfoForHash(parentInfos, block.getParentHash());
-                        
+
                         if (parentBlockInfo == null) {
                             LOG_CONS.error(
                                     "Missing block information at level {}."
@@ -1911,7 +1821,7 @@ public class AionBlockStore implements IBlockStoreBase {
 
                         BigInteger newMiningDifficulty = parentBlockInfo.miningDifficulty;
                         BigInteger newStakingDifficulty = parentBlockInfo.stakingDifficulty;
-                        
+
                         if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POW_BLOCK)) {
                             newMiningDifficulty = newMiningDifficulty.add(block.getDifficultyBI());
                         } else if (block.getHeader().getSealType().equals(AbstractBlockHeader.BlockSealType.SEAL_POS_BLOCK)) {
@@ -1920,7 +1830,7 @@ public class AionBlockStore implements IBlockStoreBase {
                             LOG.error("The database is corrupted. There is a block of impossible sealType.");
                             return IntegrityCheckResult.ERROR;
                         }
-                        
+
                         bi =
                                 new BlockInfo(
                                         block.getHash(),

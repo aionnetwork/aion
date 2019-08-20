@@ -870,28 +870,17 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        byte[] hash = ByteUtil.hexStringToBytes(_hash);
+        Block block =
+                ac.getAionHub()
+                        .getBlockStore()
+                        .getBlockByHashWithInfo(ByteUtil.hexStringToBytes(_hash));
 
-        Block block = this.ac.getBlockchain().getBlockByHash(hash);
         if (block == null) {
             LOG.debug("<get-block hash={} err=not-found>", _hash);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         }
 
-        byte[] mainchainHash =
-                this.ac.getAionHub().getBlockStore().getBlockHashByNumber(block.getNumber());
-        if (mainchainHash == null) {
-            LOG.debug("<get-block hash={} err=not-found>", _hash);
-            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
-        }
-
-        if (!Arrays.equals(block.getHash(), mainchainHash)) {
-            LOG.debug("<rpc-server not mainchain>", _hash);
-            return new RpcMsg(JSONObject.NULL);
-        }
-
-        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
-        return new RpcMsg(Blk.AionBlockToJson(block, totalDiff, _fullTx));
+        return new RpcMsg(Blk.AionBlockToJson(block, _fullTx));
     }
 
     public RpcMsg eth_getBlockByNumber(Object _params) {
@@ -928,9 +917,7 @@ public class ApiWeb3Aion extends ApiAion {
         // add main chain block to cache (currently only used by ops_getTransactionReceipt_*
         // functions)
         blockCache.put(new ByteArrayWrapper(nb.getHash()), nb);
-        BigInteger totalDiff =
-                this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
-        return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
+        return new RpcMsg(Blk.AionBlockToJson(nb, _fullTx));
     }
 
     public RpcMsg eth_getTransactionByHash(Object _params) {
@@ -1432,7 +1419,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
-        List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> blocks =
+        List<Block> blocks =
                 ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore())
                         .getBlocksByNumber(bn);
         if (blocks == null) {
@@ -1440,11 +1427,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         JSONArray response = new JSONArray();
-        for (Map.Entry<Block, Map.Entry<BigInteger, Boolean>> block : blocks) {
-            JSONObject b =
-                    (JSONObject)
-                            Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTx);
-            b.put("mainchain", block.getValue().getValue());
+        for (Block block : blocks) {
+            JSONObject b = (JSONObject) Blk.AionBlockToJson(block, _fullTx);
             response.put(b);
         }
         return new RpcMsg(response);
@@ -1564,14 +1548,13 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block hash");
         }
 
-        Block block = this.ac.getBlockchain().getBlockByHash(hash);
+        Block block = this.ac.getBlockchain().getBlockWithInfoByHash(hash);
 
         if (block == null) {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        BigInteger totalDiff = this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(hash));
-        return new RpcMsg(dumpBlock(block, totalDiff, false));
+        return new RpcMsg(dumpBlock(block, false));
     }
 
     public RpcMsg priv_dumpBlockByNumber(Object _params) {
@@ -1597,14 +1580,12 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        BigInteger totalDiff =
-                this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash()));
-        return new RpcMsg(dumpBlock(block, totalDiff, false));
+        return new RpcMsg(dumpBlock(block, false));
     }
 
-    private static JSONObject dumpBlock(Block block, BigInteger totalDiff, boolean full) {
+    private static JSONObject dumpBlock(Block block, boolean full) {
         JSONObject obj = new JSONObject();
-        obj.put("block", Blk.AionBlockToJson(block, totalDiff, full));
+        obj.put("block", Blk.AionBlockToJson(block, full));
         obj.put("raw", ByteUtil.toHexString(block.getEncoded()));
         return obj;
     }
@@ -1951,9 +1932,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         private JSONObject getJson(Block _b) {
-            BigInteger totalDiff =
-                    ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
-            return Blk.AionBlockOnlyToJson(_b, totalDiff);
+            return Blk.AionBlockOnlyToJson(_b);
         }
 
         private JSONObject buildResponse() {
@@ -2087,7 +2066,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         ChainHeadView update() {
             // get the latest head
-            Block blk = getBestBlock();
+            Block blk = getBestBlockWithInfo();
 
             if (Arrays.equals(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
@@ -2115,7 +2094,7 @@ public class ApiWeb3Aion extends ApiAion {
                     && itr < qSize
                     && blk.getNumber() > 2) {
 
-                blk = getBlockByHash(blk.getParentHash());
+                blk = getBlockWithInfoByHash(blk.getParentHash());
                 tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
                 itr++;
                 /*
@@ -2945,7 +2924,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     private Block getBlockByBN(long bn) {
         if (bn == BEST_PENDING_BLOCK) {
-            return pendingState.getBestBlock();
+            return ac.getAionHub().getBlockStore().getBestBlockWithInfo();
         } else {
             return this.ac.getBlockchain().getBlockByNumber(bn);
         }

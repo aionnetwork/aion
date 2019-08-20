@@ -766,7 +766,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
             bestMiningBlock = (AionBlock) bestBlock;
         } else if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
-            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
         } else {
             throw new IllegalStateException("Invalid block type");
         }
@@ -783,7 +783,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 if (bestBlock.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
                     bestStakingBlock = (StakingBlock) bestBlock;
                 } else {
-                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
 
                     if (bestStakingBlock == null) {
                         bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
@@ -2646,6 +2646,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public byte[] getSeed() {
         return bestStakingBlock.getSeed();
+    }
+
+    @Override
+    public Block getBestBlockWithInfo() {
+        return getBlockStore().getBestBlockWithInfo();
+    }
+
+    @Override
+    public Block getBlockWithInfoByHash(byte[] hash) {
+        return getBlockStore().getBlockByHashWithInfo(hash);
     }
 
     /**

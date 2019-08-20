@@ -126,4 +126,8 @@ public abstract class AbstractBlock implements Block {
     public void setCumulativeDifficulty(BigInteger totalDifficulty) {
         this.totalDifficulty = totalDifficulty;
     }
+
+    public boolean isMainChain() {
+        return mainChain;
+    }
 }

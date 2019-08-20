@@ -45,7 +45,6 @@ import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -192,6 +191,10 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    public Block getBestBlockWithInfo() {
+        return this.ac.getBlockchain().getBestBlockWithInfo();
+    }
+
     protected BlockContext getBlockTemplate() {
 
         blockTemplateLock.lock();
@@ -228,30 +231,27 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBlockByHash(hash);
     }
 
+    public Block getBlockWithInfoByHash(byte[] hash) {
+        return ac.getBlockchain().getBlockWithInfoByHash(hash);
+    }
+
     @Override
     public Block getBlock(long blkNr) {
         if (blkNr == -1) {
             return this.ac.getBlockchain().getBestBlock();
-        } else if (blkNr > 0) {
+        } else if (blkNr >= 0) {
             return this.ac.getBlockchain().getBlockByNumber(blkNr);
-        } else if (blkNr == 0) {
-            AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;
         }
     }
 
-    protected Map.Entry<Block, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
-        if (blkNr > 0) {
-            return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
-                    .getChainBlockByNumberWithTotalDifficulty(blkNr);
-        } else if (blkNr == 0) {
-            AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return Map.entry(
-                    new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()),
-                    genBlk.getCumulativeDifficulty());
+    protected Block getBlockWithInfo(long blkNr) {
+        if (blkNr == -1) {
+            return this.ac.getBlockchain().getBestBlockWithInfo();
+        } else if (blkNr >= 0) {
+            return this.ac.getBlockchain().getBlockByNumber(blkNr);
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;

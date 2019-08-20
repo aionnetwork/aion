@@ -81,4 +81,6 @@ public interface Block {
     byte[] getAntiparentHash();
 
     void setAntiparentHash(byte[] antiparentHash);
+
+    boolean isMainChain();
 }

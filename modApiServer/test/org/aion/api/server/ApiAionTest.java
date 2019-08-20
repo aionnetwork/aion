@@ -202,20 +202,20 @@ public class ApiAionTest {
         // retrieval based on block number
         assertTrue(api.getBlock(blk.getNumber()).isEqual(blk));
 
-        // retrieval based on block number that also gives total difficulty
-        Map.Entry<Block, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
+        // retrieval based on block number that also gives total difficulty info
+        Block rslt = api.getBlockWithInfo(blk.getNumber());
 
-        assertTrue(rslt.getKey().isEqual(blk));
+        assertTrue(rslt.isEqual(blk));
 
         // check because blk might be the genesis block
         assertEquals(
-                rslt.getValue(),
+                rslt.getCumulativeDifficulty(),
                 impl.getBlockchain().getBlockStore()
                         .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
         assertEquals(
-                api.getBlockWithTotalDifficulty(0).getValue(),
+                api.getBlockWithInfo(0).getCumulativeDifficulty(),
                 CfgAion.inst().getGenesis().getCumulativeDifficulty());
     }
 

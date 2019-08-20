@@ -17,7 +17,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
@@ -610,7 +609,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         try {
             // we also need a grandparent block to calculate difficulty
-            Block grandParentBlock = null;
+            Block grandParentBlock;
             if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
                 // create a grandparent block if none exists
                 A0BlockHeader header =
@@ -633,11 +632,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 grandParentBlock =
                         this.getBlockStore()
                                 .getBlocksByNumber((int) blockNumber - 1)
-                                .get(0)
-                                .getKey();
+                                .get(0);
             }
 
-            BlockHeader bestHeader = this.getBestBlock().getHeader();
             A0BlockHeader header =
                     new A0BlockHeader.Builder()
                             .withParentHash(grandParentBlock.getHash())

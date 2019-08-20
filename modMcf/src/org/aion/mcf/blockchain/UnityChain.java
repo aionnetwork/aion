@@ -22,6 +22,9 @@ public interface UnityChain extends IGenericChain {
 
     boolean putSealedNewStakingBlock(Block block);
 
-
     byte[] getSeed();
+
+    Block getBestBlockWithInfo();
+
+    Block getBlockWithInfoByHash(byte[] hash);
 }
