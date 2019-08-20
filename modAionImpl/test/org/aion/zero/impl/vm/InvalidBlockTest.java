@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIDecoder;
+import org.aion.avm.userlib.abi.ABIException;
+import org.aion.avm.userlib.abi.ABIToken;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
@@ -67,7 +70,7 @@ public class InvalidBlockTest {
                 this.blockchain
                         .getRepository()
                         .getNonce(new AionAddress(this.deployerKey.getAddress()));
-        List<AionTransaction> transactions = makeTransactions(5, nonce);
+        List<AionTransaction> transactions = makeTransactions(20, nonce);
 
         Block parent = this.blockchain.getBestBlock();
         AionBlock block = this.blockchain.createNewBlock(parent, transactions, false);
@@ -78,7 +81,7 @@ public class InvalidBlockTest {
         // A correct block is produced instead of an invalid one. But the correct block only
         // contains the valid transactions, not all of them.
         assertEquals(ImportResult.IMPORTED_BEST, res.getLeft());
-        assertEquals(2, res.getRight().getReceipts().size());
+        assertEquals(14, res.getRight().getReceipts().size());
     }
 
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
@@ -86,7 +89,7 @@ public class InvalidBlockTest {
 
         byte[] jar =
                 new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClassesAndUserlib(Contract.class),
+                                JarBuilder.buildJarForMainAndClasses(Contract.class, ABIDecoder.class, ABIToken.class, ABIException.class),
                                 new byte[0])
                         .encodeToBytes();
         BigInteger nonce = initialNonce;
