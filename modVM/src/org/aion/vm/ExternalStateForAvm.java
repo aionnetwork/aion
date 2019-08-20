@@ -188,23 +188,9 @@ public class ExternalStateForAvm implements IExternalState {
     }
 
     @Override
-    public void deductEnergyCost(AionAddress address, BigInteger energyCost) {
-        if (!this.isLocalCall) {
-            this.repositoryCache.addBalance(address, energyCost.negate());
-        }
-    }
-
-    @Override
     public void refundAccount(AionAddress address, BigInteger amount) {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(address, amount);
-        }
-    }
-
-    @Override
-    public void payMiningFee(AionAddress miner, BigInteger fee) {
-        if (!this.isLocalCall) {
-            this.repositoryCache.addBalance(miner, fee);
         }
     }
 
