@@ -49,7 +49,6 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
@@ -185,7 +184,7 @@ public abstract class ApiAion extends Api {
             Block bestBlock =
                     ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
             // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what does that mean for staking blocks?
-            byte[] bestBlockHash = ((A0BlockHeader) bestBlock.getHeader()).getMineHash();
+            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
 
             if (currentBestBlockHash == null
                     || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {

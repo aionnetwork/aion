@@ -56,6 +56,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
     private byte[] mineHashBytes;
 
     // TODO: Update this
+    @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
         obj.putOpt("version", oneByteToHexString(this.version));
@@ -402,6 +403,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
         return toStringWithSuffix("");
     }
 
+    @Override
     public byte[] getSolution() {
         return this.solution;
     }
@@ -410,6 +412,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
         this.solution = _sl;
     }
 
+    @Override
     public byte[] getNonce() {
         return nonce;
     }
@@ -470,6 +473,7 @@ public class A0BlockHeader extends AbstractBlockHeader {
      *
      * @return Blake2b digest (32 bytes) of the raw header bytes.
      */
+    @Override
     public byte[] getMineHash() {
         if (this.mineHashBytes == null) {
             this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));

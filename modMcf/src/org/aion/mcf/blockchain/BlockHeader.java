@@ -2,6 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 import org.aion.types.AionAddress;
+import org.json.JSONObject;
 
 /** @author jay */
 public interface BlockHeader {
@@ -57,4 +58,12 @@ public interface BlockHeader {
     long getEnergyLimit();
     
     byte getVersion();
+
+    byte[] getMineHash();
+
+    byte[] getNonce();
+
+    byte[] getSolution();
+
+    JSONObject toJSON();
 }

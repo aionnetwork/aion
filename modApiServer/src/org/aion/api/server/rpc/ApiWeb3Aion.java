@@ -51,6 +51,7 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgApiNrg;
 import org.aion.mcf.config.CfgApiRpc;
@@ -87,7 +88,6 @@ import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
@@ -1491,8 +1491,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     // default block for pending transactions
-    private static final AionBlock defaultBlock =
-            new AionBlock(new A0BlockHeader.Builder().build(), Collections.emptyList());
+    private static final AionBlock defaultBlock = AionBlock.newEmptyBlock();
 
     public RpcMsg priv_getPendingTransactions(Object _params) {
         boolean fullTx = ((JSONArray) _params).optBoolean(0, false);
@@ -2701,7 +2700,7 @@ public class ApiWeb3Aion extends ApiAion {
                 // TODO: [Unity] This cast should be removed when we support staking blocks
                 AionBlock block = (AionBlock) getBlockRaw(bnInt);
                 if (block != null) {
-                    A0BlockHeader header = block.getHeader();
+                    BlockHeader header = block.getHeader();
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));
