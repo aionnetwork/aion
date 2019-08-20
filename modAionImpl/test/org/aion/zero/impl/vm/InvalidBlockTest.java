@@ -81,7 +81,7 @@ public class InvalidBlockTest {
         // A correct block is produced instead of an invalid one. But the correct block only
         // contains the valid transactions, not all of them.
         assertEquals(ImportResult.IMPORTED_BEST, res.getLeft());
-        assertEquals(14, res.getRight().getReceipts().size());
+        assertEquals(13, res.getRight().getReceipts().size());
     }
 
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
