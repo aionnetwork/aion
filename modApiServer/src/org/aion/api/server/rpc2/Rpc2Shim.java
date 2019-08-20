@@ -20,7 +20,17 @@ public class Rpc2Shim {
     private AbstractRpcProcessor rpc = new RpcProcessor2(new RpcImpl());
 
     public static final List<String> SUPPORTED_METHOD_NAMES = List.of(
-        "getseed", "submitseed", "submitwork", "eth_getTransactionByHash2", "eth_call2"
+            // For Unity
+            "getseed",
+            "submitseed",
+            "submitwork"
+
+            // Prototype impls of existing RPC methods to illustrate
+            // how to implement existing concepts under new RPC framework.
+            // Should not be enabled in master branch for now.
+
+            // "eth_getTransactionByHash2",
+            //"eth_call2"
     );
 
     public static boolean supportsMethod(String methodName) {

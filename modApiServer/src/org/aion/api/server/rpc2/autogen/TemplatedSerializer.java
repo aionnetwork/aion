@@ -8,7 +8,6 @@ import org.aion.api.schema.TypeRegistry;
 import org.aion.api.serialization.RpcTypeDeserializer;
 import org.aion.api.server.rpc2.autogen.pod.Transaction;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
-import org.aion.api.server.rpc2.autogen.pod.SomeStruct;
 
 /******************************************************************************
 *
@@ -93,17 +92,6 @@ public class TemplatedSerializer extends RpcTypeDeserializer {
                     (byte[]) super.deserialize(
                         value.get("data"),
                         (NamedRpcType) type.getContainedFields().get(2).getType()
-                    )
-                );
-            case "SomeStruct":
-                return new SomeStruct(
-                    (byte[]) super.deserialize(
-                        value.get("MyData"),
-                        (NamedRpcType) type.getContainedFields().get(0).getType()
-                    ),
-                    (java.math.BigInteger) super.deserialize(
-                        value.get("MyQuantity"),
-                        (NamedRpcType) type.getContainedFields().get(1).getType()
                     )
                 );
             default:
