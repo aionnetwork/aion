@@ -1,6 +1,7 @@
 package org.aion.precompiled.contracts;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -17,7 +18,6 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.types.AionAddress;
@@ -106,7 +106,7 @@ public class TotalCurrencyContractTest {
         PrecompiledTransactionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -118,7 +118,7 @@ public class TotalCurrencyContractTest {
         PrecompiledTransactionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertTrue(res.getStatus().isFailed());
     }
 
     @Test
@@ -128,7 +128,7 @@ public class TotalCurrencyContractTest {
         byte[] payload = new byte[] {0};
         PrecompiledTransactionResult res = tcc.execute(payload, COST - 1);
 
-        assertEquals(PrecompiledResultCode.OUT_OF_NRG, res.getResultCode());
+        assertEquals("OUT_OF_NRG", res.getStatus().causeOfError);
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -139,7 +139,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -150,14 +150,14 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(0L, res.getEnergyRemaining());
 
         tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerKey.getAddress()));
         input = new byte[] {(byte) 0x0};
         res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT, new BigInteger(res.getReturnData()));
     }
 
@@ -168,12 +168,12 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(0L, res.getEnergyRemaining());
 
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // query a diff chainID
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
@@ -189,7 +189,7 @@ public class TotalCurrencyContractTest {
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
 
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
     }
 
@@ -198,7 +198,7 @@ public class TotalCurrencyContractTest {
         System.out.println("Running TestUpdateTotalInsufficientNrg.");
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST - 1);
-        assertEquals(PrecompiledResultCode.OUT_OF_NRG, res.getResultCode());
+        assertEquals("OUT_OF_NRG", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -211,7 +211,7 @@ public class TotalCurrencyContractTest {
                         constructUpdateInput((byte) 0x0, (byte) 0x0), 0, 100); // cut sig short.
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -227,7 +227,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = contract.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -239,7 +239,7 @@ public class TotalCurrencyContractTest {
         input[30] = (byte) ~input[30]; // flip a bit
 
         PrecompiledTransactionResult res = tcc.execute(input, COST);
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -258,14 +258,14 @@ public class TotalCurrencyContractTest {
         tcc.execute(input, COST);
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         tcc.execute(input, COST);
         tcc.execute(input, COST);
 
         res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
@@ -276,7 +276,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x1); // 0x1 == subtract
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
 
         // Verify total amount is non-negative.
@@ -291,7 +291,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x2); // only 0, 1 are valid.
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
+        assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -313,15 +313,15 @@ public class TotalCurrencyContractTest {
 
         PrecompiledTransactionResult res =
                 tcc.execute(new byte[] {(byte) 0x0}, COST); // get chain 0.
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT, new BigInteger(res.getReturnData()));
 
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // get chain 1.
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         res = tcc.execute((new byte[] {(byte) 0x10}), COST); // get chain 16.
-        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        assertTrue(res.getStatus().isSuccess());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
     }
 }

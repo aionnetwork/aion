@@ -6,9 +6,9 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.types.AionAddress;
+import org.aion.types.TransactionStatus;
 
 public final class ContractExecutor {
 
@@ -30,7 +30,7 @@ public final class ContractExecutor {
         PrecompiledContract precompiledContract = factory.getPrecompiledContract(context, worldState);
 
         if (precompiledContract == null) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
+            return new PrecompiledTransactionResult(TransactionStatus.successful(), energyRemaining);
         } else {
             return precompiledContract.execute(input, energyRemaining);
         }
@@ -62,14 +62,14 @@ public final class ContractExecutor {
 
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
-                        PrecompiledResultCode.SUCCESS,
+                        TransactionStatus.successful(),
                         transaction.getEnergyLimit() - TxUtil.calculateTransactionCost(transaction));
 
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childExternalState, transaction, result);
-        if (!result.getResultCode().isSuccess()) {
+        if (!result.getStatus().isSuccess()) {
             return PrecompiledTransactionResultUtil.createWithCodeAndEnergyRemaining(
-                result.getResultCode(),
+                result.getStatus(),
                 transaction.getEnergyLimit() - result.getEnergyRemaining());
         }
 
@@ -84,18 +84,18 @@ public final class ContractExecutor {
 
         // If the execution was successful then we can safely commit any changes in the grandChild
         // up to the child kernel.
-        if (result.getResultCode().isSuccess()) {
+        if (result.getStatus().isSuccess()) {
             grandChildExternalState.commit();
         }
 
         // If the execution was not rejected then we can safely commit any changes in the child
         // kernel up to its parent.
-        if (!result.getResultCode().isRejected()) {
+        if (!result.getStatus().isRejected()) {
             childExternalState.commit();
         }
 
         return PrecompiledTransactionResultUtil.createPrecompiledWrappedTransactionResult(
-            result.getResultCode(),
+            result.getStatus(),
             context.getInternalTransactions(),
             context.getLogs(),
             transaction.getEnergyLimit() - result.getEnergyRemaining(),
@@ -156,7 +156,6 @@ public final class ContractExecutor {
      * @param externalState The state of the world.
      * @param transaction The transaction to verify.
      * @param result The current state of the transaction result.
-     * @return the rejection-check result.
      */
     public static void performRejectionChecks(
             IExternalStateForPrecompiled externalState,
@@ -167,13 +166,13 @@ public final class ContractExecutor {
 
         if (transaction.isContractCreationTransaction()) {
             if (!externalState.isValidEnergyLimitForCreate(energyLimit)) {
-                result.setResultCode(PrecompiledResultCode.INVALID_NRG_LIMIT);
+                result.setResultCode(TransactionStatus.rejection("INVALID_NRG_LIMIT"));
                 result.setEnergyRemaining(energyLimit);
                 return;
             }
         } else {
             if (!externalState.isValidEnergyLimitForNonCreate(energyLimit)) {
-                result.setResultCode(PrecompiledResultCode.INVALID_NRG_LIMIT);
+                result.setResultCode(TransactionStatus.rejection("INVALID_NRG_LIMIT"));
                 result.setEnergyRemaining(energyLimit);
                 return;
             }
@@ -181,7 +180,7 @@ public final class ContractExecutor {
 
         BigInteger txNonce = new BigInteger(1, transaction.getNonce());
         if (!externalState.accountNonceEquals(transaction.getSenderAddress(), txNonce)) {
-            result.setResultCode(PrecompiledResultCode.INVALID_NONCE);
+            result.setResultCode(TransactionStatus.rejection("INVALID_NONCE"));
             result.setEnergyRemaining(0);
             return;
         }
@@ -190,7 +189,7 @@ public final class ContractExecutor {
         BigInteger transactionCost =
                 energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transferValue);
         if (!externalState.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {
-            result.setResultCode(PrecompiledResultCode.INSUFFICIENT_BALANCE);
+            result.setResultCode(TransactionStatus.rejection("INSUFFICIENT_BALANCE"));
             result.setEnergyRemaining(0);
         }
     }

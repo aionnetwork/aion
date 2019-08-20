@@ -12,12 +12,12 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.precompiled.ContractInfo;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.ContractExecutor;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
+import org.aion.types.TransactionStatus;
 import org.aion.util.types.ByteArrayWrapper;
 
 /**
@@ -496,31 +496,25 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
         FastVmTransactionResult fvmResult = new FastVmTransactionResult();
 
         fvmResult.setEnergyRemaining(precompiledResult.getEnergyRemaining());
-        fvmResult.setResultCode(precompiledToFvmResultCode(precompiledResult.getResultCode()));
+        fvmResult.setResultCode(precompiledToFvmResultCode(precompiledResult.getStatus()));
         fvmResult.setReturnData(precompiledResult.getReturnData());
 
         return fvmResult;
     }
 
-    private static FastVmResultCode precompiledToFvmResultCode(PrecompiledResultCode precompiledResultCode) {
-        switch (precompiledResultCode) {
-            case BAD_JUMP_DESTINATION: return FastVmResultCode.BAD_JUMP_DESTINATION;
-            case VM_INTERNAL_ERROR: return FastVmResultCode.VM_INTERNAL_ERROR;
-            case STATIC_MODE_ERROR: return FastVmResultCode.STATIC_MODE_ERROR;
-            case INVALID_NRG_LIMIT: return FastVmResultCode.INVALID_NRG_LIMIT;
-            case STACK_UNDERFLOW: return FastVmResultCode.STACK_UNDERFLOW;
-            case BAD_INSTRUCTION: return FastVmResultCode.BAD_INSTRUCTION;
-            case STACK_OVERFLOW: return FastVmResultCode.STACK_OVERFLOW;
-            case INVALID_NONCE: return FastVmResultCode.INVALID_NONCE;
-            case VM_REJECTED: return FastVmResultCode.VM_REJECTED;
-            case OUT_OF_NRG: return FastVmResultCode.OUT_OF_NRG;
-            case SUCCESS: return FastVmResultCode.SUCCESS;
-            case FAILURE: return FastVmResultCode.FAILURE;
-            case REVERT: return FastVmResultCode.REVERT;
-            case ABORT: return FastVmResultCode.ABORT;
-            case INSUFFICIENT_BALANCE: return FastVmResultCode.INSUFFICIENT_BALANCE;
-            case INCOMPATIBLE_CONTRACT_CALL: return FastVmResultCode.INCOMPATIBLE_CONTRACT_CALL;
-            default: throw new IllegalStateException("Unknown code: " + precompiledResultCode);
+    private static FastVmResultCode precompiledToFvmResultCode(TransactionStatus status) {
+        if (status.isSuccess()) {
+            return FastVmResultCode.SUCCESS;
+        }
+        else if (status.isReverted()) {
+            return FastVmResultCode.REVERT;
+        }
+        else {
+            switch (status.causeOfError) {
+                case "OUT_OF_NRG": return FastVmResultCode.OUT_OF_NRG;
+                case "FAILURE": return FastVmResultCode.FAILURE;
+                default: throw new IllegalStateException("Unknown status: " + status);
+            }
         }
     }
 

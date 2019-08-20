@@ -1,9 +1,9 @@
 package org.aion.precompiled.contracts;
 
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.types.TransactionStatus;
 import org.aion.util.types.AddressUtils;
 
 public class EDVerifyContract implements PrecompiledContract {
@@ -24,11 +24,11 @@ public class EDVerifyContract implements PrecompiledContract {
         // check length
         if (input == null || input.length != 128) {
             return new PrecompiledTransactionResult(
-                    PrecompiledResultCode.FAILURE, nrgLimit - COST, INCORRECT_LENGTH.getBytes());
+                TransactionStatus.nonRevertedFailure("FAILURE"), nrgLimit - COST, INCORRECT_LENGTH.getBytes());
         }
 
         if (COST > nrgLimit) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("OUT_OF_NRG"), 0);
         }
         byte[] msg = new byte[32];
         byte[] sig = new byte[64];
@@ -41,11 +41,11 @@ public class EDVerifyContract implements PrecompiledContract {
         try {
             boolean verify = ECKeyEd25519.verify(msg, sig, pubKey);
             return new PrecompiledTransactionResult(
-                    PrecompiledResultCode.SUCCESS,
+                    TransactionStatus.successful(),
                     nrgLimit - COST,
                     verify ? pubKey : AddressUtils.ZERO_ADDRESS.toByteArray());
         } catch (Exception e) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
     }
 }

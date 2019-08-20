@@ -3,13 +3,13 @@ package org.aion.precompiled.contracts;
 import java.math.BigInteger;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.types.AionAddress;
+import org.aion.types.TransactionStatus;
 import org.aion.util.biginteger.BIUtil;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
@@ -91,23 +91,23 @@ public class TotalCurrencyContract implements PrecompiledContract {
     private PrecompiledTransactionResult queryNetworkBalance(int input, long nrg) {
         if (nrg < COST) {
             // TODO: should this cost be the same as updating state (probably not?)
-            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("OUT_OF_NRG"), 0);
         }
 
         IPrecompiledDataWord balanceData =
                 this.externalState.getStorageValue(this.address, PrecompiledDataWord.fromInt(input));
         return new PrecompiledTransactionResult(
-                PrecompiledResultCode.SUCCESS, nrg - COST, balanceData.copyOfData());
+            TransactionStatus.successful(), nrg - COST, balanceData.copyOfData());
     }
 
     private PrecompiledTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
         // update total portion
         if (nrg < COST) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("OUT_OF_NRG"), 0);
         }
 
         if (input.length < 114) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         // process input data
@@ -128,7 +128,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         byte[] payload = new byte[18];
@@ -136,12 +136,12 @@ public class TotalCurrencyContract implements PrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(new AionAddress(sig.getAddress()))) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         // payload processing
@@ -151,7 +151,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         BigInteger finalValue;
@@ -161,7 +161,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
             }
 
             finalValue = totalCurrBI.subtract(value);
@@ -172,6 +172,6 @@ public class TotalCurrencyContract implements PrecompiledContract {
                 this.address,
                 chainId,
                 PrecompiledDataWord.fromBytes(finalValue.toByteArray()));
-        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
+        return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), nrg - COST);
     }
 }

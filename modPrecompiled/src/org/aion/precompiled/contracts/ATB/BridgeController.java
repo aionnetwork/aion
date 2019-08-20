@@ -12,7 +12,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.types.AionAddress;
@@ -275,13 +274,12 @@ public class BridgeController {
              */
             PrecompiledTransactionResult result;
             if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue()))
-                            .getResultCode()
-                    == PrecompiledResultCode.FAILURE)
+                            .getStatus().isFailed())
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
-            if (result.getResultCode() == PrecompiledResultCode.SUCCESS)
+            if (result.getStatus().isSuccess())
                 if (!emitDistributed(
                         b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);

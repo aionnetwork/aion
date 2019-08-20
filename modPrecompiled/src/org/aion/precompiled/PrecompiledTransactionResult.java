@@ -1,27 +1,21 @@
 package org.aion.precompiled;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
-import org.aion.types.AionAddress;
-import org.aion.types.InternalTransaction;
-import org.aion.types.Log;
+import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 
 public class PrecompiledTransactionResult {
 
-    private PrecompiledResultCode code;
+    private TransactionStatus code;
     private byte[] output;
     private long energyRemaining;
 
     /**
      * Constructs a new {@code TransactionResult} with no side-effects, with zero energy remaining,
-     * with an empty byte array as its output and {@link PrecompiledResultCode#SUCCESS} as its
+     * with an empty byte array as its output and {@link TransactionStatus#successful()} as its
      * result code.
      */
     public PrecompiledTransactionResult() {
-        this.code = PrecompiledResultCode.SUCCESS;
+        this.code = TransactionStatus.successful();
         this.output = new byte[0];
         this.energyRemaining = 0;
     }
@@ -30,11 +24,11 @@ public class PrecompiledTransactionResult {
      * Constructs a new {@code TransactionResult} with no side-effects and with the specified result
      * code and remaining energy.
      *
-     * @param code The transaction result code.
+     * @param status The transaction result code.
      * @param energyRemaining The energy remaining after executing the transaction.
      */
-    public PrecompiledTransactionResult(PrecompiledResultCode code, long energyRemaining) {
-        this.code = code;
+    public PrecompiledTransactionResult(TransactionStatus status, long energyRemaining) {
+        this.code = status;
         this.energyRemaining = energyRemaining;
         this.output = new byte[0];
     }
@@ -43,76 +37,31 @@ public class PrecompiledTransactionResult {
      * Constructs a new {@code TransactionResult} with no side-effects and with the specified result
      * code, remaining energy and output.
      *
-     * @param code The transaction result code.
+     * @param status The transaction result code.
      * @param energyRemaining The energy remaining after executing the transaction.
      * @param output The output of executing the transaction.
      */
     public PrecompiledTransactionResult(
-            PrecompiledResultCode code, long energyRemaining, byte[] output) {
-        this.code = code;
+            TransactionStatus status, long energyRemaining, byte[] output) {
+        this.code = status;
         this.output = (output == null) ? new byte[0] : output;
         this.energyRemaining = energyRemaining;
     }
 
-    /**
-     * Returns a <i>partial</i> byte array representation of this {@code TransactionResult}.
-     *
-     * <p>The representation is partial because it only represents the {@link
-     * PrecompiledResultCode}, the amount of energy remaining, and the output.
-     *
-     * @return A partial byte array representation of this object.
-     */
-    public byte[] toBytes() {
-        ByteBuffer buffer =
-                ByteBuffer.allocate(
-                        Integer.BYTES + Long.BYTES + Integer.BYTES + this.output.length);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(this.code.toInt());
-        buffer.putLong(this.energyRemaining);
-        buffer.putInt(this.output.length);
-        buffer.put(this.output);
-        return buffer.array();
-    }
-
     // TODO: document exception / maybe catch it and throw something more informative
 
-    /**
-     * Returns a {@code TransactionResult} object from a partial byte array representation obtained
-     * via the {@code toBytes()} method.
-     *
-     * @param bytes A partial byte array representation of a {@code TransactionResult}.
-     * @return The {@code TransactionResult} object obtained from the byte array representation.
-     */
-    public static PrecompiledTransactionResult fromBytes(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-
-        PrecompiledResultCode code = PrecompiledResultCode.fromInt(buffer.getInt());
-        long energyRemaining = buffer.getLong();
-
-        int outputLength = buffer.getInt();
-        byte[] output = new byte[outputLength];
-        buffer.get(output);
-
-        return new PrecompiledTransactionResult(code, energyRemaining, output);
-    }
-
-    public void setResultCode(PrecompiledResultCode code) {
+    public void setResultCode(TransactionStatus code) {
         if (code == null) {
             throw new NullPointerException("Cannot set null result code.");
         }
         this.code = code;
     }
 
-    public void setReturnData(byte[] output) {
-        this.output = (output == null) ? new byte[0] : output;
-    }
-
     public void setEnergyRemaining(long energyRemaining) {
         this.energyRemaining = energyRemaining;
     }
 
-    public PrecompiledResultCode getResultCode() {
+    public TransactionStatus getStatus() {
         return this.code;
     }
 

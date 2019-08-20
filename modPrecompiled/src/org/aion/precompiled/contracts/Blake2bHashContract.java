@@ -3,9 +3,9 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake256;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.types.TransactionStatus;
 
 /**
  * @author Jay Tseng
@@ -34,7 +34,7 @@ public class Blake2bHashContract implements PrecompiledContract {
         // check length
         if (input == null || input.length == 0 || input.length > 2_097_152L) {
             return new PrecompiledTransactionResult(
-                    PrecompiledResultCode.FAILURE,
+                    TransactionStatus.nonRevertedFailure("FAILURE"),
                     nrg - COST,
                     INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
@@ -46,7 +46,7 @@ public class Blake2bHashContract implements PrecompiledContract {
         long nrgLeft = nrg - (COST + additionalNRG);
 
         if (nrgLeft < 0) {
-            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("OUT_OF_NRG"), 0);
         }
 
         return blake256Hash(input, nrgLeft);
@@ -54,7 +54,7 @@ public class Blake2bHashContract implements PrecompiledContract {
 
     private PrecompiledTransactionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
-        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg, hash);
+        return new PrecompiledTransactionResult(TransactionStatus.successful(), nrg, hash);
     }
 
     @VisibleForTesting

@@ -11,7 +11,6 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
@@ -19,6 +18,7 @@ import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
+import org.aion.types.TransactionStatus;
 
 public class TokenBridgeContract implements PrecompiledContract, Transferable {
 
@@ -215,7 +215,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
     }
 
     private static final PrecompiledTransactionResult THROW =
-            new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
 
     private PrecompiledTransactionResult fail() {
         this.context.markAllInternalTransactionsAsRejected();
@@ -224,7 +224,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
 
     private PrecompiledTransactionResult success() {
         long energyRemaining = this.context.transactionEnergy - ENERGY_CONSUME;
-        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
+        return new PrecompiledTransactionResult(TransactionStatus.successful(), energyRemaining);
     }
 
     private PrecompiledTransactionResult success(@Nonnull final byte[] response) {
@@ -232,7 +232,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
         long energyRemaining = this.context.transactionEnergy - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new PrecompiledTransactionResult(
-                PrecompiledResultCode.SUCCESS, energyRemaining, response);
+                TransactionStatus.successful(), energyRemaining, response);
     }
 
     private boolean isFromAddress(byte[] address) {
@@ -256,7 +256,7 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
             @Nonnull final byte[] dest, @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.externalState.getBalance(this.contractAddress).compareTo(value) < 0)
-            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
 
         // assemble an internal transaction
         AionAddress sender = this.contractAddress;
@@ -283,6 +283,6 @@ public class TokenBridgeContract implements PrecompiledContract, Transferable {
         this.externalState.addBalance(destination, value);
 
         // construct result
-        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, 0);
+        return new PrecompiledTransactionResult(TransactionStatus.successful(), 0);
     }
 }

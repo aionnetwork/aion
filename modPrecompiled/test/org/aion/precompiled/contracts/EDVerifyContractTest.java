@@ -5,6 +5,7 @@ package org.aion.precompiled.contracts;
  */
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedWriter;
@@ -21,7 +22,6 @@ import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
-import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
@@ -108,7 +108,7 @@ public class EDVerifyContractTest {
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode().isSuccess());
+        assertThat(result.getStatus().isSuccess());
         assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
@@ -133,7 +133,7 @@ public class EDVerifyContractTest {
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode().isSuccess());
+        assertThat(result.getStatus().isSuccess());
         assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
@@ -162,7 +162,7 @@ public class EDVerifyContractTest {
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode().isSuccess());
+        assertThat(result.getStatus().isSuccess());
         assertThat(Arrays.equals(result.getReturnData(), AddressUtils.ZERO_ADDRESS.toByteArray()));
     }
 
@@ -188,8 +188,7 @@ public class EDVerifyContractTest {
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         PrecompiledTransactionResult result = contract.execute(input, 2999L);
-        assertThat(result.getResultCode().toInt())
-                .isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
+        assertEquals("OUT_OF_NRG", result.getStatus().causeOfError);
     }
 
     @Test
@@ -215,7 +214,7 @@ public class EDVerifyContractTest {
 
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
 
-        assertThat(result.getResultCode().toInt()).isEqualTo(PrecompiledResultCode.FAILURE.toInt());
+        assertEquals("FAILURE", result.getStatus().causeOfError);
     }
 
     private byte[] setupInput() {
