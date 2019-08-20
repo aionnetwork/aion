@@ -1,7 +1,7 @@
 package org.aion.vm;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.aion.avm.core.ExecutionType;
 import org.aion.avm.core.FutureResult;
@@ -10,8 +10,6 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.DataWord;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;
@@ -94,7 +92,7 @@ public final class AvmTransactionExecutor {
                         repository.startTracking(),
                         allowNonceIncrement,
                         isLocalCall,
-                        getDifficultyAsDataWord(blockDifficulty),
+                        new BigInteger(1, blockDifficulty),
                         blockNumber,
                         blockTimestamp,
                         blockNrgLimit,
@@ -139,7 +137,7 @@ public final class AvmTransactionExecutor {
                                     repository,
                                     allowNonceIncrement,
                                     isLocalCall,
-                                    getDifficultyAsDataWord(blockDifficulty),
+                                    new BigInteger(1, blockDifficulty),
                                     blockNumber,
                                     blockTimestamp,
                                     blockNrgLimit,
@@ -264,14 +262,5 @@ public final class AvmTransactionExecutor {
                 original.internalTransactions,
                 energyUsed,
                 ByteUtil.EMPTY_BYTE_ARRAY);
-    }
-
-    // TODO -- this has been marked as a temporary solution for a long time, someone should
-    // investigate
-    private static DataWord getDifficultyAsDataWord(byte[] diff) {
-        if (diff.length > 16) {
-            diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
-        }
-        return new DataWordImpl(diff);
     }
 }

@@ -7,9 +7,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.mcf.vm.DataWord;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -18,7 +15,7 @@ public class ExternalStateForAvm implements IExternalState {
     private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
-    private DataWord blockDifficulty;
+    private BigInteger blockDifficulty;
     private long blockNumber;
     private long blockTimestamp;
     private long blockNrgLimit;
@@ -28,7 +25,7 @@ public class ExternalStateForAvm implements IExternalState {
             RepositoryCache<AccountState, IBlockStoreBase> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
-            DataWord blockDifficulty,
+            BigInteger blockDifficulty,
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
@@ -267,12 +264,8 @@ public class ExternalStateForAvm implements IExternalState {
     }
 
     @Override
-    public long getBlockDifficulty() {
-        if (blockDifficulty instanceof DataWordImpl) {
-            return ((DataWordImpl) blockDifficulty).longValue();
-        } else {
-            return ((DoubleDataWord) blockDifficulty).longValue();
-        }
+    public BigInteger getBlockDifficulty() {
+        return this.blockDifficulty;
     }
 
     @Override
