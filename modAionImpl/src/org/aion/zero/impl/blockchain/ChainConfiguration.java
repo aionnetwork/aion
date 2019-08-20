@@ -9,7 +9,6 @@ import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.mcf.mine.IMiner;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.BlockNumberRule;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
@@ -39,7 +38,6 @@ import org.aion.zero.impl.valid.EquihashSolutionRule;
 public class ChainConfiguration implements IChainCfg<AionBlock> {
 
     protected BlockConstants constants;
-    protected IMiner<?, ?> miner;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;

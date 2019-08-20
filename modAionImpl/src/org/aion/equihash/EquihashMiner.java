@@ -19,15 +19,26 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
-import org.aion.mcf.mine.AbstractMineRunner;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.mine.IMineRunner;
 import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.slf4j.Logger;
 
 /** @author Ross Kitsis (ross@nuco.io) */
-public class EquihashMiner extends AbstractMineRunner<AionBlock> {
+public class EquihashMiner implements IMineRunner {
+
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+
+    private int cpuThreads;
+
+    private boolean isMining;
+
+    private volatile AionBlock miningBlock;
 
     public static final String VERSION = "0.1.0";
 
@@ -260,18 +271,25 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         this.evtMgr.registerEvent(evts);
     }
 
-    @Override
-    protected void fireMinerStarted() {
+    private void fireMinerStarted() {
         if (this.evtMgr != null) {
             this.evtMgr.newEvent(new EventMiner(EventMiner.CALLBACK.MININGSTARTED));
         }
     }
 
-    @Override
-    protected void fireMinerStopped() {
+    private void fireMinerStopped() {
         if (this.evtMgr != null) {
             this.evtMgr.newEvent(new EventMiner(EventMiner.CALLBACK.MININGSTOPPED));
         }
+    }
+
+    private void setCpuThreads(int cpuThreads) {
+        this.cpuThreads = cpuThreads;
+    }
+
+    @Override
+    public boolean isMining() {
+        return isMining;
     }
 
     @Override
@@ -289,6 +307,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
+    @Override
     public void shutdown() {
         ees.shutdown();
     }
