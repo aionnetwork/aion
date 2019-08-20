@@ -210,4 +210,40 @@ public class NodeTest {
         assertNotNull(n.getConnection());
         assertEquals(cn, n.getConnection());
     }
+
+    @Test
+    public void testToHexString() {
+        String expected = "844358ea1e0368c7d37fe232a61687dde2254d3e4c99c797993c2b95fe835bab";
+        byte[] input =
+                new byte[] {
+                    -124, 67, 88, -22, 30, 3, 104, -57, -45, 127, -30, 50, -90, 22, -121, -35, -30,
+                    37, 77, 62, 76, -103, -57, -105, -103, 60, 43, -107, -2, -125, 91, -85
+                };
+        String actual = Node.toHexString(input, 64);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testToHexStringLeadOne0() {
+        String expected = "044358ea1e0368c7d37fe232a61687dde2254d3e4c99c797993c2b95fe835bab";
+        byte[] input =
+                new byte[] {
+                    4, 67, 88, -22, 30, 3, 104, -57, -45, 127, -30, 50, -90, 22, -121, -35, -30, 37,
+                    77, 62, 76, -103, -57, -105, -103, 60, 43, -107, -2, -125, 91, -85
+                };
+        String actual = Node.toHexString(input, 64);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testToHexStringLeadTwo0() {
+        String expected = "004358ea1e0368c7d37fe232a61687dde2254d3e4c99c797993c2b95fe835bab";
+        byte[] input =
+                new byte[] {
+                    0, 67, 88, -22, 30, 3, 104, -57, -45, 127, -30, 50, -90, 22, -121, -35, -30, 37,
+                    77, 62, 76, -103, -57, -105, -103, 60, 43, -107, -2, -125, 91, -85
+                };
+        String actual = Node.toHexString(input, 64);
+        assertEquals(expected, actual);
+    }
 }
