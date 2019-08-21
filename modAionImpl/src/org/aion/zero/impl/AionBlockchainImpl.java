@@ -493,7 +493,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return {@code bestAionBlock}
      * @see #pubBestBlock
      */
-    @Override
     public byte[] getBestBlockHash() {
         return getBestBlock().getHash();
     }
@@ -507,7 +506,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return {@code positive long} representing the current size
      * @see #pubBestBlock
      */
-    @Override
     public long getSize() {
         return getBestBlock().getNumber() + 1;
     }
@@ -517,17 +515,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return this.bestBlock.getNumber() + 1;
     }
 
-    @Override
     public Block getBlockByNumber(long blockNr) {
         return getBlockStore().getChainBlockByNumber(blockNr);
     }
 
-    @Override
     public List<Block> getBlocksByRange(long first, long last) {
         return getBlockStore().getBlocksByRange(first, last);
     }
 
-    @Override
     /* NOTE: only returns receipts from the main chain */
     public AionTxInfo getTransactionInfo(byte[] hash) {
 
@@ -574,17 +569,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return transactionStore.get(txHash, blockHash);
     }
 
-    @Override
     public Block getBlockByHash(byte[] hash) {
         return getBlockStore().getBlockByHash(hash);
     }
 
-    @Override
     public List<byte[]> getListOfHashesEndWith(byte[] hash, int qty) {
         return getBlockStore().getListHashesEndWith(hash, qty < 1 ? 1 : qty);
     }
 
-    @Override
     public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
         // avoiding errors due to negative qty
         qty = qty < 1 ? 1 : qty;
@@ -625,10 +617,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (bestBlock instanceof AionBlock) {
             bestMiningBlock = (AionBlock) bestBlock;
-            bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
+            bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
         } else if (bestBlock instanceof StakingBlock) {
             bestStakingBlock = (StakingBlock) bestBlock;
-            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
         } else {
             throw new IllegalStateException("Invalid best block data!");
         }
@@ -717,33 +709,27 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return blockNumber > current + 32 || blockNumber < current - 32;
     }
 
-    @Override
     public byte[] getTrieNode(byte[] key, DatabaseType dbType) {
         return repository.getTrieNode(key, dbType);
     }
 
-    @Override
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
             byte[] value, int limit, DatabaseType dbType) {
         return repository.getReferencedTrieNodes(value, limit, dbType);
     }
 
-    @Override
     public StakingContractHelper getStakingContractHelper() {
         return stakingContractHelper;
     }
 
-    @Override
     public StakingBlock getBestStakingBlock() {
         return bestStakingBlock;
     }
 
-    @Override
     public AionBlock getBestMiningBlock() {
         return bestMiningBlock;
     }
 
-    @Override
     public void setBestStakingBlock(StakingBlock block) {
         if (block == null) {
             throw new NullPointerException();
@@ -751,7 +737,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         bestStakingBlock = block;
     }
 
-    @Override
     public void setBestMiningBlock(AionBlock block) {
         if (block == null) {
             throw new NullPointerException();
@@ -759,19 +744,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         bestMiningBlock = block;
     }
 
-    @Override
     //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
     public void loadBestMiningBlock() {
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
             bestMiningBlock = (AionBlock) bestBlock;
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
-            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
         } else {
             throw new IllegalStateException("Invalid block type");
         }
     }
 
-    @Override
     public void loadBestStakingBlock() {
         long bestBlockNumber = bestBlock.getNumber();
 
@@ -782,7 +765,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                     bestStakingBlock = (StakingBlock) bestBlock;
                 } else {
-                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHashWithInfo(bestBlock.getAntiparentHash());
+                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
 
                     if (bestStakingBlock == null) {
                         bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
@@ -1566,7 +1549,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return Pair.of(summary, null);
     }
 
-    @Override
     public void flush() {
         repository.flush();
         try {
@@ -1992,7 +1974,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         setBestBlock(block);
     }
 
-    @Override
     public boolean storePendingStatusBlock(Block block) {
         try {
             return repository.getPendingBlockStore().addStatusBlock(block);
@@ -2002,7 +1983,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
     public int storePendingBlockRange(List<Block> blocks) {
         try {
             return repository.getPendingBlockStore().addBlockRange(blocks);
@@ -2013,7 +1993,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
     public Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level) {
         try {
             return repository.getPendingBlockStore().loadBlockRange(level);
@@ -2025,7 +2004,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
     public long nextBase(long current, long knownStatus) {
         try {
             return repository.getPendingBlockStore().nextBase(current, knownStatus);
@@ -2035,7 +2013,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
     public void dropImported(
             long level,
             List<ByteArrayWrapper> ranges,
@@ -2048,20 +2025,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    public boolean hasParentOnTheChain(Block block) {
-        return getParent(block.getHeader()) != null;
-    }
-
     public TransactionStore getTransactionStore() {
         return transactionStore;
     }
 
-    @Override
     public Block getBestBlock() {
         return pubBestBlock == null ? bestBlock : pubBestBlock;
     }
 
-    @Override
     public synchronized void setBestBlock(Block block) {
         bestBlock = block;
         if (bestBlock instanceof AionBlock) {
@@ -2087,17 +2058,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         bestBlockNumber.set(bestBlock.getNumber());
     }
 
-    @Override
     public synchronized void close() {
         getBlockStore().close();
     }
 
-    @Override
     public BigInteger getTotalDifficulty() {
         return getBestBlock().getCumulativeDifficulty();
     }
 
-    @Override
     public void setUnityTotalDifficulty(BigInteger totalDifficulty, BigInteger miningDifficulty,
         BigInteger stakingDifficulty) {
         if (totalDifficulty == null || miningDifficulty == null || stakingDifficulty == null) {
@@ -2153,7 +2121,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.exitOn = exitOn;
     }
 
-    @Override
     public AionAddress getMinerCoinbase() {
         return minerCoinbase;
     }
@@ -2170,7 +2137,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param limit Maximum number of headers in return
      * @return {@link A0BlockHeader}'s list or empty list if none found
      */
-    @Override
     public List<BlockHeader> getListOfHeadersStartFrom(long blockNumber, int limit) {
 
         // identifying block we'll move from
@@ -2409,7 +2375,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return this.evtMgr;
     }
 
-    @Override
     public synchronized boolean recoverWorldState(Repository repository, Block block) {
         if (block == null) {
             LOG.error("World state recovery attempted with null block.");
@@ -2501,7 +2466,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return repo.isValidRoot(block.getStateRoot());
     }
 
-    @Override
     public synchronized boolean recoverIndexEntry(Repository repository, Block block) {
         if (block == null) {
             LOG.error("Index recovery attempted with null block.");
@@ -2613,7 +2577,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
     public BigInteger getTotalDifficultyByHash(Hash256 hash) {
         if (hash == null) {
             throw new NullPointerException();
@@ -2630,7 +2593,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @see #createNewStakingBlock(Block, List, byte[], byte[])
      * @return staking block template
      */
-    @Override
     public Block createStakingBlockTemplate(
             List<AionTransaction> pendingTransactions, byte[] publicKey, byte[] newSeed) {
         if (pendingTransactions == null || publicKey == null || newSeed == null) {
@@ -2640,17 +2602,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, publicKey);
     }
 
-    @Override
     public byte[] getSeed() {
         return bestStakingBlock.getSeed();
     }
 
-    @Override
     public Block getBestBlockWithInfo() {
         return getBlockStore().getBestBlockWithInfo();
     }
 
-    @Override
     public Block getBlockWithInfoByHash(byte[] hash) {
         return getBlockStore().getBlockByHashWithInfo(hash);
     }
@@ -2682,7 +2641,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
     
     @VisibleForTesting
-    @Override
     public void setUnityForkNumber(long unityForkNumber) {
         LOG.info("Unity enabled at fork number " + unityForkNumber);
         FORK_5_BLOCK_NUMBER = unityForkNumber;

@@ -37,7 +37,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -45,7 +44,6 @@ import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.mcf.types.AionTxReceipt;
@@ -83,11 +81,27 @@ public abstract class ApiAion extends Api {
 
     protected EventExecuteService ees;
 
+    /**
+     * The ApiAion0 constructor doesn't need blockTemplateLock cause there is no getblocktemplate
+     * method.
+     * @param _ac AionChain instance.
+     */
+
+    //TODO : [unity] consider to remove this constructor by refatoring the java api init process.
     public ApiAion(final IAionChain _ac) {
         if (_ac == null) {
             throw new NullPointerException();
         }
 
+        init(_ac);
+    }
+
+    public ApiAion(final IAionChain _ac, final ReentrantLock _lock) {
+        if (_ac == null || _lock == null) {
+            throw new NullPointerException();
+        }
+
+        blockTemplateLock = _lock;
         init(_ac);
     }
 
@@ -101,15 +115,6 @@ public abstract class ApiAion extends Api {
             Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(
             Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
-    }
-
-    public ApiAion(final IAionChain _ac, final ReentrantLock _lock) {
-        if (_ac == null || _lock == null) {
-            throw new NullPointerException();
-        }
-
-        blockTemplateLock = _lock;
-        init(_ac);
     }
 
     public final class EpApi implements Runnable {
