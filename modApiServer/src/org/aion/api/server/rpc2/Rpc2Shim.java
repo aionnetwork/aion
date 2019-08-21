@@ -38,16 +38,6 @@ public class Rpc2Shim {
     }
 
     public String process(String payload) {
-        try {
-            return rpc.process(payload);
-        } catch (Exception ex) {
-            // error cases not incorporated into autogen code / schema yet.
-            // this is a very crude temporary placeholder.
-            String err = ex.toString().replace("\n", "|").replace("\"", "\\\"");
-
-            return "{\"jsonrpc\": \"2.0\", "
-                + "\"error\": {\"code\": -32703, \"message\": \"Internal error:" + err +" \"},"
-                + " \"id\": null}";
-        }
+        return rpc.process(payload);
     }
 }

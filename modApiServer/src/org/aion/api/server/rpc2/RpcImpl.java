@@ -3,6 +3,7 @@ package org.aion.api.server.rpc2;
 import org.aion.api.server.rpc.RpcError;
 import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.rpc2.autogen.Rpc;
+import org.aion.api.server.rpc2.autogen.errors.UnauthorizedRpcException;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
 import org.aion.api.server.rpc2.autogen.pod.Transaction;
 import org.aion.api.server.types.Tx;
@@ -87,5 +88,10 @@ public class RpcImpl implements Rpc {
                         tx,
                         AionImpl.inst().getBlockchain().getBestBlock()
                 ).getTransactionOutput();
+    }
+
+    @Override
+    public byte[] eth_sendTransaction2(CallRequest var0) throws UnauthorizedRpcException {
+        throw new UnauthorizedRpcException("Account needs to be unlocked.");
     }
 }
