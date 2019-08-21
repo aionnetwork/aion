@@ -31,6 +31,7 @@ public class Rpc2Shim {
 
             // "eth_getTransactionByHash2",
             //"eth_call2"
+            , "eth_sendTransaction2"
     );
 
     public static boolean supportsMethod(String methodName) {
