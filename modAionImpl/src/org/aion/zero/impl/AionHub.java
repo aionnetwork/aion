@@ -55,6 +55,7 @@ public class AionHub {
     private static final Logger syncLOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private IP2pMgr p2pMgr;
+    private int chainId; // TODO: can be made final upon constructor refactoring
 
     private CfgAion cfg;
 
@@ -153,12 +154,13 @@ public class AionHub {
          * method
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
+        this.chainId = this.cfg.getNet().getId();
 
         // there are two p2p implementation , now just point to impl1.
         this.p2pMgr =
                 new P2pMgr(
                         AionLoggerFactory.getLogger(LogEnum.P2P.name()),
-                        this.cfg.getNet().getId(),
+                        this.chainId,
                         Version.KERNEL_VERSION,
                         this.cfg.getId(),
                         cfgNetP2p.getIp(),
@@ -545,7 +547,7 @@ public class AionHub {
     }
 
     public int getChainId() {
-        return this.p2pMgr.chainId();
+        return this.chainId;
     }
 
     public Map<Integer, NodeWrapper> getActiveNodes() {

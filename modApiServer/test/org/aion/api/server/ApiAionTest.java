@@ -509,7 +509,7 @@ public class ApiAionTest {
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
         assertNotNull(api.p2pProtocolVersion());
         assertNotEquals(0, api.getRecommendedNrgPrice());
-        assertEquals(impl.getAionHub().getP2pMgr().chainId(), Integer.parseInt(api.chainId()));
+        assertEquals(impl.getAionHub().getChainId(), Integer.parseInt(api.chainId()));
     }
 
     @Test

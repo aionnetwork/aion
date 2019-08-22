@@ -492,7 +492,7 @@ public class TaskInbound implements Runnable {
             if (p2pLOG.isTraceEnabled()) {
                 p2pLOG.trace("node {}", node.toString());
             }
-            if (handshakeRuleCheck(_netId)) {
+            if (mgr.isCorrectNetwork(_netId)) {
                 _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));
                 _buffer.setDisplayId(new String(Arrays.copyOfRange(_nodeId, 0, 6)));
                 node.setId(_nodeId);
@@ -544,12 +544,6 @@ public class TaskInbound implements Runnable {
         } else {
             p2pLOG.debug("handleKernelMsg can't find hash{}", _nodeIdHash);
         }
-    }
-
-    /** @return boolean TODO: implementation */
-    private boolean handshakeRuleCheck(int netId) {
-        // check net id
-        return netId == this.mgr.getSelfNetId();
     }
 
     //    private String getReadOverflowMsg(int prevCnt, int cnt) {

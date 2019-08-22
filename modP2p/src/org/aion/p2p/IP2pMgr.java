@@ -31,8 +31,6 @@ public interface IP2pMgr {
 
     List<Short> versions();
 
-    int chainId();
-
     int getSelfIdHash();
 
     void closeSocket(final SocketChannel _sc, String _reason);
@@ -53,7 +51,14 @@ public interface IP2pMgr {
 
     boolean validateNode(INode _node);
 
-    int getSelfNetId();
-
     int getAvgLatency();
+
+    /**
+     * Compares the given network identifier to the one recorded in the p2p manager.
+     *
+     * @param netId network identifier for attempted connection
+     * @return {@code true} if the network is compatible according to the p2p manager's definition
+     *     of correctness, {@code false} otherwise
+     */
+    boolean isCorrectNetwork(int netId);
 }

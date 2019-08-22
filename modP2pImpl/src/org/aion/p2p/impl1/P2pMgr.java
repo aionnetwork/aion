@@ -64,7 +64,8 @@ public final class P2pMgr implements IP2pMgr {
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
     private final int SOCKET_BACKLOG = 1024;
 
-    private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
+    private int maxTempNodes, maxActiveNodes, selfNodeIdHash, selfPort;
+    private final int selfChainId;
     private boolean syncSeedsOnly, upnpEnable;
     private String selfRevision, selfShortId;
     private byte[] selfNodeId, selfIp;
@@ -91,6 +92,8 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
+     * @param chainId identifier assigned to the current chain read from the blockchain
+     *     configuration. Peer connections are allowed only for equal network identifiers.
      * @param _nodeId byte[36]
      * @param _ip String
      * @param _port int
@@ -101,7 +104,7 @@ public final class P2pMgr implements IP2pMgr {
      */
     public P2pMgr(
             final Logger _p2pLog,
-            final int _netId,
+            final int chainId,
             final String _revision,
             final String _nodeId,
             final String _ip,
@@ -117,7 +120,7 @@ public final class P2pMgr implements IP2pMgr {
             throw new NullPointerException("A non-null logger must be provided in the constructor.");
         }
         this.p2pLOG = _p2pLog;
-        this.selfNetId = _netId;
+        this.selfChainId = chainId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
@@ -403,11 +406,6 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public int chainId() {
-        return this.selfNetId;
-    }
-
-    @Override
     public int getSelfIdHash() {
         return this.selfNodeIdHash;
     }
@@ -427,11 +425,6 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public int getSelfNetId() {
-        return this.selfNetId;
-    }
-
-    @Override
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
@@ -439,6 +432,11 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public int getAvgLatency() {
         return this.nodeMgr.getAvgLatency();
+    }
+
+    @Override
+    public boolean isCorrectNetwork(int netId){
+        return netId == selfChainId;
     }
 
     private TaskInbound getInboundInstance() {
@@ -485,7 +483,7 @@ public final class P2pMgr implements IP2pMgr {
     private ReqHandshake1 getReqHandshake1Instance(List<Short> versions) {
         return new ReqHandshake1(
                 selfNodeId,
-                selfNetId,
+                selfChainId,
                 this.selfIp,
                 this.selfPort,
                 this.selfRevision.getBytes(),

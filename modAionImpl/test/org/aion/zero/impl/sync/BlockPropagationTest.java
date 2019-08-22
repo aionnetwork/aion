@@ -216,11 +216,6 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public int chainId() {
-            return 0;
-        }
-
-        @Override
         public void errCheck(int nodeIdHashcode, String _displayId) {}
 
         @Override
@@ -276,8 +271,8 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public int getSelfNetId() {
-            throw new IllegalStateException("not implemented.");
+        public boolean isCorrectNetwork(int netId){
+            return netId == 0;
         }
 
         @Override
