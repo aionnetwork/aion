@@ -66,7 +66,6 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.p2p.INode;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -84,6 +83,7 @@ import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -1453,11 +1453,11 @@ public class ApiWeb3Aion extends ApiAion {
      * we can freely change the responses without breaking compatibility
      */
     public RpcMsg priv_peers() {
-        Map<Integer, INode> activeNodes = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+        Map<Integer, NodeWrapper> activeNodes = this.ac.getAionHub().getActiveNodes();
 
         JSONArray peerList = new JSONArray();
 
-        for (INode node : activeNodes.values()) {
+        for (NodeWrapper node : activeNodes.values()) {
             JSONObject n = new JSONObject();
             n.put("idShort", node.getIdShort());
             n.put("id", new String(node.getId()));
@@ -1613,11 +1613,11 @@ public class ApiWeb3Aion extends ApiAion {
     // TODO
     public RpcMsg priv_shortStats() {
         Block block = this.ac.getBlockchain().getBestBlock();
-        Map<Integer, INode> peer = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+        Map<Integer, NodeWrapper> peer = this.ac.getAionHub().getActiveNodes();
 
         // this could be optimized (cached)
-        INode maxPeer = null;
-        for (INode p : peer.values()) {
+        NodeWrapper maxPeer = null;
+        for (NodeWrapper p : peer.values()) {
             if (maxPeer == null) {
                 maxPeer = p;
                 continue;
@@ -1687,13 +1687,13 @@ public class ApiWeb3Aion extends ApiAion {
         Map<Integer, PeerState> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStates();
 
         // also retrieve nodes from p2p to see if we can piece together a full state
-        Map<Integer, INode> nodeState = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+        Map<Integer, NodeWrapper> nodeState = this.ac.getAionHub().getActiveNodes();
 
         JSONArray array = new JSONArray();
         for (Map.Entry<Integer, PeerState> peerState : peerStates.entrySet()) {
             // begin []
             JSONObject peerObj = new JSONObject();
-            INode node;
+            NodeWrapper node;
             if ((node = nodeState.get(peerState.getKey())) != null) {
                 // base[].node
                 JSONObject nodeObj = new JSONObject();

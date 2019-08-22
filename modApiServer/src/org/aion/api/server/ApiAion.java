@@ -692,7 +692,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected int peerCount() {
-        return this.ac.getAionHub().getP2pMgr().getActiveNodes().size();
+        return this.ac.getAionHub().getActiveNodesCount();
     }
 
     // follows the ethereum standard for web3 compliance. DO NOT DEPEND ON IT.
@@ -717,7 +717,7 @@ public abstract class ApiAion extends Api {
     // mainly to keep compatibility with eth_protocolVersion which returns a String
     protected String p2pProtocolVersion() {
         try {
-            List<Short> p2pVersions = this.ac.getAionHub().getP2pMgr().versions();
+            List<Short> p2pVersions = this.ac.getAionHub().getP2pVersions();
             int i = 0;
             StringBuilder b = new StringBuilder();
             for (Short v : p2pVersions) {
@@ -735,7 +735,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected String chainId() {
-        return (this.ac.getAionHub().getP2pMgr().chainId() + "");
+        return (this.ac.getAionHub().getChainId() + "");
     }
 
     public String getHashrate() {

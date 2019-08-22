@@ -24,7 +24,6 @@ dependencies {
     compile project(':modAionImpl')
     compile files("${rootProject.projectDir}/lib/fastvm-f2a39b8.jar")
     compile project(':modMcf')
-    compile project(':modP2p')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
     compile project(':3rdParty.libnzmq')

@@ -51,7 +51,6 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.tx.TxReceipt;
-import org.aion.p2p.INode;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -65,6 +64,7 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -1304,12 +1304,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_service_call_VALUE);
                     }
 
-                    List<INode> nodes =
+                    List<NodeWrapper> nodes =
                             new ArrayList<>(
-                                    this.ac.getAionHub().getP2pMgr().getActiveNodes().values());
+                                    this.ac.getAionHub().getActiveNodes().values());
                     List<Message.t_Node> pl = new ArrayList<>();
                     try {
-                        for (INode n : nodes) {
+                        for (NodeWrapper n : nodes) {
                             Message.t_Node node =
                                     Message.t_Node
                                             .newBuilder()

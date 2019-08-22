@@ -5,7 +5,9 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,6 +24,7 @@ import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
@@ -32,6 +35,7 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.pow.AionPoW;
+import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
@@ -527,8 +531,29 @@ public class AionHub {
         return this.syncMgr;
     }
 
+    /** Note: method used only by AionImpl and tests. Please avoid further use. */
     public IP2pMgr getP2pMgr() {
         return this.p2pMgr;
+    }
+
+    public int getActiveNodesCount() {
+        return this.p2pMgr.getActiveNodes().size();
+    }
+
+    public List<Short> getP2pVersions() {
+        return this.p2pMgr.versions();
+    }
+
+    public int getChainId() {
+        return this.p2pMgr.chainId();
+    }
+
+    public Map<Integer, NodeWrapper> getActiveNodes() {
+        Map<Integer, NodeWrapper> active = new HashMap<>();
+        for (Map.Entry<Integer, INode> entry : this.p2pMgr.getActiveNodes().entrySet()) {
+            active.put(entry.getKey(), new NodeWrapper(entry.getValue()));
+        }
+        return active;
     }
 
     public static String getRepoVersion() {
