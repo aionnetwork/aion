@@ -40,4 +40,6 @@ public interface A0BCConfig {
 
     /** Retrieves the desired behavior for internal transactions */
     boolean isInternalTransactionStorageEnabled();
+
+    boolean isInternalStakingEnabled();
 }

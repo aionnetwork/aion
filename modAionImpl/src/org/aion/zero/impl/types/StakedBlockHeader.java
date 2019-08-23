@@ -65,7 +65,7 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
         seed = new byte[toCopy.getSeed().length];
         System.arraycopy(toCopy.getSeed(), 0, seed, 0, seed.length);
 
-        pubkey = new byte[toCopy.getPubKey().length];
+        pubkey = new byte[toCopy.getSigningPublicKey().length];
         System.arraycopy(toCopy.getSeed(), 0, pubkey, 0, pubkey.length);
     }
 
@@ -242,7 +242,7 @@ public class StakedBlockHeader extends AbstractBlockHeader implements BlockHeade
         signature = _signature;
     }
 
-    public byte[] getPubKey() {
+    public byte[] getSigningPublicKey() {
         return pubkey;
     }
 

@@ -25,7 +25,7 @@ public class Rpc2Shim {
             // For Unity
             "getseed",
             "submitseed",
-            "submitwork"
+            "submitsignature"
 
             // Prototype impls of existing RPC methods to illustrate
             // how to implement existing concepts under new RPC framework.

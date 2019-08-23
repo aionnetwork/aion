@@ -324,51 +324,55 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         public Bundle build() {
             this.a0Config =
                     this.a0Config == null
-                            ? new A0BCConfig() {
-                                @Override
-                                public AionAddress getCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
-                                public byte[] getExtraData() {
-                                    return new byte[32];
-                                }
-
-                                @Override
-                                public boolean getExitOnBlockConflict() {
-                                    return false;
-                                }
-
-                                @Override
-                                public AionAddress getMinerCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
-                                public AionAddress getStakerCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
-                                public int getFlushInterval() {
-                                    return 1;
-                                }
-
-                                @Override
-                                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
-                                    return new TargetStrategy(
-                                            configuration.getConstants().getEnergyLowerBoundLong(),
-                                            configuration
-                                                    .getConstants()
-                                                    .getEnergyDivisorLimitLong(),
-                                            10_000_000L);
-                                }
-
-                                public boolean isInternalTransactionStorageEnabled() {
-                                    return true;
-                                }
+                        ? new A0BCConfig() {
+                            @Override
+                            public AionAddress getCoinbase() {
+                                return AddressUtils.ZERO_ADDRESS;
                             }
+
+                            @Override
+                            public byte[] getExtraData() {
+                                return new byte[32];
+                            }
+
+                            @Override
+                            public boolean getExitOnBlockConflict() {
+                                return false;
+                            }
+
+                            @Override
+                            public AionAddress getMinerCoinbase() {
+                                return AddressUtils.ZERO_ADDRESS;
+                            }
+
+                            @Override
+                            public AionAddress getStakerCoinbase() {
+                                return AddressUtils.ZERO_ADDRESS;
+                            }
+
+                            @Override
+                            public int getFlushInterval() {
+                                return 1;
+                            }
+
+                            @Override
+                            public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
+                                return new TargetStrategy(
+                                        configuration.getConstants().getEnergyLowerBoundLong(),
+                                        configuration
+                                                .getConstants()
+                                                .getEnergyDivisorLimitLong(),
+                                        10_000_000L);
+                            }
+
+                            public boolean isInternalTransactionStorageEnabled() {
+                                return true;
+                            }
+
+                        public boolean isInternalStakingEnabled() {
+                            return false;
+                        }
+                    }
                             : this.a0Config;
 
             if (this.configuration == null) {

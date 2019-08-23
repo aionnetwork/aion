@@ -2,11 +2,14 @@ package org.aion.api.server.rpc2;
 
 import java.math.BigInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.api.RpcException;
 import org.aion.api.server.rpc2.autogen.Rpc;
+import org.aion.api.server.rpc2.autogen.errors.NullReturnRpcException;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
 import org.aion.api.server.rpc2.autogen.pod.Transaction;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -40,19 +43,22 @@ public class RpcImpl implements Rpc {
     }
 
     @Override
-    public byte[] submitseed(byte[] newSeed, byte[] pubKey) throws Exception {
+    public byte[] submitseed(byte[] newSeed, byte[] pubKey, byte[] _coinbase) throws RpcException {
         if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
             throw new IllegalStateException("UnityForkNotEnabled!");
         }
 
-        if (newSeed == null || pubKey == null) {
+        if (newSeed == null || pubKey == null || _coinbase == null) {
             throw new NullPointerException();
         }
 
         if (newSeed.length != StakedBlockHeader.SEED_LENGTH
+            || _coinbase.length != StakedBlockHeader.PUBKEY_LENGTH
                 || pubKey.length != StakedBlockHeader.PUBKEY_LENGTH) {
             throw new IllegalArgumentException("Invalid arguments length");
         }
+
+        AionAddress coinbase = AddressUtils.wrapAddress(ByteUtil.toHexString(_coinbase));
 
         blockTemplateLock.lock();
         try {
@@ -62,10 +68,11 @@ public class RpcImpl implements Rpc {
                         .createStakingBlockTemplate(
                             ac.getAionHub().getPendingState().getPendingTransactions()
                             , pubKey
-                            , newSeed);
+                            , newSeed
+                            , coinbase);
 
             if (template == null) {
-                throw new Exception("GetStakingBlockTemplate failed!");
+                throw new NullReturnRpcException("GetStakingBlockTemplate failed!");
             }
 
             return template.getHeader().getMineHash();
@@ -94,7 +101,7 @@ public class RpcImpl implements Rpc {
             return false;
         }
 
-        block.sealHeader(signature, block.getHeader().getPubKey());
+        block.sealHeader(signature, block.getHeader().getSigningPublicKey());
         ac.getBlockchain().putSealedNewStakingBlock(block);
 
         return true;
@@ -149,5 +156,10 @@ public class RpcImpl implements Rpc {
                         tx,
                         AionImpl.inst().getBlockchain().getBestBlock()
                 ).getTransactionOutput();
+    }
+
+    @Override
+    public byte[] eth_sendTransaction2(CallRequest var0) {
+        return new byte[0];
     }
 }

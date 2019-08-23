@@ -36,7 +36,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.zero.impl.types.AbstractBlockHeader;
 import org.aion.zero.impl.types.AbstractBlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;

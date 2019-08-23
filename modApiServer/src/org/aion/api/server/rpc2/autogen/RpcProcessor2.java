@@ -1,8 +1,8 @@
-// === RpcProcessor2.java ===
 package org.aion.api.server.rpc2.autogen;
 import org.aion.api.server.rpc2.AbstractRpcProcessor;
 import org.aion.api.serialization.JsonRpcRequest;
 import org.aion.api.server.rpc2.autogen.pod.*;
+import org.aion.api.RpcException;
 
 /******************************************************************************
  *
@@ -17,7 +17,7 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
         this.rpc = rpc;
     }
 
-    public Object execute(JsonRpcRequest req) throws Exception {
+    public Object execute(JsonRpcRequest req) throws RpcException {
         Object[] params = req.getParams();
         switch(req.getMethod()) {
             case "getseed":
@@ -26,7 +26,8 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
             case "submitseed":
                 return rpc.submitseed(
                     (byte[]) params[0],
-                    (byte[]) params[1]
+                    (byte[]) params[1],
+                    (byte[]) params[2]
                 );
             case "submitsignature":
                 return rpc.submitsignature(
@@ -41,7 +42,11 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
                 return rpc.eth_call2(
                     (CallRequest) params[0]
                 );
-            default: throw new UnsupportedOperationException("Not a valid method.");
+            case "eth_sendTransaction2":
+                return rpc.eth_sendTransaction2(
+                    (CallRequest) params[0]
+                );
+            default: throw RpcException.methodNotFound(req.getMethod());
         }
     }
 }

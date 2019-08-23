@@ -60,6 +60,11 @@ public class A0BlockHeader extends AbstractBlockHeader {
         return obj;
     }
 
+    @Override
+    public byte[] getSigningPublicKey() {
+        throw new UnsupportedOperationException();
+    }
+
     public A0BlockHeader(byte[] encoded) {
         this((RLPList) RLP.decode2(encoded).get(0));
     }

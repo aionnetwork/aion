@@ -64,7 +64,9 @@ public class AionPoS {
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
     private ECKey stakerKey;
-    private AionAddress stakerAddress;
+    private AionAddress stakerSigningAddress;
+    private AionAddress coinbase;
+
 
     private EventExecuteService ees;
 
@@ -134,12 +136,13 @@ public class AionPoS {
             }
 
             //Check the staker's key has been setup properly, otherwise, just return for avoiding to create useless thread.
-            stakerKey = config.getConsensus().getStakerKey();
+            stakerKey = config.getConsensus().getStakerSigningKey();
             if (stakerKey == null) {
                 return;
             }
 
-            stakerAddress = AddressUtils.wrapAddress(config.getConsensus().getStakerAddress());
+            stakerSigningAddress = AddressUtils.wrapAddress(config.getConsensus().getStakerSigningAddress());
+            coinbase = AddressUtils.wrapAddress(config.getConsensus().getStakerCoinbase());
 
             setupHandler();
             ees = new EventExecuteService(10_000, "EpPos", Thread.NORM_PRIORITY, LOG);
@@ -161,16 +164,15 @@ public class AionPoS {
                                             .getStakingContractHelper()
                                             .isContractDeployed()) {
 
-                                long votes =
+                                long stakes =
                                     blockchain
                                         .getStakingContractHelper()
-                                        .callGetVote(
-                                            AddressUtils.wrapAddress(
-                                                config.getConsensus()
-                                                    .getStakerAddress()));
+                                        .getEffectiveStake(
+                                            stakerSigningAddress,
+                                            coinbase);
 
                                 // TODO: [unity] might change the threshold.
-                                if (votes < 1) {
+                                if (stakes < 1) {
                                     continue;
                                 }
 
@@ -191,7 +193,7 @@ public class AionPoS {
                                                 .pow(256)
                                                 .divide(new BigInteger(1, HashUtil.h256(newSeed)))
                                                 .doubleValue())
-                                        / votes;
+                                        / stakes;
 
                                 delta.set(Math.max((long) (newDelta * 1000), 500));
                             }
@@ -318,7 +320,15 @@ public class AionPoS {
                 LOG.debug("Creating a new block template");
             }
 
-            long vote = blockchain.getStakingContractHelper().callGetVote(stakerAddress);
+            if (!blockchain.getStakingContractHelper().isContractDeployed()) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Staking contract has not been deployed");
+                }
+                return null;
+            }
+
+            long vote = blockchain.getStakingContractHelper().getEffectiveStake(
+                stakerSigningAddress, coinbase);
             if (vote < 1) {
                 LOG.warn("No stake for the internal staker creating the blockTemplate!");
                 return null;

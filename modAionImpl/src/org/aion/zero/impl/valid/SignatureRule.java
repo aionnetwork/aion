@@ -17,7 +17,7 @@ public class SignatureRule extends BlockHeaderRule {
         }
 
         byte[] mineHash = header.getMineHash();
-        byte[] pk = ((StakedBlockHeader) header).getPubKey();
+        byte[] pk = header.getSigningPublicKey();
         byte[] sig = ((StakedBlockHeader) header).getSignature();
 
         if (!ECKeyEd25519.verify(mineHash, sig, pk)) {

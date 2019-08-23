@@ -33,7 +33,7 @@ public class StakingContractHelper {
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
-    private static byte[] abiGetVote = ABIEncoder.encodeOneString("getVote");
+    private static byte[] getEffectiveStake = ABIEncoder.encodeOneString("getEffectiveStake");
 
     private static boolean deployed = false;
 
@@ -68,12 +68,16 @@ public class StakingContractHelper {
         return stakingContractAddr;
     }
 
-    public long callGetVote(AionAddress stakerAddress) {
+    public long getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) {
+        if (signingAddress == null || coinbase == null) {
+            throw new NullPointerException();
+        }
 
         byte[] abi =
                 ByteUtil.merge(
-                        abiGetVote,
-                        ABIEncoder.encodeOneAddress(new Address(stakerAddress.toByteArray())));
+                        getEffectiveStake,
+                        ABIEncoder.encodeOneAddress(new Address(signingAddress.toByteArray())),
+                        ABIEncoder.encodeOneAddress(new Address(coinbase.toByteArray())));
 
         AionTransaction callTx =
                 AionTransaction.create(

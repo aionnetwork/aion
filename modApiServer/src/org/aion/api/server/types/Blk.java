@@ -68,7 +68,7 @@ public class Blk {
             StakingBlock block = (StakingBlock) genericBlock;
             obj.put("seed", StringUtils.toJsonHex(block.getHeader().getSeed()));
             obj.put("signature", StringUtils.toJsonHex(block.getHeader().getSignature()));
-            obj.put("publicKey", StringUtils.toJsonHex(block.getHeader().getPubKey()));
+            obj.put("publicKey", StringUtils.toJsonHex(block.getHeader().getSigningPublicKey()));
             obj.put("size", new NumericalValue(block.size()).toHexString());
         } else {
             throw new IllegalStateException("Invalid block seal type!");
@@ -158,7 +158,7 @@ public class Blk {
             StakingBlock block = (StakingBlock) genericBlock;
             obj.put("seed", StringUtils.toJsonHex(block.getHeader().getSeed()));
             obj.put("signature", StringUtils.toJsonHex(block.getHeader().getSignature()));
-            obj.put("publicKey", StringUtils.toJsonHex(block.getHeader().getPubKey()));
+            obj.put("publicKey", StringUtils.toJsonHex(block.getHeader().getSigningPublicKey()));
             obj.put("size", block.size());
         } else {
             throw new IllegalStateException("Invalid block seal type!");

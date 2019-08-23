@@ -22,7 +22,7 @@ public class StakingSeedRule extends DependentBlockHeaderRule {
 
         byte[] oldSeed = ((StakedBlockHeader) dependency).getSeed();
         byte[] newSeed = ((StakedBlockHeader) header).getSeed();
-        byte[] pk = ((StakedBlockHeader) header).getPubKey();
+        byte[] pk = header.getSigningPublicKey();
 
         if (!ECKeyEd25519.verify(oldSeed, newSeed, pk)) {
             addError(formatError(oldSeed, newSeed, pk), errors);

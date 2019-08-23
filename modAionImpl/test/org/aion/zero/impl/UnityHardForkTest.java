@@ -36,7 +36,7 @@ public class UnityHardForkTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         LongLivedAvm.createAndStartLongLivedAvm();
-        doReturn(1L).when(stakingContractHelper).callGetVote(any(AionAddress.class));
+        doReturn(1L).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key =
                 new ECKeyEd25519()
                         .fromPrivate(

@@ -57,7 +57,7 @@ public class ChainConfiguration implements IChainCfg {
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
-    private static ECKey key = CfgAion.inst().getConsensus().getStakerKey();
+    private static ECKey key = CfgAion.inst().getConsensus().getStakerSigningKey();
 
     private static AionAddress stakingContractAddress =
             new AionAddress(

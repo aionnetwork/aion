@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -21,7 +20,6 @@ import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.stake.StakeRunnerInterface;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
@@ -42,7 +40,7 @@ public class StakeRunner implements StakeRunnerInterface {
 
     private Thread thread = null;
 
-    private ECKey key = CfgAion.inst().getConsensus().getStakerKey();
+    private ECKey key = CfgAion.inst().getConsensus().getStakerSigningKey();
 
     private final class EpMiner implements Runnable {
         boolean go = true;
@@ -187,7 +185,7 @@ public class StakeRunner implements StakeRunnerInterface {
         if (cfg.getConsensus().getStaking()) {
             LOG.info("<delayed-start-staking>");
 
-            if (cfg.getConsensus().getStakerKey() != null) {
+            if (cfg.getConsensus().getStakerSigningKey() != null) {
                 Timer t = new Timer();
                 t.schedule(
                     new TimerTask() {

@@ -64,7 +64,7 @@ public class StakingBlock extends AbstractBlock {
             header.getEnergyLimit(),
             header.getSignature(),
             header.getSeed(),
-            header.getPubKey());
+            header.getSigningPublicKey());
     }
 
     public StakingBlock(
