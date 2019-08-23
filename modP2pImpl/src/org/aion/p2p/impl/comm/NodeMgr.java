@@ -338,7 +338,7 @@ public class NodeMgr implements INodeMgr {
                     return;
                 }
 
-                if (node.getIdHash() == p2pMgr.getSelfIdHash()) {
+                if (p2pMgr.isSelf(node)) {
                     p2pMgr.closeSocket(node.getChannel(), _type + " -> active, self-connected");
                     return;
                 }

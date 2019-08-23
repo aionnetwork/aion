@@ -454,7 +454,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
 
-        when(p2p.getSelfIdHash()).thenReturn(node.getIdHash());
+        when(p2p.isSelf(node)).thenReturn(true);
 
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
         assertTrue(nMgr.getActiveNodesMap().isEmpty());

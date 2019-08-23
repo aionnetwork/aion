@@ -64,11 +64,11 @@ public final class P2pMgr implements IP2pMgr {
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
     private final int SOCKET_BACKLOG = 1024;
 
-    private int maxTempNodes, maxActiveNodes, selfNodeIdHash, selfPort;
+    private final int maxTempNodes, maxActiveNodes, selfNodeIdHash, selfPort;
     private final int selfChainId;
     private boolean syncSeedsOnly, upnpEnable;
     private String selfRevision, selfShortId;
-    private byte[] selfNodeId, selfIp;
+    private final byte[] selfNodeId, selfIp;
     private INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
@@ -405,11 +405,6 @@ public final class P2pMgr implements IP2pMgr {
         return this.nodeMgr.getActiveNodesMap();
     }
 
-    @Override
-    public int getSelfIdHash() {
-        return this.selfNodeIdHash;
-    }
-
     public int getTempNodesCount() {
         return this.nodeMgr.tempNodesSize();
     }
@@ -437,6 +432,18 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public boolean isCorrectNetwork(int netId){
         return netId == selfChainId;
+    }
+
+    /**
+     * @implNote Compares the port and id to the given node to allow connections to the same id and
+     *     different port. Does not compare IP values since the self IP is often recorded as 0.0.0.0
+     *     in the configuration file and cannot be inferred reliably by the node itself.
+     */
+    @Override
+    public boolean isSelf(INode node) {
+        return selfNodeIdHash == node.getIdHash()
+                && selfPort == node.getPort()
+                && Arrays.equals(selfNodeId, node.getId());
     }
 
     private TaskInbound getInboundInstance() {

@@ -236,11 +236,6 @@ public class BlockPropagationTest {
         public void closeSocket(SocketChannel _sc, String _reason, Exception e) {}
 
         @Override
-        public int getSelfIdHash() {
-            return 0;
-        }
-
-        @Override
         public void dropActive(int _nodeIdHash, String _reason) {
             throw new IllegalStateException("not implemented.");
         }
@@ -273,6 +268,11 @@ public class BlockPropagationTest {
         @Override
         public boolean isCorrectNetwork(int netId){
             return netId == 0;
+        }
+
+        @Override
+        public boolean isSelf(INode node) {
+            return false;
         }
 
         @Override

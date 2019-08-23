@@ -31,8 +31,6 @@ public interface IP2pMgr {
 
     List<Short> versions();
 
-    int getSelfIdHash();
-
     void closeSocket(final SocketChannel _sc, String _reason);
 
     void closeSocket(final SocketChannel _sc, String _reason, Exception e);
@@ -61,4 +59,13 @@ public interface IP2pMgr {
      *     of correctness, {@code false} otherwise
      */
     boolean isCorrectNetwork(int netId);
+
+    /**
+     * Compares the given node to the one recorded as the running node.
+     *
+     * @param node a node for which a connection is attempted
+     * @return {@code true} if the given node is the same as the running node according to the p2p
+     *     manager's definition of node equality, {@code false} otherwise
+     */
+    boolean isSelf(INode node);
 }
