@@ -56,6 +56,7 @@ final class TaskImportBlocks implements Runnable {
     private final Map<Integer, PeerState> peerStates;
 
     private final Logger log;
+    private final Logger surveyLog;
 
     private SortedSet<Long> baseList;
     private PeerState state;
@@ -66,22 +67,24 @@ final class TaskImportBlocks implements Runnable {
     private long lastCompactTime;
 
     TaskImportBlocks(
+            final Logger syncLog,
+            final Logger surveyLog,
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final SyncStats _syncStats,
             final BlockingQueue<BlocksWrapper> _downloadedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
             final Map<Integer, PeerState> _peerStates,
-            final Logger _log,
             final int _slowImportTime,
             final int _compactFrequency) {
+        this.log = syncLog;
+        this.surveyLog = surveyLog;
         this.chain = _chain;
         this.start = _start;
         this.syncStats = _syncStats;
         this.downloadedBlocks = _downloadedBlocks;
         this.importedBlockHashes = _importedBlockHashes;
         this.peerStates = _peerStates;
-        this.log = _log;
         this.baseList = new TreeSet<>();
         this.state = new PeerState(NORMAL, 0L);
         this.slowImportTime = _slowImportTime;
@@ -94,11 +97,17 @@ final class TaskImportBlocks implements Runnable {
 
     @Override
     public void run() {
+        // for runtime survey information
+        long startTime, duration;
+
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         while (start.get()) {
             BlocksWrapper bw;
             try {
+                startTime = System.nanoTime();
                 bw = downloadedBlocks.take();
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("Import Stage 1: wait for blocks, duration = {} ns.", duration);
             } catch (InterruptedException ex) {
                 if (start.get()) {
                     log.error("Import blocks thread interrupted without shutdown request.", ex);
@@ -106,12 +115,19 @@ final class TaskImportBlocks implements Runnable {
                 return;
             }
 
+            startTime = System.nanoTime();
             PeerState peerState = peerStates.get(bw.getNodeIdHash());
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("Import Stage 2: wait for peer state, duration = {} ns.", duration);
+
             if (peerState == null) {
                 // ignoring these blocks
                 log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
             } else { // the peerState is not null after this
+                startTime = System.nanoTime();
                 List<Block> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("Import Stage 3: filter batch, duration = {} ns.", duration);
 
                 if (log.isDebugEnabled()) {
                     log.debug(
@@ -121,8 +137,11 @@ final class TaskImportBlocks implements Runnable {
                             peerState.getBase());
                 }
 
+                startTime = System.nanoTime();
                 // process batch and update the peer state
                 peerState.copy(processBatch(peerState, batch, bw.getDisplayId()));
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
 
                 // so we can continue immediately
                 peerState.resetLastHeaderRequest();
@@ -186,6 +205,9 @@ final class TaskImportBlocks implements Runnable {
 
     /** @implNote This method is called only when state is not null. */
     private PeerState processBatch(PeerState givenState, List<Block> batch, String displayId) {
+        // for runtime survey information
+        long startTime, duration;
+
         // make a copy of the original state
         state.copy(Objects.requireNonNull(givenState));
 
@@ -253,6 +275,7 @@ final class TaskImportBlocks implements Runnable {
         long first = -1L, last = -1L;
         ImportResult importResult;
 
+        startTime = System.nanoTime();
         for (Block b : batch) {
             try {
                 importResult = importBlock(b, displayId, givenState);
@@ -368,7 +391,10 @@ final class TaskImportBlocks implements Runnable {
                 }
             }
         }
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
 
+        startTime = System.nanoTime();
         // check for stored blocks
         if (first < last) {
             int imported = importFromStorage(state, first, last);
@@ -394,6 +420,8 @@ final class TaskImportBlocks implements Runnable {
                 }
             }
         }
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
 
         return state;
     }
@@ -625,14 +653,21 @@ final class TaskImportBlocks implements Runnable {
      * @return the total number of imported blocks from all iterations
      */
     private int importFromStorage(PeerState state, long first, long last) {
+        // for runtime survey information
+        long startTime, duration;
+
         ImportResult importResult = ImportResult.NO_PARENT;
         int imported = 0, batch;
         long level = first;
 
         while (level <= last) {
+
+            startTime = System.nanoTime();
             // get blocks stored for level
             Map<ByteArrayWrapper, List<Block>> levelFromDisk =
                     chain.loadPendingBlocksAtLevel(level);
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("Import Stage 4.B.i: load batch from disk, duration = {} ns.", duration);
 
             if (levelFromDisk.isEmpty()) {
                 // move on to next level
@@ -656,8 +691,11 @@ final class TaskImportBlocks implements Runnable {
                             level);
                 }
 
+                startTime = System.nanoTime();
                 // filter already imported blocks
                 batchFromDisk = filterBatch(batchFromDisk, chain, importedBlockHashes);
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("Import Stage 4.B.ii: filter batch from disk, duration = {} ns.", duration);
 
                 if (!batchFromDisk.isEmpty()) {
                     if (log.isDebugEnabled()) {
@@ -675,6 +713,7 @@ final class TaskImportBlocks implements Runnable {
                     continue;
                 }
 
+                startTime = System.nanoTime();
                 for (Block b : batchFromDisk) {
                     try {
                         importResult = importBlock(b, "STORAGE", state);
@@ -703,6 +742,8 @@ final class TaskImportBlocks implements Runnable {
                         }
                     }
                 }
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("Import Stage 4.B.iii: import batch from disk, duration = {} ns.", duration);
 
                 imported += batch;
             }

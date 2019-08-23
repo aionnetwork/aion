@@ -18,21 +18,28 @@ import org.slf4j.Logger;
 public final class ResStatusHandler extends Handler {
 
     private final Logger log;
+    private final Logger surveyLog;
 
     private final IP2pMgr p2pMgr;
 
     private final SyncMgr syncMgr;
 
-    public ResStatusHandler(final Logger _log, final IP2pMgr _p2pMgr, final SyncMgr _syncMgr) {
+    public ResStatusHandler(final Logger syncLog, final Logger surveyLog, final IP2pMgr _p2pMgr, final SyncMgr _syncMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
-        this.log = _log;
+        this.log = syncLog;
+        this.surveyLog = surveyLog;
         this.p2pMgr = _p2pMgr;
         this.syncMgr = _syncMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        // for runtime survey information
+        long startTime, duration;
+
         if (_msgBytes == null || _msgBytes.length == 0) return;
+
+        startTime = System.nanoTime();
         ResStatus rs = ResStatus.decode(_msgBytes);
 
         if (rs == null) {
@@ -83,5 +90,7 @@ public final class ResStatusHandler extends Handler {
                         latency);
             }
         }
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Receive Stage 1: process status, duration = {} ns.", duration);
     }
 }

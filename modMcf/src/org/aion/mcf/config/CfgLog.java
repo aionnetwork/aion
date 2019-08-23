@@ -36,6 +36,7 @@ public class CfgLog {
         modules.put(LogEnum.TX.name(), LogLevel.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevel.ERROR.name());
         modules.put(LogEnum.GUI.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.SURVEY.name(), LogLevel.ERROR.name());
         this.logFile = false;
         this.logPath = "log";
     }

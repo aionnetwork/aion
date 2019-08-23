@@ -21,22 +21,32 @@ import org.slf4j.Logger;
 public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
+    private final Logger surveyLog;
 
     private final SyncMgr syncMgr;
 
     private final IP2pMgr p2pMgr;
 
     public ResBlocksBodiesHandler(
-            final Logger _log, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
+            final Logger syncLog, final Logger surveyLog, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
-        this.log = _log;
+        this.log = syncLog;
+        this.surveyLog = surveyLog;
         this.syncMgr = _syncMgr;
         this.p2pMgr = _p2pMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        // for runtime survey information
+        long startTime, duration;
+
+        startTime = System.nanoTime();
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Receive Stage 4: decode bodies, duration = {} ns.", duration);
+
+        startTime = System.nanoTime();
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
         if (bodies == null) {
             log.error("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
@@ -59,5 +69,7 @@ public final class ResBlocksBodiesHandler extends Handler {
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
             }
         }
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Receive Stage 5: validate bodies, duration = {} ns.", duration);
     }
 }

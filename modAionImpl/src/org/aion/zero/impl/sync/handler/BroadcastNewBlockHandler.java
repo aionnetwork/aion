@@ -14,23 +14,31 @@ import org.slf4j.Logger;
 public final class BroadcastNewBlockHandler extends Handler {
 
     private final Logger log;
+    private final Logger surveyLog;
 
     private final BlockPropagationHandler propHandler;
 
     private final IP2pMgr p2pMgr;
 
     public BroadcastNewBlockHandler(
-            final Logger _log, final BlockPropagationHandler propHandler, final IP2pMgr _p2pMgr) {
+            final Logger syncLog, final Logger surveyLog, final BlockPropagationHandler propHandler, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_BLOCK);
-        this.log = _log;
+        this.log = syncLog;
+        this.surveyLog = surveyLog;
         this.propHandler = propHandler;
         this.p2pMgr = _p2pMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        // for runtime survey information
+        long startTime, duration;
+
         if (_msgBytes == null) return;
+
+        startTime = System.nanoTime();
         byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
+
         if (rawdata == null) {
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             log.error(
@@ -40,6 +48,8 @@ public final class BroadcastNewBlockHandler extends Handler {
             if (log.isTraceEnabled()) {
                 log.trace("new-block-handler dump: {}", ByteUtil.toHexString(_msgBytes));
             }
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("Receive Stage 6: process propagated block, duration = {} ns.", duration);
             return;
         }
 
@@ -47,6 +57,8 @@ public final class BroadcastNewBlockHandler extends Handler {
 
         BlockPropagationHandler.PropStatus result =
                 this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("Receive Stage 6: process propagated block, duration = {} ns.", duration);
 
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();

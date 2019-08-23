@@ -45,6 +45,8 @@ public final class SyncMgr {
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+    private static final Logger survey_log = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
+
     private final NetworkStatus networkStatus = new NetworkStatus();
     // peer syncing states
     private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
@@ -198,13 +200,14 @@ public final class SyncMgr {
         syncIb =
                 new Thread(
                         new TaskImportBlocks(
+                                log,
+                                survey_log,
                                 chain,
                                 start,
                                 stats,
                                 downloadedBlocks,
                                 importedBlockHashes,
                                 peerStates,
-                                log,
                                 _slowImportTime,
                                 _compactFrequency),
                         "sync-ib");

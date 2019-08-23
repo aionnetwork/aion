@@ -15,6 +15,7 @@ public enum LogEnum {
     TX,
     P2P,
     ROOT,
+    SURVEY,
     GUI;
 
     public static boolean contains(String _module) {

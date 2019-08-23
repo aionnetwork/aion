@@ -51,8 +51,8 @@ import org.slf4j.Logger;
 public class AionHub {
 
     private static final Logger genLOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
     private static final Logger syncLOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+    private static final Logger surveyLOG = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
 
     private IP2pMgr p2pMgr;
     private int chainId; // TODO: can be made final upon constructor refactoring
@@ -233,14 +233,14 @@ public class AionHub {
                         p2pMgr,
                         cfg.getGenesis().getHash(),
                         apiVersion));
-        cbs.add(new ResStatusHandler(syncLOG, p2pMgr, syncMgr));
+        cbs.add(new ResStatusHandler(syncLOG, surveyLOG, p2pMgr, syncMgr));
         boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
         cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
-        cbs.add(new ResBlocksHeadersHandler(syncLOG, syncMgr, p2pMgr));
+        cbs.add(new ResBlocksHeadersHandler(syncLOG, surveyLOG, syncMgr, p2pMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLOG, blockchain, syncMgr, p2pMgr, inSyncOnlyMode));
-        cbs.add(new ResBlocksBodiesHandler(syncLOG, syncMgr, p2pMgr));
+        cbs.add(new ResBlocksBodiesHandler(syncLOG, surveyLOG, syncMgr, p2pMgr));
         cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));
-        cbs.add(new BroadcastNewBlockHandler(syncLOG, propHandler, p2pMgr));
+        cbs.add(new BroadcastNewBlockHandler(syncLOG, surveyLOG, propHandler, p2pMgr));
         this.p2pMgr.register(cbs);
     }
 
