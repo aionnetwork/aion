@@ -12,17 +12,17 @@ import org.aion.api.server.rpc2.autogen.errors.*;
 public interface Rpc {
 
     byte[] getseed(
-    );    byte[] submitseed(
+    );
+
+    byte[] submitseed(
+        byte[] var0, 
+        byte[] var1, 
+        byte[] var2
+    );
+
+    boolean submitsignature(
         byte[] var0, 
         byte[] var1
-    );    boolean submitsignature(
-        byte[] var0, 
-        byte[] var1
-    );    Transaction eth_getTransactionByHash2(
-        byte[] var0
-    );    byte[] eth_call2(
-        CallRequest var0
-    );    byte[] eth_sendTransaction2(
-        CallRequest var0
-    ) throws UnauthorizedRpcException, ImATeapotRpcException;
+    );
+
 }

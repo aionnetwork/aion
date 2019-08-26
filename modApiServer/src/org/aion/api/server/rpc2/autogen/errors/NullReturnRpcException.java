@@ -6,9 +6,9 @@ package org.aion.api.server.rpc2.autogen.errors;
  * BE WIPED OUT WHEN THIS FILE GETS RE-GENERATED OR UPDATED.
  *
  *****************************************************************************/
-public class UnauthorizedRpcException extends org.aion.api.RpcException {
+public class NullReturnRpcException extends org.aion.api.RpcException {
 
-    public UnauthorizedRpcException(String data) {
-        super(10001, "Unauthorized", data);
+    public NullReturnRpcException(String data) {
+        super(10003, "Null return", data);
     }
 }

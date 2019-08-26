@@ -27,24 +27,13 @@ public class RpcProcessor2 extends AbstractRpcProcessor {
             case "submitseed":
                 return rpc.submitseed(
                     (byte[]) params[0],
-                    (byte[]) params[1]
+                    (byte[]) params[1],
+                    (byte[]) params[2]
                 );
             case "submitsignature":
                 return rpc.submitsignature(
                     (byte[]) params[0],
                     (byte[]) params[1]
-                );
-            case "eth_getTransactionByHash2":
-                return rpc.eth_getTransactionByHash2(
-                    (byte[]) params[0]
-                );
-            case "eth_call2":
-                return rpc.eth_call2(
-                    (CallRequest) params[0]
-                );
-            case "eth_sendTransaction2":
-                return rpc.eth_sendTransaction2(
-                    (CallRequest) params[0]
                 );
             default: throw RpcException.methodNotFound(req.getMethod());
         }
