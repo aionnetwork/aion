@@ -6,7 +6,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -66,12 +65,15 @@ public class CliTest {
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
     private static final File AVM_TEST_BASE_PATH = new File(BASE_PATH, "avmtestnet");
+    private static final File UNITY_TEST_BASE_PATH = new File(BASE_PATH, "unitytestnet");
 
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
     private static final File AVM_TEST_CONFIG_PATH = new File(CONFIG_PATH, "avmtestnet");
+    private static final File UNITY_TEST_CONFIG_PATH = new File(CONFIG_PATH, "unitytestnet");
+
 
     private static final String module = "modAionImpl";
 
@@ -90,18 +92,24 @@ public class CliTest {
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
     private static final File avmtestnetConfig = new File(AVM_TEST_CONFIG_PATH, configFileName);
+    private static final File unitytestnetConfig = new File(UNITY_TEST_CONFIG_PATH, configFileName);
+
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
     private static final File avmtestnetGenesis = new File(AVM_TEST_CONFIG_PATH, genesisFileName);
+    private static final File unitytestnetGenesis = new File(UNITY_TEST_CONFIG_PATH, genesisFileName);
+
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
     private static final File avmtestnetFork = new File(AVM_TEST_CONFIG_PATH, forkFileName);
+    private static final File unitytestnetFork = new File(UNITY_TEST_CONFIG_PATH, forkFileName);
+
 
     private static final String DEFAULT_PORT = "30303";
     private static final String TEST_PORT = "12345";
@@ -146,6 +154,16 @@ public class CliTest {
             Cli.copyRecursively(genesis, avmtestnetGenesis);
             Cli.copyRecursively(fork, avmtestnetFork);
         }
+
+        if (BASE_PATH.contains(module) && !unitytestnetConfig.exists()) {
+            // save config to disk at expected location for new kernel
+            if (!UNITY_TEST_CONFIG_PATH.exists()) {
+                assertThat(UNITY_TEST_CONFIG_PATH.mkdir()).isTrue();
+            }
+            Cli.copyRecursively(config, unitytestnetConfig);
+            Cli.copyRecursively(genesis, unitytestnetGenesis);
+            Cli.copyRecursively(fork, unitytestnetFork);
+        }
         cfg.resetInternal();
         doReturn("password").when(mockpr).readPassword(any(), any());
         doCallRealMethod().when(mockCli).call(any(), any());
@@ -169,6 +187,7 @@ public class CliTest {
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
         deleteRecursively(AVM_TEST_BASE_PATH);
+        deleteRecursively(UNITY_TEST_BASE_PATH);
     }
 
     /**
@@ -262,6 +281,13 @@ public class CliTest {
         for (String op : net_options) {
             // avmtestnet as parameter
             parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
+        }
+
+        // network alone with unitytestnet
+        expected = UNITY_TEST_BASE_PATH.getAbsolutePath();
+        for (String op : net_options) {
+            // unitytestnet as parameter
+            parameters.add(new Object[] {new String[] {op, "unitytestnet"}, RUN, expected});
         }
 
         // network and directory with testnet
@@ -423,6 +449,14 @@ public class CliTest {
             // avmtestnet as parameter
             parameters.add(
                     new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
+        }
+
+        expected = UNITY_TEST_BASE_PATH.getAbsolutePath();
+
+        for (String op : options) {
+            // unitytestnet as parameter
+            parameters.add(
+                new Object[] {new String[] {op, "unitytestnet"}, unitytestnetConfig, expected});
         }
 
         // config and directory

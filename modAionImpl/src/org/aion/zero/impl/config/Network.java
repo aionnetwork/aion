@@ -11,7 +11,8 @@ public enum Network {
     MAINNET("mainnet", 256),
     CONQUEST("conquest", 128),
     MASTERY("mastery", 32),
-    AVMTESTNET("avmtestnet", 31), // temporary chainid
+    AVMTESTNET("avmtestnet", 31),
+    UNITYTESTNET("unitytestnet", 30),
     CUSTOM("custom", 0);
 
     private final String name;
