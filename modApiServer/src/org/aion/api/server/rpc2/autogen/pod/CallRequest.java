@@ -1,5 +1,11 @@
 package org.aion.api.server.rpc2.autogen.pod;
 
+/******************************************************************************
+ *
+ * AUTO-GENERATED SOURCE FILE.  DO NOT EDIT MANUALLY -- YOUR CHANGES WILL
+ * BE WIPED OUT WHEN THIS FILE GETS RE-GENERATED OR UPDATED.
+ *
+ *****************************************************************************/
 public class CallRequest {
     private byte[] to;
     private java.math.BigInteger value;
