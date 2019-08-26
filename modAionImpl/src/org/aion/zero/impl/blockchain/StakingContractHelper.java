@@ -19,6 +19,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.types.AionTxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
@@ -34,6 +35,7 @@ public class StakingContractHelper {
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     private static byte[] getEffectiveStake = ABIEncoder.encodeOneString("getEffectiveStake");
+    private static byte[] getCoinbaseForSigningAddress = ABIEncoder.encodeOneString("getCoinbaseAddressForSigningAddress");
 
     private static boolean deployed = false;
 
@@ -136,5 +138,37 @@ public class StakingContractHelper {
         } finally {
             repository.rollback();
         }
+    }
+
+    public AionAddress getCoinbaseForSigningAddress(AionAddress signingAddress) {
+
+        if (signingAddress == null) {
+            throw new NullPointerException();
+        }
+
+        byte[] abi =
+            ByteUtil.merge(
+                getCoinbaseForSigningAddress,
+                ABIEncoder.encodeOneAddress(new Address(signingAddress.toByteArray())));
+
+        AionTransaction callTx =
+            AionTransaction.create(
+                keyForCallandEstimate,
+                BigInteger.ZERO.toByteArray(),
+                stakingContractAddr,
+                BigInteger.ZERO.toByteArray(),
+                abi,
+                2_000_000L,
+                10_000_000_000L,
+                TransactionTypes.DEFAULT);
+
+        AionTxReceipt receipt = callConstant(callTx);
+
+        if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
+            // TODO: [unity] handle the error case.
+            return null;
+        }
+
+        return AddressUtils.wrapAddress(new ABIDecoder(receipt.getTransactionOutput()).decodeOneAddress().toString());
     }
 }

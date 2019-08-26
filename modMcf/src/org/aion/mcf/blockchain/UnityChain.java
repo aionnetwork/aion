@@ -3,7 +3,6 @@ package org.aion.mcf.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.types.AionAddress;
 import org.aion.util.types.Hash256;
 
 /**
@@ -20,8 +19,7 @@ public interface UnityChain extends IGenericChain {
     Block createStakingBlockTemplate(
             List<AionTransaction> pendingTransactions,
             byte[] publicKey,
-            byte[] seed,
-            AionAddress coinbase);
+            byte[] seed);
 
     Block getCachingStakingBlockTemplate(byte[] hash);
 
