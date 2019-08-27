@@ -54,8 +54,8 @@ import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.mcf.types.AionTxExecSummary;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxExecSummary;
+import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 

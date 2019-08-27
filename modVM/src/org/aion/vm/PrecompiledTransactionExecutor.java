@@ -14,8 +14,8 @@ import org.aion.types.Log;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.mcf.types.AionTxExecSummary;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxExecSummary;
+import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
 
 public final class PrecompiledTransactionExecutor {

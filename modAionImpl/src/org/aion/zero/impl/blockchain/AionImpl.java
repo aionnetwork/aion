@@ -23,7 +23,7 @@ import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
 
 public class AionImpl implements IAionChain {

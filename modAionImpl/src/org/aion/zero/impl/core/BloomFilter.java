@@ -1,7 +1,7 @@
 package org.aion.zero.impl.core;
 
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Bloom;
+import org.aion.base.Bloom;
 import org.aion.types.AionAddress;
 
 public class BloomFilter {

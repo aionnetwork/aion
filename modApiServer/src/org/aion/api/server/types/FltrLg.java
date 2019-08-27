@@ -5,15 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.LogUtility;
+import org.aion.base.Bloom;
+import org.aion.base.LogUtility;
 import org.aion.types.Log;
 import org.aion.zero.impl.types.BlockSummary;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 
 /** @author chris */
 

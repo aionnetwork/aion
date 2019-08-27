@@ -1,4 +1,4 @@
-package org.aion.mcf.types;
+package org.aion.base;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -9,11 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.aion.base.AionTransaction;
+import org.aion.util.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
-import org.aion.util.InternalTransactionUtil;
 
 public class AionTxExecSummary {
 
@@ -116,8 +115,7 @@ public class AionTxExecSummary {
     /**
      * Builder for {@link AionTxExecSummary}, responsible for the correct creation of the
      * transaction summary. Contains all elements useful for referencing both the transactions and
-     * the results of the transaction. This also includes results like which rows of the account
-     * storage were {@code touched} by virtual machine.
+     * the results of the transaction.
      *
      * <p>Prefer using this builder, as rules will be enforced and the system will fast fail.
      *

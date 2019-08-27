@@ -12,7 +12,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.vm.exception.VMException;
-import org.aion.mcf.types.AionTxExecSummary;
+import org.aion.base.AionTxExecSummary;
 import org.slf4j.Logger;
 
 /**

@@ -6,7 +6,7 @@ import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.Repository;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 
 /** Aion chain interface. */
 public interface IAionChain  {

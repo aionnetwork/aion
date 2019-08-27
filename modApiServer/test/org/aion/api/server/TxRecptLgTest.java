@@ -22,7 +22,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 import org.junit.Test;
 
 public class TxRecptLgTest {

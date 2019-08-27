@@ -1,4 +1,4 @@
-package org.aion.mcf.vm.types;
+package org.aion.base;
 
 import java.util.ArrayList;
 import java.util.List;

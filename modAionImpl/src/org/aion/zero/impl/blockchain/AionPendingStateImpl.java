@@ -61,8 +61,8 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
-import org.aion.mcf.types.AionTxExecSummary;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxExecSummary;
+import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
 
 public class AionPendingStateImpl implements IPendingStateInternal {

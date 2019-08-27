@@ -11,7 +11,7 @@ import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

@@ -6,6 +6,7 @@ module aion.base {
     requires aion.log;
     requires slf4j.api;
     requires aion.fastvm;
+    requires commons.lang3;
 
     exports org.aion.base;
 }

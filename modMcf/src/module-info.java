@@ -20,6 +20,4 @@ module aion.mcf {
     exports org.aion.mcf.config;
     exports org.aion.mcf.db;
     exports org.aion.mcf.db.exception;
-    exports org.aion.mcf.types;
-    exports org.aion.mcf.vm.types;
 }

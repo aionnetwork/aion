@@ -55,7 +55,7 @@ import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.mcf.types.AionTxExecSummary;
+import org.aion.base.AionTxExecSummary;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;

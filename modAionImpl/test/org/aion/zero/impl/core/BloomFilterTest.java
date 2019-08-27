@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Bloom;
+import org.aion.base.Bloom;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.BlockchainIntegrationTest;

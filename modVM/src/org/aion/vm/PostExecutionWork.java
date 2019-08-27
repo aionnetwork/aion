@@ -5,7 +5,7 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.AionTxExecSummary;
+import org.aion.base.AionTxExecSummary;
 
 /** An abstract notion of work that is to be applied after a transaction has been executed. */
 public final class PostExecutionWork {

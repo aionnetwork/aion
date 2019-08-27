@@ -6,7 +6,7 @@ import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxReceipt;
 
 public interface IApiAion {
 

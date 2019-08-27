@@ -1,4 +1,4 @@
-package org.aion.mcf.types;
+package org.aion.base;
 
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.aion.base.AionTransaction;
-import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.LogUtility;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;

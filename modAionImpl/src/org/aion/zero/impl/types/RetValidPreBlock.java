@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.types.AionAddress;
-import org.aion.mcf.types.AionTxExecSummary;
-import org.aion.mcf.types.AionTxReceipt;
+import org.aion.base.AionTxExecSummary;
+import org.aion.base.AionTxReceipt;
 
 public class RetValidPreBlock {
 

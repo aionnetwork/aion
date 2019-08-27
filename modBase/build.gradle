@@ -8,4 +8,5 @@ dependencies {
     compile project(':modRlp')
     compile project(':modCrypto')
     compile 'org.slf4j:slf4j-api:1.7.25'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
 }

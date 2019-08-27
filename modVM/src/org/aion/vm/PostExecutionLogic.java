@@ -5,7 +5,7 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.types.AionTxExecSummary;
+import org.aion.base.AionTxExecSummary;
 
 /**
  * A functional interface that specifies post-execution logic that is to be applied immediately
