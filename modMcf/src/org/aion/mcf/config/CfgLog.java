@@ -138,8 +138,11 @@ public class CfgLog {
         if (modules.containsKey(logEnum) && !modules.get(logEnum).equalsIgnoreCase(logLevel)){
             modules.replace(logEnum, logLevel);
             return true;
-        }
-        else {
+        } else if (!modules.containsKey(logEnum)) {
+            // allows introducing new logs
+            modules.put(logEnum, logLevel);
+            return true;
+        } else {
             return false;
         }
     }
