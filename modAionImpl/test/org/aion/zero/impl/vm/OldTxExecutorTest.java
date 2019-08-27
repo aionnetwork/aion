@@ -45,7 +45,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
@@ -121,8 +121,8 @@ public class OldTxExecutorTest {
                         "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = Hex.decode("c0004213");
-        long nrg = new DataWordImpl(100000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(100000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
         AionTransaction tx = AionTransaction.create(
                 deployerKey,
                 txNonce,
@@ -209,8 +209,8 @@ public class OldTxExecutorTest {
                         "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = BigInteger.ZERO.toByteArray();
         byte[] data = Hex.decode("c0004213");
-        long nrg = new DataWordImpl(100000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(100000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
         ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 AionTransaction.create(
@@ -252,8 +252,8 @@ public class OldTxExecutorTest {
                         "2222222222222222222222222222222222222222222222222222222222222222");
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = new byte[0];
-        long nrg = new DataWordImpl(100000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(100000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
         ECKey key = ECKeyFac.inst().create();
         AionTransaction tx =
                 AionTransaction.create(
@@ -283,7 +283,7 @@ public class OldTxExecutorTest {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
-        byte[] difficulty = new DataWordImpl(0x1000000L).getData();
+        byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
         byte[] extraData = new byte[0];

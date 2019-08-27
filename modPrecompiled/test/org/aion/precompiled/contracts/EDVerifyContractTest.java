@@ -19,7 +19,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -44,11 +44,11 @@ public class EDVerifyContractTest {
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
-    private DataWordImpl blockDifficulty = new DataWordImpl(0x100000000L);
+    private DataWord blockDifficulty = new DataWord(0x100000000L);
 
-    private DataWordImpl nrgPrice;
+    private DataWord nrgPrice;
     private long nrgLimit;
-    private DataWordImpl callValue;
+    private DataWord callValue;
     private byte[] callData;
     private byte[] pubKey;
 
@@ -60,9 +60,9 @@ public class EDVerifyContractTest {
 
     @Before
     public void setup() throws IOException {
-        nrgPrice = DataWordImpl.ONE;
+        nrgPrice = DataWord.ONE;
         nrgLimit = 20000;
-        callValue = DataWordImpl.ZERO;
+        callValue = DataWord.ZERO;
         callData = new byte[0];
 
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
@@ -168,7 +168,7 @@ public class EDVerifyContractTest {
 
     @Test
     public void shouldFailIfNotEnoughEnergy() {
-        nrgPrice = DataWordImpl.ONE;
+        nrgPrice = DataWord.ONE;
 
         byte[] input = setupInput();
         PrecompiledTransactionContext ctx =

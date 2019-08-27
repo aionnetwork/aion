@@ -20,7 +20,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
@@ -91,9 +91,9 @@ public class AionContractDetailsTest {
         contractDetails.setCode(code);
         contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
-                new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
+                new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_2).toWrapper(), new DataWordImpl(val_2).toWrapper());
+                new DataWord(key_2).toWrapper(), new DataWord(val_2).toWrapper());
         contractDetails.setAddress(AddressUtils.ZERO_ADDRESS);
 
         byte[] data = contractDetails.getEncoded();
@@ -106,14 +106,14 @@ public class AionContractDetailsTest {
                 ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(
                         contractDetails_
-                                .get(new DataWordImpl(key_1).toWrapper())
+                                .get(new DataWord(key_1).toWrapper())
                                 .getNoLeadZeroesData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_2),
                 ByteUtil.toHexString(
                         contractDetails_
-                                .get(new DataWordImpl(key_2).toWrapper())
+                                .get(new DataWord(key_2).toWrapper())
                                 .getNoLeadZeroesData()));
     }
 
@@ -170,31 +170,31 @@ public class AionContractDetailsTest {
         contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.setAddress(address);
         contractDetails.put(
-                new DataWordImpl(key_0).toWrapper(), new DataWordImpl(val_0).toWrapper());
+                new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
-        contractDetails.delete(new DataWordImpl(key_2).toWrapper());
+                new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
+        contractDetails.delete(new DataWord(key_2).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_3).toWrapper(), new DataWordImpl(val_3).toWrapper());
-        contractDetails.delete(new DataWordImpl(key_4).toWrapper());
+                new DataWord(key_3).toWrapper(), new DataWord(val_3).toWrapper());
+        contractDetails.delete(new DataWord(key_4).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_5).toWrapper(), new DataWordImpl(val_5).toWrapper());
+                new DataWord(key_5).toWrapper(), new DataWord(val_5).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_6).toWrapper(), new DataWordImpl(val_6).toWrapper());
+                new DataWord(key_6).toWrapper(), new DataWord(val_6).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_7).toWrapper(), new DataWordImpl(val_7).toWrapper());
+                new DataWord(key_7).toWrapper(), new DataWord(val_7).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_8).toWrapper(), new DataWordImpl(val_8).toWrapper());
+                new DataWord(key_8).toWrapper(), new DataWord(val_8).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_9).toWrapper(), new DataWordImpl(val_9).toWrapper());
+                new DataWord(key_9).toWrapper(), new DataWord(val_9).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_10).toWrapper(), new DataWordImpl(val_10).toWrapper());
+                new DataWord(key_10).toWrapper(), new DataWord(val_10).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_11).toWrapper(), new DataWordImpl(val_11).toWrapper());
+                new DataWord(key_11).toWrapper(), new DataWord(val_11).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_12).toWrapper(), new DataWordImpl(val_12).toWrapper());
+                new DataWord(key_12).toWrapper(), new DataWord(val_12).toWrapper());
         contractDetails.put(
-                new DataWordImpl(key_13).toWrapper(), new DataWordImpl(val_13).toWrapper());
+                new DataWord(key_13).toWrapper(), new DataWord(val_13).toWrapper());
 
         byte[] data = contractDetails.getEncoded();
 
@@ -207,68 +207,68 @@ public class AionContractDetailsTest {
         assertEquals(
                 ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_1).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_1).toWrapper()).getData()));
 
-        assertNull(contractDetails_.get(new DataWordImpl(key_2).toWrapper()));
+        assertNull(contractDetails_.get(new DataWord(key_2).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_3),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_3).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_3).toWrapper()).getData()));
 
-        assertNull(contractDetails_.get(new DataWordImpl(key_4).toWrapper()));
+        assertNull(contractDetails_.get(new DataWord(key_4).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_5),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_5).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_5).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_6),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_6).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_6).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_7),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_7).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_7).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_8),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_8).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_8).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_9),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_9).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_9).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_10),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_10).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_10).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_11),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_11).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_11).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_12),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_12).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_12).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_13),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWordImpl(key_13).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_13).toWrapper()).getData()));
     }
 
     @Test
     public void testExternalStorageSerialization() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
-        Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
+        Map<DataWord, DataWord> elements = new HashMap<>();
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
@@ -282,8 +282,8 @@ public class AionContractDetailsTest {
         original.externalStorage = true;
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
-            DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
-            DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+            DataWord key = new DataWord(RandomUtils.nextBytes(16));
+            DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
             original.put(key.toWrapper(), wrapValueForPut(value));
@@ -301,23 +301,23 @@ public class AionContractDetailsTest {
         assertTrue(address.equals(deserialized.getAddress()));
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
-        for (DataWordImpl key : elements.keySet()) {
+        for (DataWord key : elements.keySet()) {
             assertEquals(
                     elements.get(key).toWrapper(),
                     wrapValueFromGet(deserialized.get(key.toWrapper())));
         }
 
-        DataWordImpl deletedKey = elements.keySet().iterator().next();
+        DataWord deletedKey = elements.keySet().iterator().next();
 
         deserialized.delete(deletedKey.toWrapper());
-        deserialized.delete(new DataWordImpl(RandomUtils.nextBytes(16)).toWrapper());
+        deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
     }
 
     @Test
     public void testContractStorageSwitch() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
-        Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
+        Map<DataWord, DataWord> elements = new HashMap<>();
 
         int memstoragelimit = 512;
         AionContractDetailsImpl original = new AionContractDetailsImpl(0, memstoragelimit);
@@ -337,8 +337,8 @@ public class AionContractDetailsTest {
 
         // the first 2 insertion use memory storage
         for (int i = 0; i < 2; i++) {
-            DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
-            DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+            DataWord key = new DataWord(RandomUtils.nextBytes(16));
+            DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
             original.put(key.toWrapper(), wrapValueForPut(value));
@@ -349,8 +349,8 @@ public class AionContractDetailsTest {
         assertTrue(!original.externalStorage);
 
         // transfer to external storage since 3rd insert
-        DataWordImpl key3rd = new DataWordImpl(RandomUtils.nextBytes(16));
-        DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+        DataWord key3rd = new DataWord(RandomUtils.nextBytes(16));
+        DataWord value = new DataWord(RandomUtils.nextBytes(16));
         elements.put(key3rd, value);
         original.put(key3rd.toWrapper(), wrapValueForPut(value));
 
@@ -368,23 +368,23 @@ public class AionContractDetailsTest {
         assertEquals(address, deserialized.getAddress());
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
-        for (DataWordImpl key : elements.keySet()) {
+        for (DataWord key : elements.keySet()) {
             assertEquals(
                     elements.get(key).toWrapper(),
                     wrapValueFromGet(deserialized.get(key.toWrapper())));
         }
 
-        DataWordImpl deletedKey = elements.keySet().iterator().next();
+        DataWord deletedKey = elements.keySet().iterator().next();
 
         deserialized.delete(deletedKey.toWrapper());
-        deserialized.delete(new DataWordImpl(RandomUtils.nextBytes(16)).toWrapper());
+        deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
     }
 
     @Test
     public void testExternalStorageTransition() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
-        Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
+        Map<DataWord, DataWord> elements = new HashMap<>();
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
@@ -396,8 +396,8 @@ public class AionContractDetailsTest {
         original.setVmType(InternalVmType.FVM);
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
-            DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
-            DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+            DataWord key = new DataWord(RandomUtils.nextBytes(16));
+            DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
             original.put(key.toWrapper(), wrapValueForPut(value));
@@ -410,8 +410,8 @@ public class AionContractDetailsTest {
 
         // adds keys for in-memory storage limit overflow
         for (int i = 0; i < 10; i++) {
-            DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
-            DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+            DataWord key = new DataWord(RandomUtils.nextBytes(16));
+            DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
 
@@ -423,21 +423,21 @@ public class AionContractDetailsTest {
 
         deserialized = deserialize(deserialized.getEncoded(), externalStorage);
 
-        for (DataWordImpl key : elements.keySet()) {
+        for (DataWord key : elements.keySet()) {
             assertEquals(
                     elements.get(key).toWrapper(),
                     wrapValueFromGet(deserialized.get(key.toWrapper())));
         }
     }
 
-    private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
+    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
         return (value.isZero())
                 ? new ByteArrayWrapper(value.getData())
                 : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 
     private static ByteArrayWrapper wrapValueFromGet(ByteArrayWrapper value) {
-        return new ByteArrayWrapper(new DataWordImpl(value.getData()).getData());
+        return new ByteArrayWrapper(new DataWord(value.getData()).getData());
     }
 
     @Test(expected = IllegalStateException.class)

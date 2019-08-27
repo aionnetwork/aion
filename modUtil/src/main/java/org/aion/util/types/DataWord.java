@@ -1,4 +1,4 @@
-package org.aion.mcf.vm.types;
+package org.aion.util.types;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -6,41 +6,40 @@ import java.util.Arrays;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
  */
-public class DataWordImpl {
+public class DataWord {
 
     public static final BigInteger MAX_VALUE =
             BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 
-    public static final DataWordImpl ZERO = new DataWordImpl(0);
-    public static final DataWordImpl ONE = new DataWordImpl(1);
+    public static final DataWord ZERO = new DataWord(0);
+    public static final DataWord ONE = new DataWord(1);
     public static final int BYTES = 16;
 
     private byte[] data;
 
-    public DataWordImpl() {
+    public DataWord() {
         data = new byte[BYTES];
     }
 
-    public DataWordImpl(int num) {
+    public DataWord(int num) {
         ByteBuffer bb = ByteBuffer.allocate(BYTES);
         bb.position(12);
         bb.putInt(num);
         data = bb.array();
     }
 
-    public DataWordImpl(long num) {
+    public DataWord(long num) {
         ByteBuffer bb = ByteBuffer.allocate(BYTES);
         bb.position(8);
         bb.putLong(num);
         data = bb.array();
     }
 
-    public DataWordImpl(byte[] data) {
+    public DataWord(byte[] data) {
         if (data == null) {
             throw new NullPointerException("Input data");
         } else if (data.length == BYTES) {
@@ -53,7 +52,7 @@ public class DataWordImpl {
         }
     }
 
-    public DataWordImpl(BigInteger num) {
+    public DataWord(BigInteger num) {
         // NOTE: DataWordImpl.value() produces a signed positive BigInteger. The byte array
         // representation of such a number must prepend a zero byte so that this can be decoded
         // correctly. This means that a 16-byte array with a non-zero starting bit will become 17
@@ -76,16 +75,16 @@ public class DataWordImpl {
      */
     private static byte[] removeLargeBigIntegerLeadingZeroByte(BigInteger number) {
         byte[] bytes = number.toByteArray();
-        return ((bytes.length == (DataWordImpl.BYTES + 1)) && (bytes[0] == 0x0))
+        return ((bytes.length == (DataWord.BYTES + 1)) && (bytes[0] == 0x0))
                 ? Arrays.copyOfRange(bytes, 1, bytes.length)
                 : bytes;
     }
 
-    public DataWordImpl(String data) {
+    public DataWord(String data) {
         this(Hex.decode(data));
     }
 
-    public DataWordImpl(ByteArrayWrapper wrapper) {
+    public DataWord(ByteArrayWrapper wrapper) {
         this(wrapper.getData());
     }
 
@@ -142,7 +141,7 @@ public class DataWordImpl {
             return false;
         }
 
-        DataWordImpl dataWord = (DataWordImpl) o;
+        DataWord dataWord = (DataWord) o;
 
         return Arrays.equals(data, dataWord.data);
     }

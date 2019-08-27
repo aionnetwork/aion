@@ -25,8 +25,9 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
@@ -45,7 +46,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
-import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -392,9 +392,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 // assumes only additions can be made in the genesis
                 track.addStorageRow(
                         ContractInfo.TOTAL_CURRENCY.contractAddress,
-                        new DataWordImpl(key.getKey()).toWrapper(),
+                        new DataWord(key.getKey()).toWrapper(),
                         new ByteArrayWrapper(
-                                new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
+                                new DataWord(key.getValue()).getNoLeadZeroesData()));
             }
 
             for (AionAddress key : genesis.getPremine().keySet()) {

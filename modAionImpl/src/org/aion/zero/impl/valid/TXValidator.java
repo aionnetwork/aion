@@ -9,7 +9,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.LogEnum;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
 import org.apache.commons.collections4.map.LRUMap;
@@ -40,7 +40,7 @@ public class TXValidator {
 
     public static boolean isValid0(AionTransaction tx) {
         byte[] check = tx.getNonce();
-        if (check == null || check.length > DataWordImpl.BYTES) {
+        if (check == null || check.length > DataWord.BYTES) {
             LOG.error("invalid tx nonce!");
             return false;
         }
@@ -52,7 +52,7 @@ public class TXValidator {
         }
 
         check = tx.getValue();
-        if (check == null || check.length > DataWordImpl.BYTES) {
+        if (check == null || check.length > DataWord.BYTES) {
             LOG.error("invalid tx value!");
             return false;
         }

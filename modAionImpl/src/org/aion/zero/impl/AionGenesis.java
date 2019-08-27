@@ -9,7 +9,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -351,8 +351,8 @@ public class AionGenesis extends AionBlock {
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 // we assume there are no deletions in the genesis
                 networkBalanceStorage.put(
-                        new DataWordImpl(entry.getKey()).toWrapper(),
-                        wrapValueForPut(new DataWordImpl(entry.getValue())));
+                        new DataWord(entry.getKey()).toWrapper(),
+                        wrapValueForPut(new DataWord(entry.getValue())));
             }
             byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
 
@@ -372,9 +372,9 @@ public class AionGenesis extends AionBlock {
             return worldTrie.getRootHash();
         }
 
-        private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
+        private static ByteArrayWrapper wrapValueForPut(DataWord value) {
             return (value.isZero())
-                    ? DataWordImpl.ZERO.toWrapper()
+                    ? DataWord.ZERO.toWrapper()
                     : new ByteArrayWrapper(value.getNoLeadZeroesData());
         }
 

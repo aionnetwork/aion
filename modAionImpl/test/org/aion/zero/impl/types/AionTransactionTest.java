@@ -10,7 +10,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -66,8 +66,8 @@ public class AionTransactionTest {
         byte[] to = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
-        long nrg = new DataWordImpl(1000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(1000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -92,8 +92,8 @@ public class AionTransactionTest {
         byte[] nonce = BigInteger.ONE.toByteArray();
         byte[] value = BigInteger.ONE.toByteArray();
         byte[] data = RandomUtils.nextBytes(128);
-        long nrg = new DataWordImpl(1000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(1000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
 
         AionTransaction tx = AionTransaction.create(
                 key,

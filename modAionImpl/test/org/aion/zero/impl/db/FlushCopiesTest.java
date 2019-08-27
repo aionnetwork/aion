@@ -10,7 +10,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -86,7 +86,7 @@ public class FlushCopiesTest {
 
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
-        ByteArrayWrapper key = new DataWordImpl(5).toWrapper();
+        ByteArrayWrapper key = new DataWord(5).toWrapper();
         ByteArrayWrapper value = longToWrapped32(13429765314L);
 
         repositoryChild.createAccount(account);
@@ -125,8 +125,8 @@ public class FlushCopiesTest {
 
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
-        ByteArrayWrapper firstKey = new DataWordImpl(5).toWrapper();
         ByteArrayWrapper firstValue = longToWrapped32(13429765314L);
+        ByteArrayWrapper firstKey = new DataWord(5).toWrapper();
 
         firstChild.createAccount(account);
         firstChild.setNonce(account, firstNonce);
@@ -143,7 +143,7 @@ public class FlushCopiesTest {
 
         BigInteger secondNonce = firstNonce.multiply(BigInteger.TWO);
         ByteArrayWrapper secondKey = longToWrapped32(289356);
-        ByteArrayWrapper secondValue = new DataWordImpl(23674).toWrapper();
+        ByteArrayWrapper secondValue = new DataWord(23674).toWrapper();
 
         secondChild.setNonce(account, secondNonce);
         secondChild.addBalance(account, firstBalance);

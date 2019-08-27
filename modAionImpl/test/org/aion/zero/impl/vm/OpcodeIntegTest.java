@@ -41,7 +41,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
@@ -103,7 +103,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("f854bb89"), new DataWordImpl(6).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("f854bb89"), new DataWord(6).getData());
         AionTransaction tx =
                 AionTransaction.create(
                         deployerKey,
@@ -126,18 +126,18 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(12, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
-        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(1).copyOfData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(2).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(3).copyOfData());
-        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(4).copyOfData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(6).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(7).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(8).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(9).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(10).copyOfData());
-        assertArrayEquals(new DataWordImpl(1).getData(), logs.get(11).copyOfData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWord(6).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWord(3).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(7).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(8).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(9).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(10).copyOfData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(11).copyOfData());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("8256cff3"), new DataWordImpl(5).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("8256cff3"), new DataWord(5).getData());
         AionTransaction tx =
                 AionTransaction.create(
                         deployerKey,
@@ -171,14 +171,14 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(1).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(2).copyOfData());
-        assertArrayEquals(new DataWordImpl(3).getData(), logs.get(3).copyOfData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(4).copyOfData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(5).copyOfData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(6).copyOfData());
-        assertArrayEquals(new DataWordImpl(2).getData(), logs.get(7).copyOfData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWord(3).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(7).copyOfData());
     }
 
     @Test
@@ -189,7 +189,7 @@ public class OpcodeIntegTest {
         long nrgPrice = 1;
         BigInteger nonce = BigInteger.ONE;
 
-        byte[] input = ByteUtil.merge(Hex.decode("10462fd0"), new DataWordImpl(7).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("10462fd0"), new DataWord(7).getData());
         AionTransaction tx =
                 AionTransaction.create(
                         deployerKey,
@@ -212,14 +212,14 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<Log> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWordImpl(0).getData(), logs.get(0).copyOfData());
-        assertArrayEquals(new DataWordImpl(7).getData(), logs.get(1).copyOfData());
-        assertArrayEquals(new DataWordImpl(6).getData(), logs.get(2).copyOfData());
-        assertArrayEquals(new DataWordImpl(5).getData(), logs.get(3).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(4).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(5).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(6).copyOfData());
-        assertArrayEquals(new DataWordImpl(4).getData(), logs.get(7).copyOfData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).copyOfData());
+        assertArrayEquals(new DataWord(7).getData(), logs.get(1).copyOfData());
+        assertArrayEquals(new DataWord(6).getData(), logs.get(2).copyOfData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(3).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(4).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(5).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(6).copyOfData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(7).copyOfData());
     }
 
     // ======================================= test CALLCODE =======================================
@@ -238,7 +238,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -320,7 +320,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -366,7 +366,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("5cce9fc2"), E.toByteArray()); // use CALLCODE on E.
-        input = ByteUtil.merge(input, new DataWordImpl(0).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(0).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -412,7 +412,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -493,7 +493,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -541,7 +541,7 @@ public class OpcodeIntegTest {
         BigInteger nonce = BigInteger.TWO;
         byte[] input =
                 ByteUtil.merge(Hex.decode("32817e1d"), E.toByteArray()); // use DELEGATECALL on E.
-        input = ByteUtil.merge(input, new DataWordImpl(n).getData()); // pass in 'n' also.
+        input = ByteUtil.merge(input, new DataWord(n).getData()); // pass in 'n' also.
 
         AionTransaction tx =
                 AionTransaction.create(
@@ -838,8 +838,8 @@ public class OpcodeIntegTest {
                 Arrays.copyOfRange(data, AionAddress.LENGTH * 2, AionAddress.LENGTH * 3),
                 origin.toByteArray());
         assertArrayEquals(
-                Arrays.copyOfRange(data, data.length - DataWordImpl.BYTES, data.length),
-                DataWordImpl.ZERO.getData());
+                Arrays.copyOfRange(data, data.length - DataWord.BYTES, data.length),
+                DataWord.ZERO.getData());
     }
 
     private AionTxExecSummary executeTransaction(

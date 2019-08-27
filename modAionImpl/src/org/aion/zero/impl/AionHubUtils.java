@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Map;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -26,8 +26,8 @@ public class AionHubUtils {
             // assumes only additions are performed in the genesis
             track.addStorageRow(
                     networkBalanceAddress,
-                    new DataWordImpl(addr.getKey()).toWrapper(),
-                    wrapValueForPut(new DataWordImpl(addr.getValue())));
+                    new DataWord(addr.getKey()).toWrapper(),
+                    wrapValueForPut(new DataWord(addr.getValue())));
         }
 
         for (AionAddress addr : genesis.getPremine().keySet()) {
@@ -40,7 +40,7 @@ public class AionHubUtils {
         repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
     }
 
-    private static ByteArrayWrapper wrapValueForPut(DataWordImpl value) {
+    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
         return (value.isZero())
                 ? value.toWrapper()
                 : new ByteArrayWrapper(value.getNoLeadZeroesData());

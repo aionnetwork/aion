@@ -38,7 +38,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
@@ -98,8 +98,8 @@ public class SolidityTypeTest {
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
         byte[] value = BigInteger.ZERO.toByteArray();
-        long nrg = new DataWordImpl(100000L).longValue();
-        long nrgPrice = DataWordImpl.ONE.longValue();
+        long nrg = new DataWord(100000L).longValue();
+        long nrgPrice = DataWord.ONE.longValue();
         return AionTransaction.create(
                 deployerKey,
                 txNonce,
@@ -425,7 +425,7 @@ public class SolidityTypeTest {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
-        byte[] difficulty = new DataWordImpl(0x1000000L).getData();
+        byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
         byte[] extraData = new byte[0];

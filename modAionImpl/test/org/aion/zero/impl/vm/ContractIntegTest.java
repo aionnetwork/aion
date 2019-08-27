@@ -56,7 +56,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -594,8 +594,8 @@ public class ContractIntegTest {
 
         //             ---------- This command will perform addition. ----------
         int num = 53475374;
-        byte[] input = ByteUtil.merge(Hex.decode("f601704f"), new DataWordImpl(num).getData());
-        input = ByteUtil.merge(input, new DataWordImpl(1).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("f601704f"), new DataWord(num).getData());
+        input = ByteUtil.merge(input, new DataWord(1).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -616,11 +616,11 @@ public class ContractIntegTest {
         // Since input takes in uint8 we only want the last byte of num. Output size is well-defined
         // at 128 bits, or 16 bytes.
         int expectedResult = 1111 + (num & 0xFF);
-        assertEquals(expectedResult, new DataWordImpl(summary.getResult()).intValue());
+        assertEquals(expectedResult, new DataWord(summary.getResult()).intValue());
 
         //             --------- This command will perform subtraction. ----------
-        input = ByteUtil.merge(Hex.decode("f601704f"), new DataWordImpl(num).getData());
-        input = ByteUtil.merge(input, new DataWordImpl(0).getData());
+        input = ByteUtil.merge(Hex.decode("f601704f"), new DataWord(num).getData());
+        input = ByteUtil.merge(input, new DataWord(0).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
                 AionTransaction.create(
@@ -642,7 +642,7 @@ public class ContractIntegTest {
         // Since input takes in uint8 we only want the last byte of num. Output size is well-defined
         // at 128 bits, or 16 bytes.
         expectedResult = 1111 - (num & 0xFF);
-        assertEquals(expectedResult, new DataWordImpl(summary.getResult()).intValue());
+        assertEquals(expectedResult, new DataWord(summary.getResult()).intValue());
     }
 
     @Test
@@ -678,7 +678,7 @@ public class ContractIntegTest {
         repo = blockchain.getRepository().startTracking();
 
         // Contract has no funds, try to withdraw just 1 coin.
-        byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWordImpl(1).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWord(1).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -735,7 +735,7 @@ public class ContractIntegTest {
         BigInteger deployerBalance = repo.getBalance(deployer);
 
         // Contract has 2^32 coins, let's withdraw them.
-        byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWordImpl(value).getData());
+        byte[] input = ByteUtil.merge(Hex.decode("9424bba3"), new DataWord(value).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -796,7 +796,7 @@ public class ContractIntegTest {
 
         // Contract has 2^13 coins, let's withdraw them.
         byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
-        input = ByteUtil.merge(input, new DataWordImpl(value).getData());
+        input = ByteUtil.merge(input, new DataWord(value).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -858,7 +858,7 @@ public class ContractIntegTest {
 
         // Contract has 2^13 coins, let's withdraw them.
         byte[] input = ByteUtil.merge(Hex.decode("8c50612c"), recipient.toByteArray());
-        input = ByteUtil.merge(input, new DataWordImpl(value).getData());
+        input = ByteUtil.merge(input, new DataWord(value).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -970,7 +970,7 @@ public class ContractIntegTest {
 
         value = BigInteger.TWO.pow(20);
         input = ByteUtil.merge(Hex.decode("57a60e6b"), recipient.toByteArray());
-        input = ByteUtil.merge(input, new DataWordImpl(value).getData());
+        input = ByteUtil.merge(input, new DataWord(value).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
                 AionTransaction.create(
@@ -1031,7 +1031,7 @@ public class ContractIntegTest {
         // Note that 128 == FvmConstants.MAX_CALL_DEPTH
         int numRecurses = 127;
         byte[] input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
-        input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
+        input = ByteUtil.merge(input, new DataWord(numRecurses + 1).getData());
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -1063,7 +1063,7 @@ public class ContractIntegTest {
         // Note that 128 == FvmConstants.MAX_CALL_DEPTH
         numRecurses = 128;
         input = ByteUtil.merge(Hex.decode("2d7df21a"), contract.toByteArray());
-        input = ByteUtil.merge(input, new DataWordImpl(numRecurses + 1).getData());
+        input = ByteUtil.merge(input, new DataWord(numRecurses + 1).getData());
         nonce = nonce.add(BigInteger.ONE);
         tx =
                 AionTransaction.create(
@@ -1917,16 +1917,16 @@ public class ContractIntegTest {
      */
     private byte[] extractOutput(byte[] rawOutput) {
         int headerLen =
-                new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
+                new DataWord(Arrays.copyOfRange(rawOutput, 0, DataWord.BYTES)).intValue();
         int outputLen =
-                new DataWordImpl(
+                new DataWord(
                                 Arrays.copyOfRange(
                                         rawOutput,
-                                        (DataWordImpl.BYTES * 2) - headerLen,
-                                        DataWordImpl.BYTES * 2))
+                                        (DataWord.BYTES * 2) - headerLen,
+                                        DataWord.BYTES * 2))
                         .intValue();
         byte[] output = new byte[outputLen];
-        System.arraycopy(rawOutput, DataWordImpl.BYTES * 2, output, 0, outputLen);
+        System.arraycopy(rawOutput, DataWord.BYTES * 2, output, 0, outputLen);
         return output;
     }
 

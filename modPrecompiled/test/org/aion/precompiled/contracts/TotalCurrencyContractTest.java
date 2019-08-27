@@ -15,8 +15,8 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.ExternalStateForTests;
@@ -88,7 +88,7 @@ public class TotalCurrencyContractTest {
      */
     private byte[] constructUpdateInput(byte chainID, byte signum) {
         ByteBuffer buffer = ByteBuffer.allocate(18);
-        buffer.put(chainID).put(signum).put(new DataWordImpl(AMT.toByteArray()).getData());
+        buffer.put(chainID).put(signum).put(new DataWord(AMT.toByteArray()).getData());
 
         byte[] payload = buffer.array();
         buffer = ByteBuffer.allocate(18 + 96);

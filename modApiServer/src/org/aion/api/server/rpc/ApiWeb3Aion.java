@@ -64,7 +64,7 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -480,10 +480,10 @@ public class ApiWeb3Aion extends ApiAion {
             bnOrId = _bnOrId + "";
         }
 
-        DataWordImpl key;
+        DataWord key;
 
         try {
-            key = new DataWordImpl(ByteUtil.hexStringToBytes(_index));
+            key = new DataWord(ByteUtil.hexStringToBytes(_index));
         } catch (Exception e) {
             // invalid key
             LOG.debug("eth_getStorageAt: invalid storageIndex. Must be <= 16 bytes.");

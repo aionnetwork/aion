@@ -17,8 +17,8 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.trie.TrieNodeResult;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
@@ -118,15 +118,15 @@ public class AionRepositoryImplTest {
         byte[] value = HashUtil.blake128("world".getBytes());
         track.addStorageRow(
                 defaultAccount,
-                new DataWordImpl(key).toWrapper(),
-                new DataWordImpl(value).toWrapper());
+                new DataWord(key).toWrapper(),
+                new DataWord(value).toWrapper());
         track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         track.flush();
 
         byte[] retrievedValue =
                 repository
-                        .getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper())
+                        .getStorageValue(defaultAccount, new DataWord(key).toWrapper())
                         .getNoLeadZeroesData();
         assertThat(retrievedValue).isEqualTo(value);
 
@@ -150,8 +150,8 @@ public class AionRepositoryImplTest {
         byte[] value = HashUtil.blake128("world".getBytes());
         track.addStorageRow(
                 defaultAccount,
-                new DataWordImpl(key).toWrapper(),
-                new DataWordImpl(value).toWrapper());
+                new DataWord(key).toWrapper(),
+                new DataWord(value).toWrapper());
         track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         // does not call parent's flush
@@ -167,8 +167,8 @@ public class AionRepositoryImplTest {
 
         AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
         details.decode(serializedDetails.get());
-        assertThat(details.get(new DataWordImpl(key).toWrapper()))
-                .isEqualTo(new DataWordImpl(value).toWrapper());
+        assertThat(details.get(new DataWord(key).toWrapper()))
+                .isEqualTo(new DataWord(value).toWrapper());
     }
 
     /** Repo track test suite */
@@ -192,18 +192,18 @@ public class AionRepositoryImplTest {
 
         repoTrack.addStorageRow(
                 defaultAccount,
-                new DataWordImpl(key).toWrapper(),
-                new DataWordImpl(value).toWrapper());
+                new DataWord(key).toWrapper(),
+                new DataWord(value).toWrapper());
         repoTrack.saveVmType(defaultAccount, InternalVmType.FVM);
 
         ByteArrayWrapper retrievedStorageValue =
-                repoTrack.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper());
-        assertThat(retrievedStorageValue).isEqualTo(new DataWordImpl(value).toWrapper());
+                repoTrack.getStorageValue(defaultAccount, new DataWord(key).toWrapper());
+        assertThat(retrievedStorageValue).isEqualTo(new DataWord(value).toWrapper());
 
         // commit changes, then check that the root has updated
         repoTrack.flush();
 
-        assertThat(repository.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper()))
+        assertThat(repository.getStorageValue(defaultAccount, new DataWord(key).toWrapper()))
                 .isEqualTo(retrievedStorageValue);
 
         final byte[] newRoot = repository.getRoot();

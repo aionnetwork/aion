@@ -12,7 +12,7 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
@@ -66,7 +66,7 @@ public class AionRepositoryCacheTest {
         assertNull(
                 cache.getStorageValue(
                         getNewAddress(),
-                        new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper()));
+                        new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper()));
     }
 
     @Test
@@ -97,20 +97,20 @@ public class AionRepositoryCacheTest {
     public void testGetStorageValueWithSingleZeroKey() {
         AionAddress address = getNewAddress();
         ByteArrayWrapper value =
-                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
-        cache.addStorageRow(address, DataWordImpl.ZERO.toWrapper(), value);
-        assertEquals(value, cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
+                new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        cache.addStorageRow(address, DataWord.ZERO.toWrapper(), value);
+        assertEquals(value, cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
 
         value = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
-        cache.addStorageRow(address, DataWordImpl.ZERO.toWrapper(), value);
-        assertEquals(value, cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
+        cache.addStorageRow(address, DataWord.ZERO.toWrapper(), value);
+        assertEquals(value, cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
     }
 
     @Test
     public void testGetStorageValueWithDoubleZeroKey() {
         AionAddress address = getNewAddress();
         ByteArrayWrapper value =
-                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+                new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
         cache.addStorageRow(address, ZERO_WRAPPED_32, value);
         assertEquals(value, cache.getStorageValue(address, ZERO_WRAPPED_32));
 
@@ -124,12 +124,12 @@ public class AionRepositoryCacheTest {
         AionAddress address = getNewAddress();
 
         // single-single
-        cache.removeStorageRow(address, DataWordImpl.ZERO.toWrapper());
-        assertNull(cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
+        cache.removeStorageRow(address, DataWord.ZERO.toWrapper());
+        assertNull(cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
 
         // single-double
-        cache.removeStorageRow(address, DataWordImpl.ZERO.toWrapper());
-        assertNull(cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
+        cache.removeStorageRow(address, DataWord.ZERO.toWrapper());
+        assertNull(cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
 
         // double-single
         cache.removeStorageRow(address, ZERO_WRAPPED_32);
@@ -144,7 +144,7 @@ public class AionRepositoryCacheTest {
     public void testOverwriteValueWithSingleZero() {
         AionAddress address = getNewAddress();
         ByteArrayWrapper key =
-                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+                new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
         ByteArrayWrapper value = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
 
         cache.addStorageRow(address, key, value);
@@ -159,7 +159,7 @@ public class AionRepositoryCacheTest {
         ByteArrayWrapper key = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
 
         ByteArrayWrapper value =
-                new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+                new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
         cache.addStorageRow(address, key, value);
         assertEquals(value, cache.getStorageValue(address, key));
         cache.removeStorageRow(address, key);

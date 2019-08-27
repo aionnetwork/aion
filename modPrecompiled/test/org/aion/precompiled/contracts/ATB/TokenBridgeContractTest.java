@@ -19,8 +19,8 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.precompiled.ExternalStateForTests;
@@ -2134,7 +2134,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult =
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertTrue(transferResult.getStatus().isSuccess());
-        assertThat(transferResult.getReturnData()).isEqualTo(DataWordImpl.ONE.getData());
+        assertThat(transferResult.getReturnData()).isEqualTo(DataWord.ONE.getData());
 
         // lock the ring
         this.connector.setRingLocked(false);
@@ -2146,7 +2146,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult2 =
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertTrue(transferResult2.getStatus().isSuccess());
-        assertThat(transferResult2.getReturnData()).isEqualTo(DataWordImpl.ZERO.getData());
+        assertThat(transferResult2.getReturnData()).isEqualTo(DataWord.ZERO.getData());
     }
 
     @Test
@@ -2180,7 +2180,7 @@ public class TokenBridgeContractTest {
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertTrue(transferResult.getStatus().isSuccess());
         assertThat(transferResult.getReturnData())
-                .isEqualTo(new DataWordImpl(new BigInteger("3")).getData());
+                .isEqualTo(new DataWord(new BigInteger("3")).getData());
 
         // explicitly set the min threshold to 5
         this.connector.setMinThresh(5);
@@ -2193,7 +2193,7 @@ public class TokenBridgeContractTest {
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertTrue(transferResult2.getStatus().isSuccess());
         assertThat(transferResult2.getReturnData())
-                .isEqualTo(new DataWordImpl(new BigInteger("5")).getData());
+                .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
         // try setting threshold greater than number of validator members
         this.connector.setMinThresh(10);
@@ -2206,7 +2206,7 @@ public class TokenBridgeContractTest {
                 this.contract.execute(callPayload3, DEFAULT_NRG);
         assertTrue(transferResult3.getStatus().isSuccess());
         assertThat(transferResult3.getReturnData())
-                .isEqualTo(new DataWordImpl(new BigInteger("10")).getData());
+                .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
 
     @Test
@@ -2240,7 +2240,7 @@ public class TokenBridgeContractTest {
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertTrue(transferResult.getStatus().isSuccess());
         assertThat(transferResult.getReturnData())
-                .isEqualTo(new DataWordImpl(new BigInteger("5")).getData());
+                .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
         // explicitly set the member count to 10
         this.connector.setMemberCount(10);
@@ -2253,7 +2253,7 @@ public class TokenBridgeContractTest {
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertTrue(transferResult2.getStatus().isSuccess());
         assertThat(transferResult2.getReturnData())
-                .isEqualTo(new DataWordImpl(new BigInteger("10")).getData());
+                .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
 
     @Test

@@ -40,7 +40,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
@@ -181,7 +181,7 @@ public class InternalTransactionTest {
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
                                 addressB.toByteArray(),
-                                new DataWordImpl(80_000).getData()),
+                                new DataWord(80_000).getData()),
                         1_000_000L,
                         1L,
                         TransactionTypes.DEFAULT);
@@ -209,7 +209,7 @@ public class InternalTransactionTest {
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
                                 addressB.toByteArray(),
-                                new DataWordImpl(20_000).getData()),
+                                new DataWord(20_000).getData()),
                         1_000_000L,
                         1L,
                         TransactionTypes.DEFAULT);
@@ -284,7 +284,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0xec779964"),
-                                new DataWordImpl(2).getData()),
+                                new DataWord(2).getData()),
                         1_000_000L,
                         1L,
                         TransactionTypes.DEFAULT);

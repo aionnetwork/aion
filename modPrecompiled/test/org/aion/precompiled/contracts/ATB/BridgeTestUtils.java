@@ -3,7 +3,7 @@ package org.aion.precompiled.contracts.ATB;
 import java.util.ArrayList;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
@@ -18,9 +18,9 @@ public class BridgeTestUtils {
         final AionAddress address = to;
         final AionAddress origin = from;
         final AionAddress caller = origin;
-        final DataWordImpl nrgPrice = DataWordImpl.ONE;
+        final DataWord nrgPrice = DataWord.ONE;
         final long nrgLimit = 21000L;
-        final DataWordImpl callValue = DataWordImpl.ZERO;
+        final DataWord callValue = DataWord.ZERO;
         final byte[] callData = txData;
         final int callDepth = 1;
         final int flag = 0;
@@ -31,7 +31,7 @@ public class BridgeTestUtils {
         long blockNumber = 0;
         long blockTimestamp = 0;
         long blockNrgLimit = 0;
-        DataWordImpl blockDifficulty = DataWordImpl.ZERO;
+        DataWord blockDifficulty = DataWord.ZERO;
 
         return new PrecompiledTransactionContext(
                 address,

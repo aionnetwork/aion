@@ -44,7 +44,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -237,7 +237,7 @@ public class Benchmark {
             assertFalse(summary.isFailed());
 
             assertEquals(
-                    1, new DataWordImpl(summary.getReceipt().getTransactionOutput()).longValue());
+                    1, new DataWord(summary.getReceipt().getTransactionOutput()).longValue());
         }
     }
 
@@ -264,7 +264,7 @@ public class Benchmark {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
-        byte[] difficulty = new DataWordImpl(0x1000000L).getData();
+        byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
         byte[] extraData = new byte[0];

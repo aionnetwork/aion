@@ -40,7 +40,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BlockCachingContext;
@@ -335,13 +335,13 @@ public class TransactionExecutorTest {
     private byte[] extractActualOutput(byte[] rawOutput) {
         // I'm guessing: first data word is the number of bytes that follows. Then those following
         // bytes denote the size of the output, which follows these last bytes.
-        int len = new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
+        int len = new DataWord(Arrays.copyOfRange(rawOutput, 0, DataWord.BYTES)).intValue();
         byte[] outputLen = new byte[len];
-        System.arraycopy(rawOutput, DataWordImpl.BYTES, outputLen, 0, len);
+        System.arraycopy(rawOutput, DataWord.BYTES, outputLen, 0, len);
         int outputSize = new BigInteger(outputLen).intValue();
 
         byte[] out = new byte[outputSize];
-        System.arraycopy(rawOutput, DataWordImpl.BYTES + len, out, 0, outputSize);
+        System.arraycopy(rawOutput, DataWord.BYTES + len, out, 0, outputSize);
         return out;
     }
 

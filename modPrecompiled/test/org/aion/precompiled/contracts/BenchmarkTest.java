@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.type.PrecompiledContract;
@@ -26,7 +26,7 @@ public class BenchmarkTest {
     private byte[] txHash, callData;
     private AionAddress origin, caller, blockCoinbase;
     private long blockNumber, blockTimestamp, blockNrgLimit, nrgLimit;
-    private DataWordImpl blockDifficulty, nrgPrice, callValue;
+    private DataWord blockDifficulty, nrgPrice, callValue;
     private int depth, kind, flags;
 
     private static int WARMUP = 2000;
@@ -58,11 +58,11 @@ public class BenchmarkTest {
         blockNumber = 2000001;
         blockTimestamp = System.currentTimeMillis() / 1000;
         blockNrgLimit = 5000000;
-        blockDifficulty = new DataWordImpl(0x100000000L);
+        blockDifficulty = new DataWord(0x100000000L);
 
-        nrgPrice = DataWordImpl.ONE;
+        nrgPrice = DataWord.ONE;
         nrgLimit = 20000;
-        callValue = DataWordImpl.ZERO;
+        callValue = DataWord.ZERO;
         callData = new byte[0];
 
         depth = 0;

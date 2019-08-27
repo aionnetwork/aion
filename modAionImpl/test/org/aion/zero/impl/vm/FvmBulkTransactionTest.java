@@ -14,7 +14,7 @@ import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -193,7 +193,7 @@ public class FvmBulkTransactionTest {
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
-        return new DataWordImpl(summary.getReceipts().get(0).getTransactionOutput()).intValue();
+        return new DataWord(summary.getReceipts().get(0).getTransactionOutput()).intValue();
     }
 
     private BigInteger getNonce(AionAddress address) {
