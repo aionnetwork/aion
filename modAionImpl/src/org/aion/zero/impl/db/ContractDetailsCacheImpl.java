@@ -10,6 +10,7 @@ import java.util.Objects;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
+import org.aion.zero.impl.trie.Node;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;

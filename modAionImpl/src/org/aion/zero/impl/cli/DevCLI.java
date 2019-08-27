@@ -4,7 +4,7 @@ import java.io.PrintStream;
 import java.util.Optional;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.db.DBUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;

@@ -22,24 +22,27 @@ public class ApiWeb3AionTest {
 
     private ApiWeb3Aion web3Api;
     private AionImpl impl;
+    private AccountManager accountManager;
 
     @Before
     public void setup() {
         impl = AionImpl.inst();
         web3Api = new ApiWeb3Aion(impl);
+        accountManager = AccountManager.inst();
         LongLivedAvm.createAndStartLongLivedAvm();
     }
 
     @After
     public void tearDown() {
         LongLivedAvm.destroy();
+        accountManager.removeAllAccounts();
     }
 
     @Test
     public void testEthSignTransaction() {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         AionAddress toAddr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
@@ -88,7 +91,7 @@ public class ApiWeb3AionTest {
     public void testEthSignTransactionAddressParamIsNull() {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         AionAddress toAddr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 

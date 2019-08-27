@@ -6,8 +6,7 @@ import java.util.Map;
 
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.slf4j.Logger;
 
 /**

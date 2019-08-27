@@ -17,7 +17,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
 import org.aion.vm.TransactionTypeRule;
 import org.aion.vm.LongLivedAvm;
-import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;

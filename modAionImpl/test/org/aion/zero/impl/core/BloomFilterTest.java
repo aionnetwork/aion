@@ -7,11 +7,12 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
+import org.aion.zero.impl.blockchain.BlockchainIntegrationTest;
 import org.junit.Test;
 
 /**
  * Very basic bloom filter tests, for integration tests, eventually look for them in {@link
- * org.aion.zero.impl.BlockchainIntegrationTest}
+ * BlockchainIntegrationTest}
  *
  * <p>TODO: implement integration tests
  */

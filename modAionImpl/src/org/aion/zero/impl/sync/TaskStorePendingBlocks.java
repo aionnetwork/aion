@@ -3,9 +3,8 @@ package org.aion.zero.impl.sync;
 import java.util.List;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.sync.statistics.BlockType;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**

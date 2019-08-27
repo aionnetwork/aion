@@ -58,7 +58,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;

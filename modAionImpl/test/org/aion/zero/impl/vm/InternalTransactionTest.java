@@ -49,7 +49,7 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
-import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;

@@ -18,12 +18,11 @@ import org.aion.p2p.impl1.P2pMgr;
 import org.aion.rlp.RLP;
 import org.aion.util.TestResources;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 import org.slf4j.Logger;
 

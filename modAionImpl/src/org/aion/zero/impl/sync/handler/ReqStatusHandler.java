@@ -3,15 +3,14 @@ package org.aion.zero.impl.sync.handler;
 import java.math.BigInteger;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.zero.impl.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
-import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResStatus;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**

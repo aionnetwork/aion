@@ -19,7 +19,7 @@ import junitparams.Parameters;
 import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.rlp.RLP;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.ResponseTrieData;
 import org.junit.Test;
 import org.junit.runner.RunWith;

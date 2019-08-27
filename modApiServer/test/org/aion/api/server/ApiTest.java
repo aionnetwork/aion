@@ -62,6 +62,7 @@ public class ApiTest {
 
     private ApiImpl api;
     private long testStartTime;
+    private AccountManager accountManager = AccountManager.inst();
 
     @Before
     public void setup() {
@@ -84,6 +85,7 @@ public class ApiTest {
 
     @After
     public void tearDown() {
+        accountManager.removeAllAccounts();
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
@@ -125,7 +127,7 @@ public class ApiTest {
 
         addr = Keystore.create("testPwd");
         assertEquals(
-                AccountManager.inst().getKey(AddressUtils.wrapAddress(addr)),
+                accountManager.getKey(AddressUtils.wrapAddress(addr)),
                 api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));

@@ -22,6 +22,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
+import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.SecureTrie;

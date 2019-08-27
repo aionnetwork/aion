@@ -8,7 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
-import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.zero.impl.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;

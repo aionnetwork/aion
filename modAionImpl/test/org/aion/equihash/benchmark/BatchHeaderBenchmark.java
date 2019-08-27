@@ -4,7 +4,7 @@
 // import org.aion.base.util.ByteUtil;
 // import org.aion.equihash.EquiUtils;
 // import org.aion.equihash.OptimizedEquiValidator;
-// import org.aion.mcf.valid.BlockHeaderValidator;
+// import org.aion.zero.impl.valid.BlockHeaderValidator;
 // import org.aion.zero.impl.AionBlockchainImpl;
 // import org.aion.zero.impl.blockchain.ChainConfiguration;
 // import org.aion.zero.impl.types.AionBlock;

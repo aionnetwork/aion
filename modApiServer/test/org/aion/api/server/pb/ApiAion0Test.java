@@ -43,6 +43,7 @@ public class ApiAion0Test {
 
     private byte[] msg, socketId, hash, rsp;
     private long testStartTime;
+    private AccountManager accountManager = AccountManager.inst();
 
     private ApiAion0 api;
 
@@ -126,6 +127,7 @@ public class ApiAion0Test {
     @After
     public void tearDown() {
         LongLivedAvm.destroy();
+        accountManager.removeAllAccounts();
 
         api.shutDown();
         rsp = null;
@@ -237,7 +239,7 @@ public class ApiAion0Test {
     @Test
     public void testProcessUnlockAccount() {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_unlockAccount reqBody =
                 Message.req_unlockAccount
@@ -268,7 +270,7 @@ public class ApiAion0Test {
     public void testProcessGetBalance() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getBalance reqBody =
                 Message.req_getBalance
@@ -300,7 +302,7 @@ public class ApiAion0Test {
     public void testProcessGetBlockReward() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getBlockReward reqBody =
                 Message.req_getBlockReward.newBuilder().setBlockNumber(1000000L).build();
@@ -331,7 +333,7 @@ public class ApiAion0Test {
     public void testProcessGetNonce() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getNonce reqBody =
                 Message.req_getNonce
@@ -440,7 +442,7 @@ public class ApiAion0Test {
     public void testProcessGetCode() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getCode reqBody =
                 Message.req_getCode
@@ -517,7 +519,7 @@ public class ApiAion0Test {
     public void testProcessCall() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_call reqBody =
                 Message.req_call
@@ -1084,10 +1086,10 @@ public class ApiAion0Test {
     @Test
     public void testProcessExportAccounts() throws Exception {
         AionAddress addr1 = AddressUtils.wrapAddress(Keystore.create("testPwd1"));
-        AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
+        accountManager.unlockAccount(addr1, "testPwd1", 50000);
 
         AionAddress addr2 = AddressUtils.wrapAddress(Keystore.create("testPwd2"));
-        AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
+        accountManager.unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_Key tkey1 =
                 Message.t_Key
@@ -1164,10 +1166,10 @@ public class ApiAion0Test {
     @Test
     public void testProcessEventRegister() throws Exception {
         AionAddress addr1 = AddressUtils.wrapAddress(Keystore.create("testPwd1"));
-        AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
+        accountManager.unlockAccount(addr1, "testPwd1", 50000);
 
         AionAddress addr2 = AddressUtils.wrapAddress(Keystore.create("testPwd2"));
-        AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
+        accountManager.unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_FilterCt fil1 =
                 Message.t_FilterCt
@@ -1369,7 +1371,7 @@ public class ApiAion0Test {
     @Test
     public void testProcessAccountDetails() throws Exception {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        accountManager.unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getAccountDetailsByAddressList reqBody =
                 Message.req_getAccountDetailsByAddressList

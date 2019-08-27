@@ -13,7 +13,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;

@@ -10,4 +10,5 @@ module aion.util {
     exports org.aion.util.biginteger;
     exports org.aion.util.map;
     exports org.aion.util.types;
+    exports org.aion.util;
 }

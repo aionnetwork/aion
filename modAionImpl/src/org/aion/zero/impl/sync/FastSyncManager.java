@@ -22,7 +22,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.aion.zero.impl.types.AionBlock;

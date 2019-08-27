@@ -14,8 +14,7 @@ import org.aion.mcf.config.StatsType;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.slf4j.Logger;
 
 /**

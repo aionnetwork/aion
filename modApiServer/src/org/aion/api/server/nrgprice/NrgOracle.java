@@ -4,7 +4,7 @@ import org.aion.api.server.nrgprice.strategy.NrgBlockPrice;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.IPowChain;
+import org.aion.zero.impl.blockchain.IPowChain;
 import org.slf4j.Logger;
 
 /**

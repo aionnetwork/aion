@@ -5,9 +5,7 @@ import java.util.Optional;
 import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.db.Repository;
-import org.aion.zero.impl.AionHub;
 import org.aion.mcf.types.AionTxReceipt;
 
 /** Aion chain interface. */

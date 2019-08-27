@@ -10,10 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.vm.types.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
+import org.aion.util.InternalTransactionUtil;
 
 public class AionTxExecSummary {
 

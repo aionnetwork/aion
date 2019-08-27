@@ -35,6 +35,10 @@ public class AccountManager {
         return Holder.INSTANCE;
     }
 
+    public void removeAllAccounts() {
+        accounts.clear();
+    }
+
     // Retrieve ECKey from active accounts list from manager perspective
     // !important method. use in careful
     // Can use this method as check if unlocked

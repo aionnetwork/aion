@@ -10,11 +10,10 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.V1Constants;
 import org.aion.p2p.Ver;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**

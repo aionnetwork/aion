@@ -10,7 +10,7 @@ import org.aion.mcf.vm.types.LogUtility;
 import org.aion.types.Log;
 import org.aion.zero.impl.blockchain.BlockSummary;
 import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.mcf.types.AionTxReceipt;

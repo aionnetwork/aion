@@ -57,6 +57,7 @@ public class AccountManagerTest {
 
     @AfterClass
     public static void cleanClass() {
+        accountManager.removeAllAccounts();
         // remove the files created
         cleanFiles();
     }
