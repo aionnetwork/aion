@@ -12,7 +12,6 @@ import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.tx.TxExecSummary;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;
@@ -177,7 +176,7 @@ public final class FvmTransactionExecutor {
 
     private static void refundSender(
             RepositoryCache repository,
-            TxExecSummary summary,
+            AionTxExecSummary summary,
             AionTransaction transaction,
             TransactionResult result) {
 
@@ -188,7 +187,7 @@ public final class FvmTransactionExecutor {
     }
 
     private static void payMiner(
-            RepositoryCache repository, AionAddress miner, TxExecSummary summary) {
+            RepositoryCache repository, AionAddress miner, AionTxExecSummary summary) {
         repository.addBalance(miner, summary.getFee());
     }
 

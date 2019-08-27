@@ -6,7 +6,6 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.tx.TxExecSummary;
 import org.aion.precompiled.type.ContractExecutor;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledWrappedTransactionResult;
@@ -99,7 +98,7 @@ public final class PrecompiledTransactionExecutor {
 
     private static void refundSender(
             RepositoryCache repository,
-            TxExecSummary summary,
+            AionTxExecSummary summary,
             AionTransaction transaction,
             TransactionResult result) {
 
@@ -110,7 +109,7 @@ public final class PrecompiledTransactionExecutor {
     }
 
     private static void payMiner(
-            RepositoryCache repository, AionAddress blockCoinbase, TxExecSummary summary) {
+            RepositoryCache repository, AionAddress blockCoinbase, AionTxExecSummary summary) {
         repository.addBalance(blockCoinbase, summary.getFee());
     }
 

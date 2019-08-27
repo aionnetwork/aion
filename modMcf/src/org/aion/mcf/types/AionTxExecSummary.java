@@ -10,13 +10,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.vm.types.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 
-public class AionTxExecSummary implements TxExecSummary {
+public class AionTxExecSummary {
 
     /**
      * The receipt associated with {@link AionTransaction} that indicates the results of the
@@ -112,11 +111,6 @@ public class AionTxExecSummary implements TxExecSummary {
 
     public static Builder builderFor(AionTxReceipt receipt) {
         return new Builder(receipt);
-    }
-
-    @Override
-    public Object getBuilder(AionTxReceipt receipt) {
-        return builderFor(receipt);
     }
 
     /**
