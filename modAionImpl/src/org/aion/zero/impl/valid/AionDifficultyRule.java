@@ -6,17 +6,16 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
 
 /** Checks block's difficulty against calculated difficulty value */
 public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
 
     private IDifficultyCalculator diffCalc;
 
-    public AionDifficultyRule(IChainCfg<AionBlock> configuration) {
+    public AionDifficultyRule(ChainConfiguration configuration) {
         this.diffCalc = configuration.getDifficultyCalculator();
     }
 

@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.aion.base.AionTransaction;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
 import org.aion.mcf.valid.BlockHeaderValidator;
@@ -19,7 +18,6 @@ import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
@@ -35,14 +33,12 @@ import org.aion.zero.impl.valid.EquihashSolutionRule;
  *
  * @author yao
  */
-public class ChainConfiguration implements IChainCfg<AionBlock> {
+public class ChainConfiguration {
 
     protected BlockConstants constants;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
-
-    protected AionAddress tokenBridgingOwnerAddress;
 
     public ChainConfiguration(final Long monetaryUpdateBlkNum, final BigInteger initialSupply) {
         this(new BlockConstants(), monetaryUpdateBlkNum, initialSupply);
@@ -78,26 +74,14 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
     public IBlockConstants getConstants() {
         return constants;
     }
-
-    public IBlockConstants getCommonConstants() {
-        return getConstants();
-    }
-
-    public boolean acceptTransactionSignature(AionTransaction tx) {
-        return true;
-    }
-
-    @Override
     public IDifficultyCalculator getDifficultyCalculator() {
         return difficultyCalculatorAdapter;
     }
 
-    @Override
     public IRewardsCalculator getRewardsCalculator() {
         return rewardsCalculatorAdapter;
     }
 
-    /** @return */
     protected OptimizedEquiValidator getEquihashValidator() {
         if (this.equiValidator == null) {
             this.equiValidator = new OptimizedEquiValidator(CfgAion.getN(), CfgAion.getK());
@@ -105,7 +89,6 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
         return this.equiValidator;
     }
 
-    @Override
     public BlockHeaderValidator createBlockHeaderValidator() {
         return new BlockHeaderValidator(
                 Arrays.asList(
@@ -116,7 +99,6 @@ public class ChainConfiguration implements IChainCfg<AionBlock> {
                         new AionHeaderVersionRule()));
     }
 
-    @Override
     public ParentBlockHeaderValidator createParentHeaderValidator() {
         return new ParentBlockHeaderValidator(
                 Arrays.asList(
