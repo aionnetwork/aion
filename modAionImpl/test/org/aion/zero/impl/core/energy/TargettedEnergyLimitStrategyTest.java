@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.valid.EnergyLimitRule;
@@ -39,7 +39,7 @@ public class TargettedEnergyLimitStrategyTest {
         when(parentHeader.getEnergyLimit()).thenReturn(parentEnergy);
         when(header.getEnergyLimit()).thenReturn(energy);
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         assertThat(rule.validate(header, parentHeader, errors)).isTrue();
         assertThat(errors).isEmpty();

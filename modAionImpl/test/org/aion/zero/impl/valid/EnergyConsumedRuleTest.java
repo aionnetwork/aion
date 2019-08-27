@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class EnergyConsumedRuleTest {
         when(mockHeader.getEnergyLimit()).thenReturn(upperBound);
 
         EnergyConsumedRule rule = new EnergyConsumedRule();
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         boolean ret = rule.validate(mockHeader, errors);
         assertThat(ret).isTrue();
@@ -49,7 +49,7 @@ public class EnergyConsumedRuleTest {
 
         when(mockHeader.getEnergyConsumed()).thenReturn(energyConsumed);
         when(mockHeader.getEnergyLimit()).thenReturn(upperBound);
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         EnergyConsumedRule rule = new EnergyConsumedRule();
         boolean ret = rule.validate(mockHeader, errors);

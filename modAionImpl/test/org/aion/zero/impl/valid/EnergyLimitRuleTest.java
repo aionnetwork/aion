@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -31,7 +31,7 @@ public class EnergyLimitRuleTest {
         A0BlockHeader upperCurrentBlock =
                 new A0BlockHeader.Builder().withEnergyLimit(INITIAL_VAL + boundShiftLimit).build();
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         // upper bound
         boolean res = rule.validate(upperCurrentBlock, parentHeader, errors);
@@ -77,7 +77,7 @@ public class EnergyLimitRuleTest {
 
         A0BlockHeader currentHeader = new A0BlockHeader.Builder().withEnergyLimit(1l).build();
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         EnergyLimitRule rule =
                 new EnergyLimitRule(

@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.blockchain.ChainConfiguration;

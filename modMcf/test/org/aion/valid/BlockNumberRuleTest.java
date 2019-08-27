@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.LinkedList;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.mcf.valid.BlockNumberRule;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class BlockNumberRuleTest {
         // define return value for method getNumber()
         when(mockChildBH.getNumber()).thenReturn(661988L);
         when(mockParentBH.getNumber()).thenReturn(661987L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);
@@ -55,7 +55,7 @@ public class BlockNumberRuleTest {
         // define return value for method getNumber()
         when(mockChildBH.getNumber()).thenReturn(661987L);
         when(mockParentBH.getNumber()).thenReturn(661988L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);
@@ -73,7 +73,7 @@ public class BlockNumberRuleTest {
         // define return value for method getNumber()
         when(mockChildBH.getNumber()).thenReturn(661985L);
         when(mockParentBH.getNumber()).thenReturn(661987L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new BlockNumberRule().validate(mockChildBH, mockParentBH, errors);

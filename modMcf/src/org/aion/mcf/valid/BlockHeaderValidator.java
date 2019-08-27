@@ -5,8 +5,7 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.mcf.blockchain.valid.IValidRule;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.slf4j.Logger;
 
 public class BlockHeaderValidator extends AbstractBlockHeaderValidator {
@@ -18,7 +17,7 @@ public class BlockHeaderValidator extends AbstractBlockHeaderValidator {
     }
 
     public boolean validate(BlockHeader header, Logger logger) {
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
         for (BlockHeaderRule rule : rules) {
             if (!rule.validate(header, errors)) {
                 if (logger != null) logErrors(logger, errors);

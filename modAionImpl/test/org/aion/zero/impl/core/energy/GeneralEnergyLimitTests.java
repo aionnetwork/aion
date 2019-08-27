@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -109,7 +109,7 @@ public class GeneralEnergyLimitTests {
 
             when(currHeader.getEnergyLimit()).thenReturn(newLimit);
 
-            List<IValidRule.RuleError> errors = new LinkedList<>();
+            List<RuleError> errors = new LinkedList<>();
             boolean success = energyLimitRule.validate(currHeader, mockHeader, errors);
             assertThat(success).isTrue();
             assertThat(errors).isEmpty();

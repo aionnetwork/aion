@@ -3,6 +3,7 @@ package org.aion.mcf.valid;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 
 public abstract class GrandParentDependantBlockHeaderRule
         extends AbstractValidRule {

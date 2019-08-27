@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */
@@ -18,7 +18,7 @@ public class ParentBlockHeaderValidator
     }
 
     public boolean validate(BlockHeader header, BlockHeader parent, Logger logger) {
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         for (IBlockHeaderValidRule rule : rules) {
             if (!rule.validate(header, parent, errors)) {

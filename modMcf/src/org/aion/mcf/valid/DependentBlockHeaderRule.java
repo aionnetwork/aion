@@ -4,6 +4,7 @@ import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 
 /** A class of rules that requires memory of the previous block */
 public abstract class DependentBlockHeaderRule extends AbstractValidRule
