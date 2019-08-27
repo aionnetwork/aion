@@ -15,7 +15,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.mine.IMineRunner;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
@@ -77,7 +76,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IMineRunner getBlockMiner() {
+    public EquihashMiner getBlockMiner() {
 
         try {
             AddressUtils.wrapAddress(this.cfg.getConsensus().getMinerAddress());

@@ -21,7 +21,6 @@ import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.mine.IMineRunner;
 import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -30,7 +29,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /** @author Ross Kitsis (ross@nuco.io) */
-public class EquihashMiner implements IMineRunner {
+public class EquihashMiner {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
@@ -130,7 +129,6 @@ public class EquihashMiner implements IMineRunner {
         return eventSN;
     }
 
-    @Override
     public void startMining() {
         if (!isMining) {
             isMining = true;
@@ -153,7 +151,6 @@ public class EquihashMiner implements IMineRunner {
         }
     }
 
-    @Override
     public void stopMining() {
         if (isMining) {
             isMining = false;
@@ -228,7 +225,6 @@ public class EquihashMiner implements IMineRunner {
      *
      * @param sec The number of seconds to wait until beginning to mine blocks
      */
-    @Override
     public void delayedStartMining(int sec) {
         if (cfg.getConsensus().getMining()) {
             LOG.info("<delayed-start-sealing>");
@@ -287,12 +283,10 @@ public class EquihashMiner implements IMineRunner {
         this.cpuThreads = cpuThreads;
     }
 
-    @Override
     public boolean isMining() {
         return isMining;
     }
 
-    @Override
     public double getHashrate() {
         return hashrateMAF.getAverage();
     }
@@ -307,7 +301,6 @@ public class EquihashMiner implements IMineRunner {
         }
     }
 
-    @Override
     public void shutdown() {
         ees.shutdown();
     }
