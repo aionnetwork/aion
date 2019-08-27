@@ -30,6 +30,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
@@ -44,7 +45,6 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -769,7 +769,7 @@ public abstract class ApiAion extends Api {
     protected void initNrgOracle(IAionChain _ac) {
         if (NRG_ORACLE != null) return;
 
-        IAionBlockchain bc = (IAionBlockchain) _ac.getBlockchain();
+        IPowChain bc = _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 

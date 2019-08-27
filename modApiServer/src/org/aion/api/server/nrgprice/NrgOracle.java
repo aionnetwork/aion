@@ -4,8 +4,7 @@ import org.aion.api.server.nrgprice.strategy.NrgBlockPrice;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.mcf.blockchain.IPowChain;
 import org.slf4j.Logger;
 
 /**
@@ -34,10 +33,10 @@ public class NrgOracle {
     private Strategy strategy;
 
     private INrgPriceAdvisor advisor;
-    private IAionBlockchain blockchain;
+    private IPowChain blockchain;
 
     public NrgOracle(
-            IAionBlockchain blockchain, long nrgPriceDefault, long nrgPriceMax, Strategy strategy) {
+            IPowChain blockchain, long nrgPriceDefault, long nrgPriceMax, Strategy strategy) {
 
         // get default and max nrg from the config
         this.recommendation = nrgPriceDefault;

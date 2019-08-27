@@ -1,18 +1,28 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.util.types.Hash256;
 
 /**
  * proof of work chain interface.
  *
  */
-@SuppressWarnings("rawtypes")
-public interface IPowChain extends IGenericChain {
+public interface IPowChain {
 
     BigInteger getTotalDifficulty();
 
     void setTotalDifficulty(BigInteger totalDifficulty);
 
     BigInteger getTotalDifficultyByHash(Hash256 hash);
+
+    Block getBlockByNumber(long number);
+
+    Block getBlockByHash(byte[] hash);
+
+    IBlockStoreBase getBlockStore();
+
+    Block getBestBlock();
+
+    void flush();
 }
