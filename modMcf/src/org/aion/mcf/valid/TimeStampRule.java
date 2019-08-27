@@ -2,6 +2,7 @@ package org.aion.mcf.valid;
 
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.valid.RuleError;
 
 /** Validates whether the timestamp of the current block is > the timestamp of the parent block */
 public class TimeStampRule extends DependentBlockHeaderRule {

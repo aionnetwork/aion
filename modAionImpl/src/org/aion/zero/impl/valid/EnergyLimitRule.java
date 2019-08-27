@@ -3,6 +3,7 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
 
 /**

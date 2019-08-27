@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
@@ -30,7 +30,7 @@ public class ExtraDataRuleTest {
 
         when(mockHeader.getExtraData()).thenReturn(EMPTY_BYTE_ARR);
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
         boolean res = dataRule.validate(mockHeader, errors);
@@ -43,7 +43,7 @@ public class ExtraDataRuleTest {
     public void testNullByteArray() {
         when(mockHeader.getExtraData()).thenReturn(null);
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
         boolean res = dataRule.validate(mockHeader, errors);
@@ -57,7 +57,7 @@ public class ExtraDataRuleTest {
 
         when(mockHeader.getExtraData()).thenReturn(LARGE_BYTE_ARRAY);
 
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
         boolean res = dataRule.validate(mockHeader, errors);

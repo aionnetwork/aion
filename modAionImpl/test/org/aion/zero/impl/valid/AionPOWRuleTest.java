@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
@@ -40,7 +40,7 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getPowBoundaryBI())
                 .thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
         boolean result = rule.validate(mockHeader, errors);
@@ -71,7 +71,7 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getPowBoundaryBI())
                 .thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
         boolean result = rule.validate(mockHeader, errors);
@@ -98,7 +98,7 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getPowBoundaryBI())
                 .thenReturn(BigInteger.ONE.shiftLeft(128).divide(difficulty));
-        List<IValidRule.RuleError> errors = new ArrayList<>();
+        List<RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
         boolean result = rule.validate(mockHeader, errors);

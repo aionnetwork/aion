@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.LinkedList;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.mcf.valid.TimeStampRule;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661986L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);
@@ -55,7 +55,7 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661987L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);
@@ -73,7 +73,7 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661988L);
-        List<IValidRule.RuleError> errors = new LinkedList<>();
+        List<RuleError> errors = new LinkedList<>();
 
         // generate output
         boolean actual = new TimeStampRule().validate(mockHeader, mockDependency, errors);

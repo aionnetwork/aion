@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.IValidRule.RuleError;
+import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
