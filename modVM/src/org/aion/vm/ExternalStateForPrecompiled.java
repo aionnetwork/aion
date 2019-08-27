@@ -1,7 +1,7 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.IPrecompiledDataWord;

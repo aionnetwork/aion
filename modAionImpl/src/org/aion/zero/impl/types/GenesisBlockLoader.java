@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.types;
 
 import com.google.common.io.ByteStreams;
 import java.io.File;
@@ -7,10 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.blockchain.AionGenesis;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.json.JSONException;
 import org.json.JSONObject;

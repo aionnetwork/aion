@@ -24,10 +24,10 @@ import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgReports;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
-import org.aion.zero.impl.blockchain.AionGenesis;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
-import org.aion.zero.impl.GenesisBlockLoader;
 import org.aion.zero.impl.SystemExitCodes;
+import org.aion.zero.impl.types.AionGenesis;
+import org.aion.zero.impl.types.GenesisBlockLoader;
 
 /** @author chris */
 public final class CfgAion extends Cfg {

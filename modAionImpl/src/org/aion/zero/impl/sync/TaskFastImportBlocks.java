@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.core.FastImportResult;
+import org.aion.zero.impl.core.FastImportResult;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;

@@ -1,12 +1,12 @@
 package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.core.ImportResult.CONSENSUS_BREAK;
-import static org.aion.mcf.core.ImportResult.EXIST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
-import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
-import static org.aion.mcf.core.ImportResult.NO_PARENT;
+import static org.aion.zero.impl.core.ImportResult.CONSENSUS_BREAK;
+import static org.aion.zero.impl.core.ImportResult.EXIST;
+import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
+import static org.aion.zero.impl.core.ImportResult.IMPORTED_NOT_BEST;
+import static org.aion.zero.impl.core.ImportResult.INVALID_BLOCK;
+import static org.aion.zero.impl.core.ImportResult.NO_PARENT;
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
@@ -42,7 +42,7 @@ import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.zero.impl.db.RepositoryConfig;

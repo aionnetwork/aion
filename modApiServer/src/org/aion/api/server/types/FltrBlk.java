@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.zero.impl.blockchain.BlockSummary;
+import org.aion.zero.impl.types.BlockSummary;
 
 public class FltrBlk extends Fltr {
 

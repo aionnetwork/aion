@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.types;
 
 import java.util.Arrays;
 import org.aion.mcf.blockchain.BlockHeader;

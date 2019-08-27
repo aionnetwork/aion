@@ -41,7 +41,7 @@ import org.aion.crypto.ECKeyFac.ECKeyType;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;

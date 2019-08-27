@@ -4,8 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.blockchain.StandaloneBlockchain;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 

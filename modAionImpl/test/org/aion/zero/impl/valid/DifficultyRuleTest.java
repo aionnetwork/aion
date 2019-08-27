@@ -1,27 +1,25 @@
-package org.aion.valid;
+package org.aion.zero.impl.valid;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.AbstractBlockHeader.NONCE_LENGTH;
-import static org.aion.zero.impl.AbstractBlockHeader.SOLUTIONSIZE;
+import static org.aion.zero.impl.types.AbstractBlockHeader.NONCE_LENGTH;
+import static org.aion.zero.impl.types.AbstractBlockHeader.SOLUTIONSIZE;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.types.A0BlockHeader;
-import org.aion.zero.impl.valid.RuleError;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /**
- * Unit tests for {@link AionDifficultyRule}.
+ * Unit tests for {@link GrandParentDependantBlockHeaderRule}.
  *
  * @author Jay Tseng
  */
@@ -67,7 +65,7 @@ public class DifficultyRuleTest {
     }
 
     /**
-     * Checks if the {@link AionDifficultyRule#validate} returns {@code false} when the difficulty
+     * Checks if the {@link GrandParentDependantBlockHeaderRule#validate} returns {@code false} when the difficulty
      * data is <b>greater</b> than the difficulty data length.
      */
     @Test
@@ -100,7 +98,7 @@ public class DifficultyRuleTest {
     }
 
     /**
-     * Checks if the {@link AionDifficultyRule#validate} returns {@code true} when the difficulty
+     * Checks if the {@link GrandParentDependantBlockHeaderRule#validate} returns {@code true} when the difficulty
      * data is <b>equal</b> the difficulty data length.
      */
     @Test

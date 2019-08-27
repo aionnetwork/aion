@@ -1,12 +1,12 @@
 package org.aion.vm;
 
 import java.math.BigInteger;
+import org.aion.base.AccountState;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
-import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;

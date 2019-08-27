@@ -2,8 +2,8 @@ package org.aion.vm;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.ContractExecutor;

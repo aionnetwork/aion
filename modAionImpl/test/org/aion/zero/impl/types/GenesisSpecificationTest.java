@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -7,10 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.blockchain.AionGenesis;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.junit.Test;
 

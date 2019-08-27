@@ -3,7 +3,7 @@ package org.aion.api.server.types;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import org.aion.base.AionTransaction;
-import org.aion.zero.impl.blockchain.BlockSummary;
+import org.aion.zero.impl.types.BlockSummary;
 
 public abstract class Fltr {
 

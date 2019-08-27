@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import org.aion.log.AionLoggerFactory;

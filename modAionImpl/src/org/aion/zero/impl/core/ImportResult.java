@@ -1,4 +1,4 @@
-package org.aion.mcf.core;
+package org.aion.zero.impl.core;
 
 /** Import Result Enum */
 public enum ImportResult {

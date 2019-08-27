@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.types;
 
 import org.aion.util.conversions.Hex;
 

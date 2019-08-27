@@ -11,7 +11,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.log.AionLoggerFactory;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.vm.TransactionTypeRule;
 import org.aion.types.AionAddress;

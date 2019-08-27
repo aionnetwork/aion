@@ -1,4 +1,4 @@
-package org.aion.mcf.core;
+package org.aion.base;
 
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;

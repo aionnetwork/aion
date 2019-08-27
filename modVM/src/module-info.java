@@ -10,6 +10,7 @@ module aion.vm {
     requires aion.crypto;
     requires aion.types;
     requires aion.base;
+    requires aion.rlp;
 
     exports org.aion.vm;
     exports org.aion.vm.exception;

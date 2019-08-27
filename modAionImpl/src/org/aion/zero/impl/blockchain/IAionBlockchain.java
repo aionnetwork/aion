@@ -6,12 +6,11 @@ import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.blockchain.IPowChain;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.BlockContext;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
 

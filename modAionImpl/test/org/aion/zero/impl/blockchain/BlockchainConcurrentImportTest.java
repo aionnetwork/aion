@@ -21,7 +21,7 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.vm.TransactionTypeRule;
 import org.aion.util.types.Hash256;
 import org.aion.vm.LongLivedAvm;

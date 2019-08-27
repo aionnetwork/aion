@@ -11,7 +11,6 @@ import java.math.BigInteger;
 import java.util.Objects;
 import org.aion.crypto.HashUtil;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
-import org.aion.zero.impl.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;

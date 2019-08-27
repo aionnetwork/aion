@@ -12,7 +12,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.vm.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.vm.LongLivedAvm;

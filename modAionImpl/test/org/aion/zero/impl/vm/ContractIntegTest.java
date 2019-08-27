@@ -53,7 +53,7 @@ import org.aion.fastvm.FastVmResultCode;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.vm.TransactionTypeRule;
 import org.aion.util.types.DataWord;

@@ -1,7 +1,6 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
-import org.aion.zero.impl.types.AionBlock;
 
 /**
  * Wraps contextual / metadata about the block that are not part of the block itself (not associated

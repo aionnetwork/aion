@@ -6,8 +6,8 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.core.IDifficultyCalculator;
 
 /** Checks block's difficulty against calculated difficulty value */
 public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {

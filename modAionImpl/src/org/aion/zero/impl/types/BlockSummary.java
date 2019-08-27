@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.types;
 
 import java.util.List;
 import org.aion.mcf.blockchain.Block;

@@ -8,7 +8,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.blockchain.BlockSummary;
 import org.aion.mcf.types.AionTxExecSummary;
 import org.aion.mcf.types.AionTxReceipt;
 import org.slf4j.Logger;

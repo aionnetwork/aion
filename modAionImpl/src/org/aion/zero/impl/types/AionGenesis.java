@@ -1,13 +1,12 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.base.AccountState;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.core.AccountState;
 import org.aion.zero.impl.trie.SecureTrie;
-import org.aion.zero.impl.AbstractBlockHeader;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractInfo;
@@ -17,8 +16,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.A0BlockHeader;
 
 public class AionGenesis extends AionBlock {
     /**

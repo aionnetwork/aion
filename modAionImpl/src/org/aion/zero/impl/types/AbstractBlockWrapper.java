@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.types;
 
 import static org.aion.util.time.TimeUtils.secondsToMillis;
 

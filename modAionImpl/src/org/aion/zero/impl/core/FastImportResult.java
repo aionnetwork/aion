@@ -1,4 +1,4 @@
-package org.aion.mcf.core;
+package org.aion.zero.impl.core;
 
 /**
  * Import results that can be returned when importing blocks using Fast Sync strategy.

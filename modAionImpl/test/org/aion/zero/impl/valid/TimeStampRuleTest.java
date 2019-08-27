@@ -1,4 +1,4 @@
-package org.aion.valid;
+package org.aion.zero.impl.valid;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;

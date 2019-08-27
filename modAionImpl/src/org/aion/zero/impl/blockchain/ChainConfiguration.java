@@ -5,8 +5,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.core.IDifficultyCalculator;
-import org.aion.mcf.core.IRewardsCalculator;
+import org.aion.zero.impl.core.IDifficultyCalculator;
+import org.aion.zero.impl.core.IRewardsCalculator;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
+import org.aion.zero.impl.valid.BlockNumberRule;
+import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.TimeStampRule;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
@@ -15,14 +20,9 @@ import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.AionPOWRule;
-import org.aion.zero.impl.valid.BlockHeaderValidator;
-import org.aion.zero.impl.valid.BlockNumberRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
-import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
-import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
-import org.aion.zero.impl.valid.TimeStampRule;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the

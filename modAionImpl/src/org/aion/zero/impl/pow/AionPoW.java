@@ -1,6 +1,6 @@
 package org.aion.zero.impl.pow;
 
-import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
+import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +24,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.IPendingState;
-import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;

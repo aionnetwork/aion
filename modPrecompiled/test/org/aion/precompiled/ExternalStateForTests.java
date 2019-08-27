@@ -5,7 +5,7 @@ import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.PruneConfig;

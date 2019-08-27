@@ -6,7 +6,7 @@ import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.mcf.core.AccountState;
+import org.aion.base.AccountState;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
