@@ -2,10 +2,11 @@ package org.aion.mcf.tx;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.mcf.types.AionTxReceipt;
 
 public interface TxExecSummary {
 
-    Object getBuilder(TxReceipt receipt);
+    Object getBuilder(AionTxReceipt receipt);
 
     boolean isRejected();
 
@@ -13,7 +14,7 @@ public interface TxExecSummary {
 
     BigInteger getFee();
 
-    TxReceipt getReceipt();
+    AionTxReceipt getReceipt();
 
     List getLogs();
 }

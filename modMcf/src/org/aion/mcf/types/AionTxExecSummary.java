@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.tx.TxExecSummary;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
@@ -116,8 +115,8 @@ public class AionTxExecSummary implements TxExecSummary {
     }
 
     @Override
-    public Object getBuilder(TxReceipt receipt) {
-        return builderFor((AionTxReceipt) receipt);
+    public Object getBuilder(AionTxReceipt receipt) {
+        return builderFor(receipt);
     }
 
     /**

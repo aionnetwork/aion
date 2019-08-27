@@ -64,7 +64,6 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.Repository;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
@@ -166,7 +165,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    protected void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state) {
+    protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
         // commenting this out because of lack support for old web3 client that we are using
         // TODO: re-enable this when we upgrade our web3 client
         /*

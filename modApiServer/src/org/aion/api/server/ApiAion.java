@@ -32,7 +32,6 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.blockchain.TxResponse;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
@@ -112,7 +111,7 @@ public abstract class ApiAion extends Api {
                     } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
                         if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
                             pendingTxUpdate(
-                                    (TxReceipt) e.getFuncArgs().get(0),
+                                    (AionTxReceipt) e.getFuncArgs().get(0),
                                     GETSTATE((int) e.getFuncArgs().get(1)));
                         } else if (e.getCallbackType()
                                 == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
@@ -135,7 +134,7 @@ public abstract class ApiAion extends Api {
 
     protected abstract void pendingTxReceived(AionTransaction _tx);
 
-    protected abstract void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state);
+    protected abstract void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state);
 
     // General Level
     public byte getApiVersion() {

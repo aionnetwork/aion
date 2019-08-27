@@ -50,7 +50,6 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
@@ -185,10 +184,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         });
     }
 
-    protected void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state) {
+    protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
         ByteArrayWrapper txHashW =
-                ByteArrayWrapper.wrap(
-                        ((AionTxReceipt) _txRcpt).getTransaction().getTransactionHash());
+                ByteArrayWrapper.wrap(_txRcpt.getTransaction().getTransactionHash());
 
         if (LOG.isTraceEnabled()) {
             LOG.trace(
@@ -200,8 +198,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         if (getMsgIdMapping().get(txHashW) != null) {
             if (pendingStatus.remainingCapacity() == 0) {
                 pendingStatus.poll();
-                LOG.warn(
-                        "ApiAion0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
+                LOG.warn("ApiAion0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
             }
 
             if (LOG.isTraceEnabled()) {
@@ -216,14 +213,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             getMsgIdMapping().get(txHashW).getValue(),
                             getMsgIdMapping().get(txHashW).getKey(),
                             _state.getValue(),
-                            ByteArrayWrapper.wrap(
-                                    ((AionTxReceipt) _txRcpt).getTransactionOutput() == null
+                            ByteArrayWrapper.wrap(_txRcpt.getTransactionOutput() == null
                                             ? EMPTY_BYTE_ARRAY
-                                            : ((AionTxReceipt) _txRcpt).getTransactionOutput()),
-                            ((AionTxReceipt) _txRcpt).getError()));
+                                            : _txRcpt.getTransactionOutput()),
+                            _txRcpt.getError()));
 
             if (_state.isPending()) {
-                pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));
+                pendingReceipts.put(txHashW, _txRcpt);
             } else {
                 pendingReceipts.remove(txHashW);
                 getMsgIdMapping().remove(txHashW);
@@ -232,16 +228,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             if (txWait.remainingCapacity() == 0) {
                 txWait.poll();
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(
-                            "ApiAion0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
+                    LOG.trace("ApiAion0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
                 }
             }
 
             // waiting origin Api call status been callback
             try {
-                txWait.put(
-                        new TxWaitingMappingUpdate(
-                                txHashW, _state.getValue(), ((AionTxReceipt) _txRcpt)));
+                txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(), _txRcpt));
             } catch (InterruptedException e) {
                 LOG.error("ApiAion0.onPendingTransactionUpdate txWait.put exception", e);
             }

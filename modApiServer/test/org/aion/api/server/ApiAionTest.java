@@ -28,7 +28,6 @@ import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.TxResponse;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;
@@ -63,7 +62,7 @@ public class ApiAionTest {
         }
 
         @Override
-        protected void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state) {
+        protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
             pendingUpdateFlag = true;
         }
 

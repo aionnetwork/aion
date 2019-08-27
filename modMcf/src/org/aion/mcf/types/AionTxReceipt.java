@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.LogUtility;
 import org.aion.rlp.RLP;
@@ -22,7 +21,7 @@ import org.aion.util.types.Bytesable;
 import org.apache.commons.lang3.ArrayUtils;
 
 /** aion transaction receipt class. */
-public class AionTxReceipt implements Bytesable<Object>, TxReceipt<Log> {
+public class AionTxReceipt implements Bytesable<Object> {
     private AionTransaction transaction;
 
     private byte[] postTxState = EMPTY_BYTE_ARRAY;
