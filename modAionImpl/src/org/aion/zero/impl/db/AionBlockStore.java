@@ -22,8 +22,8 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -48,7 +48,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
-    protected ReadWriteLock lock = new ReentrantReadWriteLock();
+    protected Lock lock = new ReentrantLock();
 
     private DataSourceArray<List<BlockInfo>> index;
     private ObjectDataSource<Block> blocks;
@@ -66,6 +66,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize) {
         this.index = new DataSourceArray<>(new ObjectDataSource(index, BLOCK_INFO_SERIALIZER));
+        // Note: because of cache use the blocks db should write lock on get as well
         this.blocks =
                 new DataSource<>(blocks, BLOCK_SERIALIZER)
                         .withCache(blockCacheSize, Type.LRU)
@@ -88,7 +89,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
         };
 
     public Block getBestBlock() {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long maxLevel = getMaxNumber();
@@ -108,12 +109,12 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return bestBlock;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     public byte[] getBlockHashByNumber(long blockNumber) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             if (blockNumber < 0L || blockNumber >= index.size()) {
@@ -130,28 +131,28 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return null;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public void flush() {
-        lock.writeLock().lock();
+        lock.lock();
         try {
             blocks.flush();
             index.flush();
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain) {
-        lock.writeLock().lock();
+        lock.lock();
         try {
             addInternalBlock(block, cummDifficulty, mainChain);
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -184,7 +185,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     public List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(
             long number) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
@@ -208,13 +209,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return result;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public Block getChainBlockByNumber(long number) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long size = index.size();
@@ -241,7 +242,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return null;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -251,7 +252,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
      * @return list of blocks in the given block level.
      */
     List<Block> getAllChainBlockByNumber(long number) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long size = index.size();
@@ -278,7 +279,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return blockList;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -301,7 +302,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
             return null;
         }
 
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             Block block = getChainBlockByNumber(first);
@@ -384,13 +385,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 return blocks;
             }
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @SuppressWarnings("Duplicates")
     public Map.Entry<Block, BigInteger> getChainBlockByNumberWithTotalDifficulty(long number) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             if (number < 0L || number >= index.size()) {
@@ -417,23 +418,23 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return null;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public Block getBlockByHash(byte[] hash) {
-        lock.readLock().lock();
+        lock.lock();
         try {
             return blocks.get(hash);
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public boolean isBlockStored(byte[] hash, long number) {
-        lock.readLock().lock();
+        lock.lock();
         try {
             // the index size is cached, making this check faster than reading from the db
             if (number >= index.size()) {
@@ -442,7 +443,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 return blocks.get(hash) != null;
             }
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -455,7 +456,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
      */
     @Override
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             Block block = this.getBlockByHash(hash);
@@ -488,7 +489,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                     block.getNumber() - 1);
             return ZERO;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -504,7 +505,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
      */
     @Override
     public BigInteger getTotalDifficulty() {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long maxNumber = getMaxNumber();
@@ -543,24 +544,24 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             throw new IllegalStateException("Index DB corruption or branch too deep.");
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public long getMaxNumber() {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             return index.size() - 1L;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             List<Block> blocks = getListBlocksEndWith(hash, number);
@@ -572,13 +573,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return hashes;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
-        lock.readLock().lock();
+        lock.lock();
         try {
             List<Block> blocks = getListBlocksEndWith(hash, qty);
             List<BlockHeader> headers = new ArrayList<>(blocks.size());
@@ -589,17 +590,17 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return headers;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
-        lock.readLock().lock();
+        lock.lock();
         try {
             return getListBlocksEndWithInner(hash, qty);
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -627,7 +628,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     @Override
     public long reBranch(Block forkBlock) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             Block bestBlock = getBestBlock();
@@ -694,7 +695,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return commonBlockNumber;
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -789,7 +790,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     @Override
     public void revert(long previousLevel) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             Block bestBlock = getBestBlock();
@@ -884,13 +885,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 }
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
     public void pruneAndCorrect() {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             Block block = getBestBlock();
@@ -932,7 +933,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 level++;
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -993,7 +994,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
     }
 
     public BigInteger correctIndexEntry(Block block, BigInteger parentTotalDifficulty) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             long blockNumber = block.getNumber();
@@ -1032,12 +1033,12 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return blockInfo.getCummDifficulty();
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
     public String dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long firstBlock = getMaxNumber();
@@ -1082,13 +1083,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
             writer.close();
             return file.getName();
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     String dumpPastBlocksForConsensusTest(long firstBlock, String reportsFolder)
             throws IOException {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             if (firstBlock < 0) {
@@ -1139,12 +1140,12 @@ public class AionBlockStore extends AbstractPowBlockstore {
             writer.close();
             return file.getName();
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             List<byte[]> result = new ArrayList<>();
@@ -1169,18 +1170,18 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
             return result;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
     public boolean isIndexed(byte[] hash, long level) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             // when null -> there was no block info for the hash
             return getBlockInfoForHash(getBlockInfoForLevel(level), hash) != null;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -1193,13 +1194,13 @@ public class AionBlockStore extends AbstractPowBlockstore {
      *     block is not indexed or is a side chain block
      */
     public boolean isMainChain(byte[] hash, long level) {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             BlockInfo info = getBlockInfoForHash(getBlockInfoForLevel(level), hash);
             return info != null && info.mainChain;
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -1223,7 +1224,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     /** Sets the block as main chain and all its ancestors. Used by the data recovery methods. */
     public void correctMainChain(Block block, Logger log) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             Block currentBlock = block;
@@ -1255,7 +1256,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 }
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -1265,7 +1266,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
      * @param block the block that will be re-imported and should not be removed from the database
      */
     public void redoIndexWithoutSideChains(Block block) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             Block currentBlock = block;
@@ -1285,7 +1286,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 index.set(block.getNumber(), Collections.emptyList());
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -1436,7 +1437,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
             };
 
     public void printChain() {
-        lock.readLock().lock();
+        lock.lock();
 
         try {
             long number = getMaxNumber();
@@ -1457,7 +1458,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 }
             }
         } finally {
-            lock.readLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -1637,7 +1638,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
 
     @Override
     public void close() {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
             index.close();
@@ -1649,14 +1650,14 @@ public class AionBlockStore extends AbstractPowBlockstore {
             } catch (Exception e) {
                 LOG.error("Not able to close the blocks database:", e);
             } finally {
-                lock.writeLock().unlock();
+                lock.unlock();
             }
         }
     }
 
     @Override
     public void rollback(long blockNumber) {
-        lock.writeLock().lock();
+        lock.lock();
 
         try {
 
@@ -1675,7 +1676,7 @@ public class AionBlockStore extends AbstractPowBlockstore {
                 index.remove(level--);
             }
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 }

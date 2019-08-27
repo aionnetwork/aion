@@ -123,8 +123,8 @@ public class TestResources {
     }
 
     /** @return a set of blocks to be used for testing. */
-    public static List<AionBlock> blocks(int limit) {
-        List<AionBlock> parameters = new ArrayList<>();
+    public static List<Block> blocks(int limit) {
+        List<Block> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(limit, rawDataFileWithRandomBlocks)) {
             parameters.add(new AionBlock(rawData));
