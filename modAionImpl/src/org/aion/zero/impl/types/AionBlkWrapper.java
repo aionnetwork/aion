@@ -2,7 +2,7 @@ package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.mcf.types.AbstractBlockWrapper;
+import org.aion.zero.impl.AbstractBlockWrapper;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;

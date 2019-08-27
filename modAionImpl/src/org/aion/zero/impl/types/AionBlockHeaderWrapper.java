@@ -1,7 +1,7 @@
 package org.aion.zero.impl.types;
 
 import java.util.List;
-import org.aion.mcf.types.AbstractBlockHeaderWrapper;
+import org.aion.zero.impl.AbstractBlockHeaderWrapper;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;

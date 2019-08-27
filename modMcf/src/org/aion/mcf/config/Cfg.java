@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import org.aion.mcf.types.AbstractBlock;
 
 /** @author chris */
 public abstract class Cfg {
@@ -570,8 +569,6 @@ public abstract class Cfg {
     public abstract void toXML(final String[] args, File file);
 
     public abstract void setGenesis();
-
-    public abstract AbstractBlock getGenesis();
 
     public abstract void setForkProperties(String network, File forkFile);
 }

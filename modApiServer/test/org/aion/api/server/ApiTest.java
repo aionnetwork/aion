@@ -14,7 +14,7 @@ import java.util.Map;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.api.server.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.types.AbstractBlock;
+import org.aion.zero.impl.AbstractBlock;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
