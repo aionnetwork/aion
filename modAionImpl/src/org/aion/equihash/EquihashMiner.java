@@ -198,10 +198,10 @@ public class EquihashMiner {
                 nonce = new byte[32];
                 ThreadLocalRandom.current().nextBytes(nonce);
 
-                Solution s = miner.mine(block, nonce);
-                if (s != null) {
+                AionPowSolution solution = miner.mine(block, nonce);
+                if (solution != null) {
                     IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
-                    ev.setFuncArgs(Collections.singletonList(s));
+                    ev.setFuncArgs(Collections.singletonList(solution));
                     evtMgr.newEvent(ev);
                 }
             }
