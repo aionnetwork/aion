@@ -14,8 +14,6 @@ import org.junit.Test;
 
 public class BlockchainRewardTest {
 
-    private IBlockConstants constants = new BlockConstants();
-
     /**
      * Test that blocks between the lower and upper bounds follow a certain function [0, 259200]
      *
