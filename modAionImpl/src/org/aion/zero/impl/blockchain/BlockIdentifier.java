@@ -1,10 +1,5 @@
-package org.aion.mcf.types;
+package org.aion.zero.impl.blockchain;
 
-import static org.aion.util.bytes.ByteUtil.byteArrayToLong;
-
-import java.math.BigInteger;
-import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
 import org.aion.util.conversions.Hex;
 
 /** Block identifier holds block hash and number <br> */
