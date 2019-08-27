@@ -8,7 +8,7 @@ import org.aion.zero.impl.types.AionBlock;
  *
  * @author Ross Kitsis (ross@nuco.io)
  */
-public class AionPowSolution implements Solution {
+public class AionPowSolution {
 
     private final AionBlock block;
     private final byte[] nonce;
