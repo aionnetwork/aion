@@ -3,7 +3,7 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.TxResponse;
+import org.aion.zero.impl.types.TxResponse;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 

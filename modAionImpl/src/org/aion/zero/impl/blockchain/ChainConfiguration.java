@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.equihash.OptimizedEquiValidator;
-import org.aion.mcf.blockchain.IBlockConstants;
+import org.aion.zero.impl.types.IBlockConstants;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.zero.impl.core.IRewardsCalculator;
 import org.aion.zero.impl.valid.BlockHeaderValidator;

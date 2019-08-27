@@ -1,4 +1,4 @@
-package org.aion.mcf.blockchain;
+package org.aion.zero.impl.types;
 
 public enum TxResponse {
     SUCCESS(0, false),

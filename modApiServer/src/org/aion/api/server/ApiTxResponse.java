@@ -1,6 +1,6 @@
 package org.aion.api.server;
 
-import org.aion.mcf.blockchain.TxResponse;
+import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 
 public class ApiTxResponse {

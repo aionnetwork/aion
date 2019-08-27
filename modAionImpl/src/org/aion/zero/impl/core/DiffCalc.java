@@ -4,7 +4,7 @@ import static org.aion.util.biginteger.BIUtil.max;
 import static org.aion.util.biginteger.BIUtil.min;
 
 import java.math.BigInteger;
-import org.aion.mcf.blockchain.IBlockConstants;
+import org.aion.zero.impl.types.IBlockConstants;
 import org.aion.zero.impl.types.AbstractBlockHeader;
 import org.aion.zero.impl.api.BlockConstants;
 

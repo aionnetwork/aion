@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.mcf.config;
 
 /**
  * Interface for pruning configuration parameters.

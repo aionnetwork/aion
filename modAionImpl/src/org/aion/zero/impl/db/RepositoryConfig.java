@@ -1,8 +1,8 @@
 package org.aion.zero.impl.db;
 
 import java.util.Properties;
+import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.PruneConfig;
 
 /**
  * Represents a configuration interface accepted that should be accepted by the repository to

@@ -34,7 +34,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.TxResponse;
+import org.aion.zero.impl.types.TxResponse;
 import org.aion.mcf.config.CfgFork;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;

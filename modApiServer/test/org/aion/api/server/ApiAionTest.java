@@ -27,7 +27,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.api.server.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.TxResponse;
+import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.LongLivedAvm;

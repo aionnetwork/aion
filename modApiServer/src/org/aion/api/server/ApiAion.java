@@ -31,7 +31,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.IPowChain;
-import org.aion.mcf.blockchain.TxResponse;
+import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;

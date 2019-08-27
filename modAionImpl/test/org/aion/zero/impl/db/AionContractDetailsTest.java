@@ -19,7 +19,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.mcf.db.PruneConfig;
+import org.aion.mcf.config.PruneConfig;
 import org.aion.util.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;

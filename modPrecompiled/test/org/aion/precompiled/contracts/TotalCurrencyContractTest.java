@@ -13,7 +13,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.PruneConfig;
+import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;

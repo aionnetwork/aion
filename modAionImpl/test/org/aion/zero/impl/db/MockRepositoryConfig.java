@@ -5,9 +5,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.PruneConfig;
-import org.aion.zero.impl.db.RepositoryConfig;
-import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.mcf.config.PruneConfig;
 
 public class MockRepositoryConfig implements RepositoryConfig {
 
