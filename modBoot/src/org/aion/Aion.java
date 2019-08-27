@@ -34,6 +34,7 @@ import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -41,7 +42,6 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
-import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
 import org.aion.vm.LongLivedAvm;
@@ -204,7 +204,7 @@ public class Aion {
         LongLivedAvm.createAndStartLongLivedAvm();
         IAionChain ac = AionFactory.create();
 
-        IMineRunner nm = null;
+        EquihashMiner nm = null;
 
         if (!cfg.getConsensus().isSeed()) {
             nm = ac.getBlockMiner();
@@ -313,12 +313,12 @@ public class Aion {
         class ShutdownThreadHolder {
 
             private final Thread zmqThread;
-            private final IMineRunner miner;
+            private final EquihashMiner miner;
             private final ProtocolProcessor pp;
             private final RpcServer rpc;
 
             private ShutdownThreadHolder(
-                    Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc) {
+                    Thread zmqThread, EquihashMiner nm, ProtocolProcessor pp, RpcServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
