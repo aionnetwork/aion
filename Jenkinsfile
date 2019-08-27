@@ -39,7 +39,7 @@ pipeline {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master' }
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_BRANCH == 'unity-master'}
             }
             steps { 
                     dir('FunctionalTests') {
