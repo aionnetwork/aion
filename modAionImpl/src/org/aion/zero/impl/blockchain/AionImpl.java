@@ -255,7 +255,6 @@ public class AionImpl implements IAionChain {
     }
 
     // assumes a correctly formatted block number
-    @Override
     public Optional<AccountState> getAccountState(AionAddress address, long blockNumber) {
         try {
             byte[] stateRoot =
@@ -277,7 +276,6 @@ public class AionImpl implements IAionChain {
     }
 
     // assumes a correctly formatted blockHash
-    @Override
     public Optional<AccountState> getAccountState(AionAddress address, byte[] blockHash) {
         try {
             byte[] stateRoot =
@@ -298,7 +296,6 @@ public class AionImpl implements IAionChain {
         }
     }
 
-    @Override
     public Optional<AccountState> getAccountState(AionAddress address) {
         try {
             byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
@@ -318,7 +315,6 @@ public class AionImpl implements IAionChain {
         }
     }
 
-    @Override
     public Optional<ByteArrayWrapper> getCode(AionAddress address) {
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
