@@ -3,12 +3,10 @@ package org.aion.zero.impl.api;
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.types.AionAddress;
-import org.aion.util.types.AddressUtils;
 
 public class BlockConstants implements IBlockConstants {
 
-    /** Number of bytes that is allowed in {@link AbstractBlockHeader#extraData} field */
+    /** Number of bytes that is allowed in {@link AbstractBlockHeader} field */
     private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
 
     /**
@@ -176,19 +174,6 @@ public class BlockConstants implements IBlockConstants {
 
     public long getClockDriftBufferTime() {
         return CLOCK_DRIFT_BUFFER_TIME;
-    }
-
-    /**
-     * TODO: this address needs to be defined
-     *
-     * <p>Public portion of the keypair that is held by bridging nodes. How the key is derived is
-     * left up to bridging implementation. All messages concerning token movement into the network
-     * must be accompanied by a signature signed with the private portion of this keypair.
-     *
-     * @return {@code address} of the sk owning this pair. Also referred to as the owner's address.
-     */
-    public AionAddress getTokenBridgingAddress() {
-        return AddressUtils.ZERO_ADDRESS;
     }
 
     @Override
