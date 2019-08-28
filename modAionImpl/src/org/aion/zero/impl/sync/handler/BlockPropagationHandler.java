@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.IPendingStateInternal;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
@@ -55,7 +55,7 @@ public class BlockPropagationHandler {
 
     private final byte apiVersion;
 
-    private final IPendingStateInternal pendingState;
+    private final AionPendingStateImpl pendingState;
 
     public BlockPropagationHandler(
             final int cacheSize,
@@ -65,7 +65,7 @@ public class BlockPropagationHandler {
             BlockHeaderValidator headerValidator,
             final boolean isSyncOnlyNode,
             final byte apiVersion,
-            final IPendingStateInternal pendingState) {
+            final AionPendingStateImpl pendingState) {
         /*
          * Size of the cache maintained within the map, a lower cacheSize
          * saves space, but indicates we may "forget" about a block sooner.

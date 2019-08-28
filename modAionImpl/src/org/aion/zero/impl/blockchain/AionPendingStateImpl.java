@@ -65,7 +65,7 @@ import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
 
-public class AionPendingStateImpl implements IPendingStateInternal {
+public class AionPendingStateImpl implements IPendingState {
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
@@ -435,7 +435,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         this.evtMgr.registerEvent(evts);
     }
 
-    @Override
     public synchronized RepositoryCache<?, ?> getRepository() {
         // Todo : no class use this method.
         return pendingState;
@@ -459,7 +458,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
      * TODO: when we removed libNc, timers were not introduced yet, we must rework the model that
      * libAion uses to work with timers
      */
-    @Override
     public synchronized TxResponse addPendingTransaction(AionTransaction tx) {
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
     }
@@ -475,7 +473,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
      * @return a list of TxResponses of the same size as the input param transactions The entries in
      *     the returned list of responses correspond one-to-one with the input txs
      */
-    @Override
     public synchronized List<TxResponse> addPendingTransactions(
             List<AionTransaction> transactions) {
 
@@ -1150,7 +1147,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         }
     }
 
-    @Override
     public synchronized BigInteger bestPendingStateNonce(AionAddress addr) {
         return isSeed ? BigInteger.ZERO : this.pendingState.getNonce(addr);
     }
@@ -1167,7 +1163,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         return this.pendingTxCache.isInCache(addr, nonce);
     }
 
-    @Override
     public void shutDown() {
         if (this.bufferEnable) {
             ex.shutdown();
@@ -1178,7 +1173,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         }
     }
 
-    @Override
     public synchronized void DumpPool() {
         List<AionTransaction> txn = txPool.snapshotAll();
         Set<AionAddress> addrs = new HashSet<>();
@@ -1229,7 +1223,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         }
     }
 
-    @Override
     public void loadPendingTx() {
 
         loadPendingTx = true;
@@ -1238,7 +1231,6 @@ public class AionPendingStateImpl implements IPendingStateInternal {
         loadPendingTx = false;
     }
 
-    @Override
     public void checkAvmFlag() {
 
         long bestBlockNumber = getBestBlock().getNumber();
@@ -1375,12 +1367,10 @@ public class AionPendingStateImpl implements IPendingStateInternal {
                 t2);
     }
 
-    @Override
     public String getVersion() {
         return isSeed ? "0" : this.txPool.getVersion();
     }
 
-    @Override
     public void updateBest() {
         getBestBlock();
     }

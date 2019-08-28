@@ -215,10 +215,6 @@ public class AionImpl implements IAionChain {
         return aionHub;
     }
 
-    private IPendingStateInternal getIPendingStateInternal() {
-        return this.aionHub.getPendingState();
-    }
-
     @Override
     public Optional<Long> getLocalBestBlockNumber() {
         try {

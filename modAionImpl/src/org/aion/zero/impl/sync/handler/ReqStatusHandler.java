@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync.handler;
 import java.math.BigInteger;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.IPendingStateInternal;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -24,7 +24,7 @@ public final class ReqStatusHandler extends Handler {
 
     private IAionBlockchain chain;
 
-    private final IPendingStateInternal pendingState;
+    private final AionPendingStateImpl pendingState;
 
     private IP2pMgr mgr;
 
@@ -41,7 +41,7 @@ public final class ReqStatusHandler extends Handler {
     public ReqStatusHandler(
             final Logger _log,
             final IAionBlockchain _chain,
-            final IPendingStateInternal _pendingState,
+            final AionPendingStateImpl _pendingState,
             final IP2pMgr _mgr,
             final byte[] _genesisHash,
             final byte _apiVersion) {

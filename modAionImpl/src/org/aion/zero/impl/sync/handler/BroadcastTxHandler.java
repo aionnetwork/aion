@@ -8,7 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
-import org.aion.zero.impl.blockchain.IPendingStateInternal;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -25,7 +25,7 @@ public final class BroadcastTxHandler extends Handler {
 
     private final Logger log;
 
-    private final IPendingStateInternal pendingState;
+    private final AionPendingStateImpl pendingState;
 
     private final IP2pMgr p2pMgr;
 
@@ -37,7 +37,7 @@ public final class BroadcastTxHandler extends Handler {
 
     public BroadcastTxHandler(
             final Logger _log,
-            final IPendingStateInternal _pendingState,
+            final AionPendingStateImpl _pendingState,
             final IP2pMgr _p2pMgr,
             final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
