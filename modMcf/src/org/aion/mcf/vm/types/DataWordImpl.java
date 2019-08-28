@@ -11,7 +11,7 @@ import org.aion.util.types.ByteArrayWrapper;
 /**
  * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
  */
-public class DataWordImpl implements Comparable<DataWord>, DataWord {
+public class DataWordImpl {
 
     public static final BigInteger MAX_VALUE =
             BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
@@ -89,12 +89,10 @@ public class DataWordImpl implements Comparable<DataWord>, DataWord {
         this(wrapper.getData());
     }
 
-    @Override
     public byte[] getData() {
         return data;
     }
 
-    @Override
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
@@ -121,7 +119,6 @@ public class DataWordImpl implements Comparable<DataWord>, DataWord {
         return v;
     }
 
-    @Override
     public boolean isZero() {
         for (int i = 0; i < BYTES; i++) {
             if (data[BYTES - 1 - i] != 0) {
@@ -134,13 +131,6 @@ public class DataWordImpl implements Comparable<DataWord>, DataWord {
     public boolean isNegative() {
         int result = data[0] & 0x80;
         return result == 0x80;
-    }
-
-    @Override
-    public DataWord copy() {
-        byte[] bs = new byte[BYTES];
-        System.arraycopy(data, 0, bs, 0, BYTES);
-        return new DataWordImpl(bs);
     }
 
     @Override
@@ -163,16 +153,10 @@ public class DataWordImpl implements Comparable<DataWord>, DataWord {
     }
 
     @Override
-    public int compareTo(DataWord o) {
-        return Arrays.compare(this.data, ((DataWordImpl) o).data);
-    }
-
-    @Override
     public String toString() {
         return Hex.toHexString(data);
     }
 
-    @Override
     public ByteArrayWrapper toWrapper() {
         return ByteArrayWrapper.wrap(data);
     }

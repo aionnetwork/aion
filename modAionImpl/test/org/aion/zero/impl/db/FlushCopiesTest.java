@@ -5,12 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -87,7 +87,7 @@ public class FlushCopiesTest {
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
         ByteArrayWrapper key = new DataWordImpl(5).toWrapper();
-        ByteArrayWrapper value = new DoubleDataWord(13429765314L).toWrapper();
+        ByteArrayWrapper value = longToWrapped32(13429765314L);
 
         repositoryChild.createAccount(account);
         repositoryChild.setNonce(account, nonce);
@@ -126,7 +126,7 @@ public class FlushCopiesTest {
         // Create a new account state in the child, flush to the parent without clearing child
         // state.
         ByteArrayWrapper firstKey = new DataWordImpl(5).toWrapper();
-        ByteArrayWrapper firstValue = new DoubleDataWord(13429765314L).toWrapper();
+        ByteArrayWrapper firstValue = longToWrapped32(13429765314L);
 
         firstChild.createAccount(account);
         firstChild.setNonce(account, firstNonce);
@@ -142,7 +142,7 @@ public class FlushCopiesTest {
         AionRepositoryCache secondChild = (AionRepositoryCache) this.repository.startTracking();
 
         BigInteger secondNonce = firstNonce.multiply(BigInteger.TWO);
-        ByteArrayWrapper secondKey = new DoubleDataWord(289356).toWrapper();
+        ByteArrayWrapper secondKey = longToWrapped32(289356);
         ByteArrayWrapper secondValue = new DataWordImpl(23674).toWrapper();
 
         secondChild.setNonce(account, secondNonce);
@@ -161,5 +161,12 @@ public class FlushCopiesTest {
         byte[] bytes = RandomUtils.nextBytes(AionAddress.LENGTH);
         bytes[0] = (byte) 0xa0;
         return new AionAddress(bytes);
+    }
+
+    private ByteArrayWrapper longToWrapped32(long num) {
+        ByteBuffer bb = ByteBuffer.allocate(32);
+        bb.position(12);
+        bb.putLong(num);
+        return ByteArrayWrapper.wrap(bb.array());
     }
 }

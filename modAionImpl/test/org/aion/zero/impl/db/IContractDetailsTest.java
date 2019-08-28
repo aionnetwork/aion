@@ -10,9 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
@@ -23,6 +21,10 @@ import org.junit.Test;
 public class IContractDetailsTest {
     // The two ways of instantiating the cache.
     private ContractDetails cache1, cache2;
+
+    private static final int SINGLE_BYTES = 16;
+    private static final int DOUBLE_BYTES = 32;
+    private static final ByteArrayWrapper ZERO_WRAPPED_32 = ByteArrayWrapper.wrap(new byte[32]);
 
     @Before
     public void setup() {
@@ -55,7 +57,7 @@ public class IContractDetailsTest {
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
-        key = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
+        key = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
     }
@@ -67,7 +69,7 @@ public class IContractDetailsTest {
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
-        key = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
+        key = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
     }
@@ -79,7 +81,7 @@ public class IContractDetailsTest {
         doPutSingleZeroKeyTest(cache1, value);
         doPutSingleZeroKeyTest(cache2, value);
 
-        value = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
+        value = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
         doPutSingleZeroKeyTest(cache1, value);
         doPutSingleZeroKeyTest(cache2, value);
     }
@@ -91,7 +93,7 @@ public class IContractDetailsTest {
         doPutDoubleZeroKeyTest(cache1, value);
         doPutDoubleZeroKeyTest(cache2, value);
 
-        value = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
+        value = ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
         doPutDoubleZeroKeyTest(cache1, value);
         doPutDoubleZeroKeyTest(cache2, value);
     }
@@ -113,18 +115,18 @@ public class IContractDetailsTest {
         assertNull(cache2.get(DataWordImpl.ZERO.toWrapper()));
 
         // Try double-single
-        cache1.delete(DoubleDataWord.ZERO.toWrapper());
-        result = cache1.get(DoubleDataWord.ZERO.toWrapper());
+        cache1.delete(ZERO_WRAPPED_32);
+        result = cache1.get(ZERO_WRAPPED_32);
         assertNull(result);
-        cache2.delete(DoubleDataWord.ZERO.toWrapper());
-        assertNull(cache2.get(DoubleDataWord.ZERO.toWrapper()));
+        cache2.delete(ZERO_WRAPPED_32);
+        assertNull(cache2.get(ZERO_WRAPPED_32));
 
         // Try double-double
-        cache1.delete(DoubleDataWord.ZERO.toWrapper());
-        result = cache1.get(DoubleDataWord.ZERO.toWrapper());
+        cache1.delete(ZERO_WRAPPED_32);
+        result = cache1.get(ZERO_WRAPPED_32);
         assertNull(result);
-        cache2.delete(DoubleDataWord.ZERO.toWrapper());
-        assertNull(cache2.get(DoubleDataWord.ZERO.toWrapper()));
+        cache2.delete(ZERO_WRAPPED_32);
+        assertNull(cache2.get(ZERO_WRAPPED_32));
     }
 
     @Test
@@ -138,19 +140,19 @@ public class IContractDetailsTest {
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // single-double
-        value = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        value = ByteArrayWrapper.wrap(sixteenToThirtyTwo(RandomUtils.nextBytes(SINGLE_BYTES)));
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // double-single
-        key = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        key = ByteArrayWrapper.wrap(sixteenToThirtyTwo(RandomUtils.nextBytes(SINGLE_BYTES)));
         value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // double-double
-        key = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
-        value = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        key = ByteArrayWrapper.wrap(sixteenToThirtyTwo(RandomUtils.nextBytes(SINGLE_BYTES)));
+        value = ByteArrayWrapper.wrap(sixteenToThirtyTwo(RandomUtils.nextBytes(SINGLE_BYTES)));
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
     }
@@ -288,14 +290,14 @@ public class IContractDetailsTest {
     @Test
     public void testCacheUpdatedAndGetWithOriginalAionContract() {
 
-        ByteArrayWrapper key = getRandomWord(true).toWrapper();
-        ByteArrayWrapper value1 = getRandomWord(true).toWrapper();
-        ByteArrayWrapper value2 = getRandomWord(true).toWrapper();
+        ByteArrayWrapper key = getRandomWord(true);
+        ByteArrayWrapper value1 = getRandomWord(true);
+        ByteArrayWrapper value2 = getRandomWord(true);
 
         // ensure the second value is different
         // unlikely to be necessary
         while (Arrays.equals(value1.getData(), value2.getData())) {
-            value2 = getRandomWord(true).toWrapper();
+            value2 = getRandomWord(true);
         }
 
         // ensure the initial cache has the value
@@ -335,9 +337,8 @@ public class IContractDetailsTest {
      * and then on a random key.
      */
     private void doGetNoSuchDoubleKeyTest(ContractDetails cache) {
-        checkGetNonExistentPairing(cache, DoubleDataWord.ZERO.toWrapper());
-        checkGetNonExistentPairing(
-                cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper());
+        checkGetNonExistentPairing(cache, ZERO_WRAPPED_32);
+        checkGetNonExistentPairing(cache, ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES)));
     }
 
     /** Tests putting value into cache with a zero-byte DataWordImpl key. */
@@ -348,8 +349,8 @@ public class IContractDetailsTest {
 
     /** Tests putting value into cache with a zero-byte DoubleDataWord key. */
     private void doPutDoubleZeroKeyTest(ContractDetails cache, ByteArrayWrapper value) {
-        cache.put(DoubleDataWord.ZERO.toWrapper(), value);
-        assertEquals(value, cache.get(DoubleDataWord.ZERO.toWrapper()));
+        cache.put(ZERO_WRAPPED_32, value);
+        assertEquals(value, cache.get(ZERO_WRAPPED_32));
     }
 
     /**
@@ -458,7 +459,7 @@ public class IContractDetailsTest {
         List<ByteArrayWrapper> keys = new ArrayList<>(numKeys);
         boolean isSingleKey = true;
         for (int i = 0; i < numKeys; i++) {
-            keys.add(getRandomWord(isSingleKey).toWrapper());
+            keys.add(getRandomWord(isSingleKey));
             isSingleKey = !isSingleKey;
         }
         return keys;
@@ -469,17 +470,17 @@ public class IContractDetailsTest {
         List<ByteArrayWrapper> values = new ArrayList<>(numValues);
         boolean isSingleValue = true;
         for (int i = 0; i < numValues; i++) {
-            values.add(getRandomWord(isSingleValue).toWrapper());
+            values.add(getRandomWord(isSingleValue));
             isSingleValue = !isSingleValue;
         }
         return values;
     }
 
-    /** Returns a random DataWordImpl if isSingleWord is true, otherwise a random DoubleDataWord. */
-    private DataWord getRandomWord(boolean isSingleWord) {
+    /** Returns a random byte array of length 16 if isSingleWord is true, otherwise length 32. */
+    private ByteArrayWrapper getRandomWord(boolean isSingleWord) {
         return (isSingleWord)
-                ? new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES))
-                : new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
+            ? ByteArrayWrapper.wrap(RandomUtils.nextBytes(SINGLE_BYTES))
+            : ByteArrayWrapper.wrap(RandomUtils.nextBytes(DOUBLE_BYTES));
     }
 
     /**
@@ -541,5 +542,11 @@ public class IContractDetailsTest {
             System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
             e.printStackTrace();
         }
+    }
+
+    private byte[] sixteenToThirtyTwo(byte[] sixteen) {
+        byte[] thirtyTwo = new byte[DOUBLE_BYTES];
+        System.arraycopy(sixteen, 0, thirtyTwo, DOUBLE_BYTES - sixteen.length, sixteen.length);
+        return thirtyTwo;
     }
 }
