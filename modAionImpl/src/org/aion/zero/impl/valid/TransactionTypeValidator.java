@@ -1,9 +1,10 @@
 package org.aion.zero.impl.valid;
 
-import static org.aion.mcf.valid.TransactionTypeRule.isValidTransactionType;
+import static org.aion.vm.TransactionTypeRule.isValidTransactionType;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
+import org.aion.vm.TransactionTypeRule;
 
 /**
  * Validator for the type field of transactions allowed by the network. The transaction types
@@ -31,11 +32,11 @@ public class TransactionTypeValidator {
      * @return {@code true} is the transaction satisfies the rule described above; {@code false}
      *     otherwise
      * @implNote Delegates the check to {@link
-     *     org.aion.mcf.valid.TransactionTypeRule#isValidTransactionType(AionTransaction)}.
+     *     TransactionTypeRule#isValidTransactionType(AionTransaction)}.
      */
     public static boolean isValid(AionTransaction transaction) {
         /*
-        TODO: this class could be replaced by org.aion.mcf.valid.TransactionTypeRule
+        TODO: this class could be replaced by org.aion.vm.TransactionTypeRule
         when the specification of modMcf and modAionImpl are properly defined and refactored
         */
         return isValidTransactionType(transaction);

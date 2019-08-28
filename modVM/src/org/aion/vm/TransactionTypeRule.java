@@ -1,4 +1,4 @@
-package org.aion.mcf.valid;
+package org.aion.vm;
 
 import static org.aion.base.TransactionTypes.ALL;
 import static org.aion.base.TransactionTypes.AVM_CREATE_CODE;

@@ -14,7 +14,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.vm.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;

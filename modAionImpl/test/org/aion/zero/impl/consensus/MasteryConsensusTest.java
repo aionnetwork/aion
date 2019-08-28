@@ -13,7 +13,7 @@ import java.util.Map;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.mcf.valid.TransactionTypeRule;
+import org.aion.vm.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
