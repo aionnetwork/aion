@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.aion.mcf.account.AccountManager;
+import org.aion.api.server.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;

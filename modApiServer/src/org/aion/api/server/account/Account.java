@@ -1,4 +1,4 @@
-package org.aion.mcf.account;
+package org.aion.api.server.account;
 
 import org.aion.crypto.ECKey;
 
