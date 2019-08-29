@@ -455,18 +455,18 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
         long cnt_nrg = 0;
         List<AionTransaction> rtn = new ArrayList<>();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
-        Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> nonPickedTx =
+        Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList>> nonPickedTx =
                 new HashMap<>();
-        for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e :
+        for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList>> e :
                 this.getFeeView().entrySet()) {
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("snapshot  fee[{}]", e.getKey().toString());
             }
 
-            SortedMap<BigInteger, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>>
+            SortedMap<BigInteger, Entry<ByteArrayWrapper, TxDependList>>
                     timeTxDep = Collections.synchronizedSortedMap(new TreeMap<>());
-            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair :
+            for (Entry<ByteArrayWrapper, TxDependList> pair :
                     e.getValue().entrySet()) {
                 BigInteger ts = pair.getValue().getTimeStamp();
                 // If timestamp has collision, increase 1 for getting a new slot to put the
@@ -477,7 +477,7 @@ public class TxPoolA0 extends AbstractTxPool implements ITxPool {
                 timeTxDep.put(ts, pair);
             }
 
-            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair :
+            for (Entry<ByteArrayWrapper, TxDependList> pair :
                     timeTxDep.values()) {
                 // Check the small nonce tx must been picked before put the high nonce tx
                 ByteArrayWrapper dependTx = pair.getValue().getDependTx();

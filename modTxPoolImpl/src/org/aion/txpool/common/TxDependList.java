@@ -4,10 +4,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.types.AionAddress;
+import org.aion.util.types.ByteArrayWrapper;
 
-public class TxDependList<BW> {
-    private final List<BW> txList;
-    private BW dependTx;
+public class TxDependList {
+    private final List<ByteArrayWrapper> txList;
+    private ByteArrayWrapper dependTx;
     private AionAddress address;
     private BigInteger timeStamp;
 
@@ -23,23 +24,23 @@ public class TxDependList<BW> {
         this.address = address;
     }
 
-    public BW getDependTx() {
+    public ByteArrayWrapper getDependTx() {
         return dependTx;
     }
 
-    public void setDependTx(BW tx) {
+    public void setDependTx(ByteArrayWrapper tx) {
         this.dependTx = tx;
     }
 
-    public List<BW> getTxList() {
+    public List<ByteArrayWrapper> getTxList() {
         return txList;
     }
 
-    public void addTx(BW tx) {
+    public void addTx(ByteArrayWrapper tx) {
         txList.add(tx);
     }
 
-    public void addTxAll(List<BW> txl) {
+    public void addTxAll(List<ByteArrayWrapper> txl) {
         txList.addAll(txl);
     }
 
@@ -55,7 +56,7 @@ public class TxDependList<BW> {
         this.timeStamp = timeStamp;
     }
 
-    public int compare(TxDependList<BW> td) {
+    public int compare(TxDependList td) {
         return timeStamp.compareTo(td.timeStamp);
     }
 }

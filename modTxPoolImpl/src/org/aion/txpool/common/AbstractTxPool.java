@@ -64,7 +64,7 @@ public abstract class AbstractTxPool {
      * energy cost = energy consumption * energy price @LinkedHashSet<TxPoolList<ByteArrayWrapper>>
      * the TxPoolList of the first transaction hash
      */
-    private final SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>>
+    private final SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList>>
             feeView = Collections.synchronizedSortedMap(new TreeMap<>(Collections.reverseOrder()));
     /**
      * accountView : Map<ByteArrayWrapper, AccountState> @ByteArrayWrapper account
@@ -97,7 +97,7 @@ public abstract class AbstractTxPool {
         return this.mainMap;
     }
 
-    protected SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>>
+    protected SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList>>
             getFeeView() {
         return this.feeView;
     }
@@ -531,7 +531,7 @@ public abstract class AbstractTxPool {
                     }
                 } else {
 
-                    TxDependList<ByteArrayWrapper> txl = new TxDependList<>();
+                    TxDependList txl = new TxDependList();
                     BigInteger timestamp = BigInteger.ZERO;
                     for (BigInteger i = ps.firstNonce;
                             i.compareTo(ps.firstNonce.add(BigInteger.valueOf(ps.combo))) < 0;
@@ -554,7 +554,7 @@ public abstract class AbstractTxPool {
                     }
 
                     if (this.feeView.get(ps.fee) == null) {
-                        Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> set =
+                        Map<ByteArrayWrapper, TxDependList> set =
                                 new LinkedHashMap<>();
                         set.put(txl.getTxList().get(0), txl);
 
