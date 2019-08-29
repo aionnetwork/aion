@@ -66,12 +66,16 @@ public class CliTest {
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
     private static final File AVM_TEST_BASE_PATH = new File(BASE_PATH, "avmtestnet");
+    private static final File MASTERY_V2_BASE_PATH = new File(BASE_PATH, "v2mastery");
+
 
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
     private static final File AVM_TEST_CONFIG_PATH = new File(CONFIG_PATH, "avmtestnet");
+    private static final File MASTERY_V2_CONFIG_PATH = new File(CONFIG_PATH, "v2mastery");
+
 
     private static final String module = "modAionImpl";
 
@@ -90,18 +94,24 @@ public class CliTest {
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
     private static final File avmtestnetConfig = new File(AVM_TEST_CONFIG_PATH, configFileName);
+    private static final File masteryv2Config = new File(MASTERY_V2_CONFIG_PATH, configFileName);
+
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
     private static final File avmtestnetGenesis = new File(AVM_TEST_CONFIG_PATH, genesisFileName);
+    private static final File masteryv2Genesis = new File(MASTERY_V2_CONFIG_PATH, genesisFileName);
+
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
     private static final File avmtestnetFork = new File(AVM_TEST_CONFIG_PATH, forkFileName);
+    private static final File masteryv2Fork = new File(MASTERY_V2_CONFIG_PATH, forkFileName);
+
 
     private static final String DEFAULT_PORT = "30303";
     private static final String TEST_PORT = "12345";
@@ -146,6 +156,17 @@ public class CliTest {
             Cli.copyRecursively(genesis, avmtestnetGenesis);
             Cli.copyRecursively(fork, avmtestnetFork);
         }
+
+        if (BASE_PATH.contains(module) && !masteryv2Config.exists()) {
+            // save config to disk at expected location for new kernel
+            if (!MASTERY_V2_CONFIG_PATH.exists()) {
+                assertThat(MASTERY_V2_CONFIG_PATH.mkdir()).isTrue();
+            }
+            Cli.copyRecursively(config, masteryv2Config);
+            Cli.copyRecursively(genesis, masteryv2Genesis);
+            Cli.copyRecursively(fork, masteryv2Fork);
+        }
+
         cfg.resetInternal();
         doReturn("password").when(mockpr).readPassword(any(), any());
         doCallRealMethod().when(mockCli).call(any(), any());
@@ -169,6 +190,7 @@ public class CliTest {
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
         deleteRecursively(AVM_TEST_BASE_PATH);
+        deleteRecursively(MASTERY_V2_BASE_PATH);
     }
 
     /**
@@ -262,6 +284,13 @@ public class CliTest {
         for (String op : net_options) {
             // avmtestnet as parameter
             parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
+        }
+
+        // network alone with masteryv2
+        expected = MASTERY_V2_BASE_PATH.getAbsolutePath();
+        for (String op : net_options) {
+            // v2mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "v2mastery"}, RUN, expected});
         }
 
         // network and directory with testnet
@@ -423,6 +452,14 @@ public class CliTest {
             // avmtestnet as parameter
             parameters.add(
                     new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
+        }
+
+        expected = MASTERY_V2_BASE_PATH.getAbsolutePath();
+
+        for (String op : options) {
+            // avmtestnet as parameter
+            parameters.add(
+                new Object[] {new String[] {op, "v2mastery"}, masteryv2Config, expected});
         }
 
         // config and directory
