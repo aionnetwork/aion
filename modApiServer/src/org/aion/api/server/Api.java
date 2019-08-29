@@ -23,7 +23,7 @@ import org.aion.solidity.Compiler;
 import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.slf4j.Logger;
 
 public abstract class Api {

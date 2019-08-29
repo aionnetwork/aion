@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.pendingState;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;

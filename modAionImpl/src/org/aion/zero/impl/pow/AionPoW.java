@@ -23,7 +23,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.IPendingState;
+import org.aion.zero.impl.pendingState.IPendingState;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.blockchain.AionImpl;

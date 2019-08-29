@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.pendingState;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -15,6 +15,9 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
+import org.aion.zero.impl.blockchain.AionHub;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
@@ -36,7 +39,7 @@ import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 
 public class PendingStateTest {
-    private StandaloneBlockchain.Bundle bundle;
+    private Bundle bundle;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private AionPendingStateImpl pendingState;
@@ -70,8 +73,7 @@ public class PendingStateTest {
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
 
-        pendingState = (AionPendingStateImpl) AionHub
-            .createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository()).getPendingState();
+        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository()).getPendingState();
     }
 
     @Test

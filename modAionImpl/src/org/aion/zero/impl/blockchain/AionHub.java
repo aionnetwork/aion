@@ -29,6 +29,7 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -203,13 +204,13 @@ public class AionHub {
             p2pMgr.run();
         }
 
-        ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
+        this.mempool.setP2pMgr(this.p2pMgr);
 
         this.pow = new AionPoW();
         this.pow.init(_blockchain, mempool, eventMgr);
     }
 
-    static AionHub createForTesting(
+    public static AionHub createForTesting(
             CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
         return new AionHub(_cfgAion, _blockchain, _repository, true);
     }

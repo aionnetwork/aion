@@ -1,21 +1,15 @@
 package org.aion.api.server.rpc2;
 
-import org.aion.api.server.rpc.RpcError;
-import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.pod.CallRequest;
 import org.aion.api.server.rpc2.autogen.pod.Transaction;
-import org.aion.api.server.types.Tx;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.math.BigInteger;
 

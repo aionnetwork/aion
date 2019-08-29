@@ -11,7 +11,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;

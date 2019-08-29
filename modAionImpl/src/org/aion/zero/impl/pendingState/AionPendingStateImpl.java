@@ -1,4 +1,4 @@
-package org.aion.zero.impl.blockchain;
+package org.aion.zero.impl.pendingState;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -34,6 +34,9 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.mcf.config.CfgFork;
 import org.aion.base.AccountState;

@@ -41,7 +41,7 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;

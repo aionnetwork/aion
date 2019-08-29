@@ -70,7 +70,7 @@ public class AionHubTest {
                 if (t.isAlive()) {
                     String name = t.getName();
 
-                    if (name.contains("p2p-") || name.contains("pool-") || name.contains("EpPS")) {
+                    if (name.contains("p2p-") || name.contains("EpPS")) {
                         t.interrupt();
                         wait = true;
                     }

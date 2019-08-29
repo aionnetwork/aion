@@ -25,7 +25,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.IPeerMetric;
 import org.aion.p2p.Msg;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
