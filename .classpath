@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="modRlp/src"/>
 	<classpathentry kind="src" path="aion_fastvm/modFastVM/src"/>
 	<classpathentry kind="src" path="modCrypto/src_native"/>
-	<classpathentry kind="src" path="modTxPoolImpl/src"/>
 	<classpathentry kind="src" path="modCrypto/src"/>
 	<classpathentry kind="src" path="modP2p/src"/>
 	<classpathentry kind="src" path="modLogger/src"/>

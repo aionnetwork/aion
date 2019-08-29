@@ -1,4 +1,4 @@
-package org.aion.txpool.zero;
+package org.aion.txpool;
 
 import java.math.BigInteger;
 import java.util.AbstractMap;
@@ -28,10 +28,6 @@ import org.aion.base.AionTransaction;
 import org.aion.base.PooledTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.txpool.Constant;
-import org.aion.txpool.ITxPool;
-import org.aion.txpool.common.AccountState;
-import org.aion.txpool.common.TxDependList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;

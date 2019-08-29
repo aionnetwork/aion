@@ -1,4 +1,4 @@
-package org.aion.txpool.common;
+package org.aion.txpool;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

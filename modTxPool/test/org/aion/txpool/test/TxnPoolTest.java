@@ -18,7 +18,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.ITxPool;
-import org.aion.txpool.zero.TxPoolA0;
+import org.aion.txpool.TxPoolA0;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
