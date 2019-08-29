@@ -1,4 +1,4 @@
-package org.aion.mcf.trie;
+package org.aion.db.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,9 +15,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -31,7 +28,7 @@ import org.slf4j.Logger;
 public class JournalPruneDataSource implements ByteArrayKeyValueStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    private final Logger LOG;
 
     private class Updates {
         ByteArrayWrapper blockHeader;
@@ -68,9 +65,10 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     private AtomicBoolean enabled = new AtomicBoolean(false);
     private final boolean hasArchive;
 
-    public JournalPruneDataSource(ByteArrayKeyValueStore src) {
+    public JournalPruneDataSource(ByteArrayKeyValueStore src, Logger log) {
         this.src = src;
         this.hasArchive = src instanceof ArchivedDataSource;
+        this.LOG = log;
     }
 
     public void setPruneEnabled(boolean _enabled) {

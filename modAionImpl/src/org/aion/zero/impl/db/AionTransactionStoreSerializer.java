@@ -3,7 +3,7 @@ package org.aion.zero.impl.db;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.mcf.ds.Serializer;
+import org.aion.db.store.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionTxInfo;

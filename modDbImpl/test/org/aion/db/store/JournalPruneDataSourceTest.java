@@ -1,4 +1,4 @@
-package org.aion.mcf.trie;
+package org.aion.db.store;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -54,7 +54,7 @@ public class JournalPruneDataSourceTest {
     @Before
     public void open() {
         assertThat(source_db.open()).isTrue();
-        db = new JournalPruneDataSource(source_db);
+        db = new JournalPruneDataSource(source_db, log);
     }
 
     @After

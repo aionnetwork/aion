@@ -1,8 +1,6 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -20,7 +18,7 @@ public final class DataSource<V> {
     private int cacheSize;
     private Type cacheType;
     private boolean isDebug;
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CACHE.name());
+    private Logger log;
 
     public enum Type {
         LRU,
@@ -59,15 +57,16 @@ public final class DataSource<V> {
     }
 
     /**
-     * Recommended for debugging in correlation with the {@link LogEnum#CACHE} selected logging
+     * Recommended for debugging in correlation with the give {@link Logger} selected logging
      * level. The returned implementation prints information on missed caching opportunities when
      * {@link Logger#isTraceEnabled()} and usage statistics at data source close when {@link
      * Logger#isInfoEnabled()}.
      *
      * @return a builder that will return a data source with statistics on cache usage
      */
-    public DataSource<V> withStatistics() {
+    public DataSource<V> withStatistics(Logger log) {
         this.isDebug = true;
+        this.log = log;
         return this;
     }
 
@@ -76,9 +75,9 @@ public final class DataSource<V> {
             if (isDebug) {
                 switch (cacheType) {
                     case LRU:
-                        return new DebugLruDataSource<>(src, serializer, cacheSize, LOG);
+                        return new DebugLruDataSource<>(src, serializer, cacheSize, log);
                     case Window_TinyLfu:
-                        return new DebugCaffeineDataSource<>(src, serializer, cacheSize, LOG);
+                        return new DebugCaffeineDataSource<>(src, serializer, cacheSize, log);
                 }
             } else {
                 switch (cacheType) {

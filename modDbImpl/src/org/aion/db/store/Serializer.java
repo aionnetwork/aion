@@ -1,4 +1,4 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 /**
  * Serializer interface.

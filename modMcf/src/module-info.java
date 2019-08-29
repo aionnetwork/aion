@@ -15,7 +15,6 @@ module aion.mcf {
     requires aion.fastvm;
     requires commons.lang3;
     requires org.json;
-    requires com.github.benmanes.caffeine;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;
@@ -24,7 +23,6 @@ module aion.mcf {
     exports org.aion.mcf.core;
     exports org.aion.mcf.db;
     exports org.aion.mcf.db.exception;
-    exports org.aion.mcf.ds;
     exports org.aion.mcf.serial;
     exports org.aion.mcf.trie;
     exports org.aion.mcf.tx;

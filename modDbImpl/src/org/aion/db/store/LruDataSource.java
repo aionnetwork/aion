@@ -1,4 +1,4 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.util.types.ByteArrayWrapper;

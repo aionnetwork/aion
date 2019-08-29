@@ -12,12 +12,11 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.ds.DataSourceArray;
-import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.db.store.DataSourceArray;
+import org.aion.db.store.ObjectDataSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

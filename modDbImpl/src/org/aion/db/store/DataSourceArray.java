@@ -1,8 +1,8 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 import java.io.Closeable;
 import java.util.Optional;
-import org.aion.mcf.db.Flushable;
+import org.aion.db.Flushable;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 

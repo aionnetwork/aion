@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.store.ArchivedDataSource;
+import org.aion.db.store.JournalPruneDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
@@ -23,8 +25,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.db.exception.InvalidFilePathException;
-import org.aion.mcf.ds.ArchivedDataSource;
-import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -296,8 +296,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
 
             // Setup the cache for transaction data source.
             this.detailsDS =
-                    new DetailsDataStore(
-                            detailsDatabase, storageDatabase, graphDatabase, this.cfg);
+                    new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG, cfg);
 
             // pruning config
             pruneEnabled = this.cfg.getPruneConfig().isEnabled();
@@ -314,7 +313,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
                 databaseGroup.add(stateArchiveDatabase);
 
                 stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
-                stateDSPrune = new JournalPruneDataSource(stateWithArchive);
+                stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
                 // the size is defined assuming for two side chain blocks at each level
                 // since the pruned blocks are removed according to their level
                 // in practice the cache is likely to be one third the allocated size
@@ -327,7 +326,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
             } else {
                 stateArchiveDatabase = null;
                 stateWithArchive = null;
-                stateDSPrune = new JournalPruneDataSource(stateDatabase);
+                stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
 
                 if (pruneEnabled) {
                     LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);

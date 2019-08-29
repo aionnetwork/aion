@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.db;
 
 public interface Flushable {
     void flush();

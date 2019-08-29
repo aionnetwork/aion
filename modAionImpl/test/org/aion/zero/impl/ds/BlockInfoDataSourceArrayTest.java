@@ -1,4 +1,4 @@
-package org.aion.mcf.ds;
+package org.aion.zero.impl.ds;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
@@ -12,6 +12,8 @@ import junitparams.Parameters;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.store.DataSourceArray;
+import org.aion.db.store.ObjectDataSource;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * @author Alexandra Roatis
  */
 @RunWith(JUnitParamsRunner.class)
-public class DataSourceArrayTest {
+public class BlockInfoDataSourceArrayTest {
 
     public static final Logger log = LoggerFactory.getLogger("DB");
 

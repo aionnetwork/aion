@@ -5,12 +5,13 @@ import static org.aion.util.types.ByteArrayWrapper.wrap;
 import java.util.Iterator;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.store.JournalPruneDataSource;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryConfig;
-import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.slf4j.Logger;
 
 /** Detail data storage , */
 public class DetailsDataStore {
@@ -21,6 +22,7 @@ public class DetailsDataStore {
     private ByteArrayKeyValueDatabase detailsSrc;
     private ByteArrayKeyValueDatabase storageSrc;
     private ByteArrayKeyValueDatabase graphSrc;
+    private Logger log;
 
     public DetailsDataStore() {}
 
@@ -28,20 +30,22 @@ public class DetailsDataStore {
             ByteArrayKeyValueDatabase detailsCache,
             ByteArrayKeyValueDatabase storageCache,
             ByteArrayKeyValueDatabase graphCache,
+            Logger log,
             RepositoryConfig repoConfig) {
-
         this.repoConfig = repoConfig;
-        withDb(detailsCache, storageCache, graphCache);
+        withDb(detailsCache, storageCache, graphCache, log);
     }
 
     public DetailsDataStore withDb(
             ByteArrayKeyValueDatabase detailsSrc,
             ByteArrayKeyValueDatabase storageSrc,
-            ByteArrayKeyValueDatabase graphSrc) {
+            ByteArrayKeyValueDatabase graphSrc,
+            Logger log) {
         this.detailsSrc = detailsSrc;
         this.storageSrc = storageSrc;
         this.graphSrc = graphSrc;
-        this.storageDSPrune = new JournalPruneDataSource(storageSrc);
+        this.log = log;
+        this.storageDSPrune = new JournalPruneDataSource(storageSrc, log);
         return this;
     }
 

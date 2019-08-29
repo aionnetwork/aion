@@ -1,9 +1,9 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 import java.io.Closeable;
 import java.util.Optional;
+import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.mcf.db.Flushable;
 
 /**
  * Object Datasource.

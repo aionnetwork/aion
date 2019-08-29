@@ -1,4 +1,4 @@
-package org.aion.mcf.ds;
+package org.aion.db.store;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
