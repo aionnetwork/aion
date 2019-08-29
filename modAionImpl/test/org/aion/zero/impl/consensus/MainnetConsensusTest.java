@@ -12,7 +12,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.base.AccountState;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.util.conversions.Hex;

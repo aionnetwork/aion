@@ -55,7 +55,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;

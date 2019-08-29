@@ -56,7 +56,7 @@ import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 import org.aion.base.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.types.AionAddress;

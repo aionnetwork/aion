@@ -1,10 +1,7 @@
-package org.aion.vm;
+package org.aion.base;
 
 import static org.aion.base.TransactionTypes.ALL;
 import static org.aion.base.TransactionTypes.AVM_CREATE_CODE;
-
-import org.aion.base.AionTransaction;
-import org.aion.base.TransactionTypes;
 
 /**
  * Rules for validating transactions based on allowed types.

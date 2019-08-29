@@ -6,6 +6,7 @@ import java.util.List;
 import org.aion.avm.core.ExecutionType;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
+import org.aion.base.TransactionTypeRule;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;

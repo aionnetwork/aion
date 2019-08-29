@@ -41,7 +41,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.TransactionStore;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 import org.aion.vm.TxNrgRule;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;

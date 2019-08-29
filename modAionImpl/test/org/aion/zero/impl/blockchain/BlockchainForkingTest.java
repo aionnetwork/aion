@@ -23,7 +23,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;

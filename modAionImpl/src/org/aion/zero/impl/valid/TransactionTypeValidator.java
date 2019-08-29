@@ -1,10 +1,10 @@
 package org.aion.zero.impl.valid;
 
-import static org.aion.vm.TransactionTypeRule.isValidTransactionType;
+import static org.aion.base.TransactionTypeRule.isValidTransactionType;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
-import org.aion.vm.TransactionTypeRule;
+import org.aion.base.TransactionTypeRule;
 
 /**
  * Validator for the type field of transactions allowed by the network. The transaction types
