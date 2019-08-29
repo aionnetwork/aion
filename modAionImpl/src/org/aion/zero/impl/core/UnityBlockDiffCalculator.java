@@ -8,11 +8,14 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.types.GenesisStakingBlock;
+import org.aion.util.math.FixedPoint;
 
 public class UnityBlockDiffCalculator {
-    private static double controlRate = 1.0 + 0.05;
+    private static FixedPoint difficultyIncreaseRate = new FixedPoint(new BigDecimal("1.05"));
+    private static FixedPoint difficultyDecreaseRate = new FixedPoint(new BigDecimal("0.952381"));
 
-    // choise barrier = 14 because lambda =~ −13.862943611
+    // Our barrier should be log2*40 = 13.862943611, 
+    // but we only compare it against integer values, so we use 14
     private static long barrier = 14;
 
     private BlockConstants constants;
@@ -41,9 +44,9 @@ public class UnityBlockDiffCalculator {
 
         BigInteger newDiff;
         if (timeDelta >= barrier) {
-            newDiff = BigDecimal.valueOf(pd.doubleValue() / controlRate).toBigInteger();
+            newDiff = difficultyDecreaseRate.multiplyInteger(pd).toBigInteger();
         } else {
-            newDiff = BigDecimal.valueOf(pd.doubleValue() * controlRate).toBigInteger();
+            newDiff = difficultyIncreaseRate.multiplyInteger(pd).toBigInteger();
 
             // Unity protocol, increasing one difficulty if the difficulty changes too small can not
             // be adjusted by the controlRate.

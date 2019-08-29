@@ -38,6 +38,7 @@ import org.aion.zero.impl.pendingState.IPendingState;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.valid.StakingDeltaCalculator;
 import org.slf4j.Logger;
 
 /**
@@ -187,14 +188,7 @@ public class AionPoS {
                                     continue;
                                 }
 
-                                double newDelta =
-                                    newBlock.getDifficultyBI().doubleValue()
-                                        * Math.log(
-                                            BigInteger.TWO
-                                                .pow(256)
-                                                .divide(new BigInteger(1, HashUtil.h256(newSeed)))
-                                                .doubleValue())
-                                        / stakes.longValue();
+                                long newDelta = StakingDeltaCalculator.calculateDelta(newSeed, newBlock.getDifficultyBI(), stakes);
 
                                 delta.set(Math.max((long) (newDelta * 1000), 500));
                             }

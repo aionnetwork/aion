@@ -11,4 +11,5 @@ module aion.util {
     exports org.aion.util.map;
     exports org.aion.util.types;
     exports org.aion.util;
+    exports org.aion.util.math;
 }

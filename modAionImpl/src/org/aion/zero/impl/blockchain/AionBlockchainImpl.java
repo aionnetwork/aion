@@ -91,6 +91,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.valid.StakingDeltaCalculator;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -1209,13 +1210,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            long newDelta =
-                max(
-                    (long) (newDiff.doubleValue()
-                        * (Math.log(BigInteger.TWO.pow(256).doubleValue())
-                            - Math.log(new BigInteger(1, HashUtil.h256(newSeed)).doubleValue()))
-                        / stakes.longValue()),
-                    1);
+            long newDelta = StakingDeltaCalculator.calculateDelta(newSeed, newDiff, stakes);
 
             newTimestamp =
                 max(
