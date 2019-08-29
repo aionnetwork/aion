@@ -21,7 +21,6 @@ import java.util.Set;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;

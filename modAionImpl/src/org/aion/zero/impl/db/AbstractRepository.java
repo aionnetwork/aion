@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
@@ -19,12 +19,15 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.DetailsDataStore;
+import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.db.Repository;
+import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.util.types.ByteArrayWrapper;
-import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
