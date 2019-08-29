@@ -63,7 +63,7 @@ public class TxnPoolTest {
 
     @Test
     public void getTxnPool() {
-        ITxPool tp = new TxPoolA0();
+        ITxPool tp = new TxPoolA0(new Properties());
         assertNotNull(tp);
     }
 
