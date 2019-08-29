@@ -24,6 +24,8 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Unit tests for {@link AionBlockStore}.
@@ -32,10 +34,12 @@ import org.junit.Test;
  */
 public class AionBlockStoreTest {
 
+    public static final Logger log = LoggerFactory.getLogger("DB");
+
     // simply mocking the dbs didn't work possibly because of the use of locks
     // for some reason index.size() gets called by store.getChainBlockByNumber(X)
-    ByteArrayKeyValueDatabase index = new MockDB("index");
-    ByteArrayKeyValueDatabase blocks = new MockDB("blocks");
+    ByteArrayKeyValueDatabase index = new MockDB("index", log);
+    ByteArrayKeyValueDatabase blocks = new MockDB("blocks", log);
 
     // returns a list of blocks in ascending order of height
     List<Block> consecutiveBlocks = TestResources.consecutiveBlocks(4);

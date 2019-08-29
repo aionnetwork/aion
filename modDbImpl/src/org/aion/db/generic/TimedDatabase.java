@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.PersistenceMethod;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.aion.util.conversions.Hex;
 import org.slf4j.Logger;
 
@@ -20,11 +18,11 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
 
     /** Unlocked database. */
     protected final ByteArrayKeyValueDatabase database;
+    protected final Logger LOG;
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
-    public TimedDatabase(ByteArrayKeyValueDatabase _database) {
-        this.database = _database;
+    public TimedDatabase(ByteArrayKeyValueDatabase database, Logger log) {
+        this.database = database;
+        this.LOG = log;
     }
 
     @Override

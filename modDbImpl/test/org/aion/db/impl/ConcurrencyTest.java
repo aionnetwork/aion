@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @author Alexandra Roatis */
 @RunWith(JUnitParamsRunner.class)
@@ -29,6 +31,7 @@ public class ConcurrencyTest {
     private static final int CONCURRENT_THREADS = 200;
     private static final int TIME_OUT = 100; // in seconds
     private static final boolean DISPLAY_MESSAGES = false;
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     private static int count = 0;
 
@@ -220,7 +223,7 @@ public class ConcurrencyTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
         // open database
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -275,7 +278,7 @@ public class ConcurrencyTest {
     public void testConcurrentPut(Properties dbDef) throws InterruptedException {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -301,7 +304,7 @@ public class ConcurrencyTest {
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -328,7 +331,7 @@ public class ConcurrencyTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
         // open database
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with

@@ -8,8 +8,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.PersistenceMethod;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -28,10 +26,11 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     /** Read-write lock allowing concurrent reads and single write operations. */
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    protected final Logger LOG;
 
-    public LockedDatabase(ByteArrayKeyValueDatabase _unlockedDatabase) {
-        this.database = _unlockedDatabase;
+    public LockedDatabase(ByteArrayKeyValueDatabase unlockedDatabase, Logger log) {
+        this.database = unlockedDatabase;
+        this.LOG = log;
     }
 
     @Override

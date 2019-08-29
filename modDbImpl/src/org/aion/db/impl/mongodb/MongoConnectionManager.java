@@ -5,8 +5,6 @@ import com.mongodb.client.MongoClients;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -16,7 +14,6 @@ import org.slf4j.Logger;
  * connection once all instances are done being used.
  */
 public class MongoConnectionManager {
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     private MongoConnectionManager() {
         // Private constructor to force using the Singleton
@@ -36,12 +33,12 @@ public class MongoConnectionManager {
     public synchronized MongoClient getMongoClientInstance(String mongoClientUri) {
         MongoClient mongoClient;
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri)) {
-            LOG.info("Creating new mongo client to connect to {}", mongoClientUri);
+            System.out.println("Creating new mongo client to connect to " + mongoClientUri);
             mongoClient = MongoClients.create(mongoClientUri);
             this.mongoUriToClientMap.put(mongoClientUri, mongoClient);
             this.activeClientCountMap.put(mongoClientUri, new AtomicInteger(1));
         } else {
-            LOG.info("Reusing existing mongo client for {}", mongoClientUri);
+            System.out.println("Reusing existing mongo client for " + mongoClientUri);
             mongoClient = this.mongoUriToClientMap.get(mongoClientUri);
             this.activeClientCountMap.get(mongoClientUri).incrementAndGet();
         }
@@ -58,7 +55,7 @@ public class MongoConnectionManager {
 
         int newCount = this.activeClientCountMap.get(mongoClientUri).decrementAndGet();
         if (newCount == 0) {
-            LOG.info("Closing mongo client connection for {}", mongoClientUri);
+            System.out.println("Closing mongo client connection for " + mongoClientUri);
 
             this.mongoUriToClientMap.get(mongoClientUri).close();
             this.mongoUriToClientMap.remove(mongoClientUri);

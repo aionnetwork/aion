@@ -17,6 +17,7 @@ import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.WriteBatch;
+import org.slf4j.Logger;
 
 /**
  * @implNote The read-write lock is used only for those operations that are not synchronized by the
@@ -34,13 +35,14 @@ public class LevelDB extends AbstractDB {
     public LevelDB(
             String name,
             String path,
+            Logger log,
             boolean enableCache,
             boolean enableCompression,
             int maxOpenFiles,
             int blockSize,
             int writeBufferSize,
             int cacheSize) {
-        super(name, path, enableCache, enableCompression);
+        super(name, path, log, enableCache, enableCompression);
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;
         this.writeBufferSize = writeBufferSize;
@@ -54,10 +56,11 @@ public class LevelDB extends AbstractDB {
      * <p>Note: the values set in this constructor are not optimal, only historical.
      */
     @Deprecated
-    public LevelDB(String name, String path, boolean enableCache, boolean enableCompression) {
+    public LevelDB(String name, String path, Logger log, boolean enableCache, boolean enableCompression) {
         this(
                 name,
                 path,
+                log,
                 enableCache,
                 enableCompression,
                 LevelDBConstants.MAX_OPEN_FILES,
@@ -263,7 +266,7 @@ public class LevelDB extends AbstractDB {
         try {
             ReadOptions readOptions = new ReadOptions();
             readOptions.snapshot(db.getSnapshot());
-            return new LevelDBIteratorWrapper(readOptions, db.iterator(readOptions));
+            return new LevelDBIteratorWrapper(readOptions, db.iterator(readOptions), LOG);
         } catch (Exception e) {
             LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
@@ -281,16 +284,18 @@ public class LevelDB extends AbstractDB {
         private final DBIterator iterator;
         private final ReadOptions readOptions;
         private boolean closed;
+        private Logger LOG;
 
         /**
          * @implNote Building two wrappers for the same {@link DBIterator} will lead to inconsistent
          *     behavior.
          */
-        LevelDBIteratorWrapper(final ReadOptions readOptions, final DBIterator iterator) {
+        LevelDBIteratorWrapper(final ReadOptions readOptions, final DBIterator iterator, final Logger log) {
             this.readOptions = readOptions;
             this.iterator = iterator;
             iterator.seekToFirst();
             closed = false;
+            this.LOG = log;
         }
 
         @Override

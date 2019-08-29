@@ -32,6 +32,7 @@ import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
+import org.slf4j.Logger;
 
 /**
  * This class allows us to connect to a MongoDB instance to write the kernel's data. To test this
@@ -200,8 +201,8 @@ public class MongoDB extends AbstractDB {
     private WriteBatch batch = null;
     private boolean isReadOnly;
 
-    public MongoDB(String dbName, String mongoClientUri) {
-        super(dbName);
+    public MongoDB(String dbName, String mongoClientUri, Logger log) {
+        super(dbName, log);
         this.mongoClientUri = mongoClientUri;
 
         this.isReadOnly = mongoClientUri.contains("reader");

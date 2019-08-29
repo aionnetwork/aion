@@ -9,13 +9,14 @@ import java.util.Set;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
+import org.slf4j.Logger;
 
 public class MockDB extends AbstractDB {
 
     protected Map<ByteArrayWrapper, byte[]> kv;
 
-    public MockDB(String name) {
-        super(name);
+    public MockDB(String name, Logger log) {
+        super(name, log);
     }
 
     @Override

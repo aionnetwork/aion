@@ -40,6 +40,8 @@ import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Ignore
 @RunWith(Parameterized.class)
@@ -50,6 +52,7 @@ public class DriverBenchmarkTest {
     @Rule public RepeatRule repeatRule = new RepeatRule();
 
     public static File testDir = new File(System.getProperty("user.dir"), "tmp");
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     @Parameters(name = "{0}")
     public static Iterable<Object[]> data() {
@@ -57,17 +60,18 @@ public class DriverBenchmarkTest {
                 new Object[][] {
                     {
                         "H2MVMap",
-                        new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), false, false)
+                        new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), log, false, false)
                     },
                     {
                         "LevelDB",
-                        new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false)
+                        new LevelDB("LevelDBTest", testDir.getAbsolutePath(), log, false, false)
                     },
                     {
                         "RocksDb",
                         new RocksDBWrapper(
                                 "RocksDb",
                                 testDir.getAbsolutePath(),
+                                log,
                                 false,
                                 false,
                                 RocksDBConstants.MAX_OPEN_FILES,

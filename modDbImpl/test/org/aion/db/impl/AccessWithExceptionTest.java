@@ -18,10 +18,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(JUnitParamsRunner.class)
 public class AccessWithExceptionTest {
     private static final boolean VERBOSE = false;
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     @BeforeClass
     public static void setup() {
@@ -57,7 +60,7 @@ public class AccessWithExceptionTest {
     public void testIsEmptyWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -73,7 +76,7 @@ public class AccessWithExceptionTest {
     public void testKeysWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -89,7 +92,7 @@ public class AccessWithExceptionTest {
     public void testGetWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -105,7 +108,7 @@ public class AccessWithExceptionTest {
     public void testPutWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -121,7 +124,7 @@ public class AccessWithExceptionTest {
     public void testDeleteWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -137,7 +140,7 @@ public class AccessWithExceptionTest {
     public void testPutToBatchWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -153,7 +156,7 @@ public class AccessWithExceptionTest {
     public void testDeleteInBatchWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -169,7 +172,7 @@ public class AccessWithExceptionTest {
     public void testPutBatchWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         Map<byte[], byte[]> map = new HashMap<>();
@@ -190,7 +193,7 @@ public class AccessWithExceptionTest {
     public void testDeleteBatchWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         List<byte[]> list = new ArrayList<>();
@@ -211,7 +214,7 @@ public class AccessWithExceptionTest {
     public void testCommitWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -228,7 +231,7 @@ public class AccessWithExceptionTest {
     public void testSizeWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.isOpen()).isFalse();
 
         if (VERBOSE) {
@@ -244,7 +247,7 @@ public class AccessWithExceptionTest {
     public void testGetWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -260,7 +263,7 @@ public class AccessWithExceptionTest {
     public void testPutWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -276,7 +279,7 @@ public class AccessWithExceptionTest {
     public void testPutWithNullValue(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -292,7 +295,7 @@ public class AccessWithExceptionTest {
     public void testPutToBatchWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -308,7 +311,7 @@ public class AccessWithExceptionTest {
     public void testPutToBatchWithNullValue(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -324,7 +327,7 @@ public class AccessWithExceptionTest {
     public void testDeleteWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -340,7 +343,7 @@ public class AccessWithExceptionTest {
     public void testDeleteInBatchWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         if (VERBOSE) {
@@ -356,7 +359,7 @@ public class AccessWithExceptionTest {
     public void testPutBatchWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         Map<byte[], byte[]> map = new HashMap<>();
@@ -377,7 +380,7 @@ public class AccessWithExceptionTest {
     public void testPutBatchWithNullValue(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         Map<byte[], byte[]> map = new HashMap<>();
@@ -398,7 +401,7 @@ public class AccessWithExceptionTest {
     public void testDeleteBatchWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
         assertThat(db.open()).isTrue();
 
         List<byte[]> list = new ArrayList<>();

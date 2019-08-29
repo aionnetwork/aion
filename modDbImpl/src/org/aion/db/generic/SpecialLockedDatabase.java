@@ -3,6 +3,7 @@ package org.aion.db.generic;
 import java.util.Collection;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.slf4j.Logger;
 
 /**
  * Implements locking functionality for a database that is mostly thread-safe except for open and
@@ -12,8 +13,8 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
  */
 public class SpecialLockedDatabase extends LockedDatabase implements ByteArrayKeyValueDatabase {
 
-    public SpecialLockedDatabase(ByteArrayKeyValueDatabase _unlockedDatabase) {
-        super(_unlockedDatabase);
+    public SpecialLockedDatabase(ByteArrayKeyValueDatabase unlockedDatabase, Logger log) {
+        super(unlockedDatabase, log);
     }
 
     @Override

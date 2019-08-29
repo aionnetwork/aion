@@ -13,8 +13,6 @@ import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -23,8 +21,6 @@ import org.slf4j.Logger;
  * @author Alexandra Roatis
  */
 public abstract class DatabaseFactory {
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     public static class Props {
         public static final String DB_TYPE = "db_type";
@@ -53,38 +49,42 @@ public abstract class DatabaseFactory {
         public static final String READ_BUFFER_SIZE = "read_buffer_size";
     }
 
-    public static ByteArrayKeyValueDatabase connect(Properties info) {
-        return connect(info, false);
+    public static ByteArrayKeyValueDatabase connect(Properties info, Logger log) {
+        return connect(info, log, false);
     }
 
-    public static ByteArrayKeyValueDatabase connect(Properties info, boolean debug) {
+    public static ByteArrayKeyValueDatabase connect(Properties info, Logger log, boolean debug) {
+
+        if (log == null) {
+            throw new NullPointerException("Please provide a Logger for recording messages.");
+        }
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
         ByteArrayKeyValueDatabase db;
 
         if (dbType == DBVendor.UNKNOWN) {
             // the driver, if correct should check path and name
-            db = connect(info.getProperty(Props.DB_TYPE), info);
+            db = connect(info.getProperty(Props.DB_TYPE), info, log);
         } else {
 
             boolean enableLocking = getBoolean(info, Props.ENABLE_LOCKING);
 
             // first check for locking
             if (enableLocking) {
-                db = connectWithLocks(info);
+                db = connectWithLocks(info, log);
             } else {
                 // next check for heap cache
                 if (getBoolean(info, Props.ENABLE_HEAP_CACHE)) {
-                    db = connectWithCache(info);
+                    db = connectWithCache(info, log);
                 } else {
-                    db = connectBasic(info);
+                    db = connectBasic(info, log);
                 }
             }
         }
 
         // time operations during debug
         if (debug) {
-            return new TimedDatabase(db);
+            return new TimedDatabase(db, log);
         } else {
             return db;
         }
@@ -95,48 +95,49 @@ public abstract class DatabaseFactory {
      *
      * @return A database implementation with read-write locks.
      */
-    private static ByteArrayKeyValueDatabase connectWithLocks(Properties info) {
+    private static ByteArrayKeyValueDatabase connectWithLocks(Properties info, Logger log) {
         boolean enableHeapCache = getBoolean(info, Props.ENABLE_HEAP_CACHE);
         if (enableHeapCache) {
-            return new LockedDatabase(connectWithCache(info));
+            return new LockedDatabase(connectWithCache(info, log), log);
         } else {
             DBVendor vendor = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
             if (vendor == DBVendor.LEVELDB || vendor == DBVendor.ROCKSDB) {
-                return new SpecialLockedDatabase(connectBasic(info));
+                return new SpecialLockedDatabase(connectBasic(info, log), log);
             } else {
-                return new LockedDatabase(connectBasic(info));
+                return new LockedDatabase(connectBasic(info, log), log);
             }
         }
     }
 
     /** @return A database implementation with a caching layer. */
-    private static ByteArrayKeyValueDatabase connectWithCache(Properties info) {
+    private static ByteArrayKeyValueDatabase connectWithCache(Properties info, Logger log) {
         boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
         return new DatabaseWithCache(
-                connectBasic(info),
+                connectBasic(info, log),
+                log,
                 enableAutoCommit,
                 info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
                 getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
     }
 
     /** @return A database implementation for each of the vendors in {@link DBVendor}. */
-    private static AbstractDB connectBasic(Properties info) {
+    private static AbstractDB connectBasic(Properties info, Logger log) {
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
 
         String dbName = info.getProperty(Props.DB_NAME);
 
         if (dbType == DBVendor.MOCKDB) {
             // MockDB does not require name and path checks
-            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist!");
-            return new MockDB(dbName);
+            log.warn("WARNING: Active vendor is set to MockDB, data will not persist!");
+            return new MockDB(dbName, log);
         }
 
         String dbPath = info.getProperty(Props.DB_PATH);
 
         if (dbType == DBVendor.PERSISTENTMOCKDB) {
-            LOG.warn(
+            log.warn(
                     "WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
-            return new PersistentMockDB(dbName, dbPath);
+            return new PersistentMockDB(dbName, dbPath, log);
         }
 
         boolean enableDbCache = getBoolean(info, Props.ENABLE_DB_CACHE);
@@ -144,13 +145,13 @@ public abstract class DatabaseFactory {
 
         // ensure not null name for other databases
         if (dbName == null) {
-            LOG.error("Please provide a database name value that is not null.");
+            log.error("Please provide a database name value that is not null.");
             return null;
         }
 
         // ensure not null path for other databases
         if (dbPath == null) {
-            LOG.error("Please provide a database path value that is not null.");
+            log.error("Please provide a database path value that is not null.");
             return null;
         }
 
@@ -161,6 +162,7 @@ public abstract class DatabaseFactory {
                     return new LevelDB(
                             dbName,
                             dbPath,
+                            log,
                             enableDbCache,
                             enableDbCompression,
                             getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
@@ -176,6 +178,7 @@ public abstract class DatabaseFactory {
                     return new RocksDBWrapper(
                             dbName,
                             dbPath,
+                            log,
                             enableDbCache,
                             enableDbCompression,
                             getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
@@ -189,17 +192,17 @@ public abstract class DatabaseFactory {
                 }
             case H2:
                 {
-                    return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+                    return new H2MVMap(dbName, dbPath, log, enableDbCache, enableDbCompression);
                 }
             case MONGODB:
                 {
-                    return new MongoDB(dbName, dbPath);
+                    return new MongoDB(dbName, dbPath, log);
                 }
             default:
                 break;
         }
 
-        LOG.error("Invalid database type provided: {}", dbType);
+        log.error("Invalid database type provided: {}", dbType);
         return null;
     }
 
@@ -207,7 +210,7 @@ public abstract class DatabaseFactory {
      * @return A database implementation based on a driver implementing the {@link IDriver}
      *     interface.
      */
-    public static ByteArrayKeyValueDatabase connect(String driverName, Properties info) {
+    public static ByteArrayKeyValueDatabase connect(String driverName, Properties info, Logger log) {
         try {
             // see if the given name is a valid driver
             IDriver driver =
@@ -215,18 +218,18 @@ public abstract class DatabaseFactory {
                             .getDeclaredConstructor()
                             .newInstance();
             // return a connection
-            return driver.connect(info);
+            return driver.connect(info, log);
         } catch (Exception e) {
-            LOG.error("Could not load database driver.", e);
+            log.error("Could not load database driver.", e);
         }
 
-        LOG.error("Invalid database driver provided: {}", driverName);
+        log.error("Invalid database driver provided: {}", driverName);
         return null;
     }
 
     /** @return A mock database. */
-    public static ByteArrayKeyValueDatabase connect(String _dbName) {
-        return new MockDB(_dbName);
+    public static ByteArrayKeyValueDatabase connect(String dbName, Logger log) {
+        return new MockDB(dbName, log);
     }
 
     private static boolean getBoolean(Properties info, String prop) {

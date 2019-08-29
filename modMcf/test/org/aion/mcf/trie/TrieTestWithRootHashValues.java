@@ -11,6 +11,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /** @author Alexandra Roatis */
@@ -29,7 +31,9 @@ public class TrieTestWithRootHashValues {
     private static String test = "test";
     private static String dude = "dude";
 
-    private MockDB mockDb = new MockDB("TrieTest");
+    public static final Logger log = LoggerFactory.getLogger("DB");
+
+    private MockDB mockDb = new MockDB("TrieTest", log);
 
     @Before
     public void setHashFunction() {
@@ -272,7 +276,7 @@ public class TrieTestWithRootHashValues {
         byte[] val3 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
         byte[] val4 = Hex.decode("01");
 
-        TrieImpl storage = new TrieImpl(new MockDB("Test"));
+        TrieImpl storage = new TrieImpl(new MockDB("Test", log));
         storage.update(key1, val1);
         storage.update(key2, val2);
         storage.update(key3, val3);

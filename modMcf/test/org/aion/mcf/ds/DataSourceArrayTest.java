@@ -17,6 +17,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests for {@link DataSourceArray}.
@@ -25,6 +27,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JUnitParamsRunner.class)
 public class DataSourceArrayTest {
+
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     private static List<AionBlockStore.BlockInfo> infoList;
 
@@ -43,7 +47,7 @@ public class DataSourceArrayTest {
 
     @Before
     public void beforeTest() {
-        db = new MockDB("test_database");
+        db = new MockDB("test_database", log);
         db.open();
         testIndex = new DataSourceArray<>(new ObjectDataSource<>(db, BLOCK_INFO_SERIALIZER));
     }

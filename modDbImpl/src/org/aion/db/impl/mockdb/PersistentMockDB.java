@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
+import org.slf4j.Logger;
 
 /**
  * Provides the same behavior as {@link MockDB} with the addition that data is read from a file on
@@ -21,8 +22,8 @@ import org.aion.util.types.ByteArrayWrapper;
  */
 public class PersistentMockDB extends MockDB {
 
-    public PersistentMockDB(String name, String path) {
-        super(name);
+    public PersistentMockDB(String name, String path, Logger log) {
+        super(name, log);
 
         Objects.requireNonNull(path, "The database path cannot be null.");
         this.path = new File(path, name).getAbsolutePath();

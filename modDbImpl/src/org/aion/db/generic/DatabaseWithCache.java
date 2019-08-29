@@ -13,8 +13,6 @@ import java.util.Optional;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.PersistenceMethod;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -27,10 +25,10 @@ import org.slf4j.Logger;
  */
 public class DatabaseWithCache implements ByteArrayKeyValueDatabase {
 
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** Underlying database implementation. */
     protected AbstractDB database;
+    private final Logger LOG;
     /** Underlying cache implementation that will be instantiated by default as a LRU cache. */
     private LoadingCache<ByteArrayWrapper, Optional<byte[]>> loadingCache = null;
 
@@ -46,21 +44,17 @@ public class DatabaseWithCache implements ByteArrayKeyValueDatabase {
     private boolean enableAutoCommit;
 
     public DatabaseWithCache(
-            AbstractDB _database,
+            AbstractDB database,
+            Logger log,
             boolean enableAutoCommit,
             String max_cache_size,
             boolean enableStats) {
-        this(enableAutoCommit, max_cache_size, enableStats);
-        database = _database;
-    }
+        this.database = database;
+        this.LOG = log;
 
-    private DatabaseWithCache(
-            boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
         this.enableAutoCommit = enableAutoCommit;
-
         Long val = max_cache_size != null ? Longs.tryParse(max_cache_size) : null;
         this.maxSize = val == null ? 0 : val;
-
         this.statsEnabled = enableStats;
     }
 

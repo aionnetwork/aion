@@ -12,6 +12,8 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockDBDriverTest {
 
@@ -19,6 +21,7 @@ public class MockDBDriverTest {
     private static DBVendor vendor;
     private static MockDBDriver driver;
     private static Properties props;
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     @Before
     public void setUp() {
@@ -35,11 +38,11 @@ public class MockDBDriverTest {
     @Test
     public void testDriverReturnDatabase() {
         // It should return an instance of the HashMapDB given the correct properties.
-        db = DatabaseFactory.connect(props);
+        db = DatabaseFactory.connect(props, log);
         assertNotNull(db);
 
         props.setProperty(DB_TYPE, driver.getClass().getName());
-        db = driver.connect(props);
+        db = driver.connect(props, log);
         assertNotNull(db);
     }
 
@@ -47,10 +50,10 @@ public class MockDBDriverTest {
     public void testDriverReturnNull() {
         // It should return null if given incorrect properties.
         props.setProperty(DB_TYPE, "leveldb");
-        db = DatabaseFactory.connect(props);
+        db = DatabaseFactory.connect(props, log);
         assertNull(db);
 
-        db = driver.connect(props);
+        db = driver.connect(props, log);
         assertNull(db);
     }
 
@@ -66,6 +69,6 @@ public class MockDBDriverTest {
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
-        new MockDB(null);
+        new MockDB(null, log);
     }
 }

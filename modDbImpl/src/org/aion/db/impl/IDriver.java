@@ -1,5 +1,7 @@
 package org.aion.db.impl;
 
+import org.slf4j.Logger;
+
 public interface IDriver {
 
     /**
@@ -8,7 +10,7 @@ public interface IDriver {
      * @param info the parameters for this database, all represented in String.
      * @return HashMapDB, or null.
      */
-    ByteArrayKeyValueDatabase connect(java.util.Properties info);
+    ByteArrayKeyValueDatabase connect(java.util.Properties info, Logger log);
 
     /**
      * Retrieves the driver's major version number. Initially this should be 1.

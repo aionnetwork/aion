@@ -10,12 +10,15 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class H2MVMapDriverTest {
 
     public static String dbPath = new File(System.getProperty("user.dir"), "tmp").getAbsolutePath();
     public static String dbVendor = DBVendor.H2.toValue();
     public static String dbName = "test";
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     private DBVendor driver = DBVendor.H2;
 
@@ -28,7 +31,7 @@ public class H2MVMapDriverTest {
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
 
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props, log);
         assertNotNull(db);
     }
 
@@ -41,22 +44,22 @@ public class H2MVMapDriverTest {
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
 
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props, log);
         assertNull(db);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
-        new H2MVMap(null, dbPath, false, false);
+        new H2MVMap(null, dbPath, log, false, false);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullPath() {
-        new H2MVMap(dbName, null, false, false);
+        new H2MVMap(dbName, null, log, false, false);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullNameAndPath() {
-        new H2MVMap(null, null, false, false);
+        new H2MVMap(null, null, log, false, false);
     }
 }

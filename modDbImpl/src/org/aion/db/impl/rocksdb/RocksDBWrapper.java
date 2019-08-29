@@ -17,6 +17,7 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
+import org.slf4j.Logger;
 
 public class RocksDBWrapper extends AbstractDB {
 
@@ -30,6 +31,7 @@ public class RocksDBWrapper extends AbstractDB {
     public RocksDBWrapper(
             String name,
             String path,
+            Logger log,
             boolean enableDbCache,
             boolean enableDbCompression,
             int maxOpenFiles,
@@ -37,7 +39,7 @@ public class RocksDBWrapper extends AbstractDB {
             int writeBufferSize,
             int readBufferSize,
             int cacheSize) {
-        super(name, path, enableDbCache, enableDbCompression);
+        super(name, path, log, enableDbCache, enableDbCompression);
 
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;

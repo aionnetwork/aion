@@ -22,12 +22,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @author Alexandra Roatis */
 public class JournalPruneDataSourceTest {
 
     private static final String dbName = "TestDB";
-    private static final ByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
+    public static final Logger log = LoggerFactory.getLogger("DB");
+    private static final ByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName, log);
     private static JournalPruneDataSource db;
 
     private static final byte[] k1 = "key1".getBytes();

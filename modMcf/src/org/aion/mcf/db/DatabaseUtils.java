@@ -21,7 +21,7 @@ public class DatabaseUtils {
 
     public static ByteArrayKeyValueDatabase connectAndOpen(Properties info, Logger LOG) {
         // get the database object
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG);
 
         // open the database connection
         db.open();

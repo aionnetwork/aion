@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -21,24 +19,25 @@ import org.slf4j.Logger;
  */
 public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
     protected static final int DEFAULT_CACHE_SIZE_BYTES = 128 * 1024 * 1024; // 128mb
     protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 16 * 1024 * 1024; // 16mb
 
     protected final String name;
+    protected final Logger LOG;
+
     protected String path = null;
     protected boolean enableDbCache = false;
     protected boolean enableDbCompression = false;
 
-    protected AbstractDB(String name) {
+    protected AbstractDB(String name, Logger log) {
         Objects.requireNonNull(name, "The database name cannot be null.");
         this.name = name;
+        this.LOG = log;
     }
 
     protected AbstractDB(
-            String name, String path, boolean enableDbCache, boolean enableDbCompression) {
-        this(name);
+            String name, String path, Logger log, boolean enableDbCache, boolean enableDbCompression) {
+        this(name, log);
 
         Objects.requireNonNull(path, "The database path cannot be null.");
         this.path = new File(path, name).getAbsolutePath();

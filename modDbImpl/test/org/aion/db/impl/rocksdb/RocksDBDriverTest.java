@@ -10,12 +10,15 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RocksDBDriverTest {
 
     public static String dbPath = new File(System.getProperty("user.dir"), "tmp").getAbsolutePath();
     public static String dbVendor = DBVendor.ROCKSDB.toValue();
     public static String dbName = "test";
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     private DBVendor driver = DBVendor.ROCKSDB;
 
@@ -32,7 +35,7 @@ public class RocksDBDriverTest {
         props.setProperty(
                 Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
 
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props, log);
         assertNotNull(db);
     }
 
@@ -45,7 +48,7 @@ public class RocksDBDriverTest {
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
 
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props, log);
         assertNull(db);
     }
 
@@ -55,6 +58,7 @@ public class RocksDBDriverTest {
         new RocksDBWrapper(
                 null,
                 dbPath,
+                log,
                 false,
                 false,
                 RocksDBConstants.MAX_OPEN_FILES,
@@ -69,6 +73,7 @@ public class RocksDBDriverTest {
         new RocksDBWrapper(
                 dbName,
                 null,
+                log,
                 false,
                 false,
                 RocksDBConstants.MAX_OPEN_FILES,
@@ -83,6 +88,7 @@ public class RocksDBDriverTest {
         new RocksDBWrapper(
                 null,
                 null,
+                log,
                 false,
                 false,
                 RocksDBConstants.MAX_OPEN_FILES,

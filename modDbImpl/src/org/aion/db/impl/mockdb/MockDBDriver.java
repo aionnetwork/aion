@@ -5,8 +5,6 @@ import static org.aion.db.impl.DatabaseFactory.Props;
 import java.util.Properties;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.IDriver;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -18,24 +16,22 @@ import org.slf4j.Logger;
  */
 public class MockDBDriver implements IDriver {
 
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
     private static final int MAJOR_VERSION = 1;
     private static final int MINOR_VERSION = 0;
 
     /** @inheritDoc */
     @Override
-    public ByteArrayKeyValueDatabase connect(Properties info) {
+    public ByteArrayKeyValueDatabase connect(Properties info, Logger log) {
 
         String dbType = info.getProperty(Props.DB_TYPE);
         String dbName = info.getProperty(Props.DB_NAME);
 
         if (!dbType.equals(this.getClass().getName())) {
-            LOG.error("Invalid dbType provided: {}", dbType);
+            log.error("Invalid dbType provided: {}", dbType);
             return null;
         }
 
-        return new MockDB(dbName);
+        return new MockDB(dbName, log);
     }
 
     /** @inheritDoc */

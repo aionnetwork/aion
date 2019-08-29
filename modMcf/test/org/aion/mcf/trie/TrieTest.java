@@ -25,11 +25,15 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /** @author Alexandra Roatis */
 @RunWith(JUnitParamsRunner.class)
 public class TrieTest {
+
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     private String[] testKeys =
             new String[] {
@@ -514,7 +518,7 @@ public class TrieTest {
     @Parameters(method = "keyValue1Value2Parameters")
     public void testRollbackToRootScenarios(String key, String value1, String value2) {
         // create a new trie object with mock database
-        TrieImpl trie = new TrieImpl(new MockDB("TestKnownRoot"));
+        TrieImpl trie = new TrieImpl(new MockDB("TestKnownRoot", log));
 
         // -------------------------------------------------------------------------------------------------------------
         // insert (key,value1) pair into the trie
@@ -608,7 +612,7 @@ public class TrieTest {
             System.out.println("Number of pairs = " + pairs.size());
         }
 
-        TrieImpl trie = new TrieImpl(new MockDB("TestInsertRandomMultipleItems"));
+        TrieImpl trie = new TrieImpl(new MockDB("TestInsertRandomMultipleItems", log));
         String key, value;
 
         for (Map.Entry<String, String> entry : pairs.entrySet()) {
@@ -647,7 +651,7 @@ public class TrieTest {
             System.out.println("Number of pairs = " + pairs.size());
         }
 
-        TrieImpl trie = new TrieImpl(new MockDB("TestDeleteAll"));
+        TrieImpl trie = new TrieImpl(new MockDB("TestDeleteAll", log));
 
         // empty at start
         assertThat(Hex.toHexString(trie.getRootHash())).isEqualTo(ROOT_HASH_EMPTY);
@@ -937,7 +941,7 @@ public class TrieTest {
 
     @Test
     public void testGetMissingNodes_wCompleteTrie() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 
@@ -954,7 +958,7 @@ public class TrieTest {
 
     @Test
     public void testGetMissingNodes_wCompleteTrie_wStartFromValue() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 
@@ -972,7 +976,7 @@ public class TrieTest {
 
     @Test
     public void testGetMissingNodes_wIncompleteTrie() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 
@@ -1008,7 +1012,7 @@ public class TrieTest {
 
     @Test
     public void testGetMissingNodes_wIncompleteTrie_wStartFromValue() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 
@@ -1045,7 +1049,7 @@ public class TrieTest {
 
     @Test
     public void testGetReferencedTrieNodes() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 
@@ -1075,7 +1079,7 @@ public class TrieTest {
 
     @Test
     public void testGetReferencedTrieNodes_withStartFromAllNodes() {
-        MockDB mockDB = new MockDB("temp");
+        MockDB mockDB = new MockDB("temp", log);
         mockDB.open();
         TrieImpl trie = new TrieImpl(mockDB);
 

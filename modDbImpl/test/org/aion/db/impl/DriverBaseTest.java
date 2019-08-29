@@ -30,6 +30,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Unwritten Tests List:
@@ -53,6 +55,7 @@ public class DriverBaseTest {
     private static final String dbNamePrefix = "TestDB";
     private static final String dbPath = testDir.getAbsolutePath();
     private static final String unboundHeapCache = "0";
+    public static final Logger log = LoggerFactory.getLogger("DB");
 
     //    public static String boundHeapCache = "256";
 
@@ -66,9 +69,9 @@ public class DriverBaseTest {
                         new boolean[] {false, false, false},
                         // { isLocked, isHeapCacheEnabled, isAutocommitEnabled }
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // H2MVMap w. db cache wo. compression
@@ -76,9 +79,9 @@ public class DriverBaseTest {
                         "H2MVMap+dbCache",
                         new boolean[] {false, false, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, true, false
                         }
                     },
                     // H2MVMap wo. db cache w. compression
@@ -86,9 +89,9 @@ public class DriverBaseTest {
                         "H2MVMap+compression",
                         new boolean[] {false, false, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, true
                         }
                     },
                     // H2MVMap w. db cache w. compression
@@ -96,9 +99,9 @@ public class DriverBaseTest {
                         "H2MVMap+dbCache+compression",
                         new boolean[] {false, false, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, true, true
                         }
                     },
                     // LevelDB wo. db cache wo. compression
@@ -106,9 +109,9 @@ public class DriverBaseTest {
                         "LevelDB",
                         new boolean[] {false, false, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // LevelDB w. db cache wo. compression
@@ -116,9 +119,9 @@ public class DriverBaseTest {
                         "LevelDB+dbCache",
                         new boolean[] {false, false, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, true, false
                         }
                     },
                     // LevelDB wo. db cache w. compression
@@ -126,9 +129,9 @@ public class DriverBaseTest {
                         "LevelDB+compression",
                         new boolean[] {false, false, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, true
                         }
                     },
                     // LevelDB w. db cache w. compression
@@ -136,33 +139,33 @@ public class DriverBaseTest {
                         "LevelDB+dbCache+compression",
                         new boolean[] {false, false, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, true, true
                         }
                     },
                     // MockDB
                     {
                         "MockDB",
                         new boolean[] {false, false, false},
-                        MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] {dbNamePrefix}
+                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
+                        new Object[] {dbNamePrefix, log}
                     },
                     // PersistentMockDB
                     {
                         "PersistentMockDB",
                         new boolean[] {false, false, false},
-                        PersistentMockDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] {dbNamePrefix + DatabaseTestUtils.getNext(), dbPath}
+                        PersistentMockDB.class.getDeclaredConstructor(String.class, String.class, Logger.class),
+                        new Object[] {dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log}
                     },
                     // H2MVMap
                     {
                         "H2MVMap+lock",
                         new boolean[] {true, false, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // LevelDB wo. db cache wo. compression
@@ -170,26 +173,26 @@ public class DriverBaseTest {
                         "LevelDB+lock",
                         new boolean[] {true, false, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // MockDB
                     {
                         "MockDB+lock",
                         new boolean[] {true, false, false},
-                        MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] {dbNamePrefix}
+                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
+                        new Object[] {dbNamePrefix, log}
                     },
                     // H2MVMap
                     {
                         "H2MVMap+heapCache",
                         new boolean[] {false, true, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // LevelDB wo. db cache wo. compression
@@ -197,26 +200,26 @@ public class DriverBaseTest {
                         "LevelDB+heapCache",
                         new boolean[] {false, true, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // MockDB
                     {
                         "MockDB+heapCache",
                         new boolean[] {false, true, false},
-                        MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] {dbNamePrefix}
+                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
+                        new Object[] {dbNamePrefix, log}
                     },
                     // H2MVMap
                     {
                         "H2MVMap+heapCache+lock",
                         new boolean[] {true, true, false},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // LevelDB wo. db cache wo. compression
@@ -224,26 +227,26 @@ public class DriverBaseTest {
                         "LevelDB+heapCache+lock",
                         new boolean[] {true, true, false},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // MockDB
                     {
                         "MockDB+heapCache+lock",
                         new boolean[] {true, true, false},
-                        MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] {dbNamePrefix}
+                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
+                        new Object[] {dbNamePrefix, log}
                     },
                     // H2MVMap
                     {
                         "H2MVMap+heapCache+autocommit",
                         new boolean[] {false, true, true},
                         H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // LevelDB wo. db cache wo. compression
@@ -251,17 +254,17 @@ public class DriverBaseTest {
                         "LevelDB+heapCache+autocommit",
                         new boolean[] {false, true, true},
                         LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, boolean.class, boolean.class),
+                                String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
                         }
                     },
                     // MockDB
                     {
                         "MockDB+heapCache+autocommit",
                         new boolean[] {false, true, true},
-                        MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] {dbNamePrefix}
+                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
+                        new Object[] {dbNamePrefix, log}
                     },
                     // TODO: [Task AJK-169] re-enable MongoDB tests
                     // {
@@ -348,10 +351,10 @@ public class DriverBaseTest {
         this.db = constructor.newInstance(args);
 
         if (props[1]) {
-            this.db = new DatabaseWithCache((AbstractDB) this.db, props[2], "0", false);
+            this.db = new DatabaseWithCache((AbstractDB) this.db, log, props[2], "0", false);
         }
         if (props[0]) {
-            this.db = new LockedDatabase(this.db);
+            this.db = new LockedDatabase(this.db, log);
         }
     }
 

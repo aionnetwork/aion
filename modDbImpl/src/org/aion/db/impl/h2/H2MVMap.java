@@ -11,6 +11,7 @@ import org.h2.mvstore.FileStore;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.MVStoreTool;
+import org.slf4j.Logger;
 
 /*
  * IMPORTANT IMPLEMENTATION NOTE:
@@ -36,8 +37,8 @@ public class H2MVMap extends AbstractDB {
     private MVStore store;
     private MVMap<byte[], byte[]> map; // MVMap implements ConcurrentMap
 
-    public H2MVMap(String name, String path, boolean enableDbCache, boolean enableDbCompression) {
-        super(name, path, enableDbCache, enableDbCompression);
+    public H2MVMap(String name, String path, Logger log, boolean enableDbCache, boolean enableDbCompression) {
+        super(name, path, log, enableDbCache, enableDbCompression);
 
         this.dbFilePath = new File(path, name + "/" + name + ".mv.db").getAbsolutePath();
     }
