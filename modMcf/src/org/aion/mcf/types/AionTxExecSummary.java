@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.tx.TxExecSummary;
 import org.aion.mcf.tx.TxReceipt;
 import org.aion.mcf.vm.types.InternalTransactionUtil;
@@ -124,8 +123,8 @@ public class AionTxExecSummary implements TxExecSummary {
     /**
      * Builder for {@link AionTxExecSummary}, responsible for the correct creation of the
      * transaction summary. Contains all elements useful for referencing both the transactions and
-     * the results of the transaction. This also includes results like which rows of the storage
-     * (account storage {@link DetailsDataStore}) were {@code touched} by virtual machine.
+     * the results of the transaction. This also includes results like which rows of the account
+     * storage were {@code touched} by virtual machine.
      *
      * <p>Prefer using this builder, as rules will be enforced and the system will fast fail.
      *

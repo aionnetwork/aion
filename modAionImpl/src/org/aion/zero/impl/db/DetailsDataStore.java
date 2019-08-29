@@ -1,10 +1,13 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import java.util.Iterator;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.mcf.db.ContractDetails;
+import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;

@@ -19,7 +19,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryConfig;
