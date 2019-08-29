@@ -32,7 +32,6 @@ dependencies {
     compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
 
-    testCompile project(path: ':modTxPoolImpl')
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
 
  //   compile group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
