@@ -42,7 +42,7 @@ public class UnityTotalDifficultyTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         LongLivedAvm.createAndStartLongLivedAvm();
-        doReturn(1L).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
+        doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key = new ECKeyEd25519().fromPrivate(
                 StringUtils.StringHexToByteArray("0x042aea49b522407c0fadf19c184dc2d78b233c81b3951c0839967993d755dfde431efa65e0967765eaa2dc31f45e5df2f1a34751cf6e4ae0b6f10b7ee899094c"));
 
