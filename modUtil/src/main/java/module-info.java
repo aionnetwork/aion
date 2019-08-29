@@ -1,5 +1,6 @@
 module aion.util {
     requires aion.types;
+    requires com.google.common;
 
     exports org.aion.util.bytes;
     exports org.aion.util.conversions;
@@ -11,4 +12,5 @@ module aion.util {
     exports org.aion.util.map;
     exports org.aion.util.types;
     exports org.aion.util;
+    exports org.aion.util.math;
 }
