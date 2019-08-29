@@ -18,7 +18,7 @@ import org.aion.types.InternalTransaction;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.config.CfgAion;

@@ -16,7 +16,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;

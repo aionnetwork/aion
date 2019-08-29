@@ -20,7 +20,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;

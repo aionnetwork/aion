@@ -12,6 +12,7 @@ module aion.vm {
     requires aion.base;
     requires aion.rlp;
 
-    exports org.aion.vm;
     exports org.aion.vm.exception;
+    exports org.aion.vm.common;
+    exports org.aion.vm.avm;
 }

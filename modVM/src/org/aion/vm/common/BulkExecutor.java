@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.common;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +12,9 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
+import org.aion.vm.fvm.FvmTransactionExecutor;
+import org.aion.vm.precompiled.PrecompiledTransactionExecutor;
+import org.aion.vm.avm.AvmTransactionExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.base.AionTxExecSummary;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.fvm;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.common.PostExecutionWork;
 import org.aion.vm.exception.VMException;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;

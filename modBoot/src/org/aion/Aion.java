@@ -44,7 +44,7 @@ import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;

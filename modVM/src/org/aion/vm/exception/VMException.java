@@ -1,8 +1,10 @@
 package org.aion.vm.exception;
 
+import org.aion.vm.common.BulkExecutor;
+
 /**
  * @implNote The VMException is an Exception throws from the BulkExecutor {@link
- *     org.aion.vm.BulkExecutor} when the vm has fatal situation occurs,e.g. OOM. The kernel will
+ *     BulkExecutor} when the vm has fatal situation occurs,e.g. OOM. The kernel will
  *     handle this exception by shutting down the kernel immediately.
  * @author Jay Tseng
  */

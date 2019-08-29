@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.avm;
 
 /**
  * A long-lived Aion Virtual Machine.

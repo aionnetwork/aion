@@ -1,7 +1,7 @@
 package org.aion.zero.impl.valid;
 
-import static org.aion.vm.TxNrgRule.isValidNrgContractCreate;
-import static org.aion.vm.TxNrgRule.isValidNrgTx;
+import static org.aion.vm.common.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.vm.common.TxNrgRule.isValidNrgTx;
 
 import java.util.Collections;
 import java.util.Map;

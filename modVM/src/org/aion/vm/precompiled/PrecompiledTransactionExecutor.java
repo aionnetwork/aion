@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.precompiled;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,7 @@ import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
+import org.aion.vm.common.PostExecutionWork;
 import org.slf4j.Logger;
 
 public final class PrecompiledTransactionExecutor {

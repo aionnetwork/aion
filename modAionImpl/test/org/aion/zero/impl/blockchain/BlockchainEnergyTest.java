@@ -13,7 +13,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.After;
 import org.junit.Before;

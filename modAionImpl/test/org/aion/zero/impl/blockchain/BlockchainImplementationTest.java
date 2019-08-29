@@ -20,7 +20,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.MockRepositoryConfig;
 import org.aion.zero.impl.exceptions.HeaderStructureException;

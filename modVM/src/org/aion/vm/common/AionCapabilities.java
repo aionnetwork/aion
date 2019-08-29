@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.common;
 
 import org.aion.avm.core.IExternalCapabilities;
 import org.aion.crypto.HashUtil;

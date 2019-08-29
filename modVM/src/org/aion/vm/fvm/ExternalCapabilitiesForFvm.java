@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.fvm;
 
 import java.math.BigInteger;
 import org.aion.crypto.HashUtil;

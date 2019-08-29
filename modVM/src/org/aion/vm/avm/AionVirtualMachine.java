@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.avm;
 
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.avm.core.AvmConfiguration;
@@ -8,6 +8,7 @@ import org.aion.avm.core.ExecutionType;
 import org.aion.avm.core.FutureResult;
 import org.aion.avm.core.IExternalState;
 import org.aion.types.Transaction;
+import org.aion.vm.common.AionCapabilities;
 
 /** A thread-safe access-point to the Aion Virtual Machine. */
 public final class AionVirtualMachine {

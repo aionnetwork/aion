@@ -1,4 +1,4 @@
-package org.aion.vm;
+package org.aion.vm.avm;
 
 import java.math.BigInteger;
 import org.aion.avm.core.IExternalState;
@@ -9,6 +9,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.vm.common.TxNrgRule;
 
 public class ExternalStateForAvm implements IExternalState {
     private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;

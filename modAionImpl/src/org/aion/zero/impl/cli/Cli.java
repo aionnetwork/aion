@@ -22,7 +22,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;

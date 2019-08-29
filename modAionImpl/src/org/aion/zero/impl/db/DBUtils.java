@@ -20,7 +20,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.LongLivedAvm;
+import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.blockchain.AionHubUtils;
