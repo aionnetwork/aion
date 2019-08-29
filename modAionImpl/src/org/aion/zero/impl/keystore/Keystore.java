@@ -1,4 +1,4 @@
-package org.aion.mcf.account;
+package org.aion.zero.impl.keystore;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,6 +47,10 @@ public class Keystore {
     private static Path PATH;
 
     static {
+        initKeystorePath();
+    }
+
+    public static void initKeystorePath() {
         String storageDir = System.getProperty("local.storage.dir");
         if (storageDir == null || storageDir.equalsIgnoreCase("")) {
             storageDir = System.getProperty("user.dir");

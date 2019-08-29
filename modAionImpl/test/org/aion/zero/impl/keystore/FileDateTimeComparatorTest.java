@@ -1,4 +1,4 @@
-package org.aion.mcf.account;
+package org.aion.zero.impl.keystore;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import org.aion.zero.impl.keystore.FileDateTimeComparator;
 import org.junit.Test;
 
 public class FileDateTimeComparatorTest {

@@ -1,15 +1,13 @@
 package org.aion.zero.impl.cli;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.mcf.account.Keystore;
+import org.aion.zero.impl.keystore.Keystore;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.apache.commons.lang3.ArrayUtils;
 import picocli.CommandLine;

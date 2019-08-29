@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.mcf.account.Keystore;
+import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.junit.After;

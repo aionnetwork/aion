@@ -22,7 +22,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.api.server.account.AccountManager;
-import org.aion.mcf.account.Keystore;
+import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;

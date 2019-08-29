@@ -1,4 +1,4 @@
-package org.aion.mcf.account;
+package org.aion.zero.impl.keystore;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,6 +19,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.keystore.Keystore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,19 +37,13 @@ public class KeystoreTest {
         return sb.toString();
     }
 
-    private static final String KEYSTORE_PATH;
-
-    static {
-        String storageDir = System.getProperty("local.storage.dir");
-        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
-            storageDir = System.getProperty("user.dir");
-        }
-        KEYSTORE_PATH = storageDir + "/keystore";
-    }
+    private static String KEYSTORE_PATH;
 
     @Before
     public void init() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+        Keystore.initKeystorePath();
+        KEYSTORE_PATH = Keystore.getKeystorePath();
     }
 
     @After

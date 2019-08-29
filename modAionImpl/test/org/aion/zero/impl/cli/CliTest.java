@@ -36,7 +36,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.account.Keystore;
+import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgDb;
 import org.aion.util.conversions.Hex;
@@ -44,6 +44,7 @@ import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.aion.zero.impl.cli.Cli.TaskPriority;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -169,6 +170,11 @@ public class CliTest {
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
         deleteRecursively(AVM_TEST_BASE_PATH);
+    }
+
+    @AfterClass
+    public static void resetKeystorePath() {
+        Keystore.initKeystorePath(); // reset the keystore path we've changed in the tests
     }
 
     /**

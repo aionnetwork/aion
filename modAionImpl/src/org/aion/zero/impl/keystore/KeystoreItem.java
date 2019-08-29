@@ -1,4 +1,4 @@
-package org.aion.mcf.account;
+package org.aion.zero.impl.keystore;
 
 import java.io.UnsupportedEncodingException;
 import org.aion.rlp.RLP;
