@@ -7,11 +7,13 @@ import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
+import org.aion.util.math.FixedPoint;
+import org.aion.util.math.LogApproximator;
 import org.aion.zero.impl.types.StakedBlockHeader;
-
 public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
 
-    private static BigInteger boundry = BigInteger.TWO.pow(256);
+    private static final BigInteger boundary = BigInteger.ONE.shiftLeft(256);
+    private static final FixedPoint logBoundary = LogApproximator.log(boundary);
 
     @Override
     public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
@@ -46,13 +48,12 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
 
         BigInteger dividend =
                 new BigInteger(1, HashUtil.h256(((StakedBlockHeader) header).getSeed()));
+        
+        FixedPoint logDifference = logBoundary.subtract(LogApproximator.log(dividend));
 
-        double delta =
-                blockDifficulty.doubleValue()
-                        * (Math.log(boundry.doubleValue()) - Math.log(dividend.doubleValue()))
-                        / stake.doubleValue();
+        BigInteger delta = logDifference.multiplyInteger(blockDifficulty).toBigInteger().divide(stake);
 
-        long offset = max((long) delta, 1);
+        long offset = max(delta.longValueExact(), 1);
 
         if (timeStamp < (parentTimeStamp + offset)) {
             addError(formatError(timeStamp, parentTimeStamp, delta), errors);
@@ -62,7 +63,7 @@ public class StakingBlockTimeStampRule extends DependentBlockHeaderRule {
         return true;
     }
 
-    private static String formatError(long timeStamp, long parantTimeStamp, double delta) {
+    private static String formatError(long timeStamp, long parantTimeStamp, BigInteger delta) {
         return "block timestamp output ("
                 + timeStamp
                 + ") violates boundary condition ( parentTimeStamp:"

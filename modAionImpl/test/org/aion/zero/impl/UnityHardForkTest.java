@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -36,7 +37,7 @@ public class UnityHardForkTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         LongLivedAvm.createAndStartLongLivedAvm();
-        doReturn(1L).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
+        doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key =
                 new ECKeyEd25519()
                         .fromPrivate(
