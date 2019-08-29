@@ -56,13 +56,11 @@ public class StakingBlockTimeStampRule implements DependentBlockHeaderRule {
         long timeStamp = header.getTimestamp();
         BigInteger blockDifficulty = header.getDifficultyBI();
 
-        BigInteger dividend =
-                new BigInteger(1, HashUtil.h256(((StakingBlockHeader) header).getSeed()));
-
+        BigInteger dividend = new BigInteger(1, HashUtil.h256(((StakingBlockHeader) header).getSeed()));
+        
         FixedPoint logDifference = logBoundary.subtract(LogApproximator.log(dividend));
 
-        BigInteger delta =
-                logDifference.multiplyInteger(blockDifficulty).toBigInteger().divide(stakes);
+        BigInteger delta = logDifference.multiplyInteger(blockDifficulty).toBigInteger().divide(stakes);
 
         long offset = max(delta.longValueExact(), 1);
 
