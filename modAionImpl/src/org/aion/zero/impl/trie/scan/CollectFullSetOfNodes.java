@@ -1,4 +1,4 @@
-package org.aion.mcf.trie.scan;
+package org.aion.zero.impl.trie.scan;
 
 import java.util.HashSet;
 import java.util.Set;

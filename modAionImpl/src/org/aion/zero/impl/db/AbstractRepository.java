@@ -26,7 +26,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryConfig;
 import org.aion.mcf.db.exception.InvalidFilePathException;
-import org.aion.mcf.trie.Trie;
+import org.aion.zero.impl.trie.Trie;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 

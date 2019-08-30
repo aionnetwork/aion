@@ -17,7 +17,7 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.trie.TrieImpl;
+import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;

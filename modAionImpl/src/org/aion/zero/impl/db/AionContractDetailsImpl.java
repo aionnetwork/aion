@@ -17,7 +17,7 @@ import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.mcf.trie.SecureTrie;
+import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -26,6 +26,7 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.trie.Node;
 
 public class AionContractDetailsImpl extends AbstractContractDetails {
     private ByteArrayKeyValueStore dataSource;
@@ -575,7 +576,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * previous root of the trie will pass its original object reference if this root is not of type
      * {@code byte[]}. - The current root of the trie will pass its original object reference if
      * this root is not of type {@code byte[]}. - Each {@link org.aion.rlp.Value} object reference
-     * held by each of the {@link org.aion.mcf.trie.Node} objects in the underlying cache.
+     * held by each of the {@link Node} objects in the underlying cache.
      *
      * @return A copy of this object.
      */

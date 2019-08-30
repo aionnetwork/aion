@@ -1,4 +1,4 @@
-package org.aion.mcf.trie;
+package org.aion.zero.impl.trie;
 
 import static org.aion.rlp.Value.fromRlpEncoded;
 import static org.aion.util.types.ByteArrayWrapper.wrap;

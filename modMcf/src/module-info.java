@@ -24,7 +24,6 @@ module aion.mcf {
     exports org.aion.mcf.db;
     exports org.aion.mcf.db.exception;
     exports org.aion.mcf.serial;
-    exports org.aion.mcf.trie;
     exports org.aion.mcf.tx;
     exports org.aion.mcf.types;
     exports org.aion.mcf.valid;

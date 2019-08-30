@@ -13,6 +13,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.trie.Node;
 
 /** Contract details cache implementation. */
 public class ContractDetailsCacheImpl extends AbstractContractDetails {
@@ -282,7 +283,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      * object reference if this root is not of type {@code byte[]}. - The current root of the trie
      * will pass its original object reference if this root is not of type {@code byte[]}. - Each
      * {@link org.aion.rlp.Value} object reference held by each of the {@link
-     * org.aion.mcf.trie.Node} objects in the underlying cache.
+     * Node} objects in the underlying cache.
      *
      * @return A copy of this object.
      */

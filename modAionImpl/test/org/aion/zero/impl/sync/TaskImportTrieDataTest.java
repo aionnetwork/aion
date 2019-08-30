@@ -16,7 +16,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.rlp.RLP;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;

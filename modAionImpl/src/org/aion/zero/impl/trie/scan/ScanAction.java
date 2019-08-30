@@ -1,4 +1,4 @@
-package org.aion.mcf.trie.scan;
+package org.aion.zero.impl.trie.scan;
 
 import org.aion.rlp.Value;
 

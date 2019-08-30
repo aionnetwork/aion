@@ -1,4 +1,4 @@
-package org.aion.mcf.trie;
+package org.aion.zero.impl.trie;
 
 /**
  * Possible results after importing a trie node.

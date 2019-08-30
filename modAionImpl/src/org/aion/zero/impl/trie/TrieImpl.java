@@ -1,4 +1,4 @@
-package org.aion.mcf.trie;
+package org.aion.zero.impl.trie;
 
 import static java.util.Arrays.copyOfRange;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -25,18 +25,18 @@ import java.util.Set;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
-import org.aion.mcf.trie.scan.CollectMappings;
-import org.aion.mcf.trie.scan.CountNodes;
-import org.aion.mcf.trie.scan.ExtractToDatabase;
-import org.aion.mcf.trie.scan.ScanAction;
-import org.aion.mcf.trie.scan.TraceAllNodes;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.trie.scan.CollectFullSetOfNodes;
+import org.aion.zero.impl.trie.scan.CollectMappings;
+import org.aion.zero.impl.trie.scan.CountNodes;
+import org.aion.zero.impl.trie.scan.ExtractToDatabase;
+import org.aion.zero.impl.trie.scan.ScanAction;
+import org.aion.zero.impl.trie.scan.TraceAllNodes;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure to map between

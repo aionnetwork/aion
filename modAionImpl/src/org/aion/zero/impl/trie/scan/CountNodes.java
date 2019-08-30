@@ -1,6 +1,7 @@
-package org.aion.mcf.trie.scan;
+package org.aion.zero.impl.trie.scan;
 
 import org.aion.rlp.Value;
+import org.aion.zero.impl.trie.scan.ScanAction;
 
 /** @author Alexandra Roatis */
 public class CountNodes implements ScanAction {

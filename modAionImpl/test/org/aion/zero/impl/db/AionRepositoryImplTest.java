@@ -18,7 +18,7 @@ import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.RepositoryConfig;
-import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;

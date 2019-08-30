@@ -24,6 +24,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.trie.SecureTrie;
 import org.slf4j.Logger;
 
 public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase> {
@@ -479,7 +480,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
      * as type {@link Object} and are cast to their expected types and copied, but will not be
      * copied if they are not in fact their expected types. This is something to be aware of. Most
      * of the imperfection results from the inability to copy {@link ByteArrayKeyValueStore} and
-     * {@link org.aion.mcf.trie.SecureTrie} perfectly or at all (in the case of the former), for the
+     * {@link SecureTrie} perfectly or at all (in the case of the former), for the
      * above reasons.
      *
      * @param other The repository that will consume the state of this repository.
