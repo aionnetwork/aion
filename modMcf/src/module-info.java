@@ -6,7 +6,6 @@ module aion.mcf {
     requires aion.rlp;
     requires aion.db.impl;
     requires slf4j.api;
-    requires aion.p2p;
     requires com.google.common;
     requires commons.collections4;
     requires core;
