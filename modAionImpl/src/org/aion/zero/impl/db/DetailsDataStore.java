@@ -8,7 +8,6 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.mcf.db.RepositoryConfig;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;

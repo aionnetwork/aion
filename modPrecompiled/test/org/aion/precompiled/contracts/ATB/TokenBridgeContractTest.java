@@ -19,7 +19,7 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.PruneConfig;
-import org.aion.mcf.db.RepositoryConfig;
+import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;

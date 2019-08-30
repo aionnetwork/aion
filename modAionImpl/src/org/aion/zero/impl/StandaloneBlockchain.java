@@ -25,7 +25,7 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.db.RepositoryConfig;
+import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractInfo;

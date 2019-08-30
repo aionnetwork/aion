@@ -29,7 +29,6 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.db.RepositoryConfig;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
