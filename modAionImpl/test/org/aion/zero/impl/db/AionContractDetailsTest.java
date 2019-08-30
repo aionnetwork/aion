@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
+import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

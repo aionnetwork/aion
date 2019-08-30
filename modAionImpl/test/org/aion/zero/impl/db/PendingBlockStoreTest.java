@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.db.DatabaseUtils.deleteRecursively;
+import static org.aion.zero.impl.db.DatabaseUtils.deleteRecursively;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.STEP_COUNT;
 

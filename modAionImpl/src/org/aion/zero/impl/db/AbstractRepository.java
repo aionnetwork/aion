@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
-import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
 
 import java.io.File;
 import java.util.ArrayList;

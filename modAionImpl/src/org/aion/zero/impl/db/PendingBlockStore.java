@@ -1,7 +1,7 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
-import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
