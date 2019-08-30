@@ -1,7 +1,6 @@
 package org.aion.mcf.db;
 
 import java.math.BigInteger;
-import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -114,7 +113,7 @@ public interface RepositoryCache<AS, BSB> extends Repository<AS, BSB> {
      * repositories should be accessing it, and there are some other cases where objects are defined
      * as type {@link Object} and are cast to their expected types and copied, but will not be
      * copied if they are not in fact their expected types. This is something to be aware of. Most
-     * of the imperfection results from the inability to copy {@link ByteArrayKeyValueStore} and
+     * of the imperfection results from the inability to copy ByteArrayKeyValueStore and
      * SecureTrie perfectly or at all (in the case of the former), for the above reasons.
      *
      * @param other The repository that will consume the state of this repository.
