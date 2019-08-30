@@ -22,14 +22,12 @@ import org.slf4j.Logger;
  */
 public abstract class DatabaseFactory {
 
+    // TODO AKI-349: refactor to avoid reliance on string properties
     public static class Props {
         public static final String DB_TYPE = "db_type";
 
         public static final String DB_NAME = "db_name";
         public static final String DB_PATH = "db_path";
-
-        public static final String CHECK_INTEGRITY = "check_integrity";
-        public static final String PERSISTENT = "persistent";
 
         public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
         public static final String ENABLE_DB_CACHE = "enable_db_cache";

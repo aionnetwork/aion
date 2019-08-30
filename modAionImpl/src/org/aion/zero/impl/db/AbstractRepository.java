@@ -1,6 +1,5 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 
@@ -15,11 +14,13 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.DBVendor;
 import org.aion.db.store.ArchivedDataSource;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
+import org.aion.mcf.config.CfgDb.Props;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
@@ -133,7 +134,9 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
 
-        if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
+        DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.DB_TYPE));
+        boolean isPersistent = vendor.isFileBased();
+        if (isPersistent) {
             // verify user-provided path
             File f = new File(this.cfg.getDbPath());
             verifyAndBuildPath(f);

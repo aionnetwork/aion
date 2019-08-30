@@ -1,6 +1,5 @@
 package org.aion.mcf.config;
 
-import static org.aion.db.impl.DatabaseFactory.Props;
 
 import com.google.common.base.Objects;
 import java.util.Optional;
@@ -8,7 +7,7 @@ import java.util.Properties;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.db.impl.DBVendor;
+import org.aion.mcf.config.CfgDb.Props;
 import org.aion.util.others.Utils;
 
 public class CfgDbDetails {
@@ -20,7 +19,7 @@ public class CfgDbDetails {
     public static final String DEFAULT_CACHE_SIZE = "128mB";
 
     public CfgDbDetails() {
-        this.vendor = DBVendor.LEVELDB.toValue();
+        this.vendor = "leveldb";
 
         this.enable_auto_commit = true;
         this.enable_db_cache = true;
@@ -55,7 +54,7 @@ public class CfgDbDetails {
     /**
      * The maximum block size
      *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}
+     * <p>This parameter is specific to LevelDB
      */
     public int block_size;
 
@@ -63,7 +62,7 @@ public class CfgDbDetails {
      * The maximum allocated file descriptor that will be allocated per database, therefore the
      * total amount of file descriptors that are required is {@code NUM_DB * max_fd_open_alloc}
      *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}
+     * <p>This parameter is specific to LevelDB
      */
     public int max_fd_open_alloc;
 
@@ -80,7 +79,7 @@ public class CfgDbDetails {
      * memory usage. Also, a larger write buffer will result in a longer recovery time the next time
      * the database is opened.
      *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}
+     * <p>This parameter is specific to LevelDB
      */
     public int write_buffer_size;
 
@@ -89,7 +88,7 @@ public class CfgDbDetails {
     /**
      * Specify the size of the cache used by LevelDB
      *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}
+     * <p>This parameter is specific to LevelDB
      */
     public int cache_size;
 

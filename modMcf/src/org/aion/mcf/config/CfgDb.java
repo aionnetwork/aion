@@ -1,7 +1,5 @@
 package org.aion.mcf.config;
 
-import static org.aion.db.impl.DatabaseFactory.Props;
-
 import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -13,7 +11,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.db.impl.DBVendor;
 import org.aion.util.others.Utils;
 
 /** @author chris */
@@ -41,6 +38,33 @@ public class CfgDb {
         public static final String TX_POOL = "pendingtxPool";
     }
 
+    /** Properties used by the DatabaseFactory */
+    public static class Props {
+        public static final String DB_TYPE = "db_type";
+
+        public static final String DB_NAME = "db_name";
+        public static final String DB_PATH = "db_path";
+
+        public static final String CHECK_INTEGRITY = "check_integrity";
+
+        public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
+        public static final String ENABLE_DB_CACHE = "enable_db_cache";
+        public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
+        public static final String DB_CACHE_SIZE = "cache_size";
+
+        public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
+        public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
+        public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
+
+        public static final String ENABLE_LOCKING = "enable_locking";
+
+        public static final String MAX_FD_ALLOC = "max_fd_alloc_size";
+        public static final String BLOCK_SIZE = "block_size";
+
+        public static final String WRITE_BUFFER_SIZE = "write_buffer_size";
+        public static final String READ_BUFFER_SIZE = "read_buffer_size";
+    }
+
     private String path;
     private String vendor;
     private boolean compression;
@@ -61,7 +85,7 @@ public class CfgDb {
 
     public CfgDb() {
         this.path = "database";
-        this.vendor = DBVendor.LEVELDB.toValue();
+        this.vendor = "leveldb";
         this.compression = false;
         this.check_integrity = true;
         this.prune = new CfgPrune(false);
@@ -283,11 +307,6 @@ public class CfgDb {
         return compression;
     }
 
-    public boolean isFileBased() {
-        DBVendor vendor = DBVendor.fromString(this.vendor);
-        return vendor.isFileBased();
-    }
-
     public String getPath() {
         return path;
     }
@@ -383,30 +402,17 @@ public class CfgDb {
         Map<String, Properties> propSet = new HashMap<>();
 
         if (expert) {
-            // set to true if any of the dbs require persistence
-            boolean isPersistent = false;
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
                 propSet.put(entry.getKey(), entry.getValue().asProperties());
-
-                // checks if any of the settings require persistence
-                if (!isPersistent) {
-                    DBVendor vendor =
-                            DBVendor.fromString(
-                                    entry.getValue().asProperties().getProperty(Props.DB_TYPE));
-                    isPersistent = vendor.isFileBased();
-                }
             }
 
             Properties props = propSet.get(Names.DEFAULT);
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
-            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
         } else {
             Properties props = new Properties();
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
-            boolean isPersistent = DBVendor.fromString(this.vendor).isFileBased();
-            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));
