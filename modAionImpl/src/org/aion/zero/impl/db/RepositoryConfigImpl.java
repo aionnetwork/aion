@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Properties;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.DetailsProvider;
 import org.aion.mcf.db.PruneConfig;
 import org.aion.mcf.db.RepositoryConfig;
 

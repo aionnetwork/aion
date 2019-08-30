@@ -1,4 +1,6 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
+
+import org.aion.mcf.db.ContractDetails;
 
 /**
  * Interface for a details provider, provides instances of contract details
