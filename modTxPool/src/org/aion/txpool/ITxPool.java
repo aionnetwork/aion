@@ -39,7 +39,6 @@ public interface ITxPool {
 
     void updateBlkNrgLimit(long nrg);
 
-    @SuppressWarnings("SameReturnValue")
     String getVersion();
 
     List<AionTransaction> snapshotAll();

@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -34,6 +33,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.txpool.TxPoolA0;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
@@ -50,7 +50,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.Constant;
 import org.aion.txpool.ITxPool;
-import org.aion.txpool.TxPoolModule;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -317,16 +316,8 @@ public class AionPendingStateImpl implements IPendingState {
 
         if (!isSeed) {
 
-            try {
-                ServiceLoader.load(TxPoolModule.class);
-            } catch (Exception e) {
-                LOGGER_TX.error("load TxPoolModule service fail!", e);
-                throw e;
-            }
-
             Properties prop = new Properties();
 
-            prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
             // The BlockEnergyLimit will be updated when the best block found.
             prop.put(
                     ITxPool.PROP_BLOCK_NRG_LIMIT,
@@ -334,14 +325,8 @@ public class AionPendingStateImpl implements IPendingState {
                             CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
             prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
             prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
-            TxPoolModule txPoolModule;
-            try {
-                txPoolModule = TxPoolModule.getSingleton(prop);
-                //noinspection unchecked
-                this.txPool = txPoolModule.getTxPool();
-            } catch (Exception e) {
-                LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
-            }
+
+            this.txPool = new TxPoolA0(prop);
 
         } else {
             LOGGER_TX.info("Seed mode is enable");

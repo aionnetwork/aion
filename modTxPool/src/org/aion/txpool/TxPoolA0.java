@@ -34,32 +34,30 @@ import org.aion.util.time.TimeInstant;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
-@SuppressWarnings("unchecked")
 public class TxPoolA0 implements ITxPool {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
 
-    protected int seqTxCountMax = 16;
-    protected int txn_timeout = 86_400; // 1 day by seconds
-    protected int blkSizeLimit = Constant.MAX_BLK_SIZE; // 2MB
+    private int seqTxCountMax = 16;
+    private int txn_timeout = 86_400; // 1 day by seconds
+    private int blkSizeLimit = Constant.MAX_BLK_SIZE; // 2MB
 
-    protected final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
-    protected final int multiplyM = 1_000_000;
-    protected final int TXN_TIMEOUT_MIN = 10; // 10s
-    protected final int TXN_TIMEOUT_MAX = 86_400; // 1 day
+    private final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
+    private final int multiplyM = 1_000_000;
+    private final int TXN_TIMEOUT_MIN = 10; // 10s
+    private final int TXN_TIMEOUT_MAX = 86_400; // 1 day
 
-    protected final int BLK_SIZE_MAX = 16 * 1024 * 1024; // 16MB
-    protected final int BLK_SIZE_MIN = 1024 * 1024; // 1MB
+    private final int BLK_SIZE_MAX = 16 * 1024 * 1024; // 16MB
+    private final int BLK_SIZE_MIN = 1024 * 1024; // 1MB
 
-    protected final int BLK_NRG_MAX = 100_000_000;
-    protected final int BLK_NRG_MIN = 1_000_000;
-    protected final int SEQ_TX_MAX = 25;
-    protected final int SEQ_TX_MIN = 5;
+    private final int BLK_NRG_MAX = 100_000_000;
+    private final int BLK_NRG_MIN = 1_000_000;
+    private final int SEQ_TX_MAX = 25;
+    private final int SEQ_TX_MIN = 5;
 
     public TxPoolA0() {}
 
     public TxPoolA0(Properties config) {
-        super();
         setPoolArgs(config);
     }
 
@@ -323,7 +321,6 @@ public class TxPoolA0 implements ITxPool {
                 lock.writeLock().unlock();
             }
 
-            //noinspection unchecked
             removedTxl.add(pooledTx);
 
             if (LOG.isTraceEnabled()) {
@@ -696,26 +693,26 @@ public class TxPoolA0 implements ITxPool {
 
     protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    protected Map<ByteArrayWrapper, TXState> getMainMap() {
+    private Map<ByteArrayWrapper, TXState> getMainMap() {
         return this.mainMap;
     }
 
-    protected SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList>>
+    private SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList>>
     getFeeView() {
         return this.feeView;
     }
 
-    protected AccountState getAccView(AionAddress acc) {
+    private AccountState getAccView(AionAddress acc) {
 
         this.accountView.computeIfAbsent(acc, k -> new AccountState());
         return this.accountView.get(acc);
     }
 
-    protected Map<AionAddress, AccountState> getFullAcc() {
+    private Map<AionAddress, AccountState> getFullAcc() {
         return this.accountView;
     }
 
-    protected List<PoolState> getPoolStateView(AionAddress acc) {
+    private List<PoolState> getPoolStateView(AionAddress acc) {
 
         if (this.accountView.get(acc) == null) {
             this.poolStateView.put(acc, new LinkedList<>());
@@ -723,14 +720,14 @@ public class TxPoolA0 implements ITxPool {
         return this.poolStateView.get(acc);
     }
 
-    protected List<PooledTransaction> getOutdatedListImpl() {
+    private List<PooledTransaction> getOutdatedListImpl() {
         List<PooledTransaction> rtn = new ArrayList<>(this.outDated);
         this.outDated.clear();
 
         return rtn;
     }
 
-    protected void addOutDatedList(List<PooledTransaction> txl) {
+    private void addOutDatedList(List<PooledTransaction> txl) {
         this.outDated.addAll(txl);
     }
 
@@ -743,7 +740,7 @@ public class TxPoolA0 implements ITxPool {
         this.outDated.clear();
     }
 
-    protected void sortTxn() {
+    private void sortTxn() {
 
         Map<AionAddress, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap =
             new ConcurrentHashMap<>();
@@ -904,11 +901,11 @@ public class TxPoolA0 implements ITxPool {
         }
     }
 
-    protected SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> getTimeView() {
+    private SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> getTimeView() {
         return this.timeView;
     }
 
-    protected void updateAccPoolState() {
+    private void updateAccPoolState() {
 
         // iterate tx by account
         List<AionAddress> clearAddr = new ArrayList<>();
@@ -1107,7 +1104,7 @@ public class TxPoolA0 implements ITxPool {
         return true;
     }
 
-    protected void updateFeeMap() {
+    private void updateFeeMap() {
         for (Entry<AionAddress, List<PoolState>> e : this.poolStateView.entrySet()) {
             ByteArrayWrapper dependTx = null;
             for (PoolState ps : e.getValue()) {
@@ -1181,7 +1178,7 @@ public class TxPoolA0 implements ITxPool {
         }
     }
 
-    protected void setBestNonce(AionAddress addr, BigInteger bn) {
+    private void setBestNonce(AionAddress addr, BigInteger bn) {
         if (addr == null || bn == null) {
             throw new NullPointerException();
         }
@@ -1199,7 +1196,7 @@ public class TxPoolA0 implements ITxPool {
         }
     }
 
-    protected BigInteger getBestNonce(AionAddress addr) {
+    private BigInteger getBestNonce(AionAddress addr) {
         if (addr == null || bestNonce.get(addr) == null) {
             return BigInteger.ONE.negate();
         }
@@ -1211,7 +1208,7 @@ public class TxPoolA0 implements ITxPool {
         private boolean sorted = false;
         private PooledTransaction tx;
 
-        public TXState(PooledTransaction tx) {
+        TXState(PooledTransaction tx) {
             this.tx = tx;
         }
 
@@ -1245,7 +1242,7 @@ public class TxPoolA0 implements ITxPool {
                 && (bi.compareTo(firstNonce.add(BigInteger.valueOf(combo))) < 0);
         }
 
-        public BigInteger getFee() {
+        BigInteger getFee() {
             return fee;
         }
 

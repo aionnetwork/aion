@@ -6,7 +6,6 @@ dependencies {
     compile project(':modUtil')
     compile project(':modCrypto')
 
-    compile project(':modMcf')
     compile project(':modPrecompiled')
     compile files("${rootProject.projectDir}/lib/fastvm-f2a39b8.jar")
     compile files('../lib/org-aion-avm-core.jar')
