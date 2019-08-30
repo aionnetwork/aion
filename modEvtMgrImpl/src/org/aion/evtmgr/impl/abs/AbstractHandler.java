@@ -10,14 +10,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.impl.evt.EventDummy;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @author jay */
 public abstract class AbstractHandler {
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
+    protected static final Logger LOG = LoggerFactory.getLogger("EVTMGR");
 
     private Set<IEvent> events = new HashSet<>();
     private BlockingQueue<IEvent> queue = new LinkedBlockingQueue<>();

@@ -1,9 +1,6 @@
 ext.moduleName = 'org.aion.evtmgr'
 
 dependencies {
-    //testCompile 'network.aion:log4j:0.4.0'
-    testCompile project(':modLogger')
-
     testCompile project(':modEvtMgrImpl')
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

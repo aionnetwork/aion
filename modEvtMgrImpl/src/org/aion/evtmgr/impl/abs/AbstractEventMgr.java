@@ -6,14 +6,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IHandler;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @author jay */
 public abstract class AbstractEventMgr {
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
+    protected static final Logger LOG = LoggerFactory.getLogger("EVTMGR");
     protected Map<IHandler, IHandler> handlers;
     private AtomicBoolean run = new AtomicBoolean(false);
 

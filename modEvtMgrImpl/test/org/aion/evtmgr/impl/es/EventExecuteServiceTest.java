@@ -12,14 +12,12 @@ import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.junit.Test;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventExecuteServiceTest {
-    private static final Logger LOGGER_EVENT =
-            AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
+    private static final Logger LOGGER_EVENT = LoggerFactory.getLogger("EVTMGR");
     private EventExecuteService eventExecuteService =
             new EventExecuteService(100, "TestEES", Thread.NORM_PRIORITY, LOGGER_EVENT);
 
