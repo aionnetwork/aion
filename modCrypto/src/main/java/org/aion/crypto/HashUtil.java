@@ -1,21 +1,15 @@
 package org.aion.crypto;
 
-import static java.util.Arrays.copyOfRange;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2bNative;
-import org.aion.rlp.RLP;
 import org.aion.util.file.NativeLoader;
-import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.KeccakDigest;
-import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -40,8 +34,6 @@ public class HashUtil {
     protected static H256Type type = BLAKE2B_256;
 
     public static final byte[] EMPTY_DATA_HASH = h256(EMPTY_BYTE_ARRAY);
-    public static final byte[] EMPTY_LIST_HASH = h256(RLP.encodeList());
-    public static final byte[] EMPTY_TRIE_HASH = h256(RLP.encodeElement(EMPTY_BYTE_ARRAY));
 
     /**
      * Sets the 256-bit hash type.
@@ -213,60 +205,6 @@ public class HashUtil {
         Blake2b digest = Blake2b.Digest.newInstance(16);
         digest.update(in);
         return digest.digest();
-    }
-
-    /**
-     * Computes the ripemed160 hash fo the given input data.
-     *
-     * @param data Message to hash
-     * @return reipmd160 hash of the message
-     */
-    public static byte[] ripemd160(byte[] data) {
-        Digest digest = new RIPEMD160Digest();
-        if (data != null) {
-            byte[] resBuf = new byte[digest.getDigestSize()];
-            digest.update(data, 0, data.length);
-            digest.doFinal(resBuf, 0);
-            return resBuf;
-        }
-        throw new NullPointerException("Can't hash a NULL value");
-    }
-
-    /**
-     * Computes the SHA3 hash of the input.
-     *
-     * <p>NOTE: This method does NOT follow the NIST SHA3-256 standard, it's only an alias of the
-     * {@link #keccak256(byte[])} function, and thus being deprecated.
-     *
-     * @param input
-     * @return
-     */
-    @Deprecated
-    public static byte[] sha3(byte[] input) {
-        return keccak256(input);
-    }
-
-    /**
-     * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations. * @param input -
-     * data
-     *
-     * @return - 20 right bytes of the hash keccak of the data
-     */
-    public static byte[] keccak256omit12(byte[] input) {
-        byte[] hash = keccak256(input);
-        return copyOfRange(hash, 12, hash.length);
-    }
-
-    /** Calculates the address as per the QA2 definitions */
-    public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
-        ByteBuffer buf = ByteBuffer.allocate(32);
-        buf.put(AddressSpecs.A0_IDENTIFIER);
-
-        byte[] encSender = RLP.encodeElement(addr);
-        byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
-
-        buf.put(h256(RLP.encodeList(encSender, encNonce)), 1, 31);
-        return buf.array();
     }
 
     /**

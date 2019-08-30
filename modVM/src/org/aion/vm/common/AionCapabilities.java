@@ -1,6 +1,7 @@
 package org.aion.vm.common;
 
 import org.aion.avm.core.IExternalCapabilities;
+import org.aion.base.TxUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.Transaction;
@@ -29,7 +30,6 @@ public class AionCapabilities implements IExternalCapabilities {
 
     @Override
     public AionAddress generateContractAddress(Transaction tx) {
-        return new AionAddress(
-                HashUtil.calcNewAddr(tx.senderAddress.toByteArray(), tx.nonce.toByteArray()));
+        return TxUtil.calculateContractAddress(tx);
     }
 }

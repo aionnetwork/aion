@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.aion.base.AionTransaction;
+import org.aion.base.ConstantUtil;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
@@ -700,7 +700,7 @@ public class BlockchainImplementationTest {
                         .withNumber(parent.getNumber() + 1)
                         .withTimestamp(2 * System.currentTimeMillis())
                         .withExtraData(parent.getExtraData())
-                        .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withTxTrieRoot(ConstantUtil.EMPTY_TRIE_HASH)
                         .withEnergyLimit(parent.getNrgLimit());
         AionBlock block = new AionBlock(headerBuilder.build(), Collections.emptyList());
 

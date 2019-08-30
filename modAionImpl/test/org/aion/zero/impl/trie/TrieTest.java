@@ -1,7 +1,6 @@
 package org.aion.zero.impl.trie;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.util.bytes.ByteUtil.intToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -18,11 +17,11 @@ import java.util.Random;
 import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.rlp.Value;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.trie.TrieImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -750,7 +749,7 @@ public class TrieTest {
 
     private static String LONG_STRING =
             "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String ROOT_HASH_EMPTY = Hex.toHexString(EMPTY_TRIE_HASH);
+    private static String ROOT_HASH_EMPTY = Hex.toHexString(ConstantUtil.EMPTY_TRIE_HASH);
 
     private static String cat = "cat";
 

@@ -1,7 +1,7 @@
 package org.aion.base;
 
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
 import java.util.Arrays;

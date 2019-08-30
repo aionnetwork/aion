@@ -1,9 +1,9 @@
 package org.aion.zero.impl.trie;
 
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.assertEquals;
 
 import junitparams.JUnitParamsRunner;
+import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
 import org.junit.After;
@@ -21,7 +21,7 @@ public class TrieTestWithRootHashValues {
 
     private static String LONG_STRING =
             "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String ROOT_HASH_EMPTY = Hex.toHexString(EMPTY_TRIE_HASH);
+    private static String ROOT_HASH_EMPTY = Hex.toHexString(ConstantUtil.EMPTY_TRIE_HASH);
 
     private static String c = "c";
     private static String ca = "ca";
