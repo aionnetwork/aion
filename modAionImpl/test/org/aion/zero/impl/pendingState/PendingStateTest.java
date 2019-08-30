@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +20,6 @@ import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
-import org.aion.txpool.TxPoolModule;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
@@ -56,11 +54,7 @@ public class PendingStateTest {
     }
 
     @Before
-    public void reinitialize() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-        // This clears the TxPool between tests, otherwise the singleton instance persists.
-        Field instance = TxPoolModule.class.getDeclaredField("singleton");
-        instance.setAccessible(true);
-        instance.set(null, null);
+    public void reinitialize() throws SecurityException, IllegalArgumentException {
 
         bundle =
             new StandaloneBlockchain.Builder()

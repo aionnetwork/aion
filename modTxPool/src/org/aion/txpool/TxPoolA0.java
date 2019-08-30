@@ -34,7 +34,6 @@ import org.aion.util.time.TimeInstant;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
-@SuppressWarnings("unchecked")
 public class TxPoolA0 implements ITxPool {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
@@ -320,7 +319,6 @@ public class TxPoolA0 implements ITxPool {
                 lock.writeLock().unlock();
             }
 
-            //noinspection unchecked
             removedTxl.add(pooledTx);
 
             if (LOG.isTraceEnabled()) {

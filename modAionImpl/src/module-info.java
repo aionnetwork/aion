@@ -1,6 +1,5 @@
 module aion.zero.impl {
     uses org.aion.evtmgr.EventMgrModule;
-    uses org.aion.txpool.TxPoolModule;
 
     requires aion.util;
     requires aion.mcf;
