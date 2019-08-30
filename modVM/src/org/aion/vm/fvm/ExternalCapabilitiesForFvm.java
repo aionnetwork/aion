@@ -1,6 +1,7 @@
 package org.aion.vm.fvm;
 
 import java.math.BigInteger;
+import org.aion.base.TxUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.fastvm.IExternalCapabilities;
 import org.aion.types.AionAddress;
@@ -12,7 +13,7 @@ public final class ExternalCapabilitiesForFvm implements IExternalCapabilities {
 
     @Override
     public AionAddress computeNewContractAddress(AionAddress sender, BigInteger senderNonce) {
-        return new AionAddress(HashUtil.calcNewAddr(sender.toByteArray(), senderNonce.toByteArray()));
+        return TxUtil.calculateContractAddress(sender.toByteArray(), senderNonce.toByteArray());
     }
 
     @Override

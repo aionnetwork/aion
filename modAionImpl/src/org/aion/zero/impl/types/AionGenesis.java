@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.base.AccountState;
-import org.aion.crypto.HashUtil;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.util.types.DataWord;
@@ -395,8 +395,8 @@ public class AionGenesis extends AionBlock {
                             this.nonce,
                             this.energyLimit,
                             rootHash,
-                            HashUtil.EMPTY_TRIE_HASH,
-                            HashUtil.EMPTY_TRIE_HASH);
+                            EmptyTrieUtil.EMPTY_TRIE_HASH,
+                            EmptyTrieUtil.EMPTY_TRIE_HASH);
 
             // temporary solution, so as not to disrupt the constructors
             genesis.setPremine(this.premined);

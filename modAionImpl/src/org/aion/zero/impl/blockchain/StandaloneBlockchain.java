@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.Properties;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
@@ -532,8 +532,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 A0BlockHeader header =
                         A0BlockHeader.Builder.newInstance()
                                 .withStateRoot(this.getBestBlock().getStateRoot())
-                                .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                                .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                                .withTxTrieRoot(EmptyTrieUtil.EMPTY_TRIE_HASH)
+                                .withReceiptTrieRoot(EmptyTrieUtil.EMPTY_TRIE_HASH)
                                 .withNumber((int) blockNumber - 1)
                                 .withEnergyLimit(this.genesis.getNrgLimit())
                                 .withDifficulty(this.genesis.getDifficulty())
@@ -558,8 +558,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     A0BlockHeader.Builder.newInstance()
                             .withParentHash(grandParentBlock.getHash())
                             .withStateRoot(this.getBestBlock().getStateRoot())
-                            .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                            .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                            .withTxTrieRoot(EmptyTrieUtil.EMPTY_TRIE_HASH)
+                            .withReceiptTrieRoot(EmptyTrieUtil.EMPTY_TRIE_HASH)
                             .withDifficulty(this.getBestBlock().getDifficulty())
                             .withEnergyLimit(this.getBestBlock().getNrgLimit())
                             .withTimestamp(1)

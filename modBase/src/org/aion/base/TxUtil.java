@@ -1,6 +1,8 @@
 package org.aion.base;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
@@ -11,6 +13,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
+import org.aion.types.Transaction;
 import org.slf4j.Logger;
 
 public final class TxUtil {
@@ -43,18 +46,41 @@ public final class TxUtil {
         return c;
     }
 
+    public static AionAddress calculateContractAddress(Transaction tx) {
+        if (tx.destinationAddress != null) {
+            return null;
+        }
+        return calcNewAddr(tx.senderAddress.toByteArray(), tx.nonce.toByteArray());
+    }
+
     public static AionAddress calculateContractAddress(AionTransaction tx) {
         if (tx.getDestinationAddress() != null) {
             return null;
         }
-        return new AionAddress(HashUtil.calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce()));
+        return calcNewAddr(tx.getSenderAddress().toByteArray(), tx.getNonce());
     }
 
     public static AionAddress calculateContractAddress(InternalTransaction itx) {
         if (itx.destination != null) {
             return null;
         }
-        return new AionAddress(HashUtil.calcNewAddr(itx.sender.toByteArray(), itx.senderNonce.toByteArray()));
+        return calcNewAddr(itx.sender.toByteArray(), itx.senderNonce.toByteArray());
+    }
+
+    public static AionAddress calculateContractAddress(byte[] addr, byte[] nonce) {
+        return calcNewAddr(addr, nonce);
+    }
+
+    /** Calculates the address as per the QA2 definitions */
+    private static AionAddress calcNewAddr(byte[] addr, byte[] nonce) {
+        ByteBuffer buf = ByteBuffer.allocate(32);
+        buf.put(AddressSpecs.A0_IDENTIFIER);
+
+        byte[] encSender = RLP.encodeElement(addr);
+        byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
+
+        buf.put(HashUtil.h256(RLP.encodeList(encSender, encNonce)), 1, 31);
+        return new AionAddress(buf.array());
     }
 
     private static final int RLP_TX_NONCE = 0,

@@ -1,7 +1,5 @@
 package org.aion.zero.impl.blockchain;
 
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -485,7 +484,7 @@ public class AionHub {
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
-        if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
+        if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EmptyTrieUtil.EMPTY_TRIE_HASH)) {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
     }

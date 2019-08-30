@@ -1,7 +1,6 @@
 package org.aion.zero.impl.db;
 
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.InternalVmType;
@@ -321,7 +321,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
                 storageRootHash = pair.get(0).getRLPData();
                 objectGraphHash = pair.get(1).getRLPData();
             } else {
-                storageRootHash = EMPTY_TRIE_HASH;
+                storageRootHash = EmptyTrieUtil.EMPTY_TRIE_HASH;
                 objectGraphHash = EMPTY_DATA_HASH;
             }
         } else {
@@ -544,12 +544,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
                 storageRootHash = pair.get(0).getRLPData();
                 graphHash = pair.get(1).getRLPData();
             } else {
-                storageRootHash = EMPTY_TRIE_HASH;
+                storageRootHash = EmptyTrieUtil.EMPTY_TRIE_HASH;
                 graphHash = EMPTY_DATA_HASH;
             }
 
             snapStorage =
-                    wrap(storageRootHash).equals(wrap(EMPTY_TRIE_HASH))
+                    wrap(storageRootHash).equals(wrap(EmptyTrieUtil.EMPTY_TRIE_HASH))
                             ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                             : new SecureTrie(storageTrie.getCache(), storageRootHash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
@@ -562,7 +562,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             details.concatenatedStorageHash = hash;
         } else {
             snapStorage =
-                    wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
+                    wrap(hash).equals(wrap(EmptyTrieUtil.EMPTY_TRIE_HASH))
                             ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                             : new SecureTrie(storageTrie.getCache(), hash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());

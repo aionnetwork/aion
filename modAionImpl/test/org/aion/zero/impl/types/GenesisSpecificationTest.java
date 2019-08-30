@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.crypto.HashUtil;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.base.AccountState;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -37,8 +37,8 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getTimestamp()).isEqualTo(AionGenesis.GENESIS_TIMESTAMP);
         assertThat(genesis.getNrgConsumed()).isEqualTo(0);
         assertThat(genesis.getNrgLimit()).isEqualTo(AionGenesis.GENESIS_ENERGY_LIMIT);
-        assertThat(genesis.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
-        assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
+        assertThat(genesis.getTxTrieRoot()).isEqualTo(EmptyTrieUtil.EMPTY_TRIE_HASH);
+        assertThat(genesis.getReceiptsRoot()).isEqualTo(EmptyTrieUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getDifficultyBI())
                 .isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
@@ -91,8 +91,8 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getTimestamp()).isEqualTo(overrideValue.longValue());
         assertThat(genesis.getNrgConsumed()).isEqualTo(0);
         assertThat(genesis.getNrgLimit()).isEqualTo(overrideValue.longValue());
-        assertThat(genesis.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
-        assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
+        assertThat(genesis.getTxTrieRoot()).isEqualTo(EmptyTrieUtil.EMPTY_TRIE_HASH);
+        assertThat(genesis.getReceiptsRoot()).isEqualTo(EmptyTrieUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getDifficultyBI()).isEqualTo(overrideValue);
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
 

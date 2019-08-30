@@ -8,10 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.AionTransaction;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
@@ -136,7 +136,7 @@ public class BlockchainIntegrationTest {
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
-        assertThat(block.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
+        assertThat(block.getTxTrieRoot()).isEqualTo(EmptyTrieUtil.EMPTY_TRIE_HASH);
 
         ImportResult connection = bc.tryToConnect(block);
         assertThat(connection).isEqualTo(ImportResult.IMPORTED_BEST);

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
-import org.aion.crypto.HashUtil;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.db.impl.SystemExitCodes;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -291,7 +291,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static byte[] calcTxTrie(List<AionTransaction> transactions) {
 
         if (transactions == null || transactions.isEmpty()) {
-            return HashUtil.EMPTY_TRIE_HASH;
+            return EmptyTrieUtil.EMPTY_TRIE_HASH;
         }
 
         Trie txsState = new TrieImpl(null);
@@ -301,7 +301,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (txEncoding != null) {
                 txsState.update(RLP.encodeInt(i), txEncoding);
             } else {
-                return HashUtil.EMPTY_TRIE_HASH;
+                return EmptyTrieUtil.EMPTY_TRIE_HASH;
             }
         }
         return txsState.getRootHash();
@@ -309,7 +309,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
         if (receipts == null || receipts.isEmpty()) {
-            return HashUtil.EMPTY_TRIE_HASH;
+            return EmptyTrieUtil.EMPTY_TRIE_HASH;
         }
 
         Trie receiptsTrie = new TrieImpl(null);

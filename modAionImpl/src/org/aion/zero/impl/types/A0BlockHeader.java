@@ -8,6 +8,8 @@ import static org.aion.util.time.TimeUtils.longToDateTime;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
+import java.util.Objects;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
@@ -489,9 +491,9 @@ public final class A0BlockHeader implements BlockHeader {
             // Formalize the data
             parentHash = parentHash == null ? HashUtil.EMPTY_DATA_HASH : parentHash;
             coinbase = coinbase == null ? AddressUtils.ZERO_ADDRESS : coinbase;
-            stateRoot = stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : stateRoot;
-            txTrieRoot = txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : txTrieRoot;
-            receiptTrieRoot = receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : receiptTrieRoot;
+            stateRoot = stateRoot == null ? EmptyTrieUtil.EMPTY_TRIE_HASH : stateRoot;
+            txTrieRoot = txTrieRoot == null ? EmptyTrieUtil.EMPTY_TRIE_HASH : txTrieRoot;
+            receiptTrieRoot = receiptTrieRoot == null ? EmptyTrieUtil.EMPTY_TRIE_HASH : receiptTrieRoot;
             logsBloom = logsBloom == null ? EMPTY_BLOOM : logsBloom;
             difficulty = difficulty == null ? ByteUtil.EMPTY_HALFWORD : difficulty;
             extraData = extraData == null ? ByteUtil.EMPTY_WORD : extraData;

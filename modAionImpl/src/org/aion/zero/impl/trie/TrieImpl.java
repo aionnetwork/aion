@@ -1,7 +1,6 @@
 package org.aion.zero.impl.trie;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.rlp.CompactEncoder.binToNibbles;
 import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
@@ -22,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
@@ -221,7 +221,7 @@ public class TrieImpl implements Trie {
             if (root == null
                     || (root instanceof byte[] && ((byte[]) root).length == 0)
                     || (root instanceof String && "".equals(root))) {
-                return EMPTY_TRIE_HASH;
+                return EmptyTrieUtil.EMPTY_TRIE_HASH;
             } else if (root instanceof byte[]) {
                 return (byte[]) this.getRoot();
             } else {

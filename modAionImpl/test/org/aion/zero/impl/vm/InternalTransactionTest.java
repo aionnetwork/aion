@@ -25,6 +25,7 @@ package org.aion.zero.impl.vm;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -361,14 +362,12 @@ public class InternalTransactionTest {
         ECKey deployerAccount = bundle.privateKeys.get(0);
 
         AionAddress firstContractAddr =
-                new AionAddress(
-                        HashUtil.calcNewAddr(
-                                deployerAccount.getAddress(), BigInteger.ONE.toByteArray()));
+                TxUtil.calculateContractAddress(
+                        deployerAccount.getAddress(), BigInteger.ONE.toByteArray());
 
         AionAddress internalContractAddress =
-                new AionAddress(
-                        HashUtil.calcNewAddr(
-                                firstContractAddr.toByteArray(), BigInteger.ZERO.toByteArray()));
+                TxUtil.calculateContractAddress(
+                        firstContractAddr.toByteArray(), BigInteger.ZERO.toByteArray());
 
         BigInteger nonce = BigInteger.ZERO;
 
@@ -453,15 +452,15 @@ public class InternalTransactionTest {
             if (firstItx) {
 
                 AionAddress contractAddress = TxUtil.calculateContractAddress(tx);
+                assertNotNull(contractAddress);
                 assertTrue(bc.getRepository().hasAccountState(contractAddress));
 
                 assertTrue(
                         bc.getRepository()
                                 .hasAccountState(
-                                        new AionAddress(
-                                                HashUtil.calcNewAddr(
+                                        TxUtil.calculateContractAddress(
                                                         contractAddress.toByteArray(),
-                                                        BigInteger.ZERO.toByteArray()))));
+                                                        BigInteger.ZERO.toByteArray())));
 
                 firstItx = false;
             }

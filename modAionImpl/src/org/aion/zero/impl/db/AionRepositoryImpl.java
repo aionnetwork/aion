@@ -1,7 +1,6 @@
 package org.aion.zero.impl.db;
 
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.aion.base.EmptyTrieUtil;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
@@ -189,7 +189,7 @@ public class AionRepositoryImpl
                     updateContractDetails(address, (AionContractDetailsImpl) contractDetails);
 
                     // TODO: incorrect check codeHash != trie hash
-                    if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
+                    if (!Arrays.equals(accountState.getCodeHash(), EmptyTrieUtil.EMPTY_TRIE_HASH)) {
                         accountState.setStateRoot(contractDetails.getStorageHash());
                     }
 
@@ -467,7 +467,7 @@ public class AionRepositoryImpl
             // to sync details storage according the trie root
             // saved in the account
             AccountState accountState = getAccountState(address);
-            byte[] storageRoot = EMPTY_TRIE_HASH;
+            byte[] storageRoot = EmptyTrieUtil.EMPTY_TRIE_HASH;
             byte[] codeHash = EMPTY_DATA_HASH;
             if (accountState != null) {
                 storageRoot = accountState.getStateRoot();
