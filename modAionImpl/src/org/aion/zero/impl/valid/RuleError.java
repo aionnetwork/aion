@@ -1,4 +1,4 @@
-package org.aion.mcf.blockchain.valid;
+package org.aion.zero.impl.valid;
 
 public class RuleError {
     public final Class<?> errorClass;

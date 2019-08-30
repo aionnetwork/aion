@@ -1,12 +1,10 @@
-package org.aion.mcf.valid;
+package org.aion.zero.impl.valid;
 
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.AbstractValidRule;
-import org.aion.mcf.blockchain.valid.RuleError;
 
 public abstract class GrandParentDependantBlockHeaderRule
-        extends AbstractValidRule {
+    extends AbstractValidRule {
 
     /**
      * A separate class of rules that infer a relationship between the current block, the block

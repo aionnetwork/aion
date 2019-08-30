@@ -1,10 +1,9 @@
-package org.aion.mcf.valid;
+package org.aion.zero.impl.valid;
 
 import java.util.List;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.slf4j.Logger;
 
-public abstract class AbstractBlockHeaderValidator {
+public class AbstractBlockHeaderValidator {
 
     public void logErrors(final Logger logger, final List<RuleError> errors) {
         if (errors.isEmpty()) return;

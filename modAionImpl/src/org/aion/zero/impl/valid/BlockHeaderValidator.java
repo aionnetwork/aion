@@ -1,11 +1,9 @@
-package org.aion.mcf.valid;
+package org.aion.zero.impl.valid;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.slf4j.Logger;
 
 public class BlockHeaderValidator extends AbstractBlockHeaderValidator {

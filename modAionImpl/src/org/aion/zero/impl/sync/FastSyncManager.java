@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.types.ByteArrayWrapper;
@@ -27,6 +26,7 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

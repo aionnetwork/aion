@@ -4,8 +4,6 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.types.A0BlockHeader;
 
 /** Checks proof value against its boundary for the block header */

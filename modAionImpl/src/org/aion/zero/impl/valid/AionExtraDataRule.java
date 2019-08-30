@@ -3,8 +3,6 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.mcf.blockchain.valid.RuleError;
 
 public class AionExtraDataRule extends BlockHeaderRule {
 

@@ -1,8 +1,7 @@
-package org.aion.mcf.valid;
+package org.aion.zero.impl.valid;
 
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.RuleError;
 
 public class BlockNumberRule extends DependentBlockHeaderRule {
 

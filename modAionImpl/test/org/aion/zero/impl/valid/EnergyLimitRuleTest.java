@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.A0BlockHeader;

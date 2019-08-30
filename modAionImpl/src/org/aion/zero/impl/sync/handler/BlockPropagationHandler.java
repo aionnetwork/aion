@@ -8,7 +8,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.config.CfgAion;
@@ -18,6 +17,7 @@ import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

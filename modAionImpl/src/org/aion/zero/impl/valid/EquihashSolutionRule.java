@@ -3,8 +3,6 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.zero.impl.types.A0BlockHeader;
 
 /** Checks if {@link A0BlockHeader#getSolution()} is a valid Equihash solution. */

@@ -8,10 +8,10 @@ import java.util.concurrent.BlockingQueue;
 
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.slf4j.Logger;
 
 /**

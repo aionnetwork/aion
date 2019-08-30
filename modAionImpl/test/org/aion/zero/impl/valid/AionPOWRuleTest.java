@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.valid.RuleError;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
