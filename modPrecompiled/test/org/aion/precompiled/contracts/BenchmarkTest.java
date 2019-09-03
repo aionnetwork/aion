@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.ExternalStateForTests;
 import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
@@ -78,7 +79,7 @@ public class BenchmarkTest {
     }
 
     @Test
-    public void benchBlack2bHash() {
+    public void benchBlake2bHash() {
 
         ctx =
                 new PrecompiledTransactionContext(
@@ -94,56 +95,21 @@ public class BenchmarkTest {
                         nrgLimit,
                         depth);
 
+        ExternalStateForTests externalStateForTests = ExternalStateForTests.usingDefaultRepository();
+
         PrecompiledContract ct;
         // warm up
         for (int i = 0; i < WARMUP; i++) {
-            ct = cf.getPrecompiledContract(ctx, null);
+            ct = cf.getPrecompiledContract(ctx, externalStateForTests);
             ct.execute(txHash, ctx.transactionEnergy);
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
-            ct = cf.getPrecompiledContract(ctx, null);
+            ct = cf.getPrecompiledContract(ctx, externalStateForTests);
             ct.execute(txHash, ctx.transactionEnergy);
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");
-    }
-
-    @Test
-    public void benchKeccakHash() {
-        //        ctx =
-        //            new ExecutionContext(
-        //                txHash,
-        //                ContractFactory.getKeccakHashContractAddress(),
-        //                origin,
-        //                caller,
-        //                nrgPrice,
-        //                nrgLimit,
-        //                callValue,
-        //                callData,
-        //                depth,
-        //                kind,
-        //                flags,
-        //                blockCoinbase,
-        //                blockNumber,
-        //                blockTimestamp,
-        //                blockNrgLimit,
-        //                blockDifficulty);
-        //
-        //        PrecompiledContract ct;
-        //        // warm up
-        //        for (int i = 0; i < WARMUP; i++) {
-        //            ct = cf.getPrecompiledContract(ctx, null);
-        //            ct.execute(txHash, ctx.nrgLimit());
-        //        }
-        //
-        //        long t1 = System.currentTimeMillis();
-        //        for (int i = 0; i<BENCH; i++) {
-        //            ct = cf.getPrecompiledContract(ctx, null);
-        //            ct.execute(txHash, ctx.nrgLimit());
-        //        }
-        //        System.out.println("Bench keccak: " + String.valueOf(System.currentTimeMillis() -
-        // t1) + "ms");
     }
 }

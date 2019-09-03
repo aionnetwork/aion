@@ -1,5 +1,4 @@
 module aion.precompiled {
-    requires aion.mcf;
     requires aion.crypto;
     requires slf4j.api;
     requires jsr305;

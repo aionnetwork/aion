@@ -21,6 +21,7 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
     private final long blockNumber;
     private final boolean isLocalCall;
     private final boolean allowNonceIncrement;
+    private final boolean fork032Enabled;
 
     /**
      * Constructs a new external state whose state is backed by the provided repository.
@@ -33,13 +34,14 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      * @param isLocalCall Whether this is a local call or not (eth_call).
      * @param allowNonceIncrement Whether or not to increment account nonces.
      */
-    public ExternalStateForPrecompiled(RepositoryCache<AccountState, IBlockStoreBase> repository, long blockNumber, boolean isLocalCall, boolean allowNonceIncrement) {
+    public ExternalStateForPrecompiled(RepositoryCache<AccountState, IBlockStoreBase> repository, long blockNumber, boolean isLocalCall, boolean fork032Enabled, boolean allowNonceIncrement) {
         if (repository == null) {
             throw new NullPointerException("Cannot create precompiled external state with null repository!");
         }
         this.repository = repository;
         this.blockNumber = blockNumber;
         this.isLocalCall = isLocalCall;
+        this.fork032Enabled = fork032Enabled;
         this.allowNonceIncrement = allowNonceIncrement;
     }
 
@@ -63,7 +65,7 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      */
     @Override
     public IExternalStateForPrecompiled newChildExternalState() {
-        return new ExternalStateForPrecompiled(this.repository.startTracking(), this.blockNumber, this.isLocalCall, this.allowNonceIncrement);
+        return new ExternalStateForPrecompiled(this.repository.startTracking(), this.blockNumber, this.isLocalCall, this.fork032Enabled, this.allowNonceIncrement);
     }
 
     /**
@@ -167,6 +169,16 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
     @Override
     public long getBlockNumber() {
         return this.blockNumber;
+    }
+
+    /**
+     * Returns the current block number.
+     *
+     * @return the block number.
+     */
+    @Override
+    public boolean isFork032Enabled() {
+        return this.fork032Enabled;
     }
 
     /**

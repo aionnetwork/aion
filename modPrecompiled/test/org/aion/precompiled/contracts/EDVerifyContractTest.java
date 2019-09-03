@@ -19,6 +19,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.ExternalStateForTests;
 import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
@@ -36,34 +37,24 @@ import org.spongycastle.util.encoders.Hex;
 
 public class EDVerifyContractTest {
 
+    ExternalStateForTests externalStateForTests = ExternalStateForTests.usingDefaultRepository();
+
     private byte[] txHash = RandomUtils.nextBytes(32);
     private AionAddress origin = new AionAddress(RandomUtils.nextBytes(32));
     private AionAddress caller = origin;
 
-    private AionAddress blockCoinbase = new AionAddress(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
-    private long blockTimestamp = System.currentTimeMillis() / 1000;
-    private long blockNrgLimit = 5000000;
-    private DataWord blockDifficulty = new DataWord(0x100000000L);
 
-    private DataWord nrgPrice;
     private long nrgLimit;
-    private DataWord callValue;
-    private byte[] callData;
     private byte[] pubKey;
 
     private int depth = 0;
-    private int kind = PrecompiledTransactionContext.CREATE;
-    private int flags = 0;
 
     private File forkFile;
 
     @Before
     public void setup() throws IOException {
-        nrgPrice = DataWord.ONE;
         nrgLimit = 20000;
-        callValue = DataWord.ZERO;
-        callData = new byte[0];
 
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
         forkFile =
@@ -104,7 +95,8 @@ public class EDVerifyContractTest {
                         blockNumber,
                         nrgLimit,
                         depth);
-        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, externalStateForTests);
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
@@ -129,7 +121,8 @@ public class EDVerifyContractTest {
                         blockNumber,
                         nrgLimit,
                         depth);
-        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, externalStateForTests);
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
@@ -158,7 +151,8 @@ public class EDVerifyContractTest {
                         blockNumber,
                         nrgLimit,
                         depth);
-        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, externalStateForTests);
 
         assertNotNull(contract);
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
@@ -168,7 +162,6 @@ public class EDVerifyContractTest {
 
     @Test
     public void shouldFailIfNotEnoughEnergy() {
-        nrgPrice = DataWord.ONE;
 
         byte[] input = setupInput();
         PrecompiledTransactionContext ctx =
@@ -185,7 +178,7 @@ public class EDVerifyContractTest {
                         nrgLimit,
                         depth);
 
-        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, externalStateForTests);
 
         PrecompiledTransactionResult result = contract.execute(input, 2999L);
         assertEquals("OUT_OF_NRG", result.getStatus().causeOfError);
@@ -210,7 +203,7 @@ public class EDVerifyContractTest {
                         nrgLimit,
                         depth);
 
-        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, externalStateForTests);
 
         PrecompiledTransactionResult result = contract.execute(input, 21000L);
 
