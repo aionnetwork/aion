@@ -113,6 +113,11 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
     }
 
     @Override
+    public boolean isFork032Enabled() {
+        return true;
+    }
+
+    @Override
     public boolean isValidEnergyLimitForCreate(long energyLimit) {
         return true;
     }

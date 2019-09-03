@@ -1,13 +1,11 @@
 ext.moduleName = 'aion.vm'
 
 dependencies {
-    //compile 'network.aion:util4j:0.4.0'
-    //compile 'network.aion:crypto4j:0.4.0'
     compile project(':modUtil')
     compile project(':modCrypto')
-
     compile project(':modMcf')
     compile project(':modPrecompiled')
+    
     compile files("${rootProject.projectDir}/lib/fastvm-f2a39b8.jar")
     compile files('../lib/org-aion-avm-core.jar')
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")

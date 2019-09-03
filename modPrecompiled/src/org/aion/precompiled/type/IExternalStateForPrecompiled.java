@@ -89,6 +89,13 @@ public interface IExternalStateForPrecompiled {
     long getBlockNumber();
 
     /**
+     * Returns true if fork 0.3.2 is enabled.
+     *
+     * @return Whether fork 0.3.2 is enabled.
+     */
+    boolean isFork032Enabled();
+
+    /**
      * Returns {@code true} if the given energy limit is valid for CREATE contracts. Otherwise
      * {@code false}.
      *

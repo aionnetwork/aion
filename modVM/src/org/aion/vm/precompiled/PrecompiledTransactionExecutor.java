@@ -31,6 +31,7 @@ public final class PrecompiledTransactionExecutor {
             boolean decrementBlockEnergyLimit,
             boolean allowNonceIncrement,
             boolean isLocalCall,
+            boolean fork032Enabled,
             long initialBlockEnergyLimit) {
 
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
@@ -41,6 +42,7 @@ public final class PrecompiledTransactionExecutor {
                         repository.startTracking(),
                         blockNumber,
                         isLocalCall,
+                        fork032Enabled,
                         allowNonceIncrement);
 
         for (AionTransaction transaction : transactions) {

@@ -7,6 +7,7 @@ import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
@@ -101,7 +102,13 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
 
         PrecompiledTransactionContext precompiledContext = toPrecompiledTransactionContext(context);
 
-        IExternalStateForPrecompiled precompiledWorldState = new ExternalStateForPrecompiled(this.repository, this.blockNumber, this.isLocalCall, this.allowNonceIncrement);
+        CfgFork cfg = new CfgFork();
+        String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
+
+        boolean fork032Enabled =
+            (forkProperty != null) && (blockNumber >= Long.valueOf(forkProperty));
+
+        IExternalStateForPrecompiled precompiledWorldState = new ExternalStateForPrecompiled(this.repository, this.blockNumber, this.isLocalCall, fork032Enabled, this.allowNonceIncrement);
 
         PrecompiledTransactionResult result = ContractExecutor.executeInternalCall(precompiledWorldState, precompiledContext, context.getTransactionData(), context.getTransactionEnergy());
 

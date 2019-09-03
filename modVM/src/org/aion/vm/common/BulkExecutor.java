@@ -7,6 +7,7 @@ import org.aion.avm.core.ExecutionType;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
@@ -412,6 +413,12 @@ public final class BulkExecutor {
                 new AionTransaction[precompiledTransactionsToExecute.size()];
         precompiledTransactionsToExecute.toArray(precompiledTransactions);
 
+        CfgFork cfg = new CfgFork();
+        String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
+
+        boolean fork032Enabled =
+            (forkProperty != null) && (blockNumber >= Long.valueOf(forkProperty));
+
         // Execute the precompiled contract call transactions.
         return PrecompiledTransactionExecutor.executeTransactions(
                 repository,
@@ -423,6 +430,7 @@ public final class BulkExecutor {
                 checkBlockEnergyLimit,
                 incrementSenderNonce,
                 isLocalCall,
+                fork032Enabled,
                 blockRemainingEnergy);
     }
 

@@ -1,6 +1,5 @@
 package org.aion.precompiled;
 
-import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
@@ -25,11 +24,7 @@ public class ContractFactory {
     public PrecompiledContract getPrecompiledContract(
             PrecompiledTransactionContext context, IExternalStateForPrecompiled externalState) {
 
-        CfgFork cfg = new CfgFork();
-        String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
-
-        boolean fork_032 =
-                (forkProperty != null) && (context.blockNumber >= Long.valueOf(forkProperty));
+        boolean fork_032 = externalState.isFork032Enabled();
 
         // TODO: need to provide a real solution for the repository here ....
 
