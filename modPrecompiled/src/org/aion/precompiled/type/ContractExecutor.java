@@ -2,12 +2,11 @@ package org.aion.precompiled.type;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.types.AionAddress;
+import org.aion.types.Transaction;
 import org.aion.types.TransactionStatus;
 
 public final class ContractExecutor {
@@ -48,7 +47,7 @@ public final class ContractExecutor {
      * @return the execution result.
      */
     public static PrecompiledWrappedTransactionResult executeExternalCall(
-            IExternalStateForPrecompiled externalState, AionTransaction transaction) {
+            IExternalStateForPrecompiled externalState, Transaction transaction) {
         if (externalState == null) {
             throw new NullPointerException("Cannot run using a null externalState!");
         }
@@ -63,20 +62,20 @@ public final class ContractExecutor {
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
                         TransactionStatus.successful(),
-                        transaction.getEnergyLimit() - TxUtil.calculateTransactionCost(transaction));
+                        transaction.energyLimit - calculateTransactionCost(transaction));
 
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childExternalState, transaction, result);
         if (!result.getStatus().isSuccess()) {
             return PrecompiledTransactionResultUtil.createWithCodeAndEnergyRemaining(
                 result.getStatus(),
-                transaction.getEnergyLimit() - result.getEnergyRemaining());
+                transaction.energyLimit - result.getEnergyRemaining());
         }
 
         incrementNonceAndDeductEnergyCost(childExternalState, transaction);
 
         // Ensure that our caller did not erroneously pass us a CREATE transaction.
-        if (transaction.isContractCreationTransaction()) {
+        if (transaction.isCreate) {
             throw new IllegalStateException("A precompiled contract call cannot be a CREATE!");
         }
 
@@ -98,7 +97,7 @@ public final class ContractExecutor {
             result.getStatus(),
             context.getInternalTransactions(),
             context.getLogs(),
-            transaction.getEnergyLimit() - result.getEnergyRemaining(),
+            transaction.energyLimit - result.getEnergyRemaining(),
             result.getReturnData(),
             context.getDeletedAddresses());
     }
@@ -117,18 +116,18 @@ public final class ContractExecutor {
      * @param transaction The transaction.
      * @return the result of executing the transaction.
      */
-    public static PrecompiledTransactionResult runPrecompiledContractCall(
+    private static PrecompiledTransactionResult runPrecompiledContractCall(
             IExternalStateForPrecompiled externalState,
             PrecompiledTransactionContext context,
             PrecompiledTransactionResult result,
-            AionTransaction transaction) {
+            Transaction transaction) {
 
         ContractFactory precompiledFactory = new ContractFactory();
         PrecompiledContract precompiledContract =
                 precompiledFactory.getPrecompiledContract(context, externalState);
 
         // Ensure we actually have a precompiled contract as our destination.
-        if (!ContractInfo.isPrecompiledContract(transaction.getDestinationAddress())) {
+        if (!ContractInfo.isPrecompiledContract(transaction.destinationAddress)) {
             throw new IllegalStateException("Expected destination to be a precompiled contract!");
         }
 
@@ -137,13 +136,12 @@ public final class ContractExecutor {
         PrecompiledTransactionResult newResult = null;
         if (precompiledContract != null) {
             newResult =
-                    precompiledContract.execute(transaction.getData(), context.transactionEnergy);
+                    precompiledContract.execute(transaction.copyOfTransactionData(), context.transactionEnergy);
         }
 
         // Transfer any specified value from the sender to the recipient.
-        BigInteger transferValue = new BigInteger(1, transaction.getValue());
-        externalState.addBalance(transaction.getSenderAddress(), transferValue.negate());
-        externalState.addBalance(transaction.getDestinationAddress(), transferValue);
+        externalState.addBalance(transaction.senderAddress, transaction.value.negate());
+        externalState.addBalance(transaction.destinationAddress, transaction.value);
 
         return (newResult == null) ? result : newResult;
     }
@@ -157,38 +155,28 @@ public final class ContractExecutor {
      * @param transaction The transaction to verify.
      * @param result The current state of the transaction result.
      */
-    public static void performRejectionChecks(
-            IExternalStateForPrecompiled externalState,
-            AionTransaction transaction,
-            PrecompiledTransactionResult result) {
-        BigInteger energyPrice = BigInteger.valueOf(transaction.getEnergyPrice());
-        long energyLimit = transaction.getEnergyLimit();
+    private static void performRejectionChecks(
+        IExternalStateForPrecompiled externalState,
+        Transaction transaction,
+        PrecompiledTransactionResult result) {
+        BigInteger energyPrice = BigInteger.valueOf(transaction.energyPrice);
+        long energyLimit = transaction.energyLimit;
 
-        if (transaction.isContractCreationTransaction()) {
-            if (!externalState.isValidEnergyLimitForCreate(energyLimit)) {
-                result.setResultCode(TransactionStatus.rejection("INVALID_NRG_LIMIT"));
-                result.setEnergyRemaining(energyLimit);
-                return;
-            }
-        } else {
-            if (!externalState.isValidEnergyLimitForNonCreate(energyLimit)) {
-                result.setResultCode(TransactionStatus.rejection("INVALID_NRG_LIMIT"));
-                result.setEnergyRemaining(energyLimit);
-                return;
-            }
+        if (!externalState.isValidEnergyLimitForNonCreate(energyLimit)) {
+            result.setResultCode(TransactionStatus.rejection("INVALID_NRG_LIMIT"));
+            result.setEnergyRemaining(energyLimit);
+            return;
         }
 
-        BigInteger txNonce = new BigInteger(1, transaction.getNonce());
-        if (!externalState.accountNonceEquals(transaction.getSenderAddress(), txNonce)) {
+        if (!externalState.accountNonceEquals(transaction.senderAddress, transaction.nonce)) {
             result.setResultCode(TransactionStatus.rejection("INVALID_NONCE"));
             result.setEnergyRemaining(0);
             return;
         }
 
-        BigInteger transferValue = transaction.getValueBI();
         BigInteger transactionCost =
-                energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transferValue);
-        if (!externalState.accountBalanceIsAtLeast(transaction.getSenderAddress(), transactionCost)) {
+                energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transaction.value);
+        if (!externalState.accountBalanceIsAtLeast(transaction.senderAddress, transactionCost)) {
             result.setResultCode(TransactionStatus.rejection("INSUFFICIENT_BALANCE"));
             result.setEnergyRemaining(0);
         }
@@ -204,28 +192,25 @@ public final class ContractExecutor {
      * @param externalState The state of the world.
      * @param transaction The transaction.
      */
-    public static void incrementNonceAndDeductEnergyCost(
-            IExternalStateForPrecompiled externalState, AionTransaction transaction) {
+    private static void incrementNonceAndDeductEnergyCost(
+            IExternalStateForPrecompiled externalState, Transaction transaction) {
         IExternalStateForPrecompiled childExternalState = externalState.newChildExternalState();
-        childExternalState.incrementNonce(transaction.getSenderAddress());
-        BigInteger energyLimit = BigInteger.valueOf(transaction.getEnergyLimit());
-        BigInteger energyPrice = BigInteger.valueOf(transaction.getEnergyPrice());
+        childExternalState.incrementNonce(transaction.senderAddress);
+        BigInteger energyLimit = BigInteger.valueOf(transaction.energyLimit);
+        BigInteger energyPrice = BigInteger.valueOf(transaction.energyPrice);
         BigInteger energyCost = energyLimit.multiply(energyPrice);
-        childExternalState.deductEnergyCost(transaction.getSenderAddress(), energyCost);
+        childExternalState.deductEnergyCost(transaction.senderAddress, energyCost);
         childExternalState.commit();
     }
 
     private static PrecompiledTransactionContext constructTransactionContext(
-            AionTransaction transaction, IExternalStateForPrecompiled externalState) {
-        AionAddress originAddress = transaction.getSenderAddress();
-        AionAddress callerAddress = transaction.getSenderAddress();
-        byte[] transactionHash = transaction.getTransactionHash();
+            Transaction transaction, IExternalStateForPrecompiled externalState) {
+        AionAddress originAddress = transaction.senderAddress;
+        AionAddress callerAddress = transaction.senderAddress;
+        byte[] transactionHash = transaction.copyOfTransactionHash();
         long blockNumber = externalState.getBlockNumber();
-        long energyRemaining = transaction.getEnergyLimit() - TxUtil.calculateTransactionCost(transaction);
-        AionAddress destinationAddress =
-                transaction.isContractCreationTransaction()
-                        ? TxUtil.calculateContractAddress(transaction)
-                        : transaction.getDestinationAddress();
+        long energyRemaining = transaction.energyLimit - calculateTransactionCost(transaction);
+        AionAddress destinationAddress = transaction.destinationAddress;
 
         return new PrecompiledTransactionContext(
                 destinationAddress,
@@ -240,4 +225,32 @@ public final class ContractExecutor {
                 energyRemaining,
                 0);
     }
+
+
+
+    private static long calculateTransactionCost(Transaction tx) {
+        byte[] data = tx.copyOfTransactionData();
+        long zeroes = zeroBytesInData(data);
+        long nonZeroes = data.length - zeroes;
+
+        return TRANSACTION_BASE_FEE
+            + zeroes * ZERO_BYTE_FEE
+            + nonZeroes * NONZERO_BYTE_FEE;
+    }
+
+    private static long zeroBytesInData(byte[] data) {
+        if (data == null) {
+            return 0;
+        }
+
+        int c = 0;
+        for (byte b : data) {
+            c += (b == 0) ? 1 : 0;
+        }
+        return c;
+    }
+
+    private static final int TRANSACTION_BASE_FEE = 21000;
+    private static final int ZERO_BYTE_FEE = 4;
+    private static final int NONZERO_BYTE_FEE = 64;
 }

@@ -1,5 +1,6 @@
 package org.aion.vm.precompiled;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.AccountState;
@@ -11,6 +12,7 @@ import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledWrappedTransactionResult;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
+import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
@@ -48,7 +50,7 @@ public final class PrecompiledTransactionExecutor {
         for (AionTransaction transaction : transactions) {
 
             // Execute the contract.
-            PrecompiledWrappedTransactionResult wrappedResult = ContractExecutor.executeExternalCall(externalState, transaction);
+            PrecompiledWrappedTransactionResult wrappedResult = ContractExecutor.executeExternalCall(externalState, toAionTypesTransaction(transaction));
 
             TransactionResult result = wrappedResult.result;
             List<AionAddress> deletedAddresses = wrappedResult.deletedAddresses;
@@ -162,5 +164,13 @@ public final class PrecompiledTransactionExecutor {
         receipt.setError(result.transactionStatus.isSuccess() ? "" : result.transactionStatus.causeOfError);
 
         return receipt;
+    }
+
+    private static Transaction toAionTypesTransaction(AionTransaction transaction) {
+        if (transaction.isContractCreationTransaction()) {
+            return Transaction.contractCreateTransaction(transaction.getSenderAddress(), transaction.getTransactionHash(), transaction.getNonceBI(), new BigInteger(1, transaction.getValue()), transaction.getData(), transaction.getEnergyLimit(), transaction.getEnergyPrice());
+        } else {
+            return Transaction.contractCallTransaction(transaction.getSenderAddress(), transaction.getDestinationAddress(), transaction.getTransactionHash(), transaction.getNonceBI(), new BigInteger(1, transaction.getValue()), transaction.getData(), transaction.getEnergyLimit(), transaction.getEnergyPrice());
+        }
     }
 }
