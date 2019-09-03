@@ -74,7 +74,7 @@ public class AionBlockStore implements IBlockStorePow {
         this.checkIntegrity = checkIntegrity;
     }
 
-    private static final Serializer<Block, byte[]> BLOCK_SERIALIZER =
+    private static final Serializer<Block> BLOCK_SERIALIZER =
         new Serializer<>() {
             @Override
             public byte[] serialize(Block block) {
@@ -1400,7 +1400,7 @@ public class AionBlockStore implements IBlockStorePow {
      * Called by {@link AionBlockStore#BLOCK_INFO_SERIALIZER} for now, on main-net launch we should
      * default to this class.
      */
-    private static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER =
+    private static final Serializer<List<BlockInfo>> BLOCK_INFO_RLP_SERIALIZER =
             new Serializer<>() {
                 @Override
                 public byte[] serialize(List<BlockInfo> object) {
@@ -1425,7 +1425,7 @@ public class AionBlockStore implements IBlockStorePow {
                 }
             };
 
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER =
+    public static final Serializer<List<BlockInfo>> BLOCK_INFO_SERIALIZER =
             new Serializer<>() {
 
                 @Override

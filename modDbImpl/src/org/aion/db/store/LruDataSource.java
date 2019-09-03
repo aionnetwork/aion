@@ -14,7 +14,7 @@ public class LruDataSource<V> extends ObjectDataSource<V> {
     protected final LRUMap<ByteArrayWrapper, V> cache;
 
     // only DataSource should know about this implementation
-    LruDataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer, int cacheSize) {
+    LruDataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer, int cacheSize) {
         super(src, serializer);
         this.cache = new LRUMap<>(cacheSize);
     }

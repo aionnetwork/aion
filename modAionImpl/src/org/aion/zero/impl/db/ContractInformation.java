@@ -76,7 +76,7 @@ public class ContractInformation {
         info.vm = vm;
     }
 
-    public static final Serializer<ContractInformation, byte[]> RLP_SERIALIZER =
+    public static final Serializer<ContractInformation> RLP_SERIALIZER =
             new Serializer<>() {
 
                 /**

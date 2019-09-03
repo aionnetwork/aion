@@ -26,7 +26,7 @@ public class DebugCaffeineDataSource<V> extends ObjectDataSource<V> {
     private Logger log;
 
     // only DataSource should know about this implementation
-    DebugCaffeineDataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer, int cacheSize, Logger log) {
+    DebugCaffeineDataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer, int cacheSize, Logger log) {
         super(src, serializer);
         this.log = log;
 

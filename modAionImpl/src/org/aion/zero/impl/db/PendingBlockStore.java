@@ -182,7 +182,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
-    private static final Serializer<List<byte[]>, byte[]> HASH_LIST_RLP_SERIALIZER =
+    private static final Serializer<List<byte[]>> HASH_LIST_RLP_SERIALIZER =
             new Serializer<>() {
                 @Override
                 public byte[] serialize(List<byte[]> object) {
@@ -207,7 +207,7 @@ public class PendingBlockStore implements Flushable, Closeable {
                 }
             };
 
-    private static final Serializer<List<Block>, byte[]> BLOCK_LIST_RLP_SERIALIZER =
+    private static final Serializer<List<Block>> BLOCK_LIST_RLP_SERIALIZER =
             new Serializer<>() {
                 @Override
                 public byte[] serialize(List<Block> object) {

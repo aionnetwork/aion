@@ -12,7 +12,7 @@ public final class DataSource<V> {
 
     // Required parameters
     private final ByteArrayKeyValueDatabase src;
-    private final Serializer<V, byte[]> serializer;
+    private final Serializer<V> serializer;
 
     // Optional parameters
     private int cacheSize;
@@ -31,7 +31,7 @@ public final class DataSource<V> {
      * @param src the source database
      * @param serializer the serializer used to convert data to byte arrays and vice versa
      */
-    public DataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer) {
+    public DataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer) {
         this.src = src;
         this.serializer = serializer;
         this.cacheSize = 0;

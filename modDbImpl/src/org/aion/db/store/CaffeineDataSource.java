@@ -17,7 +17,7 @@ public final class CaffeineDataSource<V> extends ObjectDataSource<V> {
     private final LoadingCache<ByteArrayWrapper, V> cache;
 
     // Only DataSource should know about this implementation
-    CaffeineDataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer, int cacheSize) {
+    CaffeineDataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer, int cacheSize) {
         super(src, serializer);
         this.cache =
                 Caffeine.newBuilder()

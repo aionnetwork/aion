@@ -23,7 +23,7 @@ public class TransactionStore implements Flushable, Closeable {
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(
-            ByteArrayKeyValueDatabase src, Serializer<List<AionTxInfo>, byte[]> serializer) {
+            ByteArrayKeyValueDatabase src, Serializer<List<AionTxInfo>> serializer) {
         source = new ObjectDataSource(src, serializer);
     }
 

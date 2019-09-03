@@ -23,7 +23,7 @@ public final class DebugLruDataSource<V> extends LruDataSource<V> {
     private Logger log;
 
     // only DataSource should know about this implementation
-    DebugLruDataSource(ByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer, int cacheSize, Logger log) {
+    DebugLruDataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer, int cacheSize, Logger log) {
         super(src, serializer, cacheSize);
 
         this.hits = 0L;
