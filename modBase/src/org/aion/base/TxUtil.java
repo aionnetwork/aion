@@ -24,14 +24,18 @@ public final class TxUtil {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
-    public static long calculateTransactionCost(AionTransaction tx) {
-        long zeroes = zeroBytesInData(tx.getData());
-        long nonZeroes = tx.getData().length - zeroes;
+    public static long calculateTransactionCost(byte[] data, boolean isCreate) {
+        long zeroes = zeroBytesInData(data);
+        long nonZeroes = data.length - zeroes;
 
-        return (tx.isContractCreationTransaction() ? FvmConstants.CREATE_TRANSACTION_FEE : 0)
+        return (isCreate ? FvmConstants.CREATE_TRANSACTION_FEE : 0)
                 + FvmConstants.TRANSACTION_BASE_FEE
                 + zeroes * FvmConstants.ZERO_BYTE_FEE
                 + nonZeroes * FvmConstants.NONZERO_BYTE_FEE;
+    }
+
+    public static long calculateTransactionCost(AionTransaction tx) {
+        return calculateTransactionCost(tx.getData(), tx.isContractCreationTransaction());
     }
 
     private static long zeroBytesInData(byte[] data) {
