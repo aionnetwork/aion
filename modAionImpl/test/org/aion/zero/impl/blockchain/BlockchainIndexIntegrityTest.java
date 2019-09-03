@@ -9,14 +9,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.store.ArrayStore;
+import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionBlockStore.BlockInfo;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.db.store.DataSourceArray;
-import org.aion.db.store.ObjectDataSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -151,16 +152,15 @@ public class BlockchainIndexIntegrityTest {
         ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // corrupting the index at level 2
-        DataSourceArray<List<AionBlockStore.BlockInfo>> index =
-                new DataSourceArray<>(new ObjectDataSource<>(indexDatabase, BLOCK_INFO_SERIALIZER));
-        List<AionBlockStore.BlockInfo> infos = index.get(2);
+        ArrayStore<List<BlockInfo>> index = Stores.newArrayStore(indexDatabase, BLOCK_INFO_SERIALIZER);
+        List<BlockInfo> infos = index.get(2);
         assertThat(infos.size()).isEqualTo(2);
 
         for (AionBlockStore.BlockInfo bi : infos) {
             bi.setCummDifficulty(bi.getCummDifficulty().add(BigInteger.TEN));
         }
         index.set(2, infos);
-        index.flush();
+        index.commit();
 
         AionBlockStore blockStore = repo.getBlockStore();
 

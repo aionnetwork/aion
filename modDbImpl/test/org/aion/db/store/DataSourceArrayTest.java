@@ -1,23 +1,22 @@
-package org.aion.zero.impl.ds;
+package org.aion.db.store;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
 
-import java.math.BigInteger;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.db.store.DataSourceArray;
-import org.aion.db.store.ObjectDataSource;
-import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,30 +27,35 @@ import org.slf4j.LoggerFactory;
  * @author Alexandra Roatis
  */
 @RunWith(JUnitParamsRunner.class)
-public class BlockInfoDataSourceArrayTest {
+public class DataSourceArrayTest {
 
     public static final Logger log = LoggerFactory.getLogger("DB");
 
-    private static List<AionBlockStore.BlockInfo> infoList;
+    // test serializer
+    private static final Serializer<String> STRING_SERIALIZER =
+            new Serializer<>() {
+
+                @Override
+                public byte[] serialize(String value) {
+                    return value.getBytes();
+                }
+
+                @Override
+                public String deserialize(byte[] bytes) {
+                    return new String(bytes);
+                }
+            };
 
     private static ByteArrayKeyValueDatabase db;
-    private static DataSourceArray<List<AionBlockStore.BlockInfo>> testIndex;
+    private static ArrayStore<String> testStore;
 
     private static final Random random = new Random();
-
-    static {
-        AionBlockStore.BlockInfo info =
-                new AionBlockStore.BlockInfo(HashUtil.EMPTY_DATA_HASH, BigInteger.TEN, true);
-
-        infoList = new ArrayList<>();
-        infoList.add(info);
-    }
 
     @Before
     public void beforeTest() {
         db = new MockDB("test_database", log);
         db.open();
-        testIndex = new DataSourceArray<>(new ObjectDataSource<>(db, BLOCK_INFO_SERIALIZER));
+        testStore = Stores.newArrayStore(db, STRING_SERIALIZER);
     }
 
     @After
@@ -76,26 +80,27 @@ public class BlockInfoDataSourceArrayTest {
     }
 
     /**
-     * Checks correct {@link DataSourceArray#set(long, Object)}, {@link DataSourceArray#size()},
-     * {@link DataSourceArray#get(long)} and {@link DataSourceArray#remove(long)}
+     * Checks correct {@link ArrayStore#set(long, Object)}, {@link ArrayStore#size()}, {@link
+     * ArrayStore#get(long)} and {@link ArrayStore#remove(long)}
      *
-     * @param value int values from {@link #intValues()}
+     * @param index int values from {@link #intValues()}
      */
     @Test
     @Parameters(method = "intValues")
-    public void testWithInt(int value) {
+    public void testWithInt(int index) {
+        String value = "stored data";
+
         // checking set & size functionality
-        testIndex.set(value, infoList);
-        assertThat(testIndex.size()).isEqualTo(value + 1L);
+        testStore.set(index, value);
+        assertThat(testStore.size()).isEqualTo(index + 1L);
 
         // checking get & size functionality
-        assertThat(testIndex.get(value)).isNotNull();
-        assertThat(testIndex.get(value).size()).isEqualTo(1);
-        assertThat(testIndex.size()).isEqualTo(value + 1L);
+        assertThat(testStore.get(index)).isEqualTo(value);
+        assertThat(testStore.size()).isEqualTo(index + 1L);
 
         // checking remove & size functionality
-        testIndex.remove(value);
-        assertThat(testIndex.size()).isEqualTo((long) value);
+        testStore.remove(index);
+        assertThat(testStore.size()).isEqualTo((long) index);
     }
 
     /** @return input values for {@link #testWithLong(long)} */
@@ -120,26 +125,27 @@ public class BlockInfoDataSourceArrayTest {
     }
 
     /**
-     * Checks correct {@link DataSourceArray#set(long, Object)}, {@link DataSourceArray#size()},
-     * {@link DataSourceArray#get(long)} and {@link DataSourceArray#remove(long)}
+     * Checks correct {@link ArrayStore#set(long, Object)}, {@link ArrayStore#size()}, {@link
+     * ArrayStore#get(long)} and {@link ArrayStore#remove(long)}
      *
-     * @param value long values from {@link #longValues()}
+     * @param index long values from {@link #longValues()}
      */
     @Test
     @Parameters(method = "longValues")
-    public void testWithLong(long value) {
+    public void testWithLong(long index) {
+        String value = "stored data";
+
         // checking set & size functionality
-        testIndex.set(value, infoList);
-        assertThat(testIndex.size()).isEqualTo(value + 1L);
+        testStore.set(index, value);
+        assertThat(testStore.size()).isEqualTo(index + 1L);
 
         // checking get & size functionality
-        assertThat(testIndex.get(value)).isNotNull();
-        assertThat(testIndex.get(value).size()).isEqualTo(1);
-        assertThat(testIndex.size()).isEqualTo(value + 1L);
+        assertThat(testStore.get(index)).isEqualTo(value);
+        assertThat(testStore.size()).isEqualTo(index + 1L);
 
         // checking remove & size functionality
-        testIndex.remove(value);
-        assertThat(testIndex.size()).isEqualTo(value);
+        testStore.remove(index);
+        assertThat(testStore.size()).isEqualTo(index);
     }
 
     /** @return input values for {@link #testSetWithNegativeValues(long)} */
@@ -171,12 +177,14 @@ public class BlockInfoDataSourceArrayTest {
 
     @Test
     @Parameters(method = "negativeAndLargeValues")
-    public void testSetWithNegativeValues(long value) {
+    public void testSetWithNegativeValues(long index) {
+        String value = "stored data";
+
         // setting negative or large long value
-        testIndex.set(value, infoList);
+        testStore.set(index, value);
 
         // getting size
-        long currentSize = testIndex.size();
+        long currentSize = testStore.size();
 
         // checking correct size
         assertThat(currentSize).isEqualTo(0L);
@@ -188,7 +196,7 @@ public class BlockInfoDataSourceArrayTest {
 
         List<Object> parameters = new ArrayList<>();
 
-        long intMax = (long) Integer.MAX_VALUE;
+        long intMax = Integer.MAX_VALUE;
 
         // small (int) values
         parameters.add(new Object[] {-10L, -1L, 0L});
@@ -210,26 +218,42 @@ public class BlockInfoDataSourceArrayTest {
 
     @Test
     @Parameters(method = "increasingSets")
-    public void testSetWithIncreasingValues(long value1, long value2, long value3) {
+    public void testSetWithIncreasingValues(long index1, long index2, long index3) {
+        String value1 = "stored data 1";
+        String value2 = "stored data 2";
+        String value3 = "stored data 3";
+
         // setting values consecutively
-        testIndex.set(value1, infoList);
-        testIndex.set(value2, infoList);
-        testIndex.set(value3, infoList);
+        testStore.set(index1, value1);
+        testStore.set(index2, value2);
+        testStore.set(index3, value3);
+
+        long expectedSize = index3 + 1L;
 
         // getting size
-        long currentSize = testIndex.size();
+        long currentSize = testStore.size();
 
         // checking correct size
-        assertThat(currentSize).isEqualTo(value3 + 1L);
+        assertThat(currentSize).isEqualTo(expectedSize);
 
         // checking get & size functionality for last value
-        assertThat(testIndex.get(value3)).isNotNull();
-        assertThat(testIndex.get(value3).size()).isEqualTo(1);
-        assertThat(testIndex.size()).isEqualTo(value3 + 1L);
+        // note that some sample sets have negative values
+        if (index1 >= 0) {
+            assertThat(testStore.get(index1)).isEqualTo(value1);
+        }
+        if (index2 >= 0) {
+            assertThat(testStore.get(index2)).isEqualTo(value2);
+        }
+        assertThat(testStore.get(index3)).isEqualTo(value3);
+        assertThat(testStore.size()).isEqualTo(expectedSize);
+
+        // checking remove & size functionality for value > last value
+        testStore.remove(expectedSize);
+        assertThat(testStore.size()).isEqualTo(expectedSize);
 
         // checking remove & size functionality for last value
-        testIndex.remove(value3);
-        assertThat(testIndex.size()).isEqualTo(value3);
+        testStore.remove(index3);
+        assertThat(testStore.size()).isEqualTo(index3);
     }
 
     /**
@@ -241,7 +265,7 @@ public class BlockInfoDataSourceArrayTest {
 
         List<Object> parameters = new ArrayList<>();
 
-        long intMax = (long) Integer.MAX_VALUE;
+        long intMax = Integer.MAX_VALUE;
 
         // small (int) values
         parameters.add(new Object[] {0L, -1L});
@@ -268,34 +292,90 @@ public class BlockInfoDataSourceArrayTest {
 
     @Test
     @Parameters(method = "decreasingSets")
-    public void testSetWithDecreasingValues(long value1, long value2) {
+    public void testSetWithDecreasingValues(long index1, long index2) {
+        String value1 = "stored data 1";
+        String value2 = "stored data 2";
+
         // setting values consecutively
-        testIndex.set(value1, infoList);
-        testIndex.set(value2, infoList);
+        testStore.set(index1, value1);
+        testStore.set(index2, value2);
+        long expectedSize = index1 + 1L;
 
         // getting size
-        long currentSize = testIndex.size();
+        long currentSize = testStore.size();
 
         // checking correct size
-        assertThat(currentSize).isEqualTo(value1 + 1L);
+        assertThat(currentSize).isEqualTo(expectedSize);
 
         // checking get & size functionality for first value
-        assertThat(testIndex.get(value1)).isNotNull();
-        assertThat(testIndex.get(value1).size()).isEqualTo(1);
-        assertThat(testIndex.size()).isEqualTo(value1 + 1L);
+        assertThat(testStore.get(index1)).isEqualTo(value1);
+        // note that some sample sets have negative values
+        if (index2 >= 0) {
+            assertThat(testStore.get(index2)).isEqualTo(value2);
+        }
+        assertThat(testStore.size()).isEqualTo(expectedSize);
 
         // checking remove & size functionality for first value
-        testIndex.remove(value1);
-        assertThat(testIndex.size()).isEqualTo(value1);
+        testStore.remove(index1);
+        assertThat(testStore.size()).isEqualTo(index1);
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
     @Parameters(method = "decreasingSets")
-    public void testGetWithIndexOutOfBoundsException(long value1, long value2) {
+    public void testGetWithIndexOutOfBoundsException(long index1, long index2) {
+        String value = "stored data";
+
         // setting larger value
-        testIndex.set(value2, infoList);
+        testStore.set(index2, value);
 
         // get smaller value
-        testIndex.get(value1);
+        testStore.get(index1);
+    }
+
+    @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+
+    @Test
+    public void testMissingSizeSetAtClose() throws IOException {
+        File tempFolder = testFolder.newFolder("folder");
+        db = new PersistentMockDB("test_database", tempFolder.getAbsolutePath(), log);
+        db.open();
+        testStore = Stores.newArrayStore(db, STRING_SERIALIZER);
+
+        // set data
+        String value = "stored data";
+        testStore.set(10L, value);
+
+        // drop key to imply db failure
+        db.delete(DataSourceArray.sizeKey);
+        assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isFalse();
+
+        // close should save the key
+        testStore.close();
+
+        // reopen db to check
+        db.open();
+        assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isTrue();
+    }
+
+    @Test
+    public void testMissingSizeSetAtUpdate() throws IOException {
+        File tempFolder = testFolder.newFolder("folder");
+        db = new PersistentMockDB("test_database", tempFolder.getAbsolutePath(), log);
+        db.open();
+        testStore = Stores.newArrayStore(db, STRING_SERIALIZER);
+
+        // set data
+        String value = "stored data";
+        testStore.set(10L, value);
+
+        // drop key to imply db failure
+        db.delete(DataSourceArray.sizeKey);
+        assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isFalse();
+
+        // adding another entry should save the key
+        testStore.set(11L, value);
+
+        // reopen db to check
+        assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isTrue();
     }
 }

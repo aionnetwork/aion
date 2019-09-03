@@ -25,11 +25,12 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.store.ArrayStore;
 import org.aion.db.store.DataSource;
 import org.aion.db.store.DataSource.Type;
-import org.aion.db.store.DataSourceArray;
 import org.aion.db.store.ObjectDataSource;
 import org.aion.db.store.Serializer;
+import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -50,7 +51,7 @@ public class AionBlockStore implements IBlockStorePow {
 
     protected Lock lock = new ReentrantLock();
 
-    private DataSourceArray<List<BlockInfo>> index;
+    private ArrayStore<List<BlockInfo>> index;
     private ObjectDataSource<Block> blocks;
 
     private boolean checkIntegrity = true;
@@ -65,7 +66,7 @@ public class AionBlockStore implements IBlockStorePow {
     }
 
     public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize) {
-        this.index = new DataSourceArray<>(new ObjectDataSource(index, BLOCK_INFO_SERIALIZER));
+        this.index = Stores.newArrayStore(index, BLOCK_INFO_SERIALIZER);
         // Note: because of cache use the blocks db should write lock on get as well
         this.blocks =
                 new DataSource<>(blocks, BLOCK_SERIALIZER)
@@ -156,7 +157,7 @@ public class AionBlockStore implements IBlockStorePow {
         lock.lock();
         try {
             blocks.flush();
-            index.flush();
+            index.commit();
         } finally {
             lock.unlock();
         }
@@ -1226,7 +1227,7 @@ public class AionBlockStore implements IBlockStorePow {
      */
     public void correctSize(long maxNumber, Logger log) {
         // correcting the size if smaller than should be
-        long storedSize = index.getStoredSize();
+        long storedSize = index.size();
         if (maxNumber >= storedSize) {
             // can't change size directly, so we do a put + delete the next level to reset it
             index.set(maxNumber + 1, new ArrayList<>());
@@ -1234,7 +1235,7 @@ public class AionBlockStore implements IBlockStorePow {
             log.info(
                     "Corrupted index size corrected from {} to {}.",
                     storedSize,
-                    index.getStoredSize());
+                    index.size());
         }
     }
 

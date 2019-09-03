@@ -26,7 +26,7 @@ public final class DataSource<V> {
     }
 
     /**
-     * Required data for {@link ObjectDataSource} and {@link DataSourceArray}.
+     * Required data for {@link ObjectDataSource}.
      *
      * @param src the source database
      * @param serializer the serializer used to convert data to byte arrays and vice versa
@@ -91,9 +91,5 @@ public final class DataSource<V> {
 
         // in case the given cache size is equal to zero
         return new ObjectDataSource<>(src, serializer);
-    }
-
-    public DataSourceArray<V> buildArraySource() {
-        return new DataSourceArray<>(this.buildObjectSource());
     }
 }

@@ -15,7 +15,6 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -527,10 +526,6 @@ public class BlockchainDataRecoveryTest {
             assertThat(deletedInfo.get(level)).isEqualTo(indexDatabase.get(indexKey).get());
         }
 
-        // ensure the size key is correct
-        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-
         // 2: recovery at import
 
         repo.flush();
@@ -565,9 +560,6 @@ public class BlockchainDataRecoveryTest {
             byte[] indexKey = ByteUtil.intToBytes(key.intValue());
             assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
         }
-
-        // ensure the size key is correct
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
     /** Test the recovery of the index with start from the index of an ancestor block. */
@@ -694,10 +686,6 @@ public class BlockchainDataRecoveryTest {
             assertThat(deletedInfo.get(level)).isEqualTo(indexDatabase.get(indexKey).get());
         }
 
-        // ensure the size key is correct
-        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-
         // 2: recovery at import
 
         repo.flush();
@@ -745,9 +733,6 @@ public class BlockchainDataRecoveryTest {
             // NOTE: this checks the correction of both main chain and side chain recovery
             assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
         }
-
-        // ensure the size key is correct
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
     /** Test the index recovery when the index database contains only the size and genesis index. */
@@ -819,10 +804,6 @@ public class BlockchainDataRecoveryTest {
             assertThat(deletedInfo.get(level)).isEqualTo(indexDatabase.get(indexKey).get());
         }
 
-        // ensure the size key is correct
-        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-
         // 2: recovery at import
 
         repo.flush();
@@ -857,9 +838,6 @@ public class BlockchainDataRecoveryTest {
             byte[] indexKey = ByteUtil.intToBytes(key.intValue());
             assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
         }
-
-        // ensure the size key is correct
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
     /**
@@ -976,10 +954,6 @@ public class BlockchainDataRecoveryTest {
         repo.flush();
         Map<Long, byte[]> deletedInfo = new HashMap<>();
 
-        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-        deletedInfo.put(-1L, indexDatabase.get(sizeKey).get());
-        indexDatabase.delete(sizeKey);
-
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // saving the data for checking recovery
@@ -1002,11 +976,6 @@ public class BlockchainDataRecoveryTest {
         assertThat(worked).isTrue();
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
 
-        // ensure the size key was recovered
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-        assertThat(indexDatabase.get(sizeKey).get()).isEqualTo(deletedInfo.get(-1L));
-        deletedInfo.remove(-1L);
-
         // check that the index information is correct
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             long level = entry.getKey();
@@ -1021,8 +990,6 @@ public class BlockchainDataRecoveryTest {
         // 2: recovery at import
 
         repo.flush();
-        deletedInfo.put(-1L, indexDatabase.get(sizeKey).get());
-        indexDatabase.delete(sizeKey);
 
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
@@ -1048,11 +1015,6 @@ public class BlockchainDataRecoveryTest {
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
         // ensure that the index was recovered
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
-
-        // ensure the size key was recovered
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-        assertThat(indexDatabase.get(sizeKey).get()).isEqualTo(deletedInfo.get(-1L));
-        deletedInfo.remove(-1L);
 
         // check that the index information is correct at database level
         for (Long key : blocksToDelete.keySet()) {
@@ -1165,10 +1127,6 @@ public class BlockchainDataRecoveryTest {
         // ensure that the index was recovered
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
-        // ensure the size key is correct
-        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
-
         // 2: recovery at import
 
         repo.flush();
@@ -1228,8 +1186,5 @@ public class BlockchainDataRecoveryTest {
             byte[] indexKey = ByteUtil.intToBytes(key.intValue());
             assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
         }
-
-        // ensure the size key is correct
-        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 }

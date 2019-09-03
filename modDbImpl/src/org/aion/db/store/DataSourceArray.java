@@ -1,8 +1,8 @@
 package org.aion.db.store;
 
-import java.io.Closeable;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Optional;
-import org.aion.db.Flushable;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
@@ -11,22 +11,26 @@ import org.aion.util.conversions.Hex;
  *
  * @param <V>
  */
-public class DataSourceArray<V> implements Flushable, Closeable {
+class DataSourceArray<V> implements ArrayStore<V> {
 
     private final ObjectDataSource<V> src;
-    private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
+    private final ByteArrayKeyValueDatabase db;
+    @VisibleForTesting
+    static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
     private long size = -1L;
 
-    public DataSourceArray(ObjectDataSource<V> src) {
-        this.src = src;
+    DataSourceArray(ByteArrayKeyValueDatabase database, Serializer<V> serializer) {
+        this.db = database;
+        this.src = new DataSource<>(db, serializer).buildObjectSource();
     }
 
     @Override
-    public void flush() {
+    public void commit() {
         src.flush();
     }
 
-    public V set(long index, V value) {
+    @Override
+    public void set(long index, V value) {
         if (index <= Integer.MAX_VALUE) {
             src.put(ByteUtil.intToBytes((int) index), value);
         } else {
@@ -35,9 +39,9 @@ public class DataSourceArray<V> implements Flushable, Closeable {
         if (index >= size()) {
             setSize(index + 1);
         }
-        return value;
     }
 
+    @Override
     public void remove(long index) {
         // without this check it will remove the sizeKey
         if (index < 0 || index >= size()) {
@@ -54,6 +58,7 @@ public class DataSourceArray<V> implements Flushable, Closeable {
         }
     }
 
+    @Override
     public V get(long index) {
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException(
@@ -79,14 +84,14 @@ public class DataSourceArray<V> implements Flushable, Closeable {
 
         // Read the value from the database directly and
         // convert to the size, and if it doesn't exist, 0.
-        Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
+        Optional<byte[]> optBytes = db.get(sizeKey);
         if (!optBytes.isPresent()) {
             size = 0L;
         } else {
             byte[] bytes = optBytes.get();
 
             if (bytes.length == 4) {
-                size = (long) ByteUtil.byteArrayToInt(bytes);
+                size = ByteUtil.byteArrayToInt(bytes);
             } else {
                 size = ByteUtil.byteArrayToLong(bytes);
             }
@@ -95,6 +100,7 @@ public class DataSourceArray<V> implements Flushable, Closeable {
         return size;
     }
 
+    @Override
     public long size() {
 
         if (size < 0) {
@@ -107,14 +113,23 @@ public class DataSourceArray<V> implements Flushable, Closeable {
     private synchronized void setSize(long newSize) {
         size = newSize;
         if (size <= Integer.MAX_VALUE) {
-            src.getSrc().put(sizeKey, ByteUtil.intToBytes((int) newSize));
+            db.put(sizeKey, ByteUtil.intToBytes((int) newSize));
         } else {
-            src.getSrc().put(sizeKey, ByteUtil.longToBytes(newSize));
+            db.put(sizeKey, ByteUtil.longToBytes(newSize));
         }
     }
 
     @Override
+    public boolean isOpen() {
+        return src.isOpen();
+    }
+
+    @Override
     public void close() {
+        // ensures that the size is written to disk if it was previously missing
+        if (!db.get(sizeKey).isPresent()) {
+            setSize(size);
+        }
         src.close();
     }
 }
