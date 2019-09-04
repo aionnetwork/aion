@@ -1221,7 +1221,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        transactionStore.flush();
+        transactionStore.commit();
     }
 
     @SuppressWarnings("unused")

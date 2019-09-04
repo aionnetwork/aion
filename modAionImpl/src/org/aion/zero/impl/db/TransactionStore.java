@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Serializer;
@@ -18,7 +17,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.collections4.map.LRUMap;
 
-public class TransactionStore implements Flushable, Closeable {
+public class TransactionStore implements Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final ObjectStore<List<AionTxInfo>> source;
 
@@ -88,8 +87,7 @@ public class TransactionStore implements Flushable, Closeable {
         }
     }
 
-    @Override
-    public void flush() {
+    public void commit() {
         lock.writeLock().lock();
         try {
             source.commit();

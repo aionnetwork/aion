@@ -13,5 +13,4 @@ module aion.db.impl {
     exports org.aion.db.impl.leveldb;
     exports org.aion.db.impl.rocksdb;
     exports org.aion.db.store;
-    exports org.aion.db;
 }

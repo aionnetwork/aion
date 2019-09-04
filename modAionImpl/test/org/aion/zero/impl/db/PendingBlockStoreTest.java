@@ -114,8 +114,7 @@ public class PendingBlockStoreTest {
         assertThat(pb.getStatusItem(block.getHash())).isNull();
         assertThat(pb.getStatusItem(range.get(0).getHash())).isNotNull();
 
-        // flush and close
-        pb.flush();
+        // close
         pb.close();
         assertThat(pb.isOpen()).isFalse();
 

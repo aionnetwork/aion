@@ -22,7 +22,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
@@ -61,7 +60,7 @@ import org.slf4j.Logger;
  *
  * @author Alexandra Roatis
  */
-public class PendingBlockStore implements Flushable, Closeable {
+public class PendingBlockStore implements Closeable {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_SYNC = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
@@ -776,23 +775,6 @@ public class PendingBlockStore implements Flushable, Closeable {
             return current;
         } finally {
             internalLock.unlock();
-        }
-    }
-
-    @Override
-    public void flush() {
-        databaseLock.writeLock().lock();
-        try {
-            levelSource.commit();
-            queueSource.commit();
-            if (!this.indexSource.isAutoCommitEnabled()) {
-                this.indexSource.commit();
-            }
-        } catch (Exception e) {
-            LOG.error("Unable to flush due to: ", e);
-            return;
-        } finally {
-            databaseLock.writeLock().unlock();
         }
     }
 
