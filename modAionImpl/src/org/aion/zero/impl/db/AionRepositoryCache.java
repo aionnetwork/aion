@@ -57,7 +57,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
-    public AccountState createAccount(AionAddress address) {
+    public void createAccount(AionAddress address) {
         fullyWriteLock();
         try {
             AccountState accountState = new AccountState();
@@ -68,8 +68,6 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
             // TODO: refactor to use makeDirty() from AbstractState
             contractDetails.setDirty(true);
             cachedDetails.put(address, contractDetails);
-
-            return accountState;
         } finally {
             fullyWriteUnlock();
         }

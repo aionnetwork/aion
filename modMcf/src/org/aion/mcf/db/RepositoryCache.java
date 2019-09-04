@@ -15,9 +15,8 @@ public interface RepositoryCache<AS, BSB> extends Repository<AS, BSB> {
      * Creates a new account state in the database or cache.
      *
      * @param address the address of the account to be created
-     * @return a {@link AS} object storing the newly created account state
      */
-    AS createAccount(AionAddress address);
+    void createAccount(AionAddress address);
 
     /**
      * Deletes the account from the cache and database.
