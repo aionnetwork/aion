@@ -79,7 +79,7 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.config.CfgConsensusPow;
+import org.aion.zero.impl.config.CfgConsensusUnity;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -1785,7 +1785,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     private static JSONObject configConsensus() {
-        CfgConsensusPow config = CfgAion.inst().getConsensus();
+        CfgConsensusUnity config = CfgAion.inst().getConsensus();
         JSONObject obj = new JSONObject();
         obj.put("mining", config.getMining());
         obj.put("minerAddress", config.getMinerAddress());

@@ -73,7 +73,7 @@ public class DynamicConfigKeyRegistry {
                             // below line.
                             //        put("aion.consensus.mining", ImmutablePair.of(
                             //                cfg ->
-                            // ((CfgConsensusPow)cfg.getConsensus()).getMining(),
+                            // ((CfgConsensusUnity)cfg.getConsensus()).getMining(),
                             //                new MiningApplier()));
 
                             // Below are sections where no config keys within are dynamically

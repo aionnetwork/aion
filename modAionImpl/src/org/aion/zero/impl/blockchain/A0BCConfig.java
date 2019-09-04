@@ -6,13 +6,20 @@ import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 public interface A0BCConfig {
 
     /**
-     * Retrieve the currently set coinbase for this particular node, blocks mined with this node
+     * Retrieve the currently set mining coinbase for this particular node, blocks mined with this node
      * will use this as the coinbase.
      *
      * @return {@code coinbase} a 32-bytes address
      */
     AionAddress getCoinbase();
 
+    /**
+     * Retrieve the currently set staking coinbase for this particular node, blocks staked with this node
+     * will use this as the coinbase when the node is using the internal staking block producer.
+     *
+     * @return {@code coinbase} a 32-bytes address
+     */
+    AionAddress getStakerCoinbase();
     /**
      * Retrieve the currently set extra data for this particular node, blocks mined with this node
      * will use this as extra data.
@@ -38,4 +45,10 @@ public interface A0BCConfig {
 
     /** Retrieves the desired behavior for internal transactions */
     boolean isInternalTransactionStorageEnabled();
+
+    /**
+     * Retrive status of the internal staking block producer.
+     * @return status of the internal staking block producer.
+     */
+    boolean isInternalStakingEnabled();
 }
