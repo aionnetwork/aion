@@ -1,7 +1,7 @@
 package org.aion.precompiled;
 
+import org.aion.precompiled.util.ByteUtil;
 import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 
 /**
  * Contains basic information relating to a precompiled contract. Namely, the address of that

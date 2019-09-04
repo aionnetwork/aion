@@ -2,7 +2,7 @@ package org.aion.precompiled.contracts.ATB;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
-import org.aion.util.bytes.ByteUtil;
+import org.aion.precompiled.util.ByteUtil;
 
 public class BridgeDeserializer {
 

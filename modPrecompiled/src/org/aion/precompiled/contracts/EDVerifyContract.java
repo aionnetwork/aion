@@ -2,9 +2,9 @@ package org.aion.precompiled.contracts;
 
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.util.AddressUtils;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.TransactionStatus;
-import org.aion.util.types.AddressUtils;
 
 public class EDVerifyContract implements PrecompiledContract {
 

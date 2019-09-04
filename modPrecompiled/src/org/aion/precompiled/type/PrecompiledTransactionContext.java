@@ -2,7 +2,7 @@ package org.aion.precompiled.type;
 
 import java.util.Arrays;
 import java.util.List;
-import org.aion.util.InternalTransactionUtil;
+import org.aion.precompiled.util.InternalTransactionUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;

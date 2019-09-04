@@ -3,7 +3,6 @@ test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
-    compile project(':modUtil')
     compile project(':modCrypto')
 
     compile 'com.google.guava:guava:25.1-jre'

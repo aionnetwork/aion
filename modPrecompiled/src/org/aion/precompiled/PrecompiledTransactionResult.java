@@ -1,7 +1,6 @@
 package org.aion.precompiled;
 
 import org.aion.types.TransactionStatus;
-import org.aion.util.bytes.ByteUtil;
 
 public class PrecompiledTransactionResult {
 
@@ -80,7 +79,7 @@ public class PrecompiledTransactionResult {
                 + ", energy remaining = "
                 + this.energyRemaining
                 + ", output = "
-                + ByteUtil.toHexString(this.output)
+               // + ByteUtil.toHexString(this.output)
                 + " }";
     }
 }
