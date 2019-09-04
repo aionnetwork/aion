@@ -5,12 +5,12 @@ import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.util.ByteUtil;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.precompiled.type.PrecompiledDoubleDataWord;
 import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 
 /**
  * Storage layout mapping as the following:

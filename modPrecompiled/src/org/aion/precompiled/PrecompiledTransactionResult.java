@@ -1,7 +1,7 @@
 package org.aion.precompiled;
 
+import org.aion.precompiled.util.ByteUtil;
 import org.aion.types.TransactionStatus;
-import org.aion.util.bytes.ByteUtil;
 
 public class PrecompiledTransactionResult {
 

@@ -4,13 +4,13 @@ import java.math.BigInteger;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.util.BIUtil;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.types.AionAddress;
 import org.aion.types.TransactionStatus;
-import org.aion.util.biginteger.BIUtil;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract implements PrecompiledContract {

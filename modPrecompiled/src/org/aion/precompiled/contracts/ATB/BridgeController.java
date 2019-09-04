@@ -14,9 +14,9 @@ import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.util.ByteUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
-import org.aion.util.bytes.ByteUtil;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
