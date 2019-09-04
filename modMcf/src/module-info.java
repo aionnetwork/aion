@@ -4,7 +4,6 @@ module aion.mcf {
     requires aion.log;
     requires java.xml;
     requires aion.rlp;
-    requires aion.db.impl;
     requires slf4j.api;
     requires com.google.common;
     requires commons.collections4;

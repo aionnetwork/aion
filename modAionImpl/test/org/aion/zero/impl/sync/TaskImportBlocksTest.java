@@ -43,14 +43,12 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.sync.PeerState.Mode;
 import org.junit.After;
 import org.junit.Before;
@@ -271,12 +269,6 @@ public class TaskImportBlocksTest {
                                                 return 0;
                                             }
                                         };
-                                    }
-
-                                    @Override
-                                    public ContractDetails contractDetailsImpl() {
-                                        return ContractDetailsAion.createForTesting(0, 1000000)
-                                                .getDetails();
                                     }
 
                                     @Override

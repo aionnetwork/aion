@@ -2,7 +2,6 @@ package org.aion.mcf.db;
 
 import java.util.Collection;
 import java.util.Map;
-import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -103,36 +102,11 @@ public interface ContractDetails {
     void setObjectGraph(byte[] graph);
 
     /**
-     * Sets the data source for storing the AVM object graph.
-     *
-     * @param objectGraphSource the new data source used for storing the object graph
-     */
-    void setObjectGraphSource(ByteArrayKeyValueStore objectGraphSource);
-
-    /**
      * Returns the storage hash.
      *
      * @return the storage hash.
      */
     byte[] getStorageHash();
-
-    /**
-     * Decodes an ContractDetails object from the RLP encoding rlpCode.
-     *
-     * @implNote Implementing classes may not necessarily support this method.
-     * @param rlpCode The encoding to decode.
-     */
-    void decode(byte[] rlpCode);
-
-    /**
-     * Decodes an ContractDetails object from the RLP encoding rlpCode including the fast check
-     * optional.
-     *
-     * @implNote Implementing classes may not necessarily support this method.
-     * @param rlpCode The encoding to decode.
-     * @param fastCheck fast check does the contractDetails needs syncing with external storage
-     */
-    void decode(byte[] rlpCode, boolean fastCheck);
 
     /**
      * Sets the dirty value to dirty.
@@ -161,14 +135,6 @@ public interface ContractDetails {
      * @return only if this is deleted.
      */
     boolean isDeleted();
-
-    /**
-     * Returns an rlp encoding of this ContractDetails object.
-     *
-     * @implNote Implementing classes may not necessarily support this method.
-     * @return an rlp encoding of this.
-     */
-    byte[] getEncoded();
 
     /**
      * Returns a mapping of all the key-value pairs that have keys in the given collection keys.
@@ -210,26 +176,6 @@ public interface ContractDetails {
 
     /** Syncs the storage trie. */
     void syncStorage();
-
-    /**
-     * Returns a ContractDetails object pertaining to a specific point in time given by the storage
-     * root hash.
-     *
-     * @param storageHash the storage root hash to search for
-     * @param vm used to direct the interpretation of the storage root hash, since AVM contracts
-     *     also include the hash of the object graph.
-     * @return the specified ContractDetails
-     * @implNote Implementing classes may not necessarily support this method.
-     */
-    ContractDetails getSnapshotTo(byte[] storageHash, InternalVmType vm);
-
-    /**
-     * Sets the data source to dataSource.
-     *
-     * @implNote Implementing classes may not necessarily support this method.
-     * @param dataSource The new dataSource.
-     */
-    void setDataSource(ByteArrayKeyValueStore dataSource);
 
     /**
      * Returns a sufficiently deep copy of this object. It is up to all implementations of this

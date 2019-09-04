@@ -50,11 +50,6 @@ public class AionContractDetailsTest {
                 }
 
                 @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
-
-                @Override
                 public Properties getDatabaseConfig(String db_name) {
                     Properties props = new Properties();
                     props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
@@ -63,7 +58,7 @@ public class AionContractDetailsTest {
                 }
             };
 
-    private static ContractDetails deserialize(
+    private static AionContractDetailsImpl deserialize(
             byte[] rlp, ByteArrayKeyValueDatabase externalStorage) {
         AionContractDetailsImpl result = new AionContractDetailsImpl();
         result.setExternalStorageDataSource(externalStorage);
@@ -406,7 +401,7 @@ public class AionContractDetailsTest {
         original.syncStorage();
         assertTrue(!externalStorage.isEmpty());
 
-        ContractDetails deserialized = deserialize(original.getEncoded(), externalStorage);
+        AionContractDetailsImpl deserialized = deserialize(original.getEncoded(), externalStorage);
 
         // adds keys for in-memory storage limit overflow
         for (int i = 0; i < 10; i++) {

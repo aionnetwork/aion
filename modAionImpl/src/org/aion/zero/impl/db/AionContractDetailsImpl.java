@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.precompiled.ContractInfo;
@@ -47,8 +46,22 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     public AionContractDetailsImpl() {}
 
-    public AionContractDetailsImpl(int prune, int memStorageLimit) {
-        super(prune, memStorageLimit);
+    @VisibleForTesting
+    AionContractDetailsImpl(int prune, int memStorageLimit) {
+        this.prune = prune;
+        // NOTE: updating this value can lead to incompatible data storage
+        this.detailsInMemoryStorageLimit = memStorageLimit;
+    }
+
+    /**
+     * Creates a object with attached database access for the storage and object graph.
+     *
+     * @param storageSource
+     * @param objectGraphSource
+     */
+    public AionContractDetailsImpl(ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+        this.dataSource = storageSource;
+        this.objectGraphSource = objectGraphSource;
     }
 
     private AionContractDetailsImpl(
@@ -201,20 +214,18 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      *     data is interpreted during decoding differs for AVM contracts, therefore it will be
      *     decoded incorrectly if the VM type is not set before making this method call.
      */
-    @Override
     public void decode(byte[] rlpCode) {
         // TODO: remove vm type requirement when refactoring into separate AVM & FVM implementations
         decode(rlpCode, false);
     }
 
     /**
-     * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode with fast check does
-     * the contractDetails needs external storage.
+     * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode. The fast check flag
+     * indicates whether the contractDetails needs to sync with external storage.
      *
      * @param rlpCode The encoding to decode.
-     * @param fastCheck set fastCheck option.
+     * @param fastCheck indicates whether the contractDetails needs to sync with external storage.
      */
-    @Override
     public void decode(byte[] rlpCode, boolean fastCheck) {
         RLPList data = RLP.decode2(rlpCode);
 
@@ -340,7 +351,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      *
      * @return an rlp encoding of this.
      */
-    @Override
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
@@ -431,7 +441,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     /**
-     * Sets the data source to dataSource.
+     * Sets the storage data source.
      *
      * @param dataSource The new dataSource.
      */
@@ -439,7 +449,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         this.dataSource = dataSource;
     }
 
-    @Override
+    /**
+     * Sets the data source for storing the AVM object graph.
+     *
+     * @param objectGraphSource the new data source used for storing the object graph
+     */
     public void setObjectGraphSource(ByteArrayKeyValueStore objectGraphSource) {
         this.objectGraphSource = objectGraphSource;
     }
@@ -495,13 +509,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     /**
      * Returns an AionContractDetailsImpl object pertaining to a specific point in time given by the
-     * root hash hash.
+     * storage root hash.
      *
-     * @param hash The root hash to search for.
+     * @param hash the storage root hash to search for
+     * @param vm used to direct the interpretation of the storage root hash, since AVM contracts
+     *     also include the hash of the object graph.
      * @return the specified AionContractDetailsImpl.
      */
-    @Override
-    public ContractDetails getSnapshotTo(byte[] hash, InternalVmType vm) {
+    public AionContractDetailsImpl getSnapshotTo(byte[] hash, InternalVmType vm) {
         // set the VM type using the code hash
         vmType = vm;
 

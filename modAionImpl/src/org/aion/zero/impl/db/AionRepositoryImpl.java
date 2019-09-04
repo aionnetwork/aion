@@ -170,7 +170,7 @@ public class AionRepositoryImpl
                     ContractDetailsCacheImpl contractDetailsCache =
                             (ContractDetailsCacheImpl) contractDetails;
                     if (contractDetailsCache.origContract == null) {
-                        contractDetailsCache.origContract = this.cfg.contractDetailsImpl();
+                        contractDetailsCache.origContract = new AionContractDetailsImpl();
 
                         try {
                             contractDetailsCache.origContract.setAddress(address);
@@ -185,7 +185,8 @@ public class AionRepositoryImpl
 
                     contractDetails = contractDetailsCache.origContract;
 
-                    updateContractDetails(address, contractDetails);
+                    // this method requires the encoding functionality therefore can be applied only to AionContractDetailsImpl
+                    updateContractDetails(address, (AionContractDetailsImpl) contractDetails);
 
                     // TODO: incorrect check codeHash != trie hash
                     if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
@@ -225,7 +226,7 @@ public class AionRepositoryImpl
 
     /** @implNote The method calling this method must handle the locking. */
     private void updateContractDetails(
-            final AionAddress address, final ContractDetails contractDetails) {
+            final AionAddress address, final AionContractDetailsImpl contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
 
@@ -451,16 +452,16 @@ public class AionRepositoryImpl
     /**
      * @inheritDoc
      * @implNote Any other method calling this can rely on the fact that the contract details
-     *     returned is a newly created object by {@link ContractDetails#getSnapshotTo(byte[],
+     *     returned is a newly created object by {@link AionContractDetailsImpl#getSnapshotTo(byte[],
      *     InternalVmType)}. Since this querying method it locked, the methods calling it <b>may not
      *     need to be locked or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public ContractDetails getContractDetails(AionAddress address) {
+    public AionContractDetailsImpl getContractDetails(AionAddress address) {
         rwLock.readLock().lock();
 
         try {
-            ContractDetails details;
+            AionContractDetailsImpl details;
 
             // That part is important cause if we have
             // to sync details storage according the trie root
@@ -1214,7 +1215,6 @@ public class AionRepositoryImpl
                 new AionRepositoryImpl(
                         new RepositoryConfigImpl(
                                 config.getDatabasePath(),
-                                ContractDetailsAion.getInstance(),
                                 config.getDb()),
                         10);
     }

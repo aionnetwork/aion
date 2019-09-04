@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.JournalPruneDataSource;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -14,38 +13,23 @@ import org.slf4j.Logger;
 
 /** Detail data storage , */
 public class DetailsDataStore {
-
     private JournalPruneDataSource storageDSPrune;
-    private RepositoryConfig repoConfig;
 
     private ByteArrayKeyValueDatabase detailsSrc;
     private ByteArrayKeyValueDatabase storageSrc;
     private ByteArrayKeyValueDatabase graphSrc;
     private Logger log;
 
-    public DetailsDataStore() {}
-
     public DetailsDataStore(
             ByteArrayKeyValueDatabase detailsCache,
             ByteArrayKeyValueDatabase storageCache,
             ByteArrayKeyValueDatabase graphCache,
-            Logger log,
-            RepositoryConfig repoConfig) {
-        this.repoConfig = repoConfig;
-        withDb(detailsCache, storageCache, graphCache, log);
-    }
-
-    public DetailsDataStore withDb(
-            ByteArrayKeyValueDatabase detailsSrc,
-            ByteArrayKeyValueDatabase storageSrc,
-            ByteArrayKeyValueDatabase graphSrc,
             Logger log) {
-        this.detailsSrc = detailsSrc;
-        this.storageSrc = storageSrc;
-        this.graphSrc = graphSrc;
+        this.detailsSrc = detailsCache;
+        this.storageSrc = storageCache;
+        this.graphSrc = graphCache;
         this.log = log;
         this.storageDSPrune = new JournalPruneDataSource(storageSrc, log);
-        return this;
     }
 
     /**
@@ -55,7 +39,7 @@ public class DetailsDataStore {
      * @param vm the virtual machine used at contract deployment
      * @return
      */
-    public synchronized ContractDetails get(InternalVmType vm, byte[] key) {
+    public synchronized AionContractDetailsImpl get(InternalVmType vm, byte[] key) {
 
         Optional<byte[]> rawDetails = detailsSrc.get(key);
 
@@ -65,9 +49,7 @@ public class DetailsDataStore {
         }
 
         // Found something from cache or database, return it by decoding it.
-        ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
-        detailsImpl.setDataSource(storageDSPrune);
-        detailsImpl.setObjectGraphSource(graphSrc);
+        AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
         detailsImpl.setVmType(vm);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
@@ -81,11 +63,10 @@ public class DetailsDataStore {
         return rawDetails.isPresent();
     }
 
-    public synchronized void update(AionAddress key, ContractDetails contractDetails) {
+    public synchronized void update(AionAddress key, AionContractDetailsImpl contractDetails) {
 
         contractDetails.setAddress(key);
         contractDetails.setObjectGraphSource(graphSrc);
-        ByteArrayWrapper wrappedKey = wrap(key.toByteArray());
 
         // Put into cache.
         byte[] rawDetails = contractDetails.getEncoded();
@@ -141,9 +122,7 @@ public class DetailsDataStore {
             }
 
             // Decode the details.
-            ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
-            detailsImpl.setDataSource(storageDSPrune);
-            detailsImpl.setObjectGraphSource(graphSrc);
+            AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
             detailsImpl.decode(rawDetails.get(), true);
             // We can safely get as we checked if it is present.
 

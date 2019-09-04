@@ -11,7 +11,6 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.config.PruneConfig;
@@ -41,11 +40,6 @@ public class AionRepositoryImplTest {
                 @Override
                 public PruneConfig getPruneConfig() {
                     return new CfgPrune(false);
-                }
-
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                 }
 
                 @Override

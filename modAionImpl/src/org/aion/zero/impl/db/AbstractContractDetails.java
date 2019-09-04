@@ -20,8 +20,11 @@ public abstract class AbstractContractDetails implements ContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    protected int prune;
-    protected int detailsInMemoryStorageLimit;
+    // a value > 0 indicates that prune should be for that many blocks.
+    protected int prune = 0;
+    // indicates the maximum storage size before shifting to the storage database
+    // NOTE: updating this value can lead to incompatible data storage
+    protected int detailsInMemoryStorageLimit = 64 * 1024;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
     protected byte[] transformedCode;
@@ -30,15 +33,6 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     // using the default transaction type to specify undefined VM
     protected InternalVmType vmType = InternalVmType.EITHER;
-
-    protected AbstractContractDetails() {
-        this(0, 64 * 1024);
-    }
-
-    protected AbstractContractDetails(int prune, int memStorageLimit) {
-        this.prune = prune;
-        this.detailsInMemoryStorageLimit = memStorageLimit;
-    }
 
     @Override
     public byte[] getCode() {

@@ -13,7 +13,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.RepositoryConfig;
@@ -24,7 +23,6 @@ import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,11 +68,6 @@ public class BridgeTransferTest {
                     @Override
                     public PruneConfig getPruneConfig() {
                         return new CfgPrune(false);
-                    }
-
-                    @Override
-                    public ContractDetails contractDetailsImpl() {
-                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                     }
 
                     @Override

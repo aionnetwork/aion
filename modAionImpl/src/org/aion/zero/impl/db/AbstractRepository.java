@@ -298,7 +298,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
 
             // Setup the cache for transaction data source.
             this.detailsDS =
-                    new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG, cfg);
+                    new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG);
 
             // pruning config
             pruneEnabled = this.cfg.getPruneConfig().isEnabled();

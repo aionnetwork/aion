@@ -162,24 +162,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         return origContract == null ? null : origContract.getStorageHash();
     }
 
-    /** This method is not supported. */
-    @Override
-    public void decode(byte[] rlpCode) {
-        throw new RuntimeException("Not supported by this implementation.");
-    }
-
-    /** This method is not supported. */
-    @Override
-    public void decode(byte[] rlpCode, boolean fastCheck) {
-        throw new RuntimeException("Not supported by this implementation.");
-    }
-
-    /** This method is not supported. */
-    @Override
-    public byte[] getEncoded() {
-        throw new RuntimeException("Not supported by this implementation.");
-    }
-
     /**
      * Get the address associated with this ContractDetailsCacheImpl.
      *
@@ -250,24 +232,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
         origContract.setTransformedCode(getTransformedCode());
         origContract.setDirty(this.isDirty() || origContract.isDirty());
-    }
-
-    /** This method is not supported. */
-    @Override
-    public ContractDetails getSnapshotTo(byte[] hash, InternalVmType vm) {
-        throw new UnsupportedOperationException("No snapshot option during cache state");
-    }
-
-    /** This method is not supported. */
-    @Override
-    public void setDataSource(ByteArrayKeyValueStore dataSource) {
-        throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
-    }
-
-    /** This method is not supported. */
-    @Override
-    public void setObjectGraphSource(ByteArrayKeyValueStore objectGraphSource) {
-        throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
     }
 
     /**

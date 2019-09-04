@@ -20,7 +20,6 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
@@ -40,7 +39,6 @@ import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -71,11 +69,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 @Override
                 public PruneConfig getPruneConfig() {
                     return new CfgPrune(false);
-                }
-
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                 }
 
                 @Override
@@ -267,11 +260,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 @Override
                 public PruneConfig getPruneConfig() {
                     return new CfgPrune(false);
-                }
-
-                @Override
-                public ContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                 }
 
                 @Override

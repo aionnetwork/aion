@@ -4,7 +4,6 @@ import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.config.PruneConfig;
 
 public class MockRepositoryConfig implements RepositoryConfig {
@@ -20,11 +19,6 @@ public class MockRepositoryConfig implements RepositoryConfig {
     @Override
     public PruneConfig getPruneConfig() {
         return pruneConfig;
-    }
-
-    @Override
-    public ContractDetails contractDetailsImpl() {
-        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
     }
 
     @Override

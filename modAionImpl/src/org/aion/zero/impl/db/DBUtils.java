@@ -13,7 +13,6 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.config.CfgDb;
 import org.aion.base.AccountState;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -248,7 +247,7 @@ public class DBUtils {
                         writer.append("Contract: " + AddressUtils.wrapAddress(otherParameters[i]));
                         writer.newLine();
 
-                        ContractDetails details =
+                        AionContractDetailsImpl details =
                                 repository.getContractDetails(
                                         AddressUtils.wrapAddress(otherParameters[i]));
 
