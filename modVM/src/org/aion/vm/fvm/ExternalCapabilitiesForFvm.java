@@ -13,7 +13,7 @@ public final class ExternalCapabilitiesForFvm implements IExternalCapabilities {
 
     @Override
     public AionAddress computeNewContractAddress(AionAddress sender, BigInteger senderNonce) {
-        return TxUtil.calculateContractAddress(sender.toByteArray(), senderNonce.toByteArray());
+        return TxUtil.calculateContractAddress(sender.toByteArray(), senderNonce);
     }
 
     @Override

@@ -54,30 +54,30 @@ public final class TxUtil {
         if (tx.destinationAddress != null) {
             return null;
         }
-        return calculateContractAddress(tx.senderAddress.toByteArray(), tx.nonce.toByteArray());
+        return calculateContractAddress(tx.senderAddress.toByteArray(), tx.nonce);
     }
 
     public static AionAddress calculateContractAddress(AionTransaction tx) {
         if (tx.getDestinationAddress() != null) {
             return null;
         }
-        return calculateContractAddress(tx.getSenderAddress().toByteArray(), tx.getNonce());
+        return calculateContractAddress(tx.getSenderAddress().toByteArray(), tx.getNonceBI());
     }
 
     public static AionAddress calculateContractAddress(InternalTransaction itx) {
         if (itx.destination != null) {
             return null;
         }
-        return calculateContractAddress(itx.sender.toByteArray(), itx.senderNonce.toByteArray());
+        return calculateContractAddress(itx.sender.toByteArray(), itx.senderNonce);
     }
 
     /** Calculates the address as per the QA2 definitions */
-    public static AionAddress calculateContractAddress(byte[] addr, byte[] nonce) {
+    public static AionAddress calculateContractAddress(byte[] addr, BigInteger nonce) {
         ByteBuffer buf = ByteBuffer.allocate(32);
         buf.put(AddressSpecs.A0_IDENTIFIER);
 
         byte[] encSender = RLP.encodeElement(addr);
-        byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
+        byte[] encNonce = RLP.encodeBigInteger(nonce);
 
         buf.put(HashUtil.h256(RLP.encodeList(encSender, encNonce)), 1, 31);
         return new AionAddress(buf.array());

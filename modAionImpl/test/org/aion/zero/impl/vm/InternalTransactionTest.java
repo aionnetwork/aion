@@ -363,11 +363,11 @@ public class InternalTransactionTest {
 
         AionAddress firstContractAddr =
                 TxUtil.calculateContractAddress(
-                        deployerAccount.getAddress(), BigInteger.ONE.toByteArray());
+                        deployerAccount.getAddress(), BigInteger.ONE);
 
         AionAddress internalContractAddress =
                 TxUtil.calculateContractAddress(
-                        firstContractAddr.toByteArray(), BigInteger.ZERO.toByteArray());
+                        firstContractAddr.toByteArray(), BigInteger.ZERO);
 
         BigInteger nonce = BigInteger.ZERO;
 
@@ -460,7 +460,7 @@ public class InternalTransactionTest {
                                 .hasAccountState(
                                         TxUtil.calculateContractAddress(
                                                         contractAddress.toByteArray(),
-                                                        BigInteger.ZERO.toByteArray())));
+                                                        BigInteger.ZERO)));
 
                 firstItx = false;
             }

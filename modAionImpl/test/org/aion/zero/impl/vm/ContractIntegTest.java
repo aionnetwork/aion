@@ -1424,7 +1424,7 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
-                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce.toByteArray());
+                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce);
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1507,7 +1507,7 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
-                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce.toByteArray());
+                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce);
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
@@ -1597,7 +1597,7 @@ public class ContractIntegTest {
         BigInteger value = BigInteger.ONE;
 
         AionAddress avmAddress =
-                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce.toByteArray());
+                TxUtil.calculateContractAddress(deployer.toByteArray(), deployerNonce);
 
         // create a tx the sender send some balance to the account the deployer will deploy in the
         // feature.
