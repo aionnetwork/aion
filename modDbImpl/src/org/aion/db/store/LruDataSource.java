@@ -9,7 +9,7 @@ import org.apache.commons.collections4.map.LRUMap;
  *
  * @author Alexandra Roatis
  */
-public class LruDataSource<V> extends ObjectDataSource<V> {
+class LruDataSource<V> extends ObjectDataSource<V> {
 
     protected final LRUMap<ByteArrayWrapper, V> cache;
 

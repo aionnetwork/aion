@@ -18,7 +18,7 @@ import org.slf4j.Logger;
  *
  * @author Alexandra Roatis
  */
-public class DebugCaffeineDataSource<V> extends ObjectDataSource<V> {
+class DebugCaffeineDataSource<V> extends ObjectDataSource<V> {
 
     protected final LoadingCache<ByteArrayWrapper, V> cache;
 

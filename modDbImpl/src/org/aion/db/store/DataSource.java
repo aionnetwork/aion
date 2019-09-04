@@ -8,7 +8,7 @@ import org.slf4j.Logger;
  *
  * @author Alexandra Roatis
  */
-public final class DataSource<V> {
+final class DataSource<V> {
 
     // Required parameters
     private final ByteArrayKeyValueDatabase src;
@@ -31,7 +31,7 @@ public final class DataSource<V> {
      * @param src the source database
      * @param serializer the serializer used to convert data to byte arrays and vice versa
      */
-    public DataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer) {
+    DataSource(ByteArrayKeyValueDatabase src, Serializer<V> serializer) {
         this.src = src;
         this.serializer = serializer;
         this.cacheSize = 0;
@@ -45,7 +45,7 @@ public final class DataSource<V> {
      * @return a builder that will return a data source with cache when the given size is greater
      *     than zero
      */
-    public DataSource<V> withCache(int cacheSize, Type cacheType) {
+    DataSource<V> withCache(int cacheSize, Type cacheType) {
         // allows the case where cacheSize == 0 to facilitate enabling/disabling cache usage
         if (cacheSize < 0) {
             throw new IllegalArgumentException("Please provide a positive number as cache size.");
@@ -64,13 +64,13 @@ public final class DataSource<V> {
      *
      * @return a builder that will return a data source with statistics on cache usage
      */
-    public DataSource<V> withStatistics(Logger log) {
+    DataSource<V> withStatistics(Logger log) {
         this.isDebug = true;
         this.log = log;
         return this;
     }
 
-    public ObjectDataSource<V> buildObjectSource() {
+    ObjectDataSource<V> buildObjectSource() {
         if (cacheSize != 0) {
             if (isDebug) {
                 switch (cacheType) {

@@ -1,8 +1,6 @@
 package org.aion.db.store;
 
-import java.io.Closeable;
 import java.util.Optional;
-import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 
 /**
@@ -10,7 +8,7 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
  *
  * @param <V>
  */
-public class ObjectDataSource<V> implements Flushable, Closeable {
+class ObjectDataSource<V> implements ObjectStore<V> {
 
     private ByteArrayKeyValueDatabase src;
     private Serializer<V> serializer;
@@ -20,7 +18,7 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         this.serializer = serializer;
     }
 
-    public void flush() {
+    public void commit() {
         // for write-back type cache only
         if (!this.src.isAutoCommitEnabled()) {
             this.src.commit();

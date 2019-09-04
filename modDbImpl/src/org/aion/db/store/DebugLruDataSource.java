@@ -13,7 +13,7 @@ import org.slf4j.Logger;
  *
  * @author Alexandra Roatis
  */
-public final class DebugLruDataSource<V> extends LruDataSource<V> {
+final class DebugLruDataSource<V> extends LruDataSource<V> {
 
     // used to gather information regarding the cache use
     private long hits;

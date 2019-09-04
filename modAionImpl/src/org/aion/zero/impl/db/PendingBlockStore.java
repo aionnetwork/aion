@@ -26,8 +26,9 @@ import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
-import org.aion.db.store.ObjectDataSource;
+import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Serializer;
+import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -78,11 +79,11 @@ public class PendingBlockStore implements Flushable, Closeable {
      * Used to map a level (blockchain height) to the queue identifiers that start with blocks at
      * that height.
      */
-    private ObjectDataSource<List<byte[]>> levelSource;
+    private ObjectStore<List<byte[]>> levelSource;
 
     private ByteArrayKeyValueDatabase levelDatabase;
     /** Used to map a queue identifier to a list of consecutive blocks. */
-    private ObjectDataSource<List<Block>> queueSource;
+    private ObjectStore<List<Block>> queueSource;
 
     private ByteArrayKeyValueDatabase queueDatabase;
     /** Used to maps a block hash to its current queue identifier. */
@@ -136,7 +137,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         if (levelDatabase == null || levelDatabase.isClosed()) {
             throw newException(LEVEL_DB_NAME, props);
         }
-        this.levelSource = new ObjectDataSource<>(levelDatabase, HASH_LIST_RLP_SERIALIZER);
+        this.levelSource = Stores.newObjectStore(levelDatabase, HASH_LIST_RLP_SERIALIZER);
 
         // create the queue source
         props.setProperty(Props.DB_NAME, QUEUE_DB_NAME);
@@ -144,7 +145,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         if (queueDatabase == null || queueDatabase.isClosed()) {
             throw newException(QUEUE_DB_NAME, props);
         }
-        this.queueSource = new ObjectDataSource<>(queueDatabase, BLOCK_LIST_RLP_SERIALIZER);
+        this.queueSource = Stores.newObjectStore(queueDatabase, BLOCK_LIST_RLP_SERIALIZER);
 
         // create the index source
         props.setProperty(Props.DB_NAME, INDEX_DB_NAME);
@@ -782,8 +783,8 @@ public class PendingBlockStore implements Flushable, Closeable {
     public void flush() {
         databaseLock.writeLock().lock();
         try {
-            levelSource.flush();
-            queueSource.flush();
+            levelSource.commit();
+            queueSource.commit();
             if (!this.indexSource.isAutoCommitEnabled()) {
                 this.indexSource.commit();
             }

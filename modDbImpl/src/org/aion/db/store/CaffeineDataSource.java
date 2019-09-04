@@ -12,7 +12,7 @@ import org.aion.util.types.ByteArrayWrapper;
  *
  * @author Alexandra Roatis
  */
-public final class CaffeineDataSource<V> extends ObjectDataSource<V> {
+final class CaffeineDataSource<V> extends ObjectDataSource<V> {
 
     private final LoadingCache<ByteArrayWrapper, V> cache;
 

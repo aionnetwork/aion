@@ -26,7 +26,7 @@ class DataSourceArray<V> implements ArrayStore<V> {
 
     @Override
     public void commit() {
-        src.flush();
+        src.commit();
     }
 
     @Override

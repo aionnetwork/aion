@@ -21,9 +21,8 @@ import java.util.Set;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.db.store.DataSource;
-import org.aion.db.store.DataSource.Type;
-import org.aion.db.store.ObjectDataSource;
+import org.aion.db.store.ObjectStore;
+import org.aion.db.store.Stores;
 import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
@@ -57,7 +56,7 @@ public class AionRepositoryImpl
     private PendingBlockStore pendingStore;
 
     // inferred contract information not used for consensus
-    private ObjectDataSource<ContractInformation> contractInfoSource;
+    private ObjectStore<ContractInformation> contractInfoSource;
 
     // TODO: include in the repository config after the FVM is decoupled or remove RepositoryConfig and pass individual parameters
     private int blockCacheSize;
@@ -97,10 +96,7 @@ public class AionRepositoryImpl
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
-            this.contractInfoSource =
-                    new DataSource<>(contractIndexDatabase, ContractInformation.RLP_SERIALIZER)
-                            .withCache(10, Type.LRU)
-                            .buildObjectSource();
+            this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10);
 
             // Setup world trie.
             worldState = createStateTrie();

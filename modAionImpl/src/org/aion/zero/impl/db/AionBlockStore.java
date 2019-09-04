@@ -26,9 +26,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.ArrayStore;
-import org.aion.db.store.DataSource;
-import org.aion.db.store.DataSource.Type;
-import org.aion.db.store.ObjectDataSource;
+import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Serializer;
 import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
@@ -52,7 +50,7 @@ public class AionBlockStore implements IBlockStorePow {
     protected Lock lock = new ReentrantLock();
 
     private ArrayStore<List<BlockInfo>> index;
-    private ObjectDataSource<Block> blocks;
+    private ObjectStore<Block> blocks;
 
     private boolean checkIntegrity = true;
 
@@ -68,10 +66,7 @@ public class AionBlockStore implements IBlockStorePow {
     public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize) {
         this.index = Stores.newArrayStore(index, BLOCK_INFO_SERIALIZER);
         // Note: because of cache use the blocks db should write lock on get as well
-        this.blocks =
-                new DataSource<>(blocks, BLOCK_SERIALIZER)
-                        .withCache(blockCacheSize, Type.LRU)
-                        .buildObjectSource();
+        this.blocks = Stores.newObjectStoreWithCache(blocks, BLOCK_SERIALIZER, blockCacheSize);
         this.checkIntegrity = checkIntegrity;
     }
 
@@ -156,7 +151,7 @@ public class AionBlockStore implements IBlockStorePow {
     public void flush() {
         lock.lock();
         try {
-            blocks.flush();
+            blocks.commit();
             index.commit();
         } finally {
             lock.unlock();

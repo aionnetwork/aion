@@ -3,6 +3,7 @@ package org.aion.zero.impl.db;
 import static org.aion.util.others.Utils.dummy;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,21 +11,22 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.db.Flushable;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.db.store.ObjectDataSource;
+import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Serializer;
+import org.aion.db.store.Stores;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.collections4.map.LRUMap;
 
 public class TransactionStore implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final ObjectDataSource<List<AionTxInfo>> source;
+    private final ObjectStore<List<AionTxInfo>> source;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(
             ByteArrayKeyValueDatabase src, Serializer<List<AionTxInfo>> serializer) {
-        source = new ObjectDataSource(src, serializer);
+        source = Stores.newObjectStore(src, serializer);
     }
 
     public boolean putToBatch(AionTxInfo tx) {
@@ -90,14 +92,14 @@ public class TransactionStore implements Flushable, Closeable {
     public void flush() {
         lock.writeLock().lock();
         try {
-            source.flush();
+            source.commit();
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         lock.writeLock().lock();
         try {
             source.close();
