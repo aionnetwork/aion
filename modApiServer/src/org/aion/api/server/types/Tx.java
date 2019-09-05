@@ -3,13 +3,16 @@ package org.aion.api.server.types;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.List;
+import java.util.Objects;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.TxUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
+import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
 import org.json.JSONArray;
@@ -115,5 +118,42 @@ public class Tx {
         json.put("rejected", String.valueOf(itx.isRejected));
 
         return json;
+    }
+
+    public static JSONObject aionTxInfoToDetailsJSON(AionTxInfo info, Block blk){
+        JSONObject obj = InfoToJSON(info, blk);
+        if (obj == null) {
+            return null;
+        }
+        else {
+            AionTransaction transaction = info.getReceipt().getTransaction();
+            obj.put("input", StringUtils.toJsonHex(transaction.getData()));
+            obj.put("timestamp", new NumericalValue(transaction.getTimestamp()).toHexString());
+            obj.put("error", info.getReceipt().getError());
+            obj.put("nonce", StringUtils.toJsonHex(transaction.getNonce()));
+            obj.put("type", StringUtils.toJsonHex(transaction.getType()));
+            obj.put("value", new NumericalValue(transaction.getValueBI()).toHexString());
+            obj.put("hasInternalTransactions", info.hasInternalTransactions());
+
+            JSONArray txLogs = new JSONArray();
+            List<Log> logInfoList = info.getReceipt().getLogInfoList();
+            for (int i = 0; i < logInfoList.size(); i++) {
+                JSONObject jsonLog = new JSONObject();
+                Log log = logInfoList.get(i);
+                jsonLog.put("address",StringUtils.toJsonHex(log.copyOfAddress()));
+                jsonLog.put("transactionIndex", i);
+                jsonLog.put("data", StringUtils.toJsonHex(log.copyOfData()));
+                JSONArray topics = new JSONArray();
+                for(byte[] topic: log.copyOfTopics()){
+                    topics.put(StringUtils.toJsonHex(topic));
+                }
+                jsonLog.put("topics", topics);
+                jsonLog.put("blockNumber", blk.getNumber());
+                txLogs.put(jsonLog);
+            }
+            obj.put("logs", txLogs);
+
+            return obj;
+        }
     }
 }

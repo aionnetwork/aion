@@ -10,7 +10,9 @@ import org.aion.base.TxUtil;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -93,6 +95,38 @@ public class Blk {
         obj.put("transactions", jsonTxs);
         return obj;
     }
+
+    public static JSONObject aionBlockDetailsToJson(Block genericBlock,
+        List<AionTxInfo> aionTxInfoList, Long previousTimestamp, BigInteger totalDifficulty,
+        BigInteger blockReward){
+
+        JSONObject obj = AionBlockOnlyToJson(genericBlock, totalDifficulty);
+
+        if(obj == null){
+            return null;
+        }
+
+        if (genericBlock.getNumber() == 0){
+            obj.put("blockTime", 0);
+        }
+        else if (previousTimestamp == null){
+            obj.put("blockTime", JSONObject.NULL);
+        }
+        else {
+            obj.put("blockTime", genericBlock.getTimestamp() - previousTimestamp);
+        }
+
+        obj.put("txTrieRoot", StringUtils.toJsonHex(genericBlock.getTxTrieRoot()));
+        obj.put("blockReward", new NumericalValue(blockReward).toHexString());
+        JSONArray transactions = new JSONArray();
+        for(AionTxInfo tx: aionTxInfoList){
+            transactions.put(Tx.aionTxInfoToDetailsJSON(tx, genericBlock));
+        }
+        obj.put("transactions", transactions);
+
+        return obj;
+    }
+
 
     @SuppressWarnings("Duplicates")
     public static JSONObject AionBlockOnlyToJson(Block genericBlock, BigInteger totalDifficulty) {
