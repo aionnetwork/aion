@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -26,15 +25,17 @@ public class BridgeControllerOwnerTest {
     private List<Log> logs;
     private List<InternalTransaction> internalTransactions;
     private List<AionAddress> deletedAddresses;
+    private static ExternalCapabilitiesForTesting capabilities;
 
-    private static final AionAddress CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static AionAddress CONTRACT_ADDR;
+    private static AionAddress OWNER_ADDR;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
+        CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
+        OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
     }
 
     @AfterClass
@@ -62,8 +63,8 @@ public class BridgeControllerOwnerTest {
 
     @Test
     public void testTransferOwnership() {
-        byte[] transferOwnership = HashUtil.keccak256("ChangedOwner(address)".getBytes());
-        byte[] newOwner = HashUtil.h256("newOwner".getBytes());
+        byte[] transferOwnership = capabilities.keccak256("ChangedOwner(address)".getBytes());
+        byte[] newOwner = capabilities.blake2b("newOwner".getBytes());
         this.controller.initialize();
         this.controller.setNewOwner(OWNER_ADDR.toByteArray(), newOwner);
 
@@ -84,8 +85,8 @@ public class BridgeControllerOwnerTest {
 
     @Test
     public void testInvalidOwnerTransferOwnership() {
-        byte[] notOwner = HashUtil.h256("not owner".getBytes());
-        byte[] newOwner = HashUtil.h256("newOwner".getBytes());
+        byte[] notOwner = capabilities.blake2b("not owner".getBytes());
+        byte[] newOwner = capabilities.blake2b("newOwner".getBytes());
         this.controller.initialize();
         ErrCode err = this.controller.setNewOwner(notOwner, newOwner);
         assertThat(err).isEqualTo(ErrCode.NOT_OWNER);

@@ -3,7 +3,6 @@ package org.aion.precompiled.contracts.ATB;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.CapabilitiesProvider;
@@ -18,14 +17,17 @@ public class BridgeRingInitializationTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final AionAddress CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static ExternalCapabilitiesForTesting capabilities;
+
+    private static AionAddress CONTRACT_ADDR;
+    private static AionAddress OWNER_ADDR;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
+        CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
+        OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
     }
 
     @AfterClass
@@ -65,11 +67,11 @@ public class BridgeRingInitializationTest {
     public void testRingMultiMemberInitialization() {
         byte[][] members =
                 new byte[][] {
-                    HashUtil.h256("member1".getBytes()),
-                    HashUtil.h256("member2".getBytes()),
-                    HashUtil.h256("member3".getBytes()),
-                    HashUtil.h256("member4".getBytes()),
-                    HashUtil.h256("member5".getBytes())
+                    capabilities.blake2b("member1".getBytes()),
+                    capabilities.blake2b("member2".getBytes()),
+                    capabilities.blake2b("member3".getBytes()),
+                    capabilities.blake2b("member4".getBytes()),
+                    capabilities.blake2b("member5".getBytes())
                 };
         ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
@@ -79,7 +81,7 @@ public class BridgeRingInitializationTest {
 
     @Test
     public void testRingInitializationNotOwner() {
-        byte[] notOwner = HashUtil.h256("not owner".getBytes());
+        byte[] notOwner = capabilities.blake2b("not owner".getBytes());
         ErrCode code = this.controller.ringInitialize(notOwner, new byte[][] {});
         assertThat(code).isEqualTo(ErrCode.NOT_OWNER);
 

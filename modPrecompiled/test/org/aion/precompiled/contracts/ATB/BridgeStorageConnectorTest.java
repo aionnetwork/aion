@@ -2,7 +2,6 @@ package org.aion.precompiled.contracts.ATB;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.CapabilitiesProvider;
@@ -18,10 +17,12 @@ import org.junit.Test;
 public class BridgeStorageConnectorTest {
     private BridgeStorageConnector connector;
     private static final AionAddress contractAddress = AddressUtils.ZERO_ADDRESS;
+    private static ExternalCapabilitiesForTesting capabilities;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
     }
 
     @AfterClass
@@ -63,13 +64,13 @@ public class BridgeStorageConnectorTest {
 
     @Test
     public void testDefaultMemberMap() {
-        byte[] memberKey = HashUtil.h256("member1".getBytes());
+        byte[] memberKey = capabilities.blake2b("member1".getBytes());
         assertThat(this.connector.getActiveMember(memberKey)).isFalse();
     }
 
     @Test
     public void testDefaultBundleMap() {
-        byte[] bundleKey = HashUtil.h256("active1".getBytes());
+        byte[] bundleKey = capabilities.blake2b("active1".getBytes());
         assertThat(this.connector.getBundle(bundleKey)).isEqualTo(ByteUtil.EMPTY_WORD);
     }
 
@@ -80,7 +81,7 @@ public class BridgeStorageConnectorTest {
 
     @Test
     public void testNoKeyOverlap() {
-        byte[] key = HashUtil.h256("key".getBytes());
+        byte[] key = capabilities.blake2b("key".getBytes());
         this.connector.setActiveMember(key, true);
         this.connector.setBundle(key, ByteUtil.EMPTY_WORD);
 
@@ -88,7 +89,7 @@ public class BridgeStorageConnectorTest {
         assertThat(this.connector.getBundle(key)).isEqualTo(ByteUtil.EMPTY_WORD);
 
         // test that the reverse is true
-        byte[] hash = HashUtil.h256("hash".getBytes());
+        byte[] hash = capabilities.blake2b("hash".getBytes());
         this.connector.setActiveMember(key, false);
         this.connector.setBundle(key, hash);
 
@@ -98,7 +99,7 @@ public class BridgeStorageConnectorTest {
 
     @Test
     public void testOwnerAddress() {
-        byte[] ownerAddress = HashUtil.h256("ownerAddress".getBytes());
+        byte[] ownerAddress = capabilities.blake2b("ownerAddress".getBytes());
         this.connector.setOwner(ownerAddress);
         byte[] retrieved = this.connector.getOwner();
         assertThat(retrieved).isEqualTo(ownerAddress);
@@ -106,7 +107,7 @@ public class BridgeStorageConnectorTest {
 
     @Test
     public void testNewOwnerAddress() {
-        byte[] newOwnerAddress = HashUtil.h256("newOwnerAddress".getBytes());
+        byte[] newOwnerAddress = capabilities.blake2b("newOwnerAddress".getBytes());
         this.connector.setNewOwner(newOwnerAddress);
         byte[] retrieved = this.connector.getNewOwner();
         assertThat(retrieved).isEqualTo(newOwnerAddress);

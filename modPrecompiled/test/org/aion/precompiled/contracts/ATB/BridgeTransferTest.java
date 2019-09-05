@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Properties;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -38,11 +37,6 @@ public class BridgeTransferTest {
     private TokenBridgeContract contract;
     private PrecompiledTransactionContext context;
 
-    private static final AionAddress CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
-
     private static final ECKey members[] =
             new ECKey[] {
                 ECKeyFac.inst().create(),
@@ -60,9 +54,17 @@ public class BridgeTransferTest {
         return memberList;
     }
 
+    private static ExternalCapabilitiesForTesting capabilities;
+
+    private static AionAddress CONTRACT_ADDR;
+    private static AionAddress OWNER_ADDR;
+
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
+        CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
+        OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
     }
 
     @AfterClass
@@ -112,10 +114,10 @@ public class BridgeTransferTest {
     @Test
     public void testBridgeTransferOne() {
         final byte[] senderAddress = this.members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransactionHash".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransactionHash".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
@@ -148,14 +150,14 @@ public class BridgeTransferTest {
     @Test
     public void testBridgeNotEnoughSignatures() {
         final byte[] senderAddress = members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
 
         // ATB-4, this is the hash of the aion transaction which submitted
         // this bundle, this is different from the source transaction hash
         // which is transferred from another blockchain network.
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
@@ -190,10 +192,10 @@ public class BridgeTransferTest {
     @Test
     public void testLowerBoundSignature() {
         final byte[] senderAddress = members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransaction".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
@@ -228,10 +230,10 @@ public class BridgeTransferTest {
     @Test
     public void testBeyondUpperBoundSignatures() {
         final byte[] senderAddress = members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransaction".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
@@ -266,10 +268,10 @@ public class BridgeTransferTest {
     @Test
     public void testTransferZeroBundle() {
         final byte[] senderAddress = members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransaction".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransaction".getBytes());
 
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
         BridgeTransfer bundle =
@@ -332,10 +334,10 @@ public class BridgeTransferTest {
     @Test
     public void testDoubleBundleSend() {
         final byte[] senderAddress = this.members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransactionHash".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransactionHash".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.TWO);
@@ -346,7 +348,7 @@ public class BridgeTransferTest {
                 senderAddress, blockHash, aionTransactionHash, new BridgeTransfer[] {transfer});
 
         final byte[] secondAionTransactionHash =
-                HashUtil.h256("secondAionTransactionHash".getBytes());
+                capabilities.blake2b("secondAionTransactionHash".getBytes());
 
         // try second time, should still be succesful
         ResultHashTuple tuple =
@@ -374,9 +376,9 @@ public class BridgeTransferTest {
     @Test
     public void testBundleMultipleTransferSameRecipient() {
         final byte[] senderAddress = this.members[0].getAddress();
-        final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
-        final byte[] recipient = HashUtil.h256("recipient".getBytes());
-        final byte[] aionTransactionHash = HashUtil.h256("aionTransactionHash".getBytes());
+        final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
+        final byte[] recipient = capabilities.blake2b("recipient".getBytes());
+        final byte[] aionTransactionHash = capabilities.blake2b("aionTransactionHash".getBytes());
 
         int transferTotal = 511;
         final BigInteger transferTotalBigInteger = BigInteger.valueOf(transferTotal);

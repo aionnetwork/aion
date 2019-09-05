@@ -13,7 +13,6 @@ import java.util.Properties;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -62,16 +61,18 @@ public class TokenBridgeContractTest {
                 ECKeyFac.inst().create()
             };
 
-    private static final AionAddress CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
-
     private static final long DEFAULT_NRG = 21000L;
+    private static ExternalCapabilitiesForTesting capabilities;
+
+    private static AionAddress CONTRACT_ADDR;
+    private static AionAddress OWNER_ADDR;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
+        CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
+        OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
     }
 
     @AfterClass
@@ -138,7 +139,7 @@ public class TokenBridgeContractTest {
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
-        byte[] newOwner = AddressSpecs.computeA0Address(HashUtil.h256("newOwner".getBytes()));
+        byte[] newOwner = AddressSpecs.computeA0Address(capabilities.blake2b("newOwner".getBytes()));
         byte[] payload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_CHANGE_OWNER.getSignature(),
@@ -172,7 +173,7 @@ public class TokenBridgeContractTest {
         this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
-        byte[] newOwner = AddressSpecs.computeA0Address(HashUtil.h256("newOwner".getBytes()));
+        byte[] newOwner = AddressSpecs.computeA0Address(capabilities.blake2b("newOwner".getBytes()));
 
         byte[] payload =
                 new AbiEncoder(
@@ -288,18 +289,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
 
@@ -478,17 +479,17 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
-                            HashUtil.h256(Integer.toHexString(i).getBytes()),
+                            capabilities.blake2b(Integer.toHexString(i).getBytes()),
                             sourceTransactionHash);
         }
 
@@ -667,18 +668,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -799,19 +800,19 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         // place a value greater than the maximum 1024
         BridgeTransfer[] transfers = new BridgeTransfer[1024];
         for (int i = 0; i < 1024; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -921,18 +922,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1043,18 +1044,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[5];
         for (int i = 0; i < 5; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1178,18 +1179,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1322,18 +1323,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[5];
         for (int i = 0; i < 5; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1465,18 +1466,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[5];
         for (int i = 0; i < 5; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1517,9 +1518,10 @@ public class TokenBridgeContractTest {
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
             // add incorrect signatures, copies [0:32] for all chunks
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
+            // verifyISig for testing will only fail if signature is empty byte array
+            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
+            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
+            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
         }
 
         callPayload =
@@ -1537,6 +1539,8 @@ public class TokenBridgeContractTest {
         // input will include 5 transfers and 3 validators with incorrect signatures
         transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
 
+        assertEquals("FAILURE", transferResult.getStatus().causeOfError);
+
         /// VERIFICATION
         assertThat(
                         this.contract
@@ -1546,9 +1550,7 @@ public class TokenBridgeContractTest {
                                                 payloadHash),
                                         21000L)
                                 .getReturnData())
-                .isEqualTo(new byte[32]);
-
-        assertEquals("FAILURE", transferResult.getStatus().causeOfError);
+                .isEqualTo(ByteUtil.EMPTY_WORD);
 
         // check that nothing has been changed from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1611,18 +1613,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         BridgeTransfer[] transfers = new BridgeTransfer[5];
         for (int i = 0; i < 5; i++) {
 
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
@@ -1719,21 +1721,21 @@ public class TokenBridgeContractTest {
 
             // send to the same addr more than once
             if (i == 2 || i == 3) {
-                byte[] sourceTransactionHashDefault = HashUtil.h256(Integer.toString(2).getBytes());
+                byte[] sourceTransactionHashDefault = capabilities.blake2b(Integer.toString(2).getBytes());
                 transfers[i] =
                         BridgeTransfer.getInstance(
                                 BigInteger.ONE,
                                 AddressSpecs.computeA0Address(
-                                        HashUtil.h256(Integer.toHexString(2).getBytes())),
+                                        capabilities.blake2b(Integer.toHexString(2).getBytes())),
                                 sourceTransactionHashDefault);
             } else {
                 // generate a unique sourceTransactionHash for each transfer
-                byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+                byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
                 transfers[i] =
                         BridgeTransfer.getInstance(
                                 BigInteger.ONE,
                                 AddressSpecs.computeA0Address(
-                                        HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                        capabilities.blake2b(Integer.toHexString(i).getBytes())),
                                 sourceTransactionHash);
             }
         }
@@ -1819,12 +1821,12 @@ public class TokenBridgeContractTest {
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
 
@@ -1869,12 +1871,12 @@ public class TokenBridgeContractTest {
         BridgeTransfer[] transfers = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
 
@@ -1923,12 +1925,12 @@ public class TokenBridgeContractTest {
         BridgeTransfer[] transfers = new BridgeTransfer[n];
         for (int i = 0; i < n; i++) {
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
 
@@ -1970,12 +1972,12 @@ public class TokenBridgeContractTest {
         BridgeTransfer[] transfers = new BridgeTransfer[n];
         for (int i = 0; i < n; i++) {
             // generate a unique sourceTransactionHash for each transfer
-            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            byte[] sourceTransactionHash = capabilities.blake2b(Integer.toString(i).getBytes());
             transfers[i] =
                     BridgeTransfer.getInstance(
                             BigInteger.ONE,
                             AddressSpecs.computeA0Address(
-                                    HashUtil.h256(Integer.toHexString(i).getBytes())),
+                                    capabilities.blake2b(Integer.toHexString(i).getBytes())),
                             sourceTransactionHash);
         }
 
@@ -2042,7 +2044,7 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         // assemble the payload
-        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+        byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
 
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
 

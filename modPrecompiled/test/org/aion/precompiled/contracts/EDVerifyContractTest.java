@@ -16,13 +16,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.CapabilitiesProvider;
-import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -55,10 +53,12 @@ public class EDVerifyContractTest {
     private int depth = 0;
 
     private File forkFile;
+    private static ExternalCapabilitiesForTesting capabilities;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
     }
 
     @AfterClass
@@ -236,8 +236,7 @@ public class EDVerifyContractTest {
 
         byte[] data = "Our first test in AION1234567890".getBytes();
 
-        HashUtil.setType(HashUtil.H256Type.KECCAK_256);
-        byte[] hashedMessage = HashUtil.h256(data);
+        byte[] hashedMessage = capabilities.keccak256(data);
 
         ISignature signature = ecKey.sign(hashedMessage);
 

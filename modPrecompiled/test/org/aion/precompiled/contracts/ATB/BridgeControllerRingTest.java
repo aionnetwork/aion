@@ -5,7 +5,6 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.CapabilitiesProvider;
@@ -20,10 +19,6 @@ public class BridgeControllerRingTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final AionAddress CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -41,10 +36,19 @@ public class BridgeControllerRingTest {
         }
         return memberList;
     }
+    private static ExternalCapabilitiesForTesting capabilities;
+
+    private static AionAddress CONTRACT_ADDR;
+    private static AionAddress OWNER_ADDR;
+    private static byte[] memberAddress;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
+        CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
+        OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
+        memberAddress = capabilities.blake2b("memberAddress".getBytes());
     }
 
     @AfterClass
@@ -82,8 +86,6 @@ public class BridgeControllerRingTest {
                 this.controller.ringInitialize(OWNER_ADDR.toByteArray(), getMemberAddress(members));
         assertThat(code).isEqualTo(ErrCode.RING_LOCKED);
     }
-
-    private static final byte[] memberAddress = HashUtil.h256("memberAddress".getBytes());
 
     @Test
     public void testRingAddMember() {
