@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
@@ -238,12 +237,10 @@ public class EDVerifyContractTest {
 
         byte[] hashedMessage = capabilities.keccak256(data);
 
-        ISignature signature = ecKey.sign(hashedMessage);
-
         byte[] input = new byte[128];
         System.arraycopy(hashedMessage, 0, input, 0, 32);
         System.arraycopy(pubKey, 0, input, 32, 32);
-        System.arraycopy(signature.getSignature(), 0, input, 64, 64);
+        System.arraycopy(capabilities.sign(pubKey, hashedMessage), 0, input, 64, 64);
 
         return input;
     }
