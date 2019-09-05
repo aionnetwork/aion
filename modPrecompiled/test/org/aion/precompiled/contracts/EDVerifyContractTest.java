@@ -19,7 +19,9 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
@@ -31,7 +33,9 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -51,6 +55,16 @@ public class EDVerifyContractTest {
     private int depth = 0;
 
     private File forkFile;
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
+    }
 
     @Before
     public void setup() throws IOException {

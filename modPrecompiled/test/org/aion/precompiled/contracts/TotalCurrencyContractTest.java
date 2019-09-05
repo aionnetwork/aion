@@ -14,6 +14,8 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.ContractInfo;
@@ -23,7 +25,9 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -35,6 +39,16 @@ public class TotalCurrencyContractTest {
     private TotalCurrencyContract tcc;
     private RepositoryCache repo;
     private ECKey ownerKey;
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
+    }
 
     @Before
     public void setup() {

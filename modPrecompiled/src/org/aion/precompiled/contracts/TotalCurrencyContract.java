@@ -1,9 +1,9 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
-import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.CapabilitiesProvider;
+import org.aion.precompiled.type.IExternalCapabilitiesForPrecompiled;
 import org.aion.precompiled.util.BIUtil;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -125,22 +125,17 @@ public class TotalCurrencyContract implements PrecompiledContract {
         offset += 16;
         System.arraycopy(input, offset, sign, 0, 96);
 
-        // verify signature is correct
-        Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
-        if (sig == null) {
-            return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
-        }
-
+        IExternalCapabilitiesForPrecompiled capabilities = CapabilitiesProvider.getExternalCapabilities();
         byte[] payload = new byte[18];
         System.arraycopy(input, 0, payload, 0, 18);
-        boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
+        boolean b = capabilities.verifyEd25519Signature(payload, sign);
 
         if (!b) {
             return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 
         // verify public key matches owner
-        if (!this.ownerAddress.equals(new AionAddress(sig.getAddress()))) {
+        if (!this.ownerAddress.equals(new AionAddress(capabilities.getEd25519Address(sign)))) {
             return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), 0);
         }
 

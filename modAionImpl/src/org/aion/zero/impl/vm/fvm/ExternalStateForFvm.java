@@ -18,6 +18,7 @@ import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.TransactionStatus;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.vm.precompiled.ExternalCapabilitiesForPrecompiled;
 import org.aion.zero.impl.vm.precompiled.ExternalStateForPrecompiled;
 import org.aion.zero.impl.vm.common.TxNrgRule;
 
@@ -111,7 +112,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
 
         IExternalStateForPrecompiled precompiledWorldState = new ExternalStateForPrecompiled(this.repository, this.blockNumber, this.isLocalCall, fork032Enabled, this.allowNonceIncrement);
 
-        PrecompiledTransactionResult result = ContractExecutor.executeInternalCall(precompiledWorldState, precompiledContext, context.getTransactionData(), context.getTransactionEnergy());
+        PrecompiledTransactionResult result = ContractExecutor.executeInternalCall(new ExternalCapabilitiesForPrecompiled(), precompiledWorldState, precompiledContext, context.getTransactionData(), context.getTransactionEnergy());
 
         return precompiledToFvmResult(result);
     }

@@ -10,10 +10,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.aion.crypto.ISignature;
-import org.aion.crypto.SignatureFac;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.type.CapabilitiesProvider;
+import org.aion.precompiled.type.IExternalCapabilitiesForPrecompiled;
 import org.aion.precompiled.util.ByteUtil;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
@@ -241,10 +241,10 @@ public class BridgeController {
         }
 
         int signed = 0;
+        IExternalCapabilitiesForPrecompiled capabilities = CapabilitiesProvider.getExternalCapabilities();
         for (byte[] sigBytes : signatures) {
-            ISignature sig = SignatureFac.fromBytes(sigBytes);
-            if (SignatureFac.verify(hash, sig)
-                    && this.connector.getActiveMember(sig.getAddress())) {
+            if (capabilities.verifyISig(hash, sigBytes)
+                    && this.connector.getActiveMember(capabilities.getISigAddress(sigBytes))) {
                 signed++;
             }
         }

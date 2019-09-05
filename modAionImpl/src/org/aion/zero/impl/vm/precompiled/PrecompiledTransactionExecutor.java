@@ -49,7 +49,7 @@ public final class PrecompiledTransactionExecutor {
         for (AionTransaction transaction : transactions) {
 
             // Execute the contract.
-            PrecompiledWrappedTransactionResult wrappedResult = ContractExecutor.executeExternalCall(externalState, toAionTypesTransaction(transaction));
+            PrecompiledWrappedTransactionResult wrappedResult = ContractExecutor.executeExternalCall(new ExternalCapabilitiesForPrecompiled(), externalState, toAionTypesTransaction(transaction));
 
             TransactionResult result = wrappedResult.result;
             List<AionAddress> deletedAddresses = wrappedResult.deletedAddresses;

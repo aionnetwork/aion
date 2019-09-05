@@ -5,14 +5,18 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
 import org.aion.crypto.HashUtil;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class BridgeControllerOwnerTest {
@@ -27,6 +31,16 @@ public class BridgeControllerOwnerTest {
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
     private static final AionAddress OWNER_ADDR =
             new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
+    }
 
     @Before
     public void beforeEach() {

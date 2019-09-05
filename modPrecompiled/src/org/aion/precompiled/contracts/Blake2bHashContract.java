@@ -1,9 +1,8 @@
 package org.aion.precompiled.contracts;
 
-import static org.aion.crypto.HashUtil.blake256;
-
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.TransactionStatus;
 
@@ -53,7 +52,7 @@ public class Blake2bHashContract implements PrecompiledContract {
     }
 
     private PrecompiledTransactionResult blake256Hash(byte[] input, long nrg) {
-        byte[] hash = blake256(input);
+        byte[] hash = CapabilitiesProvider.getExternalCapabilities().blake2b(input);
         return new PrecompiledTransactionResult(TransactionStatus.successful(), nrg, hash);
     }
 

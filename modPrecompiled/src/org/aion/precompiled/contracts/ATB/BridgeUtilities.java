@@ -4,21 +4,21 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.util.ByteUtil;
 
 public class BridgeUtilities {
 
     static byte[] toSignature(@Nonnull final String funcSignature) {
         byte[] sigChopped = new byte[4];
-        byte[] full = HashUtil.keccak256(funcSignature.getBytes());
+        byte[] full = CapabilitiesProvider.getExternalCapabilities().keccak256(funcSignature.getBytes());
         System.arraycopy(full, 0, sigChopped, 0, 4);
         return sigChopped;
     }
 
     static byte[] toEventSignature(@Nonnull final String eventSignature) {
-        return HashUtil.keccak256(eventSignature.getBytes());
+        return CapabilitiesProvider.getExternalCapabilities().keccak256(eventSignature.getBytes());
     }
 
     static byte[] getSignature(@Nonnull final byte[] input) {
@@ -60,6 +60,6 @@ public class BridgeUtilities {
             buf.put(b.getTransferValueByteArray());
         }
 
-        return HashUtil.h256(buf.array());
+        return CapabilitiesProvider.getExternalCapabilities().blake2b(buf.array());
     }
 }

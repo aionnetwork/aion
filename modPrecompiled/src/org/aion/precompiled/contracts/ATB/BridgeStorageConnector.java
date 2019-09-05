@@ -3,8 +3,8 @@ package org.aion.precompiled.contracts.ATB;
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
-import org.aion.crypto.HashUtil;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.util.ByteUtil;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -151,7 +151,8 @@ public class BridgeStorageConnector {
     // TODO: this can be optimized
     public void setActiveMember(@Nonnull final byte[] key, final boolean value) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(
+            CapabilitiesProvider.getExternalCapabilities().blake2b(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
         PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
         PrecompiledDataWord b = value ? PrecompiledDataWord.fromInt(1) : PrecompiledDataWord.fromInt(0);
         this.setWORD(hWord, b);
@@ -159,7 +160,7 @@ public class BridgeStorageConnector {
 
     public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(CapabilitiesProvider.getExternalCapabilities().blake2b(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
         PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
 
         // C1 covered by getWORD
@@ -179,7 +180,7 @@ public class BridgeStorageConnector {
         assert key.length == 32;
         assert value.length == 32;
 
-        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(CapabilitiesProvider.getExternalCapabilities().blake2b(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
         this.setDWORD(hWord, value);
     }
@@ -195,7 +196,7 @@ public class BridgeStorageConnector {
      */
     public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(CapabilitiesProvider.getExternalCapabilities().blake2b(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         PrecompiledDataWord hWord = PrecompiledDataWord.fromBytes(h);
         byte[] bundleDoubleWord = this.getDWORD(hWord);
         if (bundleDoubleWord == null) return ByteUtil.EMPTY_WORD;

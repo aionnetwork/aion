@@ -6,7 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.util.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
@@ -16,7 +18,9 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class BenchmarkTest {
@@ -33,6 +37,16 @@ public class BenchmarkTest {
     private static int WARMUP = 2000;
     private static int BENCH = 1000000;
     private File forkFile;
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
+    }
 
     @Before
     public void setup() throws IOException {

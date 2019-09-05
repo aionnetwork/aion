@@ -2,7 +2,6 @@ package org.aion.precompiled.type;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import org.aion.base.TxUtil;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -11,6 +10,7 @@ import org.aion.types.Transaction;
 import org.aion.types.TransactionStatus;
 
 public final class ContractExecutor {
+    private static final Object PRECOMPILED_LOCK = new Object();
 
     /**
      * Returns the result of executing the internal transaction whose context is the specified
@@ -25,14 +25,24 @@ public final class ContractExecutor {
      * @param energyRemaining The current energy remaining.
      * @return the execution result.
      */
-    public static PrecompiledTransactionResult executeInternalCall(IExternalStateForPrecompiled worldState, PrecompiledTransactionContext context, byte[] input, long energyRemaining) {
+    public static PrecompiledTransactionResult executeInternalCall(IExternalCapabilitiesForPrecompiled capabilities, IExternalStateForPrecompiled worldState, PrecompiledTransactionContext context, byte[] input, long energyRemaining) {
         ContractFactory factory = new ContractFactory();
         PrecompiledContract precompiledContract = factory.getPrecompiledContract(context, worldState);
 
         if (precompiledContract == null) {
             return new PrecompiledTransactionResult(TransactionStatus.successful(), energyRemaining);
         } else {
-            return precompiledContract.execute(input, energyRemaining);
+            synchronized (PRECOMPILED_LOCK) {
+                // Install the external capabilities for precompiled to use.
+                CapabilitiesProvider.installExternalCapabilities(capabilities);
+
+                PrecompiledTransactionResult result = precompiledContract.execute(input, energyRemaining);
+
+                // Remove the newly installed capabilities.
+                CapabilitiesProvider.removeExternalCapabilities();
+
+                return result;
+            }
         }
     }
 
@@ -47,7 +57,7 @@ public final class ContractExecutor {
      * @param transaction The transaction.
      * @return the execution result.
      */
-    public static PrecompiledWrappedTransactionResult executeExternalCall(
+    public static PrecompiledWrappedTransactionResult executeExternalCall(IExternalCapabilitiesForPrecompiled capabilities,
             IExternalStateForPrecompiled externalState, Transaction transaction) {
         if (externalState == null) {
             throw new NullPointerException("Cannot run using a null externalState!");
@@ -56,14 +66,14 @@ public final class ContractExecutor {
             throw new NullPointerException("Cannot run null transaction!");
         }
 
-        PrecompiledTransactionContext context = constructTransactionContext(transaction, externalState);
+        PrecompiledTransactionContext context = constructTransactionContext(capabilities, transaction, externalState);
         IExternalStateForPrecompiled childExternalState = externalState.newChildExternalState();
         IExternalStateForPrecompiled grandChildExternalState = childExternalState.newChildExternalState();
 
         PrecompiledTransactionResult result =
                 new PrecompiledTransactionResult(
                         TransactionStatus.successful(),
-                        transaction.energyLimit - TxUtil.calculateTransactionCost(transaction.copyOfTransactionData(), transaction.isCreate));
+                        transaction.energyLimit - capabilities.calculateTransactionCost(transaction.copyOfTransactionData(), transaction.isCreate));
 
         // Perform the rejection checks and return immediately if transaction is rejected.
         performRejectionChecks(childExternalState, transaction, result);
@@ -80,7 +90,15 @@ public final class ContractExecutor {
             throw new IllegalStateException("A precompiled contract call cannot be a CREATE!");
         }
 
-        result = runPrecompiledContractCall(grandChildExternalState, context, result, transaction);
+        synchronized (PRECOMPILED_LOCK) {
+            // Install the external capabilities for precompiled to use.
+            CapabilitiesProvider.installExternalCapabilities(capabilities);
+
+            result = runPrecompiledContractCall(grandChildExternalState, context, result, transaction);
+
+            // Remove the newly installed capabilities.
+            CapabilitiesProvider.removeExternalCapabilities();
+        }
 
         // If the execution was successful then we can safely commit any changes in the grandChild
         // up to the child kernel.
@@ -205,12 +223,12 @@ public final class ContractExecutor {
     }
 
     private static PrecompiledTransactionContext constructTransactionContext(
-            Transaction transaction, IExternalStateForPrecompiled externalState) {
+            IExternalCapabilitiesForPrecompiled capabilities, Transaction transaction, IExternalStateForPrecompiled externalState) {
         AionAddress originAddress = transaction.senderAddress;
         AionAddress callerAddress = transaction.senderAddress;
         byte[] transactionHash = transaction.copyOfTransactionHash();
         long blockNumber = externalState.getBlockNumber();
-        long energyRemaining = transaction.energyLimit - TxUtil.calculateTransactionCost(transaction.copyOfTransactionData(), transaction.isCreate);
+        long energyRemaining = transaction.energyLimit - capabilities.calculateTransactionCost(transaction.copyOfTransactionData(), transaction.isCreate);
         AionAddress destinationAddress = transaction.destinationAddress;
 
         return new PrecompiledTransactionContext(

@@ -1,8 +1,7 @@
 package org.aion.precompiled.contracts;
 
-import static org.aion.crypto.HashUtil.keccak256;
-
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.types.TransactionStatus;
 
@@ -31,7 +30,7 @@ public class KeccakHash implements PrecompiledContract {
                     nrg - DEFAULT_COST,
                     "input too short".getBytes());
 
-        byte[] hash = keccak256(input);
+        byte[] hash = CapabilitiesProvider.getExternalCapabilities().keccak256(input);
         return new PrecompiledTransactionResult(
                 TransactionStatus.successful(), nrg - DEFAULT_COST - additionalNRG, hash);
     }

@@ -18,6 +18,8 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.config.PruneConfig;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -36,7 +38,9 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -64,6 +68,16 @@ public class TokenBridgeContractTest {
             new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final long DEFAULT_NRG = 21000L;
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
+    }
 
     @Before
     public void before() {

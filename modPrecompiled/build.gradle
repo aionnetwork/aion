@@ -5,18 +5,13 @@ clean.dependsOn deleteNativeLibs
 dependencies {
     compile project(':modCrypto')
 
-    compile project(':modBase')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
     compile 'org.slf4j:slf4j-api:1.7.25'
 
-    testCompile project(':modEvtMgr')
-    testCompile project(':modPrecompiled')
     testCompile project(':modAionImpl')
-    testCompile project(':modDbImpl')
-    testCompile project(':modRlp')
-    testCompile project(':modLogger')
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

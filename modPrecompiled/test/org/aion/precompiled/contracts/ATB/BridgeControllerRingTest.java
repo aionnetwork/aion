@@ -6,10 +6,14 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.types.AionAddress;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class BridgeControllerRingTest {
@@ -36,6 +40,16 @@ public class BridgeControllerRingTest {
             memberList[i] = members[i].getAddress();
         }
         return memberList;
+    }
+
+    @BeforeClass
+    public static void setupCapabilities() {
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+    }
+
+    @AfterClass
+    public static void teardownCapabilities() {
+        CapabilitiesProvider.removeExternalCapabilities();
     }
 
     @Before
