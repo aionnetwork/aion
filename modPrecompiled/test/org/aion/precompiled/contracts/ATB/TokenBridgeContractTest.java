@@ -132,7 +132,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -163,10 +163,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(
-                                AddressUtils.ZERO_ADDRESS,
-                                CONTRACT_ADDR,
-                                ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -191,7 +188,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -219,10 +216,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(
-                                AddressUtils.ZERO_ADDRESS,
-                                CONTRACT_ADDR,
-                                ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -243,8 +237,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransfer() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -278,10 +271,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -433,8 +423,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testNonA0AddressTransfer() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -468,10 +457,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -622,8 +608,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferNotRelayer() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -657,10 +642,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -728,7 +710,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext incorrectRelaySubmitBundleContext =
-                context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+                context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         incorrectRelaySubmitBundleContext,
@@ -758,7 +740,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -788,10 +770,7 @@ public class TokenBridgeContractTest {
 
         // override defaults
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.valueOf(1024));
         this.contract =
                 new TokenBridgeContract(
@@ -876,8 +855,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testAlreadySubmittedBundle() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -911,10 +889,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1001,8 +976,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferRingLocked() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1033,10 +1007,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1142,8 +1113,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferInvalidReLayer() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1168,10 +1138,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1277,8 +1244,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferLessThanMinimumRequiredValidators() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1312,10 +1278,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1420,8 +1383,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferInsufficientValidatorSignatures() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1455,10 +1417,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1566,8 +1525,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testTransferOutOfBoundsListMeta() {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1602,10 +1560,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1998,8 +1953,7 @@ public class TokenBridgeContractTest {
 
     private ReturnDataFromSetup setupForTest(BridgeTransfer[] transfers, ECKey[] members) {
         // override defaults
-        PrecompiledTransactionContext initializationContext =
-                context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -2033,10 +1987,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(
-                        new AionAddress(members[0].getAddress()),
-                        CONTRACT_ADDR,
-                        ByteUtil.EMPTY_BYTE_ARRAY);
+                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -2117,7 +2068,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2162,7 +2113,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2222,7 +2173,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2269,7 +2220,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2312,7 +2263,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2345,7 +2296,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2396,10 +2347,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(
-                                AddressUtils.ZERO_ADDRESS,
-                                CONTRACT_ADDR,
-                                ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2432,7 +2380,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2497,7 +2445,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2548,10 +2496,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(
-                                AddressUtils.ZERO_ADDRESS,
-                                CONTRACT_ADDR,
-                                ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2575,7 +2520,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(OWNER_ADDR, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2607,7 +2552,7 @@ public class TokenBridgeContractTest {
         AionAddress address1 = new AionAddress(ECKeyFac.inst().create().getAddress());
         this.contract =
                 new TokenBridgeContract(
-                        context(address1, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(address1, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
@@ -2629,10 +2574,7 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(
-                        context(
-                                AddressUtils.ZERO_ADDRESS,
-                                CONTRACT_ADDR,
-                                ByteUtil.EMPTY_BYTE_ARRAY),
+                        context(AddressUtils.ZERO_ADDRESS, CONTRACT_ADDR),
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
