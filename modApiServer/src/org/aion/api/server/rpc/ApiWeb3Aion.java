@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -2267,6 +2268,57 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(result);
     }
 
+    public RpcMsg ops_getBlockDetailsByNumber(Object _params){
+        String _blockNumber;
+        if (_params instanceof JSONArray) {
+            _blockNumber = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            _blockNumber = ((JSONObject) _params).get("block") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+        AionBlock block;
+        Long bn = this.parseBnOrId(_blockNumber);
+
+        // user passed a Long block number
+        if (bn != null && bn >= 0) {
+            block = (AionBlock) this.ac.getBlockchain().getBlockByNumber(bn);
+            if (block == null) {
+                return new RpcMsg(JSONObject.NULL);
+            }
+        }else {
+            return new RpcMsg(JSONObject.NULL);
+        }
+
+        return rpcBlockDetailsFromBlock(block);
+    }
+
+
+    public RpcMsg ops_getBlockDetailsByHash(Object _params){
+        String _blockHash;
+        if (_params instanceof JSONArray) {
+            _blockHash = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            _blockHash = ((JSONObject) _params).get("block") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        Block block = this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_blockHash));
+
+        if (block == null) {
+                return new RpcMsg(JSONObject.NULL);
+        }
+
+        Block mainBlock = this.ac.getBlockchain().getBlockByNumber(block.getNumber());
+
+        if (mainBlock == null || !Arrays.equals(block.getHash(), mainBlock.getHash())) {
+            return new RpcMsg(JSONObject.NULL);
+        }
+
+        return rpcBlockDetailsFromBlock(block);
+    }
+
     public RpcMsg ops_getBlock(Object _params) {
         String _bnOrHash;
         boolean _fullTx;
@@ -2982,6 +3034,41 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("err on parsing block number #" + _bnOrId);
             return null;
         }
+    }
+
+
+    private RpcMsg rpcBlockDetailsFromBlock(Block block){
+
+        BigInteger blkReward =
+            ((AionBlockchainImpl) ac.getBlockchain())
+                .getChainConfiguration()
+                .getRewardsCalculator()
+                .calculateReward(block.getHeader().getNumber());
+        BigInteger totalDiff =
+            this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
+
+        List<AionTxInfo> txInfoList = new ArrayList<>();
+        for (AionTransaction transaction: block.getTransactionsList()){
+            AionTxInfo txInfo = this.ac.getAionHub()
+                .getBlockchain()
+                .getTransactionInfo(transaction.getTransactionHash());
+            txInfoList.add(txInfo);
+        }
+        Block previousBlock = this.ac.getBlockchain().getBlockByHash(block.getParentHash());
+        // get the parent block
+
+        Long previousTimestamp;
+
+        if (previousBlock == null){
+            previousTimestamp = null;
+        }
+        else {
+            previousTimestamp = previousBlock.getTimestamp();
+        }
+
+        return new RpcMsg(
+            Blk.aionBlockDetailsToJson(block, txInfoList, previousTimestamp, totalDiff, blkReward
+            ));
     }
 
     public void shutdown() {
