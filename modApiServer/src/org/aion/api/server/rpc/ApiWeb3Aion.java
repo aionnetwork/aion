@@ -244,7 +244,7 @@ public class ApiWeb3Aion extends ApiAion {
                                                 "<rpc-server blockCache miss for "
                                                         + blockHash.toString()
                                                         + " >");
-                                        return getBlockByHash(blockHash.getData());
+                                        return getBlockByHash(blockHash.toBytes());
                                     }
                                 });
 
@@ -509,7 +509,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         ByteArrayWrapper storageValue = repo.getStorageValue(address, key.toWrapper());
         if (storageValue != null) {
-            return new RpcMsg(StringUtils.toJsonHex(storageValue.getData()));
+            return new RpcMsg(StringUtils.toJsonHex(storageValue.toBytes()));
         } else {
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
         }
@@ -915,7 +915,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         // add main chain block to cache (currently only used by ops_getTransactionReceipt_*
         // functions)
-        blockCache.put(new ByteArrayWrapper(nb.getHash()), nb);
+        blockCache.put(nb.getHashWrapper(), nb);
         return new RpcMsg(Blk.AionBlockToJson(nb, _fullTx));
     }
 
@@ -2389,7 +2389,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        Block block = blockCache.get(new ByteArrayWrapper(info.getBlockHash()));
+        Block block = blockCache.get(ByteArrayWrapper.wrap(info.getBlockHash()));
 
         return new RpcMsg((new TxRecpt(block, info, 0L, true)).toJson());
     }
@@ -2422,7 +2422,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        Block block = blockCache.get(new ByteArrayWrapper(blockHash));
+        Block block = blockCache.get(ByteArrayWrapper.wrap(blockHash));
 
         AionTransaction t = block.getTransactionsList().get(info.getIndex());
         if (Arrays.compare(t.getTransactionHash(), transactionHash) != 0) {
@@ -2453,7 +2453,7 @@ public class ApiWeb3Aion extends ApiAion {
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         Block b;
         try {
-            b = blockCache.get(new ByteArrayWrapper(blockHash));
+            b = blockCache.get(ByteArrayWrapper.wrap(blockHash));
         } catch (Exception e) {
             // Catch errors if send an incorrect tx hash
             return new RpcMsg(
@@ -2526,7 +2526,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(obj);
         }
 
-        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.block.getHeader().getMineHash());
+        ByteArrayWrapper key = ByteArrayWrapper.wrap(bestBlock.block.getHeader().getMineHash());
 
         // Read template map; if block already contained chain has not moved forward, simply return
         // the same block.
@@ -2643,7 +2643,7 @@ public class ApiWeb3Aion extends ApiAion {
             try {
                 templateMapLock.writeLock().lock();
 
-                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
+                ByteArrayWrapper key = ByteArrayWrapper.wrap(hexStringToBytes((String) hdrHash));
 
                 // Grab copy of best block
                 AionBlock bestBlock = templateMap.get(key);

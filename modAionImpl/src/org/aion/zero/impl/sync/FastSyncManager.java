@@ -304,7 +304,7 @@ public final class FastSyncManager {
     private void makeBlockRequests(ByteArrayWrapper requiredHash, long requiredLevel) {
         // make request for the needed hash
         RequestBlocks request =
-                new RequestBlocks(requiredHash.getData(), BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE, true);
+                new RequestBlocks(requiredHash.toBytes(), BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE, true);
 
         // TODO: improve peer selection
         // TODO: request that level plus further blocks

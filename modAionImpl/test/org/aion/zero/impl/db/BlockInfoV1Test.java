@@ -24,7 +24,7 @@ public class BlockInfoV1Test {
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(info));
-        System.out.println("serialized: " + new ByteArrayWrapper(serialized));
+        System.out.println("serialized: " + ByteArrayWrapper.wrap(serialized));
 
         List<BlockInfo> deserializedBlockInfos =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.deserialize(serialized);
@@ -46,7 +46,7 @@ public class BlockInfoV1Test {
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Arrays.asList(info, info2));
-        System.out.println("serialized: " + new ByteArrayWrapper(serialized));
+        System.out.println("serialized: " + ByteArrayWrapper.wrap(serialized));
 
         // deserialized
         List<BlockInfo> deserializedBlockInfos =

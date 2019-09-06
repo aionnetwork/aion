@@ -9,13 +9,13 @@ public class Bytes32FVM extends BaseTypeFVM {
     private ByteArrayWrapper word;
 
     public Bytes32FVM(@Nonnull final ByteArrayWrapper word) {
-        assert word.getData().length == 32;
+        assert word.length() == 32;
         this.word = word;
     }
 
     @Override
     public byte[] serialize() {
-        return this.word.getData();
+        return this.word.toBytes();
     }
 
     @Override

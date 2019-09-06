@@ -94,7 +94,7 @@ public class BlockPropagationHandler {
     // assumption here is that blocks propagated have unique hashes
     public void propagateNewBlock(final Block block) {
         if (block == null) return;
-        ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
+        ByteArrayWrapper hashWrapped = block.getHashWrapper();
 
         synchronized (this.cacheMap) {
             this.cacheMap.put(hashWrapped, true);
@@ -121,7 +121,7 @@ public class BlockPropagationHandler {
             final int nodeId, final String displayId, final Block block) {
         if (block == null) return PropStatus.DROPPED;
 
-        ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
+        ByteArrayWrapper hashWrapped = block.getHashWrapper();
 
         if (!this.blockHeaderValidator.validate(block.getHeader(), log)) return PropStatus.DROPPED;
 

@@ -491,7 +491,7 @@ public class AionGenesis extends AionBlock {
         private static ByteArrayWrapper wrapValueForPut(DataWord value) {
             return (value.isZero())
                     ? DataWord.ZERO.toWrapper()
-                    : new ByteArrayWrapper(value.getNoLeadZeroesData());
+                    : ByteArrayWrapper.wrap(value.getNoLeadZeroesData());
         }
 
         private static byte[] generateExtraData(int chainId) {

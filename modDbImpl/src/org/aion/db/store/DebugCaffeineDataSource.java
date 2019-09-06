@@ -41,7 +41,7 @@ class DebugCaffeineDataSource<V> extends ObjectDataSource<V> {
                                     key -> {
                                         // logging information on missed caching opportunities
                                         this.log.trace("[Database:" + getName() + "] Stack trace for missed cache retrieval: ", new Exception());
-                                        return getFromDatabase(key.getData());
+                                        return getFromDatabase(key.toBytes());
                                     });
         } else {
             this.cache =
@@ -49,7 +49,7 @@ class DebugCaffeineDataSource<V> extends ObjectDataSource<V> {
                             .expireAfterWrite(6, TimeUnit.MINUTES)
                             .maximumSize(cacheSize)
                             .recordStats()
-                            .build(key -> getFromDatabase(key.getData()));
+                            .build(key -> getFromDatabase(key.toBytes()));
         }
     }
 

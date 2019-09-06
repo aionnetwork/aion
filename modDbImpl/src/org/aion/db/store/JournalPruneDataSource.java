@@ -191,7 +191,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     private void incRef(ByteArrayWrapper keyW) {
         Ref cnt = refCount.get(keyW);
         if (cnt == null) {
-            cnt = new Ref(src.get(keyW.getData()).isPresent());
+            cnt = new Ref(src.get(keyW.toBytes()).isPresent());
             refCount.put(keyW, cnt);
         }
         cnt.journalRefs++;
@@ -241,7 +241,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
                 for (ByteArrayWrapper key : updates.deletedKeys) {
                     Ref ref = refCount.get(key);
                     if (ref == null || ref.journalRefs == 0) {
-                        batchRemove.add(key.getData());
+                        batchRemove.add(key.toBytes());
                     } else if (ref != null) {
                         ref.dbRef = false;
                     }
@@ -269,7 +269,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
             Ref ref = decRef(insertedKey);
             if (ref.getTotRefs() == 0) {
-                batchRemove.add(insertedKey.getData());
+                batchRemove.add(insertedKey.toBytes());
             }
         }
         src.deleteBatch(batchRemove);

@@ -371,7 +371,7 @@ public class ResponseTrieDataTest {
                                 RLP.encodeList(
                                         RLP.encodeElement(nodeKey), RLP.encodeElement(leafValue)),
                                 RLP.encodeList(
-                                        RLP.encodeElement(wrappedAltNodeKey.getData()),
+                                        RLP.encodeElement(wrappedAltNodeKey.toBytes()),
                                         RLP.encodeElement(emptyValue))),
                         RLP.encodeString(STATE.toString()));
         assertThat(ResponseTrieData.decode(encoding)).isNull();
@@ -414,7 +414,7 @@ public class ResponseTrieDataTest {
 
         byte[] encoding =
                 RLP.encodeList(
-                        RLP.encodeElement(key.getData()),
+                        RLP.encodeElement(key.toBytes()),
                         RLP.encodeElement(value),
                         RLP.encodeList(encodeReferencedNodes(referencedNodes)),
                         RLP.encodeString(dbType.toString()));
@@ -439,7 +439,7 @@ public class ResponseTrieDataTest {
 
         byte[] expected =
                 RLP.encodeList(
-                        RLP.encodeElement(key.getData()),
+                        RLP.encodeElement(key.toBytes()),
                         RLP.encodeElement(value),
                         RLP.encodeList(encodeReferencedNodes(emptyReferences)),
                         RLP.encodeString(dbType.toString()));
@@ -458,7 +458,7 @@ public class ResponseTrieDataTest {
 
         byte[] expected =
                 RLP.encodeList(
-                        RLP.encodeElement(key.getData()),
+                        RLP.encodeElement(key.toBytes()),
                         RLP.encodeElement(value),
                         RLP.encodeList(encodeReferencedNodes(referencedNodes)),
                         RLP.encodeString(dbType.toString()));

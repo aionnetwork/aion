@@ -249,7 +249,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
     private void cacheBlock(AionBlockSummary cbs) {
         // put the block summary in the cache
-        explorerBlockCache.put(new ByteArrayWrapper(cbs.getBlock().getHash()), cbs);
+        explorerBlockCache.put(cbs.getBlock().getHashWrapper(), cbs);
     }
 
     private boolean isBlkCacheEnabled;
@@ -2001,7 +2001,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             if (explorerBlockCache != null) {
                                 // remove from cache since after consumed, we're probably not gonna
                                 // revisit it
-                                bs = explorerBlockCache.remove(new ByteArrayWrapper(b.getHash()));
+                                bs = explorerBlockCache.remove(b.getHashWrapper());
                             }
 
                             if (bs != null) {
@@ -2013,7 +2013,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                                 for (AionTxReceipt r : bs.getReceipts()) {
                                     receipts.put(
-                                            new ByteArrayWrapper(
+                                            ByteArrayWrapper.wrap(
                                                     r.getTransaction().getTransactionHash()),
                                             r);
                                 }
@@ -2023,7 +2023,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     AionTransaction tx = txns.get(j);
                                     AionTxReceipt r =
                                             receipts.get(
-                                                    new ByteArrayWrapper(tx.getTransactionHash()));
+                                                    ByteArrayWrapper.wrap(tx.getTransactionHash()));
                                     if (r == null) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug(
@@ -2233,7 +2233,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             if (explorerBlockCache != null) {
                                 // remove from cache since after consumed, we're probably not gonna
                                 // revisit it
-                                bs = explorerBlockCache.remove(new ByteArrayWrapper(b.getHash()));
+                                bs = explorerBlockCache.remove(b.getHashWrapper());
                             }
 
                             if (bs != null) {
@@ -2247,7 +2247,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                                 for (AionTxReceipt r : bs.getReceipts()) {
                                     receipts.put(
-                                            new ByteArrayWrapper(
+                                            ByteArrayWrapper.wrap(
                                                     r.getTransaction().getTransactionHash()),
                                             r);
                                 }
@@ -2257,7 +2257,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     AionTransaction tx = txns.get(j);
                                     AionTxReceipt r =
                                             receipts.get(
-                                                    new ByteArrayWrapper(tx.getTransactionHash()));
+                                                    ByteArrayWrapper.wrap(tx.getTransactionHash()));
                                     if (r == null) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug(

@@ -100,8 +100,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         // We strip leading zeros of a DataWordImpl but not a DoubleDataWord so that when we call
         // get we can differentiate between the two.
 
-        byte[] data = RLP.encodeElement(value.getData());
-        storageTrie.update(key.getData(), data);
+        byte[] data = RLP.encodeElement(value.toBytes());
+        storageTrie.update(key.toBytes(), data);
 
         setDirty(true);
         rlpEncoded = null;
@@ -111,7 +111,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public void delete(ByteArrayWrapper key) {
         Objects.requireNonNull(key);
 
-        storageTrie.delete(key.getData());
+        storageTrie.delete(key.toBytes());
 
         setDirty(true);
         rlpEncoded = null;
@@ -126,10 +126,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        byte[] data = storageTrie.get(key.getData());
+        byte[] data = storageTrie.get(key.toBytes());
         return (data == null || data.length == 0)
                 ? null
-                : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
+                : ByteArrayWrapper.wrap(RLP.decode2(data).get(0).getRLPData());
     }
 
     public void setVmType(InternalVmType vmType) {
@@ -653,17 +653,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
         for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
 
-            ByteArrayWrapper keyWrapper = null;
-            if (codeEntry.getKey() != null) {
-                byte[] keyBytes = codeEntry.getKey().getData();
-                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
-            }
-
             byte[] copyOfValue =
                     (codeEntry.getValue() == null)
                             ? null
                             : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
-            copyOfCodes.put(keyWrapper, copyOfValue);
+            // the ByteArrayWrapper is immutable
+            copyOfCodes.put(codeEntry.getKey(), copyOfValue);
         }
         return copyOfCodes;
     }

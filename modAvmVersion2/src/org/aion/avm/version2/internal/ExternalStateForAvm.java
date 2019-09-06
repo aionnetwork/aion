@@ -122,24 +122,24 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public void putStorage(AionAddress address, byte[] key, byte[] value) {
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
-        ByteArrayWrapper storageValue = new ByteArrayWrapper(value);
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key);
+        ByteArrayWrapper storageValue = ByteArrayWrapper.wrap(value);
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
         setVmType(address);
     }
 
     @Override
     public void removeStorage(AionAddress address, byte[] key) {
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key);
         this.repositoryCache.removeStorageRow(address, storageKey);
         setVmType(address);
     }
 
     @Override
     public byte[] getStorage(AionAddress address, byte[] key) {
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key);
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
-        return (value == null) ? null : value.getData();
+        return (value == null) ? null : value.toBytes();
     }
 
     @Override

@@ -66,7 +66,7 @@ public final class RequestTrieDataHandler extends Handler {
             byte[] value = null;
             try {
                 // retrieve from blockchain depending on db type
-                value = chain.getTrieNode(key.getData(), dbType);
+                value = chain.getTrieNode(key.toBytes(), dbType);
             } catch (Exception e) {
                 this.log.error("<req-trie value retrieval failed>", e);
             }

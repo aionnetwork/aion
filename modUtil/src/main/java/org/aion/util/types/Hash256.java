@@ -44,7 +44,7 @@ public final class Hash256 implements Comparable<Hash256>, Cloneable {
             throw new IllegalArgumentException("Null input!");
         }
 
-        byte[] data = in.getData();
+        byte[] data = in.toBytes();
         if (data == null || data.length != BYTES) {
             throw new IllegalArgumentException();
         }

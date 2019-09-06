@@ -85,7 +85,7 @@ public class DataWord {
     }
 
     public DataWord(ByteArrayWrapper wrapper) {
-        this(wrapper.getData());
+        this(wrapper.toBytes());
     }
 
     public byte[] getData() {

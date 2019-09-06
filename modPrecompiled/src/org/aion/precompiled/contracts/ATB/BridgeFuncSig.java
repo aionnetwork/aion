@@ -38,7 +38,7 @@ enum BridgeFuncSig {
 
     BridgeFuncSig(@Nonnull final String signature) {
         this.signature = signature;
-        this.sigWrapper = new ByteArrayWrapper(toSignature(signature));
+        this.sigWrapper = ByteArrayWrapper.wrap(toSignature(signature));
     }
 
     /**
@@ -51,7 +51,7 @@ enum BridgeFuncSig {
     public static BridgeFuncSig getSignatureEnum(@Nonnull final byte[] arr) {
         if (arr.length != 4) return null;
 
-        return enumSet.get(new ByteArrayWrapper(arr));
+        return enumSet.get(ByteArrayWrapper.wrap(arr));
     }
 
     public byte[] getBytes() {

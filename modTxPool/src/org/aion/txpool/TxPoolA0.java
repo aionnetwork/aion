@@ -140,7 +140,7 @@ public class TxPoolA0 implements ITxPool {
                 if (LOG.isWarnEnabled()) {
                     LOG.warn(
                             "The tx hash existed in the pool! [{}]",
-                            ByteUtil.toHexString(bw.getData()));
+                            ByteUtil.toHexString(bw.toBytes()));
                 }
                 continue;
             }
@@ -148,7 +148,7 @@ public class TxPoolA0 implements ITxPool {
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
                         "Put tx into mainMap: hash:[{}] tx:[{}]",
-                        ByteUtil.toHexString(bw.getData()),
+                        ByteUtil.toHexString(bw.toBytes()),
                         pendingTx.toString());
             }
 
@@ -787,7 +787,7 @@ public class TxPoolA0 implements ITxPool {
                             LOG.trace(
                                 "AbstractTxPool.sortTxn Put tx into nonceMap: nonce:[{}] ts:[{}] nrgCharge:[{}]",
                                 nonce,
-                                ByteUtil.toHexString(e.getKey().getData()),
+                                ByteUtil.toHexString(e.getKey().toBytes()),
                                 nrgCharge.toString());
                         }
 

@@ -326,7 +326,7 @@ public class AionImpl implements IAionChain {
     public Optional<ByteArrayWrapper> getCode(AionAddress address) {
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
-        return Optional.of(new ByteArrayWrapper(code));
+        return Optional.of(ByteArrayWrapper.wrap(code));
     }
 
     private static class Holder {

@@ -33,12 +33,12 @@ public class Hash256Test {
 
     private final ByteArrayWrapper[] hashArray = { // Same as hashHex
         null,
-        new ByteArrayWrapper(new byte[0]),
-        new ByteArrayWrapper(hashByte[2]),
-        new ByteArrayWrapper(hashByte[3]),
-        new ByteArrayWrapper(hashByte[4]),
-        new ByteArrayWrapper(new byte[32]),
-        new ByteArrayWrapper(hashByte[6])
+        ByteArrayWrapper.wrap(new byte[0]),
+        ByteArrayWrapper.wrap(hashByte[2]),
+        ByteArrayWrapper.wrap(hashByte[3]),
+        ByteArrayWrapper.wrap(hashByte[4]),
+        ByteArrayWrapper.wrap(new byte[32]),
+        ByteArrayWrapper.wrap(hashByte[6])
     };
 
     /**

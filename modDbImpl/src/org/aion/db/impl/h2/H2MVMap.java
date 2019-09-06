@@ -308,9 +308,9 @@ public class H2MVMap extends AbstractDB {
             // doesn't actually have functionality for batch operations
             for (Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
                 if (e.getValue() == null) {
-                    map.remove(e.getKey().getData());
+                    map.remove(e.getKey().toBytes());
                 } else {
-                    map.put(e.getKey().getData(), e.getValue());
+                    map.put(e.getKey().toBytes(), e.getValue());
                 }
             }
 

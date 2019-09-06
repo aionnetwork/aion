@@ -164,7 +164,7 @@ public class BlockchainForkingTest {
         higherDifficultyBlock.updateHeader(newBlockHeader);
 
         System.out.println(
-                "before any processing: " + new ByteArrayWrapper(bc.getRepository().getRoot()));
+                "before any processing: " + Hex.toHexString(bc.getRepository().getRoot()));
         System.out.println("trie: " + bc.getRepository().getWorldState().getTrieDump());
 
         ImportResult result = bc.tryToConnect(standardBlock);
@@ -178,7 +178,7 @@ public class BlockchainForkingTest {
         // assert that the block we just inserted (best) is the instance that is returned
         assertThat(bc.getBestBlock() == standardBlock).isTrue();
 
-        System.out.println(new ByteArrayWrapper(bc.getRepository().getRoot()));
+        System.out.println(Hex.toHexString(bc.getRepository().getRoot()));
 
         ImportResult higherDifficultyResult = bc.tryToConnect(higherDifficultyBlock);
 

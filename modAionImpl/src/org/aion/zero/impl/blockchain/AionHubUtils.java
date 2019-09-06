@@ -51,6 +51,6 @@ public class AionHubUtils {
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {
         return (value.isZero())
                 ? value.toWrapper()
-                : new ByteArrayWrapper(value.getNoLeadZeroesData());
+                : ByteArrayWrapper.wrap(value.getNoLeadZeroesData());
     }
 }

@@ -1,5 +1,6 @@
 package org.aion.util.bytes;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
@@ -42,7 +43,7 @@ public class ByteArrayWrapperTest {
         try {
             tempArray = ByteArrayWrapper.wrap(inputByte);
             assertEquals(tempArray.toString(), inputString.toLowerCase());
-            assertEquals(tempArray.toBytes(), tempArray.getData());
+            assertArrayEquals(tempArray.toBytes(), tempArray.toBytes());
             System.out.println("Valid " + tempArray);
         } catch (NullPointerException e) {
             System.out.println("Invalid");
@@ -57,7 +58,7 @@ public class ByteArrayWrapperTest {
             ByteBuffer buffer = ByteBuffer.allocate(20);
             buffer.putInt(i);
 
-            map.put(new ByteArrayWrapper(buffer.array()), new Object());
+            map.put(ByteArrayWrapper.wrap(buffer.array()), new Object());
         }
 
         int cnt1 = 0;
@@ -78,5 +79,10 @@ public class ByteArrayWrapperTest {
 
         Assert.assertEquals(0, cnt1);
         Assert.assertEquals(0, cnt2);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testWrapNull() {
+        ByteArrayWrapper.wrap(null);
     }
 }

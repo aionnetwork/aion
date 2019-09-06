@@ -437,9 +437,9 @@ public class LevelDB extends AbstractDB {
             // add put and delete operations to batch
             for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
                 if (e.getValue() == null) {
-                    batch.delete(e.getKey().getData());
+                    batch.delete(e.getKey().toBytes());
                 } else {
-                    batch.put(e.getKey().getData(), e.getValue());
+                    batch.put(e.getKey().toBytes(), e.getValue());
                 }
             }
 

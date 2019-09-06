@@ -23,7 +23,7 @@ final class CaffeineDataSource<V> extends ObjectDataSource<V> {
                 Caffeine.newBuilder()
                         .maximumSize(cacheSize)
                         .expireAfterWrite(6, TimeUnit.MINUTES)
-                        .build(key -> getFromDatabase(key.getData()));
+                        .build(key -> getFromDatabase(key.toBytes()));
     }
 
     public void put(byte[] key, V value) {

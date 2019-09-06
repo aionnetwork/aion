@@ -51,8 +51,8 @@ public class FvmBenchmark {
                             ByteUtil.merge(zeros28, ByteUtil.intToBytes(i * 1024 + j)));
                     repo.addStorageRow(
                         address,
-                        new ByteArrayWrapper(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData()),
-                        new ByteArrayWrapper(
+                        ByteArrayWrapper.wrap(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData()),
+                        ByteArrayWrapper.wrap(
                             ByteUtil.stripLeadingZeroes(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData())));
                 }
                 repo.flush();
@@ -70,8 +70,8 @@ public class FvmBenchmark {
                     FvmDataWord.fromBytes(
                         repo.getStorageValue(
                             address,
-                            new ByteArrayWrapper(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData()))
-                            .getData());
+                            ByteArrayWrapper.wrap(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData()))
+                            .toBytes());
                 }
                 repo.flush();
                 db.flush();

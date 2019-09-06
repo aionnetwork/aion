@@ -41,7 +41,7 @@ public class TransactionStore implements Closeable {
             byte[] txHash = tx.getReceipt().getTransaction().getTransactionHash();
 
             List<AionTxInfo> existingInfos = null;
-            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null
+            if (lastSavedTxHash.put(ByteArrayWrapper.wrap(txHash), dummy) != null
                     || !lastSavedTxHash.isFull()) {
                 existingInfos = txInfoSource.get(txHash);
             }
@@ -79,7 +79,7 @@ public class TransactionStore implements Closeable {
                     if (existingAliases == null) {
                         existingAliases = new HashSet<>();
                     }
-                    existingAliases.add(new ByteArrayWrapper(txHash));
+                    existingAliases.add(ByteArrayWrapper.wrap(txHash));
                     aliasSource.putToBatch(invokableHash, existingAliases);
                 }
             }
@@ -171,7 +171,7 @@ public class TransactionStore implements Closeable {
                     for (int pos = 0; pos < stream.length; pos += 32) {
                         byte[] holder = new byte[32];
                         System.arraycopy(stream, pos, holder, 0, 32);
-                        ret.add(new ByteArrayWrapper(holder));
+                        ret.add(ByteArrayWrapper.wrap(holder));
                     }
                     return ret;
                 } catch (Exception e) {

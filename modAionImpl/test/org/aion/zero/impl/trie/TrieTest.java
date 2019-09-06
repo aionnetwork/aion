@@ -870,7 +870,7 @@ public class TrieTest {
         byte[] value;
 
         key =
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         new byte[] {
                             -96, 29, -93, -108, -55, -59, 67, -121, -3, 10, 44, -128, -127, 73, 90,
                             -26, 3, 62, 55, -60, -82, -11, -96, -54, 106, 114, 42, 70, 46, 31, 37,
@@ -887,7 +887,7 @@ public class TrieTest {
         data.put(key, value);
 
         key =
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         new byte[] {
                             -96, 44, -96, -3, -97, 10, 112, 111, 28, -32, 44, 18, 101, -106, 51, 6,
                             -107, 0, 24, 13, 50, 81, -84, 68, 125, 110, 118, 97, -109, -96, -30, 107
@@ -903,7 +903,7 @@ public class TrieTest {
         data.put(key, value);
 
         key =
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         new byte[] {
                             -96, 53, 87, -10, 21, -118, 120, -87, 69, -83, 111, 41, -26, -81, 41,
                             -82, -90, -108, -59, -19, -60, 87, -98, -88, 50, -127, 89, -11, -56,
@@ -920,7 +920,7 @@ public class TrieTest {
         data.put(key, value);
 
         key =
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         new byte[] {
                             -96, -118, 43, 113, -6, -115, 90, 79, -76, -32, -70, -7, -91, -98, 70,
                             111, 32, 97, 96, 55, -119, -89, 64, -34, -92, 94, 1, 58, -61, 63, 102,
@@ -946,7 +946,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -963,7 +963,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -981,7 +981,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -991,16 +991,16 @@ public class TrieTest {
         // removing two of the nodes from the trie
         Set<ByteArrayWrapper> expected = new HashSet<>();
         expected.add(
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         Hex.decode(
                                 "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
         expected.add(
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         Hex.decode(
                                 "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
-            mockDB.delete(key.getData());
+            mockDB.delete(key.toBytes());
         }
 
         trie = new TrieImpl(mockDB);
@@ -1017,7 +1017,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -1028,16 +1028,16 @@ public class TrieTest {
         // removing two of the nodes from the trie
         Set<ByteArrayWrapper> expected = new HashSet<>();
         expected.add(
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         Hex.decode(
                                 "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a")));
         expected.add(
-                new ByteArrayWrapper(
+                ByteArrayWrapper.wrap(
                         Hex.decode(
                                 "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
-            mockDB.delete(key.getData());
+            mockDB.delete(key.toBytes());
         }
 
         trie = new TrieImpl(mockDB);
@@ -1054,7 +1054,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -1084,7 +1084,7 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDB);
 
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
-            trie.update(e.getKey().getData(), e.getValue());
+            trie.update(e.getKey().toBytes(), e.getValue());
         }
         trie.getCache().commit(true);
 
@@ -1094,31 +1094,31 @@ public class TrieTest {
         Value v;
 
         for (ByteArrayWrapper key : allKeys) {
-            value = mockDB.get(key.getData()).get();
+            value = mockDB.get(key.toBytes()).get();
             v = Value.fromRlpEncoded(value);
 
             // empty for limit <= 0
-            assertThat(trie.getReferencedTrieNodes(key.getData(), -2)).isEmpty();
+            assertThat(trie.getReferencedTrieNodes(key.toBytes(), -2)).isEmpty();
             assertThat(trie.getReferencedTrieNodes(value, -2)).isEmpty();
-            assertThat(trie.getReferencedTrieNodes(key.getData(), 0)).isEmpty();
+            assertThat(trie.getReferencedTrieNodes(key.toBytes(), 0)).isEmpty();
             assertThat(trie.getReferencedTrieNodes(value, 0)).isEmpty();
 
             // partial size = 1 for non-leafs and 0 for leafs
             assertThat(trie.getReferencedTrieNodes(value, 1).size()).isAtMost(1);
-            assertThat(trie.getReferencedTrieNodes(key.getData(), 1).size()).isAtMost(1);
+            assertThat(trie.getReferencedTrieNodes(key.toBytes(), 1).size()).isAtMost(1);
 
             if (v.isList() && v.asList().size() > 2) {
                 // partial size = 4 for branch node
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isEqualTo(4);
-                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isEqualTo(5);
+                assertThat(trie.getReferencedTrieNodes(key.toBytes(), 100).size()).isEqualTo(5);
             } else if (v.isList()) {
                 // at most whole list
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isAtMost(5);
-                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isAtMost(6);
+                assertThat(trie.getReferencedTrieNodes(key.toBytes(), 100).size()).isAtMost(6);
             } else {
                 // partial size = 0 for leafs
                 assertThat(trie.getReferencedTrieNodes(value, 100).size()).isAtMost(0);
-                assertThat(trie.getReferencedTrieNodes(key.getData(), 100).size()).isAtMost(0);
+                assertThat(trie.getReferencedTrieNodes(key.toBytes(), 100).size()).isAtMost(0);
             }
         }
     }

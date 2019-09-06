@@ -175,7 +175,7 @@ public final class ResponseTrieData extends Msg {
                 return null;
             }
 
-            nodes.put(new ByteArrayWrapper(hash), value);
+            nodes.put(ByteArrayWrapper.wrap(hash), value);
         }
 
         return nodes;
@@ -184,7 +184,7 @@ public final class ResponseTrieData extends Msg {
     @Override
     public byte[] encode() {
         return RLP.encodeList(
-                RLP.encodeElement(nodeKey.getData()),
+                RLP.encodeElement(nodeKey.toBytes()),
                 RLP.encodeElement(nodeValue),
                 RLP.encodeList(encodeReferencedNodes(referencedNodes)),
                 RLP.encodeString(dbType.toString()));
@@ -203,7 +203,7 @@ public final class ResponseTrieData extends Msg {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : referencedNodes.entrySet()) {
             pairs[i++] =
                     RLP.encodeList(
-                            RLP.encodeElement(e.getKey().getData()),
+                            RLP.encodeElement(e.getKey().toBytes()),
                             RLP.encodeElement(e.getValue()));
         }
 

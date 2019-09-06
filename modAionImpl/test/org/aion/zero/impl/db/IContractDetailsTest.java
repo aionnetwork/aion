@@ -237,7 +237,7 @@ public class IContractDetailsTest {
                     assertEquals(impl.get(key), cache1.get(key));
                 }
             } catch (AssertionError e) {
-                System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                System.err.println("\nAssertion failed on key: " + key);
                 e.printStackTrace();
             }
             count++;
@@ -275,7 +275,7 @@ public class IContractDetailsTest {
                     assertEquals(impl.get(key), cache2.get(key));
                 }
             } catch (AssertionError e) {
-                System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                System.err.println("\nAssertion failed on key: " + key);
                 e.printStackTrace();
             }
             count++;
@@ -296,7 +296,7 @@ public class IContractDetailsTest {
 
         // ensure the second value is different
         // unlikely to be necessary
-        while (Arrays.equals(value1.getData(), value2.getData())) {
+        while (value1.equals(value2)) {
             value2 = getRandomWord(true);
         }
 
@@ -414,7 +414,7 @@ public class IContractDetailsTest {
                     assertNull(storage.get(key));
                 } catch (AssertionError e) {
                     System.err.println(
-                            "\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                            "\nAssertion failed on key: " + key);
                     e.printStackTrace();
                 }
             } else {
@@ -539,7 +539,7 @@ public class IContractDetailsTest {
         try {
             assertNull(cache.get(key));
         } catch (AssertionError e) {
-            System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+            System.err.println("\nAssertion failed on key: " + key);
             e.printStackTrace();
         }
     }

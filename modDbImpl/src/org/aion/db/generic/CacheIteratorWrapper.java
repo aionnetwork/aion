@@ -62,7 +62,7 @@ public class CacheIteratorWrapper implements Iterator<byte[]> {
         // exhausted the initial iterator, trying the dirty entries
         // check in the cached entries
         if (seek && !additions.isEmpty()) {
-            next = additions.remove(0).getData();
+            next = additions.remove(0).toBytes();
             seek = false;
         }
 

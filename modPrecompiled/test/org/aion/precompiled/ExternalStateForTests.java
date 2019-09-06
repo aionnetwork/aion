@@ -72,17 +72,17 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
         // This has always been done, it's a repository storage implementation detail as a kind of
         // compaction optimization.
         byte[] valueBytes = (value instanceof PrecompiledDataWord) ? dropLeadingZeroes(value.copyOfData()) : value.copyOfData();
-        this.repository.addStorageRow(address, new ByteArrayWrapper(key.copyOfData()), new ByteArrayWrapper(valueBytes));
+        this.repository.addStorageRow(address, ByteArrayWrapper.wrap(key.copyOfData()), ByteArrayWrapper.wrap(valueBytes));
     }
 
     @Override
     public void removeStorage(AionAddress address, IPrecompiledDataWord key) {
-        this.repository.removeStorageRow(address, new ByteArrayWrapper(key.copyOfData()));
+        this.repository.removeStorageRow(address, ByteArrayWrapper.wrap(key.copyOfData()));
     }
 
     @Override
     public IPrecompiledDataWord getStorageValue(AionAddress address, IPrecompiledDataWord key) {
-        ByteArrayWrapper byteArray = this.repository.getStorageValue(address, new ByteArrayWrapper(key.copyOfData()));
+        ByteArrayWrapper byteArray = this.repository.getStorageValue(address, ByteArrayWrapper.wrap(key.copyOfData()));
         return (byteArray == null) ? null : toDataWord(byteArray.toBytes());
     }
 

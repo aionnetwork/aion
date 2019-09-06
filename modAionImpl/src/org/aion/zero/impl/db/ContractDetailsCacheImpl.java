@@ -7,10 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.zero.impl.trie.Node;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
@@ -96,15 +94,15 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
             // save a copy to local storage
             if (value != null) {
-                storage.put(key.copy(), value.copy());
+                storage.put(key, value);
             } else {
-                storage.put(key.copy(), null);
+                storage.put(key, null);
             }
         } else { // check local storage
             value = storage.get(key);
 
             if (value != null) {
-                value = value.copy();
+                value = value;
             }
         }
         return value;
@@ -289,17 +287,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
         for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
 
-            ByteArrayWrapper keyWrapper = null;
-            if (codeEntry.getKey() != null) {
-                byte[] keyBytes = codeEntry.getKey().getData();
-                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
-            }
-
             byte[] copyOfValue =
                     (codeEntry.getValue() == null)
                             ? null
                             : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
-            copyOfCodes.put(keyWrapper, copyOfValue);
+            // the ByteArrayWrapper is immutable
+            copyOfCodes.put(codeEntry.getKey(), copyOfValue);
         }
         return copyOfCodes;
     }
@@ -311,20 +304,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
         Map<ByteArrayWrapper, ByteArrayWrapper> storageCopy = new HashMap<>();
         for (Entry<ByteArrayWrapper, ByteArrayWrapper> storageEntry : this.storage.entrySet()) {
-            ByteArrayWrapper keyWrapper = null;
-            ByteArrayWrapper valueWrapper = null;
-
-            if (storageEntry.getKey() != null) {
-                byte[] keyBytes = storageEntry.getKey().getData();
-                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
-            }
-
-            if (storageEntry.getValue() != null) {
-                byte[] valueBytes = storageEntry.getValue().getData();
-                valueWrapper = new ByteArrayWrapper(Arrays.copyOf(valueBytes, valueBytes.length));
-            }
-
-            storageCopy.put(keyWrapper, valueWrapper);
+            // the ByteArrayWrapper is immutable
+            storageCopy.put(storageEntry.getKey(), storageEntry.getValue());
         }
         return storageCopy;
     }

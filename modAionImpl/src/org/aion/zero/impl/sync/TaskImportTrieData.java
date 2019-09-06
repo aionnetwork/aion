@@ -78,7 +78,7 @@ final class TaskImportTrieData implements Runnable {
                 key = e.getKey();
                 value = e.getValue();
 
-                TrieNodeResult result = chain.importTrieNode(key.getData(), value, dbType);
+                TrieNodeResult result = chain.importTrieNode(key.toBytes(), value, dbType);
 
                 if (result.isSuccessful()) {
                     fastSyncMgr.addImportedNode(key, value, dbType);

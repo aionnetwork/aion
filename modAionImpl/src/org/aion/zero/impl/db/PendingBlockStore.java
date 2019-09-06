@@ -462,7 +462,7 @@ public class PendingBlockStore implements Closeable {
                 }
 
                 // delete queue
-                queueSource.deleteInBatch(q.getData());
+                queueSource.deleteInBatch(q.toBytes());
             }
 
             // update level

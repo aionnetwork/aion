@@ -119,7 +119,7 @@ public class PersistentMockDB extends MockDB {
             try (FileWriter writer = new FileWriter(dbFile, false)) {
                 for (Map.Entry<ByteArrayWrapper, byte[]> entry : kv.entrySet()) {
                     writer.write(
-                            Arrays.toString(entry.getKey().getData())
+                            Arrays.toString(entry.getKey().toBytes())
                                     + ":"
                                     + Arrays.toString(entry.getValue())
                                     + "\n");

@@ -44,7 +44,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
         if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
             return EMPTY_BYTE_ARRAY;
         }
-        byte[] code = codes.get(new ByteArrayWrapper(codeHash));
+        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
         return code == null ? EMPTY_BYTE_ARRAY : code;
     }
 

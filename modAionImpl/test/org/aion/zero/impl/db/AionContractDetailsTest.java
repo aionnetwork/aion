@@ -201,61 +201,61 @@ public class AionContractDetailsTest {
         assertEquals(
                 ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_1).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_1).toWrapper()).toBytes()));
 
         assertNull(contractDetails_.get(new DataWord(key_2).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_3),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_3).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_3).toWrapper()).toBytes()));
 
         assertNull(contractDetails_.get(new DataWord(key_4).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_5),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_5).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_5).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_6),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_6).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_6).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_7),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_7).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_7).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_8),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_8).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_8).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_9),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_9).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_9).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_10),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_10).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_10).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_11),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_11).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_11).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_12),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_12).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_12).toWrapper()).toBytes()));
 
         assertEquals(
                 ByteUtil.toHexString(val_13),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_13).toWrapper()).getData()));
+                        contractDetails_.get(new DataWord(key_13).toWrapper()).toBytes()));
     }
 
     @Test
@@ -426,12 +426,12 @@ public class AionContractDetailsTest {
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {
         return (value.isZero())
-                ? new ByteArrayWrapper(value.getData())
-                : new ByteArrayWrapper(value.getNoLeadZeroesData());
+                ? ByteArrayWrapper.wrap(value.getData())
+                : ByteArrayWrapper.wrap(value.getNoLeadZeroesData());
     }
 
     private static ByteArrayWrapper wrapValueFromGet(ByteArrayWrapper value) {
-        return new ByteArrayWrapper(new DataWord(value.getData()).getData());
+        return ByteArrayWrapper.wrap(new DataWord(value.toBytes()).getData());
     }
 
     @Test(expected = IllegalStateException.class)

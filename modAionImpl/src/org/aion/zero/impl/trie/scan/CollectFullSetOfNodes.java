@@ -10,7 +10,7 @@ public class CollectFullSetOfNodes implements ScanAction {
 
     @Override
     public void doOnNode(byte[] hash, Value node) {
-        nodes.add(new ByteArrayWrapper(hash));
+        nodes.add(ByteArrayWrapper.wrap(hash));
     }
 
     public Set<ByteArrayWrapper> getCollectedHashes() {

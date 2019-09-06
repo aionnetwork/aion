@@ -13,7 +13,7 @@ public class CollectMappings implements ScanAction {
 
     @Override
     public void doOnNode(byte[] hash, Value node) {
-        nodes.put(new ByteArrayWrapper(hash), node.asBytes());
+        nodes.put(ByteArrayWrapper.wrap(hash), node.asBytes());
     }
 
     public Map<ByteArrayWrapper, byte[]> getNodes() {

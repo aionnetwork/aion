@@ -85,7 +85,7 @@ public class MockDB extends AbstractDB {
 
         check();
 
-        kv.keySet().forEach(key -> set.add(key.getData()));
+        kv.keySet().forEach(key -> set.add(key.toBytes()));
 
         // empty when retrieval failed
         return set.iterator();

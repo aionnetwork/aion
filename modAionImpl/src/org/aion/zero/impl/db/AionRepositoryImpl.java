@@ -979,8 +979,8 @@ public class AionRepositoryImpl
         for (ByteArrayWrapper ref : refs.keySet()) {
             elements[i] =
                     RLP.encodeList(
-                            RLP.encodeElement(ref.getData()),
-                            RLP.encodeElement(getTrieNode(ref.getData(), dbType)));
+                            RLP.encodeElement(ref.toBytes()),
+                            RLP.encodeElement(getTrieNode(ref.toBytes(), dbType)));
             i++;
         }
         return RLP.encodeList(elements);
@@ -1010,7 +1010,7 @@ public class AionRepositoryImpl
             Map<ByteArrayWrapper, byte[]> refs = trie.getReferencedTrieNodes(value, limit);
             List<byte[]> converted = new ArrayList<>();
             for (ByteArrayWrapper key : refs.keySet()) {
-                converted.add(ByteUtil.xorAlignRight(key.getData(), subKey));
+                converted.add(ByteUtil.xorAlignRight(key.toBytes(), subKey));
             }
             return converted;
         }

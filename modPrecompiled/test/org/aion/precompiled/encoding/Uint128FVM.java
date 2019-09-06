@@ -10,8 +10,8 @@ public class Uint128FVM extends BaseTypeFVM {
     private final byte[] payload;
 
     public Uint128FVM(@Nonnull final ByteArrayWrapper word) {
-        assert word.getData().length == 16;
-        this.payload = word.getData();
+        assert word.length() == 16;
+        this.payload = word.toBytes();
     }
 
     @Override

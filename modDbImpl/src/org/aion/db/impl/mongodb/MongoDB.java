@@ -83,7 +83,7 @@ public class MongoDB extends AbstractDB {
          * @return this
          */
         public WriteBatch addEdit(ByteArrayWrapper key, byte[] value) {
-            return addEdit(key.getData(), value);
+            return addEdit(key.toBytes(), value);
         }
 
         /**
@@ -329,7 +329,7 @@ public class MongoDB extends AbstractDB {
     @Override
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
         check();
-        check(cache.keySet().stream().map(k -> k.getData()).collect(Collectors.toList()));
+        check(cache.keySet().stream().map(k -> k.toBytes()).collect(Collectors.toList()));
 
         WriteBatch edits = new WriteBatch().addEditsWrapper(cache);
         WriteBatchResult result = doBulkWrite(edits);

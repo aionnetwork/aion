@@ -136,7 +136,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
             throw new IllegalArgumentException("Put with null, empty or zero byte array values is not allowed for the FVM. For deletions, make explicit calls to the delete method.");
         }
 
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key.copyOfData());
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key.copyOfData());
         ByteArrayWrapper storageValue = alignValueToWordSizeForPut(valueBytes);
         if (storageValue.isZero()) {
             // used to ensure FVM correctness
@@ -156,7 +156,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public void removeStorage(AionAddress address, FvmDataWord key) {
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key.copyOfData());
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key.copyOfData());
         this.repository.removeStorageRow(address, storageKey);
         setVmType(address);
     }
@@ -171,7 +171,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public FvmDataWord getStorageValue(AionAddress address, FvmDataWord key) {
-        ByteArrayWrapper storageKey = new ByteArrayWrapper(key.copyOfData());
+        ByteArrayWrapper storageKey = ByteArrayWrapper.wrap(key.copyOfData());
         ByteArrayWrapper value = this.repository.getStorageValue(address, storageKey);
         if (value != null && (value.isZero() || value.isEmpty())) {
             // used to ensure FVM correctness
@@ -480,7 +480,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      * <p>This method should only be used for putting data into storage.
      */
     private ByteArrayWrapper alignValueToWordSizeForPut(byte[] bytes) {
-        return (allBytesAreZero(bytes)) ? new ByteArrayWrapper(bytes) : new ByteArrayWrapper(dropLeadingZeroes(bytes));
+        return (allBytesAreZero(bytes)) ? ByteArrayWrapper.wrap(bytes) : ByteArrayWrapper.wrap(dropLeadingZeroes(bytes));
     }
 
     private InternalVmType getVmType(AionAddress destination) {

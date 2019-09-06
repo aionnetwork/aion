@@ -154,7 +154,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 ECKey pk = ECKeyFac.inst().create();
                 this.defaultKeys.add(pk);
                 initialState.put(
-                        new ByteArrayWrapper(pk.getAddress()),
+                        ByteArrayWrapper.wrap(pk.getAddress()),
                         new AccountState(BigInteger.ZERO, DEFAULT_BALANCE));
             }
             return this;
@@ -165,7 +165,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             this.defaultKeys.forEach(
                     k ->
                             initialState.put(
-                                    new ByteArrayWrapper(k.getAddress()),
+                                    ByteArrayWrapper.wrap(k.getAddress()),
                                     new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
             return this;
         }
@@ -395,7 +395,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
                 genesisBuilder.addPreminedAccount(
-                        new AionAddress(acc.getKey().getData()), acc.getValue());
+                        new AionAddress(acc.getKey().toBytes()), acc.getValue());
             }
 
             AionGenesis genesis;
@@ -416,7 +416,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 track.addStorageRow(
                         ContractInfo.TOTAL_CURRENCY.contractAddress,
                         new DataWord(key.getKey()).toWrapper(),
-                        new ByteArrayWrapper(
+                        ByteArrayWrapper.wrap(
                                 new DataWord(key.getValue()).getNoLeadZeroesData()));
             }
 

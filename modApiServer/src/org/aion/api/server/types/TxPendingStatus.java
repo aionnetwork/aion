@@ -32,11 +32,11 @@ public class TxPendingStatus {
     }
 
     public byte[] getSocketId() {
-        return this.socketId.getData();
+        return this.socketId.toBytes();
     }
 
     public byte[] getMsgHash() {
-        return this.msgHash.getData();
+        return this.msgHash.toBytes();
     }
 
     public int getPendStatus() {
@@ -44,11 +44,11 @@ public class TxPendingStatus {
     }
 
     public byte[] getTxHash() {
-        return this.txhash.getData();
+        return this.txhash.toBytes();
     }
 
     public byte[] getTxResult() {
-        return this.txResult.getData();
+        return this.txResult.toBytes();
     }
 
     public String getError() {

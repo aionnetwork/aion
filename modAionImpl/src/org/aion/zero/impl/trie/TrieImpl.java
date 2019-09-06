@@ -723,7 +723,7 @@ public class TrieImpl implements Trie {
                     continue;
                 }
 
-                byte[] keyBytes = key.getData();
+                byte[] keyBytes = key.toBytes();
                 keysTotalSize += keyBytes.length;
 
                 byte[] valBytes = node.getValue().getData();
@@ -790,14 +790,15 @@ public class TrieImpl implements Trie {
                     continue;
                 }
 
+                // TODO: make internal wrapper operation
                 System.arraycopy(
-                        key.getData(),
+                        key.toBytes(),
                         0,
                         rlpData,
                         (listHeader.length + keysHeader.length + k_1),
-                        key.getData().length);
+                        key.length());
 
-                k_1 += key.getData().length;
+                k_1 += key.length();
 
                 byte[] valBytes = RLP.encodeElement(node.getValue().getData());
 
