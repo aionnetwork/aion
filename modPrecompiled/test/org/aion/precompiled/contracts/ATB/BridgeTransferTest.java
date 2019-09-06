@@ -31,9 +31,7 @@ import org.junit.Test;
 public class BridgeTransferTest {
 
     private RepositoryCache repo;
-    private BridgeStorageConnector connector;
     private BridgeController controller;
-    private TokenBridgeContract contract;
     private PrecompiledTransactionContext context;
 
     private static byte[][] members = new byte[5][32];
@@ -90,9 +88,8 @@ public class BridgeTransferTest {
 
     private void resetContext() {
         this.context = dummyContext();
-        this.contract = new TokenBridgeContract(context, ExternalStateForTests.usingRepository(repo), OWNER_ADDR, CONTRACT_ADDR);
-        this.connector = this.contract.getConnector();
-        this.controller = this.contract.getController();
+        TokenBridgeContract contract = new TokenBridgeContract(context, ExternalStateForTests.usingRepository(repo), OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = contract.getController();
         this.controller.initialize();
 
         this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
@@ -320,7 +317,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testDoubleBundleSend() {
-        final byte[] senderAddress = this.members[0];
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());

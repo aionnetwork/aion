@@ -7,8 +7,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Properties;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
+import java.util.Random;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -16,6 +15,7 @@ import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.type.CapabilitiesProvider;
+import org.aion.types.TransactionStatus;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.ContractInfo;
@@ -28,21 +28,21 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class TotalCurrencyContractTest {
     private static final AionAddress ADDR = ContractInfo.TOTAL_CURRENCY.contractAddress;
     private static final long COST = 21000L;
     private static final BigInteger AMT = BigInteger.valueOf(1000);
     private TotalCurrencyContract tcc;
     private RepositoryCache repo;
-    private ECKey ownerKey;
+    private byte[] ownerAddr;
+    private static ExternalCapabilitiesForTesting capabilities;
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        capabilities = new ExternalCapabilitiesForTesting();
+        CapabilitiesProvider.installExternalCapabilities(capabilities);
     }
 
     @AfterClass
@@ -73,14 +73,14 @@ public class TotalCurrencyContractTest {
                 };
         repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
 
-        ownerKey = ECKeyFac.inst().create();
-        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerKey.getAddress()));
+        ownerAddr = getRandomAddr();
+        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerAddr));
     }
 
     @After
     public void tearDown() {
         repo = null;
-        ownerKey = null;
+        ownerAddr = null;
         tcc = null;
     }
 
@@ -99,7 +99,7 @@ public class TotalCurrencyContractTest {
         byte[] payload = buffer.array();
         buffer = ByteBuffer.allocate(18 + 96);
 
-        return buffer.put(payload).put(ownerKey.sign(payload).toBytes()).array();
+        return buffer.put(payload).put(capabilities.sign(ownerAddr, Arrays.copyOf(payload, 32))).array();
     }
 
     // <------------------------------------------------------------------------------------------->
@@ -112,7 +112,7 @@ public class TotalCurrencyContractTest {
         PrecompiledTransactionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -145,7 +145,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(0L, res.getEnergyRemaining());
     }
 
@@ -156,14 +156,14 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(0L, res.getEnergyRemaining());
 
-        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerKey.getAddress()));
+        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerAddr));
         input = new byte[] {(byte) 0x0};
         res = tcc.execute(input, COST);
 
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT, new BigInteger(res.getReturnData()));
     }
 
@@ -174,13 +174,13 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = tcc.execute(input, COST);
 
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(0L, res.getEnergyRemaining());
 
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // query a diff chainID
 
-        assertTrue(res.getStatus().isSuccess());
-        assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
+        assertEquals(TransactionStatus.successful(), res.getStatus());
+        assertEquals(BigInteger.ZERO, new BigInteger(1, res.getReturnData()));
     }
 
     @Test
@@ -195,7 +195,7 @@ public class TotalCurrencyContractTest {
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
 
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
     }
 
@@ -228,7 +228,7 @@ public class TotalCurrencyContractTest {
                 new TotalCurrencyContract(
                         ExternalStateForTests.usingRepository(repo),
                         ADDR,
-                        new AionAddress(ECKeyFac.inst().create().getAddress())); // diff owner.
+                        new AionAddress(getRandomAddr())); // diff owner.
 
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         PrecompiledTransactionResult res = contract.execute(input, COST);
@@ -264,14 +264,14 @@ public class TotalCurrencyContractTest {
         tcc.execute(input, COST);
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         tcc.execute(input, COST);
         tcc.execute(input, COST);
 
         res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
@@ -285,9 +285,9 @@ public class TotalCurrencyContractTest {
         assertEquals("FAILURE", res.getStatus().causeOfError);
         assertEquals(0L, res.getEnergyRemaining());
 
-        // Verify total amount is non-negative.
+        // Verify total amount is zero.
         res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
+        assertEquals(BigInteger.ZERO, new BigInteger(1, res.getReturnData()));
     }
 
     @Test
@@ -319,15 +319,23 @@ public class TotalCurrencyContractTest {
 
         PrecompiledTransactionResult res =
                 tcc.execute(new byte[] {(byte) 0x0}, COST); // get chain 0.
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT, new BigInteger(res.getReturnData()));
 
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // get chain 1.
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         res = tcc.execute((new byte[] {(byte) 0x10}), COST); // get chain 16.
-        assertTrue(res.getStatus().isSuccess());
+        assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
+    }
+
+    private static Random r = new Random();
+    private static byte[] getRandomAddr() {
+        byte[] addr = new byte[32];
+        r.nextBytes(addr);
+        addr[0] = org.aion.precompiled.util.ByteUtil.hexStringToBytes("0xa0")[0];
+        return addr;
     }
 }

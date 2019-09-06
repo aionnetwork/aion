@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
-import org.aion.crypto.HashUtil;
+import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.util.bytes.ByteUtil;
 
@@ -15,21 +15,11 @@ public class AbiEncoder {
     private List<BaseTypeFVM> params;
     private volatile StringBuffer buffer;
     private String signature;
-
-    private static final int STATIC_OFFSET_LEN = 16;
-
-    public AbiEncoder(@Nonnull final byte[] signature, @Nonnull BaseTypeFVM... params) {
-        this(ByteUtil.toHexString(signature), params);
-    }
+    private static ExternalCapabilitiesForTesting capabilities = new ExternalCapabilitiesForTesting();
 
     public AbiEncoder(@Nonnull String signature, @Nonnull BaseTypeFVM... params) {
         this.params = new ArrayList<>(Arrays.asList(params));
         this.signature = signature;
-    }
-
-    public synchronized AbiEncoder setParam(BaseTypeFVM param) {
-        this.params.add(param);
-        return this;
     }
 
     private synchronized void createBuffer() {
@@ -68,7 +58,7 @@ public class AbiEncoder {
         this.buffer = b;
     }
 
-    public String encode() {
+    private String encode() {
         if (buffer == null) createBuffer();
         return "0x" + buffer.toString();
     }
@@ -86,7 +76,7 @@ public class AbiEncoder {
     private static byte[] encodeSignature(String s) {
         // encode signature
         byte[] sig = new byte[4];
-        System.arraycopy(HashUtil.keccak256(s.getBytes()), 0, sig, 0, 4);
+        System.arraycopy(capabilities.keccak256(s.getBytes()), 0, sig, 0, 4);
         return sig;
     }
 }

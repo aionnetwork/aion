@@ -97,7 +97,7 @@ public class TotalCurrencyContract implements PrecompiledContract {
         IPrecompiledDataWord balanceData =
                 this.externalState.getStorageValue(this.address, PrecompiledDataWord.fromInt(input));
         return new PrecompiledTransactionResult(
-            TransactionStatus.successful(), nrg - COST, balanceData.copyOfData());
+            TransactionStatus.successful(), nrg - COST, balanceData == null ? null : balanceData.copyOfData());
     }
 
     private PrecompiledTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
