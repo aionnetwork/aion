@@ -1491,7 +1491,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             if (req.getPrivateKey()) {
                                 pKey = Keystore.getKey(addr, req.getPassword(i)).getPrivKeyBytes();
                                 if (pKey == null) {
-                                    pKey = ByteArrayWrapper.NULL_BYTE;
+                                    pKey = new byte[] {(byte) 0x0};
                                 }
 
                                 pKeyList.add(ByteString.copyFrom(pKey));

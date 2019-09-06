@@ -2,7 +2,7 @@ package org.aion.util.types;
 
 import java.util.Arrays;
 
-public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, Cloneable {
+public final class Hash256 implements Comparable<Hash256>, Cloneable {
 
     public static final int BYTES = 32;
     private static final Hash256 zeroHash = Hash256.wrap(new byte[BYTES]);
@@ -82,7 +82,6 @@ public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, C
         return ByteArrayWrapper.wrap(this.hash);
     }
 
-    @Override
     public final byte[] toBytes() {
         return this.hash;
     }
@@ -159,7 +158,6 @@ public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, C
         return Arrays.compare(this.hash, o.toBytes());
     }
 
-    @Override
     public final Hash256 fromBytes(byte[] bs) {
         return new Hash256(bs);
     }

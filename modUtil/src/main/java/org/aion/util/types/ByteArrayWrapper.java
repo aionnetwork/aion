@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 public final class ByteArrayWrapper
-        implements Comparable<ByteArrayWrapper>, Serializable, Bytesable<ByteArrayWrapper> {
+        implements Comparable<ByteArrayWrapper>, Serializable {
 
     public static final ByteArrayWrapper ZERO = ByteArrayWrapper.wrap(new byte[] {0});
     private static final long serialVersionUID = -2937011296133778157L;
@@ -52,12 +52,10 @@ public final class ByteArrayWrapper
     }
 
     // toBytes() and getData() have identical functionality
-    @Override
     public byte[] toBytes() {
         return data;
     }
 
-    @Override
     public ByteArrayWrapper fromBytes(byte[] bs) {
         return new ByteArrayWrapper(bs);
     }

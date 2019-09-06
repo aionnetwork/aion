@@ -14,11 +14,10 @@ import org.aion.rlp.RLPList;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.util.types.Bytesable;
 import org.apache.commons.lang3.ArrayUtils;
 
 /** aion transaction receipt class. */
-public class AionTxReceipt implements Bytesable<Object> {
+public class AionTxReceipt {
     private AionTransaction transaction;
 
     private byte[] postTxState = EMPTY_BYTE_ARRAY;
