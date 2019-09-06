@@ -13,6 +13,7 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
 
@@ -428,9 +429,8 @@ public class StakingBlock extends AbstractBlock {
 
     @Override
     public boolean isGenesis() {
-        // UnCommon it when we introduce genesisStakingBlock
-        //return Arrays.equals(header.getHash(), CfgAion.inst().getGenesisStakingBlock().getHash());
-        return true;
+        return Arrays.equals(
+                header.getHash(), CfgAion.inst().getGenesis().getGenesisStakingBlock().getHash());
     }
 
     @Override

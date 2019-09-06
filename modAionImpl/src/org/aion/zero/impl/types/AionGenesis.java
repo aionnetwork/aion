@@ -22,7 +22,7 @@ public class AionGenesis extends AionBlock {
      * Make this value constant for now, in the future we may move this to a more configuration
      * position, this indicates the address at which the storage rows are to be stored
      */
-    protected static final AionAddress NETWORK_BALANCE_ADDRESS =
+    private static final AionAddress NETWORK_BALANCE_ADDRESS =
             ContractInfo.TOTAL_CURRENCY.contractAddress;
 
     /**
@@ -38,7 +38,7 @@ public class AionGenesis extends AionBlock {
      * blocks, this value could reference something arbitrary. We have chosen to arbitrarily set it
      * to a silly phrase.
      */
-    protected static final byte[] GENESIS_PARENT_HASH =
+    static final byte[] GENESIS_PARENT_HASH =
             ByteUtil.hexStringToBytes(
                     "0000000000000000000000000000000000000000000000000000000000000000");
 
@@ -46,13 +46,13 @@ public class AionGenesis extends AionBlock {
      * Corresponds to {@link A0BlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
-    protected static final AionAddress GENESIS_COINBASE = AddressUtils.ZERO_ADDRESS;
+    static final AionAddress GENESIS_COINBASE = AddressUtils.ZERO_ADDRESS;
 
     /**
      * Corresponds to {@link A0BlockHeader#getLogsBloom()} indicates the logsBloom of the
      * genesis block, because no transactions are included in this block. It defaults to empty.
      */
-    protected static final byte[] GENESIS_LOGSBLOOM = new byte[256];
+    static final byte[] GENESIS_LOGSBLOOM = new byte[256];
 
     /**
      * Corresponds to {@link A0BlockHeader#getDifficulty()} and {@link
@@ -68,26 +68,26 @@ public class AionGenesis extends AionBlock {
      * @implNote Updated April 7th, 2018. In light of changes to the original plan this value has
      *     been reduced to 1024 based on the heuristic data from the QA1 TestNet
      */
-    protected static final byte[] GENESIS_DIFFICULTY =
+    static final byte[] GENESIS_DIFFICULTY =
             ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1024));
 
     /**
      * Corresponds to {@link A0BlockHeader#getNumber()} the number. This is pretty self
      * explanatory.
      */
-    protected static final long GENESIS_NUMBER = 0;
+    private static final long GENESIS_NUMBER = 0;
 
     /**
      * Corresponds to {@link A0BlockHeader#getTimestamp()} the timestamp that the block was
      * forged. In terms of the genesis, we arbitrarily set it to 0.
      */
-    protected static final long GENESIS_TIMESTAMP = 0;
+    static final long GENESIS_TIMESTAMP = 0;
 
     /**
      * Corresponds to {@link A0BlockHeader#getNonce()} nonce of the block, we arbitrarily set
      * this to 0 for now
      */
-    protected static final byte[] GENESIS_NONCE = new byte[32];
+    private static final byte[] GENESIS_NONCE = new byte[32];
 
     /**
      * Corresponds to {@link A0BlockHeader#getEnergyLimit()} sets the initial energy limit. We will
@@ -100,12 +100,12 @@ public class AionGenesis extends AionBlock {
      * @see <a href=
      *     "https://blog.ethereum.org/2016/10/31/uncle-rate-transaction-fee-analysis">fee-analysis</a>
      */
-    protected static final long GENESIS_ENERGY_LIMIT = 10000000;
+    static final long GENESIS_ENERGY_LIMIT = 10000000;
 
     /** Corresponds to {@link AionGenesis#premine} default premined accounts */
-    protected static final Map<AionAddress, AccountState> GENESIS_PREMINE;
+    static final Map<AionAddress, AccountState> GENESIS_PREMINE;
 
-    protected static final Map<Integer, BigInteger> GENESIS_NETWORK_BALANCE;
+    private static final Map<Integer, BigInteger> GENESIS_NETWORK_BALANCE;
 
     static {
         // leaving because we may want to add accounts later
@@ -125,6 +125,12 @@ public class AionGenesis extends AionBlock {
      * address 0x100 (256).
      */
     private Map<AionAddress, AccountState> premine = new HashMap<>();
+
+    /**
+     * The virtual staking block, which is the sealParent of the first PoS block is built, and the
+     * sealAntiparent of all PoW blocks until the first PoS block.
+     */
+    private GenesisStakingBlock genesisStakingBlock;
 
     // TODO: verify whether setting the solution to null is okay
     // TODO: set energyLimit to a correct value (after genesis loader is
@@ -161,16 +167,24 @@ public class AionGenesis extends AionBlock {
         return premine;
     }
 
-    public void setPremine(Map<AionAddress, AccountState> premine) {
+    private void setPremine(Map<AionAddress, AccountState> premine) {
         this.premine = premine;
     }
 
-    public void setNetworkBalance(Map<Integer, BigInteger> networkBalances) {
+    private void setNetworkBalance(Map<Integer, BigInteger> networkBalances) {
         this.networkBalances = networkBalances;
     }
 
     public Map<Integer, BigInteger> getNetworkBalances() {
         return this.networkBalances;
+    }
+
+    public GenesisStakingBlock getGenesisStakingBlock() {
+        return this.genesisStakingBlock;
+    }
+
+    private void setGenesisStakingBlock(GenesisStakingBlock genesisStakingBlock) {
+        this.genesisStakingBlock = genesisStakingBlock;
     }
 
     /**
@@ -209,22 +223,40 @@ public class AionGenesis extends AionBlock {
          * With proposed changes to chainId, the extraData field is now segmented into the following
          * [30-byte FREE | 2-byte chainId (uint16)]
          */
-        protected int chainId;
+        int chainId;
 
-        protected Map<Integer, BigInteger> networkBalance;
-        protected Map<AionAddress, AccountState> premined;
+        Map<Integer, BigInteger> networkBalance;
+        Map<AionAddress, AccountState> premined;
 
         public Builder withParentHash(final byte[] parentHash) {
+            if (parentHash == null) {
+                throw new NullPointerException("parentHash is null");
+            }
+
+            if (parentHash.length != 32) {
+                throw new IllegalArgumentException("Invalid parentHash length");
+            }
             this.parentHash = parentHash;
             return this;
         }
 
         public Builder withCoinbase(final AionAddress coinbase) {
+            if (coinbase == null) {
+                throw new NullPointerException("coinbase is null");
+            }
             this.coinbase = coinbase;
             return this;
         }
 
         public Builder withDifficulty(final byte[] difficulty) {
+            if (difficulty == null) {
+                throw new NullPointerException();
+            }
+
+            if (difficulty.length > 16) {
+                throw new IllegalArgumentException("Invalid difficulty length");
+            }
+
             this.difficulty = difficulty;
             return this;
         }
@@ -244,6 +276,14 @@ public class AionGenesis extends AionBlock {
         }
 
         public Builder withNonce(final byte[] nonce) {
+            if (nonce == null) {
+                throw new NullPointerException("nonce is null");
+            }
+
+            if (nonce.length != 32) {
+                throw new IllegalArgumentException("Invalid nonce length");
+            }
+
             this.nonce = nonce;
             return this;
         }
@@ -267,7 +307,17 @@ public class AionGenesis extends AionBlock {
         }
 
         public Builder addPreminedAccount(final AionAddress address, final AccountState state) {
-            if (this.premined == null) this.premined = new HashMap<>();
+            if (address == null) {
+                throw new NullPointerException("address is null");
+            }
+
+            if (state == null) {
+                throw new NullPointerException("state is null");
+            }
+
+            if (this.premined == null) {
+                this.premined = new HashMap<>();
+            }
 
             if (this.premined.get(address) != null)
                 throw new IllegalArgumentException("duplicate premined address");
@@ -277,6 +327,14 @@ public class AionGenesis extends AionBlock {
         }
 
         public Builder addNetworkBalance(Integer chainId, BigInteger balance) {
+            if (chainId == null) {
+                throw new NullPointerException("chain ID is null");
+            }
+
+            if (balance == null) {
+                throw new NullPointerException("balance is null");
+            }
+
             if (chainId < 0)
                 throw new IllegalArgumentException(
                         "networkBalance chainId cannot be null or negative");
@@ -287,7 +345,7 @@ public class AionGenesis extends AionBlock {
 
             if (this.networkBalance == null) this.networkBalance = new HashMap<>();
 
-            if (chainId > 256) throw new IllegalArgumentException("chainId cannot exceed 255");
+            if (chainId > 255) throw new IllegalArgumentException("chainId cannot exceed 255");
 
             if (this.networkBalance.get(chainId) != null)
                 throw new IllegalArgumentException("duplicate chainId");
@@ -344,10 +402,19 @@ public class AionGenesis extends AionBlock {
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
 
+            GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(extraData);
+            genesis.setGenesisStakingBlock(genesisStakingBlock);
+            genesis.setAntiparentHash(genesisStakingBlock.getHash());
+
+            BigInteger miningDifficulty = genesis.getDifficultyBI();
+            genesis.setMiningDifficulty(miningDifficulty);
+            genesis.setStakingDifficulty(BigInteger.ONE);
+            genesis.setCumulativeDifficulty(miningDifficulty);
+
             return genesis;
         }
 
-        protected byte[] generateRootHash() {
+        byte[] generateRootHash() {
             Trie worldTrie = new SecureTrie(null);
             AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl();
 
