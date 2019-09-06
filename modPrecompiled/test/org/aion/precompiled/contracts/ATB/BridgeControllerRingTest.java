@@ -3,8 +3,7 @@ package org.aion.precompiled.contracts.ATB;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
+import java.util.Random;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.CapabilitiesProvider;
@@ -20,22 +19,8 @@ public class BridgeControllerRingTest {
     private BridgeStorageConnector connector;
     private BridgeController controller;
 
-    private static final ECKey members[] =
-            new ECKey[] {
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create()
-            };
+    private static final byte[][] members = new byte[5][32];
 
-    private static byte[][] getMemberAddress(ECKey[] members) {
-        byte[][] memberList = new byte[members.length][];
-        for (int i = 0; i < members.length; i++) {
-            memberList[i] = members[i].getAddress();
-        }
-        return memberList;
-    }
     private static ExternalCapabilitiesForTesting capabilities;
 
     private static AionAddress CONTRACT_ADDR;
@@ -49,6 +34,13 @@ public class BridgeControllerRingTest {
         CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
         OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
         memberAddress = capabilities.blake2b("memberAddress".getBytes());
+
+        Random r = new Random();
+        for (int i = 0; i < members.length; i++) {
+            byte[] addr = new byte[32];
+            r.nextBytes(addr);
+            members[i] = addr;
+        }
     }
 
     @AfterClass
@@ -65,25 +57,20 @@ public class BridgeControllerRingTest {
                         connector, dummyContext().getLogs(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
 
-        byte[][] memberList = new byte[members.length][];
-        for (int i = 0; i < members.length; i++) {
-            memberList[i] = members[i].getAddress();
-        }
         // setup initial ring structure
-        this.controller.ringInitialize(OWNER_ADDR.toByteArray(), memberList);
+        this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
     }
 
     @Test
     public void testRingInitialization() {
-        for (ECKey k : members) {
-            assertThat(this.connector.getActiveMember(k.getAddress())).isTrue();
+        for (byte[] addr : members) {
+            assertThat(this.connector.getActiveMember(addr)).isTrue();
         }
     }
 
     @Test
     public void testRingReinitialization() {
-        ErrCode code =
-                this.controller.ringInitialize(OWNER_ADDR.toByteArray(), getMemberAddress(members));
+        ErrCode code = this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
         assertThat(code).isEqualTo(ErrCode.RING_LOCKED);
     }
 

@@ -10,7 +10,6 @@ import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.types.AionAddress;
-import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.AfterClass;
@@ -23,8 +22,6 @@ public class BridgeControllerOwnerTest {
     private BridgeStorageConnector connector;
     private BridgeController controller;
     private List<Log> logs;
-    private List<InternalTransaction> internalTransactions;
-    private List<AionAddress> deletedAddresses;
     private static ExternalCapabilitiesForTesting capabilities;
 
     private static AionAddress CONTRACT_ADDR;
@@ -50,8 +47,6 @@ public class BridgeControllerOwnerTest {
 
         PrecompiledTransactionContext context = dummyContext();
         this.logs = context.getLogs();
-        this.internalTransactions = context.getInternalTransactions();
-        this.deletedAddresses = context.getDeletedAddresses();
         this.controller = new BridgeController(connector, this.logs, CONTRACT_ADDR, OWNER_ADDR);
     }
 
