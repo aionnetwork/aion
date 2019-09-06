@@ -10,14 +10,14 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
+import java.util.Random;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.type.CapabilitiesProvider;
+import org.aion.types.TransactionStatus;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -51,14 +51,8 @@ public class TokenBridgeContractTest {
     private BridgeStorageConnector connector;
     private AionRepositoryCache repository;
 
-    private static final ECKey members[] =
-            new ECKey[] {
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create()
-            };
+    private static byte[][] members = new byte[5][32];
+    private static Random r = new Random();
 
     private static final long DEFAULT_NRG = 21000L;
     private static ExternalCapabilitiesForTesting capabilities;
@@ -72,6 +66,10 @@ public class TokenBridgeContractTest {
         CapabilitiesProvider.installExternalCapabilities(capabilities);
         CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
         OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
+
+        for (int i = 0; i < members.length; i++) {
+            members[i] = getRandomAddr();
+        }
     }
 
     @AfterClass
@@ -111,8 +109,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testNotEnoughEnergyExecution() {
         assertThat(this.connector.getInitialized()).isFalse();
-        PrecompiledTransactionResult result =
-                this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), 20_000L);
+        this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), 20_000L);
         assertThat(this.connector.getInitialized()).isFalse();
     }
 
@@ -195,18 +192,18 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // pull results from controller
-        for (ECKey k : members) {
-            assertThat(this.connector.getActiveMember(k.getAddress())).isTrue();
+        for (byte[] k : members) {
+            assertThat(this.connector.getActiveMember(k)).isTrue();
         }
     }
 
@@ -223,8 +220,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -244,20 +241,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -270,7 +267,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -308,8 +305,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -430,20 +427,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -456,7 +453,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -493,8 +490,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -615,20 +612,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -641,7 +638,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -678,8 +675,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -747,20 +744,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -769,7 +766,7 @@ public class TokenBridgeContractTest {
 
         // override defaults
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.valueOf(1024));
         this.contract =
                 new TokenBridgeContract(
@@ -796,8 +793,8 @@ public class TokenBridgeContractTest {
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -862,20 +859,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -888,7 +885,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -917,8 +914,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -983,8 +980,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // not initializing the ring
@@ -993,7 +990,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1006,7 +1003,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1043,8 +1040,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -1120,14 +1117,14 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // not setting relayer
 
@@ -1137,7 +1134,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1174,8 +1171,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -1251,20 +1248,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1277,7 +1274,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1314,8 +1311,8 @@ public class TokenBridgeContractTest {
 
         // only give 2/5 signatures
         byte[][] signatures = new byte[2][];
-        signatures[0] = members[0].sign(payloadHash).toBytes();
-        signatures[1] = members[1].sign(payloadHash).toBytes();
+        signatures[0] = capabilities.sign(members[0], payloadHash);
+        signatures[1] = capabilities.sign(members[1], payloadHash);
 
         ListFVM sourceTransactionList = new ListFVM();
         ListFVM addressList = new ListFVM();
@@ -1390,20 +1387,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1416,7 +1413,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1453,9 +1450,9 @@ public class TokenBridgeContractTest {
 
         // only give 3/5 signatures
         byte[][] signatures = new byte[3][];
-        signatures[0] = members[0].sign(payloadHash).toBytes();
-        signatures[1] = members[1].sign(payloadHash).toBytes();
-        signatures[2] = members[1].sign(payloadHash).toBytes();
+        signatures[0] = capabilities.sign(members[0], payloadHash);
+        signatures[1] = capabilities.sign(members[1], payloadHash);
+        signatures[2] = capabilities.sign(members[2], payloadHash);
 
         ListFVM sourceTransactionList = new ListFVM();
         ListFVM addressList = new ListFVM();
@@ -1532,21 +1529,21 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1559,7 +1556,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -1596,8 +1593,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -1873,7 +1870,8 @@ public class TokenBridgeContractTest {
     public void testTransferFailLength() {
         // instantiate a bundle with 1 transfer and 1 validator
         // input byte should have length 404
-        ECKey members[] = new ECKey[] {ECKeyFac.inst().create()};
+        byte[][] members = new byte[1][32];
+        members[0] = getRandomAddr();
 
         int n = 1;
         BridgeTransfer[] transfers = new BridgeTransfer[n];
@@ -1906,21 +1904,17 @@ public class TokenBridgeContractTest {
         byte[] input = new byte[555];
         System.arraycopy(callPayload, 0, input, 0, 404);
         PrecompiledTransactionResult result = this.contract.execute(input, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
     }
 
     @Test
     public void testTransferFailLength2() {
         // instantiate a bundle with 10 transfers and 5 validators
         // input byte[] should have length of 1508 = 404 + (10-1)*80 + (5-1)*96
-        ECKey members[] =
-                new ECKey[] {
-                    ECKeyFac.inst().create(),
-                    ECKeyFac.inst().create(),
-                    ECKeyFac.inst().create(),
-                    ECKeyFac.inst().create(),
-                    ECKeyFac.inst().create()
-                };
+        byte[][] members = new byte[5][32];
+        for (int i = 0; i < members.length; i++) {
+            members[i] = getRandomAddr();
+        }
 
         int n = 10; // number of transfers
         BridgeTransfer[] transfers = new BridgeTransfer[n];
@@ -1950,7 +1944,7 @@ public class TokenBridgeContractTest {
         System.out.println("fail count: " + i);
     }
 
-    private ReturnDataFromSetup setupForTest(BridgeTransfer[] transfers, ECKey[] members) {
+    private ReturnDataFromSetup setupForTest(BridgeTransfer[] transfers, byte[][] members) {
         // override defaults
         PrecompiledTransactionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR);
         this.contract =
@@ -1960,20 +1954,20 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // set relayer
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0].getAddress())))
+                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1986,7 +1980,7 @@ public class TokenBridgeContractTest {
         // we create a new token bridge contract here because we
         // need to change the execution context
         PrecompiledTransactionContext submitBundleContext =
-                context(new AionAddress(members[0].getAddress()), CONTRACT_ADDR);
+                context(new AionAddress(members[0]), CONTRACT_ADDR);
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
@@ -2000,8 +1994,8 @@ public class TokenBridgeContractTest {
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
-        for (ECKey k : members) {
-            signatures[i] = k.sign(payloadHash).toBytes();
+        for (byte[] k : members) {
+            signatures[i] = capabilities.sign(k, payloadHash);
             i++;
         }
 
@@ -2075,15 +2069,15 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // try before
         byte[] callPayload =
@@ -2120,15 +2114,15 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // try before
         byte[] callPayload =
@@ -2180,15 +2174,15 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // try before
         byte[] callPayload =
@@ -2227,22 +2221,21 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // create input byte[]
         byte[] callPayload = new byte[36];
         byte[] encodeBytes =
                 new AbiEncoder(BridgeFuncSig.PURE_RING_MAP.getSignature()).encodeBytes();
-        ECKey newKey = ECKeyFac.inst().create();
-        byte[] randomAddress = newKey.getAddress();
+        byte[] randomAddress = getRandomAddr();
         System.arraycopy(encodeBytes, 0, callPayload, 0, 4);
         System.arraycopy(randomAddress, 0, callPayload, 4, 32);
 
@@ -2270,8 +2263,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // address null
@@ -2303,8 +2296,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // address null - fail
@@ -2317,7 +2310,7 @@ public class TokenBridgeContractTest {
         byte[] sig =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_ADD_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember = getRandomAddr(); // the new member
         byte[] payload2 = new byte[4 + 32];
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
@@ -2332,7 +2325,7 @@ public class TokenBridgeContractTest {
         byte[] sig3 =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_ADD_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember3 = getRandomAddr(); // the new member
         byte[] payload3 = new byte[4 + 32];
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
@@ -2354,8 +2347,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // lock the ring
@@ -2365,7 +2358,7 @@ public class TokenBridgeContractTest {
         byte[] sig3 =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_ADD_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember3 = getRandomAddr(); // the new member
         byte[] payload3 = new byte[4 + 32];
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
@@ -2387,8 +2380,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // address null - fail
@@ -2401,7 +2394,7 @@ public class TokenBridgeContractTest {
         byte[] sig =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember = getRandomAddr(); // the new member
         byte[] payload2 = new byte[4 + 32];
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
@@ -2419,7 +2412,7 @@ public class TokenBridgeContractTest {
         byte[] sig3 =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember3 = getRandomAddr(); // the new member
         byte[] payload3 = new byte[4 + 32];
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
@@ -2433,7 +2426,7 @@ public class TokenBridgeContractTest {
                         .encodeBytes();
         byte[] payload4 = new byte[4 + 32];
         System.arraycopy(sig4, 0, payload4, 0, 4);
-        System.arraycopy(members[0].getAddress(), 0, payload4, 4, 32);
+        System.arraycopy(members[0], 0, payload4, 4, 32);
 
         PrecompiledTransactionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
         assertTrue(result4.getStatus().isSuccess());
@@ -2452,8 +2445,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // address null - fail
@@ -2466,7 +2459,7 @@ public class TokenBridgeContractTest {
         byte[] sig =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember = getRandomAddr(); // the new member
         byte[] payload2 = new byte[4 + 32];
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
@@ -2484,7 +2477,7 @@ public class TokenBridgeContractTest {
         byte[] sig3 =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList)
                         .encodeBytes();
-        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] newMember3 = getRandomAddr(); // the new member
         byte[] payload3 = new byte[4 + 32];
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
@@ -2508,7 +2501,7 @@ public class TokenBridgeContractTest {
                         .encodeBytes();
         byte[] payload4 = new byte[4 + 32];
         System.arraycopy(sig4, 0, payload4, 0, 4);
-        System.arraycopy(members[0].getAddress(), 0, payload4, 4, 32);
+        System.arraycopy(members[0], 0, payload4, 4, 32);
 
         PrecompiledTransactionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
         assertEquals("FAILURE", result4.getStatus().causeOfError);
@@ -2527,8 +2520,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
-        for (ECKey k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k.getAddress())));
+        for (byte[] k : members) {
+            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
         }
 
         // address null
@@ -2539,16 +2532,16 @@ public class TokenBridgeContractTest {
 
         // address valid
         byte[] sig = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature()).encodeBytes();
-        byte[] newReplayer = ECKeyFac.inst().create().getAddress();
+        byte[] newReplayer = getRandomAddr();
         byte[] payload = new byte[4 + 32];
 
         System.arraycopy(sig, 0, payload, 0, 4);
         System.arraycopy(newReplayer, 0, payload, 4, 32);
         PrecompiledTransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
 
         // caller not owner - fail
-        AionAddress address1 = new AionAddress(ECKeyFac.inst().create().getAddress());
+        AionAddress address1 = new AionAddress(getRandomAddr());
         this.contract =
                 new TokenBridgeContract(
                         context(address1, CONTRACT_ADDR),
@@ -2559,7 +2552,7 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         byte[] sig2 = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature()).encodeBytes();
-        byte[] newReplayer2 = ECKeyFac.inst().create().getAddress();
+        byte[] newReplayer2 = getRandomAddr();
         byte[] payload2 = new byte[4 + 32];
 
         System.arraycopy(sig2, 0, payload2, 0, 4);
@@ -2583,7 +2576,14 @@ public class TokenBridgeContractTest {
         assertThat(this.connector.getInitialized()).isFalse();
         PrecompiledTransactionResult result =
                 this.contract.execute(ByteUtil.EMPTY_BYTE_ARRAY, 21_000L);
-        assertTrue(result.getStatus().isSuccess());
+        assertEquals(result.getStatus(), TransactionStatus.successful());
         assertThat(this.connector.getInitialized()).isTrue();
+    }
+
+    private static byte[] getRandomAddr() {
+        byte[] addr = new byte[32];
+        r.nextBytes(addr);
+        addr[0] = org.aion.precompiled.util.ByteUtil.hexStringToBytes("0xa0")[0];
+        return addr;
     }
 }

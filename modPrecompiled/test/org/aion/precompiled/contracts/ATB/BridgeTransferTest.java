@@ -7,8 +7,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Properties;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
+import java.util.Random;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -37,22 +36,7 @@ public class BridgeTransferTest {
     private TokenBridgeContract contract;
     private PrecompiledTransactionContext context;
 
-    private static final ECKey members[] =
-            new ECKey[] {
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create(),
-                ECKeyFac.inst().create()
-            };
-
-    private static byte[][] getMemberAddress(ECKey[] members) {
-        final byte[][] memberList = new byte[members.length][];
-        for (int i = 0; i < members.length; i++) {
-            memberList[i] = members[i].getAddress();
-        }
-        return memberList;
-    }
+    private static byte[][] members = new byte[5][32];
 
     private static ExternalCapabilitiesForTesting capabilities;
 
@@ -65,6 +49,13 @@ public class BridgeTransferTest {
         CapabilitiesProvider.installExternalCapabilities(capabilities);
         CONTRACT_ADDR = new AionAddress(capabilities.blake2b("contractAddress".getBytes()));
         OWNER_ADDR = new AionAddress(capabilities.blake2b("ownerAddress".getBytes()));
+
+        Random r = new Random();
+        for (int i = 0; i < members.length; i++) {
+            byte[] addr = new byte[32];
+            r.nextBytes(addr);
+            members[i] = addr;
+        }
     }
 
     @AfterClass
@@ -104,16 +95,12 @@ public class BridgeTransferTest {
         this.controller = this.contract.getController();
         this.controller.initialize();
 
-        byte[][] memberList = new byte[members.length][];
-        for (int i = 0; i < members.length; i++) {
-            memberList[i] = members[i].getAddress();
-        }
-        this.controller.ringInitialize(OWNER_ADDR.toByteArray(), memberList);
+        this.controller.ringInitialize(OWNER_ADDR.toByteArray(), members);
     }
 
     @Test
     public void testBridgeTransferOne() {
-        final byte[] senderAddress = this.members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -129,7 +116,7 @@ public class BridgeTransferTest {
 
         byte[][] signatures = new byte[members.length][];
         for (int i = 0; i < members.length; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -149,7 +136,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testBridgeNotEnoughSignatures() {
-        final byte[] senderAddress = members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -169,7 +156,7 @@ public class BridgeTransferTest {
 
         byte[][] signatures = new byte[2][];
         for (int i = 0; i < 2; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -191,7 +178,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testLowerBoundSignature() {
-        final byte[] senderAddress = members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -207,7 +194,7 @@ public class BridgeTransferTest {
 
         byte[][] signatures = new byte[3][];
         for (int i = 0; i < 3; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -229,7 +216,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testBeyondUpperBoundSignatures() {
-        final byte[] senderAddress = members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -245,7 +232,7 @@ public class BridgeTransferTest {
 
         byte[][] signatures = new byte[6][];
         for (int i = 0; i < 5; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -267,7 +254,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testTransferZeroBundle() {
-        final byte[] senderAddress = members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -281,7 +268,7 @@ public class BridgeTransferTest {
 
         byte[][] signatures = new byte[5][];
         for (int i = 0; i < 5; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -316,7 +303,7 @@ public class BridgeTransferTest {
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
         byte[][] signatures = new byte[members.length][];
         for (int i = 0; i < members.length; i++) {
-            signatures[i] = members[i].sign(bundleHash).toBytes();
+            signatures[i] = capabilities.sign(members[i], bundleHash);
         }
 
         ErrCode code = this.controller.setRelayer(OWNER_ADDR.toByteArray(), senderAddress);
@@ -333,7 +320,7 @@ public class BridgeTransferTest {
 
     @Test
     public void testDoubleBundleSend() {
-        final byte[] senderAddress = this.members[0].getAddress();
+        final byte[] senderAddress = this.members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] sourceTransactionHash = capabilities.blake2b("transaction".getBytes());
@@ -375,7 +362,7 @@ public class BridgeTransferTest {
     // Also thoroughly checks event signatures
     @Test
     public void testBundleMultipleTransferSameRecipient() {
-        final byte[] senderAddress = this.members[0].getAddress();
+        final byte[] senderAddress = members[0];
         final byte[] blockHash = capabilities.blake2b("blockHash".getBytes());
         final byte[] recipient = capabilities.blake2b("recipient".getBytes());
         final byte[] aionTransactionHash = capabilities.blake2b("aionTransactionHash".getBytes());
