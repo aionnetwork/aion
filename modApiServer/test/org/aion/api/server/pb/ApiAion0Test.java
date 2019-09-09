@@ -484,7 +484,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -614,7 +614,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -668,7 +668,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -722,7 +722,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -774,7 +774,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -826,7 +826,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -876,7 +876,7 @@ public class ApiAion0Test {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -1075,7 +1075,7 @@ public class ApiAion0Test {
                         msg,
                         1000,
                         5000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(AionImpl.instForTest().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
 

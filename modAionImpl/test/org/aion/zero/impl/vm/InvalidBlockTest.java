@@ -105,7 +105,7 @@ public class InvalidBlockTest {
                             jar,
                             5_000_000L,
                             10_000_000_000L,
-                            TransactionTypes.AVM_CREATE_CODE);
+                            TransactionTypes.AVM_CREATE_CODE, null);
 
             transactions.add(transaction);
             nonce = nonce.add(BigInteger.ONE);

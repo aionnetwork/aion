@@ -73,7 +73,7 @@ public class TxRecptLgTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
@@ -85,7 +85,7 @@ public class TxRecptLgTest {
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
@@ -113,7 +113,7 @@ public class TxRecptLgTest {
                         ByteUtil.merge(functionAA, addressB.toByteArray()),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);

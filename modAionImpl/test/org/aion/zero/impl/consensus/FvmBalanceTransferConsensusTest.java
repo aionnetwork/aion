@@ -88,7 +88,7 @@ public class FvmBalanceTransferConsensusTest {
                         new byte[] {},
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -150,7 +150,7 @@ public class FvmBalanceTransferConsensusTest {
                                 "a6f9dae1a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0"),
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -210,7 +210,7 @@ public class FvmBalanceTransferConsensusTest {
                         new byte[] {},
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -276,7 +276,7 @@ public class FvmBalanceTransferConsensusTest {
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -345,7 +345,7 @@ public class FvmBalanceTransferConsensusTest {
                         Hex.decode("abcdef0123456789"),
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // Process the transaction.
         Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
@@ -794,7 +794,7 @@ public class FvmBalanceTransferConsensusTest {
                 getNonpayableConstructorContractBytes(),
                 5_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCreateAndTransferToFvmPayableConstructorContractTx(
@@ -808,7 +808,7 @@ public class FvmBalanceTransferConsensusTest {
                 getPayableConstructorContractBytes(),
                 5_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCreatePayableFallbackContractTx() {
@@ -821,7 +821,7 @@ public class FvmBalanceTransferConsensusTest {
                 getPayableFallbackContractBytes(),
                 5_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCreateNonpayableFallbackContractTx() {
@@ -834,7 +834,7 @@ public class FvmBalanceTransferConsensusTest {
                 getNonpayableFallbackContractBytes(),
                 5_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCreatePayableContractTx() {
@@ -847,7 +847,7 @@ public class FvmBalanceTransferConsensusTest {
                 getPayableContractBytes(),
                 5_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCallNonpayableFunctionTx(
@@ -861,7 +861,7 @@ public class FvmBalanceTransferConsensusTest {
                 callNonpayableFunctionEncoding(),
                 2_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCallFallbackFunctionTx(
@@ -875,7 +875,7 @@ public class FvmBalanceTransferConsensusTest {
                 new byte[0],
                 2_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private static AionTransaction makeCallPayableFunctionTx(
@@ -889,7 +889,7 @@ public class FvmBalanceTransferConsensusTest {
                 callPayableFunctionEncoding(),
                 2_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private Pair<ImportResult, AionBlockSummary> processTransaction(

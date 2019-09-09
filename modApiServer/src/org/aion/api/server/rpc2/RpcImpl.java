@@ -73,7 +73,8 @@ public class RpcImpl implements Rpc {
                         var0.getData(),
                         CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
                         Long.MAX_VALUE,
-                        (byte)1
+                        (byte)1,
+                        null
                 );
         return AionImpl
                 .inst()

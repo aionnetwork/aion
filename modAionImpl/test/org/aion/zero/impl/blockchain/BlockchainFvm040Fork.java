@@ -194,7 +194,7 @@ public class BlockchainFvm040Fork {
                         ByteUtil.hexStringToBytes(deepContractCode),
                         1000000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block1 =
                 bc.createNewBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
@@ -215,7 +215,7 @@ public class BlockchainFvm040Fork {
                         callData,
                         1000000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block2);
@@ -234,7 +234,7 @@ public class BlockchainFvm040Fork {
                         callData,
                         1000000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block3);

@@ -51,7 +51,7 @@ public class PendingTxCacheTest {
                             ByteUtil.hexStringToBytes("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
 
             txn.add(tx);
         }
@@ -81,7 +81,7 @@ public class PendingTxCacheTest {
                             ByteUtil.hexStringToBytes(data),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
 
             txn.add(tx);
         }

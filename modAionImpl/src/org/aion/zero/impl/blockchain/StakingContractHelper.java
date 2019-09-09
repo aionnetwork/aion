@@ -99,7 +99,8 @@ public class StakingContractHelper {
                         abi,
                         2_000_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT,
+                        null);
 
         AionTxReceipt receipt = callConstant(callTx);
 
@@ -171,7 +172,8 @@ public class StakingContractHelper {
                         abi,
                         2_000_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT,
+                        null);
 
         AionTxReceipt receipt = callConstant(callTx);
 

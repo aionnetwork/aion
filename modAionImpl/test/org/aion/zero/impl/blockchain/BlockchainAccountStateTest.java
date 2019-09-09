@@ -59,7 +59,7 @@ public class BlockchainAccountStateTest {
                             ZERO_BYTE,
                             21000,
                             1,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -123,7 +123,7 @@ public class BlockchainAccountStateTest {
                             ZERO_BYTE,
                             21000,
                             1,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
         }
 

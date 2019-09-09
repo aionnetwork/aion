@@ -122,7 +122,7 @@ public class VMTxStateAlignTest {
                 new byte[10],
                 2_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     // Deploys the Ticker.sol contract.
@@ -138,7 +138,7 @@ public class VMTxStateAlignTest {
                 contractBytes,
                 5_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction makeFvmContractCallTransaction(
@@ -155,7 +155,7 @@ public class VMTxStateAlignTest {
                 callBytes,
                 2_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionBlock genNewBlock(List<AionTransaction> transactions, StandaloneBlockchain bc) {

@@ -120,7 +120,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         nonce = nonce.add(BigInteger.ONE);
         AionTransaction tx2 =
@@ -132,7 +132,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
@@ -158,7 +158,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes("0x26121ff0"),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);
@@ -185,7 +185,7 @@ public class InternalTransactionTest {
                                 new DataWord(80_000).getData()),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx4), false);
         result = bc.tryToConnect(context.block);
@@ -213,7 +213,7 @@ public class InternalTransactionTest {
                                 new DataWord(20_000).getData()),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx6), false);
         result = bc.tryToConnect(context.block);
@@ -263,7 +263,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ImportResult result = bc.tryToConnect(context.block);
@@ -288,7 +288,7 @@ public class InternalTransactionTest {
                                 new DataWord(2).getData()),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx2);
@@ -336,7 +336,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
@@ -383,7 +383,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block parentBlock = bc.getBestBlock();
 
@@ -411,7 +411,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         parentBlock = bc.getBestBlock();
         newBlock =
@@ -438,7 +438,7 @@ public class InternalTransactionTest {
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         System.out.println("contractaddr: " + TxUtil.calculateContractAddress(tx));
 

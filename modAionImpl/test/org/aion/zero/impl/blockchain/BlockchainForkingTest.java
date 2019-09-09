@@ -750,7 +750,7 @@ public class BlockchainForkingTest {
                 ByteUtil.hexStringToBytes(contractCode),
                 5_000_000L,
                 10_123_456_789L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction callSetValue(
@@ -770,7 +770,7 @@ public class BlockchainForkingTest {
                 Hex.decode(contractCode),
                 2_000_000L,
                 10_123_456_789L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction callSetValue2(
@@ -794,7 +794,7 @@ public class BlockchainForkingTest {
                 Hex.decode(contractCode),
                 2_000_000L,
                 10_123_456_789L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /**
@@ -1031,7 +1031,7 @@ public class BlockchainForkingTest {
                 statefulnessAVM,
                 5_000_000L,
                 10_123_456_789L,
-                TransactionTypes.AVM_CREATE_CODE);
+                TransactionTypes.AVM_CREATE_CODE, null);
     }
 
     private List<AionTransaction> callStatefulnessAVM(
@@ -1051,7 +1051,7 @@ public class BlockchainForkingTest {
                             ABIUtil.encodeMethodArguments("incrementCounter"),
                             2_000_000L,
                             10_123_456_789L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             txs.add(transaction);
             // increment nonce
             nonce = nonce.add(BigInteger.ONE);
@@ -1067,7 +1067,7 @@ public class BlockchainForkingTest {
                         ABIUtil.encodeMethodArguments("getCount"),
                         2_000_000L,
                         10_123_456_789L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         txs.add(transaction);
 
         return txs;

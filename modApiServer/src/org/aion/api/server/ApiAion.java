@@ -464,7 +464,7 @@ public abstract class ApiAion extends Api {
                         _params.getData(),
                         _params.getNrg(),
                         _params.getNrgPrice(),
-                        _params.getType());
+                        _params.getType(), null);
         AionTxReceipt rec =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return rec.getTransactionOutput();
@@ -482,7 +482,7 @@ public abstract class ApiAion extends Api {
                         params.getData(),
                         params.getNrg(),
                         params.getNrgPrice(),
-                        params.getType());
+                        params.getType(), null);
 
         AionTxReceipt receipt =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
@@ -527,7 +527,7 @@ public abstract class ApiAion extends Api {
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
-                                _params.getType());
+                                _params.getType(), null);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
@@ -595,7 +595,7 @@ public abstract class ApiAion extends Api {
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
-                                _params.getType());
+                                _params.getType(), null);
 
                 return (new ApiTxResponse(
                         pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
@@ -657,7 +657,7 @@ public abstract class ApiAion extends Api {
                         _params.getData(),
                         _params.getNrg(),
                         _params.getNrgPrice(),
-                        _params.getType());
+                        _params.getType(), null);
             }
         } catch (Exception ex) {
             if (LOG.isDebugEnabled()) {

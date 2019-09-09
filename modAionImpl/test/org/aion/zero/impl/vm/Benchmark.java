@@ -105,7 +105,7 @@ public class Benchmark {
                 deployer,
                 nrg,
                 nrgPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         // save contract address
         contract = TxUtil.calculateContractAddress(tx);
@@ -147,7 +147,7 @@ public class Benchmark {
                     data,
                     nrg,
                     nrgPrice,
-                    TransactionTypes.DEFAULT);
+                    TransactionTypes.DEFAULT, null);
 
             list.add(tx);
         }
@@ -231,7 +231,7 @@ public class Benchmark {
                     data,
                     nrg,
                     nrgPrice,
-                    TransactionTypes.DEFAULT);
+                    TransactionTypes.DEFAULT, null);
 
             AionTxExecSummary summary = executeTransaction(tx);
             assertFalse(summary.isFailed());

@@ -113,7 +113,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -158,7 +158,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -199,7 +199,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -249,7 +249,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -272,7 +272,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -295,7 +295,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(E, tx.getDestinationAddress());
 
@@ -331,7 +331,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -377,7 +377,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -423,7 +423,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -446,7 +446,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -468,7 +468,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(E, tx.getDestinationAddress());
 
@@ -504,7 +504,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -552,7 +552,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertEquals(deployer, tx.getSenderAddress());
         assertEquals(D, tx.getDestinationAddress());
 
@@ -596,7 +596,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -647,7 +647,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -693,7 +693,7 @@ public class OpcodeIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         BlockContext context =
                 blockchain.createNewBlockContext(
@@ -737,7 +737,7 @@ public class OpcodeIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         AionAddress contract =
                 deployContract(
                         repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce);

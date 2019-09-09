@@ -76,7 +76,7 @@ public class AvmHelloWorldTest {
                         jar,
                         5_000_000,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
@@ -111,7 +111,7 @@ public class AvmHelloWorldTest {
                         jar,
                         5_000_000,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
@@ -140,7 +140,7 @@ public class AvmHelloWorldTest {
                         call,
                         2_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         block =
                 this.blockchain.createNewBlock(
@@ -169,7 +169,7 @@ public class AvmHelloWorldTest {
                         jar,
                         5_000_000,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         List<AionTransaction> ls = new ArrayList<>();
         ls.add(transaction);
@@ -184,7 +184,7 @@ public class AvmHelloWorldTest {
                         call,
                         2_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         ls.add(transaction2);
 

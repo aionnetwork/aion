@@ -161,7 +161,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -226,7 +226,7 @@ public class ContractIntegTest {
                         new byte[0],
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -277,7 +277,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -327,7 +327,7 @@ public class ContractIntegTest {
                         new byte[0],
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -376,7 +376,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -426,7 +426,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -477,7 +477,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -528,7 +528,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
 
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
@@ -547,7 +547,7 @@ public class ContractIntegTest {
                             Hex.decode(getMsgFunctionHash),
                             nrg,
                             nrgPrice,
-                            txType);
+                            txType, null);
             assertFalse(tx.isContractCreationTransaction());
 
             AionBlock block = makeBlock(tx);
@@ -580,7 +580,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -604,7 +604,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -630,7 +630,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -661,7 +661,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -687,7 +687,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -720,7 +720,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -744,7 +744,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -776,7 +776,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -805,7 +805,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -839,7 +839,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -867,7 +867,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -902,7 +902,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress multiFeatureContract =
@@ -929,7 +929,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         nonce = nonce.add(BigInteger.ONE);
         AionAddress callerContract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
@@ -948,7 +948,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -980,7 +980,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -1012,7 +1012,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -1040,7 +1040,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1073,7 +1073,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         block = makeBlock(tx);
@@ -1152,7 +1152,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
 
         // Mock up the repo so that the contract address already exists.
         AionRepositoryCache repo = mock(AionRepositoryCache.class);
@@ -1201,7 +1201,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -1222,7 +1222,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         BigInteger senderBalance = repo.getBalance(deployer);
@@ -1260,7 +1260,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         repo = blockchain.getRepository().startTracking();
@@ -1300,7 +1300,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
 
@@ -1323,7 +1323,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx2.isContractCreationTransaction());
         ls.add(tx2);
 
@@ -1374,7 +1374,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         AionAddress contract =
@@ -1398,7 +1398,7 @@ public class ContractIntegTest {
                         input,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1437,7 +1437,7 @@ public class ContractIntegTest {
                         new byte[0],
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1471,7 +1471,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -1520,7 +1520,7 @@ public class ContractIntegTest {
                         new byte[0],
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1554,7 +1554,7 @@ public class ContractIntegTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        txType);
+                        txType, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -1610,7 +1610,7 @@ public class ContractIntegTest {
                         new byte[0],
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
         AionBlock block = makeBlock(tx);
@@ -1653,7 +1653,7 @@ public class ContractIntegTest {
                         call,
                         2_000_000,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         block =
                 this.blockchain.createNewBlock(
@@ -1972,7 +1972,7 @@ public class ContractIntegTest {
                         jar,
                         5_000_000L,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
                 this.blockchain.createNewBlock(

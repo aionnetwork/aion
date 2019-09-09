@@ -41,7 +41,7 @@ public enum RpcError {
     // custom error codes
     UNAUTHORIZED(1, "Unauthorized"),
     NOT_ALLOWED(2, "Action not allowed"),
-    EXECUTION_ERROR(3, "Execution error");
+    EXECUTION_ERROR(3, "Execution error"),
 
     private final int code;
     private final String message;

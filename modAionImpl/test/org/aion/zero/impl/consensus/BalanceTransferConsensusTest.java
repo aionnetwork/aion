@@ -94,7 +94,8 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        (byte) 11); // legal type before the fork
+                        (byte) 11, // legal type before the fork
+                        null);
 
         // check that the transaction is valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
@@ -142,7 +143,8 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        (byte) 11); // illegal type after the fork
+                        (byte) 11,  // illegal type after the fork
+                        null);
 
         // check that the transaction is not valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
@@ -167,8 +169,8 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes
-                                .AVM_CREATE_CODE); // illegal type for the balance transfer after
+                        TransactionTypes.AVM_CREATE_CODE, // illegal type for the balance transfer after
+                        null);
         // the fork
 
         // check that the transaction is not valid
@@ -194,7 +196,8 @@ public class BalanceTransferConsensusTest {
                         new byte[0],
                         2_000_000,
                         ENERGY_PRICE,
-                        TransactionTypes.DEFAULT); // the only valid type after the fork
+                        TransactionTypes.DEFAULT, // the only valid type after the fork
+                        null);
 
         // check that the transaction is not valid
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
@@ -380,7 +383,7 @@ public class BalanceTransferConsensusTest {
                 new byte[] {0x1, 0x2, 0x3},
                 2_000_000,
                 ENERGY_PRICE,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private BigInteger getBalance(AionAddress address) {

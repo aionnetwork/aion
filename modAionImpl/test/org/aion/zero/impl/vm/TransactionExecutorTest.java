@@ -104,7 +104,7 @@ public class TransactionExecutorTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertTrue(tx.isContractCreationTransaction());
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
@@ -154,7 +154,7 @@ public class TransactionExecutorTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
@@ -201,7 +201,7 @@ public class TransactionExecutorTest {
                         callingCode,
                         1_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -231,7 +231,7 @@ public class TransactionExecutorTest {
                         callingCode,
                         1_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
         context =
@@ -282,7 +282,7 @@ public class TransactionExecutorTest {
                         callingCode,
                         1_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
         BlockContext context =
@@ -318,7 +318,7 @@ public class TransactionExecutorTest {
                         deployCode,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         assertTrue(tx.isContractCreationTransaction());
 
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));

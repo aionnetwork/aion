@@ -183,7 +183,7 @@ public class BlockchainAccountStateBenchmark {
                             ZERO_BYTE,
                             21000,
                             1,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
@@ -253,7 +253,7 @@ public class BlockchainAccountStateBenchmark {
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
                         1000000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block =
                 bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
@@ -290,7 +290,7 @@ public class BlockchainAccountStateBenchmark {
                             callData,
                             200000,
                             1,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
         }

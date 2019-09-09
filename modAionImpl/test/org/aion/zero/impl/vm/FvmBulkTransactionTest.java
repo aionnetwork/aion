@@ -155,7 +155,7 @@ public class FvmBulkTransactionTest {
                 contractBytes,
                 5_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction makeFvmContractCallTransaction(
@@ -172,7 +172,7 @@ public class FvmBulkTransactionTest {
                 callBytes,
                 2_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private int getDeployedTickerCountValue(ECKey sender, BigInteger nonce, AionAddress contract) {
@@ -189,7 +189,7 @@ public class FvmBulkTransactionTest {
                         callBytes,
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));

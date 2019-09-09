@@ -173,7 +173,7 @@ public class AlternatingVmBlockTest {
                 jar,
                 5_000_000,
                 1,
-                TransactionTypes.AVM_CREATE_CODE);
+                TransactionTypes.AVM_CREATE_CODE, null);
     }
 
     private byte[] getJarBytes() {
@@ -194,7 +194,7 @@ public class AlternatingVmBlockTest {
                 contractBytes,
                 5_000_000,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private long getAvmContractDeploymentCost(BigInteger nonce) {

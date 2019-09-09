@@ -83,7 +83,7 @@ public class PendingStateTest {
                         new byte[0],
                         1_000_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
     }
@@ -101,7 +101,7 @@ public class PendingStateTest {
                         new byte[0],
                         1_000_000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.INVALID_TX_NRG_PRICE);
     }
@@ -125,7 +125,7 @@ public class PendingStateTest {
                         jar,
                         5_000_000,
                         10_000_000_000L,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         assertEquals(pendingState.addPendingTransaction(transaction), TxResponse.SUCCESS);
     }
@@ -149,7 +149,7 @@ public class PendingStateTest {
                         jar,
                         5_000_000,
                         10_000_000_000L,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         assertEquals(pendingState.addPendingTransaction(createTransaction), TxResponse.SUCCESS);
 
@@ -179,7 +179,7 @@ public class PendingStateTest {
                         call,
                         2_000_000,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(callTransaction), TxResponse.SUCCESS);
     }
@@ -194,7 +194,7 @@ public class PendingStateTest {
                 1000_000L,
                 10_000_000_000L,
                 TransactionTypes.DEFAULT,
-                timeStamp);
+                timeStamp, null);
     }
 
     private AionTransaction genTransaction(byte[] nonce) {
@@ -206,7 +206,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     @Test
@@ -264,7 +264,7 @@ public class PendingStateTest {
                     ByteUtils.fromHexString("1"),
                     1000_000L,
                     10_000_000_000L,
-                    TransactionTypes.DEFAULT);
+                    TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.REPAYTX_LOWPRICE);
@@ -318,7 +318,7 @@ public class PendingStateTest {
                         ByteUtils.fromHexString("1"),
                         1000_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.CACHED_NONCE);
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.ALREADY_CACHED);
@@ -335,7 +335,7 @@ public class PendingStateTest {
                         ByteUtils.fromHexString("1"),
                         10L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.INVALID_TX);
     }
@@ -351,7 +351,7 @@ public class PendingStateTest {
                         ByteUtils.fromHexString("1"),
                         1000_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
                 AionTransaction.create(
@@ -362,7 +362,7 @@ public class PendingStateTest {
                         ByteUtils.fromHexString("2"),
                         1000_000L,
                         20_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 
@@ -387,7 +387,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -398,7 +398,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 19_999_999_999L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.REPAYTX_LOWPRICE, pendingState.addPendingTransaction(tx2));
@@ -416,7 +416,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -427,7 +427,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 20_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx2));
@@ -456,7 +456,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -467,7 +467,7 @@ public class PendingStateTest {
                 ByteUtils.fromHexString("1"),
                 1000_000L,
                 20_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.REPAID, pendingState.addPendingTransaction(tx2));
@@ -499,7 +499,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -510,7 +510,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         /* tx1 and tx3 should use the entire balance. If tx2 is removed properly, tx3 should be
          * able to replace it in the pending state */
@@ -523,7 +523,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 20_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         // This would execute fine on top of tx2, but should have insufficient balance on top of tx3
         AionTransaction tx4 =
@@ -535,7 +535,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
@@ -569,7 +569,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -580,7 +580,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         /* tx1 and tx3 should use the entire balance. If tx2 is removed properly, tx3 should be
          * able to replace it in the pending state */
@@ -593,7 +593,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 40_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         // This would execute fine on top of tx2, but should have insufficient balance on top of tx3
         AionTransaction tx4 =
@@ -605,7 +605,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 40_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx5 =
             AionTransaction.create(
@@ -616,7 +616,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
@@ -651,7 +651,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx2 =
             AionTransaction.create(
@@ -662,7 +662,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionTransaction tx3 =
             AionTransaction.create(
@@ -673,7 +673,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 40_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         // This tx will get dropped after tx3 is rejected
         AionTransaction tx4 =
@@ -685,7 +685,7 @@ public class PendingStateTest {
                 new byte[0],
                 21000,
                 10_000_000_000L,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx1));
         assertEquals(TxResponse.SUCCESS, pendingState.addPendingTransaction(tx2));
@@ -714,7 +714,7 @@ public class PendingStateTest {
                         ByteUtils.fromHexString("1"),
                         21_000L,
                         10_000_000_000L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 

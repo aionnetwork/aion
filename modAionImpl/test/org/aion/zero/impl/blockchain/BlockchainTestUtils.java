@@ -71,7 +71,7 @@ public class BlockchainTestUtils {
                                 ZERO_BYTE,
                                 NRG,
                                 NRG_PRICE,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 transactions.add(newTx);
                 accountNonce = accountNonce.add(BigInteger.ONE);
                 nonces.put(key, accountNonce);

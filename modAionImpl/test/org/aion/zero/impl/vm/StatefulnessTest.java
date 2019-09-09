@@ -217,7 +217,7 @@ public class StatefulnessTest {
                         jar,
                         5_000_000,
                         this.energyPrice,
-                        txType);
+                        txType, null);
 
         return sendTransactions(transaction);
     }
@@ -232,7 +232,7 @@ public class StatefulnessTest {
                         abiEncodeMethodCall(method, arguments),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         return sendTransactions(transaction);
     }
@@ -247,7 +247,7 @@ public class StatefulnessTest {
                         new byte[0],
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         return sendTransactions(transaction);
     }

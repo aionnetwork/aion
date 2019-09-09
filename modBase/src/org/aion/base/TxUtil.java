@@ -14,6 +14,7 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
+import org.aion.util.bytes.ByteUtil;
 import org.slf4j.Logger;
 
 public final class TxUtil {
@@ -83,7 +84,13 @@ public final class TxUtil {
         return new AionAddress(buf.array());
     }
 
-    private static final int RLP_TX_NONCE = 0,
+    /**
+     * The value to use for the {@link #RLP_TX_EXTENSIONS} field if beacon hash
+     * extension is used.
+     */
+    public static final byte BEACON_HASH_EXTENSION = 1;
+
+    public static final int RLP_TX_NONCE = 0,
             RLP_TX_TO = 1,
             RLP_TX_VALUE = 2,
             RLP_TX_DATA = 3,
@@ -91,8 +98,31 @@ public final class TxUtil {
             RLP_TX_NRG = 5,
             RLP_TX_NRGPRICE = 6,
             RLP_TX_TYPE = 7,
-            RLP_TX_SIG = 8;
+            RLP_TX_SIG = 8,
+            RLP_TX_EXTENSIONS = 9,
+            RLP_TX_BEACON_HASH = 10;
 
+    /**
+     * Decode the given rlp encoding into an {@link AionTransaction}.
+     *
+     * The given encoding is expected to always be an RLP list of size 10 or 11.
+     * The expected elements and their indices in the list :
+     *
+     * {@link #RLP_TX_NONCE} - nonce
+     * {@link #RLP_TX_TO} - destination address
+     * {@link #RLP_TX_VALUE} - transfer value
+     * {@link #RLP_TX_DATA} - transaction data/input
+     * {@link #RLP_TX_TIMESTAMP} - timestamp
+     * {@link #RLP_TX_NRG} - energy
+     * {@link #RLP_TX_NRGPRICE} - energy price
+     * {@link #RLP_TX_TYPE} - transaction type
+     * {@link #RLP_TX_SIG} - signature
+     * {@link #RLP_TX_BEACON_HASH} - Optional: beacon hash.  If absent,
+     *                               this element is not present in the list.
+     *
+     * @param rlpEncoding RLP encoding of an Aion transaction
+     * @return Aion Transaction represented by the given RLP encoding
+     */
     public static AionTransaction decode(byte[] rlpEncoding) {
 
         RLPList decodedTxList;
@@ -140,6 +170,28 @@ public final class TxUtil {
             return null;
         }
 
+        final byte[] beaconHash;
+        if(tx.size() - 1 >= RLP_TX_EXTENSIONS) {
+            // there are extensions
+            // today -- the only one that exists is beacon hash extension
+            byte extensions = tx.get(RLP_TX_EXTENSIONS).getRLPData()[0];
+            if(extensions != BEACON_HASH_EXTENSION) {
+                throw new IllegalArgumentException("TxUtil#decode: unknown extension value: " +
+                        Byte.toString(extensions));
+            }
+
+            // the beacon hash should be present -- check that it really does
+            if(tx.size() - 1 != RLP_TX_BEACON_HASH) {
+                // malformed
+                throw new IllegalArgumentException("TxUtil#decode: malformed encoding: " +
+                        "BEACON_HASH_EXTENSION was specified, but no beacon hash was provided");
+            }
+            beaconHash = tx.get(RLP_TX_BEACON_HASH).getRLPData();
+        } else {
+            // the beacon hash is absent
+            beaconHash = null;
+        }
+
         try {
             return AionTransaction.createFromRlp(
                 nonce,
@@ -152,7 +204,8 @@ public final class TxUtil {
                 type,
                 timeStamp,
                 signature,
-                rlpEncoding);
+                rlpEncoding,
+                beaconHash);
         }
         catch (Exception e) {
             LOG.error("tx -> invalid parameter decoded in rlpEncoding");
@@ -169,7 +222,10 @@ public final class TxUtil {
             byte[] timeStamp,
             long energyLimit,
             long energyPrice,
-            byte type) {
+            byte type,
+            byte[] beaconHash) {
+        // see https://aionnetwork.atlassian.net/wiki/spaces/TE/pages/292389035/Transaction+RLP+Encoding
+        // for decoding/encoding rules
 
         byte[] nonceEncoded = RLP.encodeElement(nonce);
         byte[] destinationEncoded = RLP.encodeElement(destination == null ? null : destination.toByteArray());
@@ -180,17 +236,43 @@ public final class TxUtil {
         byte[] energyPriceEncoded = RLP.encodeLong(energyPrice);
         byte[] typeEncoded = RLP.encodeByte(type);
 
-        return RLP.encodeList(
-                nonceEncoded,
-                destinationEncoded,
-                valueEncoded,
-                dataEncoded,
-                timeStampEncoded,
-                energyLimitEncoded,
-                energyPriceEncoded,
-                typeEncoded);
+        if(beaconHash == null) {
+            return RLP.encodeList(
+                    nonceEncoded,
+                    destinationEncoded,
+                    valueEncoded,
+                    dataEncoded,
+                    timeStampEncoded,
+                    energyLimitEncoded,
+                    energyPriceEncoded,
+                    typeEncoded);
+        } else {
+            // may use different extensions in the future, but
+            // today, the only extension is beacon hash, which
+            // is represented by 0x01.
+            byte[] extensionsEncoded = RLP.encodeByte(BEACON_HASH_EXTENSION);
+
+            byte[] beaconHashEncoded = RLP.encodeElement(beaconHash);
+            return RLP.encodeList(
+                    nonceEncoded,
+                    destinationEncoded,
+                    valueEncoded,
+                    dataEncoded,
+                    timeStampEncoded,
+                    energyLimitEncoded,
+                    energyPriceEncoded,
+                    typeEncoded,
+                    extensionsEncoded,
+                    beaconHashEncoded);
+        }
     }
 
+    /**
+     * Encode the given {@link AionTransaction} into an RLP encoding.
+     *
+     * The only parameter allowed to be null is beaconHash.
+     *
+     */
     static byte[] rlpEncode(
             byte[] nonce,
             AionAddress destination,
@@ -200,7 +282,10 @@ public final class TxUtil {
             long energyLimit,
             long energyPrice,
             byte type,
-            ISignature signature) {
+            ISignature signature,
+            byte[] beaconHash) {
+        // see https://aionnetwork.atlassian.net/wiki/spaces/TE/pages/292389035/Transaction+RLP+Encoding
+        // for decoding/encoding rules
 
         byte[] nonceEncoded = RLP.encodeElement(nonce);
         byte[] destinationEncoded = RLP.encodeElement(destination == null ? null : destination.toByteArray());
@@ -212,15 +297,35 @@ public final class TxUtil {
         byte[] typeEncoded = RLP.encodeByte(type);
         byte[] signatureEncoded = RLP.encodeElement(signature.toBytes());
 
-        return RLP.encodeList(
-                nonceEncoded,
-                destinationEncoded,
-                valueEncoded,
-                dataEncoded,
-                timeStampEncoded,
-                energyLimitEncoded,
-                energyPriceEncoded,
-                typeEncoded,
-                signatureEncoded);
+        if(beaconHash == null) {
+            return RLP.encodeList(
+                    nonceEncoded,
+                    destinationEncoded,
+                    valueEncoded,
+                    dataEncoded,
+                    timeStampEncoded,
+                    energyLimitEncoded,
+                    energyPriceEncoded,
+                    typeEncoded,
+                    signatureEncoded);
+        } else {
+            // may use different extensions in the future, but
+            // today, the only extension is beacon hash, which
+            // is represented by 0x01.
+            byte[] extensionsEncoded = RLP.encodeByte(BEACON_HASH_EXTENSION);
+            byte[] beaconHashEncoded = RLP.encodeElement(beaconHash);
+            return RLP.encodeList(
+                    nonceEncoded,
+                    destinationEncoded,
+                    valueEncoded,
+                    dataEncoded,
+                    timeStampEncoded,
+                    energyLimitEncoded,
+                    energyPriceEncoded,
+                    typeEncoded,
+                    signatureEncoded,
+                    extensionsEncoded,
+                    beaconHashEncoded);
+        }
     }
 }

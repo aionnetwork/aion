@@ -131,7 +131,7 @@ public class OldTxExecutorTest {
                 data,
                 nrg,
                 nrgPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionBlock block = createDummyBlock();
 
@@ -177,7 +177,7 @@ public class OldTxExecutorTest {
                 data,
                 nrg,
                 nrgPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
 
         AionBlock block = createDummyBlock();
 
@@ -221,7 +221,7 @@ public class OldTxExecutorTest {
                         data,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block = createDummyBlock();
 
@@ -264,7 +264,7 @@ public class OldTxExecutorTest {
                         data,
                         nrg,
                         nrgPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block = createDummyBlock();
 

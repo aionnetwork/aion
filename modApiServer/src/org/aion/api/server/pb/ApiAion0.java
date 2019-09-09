@@ -424,7 +424,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         BigInteger.ZERO,
                                         BigInteger.ZERO,
                                         req.getNrgLimit(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        null /* beacon hash */);
 
                         LOG.debug(
                                 "ApiAion0.process.ContractDeploy - ArgsTxCall: [{}] ",
@@ -790,7 +791,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         new BigInteger(req.getNonce().toByteArray()),
                                         new BigInteger(req.getValue().toByteArray()),
                                         req.getNrg(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        null /* beacon hash */);
 
                         result = this.sendTransaction(params);
                     } catch (InvalidProtocolBufferException e) {
@@ -945,7 +947,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         BigInteger.ZERO,
                                         value,
                                         req.getNrg(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        null /* beacon hash */);
                         Message.rsp_call rsp =
                                 Message.rsp_call
                                         .newBuilder()
@@ -1593,7 +1596,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         BigInteger.ZERO,
                                         new BigInteger(req.getValue().toByteArray()),
                                         req.getNrg(),
-                                        req.getNrgPrice());
+                                        req.getNrgPrice(),
+                                        null /* beacon hash */);
 
                         result = this.estimateNrg(params);
                     } catch (InvalidProtocolBufferException e) {

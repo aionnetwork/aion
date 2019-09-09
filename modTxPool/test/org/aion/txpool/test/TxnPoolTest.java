@@ -117,7 +117,7 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         10000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         return Collections.singletonList(new PooledTransaction(tx, energyConsumed));
     }
@@ -230,7 +230,7 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         10000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         return new PooledTransaction(tx, energyConsumed);
     }
 
@@ -245,7 +245,7 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         10000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         return new PooledTransaction(tx, energyConsumed);
     }
 
@@ -259,7 +259,7 @@ public class TxnPoolTest {
                 10000L,
                 1L,
                 TransactionTypes.DEFAULT,
-                timeStamp);
+                timeStamp, null);
         return new PooledTransaction(tx, energyConsumed);
     }
 
@@ -273,7 +273,7 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         10000L,
                         r.nextInt(1000),
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         return new PooledTransaction(tx, energyConsumed);
     }
 
@@ -704,7 +704,7 @@ public class TxnPoolTest {
                         ByteUtils.fromHexString("1"),
                         10000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         PooledTransaction pooledTx = new PooledTransaction(txn, 0);
 
@@ -824,7 +824,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(txn, 100);
             txnl.add(pooledTx);
         }
@@ -865,7 +865,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -909,7 +909,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(txn, i + 1);
             txnl.add(pooledTx);
         }
@@ -1009,7 +1009,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -1055,7 +1055,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -1083,7 +1083,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -1132,7 +1132,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -1185,7 +1185,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(txn, 100);
             txnl.add(pooledTx);
 
@@ -1249,7 +1249,7 @@ public class TxnPoolTest {
                                 ByteUtils.fromHexString("1"),
                                 10000L,
                                 1L,
-                                TransactionTypes.DEFAULT);
+                                TransactionTypes.DEFAULT, null);
                 PooledTransaction pooledTx = new PooledTransaction(txn, 100);
                 txnl.add(pooledTx);
             }
@@ -1294,7 +1294,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(tx, 1);
             txs.add(pooledTx);
         }
@@ -1328,7 +1328,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(tx, 1);
             txs.add(pooledTx);
         }
@@ -1358,7 +1358,7 @@ public class TxnPoolTest {
                             ByteUtils.fromHexString("1"),
                             10000L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             PooledTransaction pooledTx = new PooledTransaction(tx, 100);
             txs.add(pooledTx);
         }

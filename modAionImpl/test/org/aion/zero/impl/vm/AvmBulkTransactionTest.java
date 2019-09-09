@@ -99,7 +99,7 @@ public class AvmBulkTransactionTest {
                         new byte[0],
                         5_000_000L,
                         10_123_456_789L,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
@@ -202,7 +202,7 @@ public class AvmBulkTransactionTest {
                         ByteUtil.hexStringToBytes(contractCode),
                         5_000_000L,
                         energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
@@ -224,7 +224,7 @@ public class AvmBulkTransactionTest {
                         Hex.decode("62eb702a00000000000000000000000000000006"),
                         2_000_000L,
                         energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
         transactions.add(contractCallTx);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
@@ -403,7 +403,7 @@ public class AvmBulkTransactionTest {
                 jar,
                 5_000_000,
                 this.energyPrice,
-                TransactionTypes.AVM_CREATE_CODE);
+                TransactionTypes.AVM_CREATE_CODE, null);
     }
 
     private AionTransaction makeAvmContractCallTransaction(
@@ -416,7 +416,7 @@ public class AvmBulkTransactionTest {
                 abiEncodeMethodCall("incrementCounter"),
                 2_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction makeValueTransferTransaction(
@@ -430,7 +430,7 @@ public class AvmBulkTransactionTest {
                 new byte[0],
                 2_000_000,
                 this.energyPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private int getDeployedStatefulnessCountValue(
@@ -445,7 +445,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));

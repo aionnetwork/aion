@@ -125,7 +125,7 @@ public class AvmLogAndInternalTransactionTest {
                         data,
                         2_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block =
                 this.blockchain.createBlock(
@@ -148,7 +148,7 @@ public class AvmLogAndInternalTransactionTest {
                         jar,
                         5_000_000,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
                 this.blockchain.createBlock(

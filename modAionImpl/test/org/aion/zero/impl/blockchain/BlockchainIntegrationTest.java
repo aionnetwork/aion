@@ -131,7 +131,7 @@ public class BlockchainIntegrationTest {
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         1L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -169,7 +169,7 @@ public class BlockchainIntegrationTest {
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
@@ -244,7 +244,7 @@ public class BlockchainIntegrationTest {
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         // create a new block containing a single transaction (tx)
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -281,7 +281,7 @@ public class BlockchainIntegrationTest {
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
                         1L,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block =
                 blockchain.createNewBlock(

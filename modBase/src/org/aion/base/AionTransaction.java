@@ -38,6 +38,9 @@ public class AionTransaction {
     /** rlpEncoding is saved because it is needed to calculate the transactionHash */
     private final byte[] rlpEncoding;
 
+    /** beacon hash */
+    private final byte[] beaconHash;
+
     /** Constructor for AionTransaction */
     private AionTransaction(
             byte[] nonce,
@@ -52,7 +55,8 @@ public class AionTransaction {
             byte[] transactionHashWithoutSignature,
             ISignature signature,
             byte[] rlpEncoding,
-            byte[] transactionHash) {
+            byte[] transactionHash,
+            byte[] beaconHash) {
 
         this.nonce = nonce;
         this.value = value;
@@ -84,6 +88,8 @@ public class AionTransaction {
                             energyLimit,
                             energyPrice);
         }
+
+        this.beaconHash = beaconHash;
     }
 
     /** Factory method used by most of the kernel to create AionTransactions */
@@ -95,7 +101,8 @@ public class AionTransaction {
             byte[] data,
             long energyLimit,
             long energyPrice,
-            byte type) {
+            byte type,
+            byte[] beaconHash) {
 
         byte[] timeStamp = ByteUtil.longToBytes(TimeInstant.now().toEpochMicro());
 
@@ -108,7 +115,8 @@ public class AionTransaction {
                         timeStamp,
                         energyLimit,
                         energyPrice,
-                        type));
+                        type,
+                        beaconHash));
 
         ISignature signature = key.sign(transactionHashWithoutSignature);
 
@@ -122,7 +130,8 @@ public class AionTransaction {
                         energyLimit,
                         energyPrice,
                         type,
-                        signature);
+                        signature,
+                        beaconHash);
 
         byte[] transactionHash = HashUtil.h256(rlpEncoding);
 
@@ -139,7 +148,8 @@ public class AionTransaction {
                 transactionHashWithoutSignature,
                 signature,
                 rlpEncoding,
-                transactionHash);
+                transactionHash,
+                beaconHash);
     }
 
     /** Factory method used by ApiAion to perform ethCalls */
@@ -151,7 +161,8 @@ public class AionTransaction {
             byte[] data,
             long energyLimit,
             long energyPrice,
-            byte type) {
+            byte type,
+            byte[] beaconHash) {
 
         ECKey key = ECKeyFac.inst().create();
 
@@ -166,7 +177,8 @@ public class AionTransaction {
                         timeStamp,
                         energyLimit,
                         energyPrice,
-                        type));
+                        type,
+                        beaconHash));
 
         ISignature signature = key.sign(transactionHashWithoutSignature);
 
@@ -180,7 +192,8 @@ public class AionTransaction {
                         energyLimit,
                         energyPrice,
                         type,
-                        signature);
+                        signature,
+                        beaconHash);
 
         byte[] transactionHash = HashUtil.h256(rlpEncoding);
 
@@ -197,7 +210,8 @@ public class AionTransaction {
                 transactionHashWithoutSignature,
                 signature,
                 rlpEncoding,
-                transactionHash);
+                transactionHash,
+                beaconHash);
     }
 
     /** Factory method used by some tests to create multiple transactions with the same timestamp */
@@ -210,7 +224,8 @@ public class AionTransaction {
             long energyLimit,
             long energyPrice,
             byte type,
-            byte[] timeStamp) {
+            byte[] timeStamp,
+            byte[] beaconHash) {
 
         byte[] transactionHashWithoutSignature =
                 HashUtil.h256(TxUtil.rlpEncodeWithoutSignature(
@@ -221,7 +236,8 @@ public class AionTransaction {
                         timeStamp,
                         energyLimit,
                         energyPrice,
-                        type));
+                        type,
+                        beaconHash));
 
         ISignature signature = key.sign(transactionHashWithoutSignature);
 
@@ -235,7 +251,8 @@ public class AionTransaction {
                         energyLimit,
                         energyPrice,
                         type,
-                        signature);
+                        signature,
+                        beaconHash);
 
         byte[] transactionHash = HashUtil.h256(rlpEncoding);
 
@@ -252,7 +269,8 @@ public class AionTransaction {
                 transactionHashWithoutSignature,
                 signature,
                 rlpEncoding,
-                transactionHash);
+                transactionHash,
+                beaconHash);
     }
 
     /**
@@ -271,7 +289,8 @@ public class AionTransaction {
             byte type,
             byte[] timeStamp,
             ISignature signature,
-            byte[] rlpEncoding) {
+            byte[] rlpEncoding,
+            byte[] beaconHash) {
 
         byte[] transactionHashWithoutSignature =
                 HashUtil.h256(
@@ -283,7 +302,8 @@ public class AionTransaction {
                                 timeStamp,
                                 energyLimit,
                                 energyPrice,
-                                type));
+                                type,
+                                beaconHash));
 
         byte[] transactionHash = HashUtil.h256(rlpEncoding);
 
@@ -300,7 +320,8 @@ public class AionTransaction {
                 transactionHashWithoutSignature,
                 signature,
                 rlpEncoding,
-                transactionHash);
+                transactionHash,
+                beaconHash);
     }
 
     public byte[] getTransactionHash() {
@@ -371,6 +392,10 @@ public class AionTransaction {
         return transaction.senderAddress;
     }
 
+    public byte[] getBeaconHash() {
+        return beaconHash;
+    }
+
     @Override
     public String toString() {
         return "TransactionData ["
@@ -381,6 +406,8 @@ public class AionTransaction {
                 + ByteUtil.byteArrayToLong(timeStamp)
                 + ", signature="
                 + ((signature == null) ? "null" : signature.toString())
+                + ", beaconHash="
+                + ((beaconHash == null) ? "null" : ByteUtil.toHexString(beaconHash))
                 + "]";
     }
 

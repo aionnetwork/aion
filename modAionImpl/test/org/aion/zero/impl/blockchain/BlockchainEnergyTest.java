@@ -76,7 +76,7 @@ public class BlockchainEnergyTest {
                             ByteUtil.EMPTY_BYTE_ARRAY,
                             21000L,
                             BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue(),
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             txs.add(atx);
         }
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);

@@ -371,7 +371,7 @@ public class ConsensusTest {
                 getContractCode(),
                 2_000_000,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /** Calls the function: addOwner(Address) in Wallet.sol */
@@ -386,7 +386,7 @@ public class ConsensusTest {
                 callData,
                 2_000_000,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /**
@@ -405,7 +405,7 @@ public class ConsensusTest {
                 callData,
                 2_000_000,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /**
@@ -425,7 +425,7 @@ public class ConsensusTest {
                 callData,
                 24_460,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /**
@@ -445,7 +445,7 @@ public class ConsensusTest {
                 callData,
                 22_326,
                 2,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /** Transfers the specified amount of value from OWNER account to OTHER. */
@@ -459,7 +459,7 @@ public class ConsensusTest {
                 new byte[0],
                 21_000,
                 1,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     /** The binary of the contract: Wallet.sol */

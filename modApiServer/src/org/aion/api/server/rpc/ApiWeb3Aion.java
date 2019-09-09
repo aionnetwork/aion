@@ -825,7 +825,9 @@ public class ApiWeb3Aion extends ApiAion {
                         txParams.getData(),
                         txParams.getNrg(),
                         txParams.getNrgPrice(),
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT,
+                        null // TODO beacon hash goes here
+                        );
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 

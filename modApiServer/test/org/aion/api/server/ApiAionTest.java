@@ -88,7 +88,7 @@ public class ApiAionTest {
                             new byte[0],
                             0L,
                             1L,
-                            TransactionTypes.DEFAULT);
+                            TransactionTypes.DEFAULT, null);
             List<AionTransaction> l1 = new ArrayList<>();
             l1.add(tx);
             l1.add(tx);
@@ -287,7 +287,7 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         Block blk =
                 impl.getAionHub()
@@ -353,7 +353,7 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         ArgTxCall txcall =
                 new ArgTxCall(

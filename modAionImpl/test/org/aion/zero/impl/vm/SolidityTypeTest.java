@@ -108,7 +108,7 @@ public class SolidityTypeTest {
                 callData,
                 nrg,
                 nrgPrice,
-                TransactionTypes.DEFAULT);
+                TransactionTypes.DEFAULT, null);
     }
 
     private RepositoryCache createRepository(AionTransaction tx) throws IOException {

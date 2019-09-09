@@ -56,7 +56,7 @@ public class TxTest {
         long txNrgPrice = 10L;
         byte type = 0b1;
         long txNrgUsed = 5L;
-        AionTransaction transaction = AionTransaction.createWithoutKey(txNonce,from, to, value, data, txNrgLimit, txNrgPrice, type);
+        AionTransaction transaction = AionTransaction.createWithoutKey(txNonce,from, to, value, data, txNrgLimit, txNrgPrice, type, null);
 
         AionTxReceipt txReceipt = new AionTxReceipt();
         txReceipt.setTransaction(transaction);
@@ -110,7 +110,7 @@ public class TxTest {
         Log txLog = Log.topicsAndData(to.toByteArray(), topics, logData);
 
 
-        AionTransaction transactionWithLog = AionTransaction.createWithoutKey(txNonce,from, to, value, data, txNrgLimit, txNrgPrice, type);
+        AionTransaction transactionWithLog = AionTransaction.createWithoutKey(txNonce,from, to, value, data, txNrgLimit, txNrgPrice, type, null);
 
         AionTxReceipt txReceiptWithLog = new AionTxReceipt();
         txReceiptWithLog.setLogs(List.of(txLog));

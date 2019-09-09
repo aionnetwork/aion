@@ -75,7 +75,7 @@ public class AvmInternalTxTest {
                         jar,
                         5_000_000,
                         1,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
@@ -116,7 +116,7 @@ public class AvmInternalTxTest {
                         call,
                         2_000_000,
                         1,
-                        TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT, null);
 
         AionBlock block =
                 this.blockchain.createNewBlock(
