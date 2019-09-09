@@ -6,24 +6,15 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.Random;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.config.PruneConfig;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.util.types.DataWord;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.type.CapabilitiesProvider;
-import org.aion.types.TransactionStatus;
-import org.aion.util.types.DataWord;
-import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.ExternalStateForTests;
+import org.aion.types.TransactionStatus;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -35,7 +26,7 @@ public class TotalCurrencyContractTest {
     private static final long COST = 21000L;
     private static final BigInteger AMT = BigInteger.valueOf(1000);
     private TotalCurrencyContract tcc;
-    private RepositoryCache repo;
+    private ExternalStateForTests state;
     private byte[] ownerAddr;
     private static ExternalCapabilitiesForTesting capabilities;
 
@@ -52,34 +43,14 @@ public class TotalCurrencyContractTest {
 
     @Before
     public void setup() {
-        RepositoryConfig repoConfig =
-                new RepositoryConfig() {
-                    @Override
-                    public String getDbPath() {
-                        return "";
-                    }
-
-                    @Override
-                    public PruneConfig getPruneConfig() {
-                        return new CfgPrune(false);
-                    }
-
-                    @Override
-                    public Properties getDatabaseConfig(String db_name) {
-                        Properties props = new Properties();
-                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                        return props;
-                    }
-                };
-        repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
-
+        state = ExternalStateForTests.usingDefaultRepository();
         ownerAddr = getRandomAddr();
-        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerAddr));
+        tcc = new TotalCurrencyContract(state, ADDR, new AionAddress(ownerAddr));
     }
 
     @After
     public void tearDown() {
-        repo = null;
+        state = null;
         ownerAddr = null;
         tcc = null;
     }
@@ -159,7 +130,7 @@ public class TotalCurrencyContractTest {
         assertEquals(TransactionStatus.successful(), res.getStatus());
         assertEquals(0L, res.getEnergyRemaining());
 
-        tcc = new TotalCurrencyContract(ExternalStateForTests.usingRepository(repo), ADDR, new AionAddress(ownerAddr));
+        tcc = new TotalCurrencyContract(state, ADDR, new AionAddress(ownerAddr));
         input = new byte[] {(byte) 0x0};
         res = tcc.execute(input, COST);
 
@@ -226,7 +197,7 @@ public class TotalCurrencyContractTest {
         System.out.println("Running TestUpdateTotalNotOwner.");
         TotalCurrencyContract contract =
                 new TotalCurrencyContract(
-                        ExternalStateForTests.usingRepository(repo),
+                        ExternalStateForTests.usingDefaultRepository(),
                         ADDR,
                         new AionAddress(getRandomAddr())); // diff owner.
 
