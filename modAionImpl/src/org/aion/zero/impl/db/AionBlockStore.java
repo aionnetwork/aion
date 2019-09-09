@@ -1429,6 +1429,20 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     /**
+     * Checks if a hash is indexed as main chain or side chain; like
+     * {@link #isMainChain(byte[], long)}, but less efficient
+     *
+     * @param hash the hash for which we check its chain status
+     *
+     * @return {@code true} if the block is indexed as a main chain block, {@code false} if the
+     *     block is not indexed or is a side chain block
+     */
+    public boolean isMainChain(byte[] hash) {
+        Block block = getBlockByHash(hash);
+        return block == null ? false : isMainChain(hash, block.getNumber());
+    }
+
+    /**
      * First checks if the size key is missing or smaller than it should be. If it is incorrect, the
      * method attempts to correct it by setting it to the given level.
      */
