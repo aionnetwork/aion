@@ -331,7 +331,8 @@ public class ApiAionTest {
                         repo.getNonce(addr),
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertNotNull(api.doCall(txcall));
     }
@@ -353,7 +354,8 @@ public class ApiAionTest {
                         msg,
                         100000,
                         100000,
-                        TransactionTypes.DEFAULT, null);
+                        TransactionTypes.DEFAULT,
+                        null);
 
         ArgTxCall txcall =
                 new ArgTxCall(
@@ -363,7 +365,8 @@ public class ApiAionTest {
                         repo.getNonce(addr),
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
     }
@@ -388,7 +391,8 @@ public class ApiAionTest {
                         BigInteger.ONE,
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
 
@@ -400,7 +404,8 @@ public class ApiAionTest {
                         BigInteger.ONE,
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
 
@@ -416,7 +421,8 @@ public class ApiAionTest {
                         repo.getNonce(addr),
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
@@ -457,7 +463,8 @@ public class ApiAionTest {
                         BigInteger.ONE,
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
@@ -469,7 +476,8 @@ public class ApiAionTest {
                         BigInteger.ONE,
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
@@ -485,7 +493,8 @@ public class ApiAionTest {
                         repo.getNonce(addr),
                         BigInteger.ONE,
                         100000,
-                        100000);
+                        100000,
+                        null);
 
         assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }

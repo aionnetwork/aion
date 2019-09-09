@@ -595,7 +595,8 @@ public abstract class ApiAion extends Api {
                                 _params.getData(),
                                 _params.getNrg(),
                                 _params.getNrgPrice(),
-                                _params.getType(), null);
+                                _params.getType(),
+                                _params.getBeaconHash());
 
                 return (new ApiTxResponse(
                         pendingState.addPendingTransaction(tx), tx.getTransactionHash()));

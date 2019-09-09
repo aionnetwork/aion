@@ -25,11 +25,14 @@ public final class ArgTxCall {
     private final BigInteger value;
     private final long nrg;
     private final long nrgPrice;
+    private final byte[] beaconHash;
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     // @Jay
     // TODO: create a builder class for create this class
+
+    // TODO: should store common field names in constants (AKI-372)
 
     public ArgTxCall(
             final AionAddress _from,
@@ -38,8 +41,9 @@ public final class ArgTxCall {
             final BigInteger _nonce,
             final BigInteger _value,
             final long _nrg,
-            final long _nrgPrice) {
-        this(_from, _to, _data, _nonce, _value, _nrg, _nrgPrice, TransactionTypes.DEFAULT);
+            final long _nrgPrice,
+            final byte[] beaconHash) {
+        this(_from, _to, _data, _nonce, _value, _nrg, _nrgPrice, TransactionTypes.DEFAULT, beaconHash);
     }
 
     public ArgTxCall(
@@ -50,7 +54,8 @@ public final class ArgTxCall {
             final BigInteger _value,
             final long _nrg,
             final long _nrgPrice,
-            final byte _type) {
+            final byte _type,
+            final byte[] beaconHash) {
         this.from = _from;
         this.to = _to;
         this.data = _data == null ? ByteUtil.EMPTY_BYTE_ARRAY : _data;
@@ -59,6 +64,7 @@ public final class ArgTxCall {
         this.nrg = _nrg;
         this.nrgPrice = _nrgPrice;
         this.type = _type;
+        this.beaconHash = beaconHash;
     }
 
     public static ArgTxCall fromJSON(final JSONObject _jsonObj, long defaultNrgPrice) {
@@ -118,7 +124,13 @@ public final class ArgTxCall {
                                 ? StringUtils.StringHexToBigInteger(nrgPriceStr).longValue()
                                 : StringUtils.StringNumberAsBigInt(nrgPriceStr).longValue();
 
-            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice, type);
+            byte[] beaconHash = null;
+            String maybeBeaconHash = _jsonObj.has("beaconHash") ? _jsonObj.getString("beaconHash") : null;
+            if(maybeBeaconHash != null) {
+                beaconHash = StringUtils.StringHexToByteArray(maybeBeaconHash);
+            }
+
+            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice, type, beaconHash);
         } catch (Exception e) {
             LOG.debug("Failed to parse transaction call object from input parameters", e);
             return null;
@@ -155,5 +167,9 @@ public final class ArgTxCall {
 
     public byte getType() {
         return type;
+    }
+
+    public byte[] getBeaconHash() {
+        return beaconHash;
     }
 }
