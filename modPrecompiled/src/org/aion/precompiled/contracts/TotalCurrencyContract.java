@@ -172,6 +172,6 @@ public class TotalCurrencyContract implements PrecompiledContract {
                 this.address,
                 chainId,
                 PrecompiledDataWord.fromBytes(finalValue.toByteArray()));
-        return new PrecompiledTransactionResult(TransactionStatus.nonRevertedFailure("FAILURE"), nrg - COST);
+        return new PrecompiledTransactionResult(TransactionStatus.successful(), nrg - COST);
     }
 }
