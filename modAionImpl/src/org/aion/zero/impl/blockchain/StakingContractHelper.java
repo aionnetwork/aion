@@ -70,7 +70,7 @@ public class StakingContractHelper {
         return stakingContractAddr;
     }
 
-    public long getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) {
+    public BigInteger getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) {
         if (signingAddress == null || coinbase == null) {
             throw new NullPointerException();
         }
@@ -96,10 +96,10 @@ public class StakingContractHelper {
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
             // TODO: [unity] handle the error case.
-            return 0;
+            return BigInteger.ZERO;
         }
 
-        return new ABIDecoder(receipt.getTransactionOutput()).decodeOneLong();
+        return new ABIDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
     }
 
     private AionTxReceipt callConstant(AionTransaction tx) {
