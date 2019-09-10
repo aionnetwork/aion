@@ -9,17 +9,12 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.config.PruneConfig;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
+import org.aion.precompiled.RepositoryForPrecompiled;
 import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.types.TransactionStatus;
 import org.aion.util.types.DataWord;
-import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.precompiled.ExternalStateForTests;
@@ -34,8 +29,6 @@ import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,7 +42,7 @@ public class TokenBridgeContractTest {
     private TokenBridgeContract contract;
     private BridgeController controller;
     private BridgeStorageConnector connector;
-    private AionRepositoryCache repository;
+    private RepositoryForPrecompiled repository;
 
     private static byte[][] members = new byte[5][32];
     private static Random r = new Random();
@@ -79,26 +72,7 @@ public class TokenBridgeContractTest {
 
     @Before
     public void before() {
-        RepositoryConfig repoConfig =
-                new RepositoryConfig() {
-                    @Override
-                    public String getDbPath() {
-                        return "";
-                    }
-
-                    @Override
-                    public PruneConfig getPruneConfig() {
-                        return new CfgPrune(false);
-                    }
-
-                    @Override
-                    public Properties getDatabaseConfig(String db_name) {
-                        Properties props = new Properties();
-                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                        return props;
-                    }
-                };
-        this.repository = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        this.repository = new RepositoryForPrecompiled();
         // override defaults
         this.contract =
                 new TokenBridgeContract(dummyContext(), ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);

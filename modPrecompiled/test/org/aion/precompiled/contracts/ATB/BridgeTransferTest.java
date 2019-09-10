@@ -6,23 +6,15 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.config.PruneConfig;
-import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
+import org.aion.precompiled.RepositoryForPrecompiled;
 import org.aion.precompiled.type.CapabilitiesProvider;
-import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.precompiled.ExternalStateForTests;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
-import org.aion.zero.impl.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,7 +22,7 @@ import org.junit.Test;
 
 public class BridgeTransferTest {
 
-    private RepositoryCache repo;
+    private RepositoryForPrecompiled repo;
     private BridgeController controller;
     private PrecompiledTransactionContext context;
 
@@ -63,26 +55,7 @@ public class BridgeTransferTest {
 
     @Before
     public void beforeEach() {
-        RepositoryConfig repoConfig =
-                new RepositoryConfig() {
-                    @Override
-                    public String getDbPath() {
-                        return "";
-                    }
-
-                    @Override
-                    public PruneConfig getPruneConfig() {
-                        return new CfgPrune(false);
-                    }
-
-                    @Override
-                    public Properties getDatabaseConfig(String db_name) {
-                        Properties props = new Properties();
-                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                        return props;
-                    }
-                };
-        repo = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        repo = new RepositoryForPrecompiled();
         resetContext();
     }
 
@@ -258,6 +231,7 @@ public class BridgeTransferTest {
         final byte[] aionTransactionHash = capabilities.blake2b("aionTransaction".getBytes());
 
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
+        assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
         BridgeTransfer bundle =
                 BridgeTransfer.getInstance(BigInteger.ZERO, recipient, sourceTransactionHash);
         byte[] bundleHash =

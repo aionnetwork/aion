@@ -1,68 +1,37 @@
 package org.aion.precompiled;
 
 import java.math.BigInteger;
-import java.util.Properties;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.base.AccountState;
-import org.aion.mcf.config.PruneConfig;
-import org.aion.mcf.db.RepositoryCache;
-import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.precompiled.type.PrecompiledDoubleDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 
 /**
  * A basic testing implementation of the interface.
  */
 public final class ExternalStateForTests implements IExternalStateForPrecompiled {
-    private final RepositoryCache<AccountState> repository;
+    private final RepositoryForPrecompiled repository;
 
-    private ExternalStateForTests(RepositoryCache<AccountState> repository) {
+    private ExternalStateForTests(RepositoryForPrecompiled repository) {
         this.repository = repository;
     }
 
     public static ExternalStateForTests usingDefaultRepository() {
-        RepositoryConfig repoConfig = new RepositoryConfig() {
-            @Override
-            public String getDbPath() {
-                        return "";
-                    }
-
-            @Override
-            public PruneConfig getPruneConfig() {
-                        return new CfgPrune(false);
-                    }
-
-            @Override
-            public Properties getDatabaseConfig(String db_name) {
-                Properties props = new Properties();
-                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                return props;
-            }
-        };
-        AionRepositoryCache repository = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
-        return new ExternalStateForTests(repository);
+        return new ExternalStateForTests(new RepositoryForPrecompiled());
     }
 
-    public static ExternalStateForTests usingRepository(RepositoryCache<AccountState> repository) {
+    public static ExternalStateForTests usingRepository(RepositoryForPrecompiled repository) {
         return new ExternalStateForTests(repository);
     }
 
     @Override
-    public void commit() {
-        this.repository.flush();
-    }
+    public void commit() {}
 
     @Override
     public IExternalStateForPrecompiled newChildExternalState() {
-        return new ExternalStateForTests(this.repository.startTracking());
+        return new ExternalStateForTests(this.repository);
     }
 
     @Override
