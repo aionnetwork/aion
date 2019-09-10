@@ -10,7 +10,7 @@ public class AddressFVM extends BaseTypeFVM {
     private final ByteArrayWrapper address;
 
     public AddressFVM(@Nonnull final ByteArrayWrapper address) {
-        assert address.length() == 32;
+        assert address.toBytes().length == 32;
         this.address = address;
     }
 

@@ -1,15 +1,15 @@
-package org.aion.precompiled.contracts;
+package org.aion.zero.impl.precompiled.contracts;
 
 import java.util.Collections;
-import java.util.Random;
-import org.aion.precompiled.ExternalCapabilitiesForTesting;
-import org.aion.precompiled.ExternalStateForTests;
-import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.ContractInfo;
+import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
+import org.aion.zero.impl.precompiled.ExternalStateForTests;
+import org.aion.zero.impl.vm.precompiled.ExternalCapabilitiesForPrecompiled;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -18,7 +18,6 @@ import org.junit.Test;
 public class BenchmarkTest {
 
     private ContractFactory cf;
-    private PrecompiledTransactionContext ctx;
 
     private byte[] txHash;
     private AionAddress origin;
@@ -32,7 +31,7 @@ public class BenchmarkTest {
 
     @BeforeClass
     public static void setupCapabilities() {
-        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForTesting());
+        CapabilitiesProvider.installExternalCapabilities(new ExternalCapabilitiesForPrecompiled());
     }
 
     @AfterClass
@@ -43,8 +42,8 @@ public class BenchmarkTest {
     @Before
     public void setup() {
         cf = new ContractFactory();
-        txHash = getRandom32Bytes();
-        origin = new AionAddress(getRandom32Bytes());
+        txHash = RandomUtils.nextBytes(32);
+        origin = new AionAddress(RandomUtils.nextBytes(32));
         caller = origin;
         blockNumber = 2000001;
 
@@ -56,44 +55,34 @@ public class BenchmarkTest {
     @Test
     public void benchBlake2bHash() {
 
-        ctx =
-                new PrecompiledTransactionContext(
-                        ContractInfo.BLAKE_2B.contractAddress,
-                        origin,
-                        caller,
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        txHash,
-                        txHash,
-                        blockNumber,
-                        nrgLimit,
-                        depth);
+        PrecompiledTransactionContext context = new PrecompiledTransactionContext(
+            ContractInfo.BLAKE_2B.contractAddress,
+            origin,
+            caller,
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            txHash,
+            txHash,
+            blockNumber,
+            nrgLimit,
+            depth);
 
         ExternalStateForTests externalStateForTests = ExternalStateForTests.usingDefaultRepository();
 
         PrecompiledContract ct;
         // warm up
         for (int i = 0; i < WARMUP; i++) {
-            ct = cf.getPrecompiledContract(ctx, externalStateForTests);
-            ct.execute(txHash, ctx.transactionEnergy);
+            ct = cf.getPrecompiledContract(context, externalStateForTests);
+            ct.execute(txHash, context.transactionEnergy);
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
-            ct = cf.getPrecompiledContract(ctx, externalStateForTests);
-            ct.execute(txHash, ctx.transactionEnergy);
+            ct = cf.getPrecompiledContract(context, externalStateForTests);
+            ct.execute(txHash, context.transactionEnergy);
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");
     }
-
-    private static Random r = new Random();
-
-    private static byte[] getRandom32Bytes() {
-        byte[] bytes = new byte[32];
-        r.nextBytes(bytes);
-        return bytes;
-    }
-
 }

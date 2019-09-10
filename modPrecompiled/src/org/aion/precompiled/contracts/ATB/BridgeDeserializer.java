@@ -1,5 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
 import org.aion.precompiled.util.ByteUtil;
@@ -57,7 +58,8 @@ public class BridgeDeserializer {
      * @param call input data
      * @return {@code 2d array} containing list of addresses. {@code null} otherwise.
      */
-    static byte[][] parseAddressList(@Nonnull final byte[] call) {
+    @VisibleForTesting
+    public static byte[][] parseAddressList(@Nonnull final byte[] call) {
         // check minimum length
         if (call.length < CALL_OFFSET + (LIST_META * 2)) return null;
 

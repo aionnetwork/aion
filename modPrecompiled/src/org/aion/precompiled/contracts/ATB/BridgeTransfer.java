@@ -1,5 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
@@ -29,27 +30,32 @@ public class BridgeTransfer {
                         : Arrays.copyOf(sourceTransactionHash, 32);
     }
 
-    static BridgeTransfer getInstance(
-            @Nonnull final BigInteger transferValue,
-            @Nonnull final byte[] recipient,
-            @Nonnull final byte[] sourceTransactionHash) {
+    @VisibleForTesting
+    public static BridgeTransfer getInstance(
+        @Nonnull final BigInteger transferValue,
+        @Nonnull final byte[] recipient,
+        @Nonnull final byte[] sourceTransactionHash) {
         if (transferValue.toByteArray().length > 16) return null;
         return new BridgeTransfer(transferValue, recipient, sourceTransactionHash);
     }
 
-    byte[] getRecipient() {
+    @VisibleForTesting
+    public byte[] getRecipient() {
         return this.recipient;
     }
 
-    byte[] getSourceTransactionHash() {
+    @VisibleForTesting
+    public byte[] getSourceTransactionHash() {
         return this.sourceTransactionHash;
     }
 
-    byte[] getTransferValueByteArray() {
+    @VisibleForTesting
+    public byte[] getTransferValueByteArray() {
         return PrecompiledUtilities.pad(transferValue.toByteArray(), 16);
     }
 
-    BigInteger getTransferValue() {
+    @VisibleForTesting
+    public BigInteger getTransferValue() {
         return this.transferValue;
     }
 }

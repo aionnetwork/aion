@@ -2,12 +2,14 @@ package org.aion.precompiled.contracts.ATB;
 
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toSignature;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import org.aion.precompiled.util.ByteArrayWrapper;
 
-enum BridgeFuncSig {
+@VisibleForTesting
+public enum BridgeFuncSig {
     SIG_CHANGE_OWNER("changeOwner(address)"),
     SIG_ACCEPT_OWNERSHIP("acceptOwnership()"),
     SIG_RING_INITIALIZE("initializeRing(address[])"),

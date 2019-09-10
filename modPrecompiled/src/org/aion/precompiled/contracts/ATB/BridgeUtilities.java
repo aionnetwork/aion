@@ -1,5 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import javax.annotation.Nonnull;
@@ -48,7 +49,8 @@ public class BridgeUtilities {
         return PrecompiledUtilities.pad(BigInteger.valueOf(input).toByteArray(), 16);
     }
 
-    static byte[] computeBundleHash(byte[] sourceBlockHash, BridgeTransfer[] bundles) {
+    @VisibleForTesting
+    public static byte[] computeBundleHash(byte[] sourceBlockHash, BridgeTransfer[] bundles) {
         int size = sourceBlockHash.length + bundles.length * BridgeTransfer.TRANSFER_SIZE;
 
         ByteBuffer buf = ByteBuffer.allocate(size);

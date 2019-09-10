@@ -4,6 +4,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResul
 import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processSuccess;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.computeBundleHash;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -342,8 +343,9 @@ public class BridgeController {
         addLog(topics);
     }
 
-    static class ProcessedResults {
-        final ErrCode controllerResult;
+    @VisibleForTesting
+    public static class ProcessedResults {
+        public final ErrCode controllerResult;
         final List<PrecompiledTransactionResult> internalResults;
 
         private ProcessedResults(ErrCode code, List<PrecompiledTransactionResult> internalResults) {

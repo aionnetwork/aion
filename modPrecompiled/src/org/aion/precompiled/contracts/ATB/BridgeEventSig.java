@@ -2,9 +2,11 @@ package org.aion.precompiled.contracts.ATB;
 
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toEventSignature;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.annotation.Nonnull;
 
-enum BridgeEventSig {
+@VisibleForTesting
+public enum BridgeEventSig {
     CHANGE_OWNER("ChangedOwner(address)"),
     ADD_MEMBER("AddMember(address)"),
     REMOVE_MEMBER("RemoveMember(address)"),
