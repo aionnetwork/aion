@@ -1,36 +1,64 @@
 package org.aion.precompiled.util;
 
-import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
-public final class ByteArrayWrapper
-        implements Comparable<ByteArrayWrapper>, Serializable {
+/**
+ * Immutable class used to wrap byte arrays for use in scenarios where value-based equality needs to
+ * be applied.
+ */
+public final class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 
-    public static final ByteArrayWrapper ZERO = ByteArrayWrapper
-        .wrap(new byte[] {0});
-    private static final long serialVersionUID = -2937011296133778157L;
-    private final byte[] data;
-    private int hashCode;
+    private final byte[] bytes;
+    private final int hashCode;
 
-    public ByteArrayWrapper(byte[] data) {
-        if (data == null) {
-            throw new NullPointerException("Data must not be null");
-        }
-        this.data = data;
-        this.hashCode = Arrays.hashCode(data);
+    // utility used by toString
+    private static final char[] hexArray = "0123456789abcdef".toCharArray();
+
+    private ByteArrayWrapper(byte[] bytes) {
+        Objects.requireNonNull(bytes, "The given byte array must not be null.");
+        this.bytes = bytes.clone();
+        this.hashCode = Arrays.hashCode(this.bytes);
     }
 
-    public static ByteArrayWrapper wrap(byte[] data) {
-        return new ByteArrayWrapper(data);
+    /**
+     * Returns a wrapper for the give byte array.
+     *
+     * @param bytes non-{@code null} byte array to be wrapped
+     * @return a wrapper for the give byte array
+     */
+    public static ByteArrayWrapper wrap(byte[] bytes) {
+        return new ByteArrayWrapper(bytes);
+    }
+
+    /**
+     * Returns a copy of the encapsulated byte array.
+     *
+     * @return a copy of the encapsulated byte array
+     */
+    public byte[] toBytes() {
+        return bytes.clone();
+    }
+
+    /**
+     * Returns the length of the wrapped byte array.
+     *
+     * @return the length of the wrapped byte array
+     */
+    public int length() {
+        return bytes.length;
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof ByteArrayWrapper)) {
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ByteArrayWrapper)) {
             return false;
         }
-
-        return Arrays.equals(data, ((ByteArrayWrapper) other).getData());
+        ByteArrayWrapper other = (ByteArrayWrapper) o;
+        return Arrays.equals(this.bytes, other.bytes);
     }
 
     @Override
@@ -40,25 +68,19 @@ public final class ByteArrayWrapper
 
     @Override
     public int compareTo(ByteArrayWrapper o) {
-        return Arrays.compare(data, o.getData());
-    }
-
-    public byte[] getData() {
-        return data;
+        // do not use getter here to avoid performance loss due to cloning
+        return Arrays.compare(this.bytes, o.bytes);
     }
 
     @Override
     public String toString() {
-        return HexConvert.bytesToHexString(data);
-    }
-
-    // toBytes() and getData() have identical functionality
-    public byte[] toBytes() {
-        return data;
-    }
-
-    public ByteArrayWrapper fromBytes(byte[] bs) {
-        return new ByteArrayWrapper(bs);
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 
     /**
@@ -67,9 +89,9 @@ public final class ByteArrayWrapper
      * @return {@code true} if every byte in the array has the value 0, {@code false} otherwise
      */
     public boolean isZero() {
-        int length = data.length;
+        int length = bytes.length;
         for (int i = 0; i < length; i++) {
-            if (data[length - 1 - i] != 0) {
+            if (bytes[length - 1 - i] != 0) {
                 return false;
             }
         }
@@ -82,13 +104,32 @@ public final class ByteArrayWrapper
      * @return {@code true} if empty, {@code false} otherwise
      */
     public boolean isEmpty() {
-        return data.length == 0;
+        return bytes.length == 0;
     }
 
-    public ByteArrayWrapper copy() {
-        int length = data.length;
-        byte[] bs = new byte[length];
-        System.arraycopy(data, 0, bs, 0, length);
-        return new ByteArrayWrapper(bs);
+    public byte[] getNoLeadZeroesData() {
+        final int firstNonZero = firstNonZeroByte(bytes);
+        switch (firstNonZero) {
+            case -1:
+                // this should not be a constant because the first byte could be modified
+                return new byte[] {0};
+            case 0:
+                // must never share access to the mutable object
+                return bytes.clone();
+            default:
+                byte[] result = new byte[bytes.length - firstNonZero];
+                System.arraycopy(bytes, firstNonZero, result, 0, bytes.length - firstNonZero);
+                return result;
+        }
+    }
+
+    private static int firstNonZeroByte(byte[] bytes) {
+        for (int i = 0; i < bytes.length; ++i) {
+            if (bytes[i] != 0) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
+

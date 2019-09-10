@@ -3,8 +3,8 @@ package org.aion.precompiled.contracts.ATB;
 import java.util.ArrayList;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
+import org.aion.precompiled.util.AddressUtils;
 import org.aion.types.AionAddress;
-import org.aion.util.types.AddressUtils;
 
 public class BridgeTestUtils {
     static PrecompiledTransactionContext dummyContext() {

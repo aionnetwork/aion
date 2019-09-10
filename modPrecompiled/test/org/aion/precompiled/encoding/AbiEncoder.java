@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.util.bytes.ByteUtil;
+import org.aion.precompiled.util.ByteUtil;
 
 @ThreadSafe
 public class AbiEncoder {

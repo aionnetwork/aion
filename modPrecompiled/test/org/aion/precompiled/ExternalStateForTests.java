@@ -5,8 +5,8 @@ import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.precompiled.type.PrecompiledDoubleDataWord;
+import org.aion.precompiled.util.ByteArrayWrapper;
 import org.aion.types.AionAddress;
-import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * A basic testing implementation of the interface.

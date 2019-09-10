@@ -3,8 +3,8 @@ package org.aion.precompiled;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.precompiled.util.ByteArrayWrapper;
 import org.aion.types.AionAddress;
-import org.aion.util.types.ByteArrayWrapper;
 
 public class RepositoryForPrecompiled {
     private Map<AionAddress, AccountState> repo = new HashMap<>();

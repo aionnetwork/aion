@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
-import org.aion.util.types.DataWord;
+import org.aion.precompiled.util.DataWord;
 import org.aion.precompiled.ExternalCapabilitiesForTesting;
 import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.precompiled.ContractInfo;
