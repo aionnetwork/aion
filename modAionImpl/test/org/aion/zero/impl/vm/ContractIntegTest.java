@@ -459,8 +459,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructorInsufficientFunds()
-            throws IOException, VMException {
+    public void testTransferValueToPayableConstructorInsufficientFunds() throws IOException, VMException {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -1281,7 +1280,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void tellFvmContractCallWithinDeployingBlock() throws IOException, VMException {
+    public void tellFvmContractCallWithinDeployingBlock() throws IOException {
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
             return;
         }
@@ -1867,8 +1866,7 @@ public class ContractIntegTest {
             AionAddress contractAddr,
             byte[] output,
             FastVmResultCode result,
-            BigInteger value)
-            throws IOException {
+            BigInteger value) throws IOException {
 
         byte[] body = ContractUtils.getContractBody(contractFilename, contractName);
         if (result.isSuccess()) {

@@ -1,22 +1,45 @@
 package org.aion.mcf.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
-import org.aion.types.AionAddress;
-import org.json.JSONObject;
 
-/** @author jay */
+/**
+ * The block header interface for cross-module usage purpose.
+ * @author jay
+ */
 public interface BlockHeader {
 
-    // Getter
+    enum BlockSealType {
+        SEAL_NA((byte) 0),
+        SEAL_POW_BLOCK((byte) 1),
+        SEAL_POS_BLOCK((byte) 2);
+
+        final byte sealId;
+
+        BlockSealType(byte sealId) {
+            this.sealId = sealId;
+        }
+
+        public byte getSealId() {
+            return sealId;
+        }
+
+        public static BlockSealType byteToSealType(byte id) {
+            if (id == SEAL_POW_BLOCK.sealId) {
+                return SEAL_POW_BLOCK;
+            } else if (id == SEAL_POS_BLOCK.sealId) {
+                return SEAL_POS_BLOCK;
+            } else {
+                return SEAL_NA;
+            }
+        }
+    }
+
+    int HASH_BYTE_SIZE = 32;
+    int BLOOM_BYTE_SIZE = 256;
+    int MAX_DIFFICULTY_LENGTH = 16;
+
     byte[] getParentHash();
-
-    byte[] getStateRoot();
-
-    byte[] getTxTrieRoot();
-
-    byte[] getReceiptsRoot();
-
-    byte[] getLogsBloom();
 
     byte[] getExtraData();
 
@@ -24,46 +47,22 @@ public interface BlockHeader {
 
     byte[] getEncoded();
 
-    AionAddress getCoinbase();
-
     long getTimestamp();
 
     long getNumber();
 
-    // Setter
-    void setCoinbase(AionAddress _cb);
-
-    void setStateRoot(byte[] _strt);
-
-    void setReceiptsRoot(byte[] _rcrt);
-
-    void setTimestamp(long _ts);
-
-    void setNumber(long _nb);
-
-    void setLogsBloom(byte[] _lb);
-
-    void setExtraData(byte[] _ed);
-
     boolean isGenesis();
 
+    @VisibleForTesting
     byte[] getDifficulty();
 
     BigInteger getDifficultyBI();
 
-    void setDifficulty(byte[] _diff);
-
     long getEnergyConsumed();
 
     long getEnergyLimit();
-    
-    byte getVersion();
 
     byte[] getMineHash();
 
-    byte[] getNonce();
-
-    byte[] getSolution();
-
-    JSONObject toJSON();
+    BlockSealType getSealType();
 }

@@ -181,7 +181,7 @@ public abstract class ApiAion extends Api {
         blockTemplateLock.lock();
         try {
             Block bestBlock =
-                    ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+                    ac.getAionHub().getPendingState().getBestBlock();
             // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what does that mean for staking blocks?
             byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
 

@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import org.aion.base.AccountState;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,7 +35,7 @@ public class GenesisBlockLoader {
      * @return genesis file
      */
     public static AionGenesis loadJSON(String filePath)
-            throws IOException, HeaderStructureException {
+            throws IOException {
         File genesisFile = new File(filePath);
         if (genesisFile.exists()) {
             try (InputStream is = new FileInputStream(genesisFile)) {

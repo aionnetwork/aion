@@ -39,7 +39,7 @@
 // unpaddedNonceBytes.length);
 //        System.out.println(new ByteArrayWrapper(nonceBytes));
 //
-//        A0BlockHeader header = new A0BlockHeader.Builder().build();
+//        A0BlockHeader header = A0BlockHeader.Builder.newInstance().build();
 //        header.setNonce(nonceBytes);
 //        byte[] headerBytes = header.getHeaderBytes(true);
 //

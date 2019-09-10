@@ -5,12 +5,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+//TODO: [unity] rename and revise the test cases
 public class AionBlockHeaderVersionTest {
 
     @Mock A0BlockHeader mockHeader;
@@ -22,7 +24,7 @@ public class AionBlockHeaderVersionTest {
 
     @Test
     public void testSupportedVersion() {
-        when(mockHeader.getVersion()).thenReturn((byte) 1);
+        when(mockHeader.getSealType()).thenReturn(BlockSealType.SEAL_POW_BLOCK);
 
         List<RuleError> errors = new ArrayList<>();
 
@@ -35,7 +37,7 @@ public class AionBlockHeaderVersionTest {
 
     @Test
     public void testUnsupportedVersion() {
-        when(mockHeader.getVersion()).thenReturn((byte) -1);
+        when(mockHeader.getSealType()).thenReturn(BlockSealType.SEAL_NA);
 
         List<RuleError> errors = new ArrayList<>();
 

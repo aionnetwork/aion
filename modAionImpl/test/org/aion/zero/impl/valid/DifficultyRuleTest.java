@@ -1,8 +1,8 @@
 package org.aion.zero.impl.valid;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.types.AbstractBlockHeader.NONCE_LENGTH;
-import static org.aion.zero.impl.types.AbstractBlockHeader.SOLUTIONSIZE;
+import static org.aion.zero.impl.types.A0BlockHeader.NONCE_LENGTH;
+import static org.aion.zero.impl.types.A0BlockHeader.SOLUTIONSIZE;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
@@ -30,61 +30,64 @@ public class DifficultyRuleTest {
     @Mock ChainConfiguration mockChainCfg;
     @Mock IDifficultyCalculator mockDiffCalculator;
 
+
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
         grandParentHeader =
-                new A0BlockHeader(
-                        (byte) 0x01,
-                        1,
-                        new byte[32],
-                        AddressUtils.ZERO_ADDRESS,
-                        new byte[256],
-                        ByteUtil.intToBytes(1),
-                        null,
-                        1,
-                        1,
-                        1,
-                        new byte[NONCE_LENGTH],
-                        new byte[SOLUTIONSIZE]);
+            A0BlockHeader.Builder.newInstance()
+                .withNumber(1)
+                .withParentHash(new byte[32])
+                .withCoinbase(AddressUtils.ZERO_ADDRESS)
+                .withLogsBloom(new byte[256])
+                .withDifficulty(ByteUtil.intToBytes(1))
+                .withExtraData(new byte[32])
+                .withEnergyConsumed(1)
+                .withEnergyLimit(1)
+                .withTimestamp(1)
+                .withNonce(new byte[NONCE_LENGTH])
+                .withSolution(new byte[SOLUTIONSIZE])
+                .build();
+
         parentHeader =
-                new A0BlockHeader(
-                        (byte) 0x01,
-                        2,
-                        new byte[32],
-                        AddressUtils.ZERO_ADDRESS,
-                        new byte[256],
-                        ByteUtil.intToBytes(1),
-                        null,
-                        1,
-                        1,
-                        11,
-                        new byte[NONCE_LENGTH],
-                        new byte[SOLUTIONSIZE]);
+            A0BlockHeader.Builder.newInstance()
+                .withNumber(2)
+                .withParentHash(new byte[32])
+                .withCoinbase(AddressUtils.ZERO_ADDRESS)
+                .withLogsBloom(new byte[256])
+                .withDifficulty(ByteUtil.intToBytes(1))
+                .withExtraData(new byte[32])
+                .withEnergyConsumed(1)
+                .withEnergyLimit(1)
+                .withTimestamp(11)
+                .withNonce(new byte[NONCE_LENGTH])
+                .withSolution(new byte[SOLUTIONSIZE])
+                .build();
     }
 
     /**
      * Checks if the {@link GrandParentDependantBlockHeaderRule#validate} returns {@code false} when the difficulty
      * data is <b>greater</b> than the difficulty data length.
      */
-    @Test
+    @Test (expected = IllegalArgumentException.class)
     public void testInvalidDifficultyLength() {
 
         currentHeader =
-                new A0BlockHeader(
-                        (byte) 0x01,
-                        3,
-                        new byte[32],
-                        AddressUtils.ZERO_ADDRESS,
-                        new byte[256],
-                        new byte[17],
-                        null,
-                        1,
-                        1,
-                        3,
-                        new byte[NONCE_LENGTH],
-                        new byte[SOLUTIONSIZE]);
+            A0BlockHeader.Builder.newInstance(true)
+                .withNumber(3)
+                .withParentHash(new byte[32])
+                .withCoinbase(AddressUtils.ZERO_ADDRESS)
+                .withLogsBloom(new byte[256])
+                .withDifficulty(new byte[17])
+                .withExtraData(new byte[32])
+                .withEnergyConsumed(1)
+                .withEnergyLimit(1)
+                .withTimestamp(3)
+                .withNonce(new byte[NONCE_LENGTH])
+                .withSolution(new byte[SOLUTIONSIZE])
+                .build();
 
         List<RuleError> errors = new LinkedList<>();
 
@@ -105,19 +108,19 @@ public class DifficultyRuleTest {
     public void testDifficultyLength() {
 
         currentHeader =
-                new A0BlockHeader(
-                        (byte) 0x01,
-                        3,
-                        new byte[32],
-                        AddressUtils.ZERO_ADDRESS,
-                        new byte[256],
-                        ByteUtil.bigIntegerToBytes(BigInteger.ONE, 16),
-                        null,
-                        1,
-                        1,
-                        3,
-                        new byte[NONCE_LENGTH],
-                        new byte[SOLUTIONSIZE]);
+            A0BlockHeader.Builder.newInstance()
+                .withNumber(3)
+                .withParentHash(new byte[32])
+                .withCoinbase(AddressUtils.ZERO_ADDRESS)
+                .withLogsBloom(new byte[256])
+                .withDifficulty(ByteUtil.bigIntegerToBytes(BigInteger.ONE, 16))
+                .withExtraData(new byte[32])
+                .withEnergyConsumed(1)
+                .withEnergyLimit(1)
+                .withTimestamp(3)
+                .withNonce(new byte[NONCE_LENGTH])
+                .withSolution(new byte[SOLUTIONSIZE])
+                .build();
 
         List<RuleError> errors = new LinkedList<>();
 

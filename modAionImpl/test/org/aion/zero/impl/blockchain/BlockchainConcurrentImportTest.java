@@ -27,6 +27,7 @@ import org.aion.util.types.Hash256;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -104,7 +105,13 @@ public class BlockchainConcurrentImportTest {
             sourceRepo.syncToRoot(originalRoot);
 
             block = sourceChain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-            block.setExtraData(String.valueOf(i).getBytes());
+
+            A0BlockHeader newBlockHeader =
+                    A0BlockHeader.Builder.newInstance()
+                            .withHeader(block.getHeader())
+                            .withExtraData(String.valueOf(i).getBytes())
+                            .build();
+            block.updateHeader(newBlockHeader);
 
             ImportResult result = sourceChain.tryToConnectInternal(block, (time += 10));
             knownBlocks.add(block);
@@ -290,8 +297,21 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
-                        block.setExtraData(String.valueOf(_id).getBytes());
+                        AionBlock block = null;
+                        try {
+                            block = _chain.createNewBlock(_parent, txs, true);
+
+                            A0BlockHeader newBlockHeader =
+                                A0BlockHeader.Builder.newInstance()
+                                    .withHeader(block.getHeader())
+                                    .withExtraData(String.valueOf(_id).getBytes())
+                                    .build();
+
+                            block.updateHeader(newBlockHeader);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
                         testChain.assertEqualTotalDifficulty();
 
                         // checking if the new block was already imported
@@ -357,8 +377,20 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
-                        block.setExtraData(String.valueOf(_id).getBytes());
+                        AionBlock block = null;
+                        try {
+                            block = _chain.createNewBlock(_parent, txs, true);
+
+                            A0BlockHeader newBlockHeader =
+                                A0BlockHeader.Builder.newInstance()
+                                    .withHeader(block.getHeader())
+                                    .withExtraData(String.valueOf(_id).getBytes())
+                                    .build();
+                            block.updateHeader(newBlockHeader);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
                         testChain.assertEqualTotalDifficulty();
 
                         // still adding this block

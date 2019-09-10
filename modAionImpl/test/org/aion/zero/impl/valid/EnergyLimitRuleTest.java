@@ -5,7 +5,6 @@ import static com.google.common.truth.Truth.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.zero.impl.api.BlockConstants;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -15,7 +14,7 @@ public class EnergyLimitRuleTest {
     private final BlockConstants constants = new BlockConstants();
 
     @Test
-    public void testEnergyLimitBounds() throws HeaderStructureException {
+    public void testEnergyLimitBounds() {
         final long INITIAL_VAL = 2000000L;
         final long DIVISOR = 1024;
         EnergyLimitRule rule =
@@ -23,12 +22,12 @@ public class EnergyLimitRuleTest {
                         constants.getEnergyDivisorLimitLong(), constants.getEnergyLowerBoundLong());
 
         A0BlockHeader parentHeader =
-                new A0BlockHeader.Builder().withEnergyLimit(INITIAL_VAL).build();
+                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL).build();
 
         long boundShiftLimit = INITIAL_VAL / DIVISOR;
 
         A0BlockHeader upperCurrentBlock =
-                new A0BlockHeader.Builder().withEnergyLimit(INITIAL_VAL + boundShiftLimit).build();
+                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL + boundShiftLimit).build();
 
         List<RuleError> errors = new ArrayList<>();
 
@@ -39,7 +38,7 @@ public class EnergyLimitRuleTest {
         errors.clear();
 
         A0BlockHeader invalidCurrentHeader =
-                new A0BlockHeader.Builder()
+                A0BlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL + boundShiftLimit + 1)
                         .build();
 
@@ -50,7 +49,7 @@ public class EnergyLimitRuleTest {
 
         // lower bound
         A0BlockHeader lowerCurrentHeader =
-                new A0BlockHeader.Builder().withEnergyLimit(INITIAL_VAL - boundShiftLimit).build();
+                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL - boundShiftLimit).build();
 
         res = rule.validate(lowerCurrentHeader, parentHeader, errors);
         assertThat(res).isEqualTo(true);
@@ -58,7 +57,7 @@ public class EnergyLimitRuleTest {
         errors.clear();
 
         A0BlockHeader invalidLowerCurrentHeader =
-                new A0BlockHeader.Builder()
+                A0BlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL - boundShiftLimit - 1)
                         .build();
 
@@ -69,12 +68,12 @@ public class EnergyLimitRuleTest {
     }
 
     @Test
-    public void testEnergyLimitLowerBound() throws HeaderStructureException {
+    public void testEnergyLimitLowerBound() {
         final long INITIAL_VAL = 0l;
 
-        A0BlockHeader parentHeader = new A0BlockHeader.Builder().withEnergyLimit(0l).build();
+        A0BlockHeader parentHeader = A0BlockHeader.Builder.newInstance().withEnergyLimit(0l).build();
 
-        A0BlockHeader currentHeader = new A0BlockHeader.Builder().withEnergyLimit(1l).build();
+        A0BlockHeader currentHeader = A0BlockHeader.Builder.newInstance().withEnergyLimit(1l).build();
 
         List<RuleError> errors = new ArrayList<>();
 

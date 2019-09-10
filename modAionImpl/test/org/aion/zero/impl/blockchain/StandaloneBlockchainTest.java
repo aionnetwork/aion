@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 

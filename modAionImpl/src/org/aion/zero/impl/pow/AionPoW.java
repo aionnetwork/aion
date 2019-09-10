@@ -206,8 +206,12 @@ public class AionPoW {
             }
 
             // set the nonce and solution
-            block.getHeader().setNonce(solution.getNonce());
-            block.getHeader().setSolution(solution.getSolution());
+            try {
+                block.seal(solution.getNonce(), solution.getSolution());
+            } catch (Exception e) {
+                LOG.error("seal block failed!", e);
+                return;
+            }
 
             // This can be improved
             ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
@@ -262,7 +266,13 @@ public class AionPoW {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            Block newBlock = blockchain.createNewBlock(bestBlock, txs, false);
+            Block newBlock;
+            try {
+                newBlock = blockchain.createNewBlock(bestBlock, txs, false);
+            } catch (Exception e) {
+                LOG.error("Create new block failed!", e);
+                return;
+            }
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

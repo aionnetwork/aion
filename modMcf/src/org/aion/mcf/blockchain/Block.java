@@ -1,5 +1,6 @@
 package org.aion.mcf.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
@@ -37,21 +38,13 @@ public interface Block {
     long getTimestamp();
 
     BigInteger getDifficultyBI();
-    
-    void setCumulativeDifficulty(BigInteger totalDifficulty);
-    
-    void setMainChain();
-    
+
     AionAddress getCoinbase();
     
     byte[] getDifficulty();
 
     byte[] getStateRoot();
 
-    void setStateRoot(byte[] stateRoot);
-
-    BigInteger getCumulativeDifficulty();
-    
     byte[] getTxTrieRoot();
 
     byte[] getLogBloom();
@@ -70,7 +63,31 @@ public interface Block {
 
     ByteArrayWrapper getParentHashWrapper();
 
-    void setExtraData(byte[] data);
-    
     byte[] getExtraData();
+
+    /* these 3 setters are only relate with the consensus itself. Not been include inside the block data*/
+    void setMiningDifficulty(BigInteger totalDifficulty);
+
+    void setStakingDifficulty(BigInteger totalDifficulty);
+
+    void setCumulativeDifficulty(BigInteger totalDifficulty);
+
+    void setMainChain();
+
+    BigInteger getMiningDifficulty();
+
+    BigInteger getStakingDifficulty();
+
+    BigInteger getCumulativeDifficulty();
+
+    int size();
+
+    byte[] getAntiparentHash();
+
+    void setAntiparentHash(byte[] antiparentHash);
+
+    boolean isMainChain();
+
+    @VisibleForTesting
+    void updateHeader(BlockHeader header);
 }

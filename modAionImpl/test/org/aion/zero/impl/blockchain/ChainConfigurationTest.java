@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,7 +26,7 @@ public class ChainConfigurationTest {
 
     @Ignore // To be re-enabled later
     @Test
-    public void testValidation() throws HeaderStructureException {
+    public void testValidation() {
         int n = 210;
         int k = 9;
         byte[] nonce = {
@@ -37,7 +36,7 @@ public class ChainConfigurationTest {
             0, 0, 0, 0, 0, 0, 0
         };
         // setup mock
-        //        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        //        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
         //        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
         //        builder.withNonce(nonce);
         //        builder.withTimestamp(12345678910L);

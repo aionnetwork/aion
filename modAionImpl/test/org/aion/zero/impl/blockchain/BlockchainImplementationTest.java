@@ -23,7 +23,6 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.MockRepositoryConfig;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -684,7 +683,7 @@ public class BlockchainImplementationTest {
     }
 
     @Test
-    public void tryFastImport_withIncorrectTimestamp() throws HeaderStructureException {
+    public void tryFastImport_withIncorrectTimestamp() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
@@ -695,8 +694,7 @@ public class BlockchainImplementationTest {
 
         Block parent = chain.getBestBlock();
         A0BlockHeader.Builder headerBuilder =
-                new A0BlockHeader.Builder()
-                        .withVersion((byte) 1)
+                A0BlockHeader.Builder.newInstance()
                         .withParentHash(parent.getHash())
                         .withCoinbase(parent.getCoinbase())
                         .withNumber(parent.getNumber() + 1)

@@ -18,6 +18,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -601,7 +602,14 @@ public class BlockchainDataRecoveryTest {
         // starting side chain
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewBlockInternal(sideChainBlock, txs, true, time / 10000L);
-        context.block.setExtraData("other".getBytes());
+
+        A0BlockHeader newHeader =
+                A0BlockHeader.Builder.newInstance()
+                        .withHeader(context.block.getHeader())
+                        .withExtraData("other".getBytes()).build();
+
+        context.block.updateHeader(newHeader);
+
         assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
                 .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         sideChainBlock = context.block;

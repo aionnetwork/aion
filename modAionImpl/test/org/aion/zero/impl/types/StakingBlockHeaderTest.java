@@ -8,7 +8,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
 
-public class A0BlockHeaderTest {
+public class StakingBlockHeaderTest {
 
     private byte[] PARENT_HASH = HashUtil.h256("parentHash".getBytes());
     private byte[] COINBASE = HashUtil.keccak256("coinbase".getBytes());
@@ -27,13 +27,19 @@ public class A0BlockHeaderTest {
     private byte[] ENERGY_LIMIT_BYTES = ByteUtil.longToBytes(6700000);
 
     // randomly selected
-    private byte[] NONCE_BYTES = HashUtil.h256(ByteUtil.longToBytes(42));
+    private byte[] SEED =
+            ByteUtil.merge(
+                    HashUtil.h256(ByteUtil.longToBytes(42)),
+                    HashUtil.h256(ByteUtil.longToBytes(43)));
+    private byte[] SIGNINGPUBKEY = HashUtil.h256(ByteUtil.longToBytes(142));
+    private byte[] SIGNATURE = ByteUtil.merge(SIGNINGPUBKEY, SIGNINGPUBKEY);
+
 
     @Test
     public void testBlockHeaderFromSafeBuilder() {
         long time = System.currentTimeMillis() / 1000;
 
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
         // partial build
         builder.withCoinbase(new AionAddress(COINBASE))
                 .withStateRoot(STATE_ROOT)
@@ -45,9 +51,11 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withSeed(SEED)
+                .withSignature(SIGNATURE)
+                .withSigningPublicKey(SIGNINGPUBKEY);
 
-        A0BlockHeader header = builder.build();
+        StakingBlockHeader header = builder.build();
 
         assertThat(header.getCoinbase().toByteArray()).isEqualTo(COINBASE);
         assertThat(header.getStateRoot()).isEqualTo(STATE_ROOT);
@@ -58,8 +66,9 @@ public class A0BlockHeaderTest {
         assertThat(header.getNumber()).isEqualTo(NUMBER);
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
-        assertThat(header.getSolution()).isEqualTo(new byte[1408]);
-        assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
+        assertThat(header.getSignature()).isEqualTo(SIGNATURE);
+        assertThat(header.getSeed()).isEqualTo(SEED);
+        assertThat(header.getSigningPublicKey()).isEqualTo(SIGNINGPUBKEY);
         assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
     }
 
@@ -67,9 +76,10 @@ public class A0BlockHeaderTest {
     public void testBlockHeaderFromUnsafeSource() {
         long time = System.currentTimeMillis() / 1000;
 
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance(true);
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
         // partial build
-        builder.withStateRoot(STATE_ROOT)
+        builder.fromUnsafeSource()
+                .withStateRoot(STATE_ROOT)
                 .withCoinbase(new AionAddress(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
@@ -80,7 +90,7 @@ public class A0BlockHeaderTest {
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH);
 
-        A0BlockHeader header = builder.build();
+        StakingBlockHeader header = builder.build();
 
         assertThat(header.getStateRoot()).isEqualTo(STATE_ROOT);
         assertThat(header.getCoinbase().toByteArray()).isEqualTo(COINBASE);
@@ -91,8 +101,9 @@ public class A0BlockHeaderTest {
         assertThat(header.getNumber()).isEqualTo(NUMBER);
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
-        assertThat(header.getSolution()).isEqualTo(new byte[1408]);
-        assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(header.getSeed()).isEqualTo(new byte[64]);
+        assertThat(header.getSigningPublicKey()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(header.getSignature()).isEqualTo(new byte[64]);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
         assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
     }
@@ -102,9 +113,10 @@ public class A0BlockHeaderTest {
     public void testBlockHeaderFromRLP() {
         long time = System.currentTimeMillis() / 1000;
 
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance(true);
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
 
-        builder.withCoinbase(new AionAddress(COINBASE))
+        builder.fromUnsafeSource()
+                .withCoinbase(new AionAddress(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
                 .withReceiptTrieRoot(RECEIPT_ROOT)
@@ -113,12 +125,14 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withSeed(SEED)
+                .withSigningPublicKey(SIGNINGPUBKEY)
+                .withSignature(SIGNATURE);
 
-        A0BlockHeader header = builder.build();
+        StakingBlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
 
-        A0BlockHeader reconstructed = A0BlockHeader.Builder.newInstance(true).withRlpEncodedData(encoded).build();
+        StakingBlockHeader reconstructed = StakingBlockHeader.Builder.newInstance(true).withRlpEncodedData(encoded).build();
         assertThat(reconstructed.getCoinbase()).isEqualTo(header.getCoinbase());
         assertThat(reconstructed.getTxTrieRoot()).isEqualTo(header.getTxTrieRoot());
         assertThat(reconstructed.getExtraData()).isEqualTo(header.getExtraData());
@@ -128,7 +142,10 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getEnergyConsumed()).isEqualTo(header.getEnergyConsumed());
         assertThat(reconstructed.getEnergyLimit()).isEqualTo(header.getEnergyLimit());
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
-        assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
+        assertThat(reconstructed.getSeed()).isEqualTo(header.getSeed());
+        assertThat(reconstructed.getSignature()).isEqualTo(header.getSignature());
+        assertThat(reconstructed.getSigningPublicKey()).isEqualTo(header.getSigningPublicKey());
+
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
         assertThat(reconstructed.getSealType() == header.getSealType());
 
@@ -136,17 +153,56 @@ public class A0BlockHeaderTest {
     }
 
     // verification tests, test that no properties are being violated
-
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidNonceLong() {
-        byte[] invalidNonceLength = new byte[33];
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance(true);
-        builder.withNonce(invalidNonceLength);
+    public void testInvalidSeedLength() {
+        byte[] invalidSeedLength = new byte[63];
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSeed(invalidSeedLength);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testInvalidNonceNull() {
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance(true);
-        builder.withNonce(null);
+    public void testInvalidSeedNull() {
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSeed(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidSignatureLength() {
+        byte[] invalidSignature = new byte[65];
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSignature(invalidSignature);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidSignatureLength2() {
+        byte[] invalidSignature = new byte[63];
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSignature(invalidSignature);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInvalidSignatureNull() {
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSignature(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidPubkeyLength() {
+        byte[] invalidPubkey = new byte[33];
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSigningPublicKey(invalidPubkey);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInvalidPubkeyNull() {
+        StakingBlockHeader.Builder builder = StakingBlockHeader.Builder.newInstance();
+        builder.fromUnsafeSource();
+        builder.withSigningPublicKey(null);
     }
 }

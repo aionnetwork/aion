@@ -77,7 +77,8 @@ public class Equihash {
      */
     public AionPowSolution mine(AionBlock block, byte[] nonce) {
 
-        A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
+        A0BlockHeader updateHeader =
+                A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
 
         byte[] inputBytes = updateHeader.getMineHash();
 

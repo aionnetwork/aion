@@ -24,7 +24,6 @@ import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgReports;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisBlockLoader;
@@ -73,14 +72,15 @@ public final class CfgAion extends Cfg {
     public void setGenesis() {
         try {
             this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisFile().getAbsolutePath());
-        } catch (IOException | HeaderStructureException e) {
+        } catch (IOException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
             try {
                 this.genesis = (new AionGenesis.Builder()).build();
-            } catch (HeaderStructureException e2) {
+            } catch (Exception e2) {
                 // if this fails, it means our DEFAULT genesis violates header rules
                 // this is catastrophic
+                System.out.println("load default AionGenesis runtime failed! " + e2.getMessage());
                 throw new RuntimeException(e2);
             }
         }

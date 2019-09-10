@@ -18,6 +18,8 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionBlockStore.BlockInfo;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -62,7 +64,7 @@ public class BlockchainIndexIntegrityTest {
 
         chain.getRepository().flush();
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // deleting the genesis index
@@ -132,13 +134,18 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
             next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
-            next.setExtraData("other".getBytes());
+            A0BlockHeader newBlockHeader =
+                    A0BlockHeader.Builder.newInstance()
+                            .withHeader(next.getHeader())
+                            .withExtraData("other".getBytes())
+                            .build();
+            next.updateHeader(newBlockHeader);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         }
@@ -148,7 +155,7 @@ public class BlockchainIndexIntegrityTest {
 
         chain.getRepository().flush();
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // corrupting the index at level 2
@@ -184,13 +191,18 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            Block next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
             next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
-            next.setExtraData("other".getBytes());
+            A0BlockHeader newBlockHeader =
+                    A0BlockHeader.Builder.newInstance()
+                            .withHeader(next.getHeader())
+                            .withExtraData("other".getBytes())
+                            .build();
+            next.updateHeader(newBlockHeader);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         }
@@ -200,7 +212,7 @@ public class BlockchainIndexIntegrityTest {
 
         chain.getRepository().flush();
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery succeeded

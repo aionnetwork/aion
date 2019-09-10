@@ -17,7 +17,7 @@ public class ResBlocksHeadersTest {
 
     static {
         // replace with well-formed header
-        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
         bh1 = builder.build();
     }
 
@@ -25,9 +25,9 @@ public class ResBlocksHeadersTest {
     public void testHeader() {
 
         byte[] dd = bh1.getEncoded();
-        A0BlockHeader bh2 = null;
+        A0BlockHeader bh2;
         try {
-            bh2 = A0BlockHeader.fromRLP(dd, false);
+            bh2 = A0BlockHeader.Builder.newInstance().withRlpEncodedData(dd).build();
         } catch (Exception e) {
             System.out.println(e.toString());
             e.printStackTrace();

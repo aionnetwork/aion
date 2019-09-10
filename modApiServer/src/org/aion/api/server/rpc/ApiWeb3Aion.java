@@ -51,7 +51,6 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgApiNrg;
 import org.aion.mcf.config.CfgApiRpc;
@@ -73,6 +72,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -2522,7 +2522,18 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "SeedNodeIsOpened");
         }
 
-        BlockContext bestBlock = getBlockTemplate();
+        BlockContext bestBlock;
+        try {
+            bestBlock = getBlockTemplate();
+        } catch (Exception e) {
+            LOG.error("get block template failed!", e);
+
+            JSONObject obj = new JSONObject();
+            obj.put("message", "failed: " + e.toString());
+            obj.put("code", -1);
+            return new RpcMsg(obj);
+        }
+
         ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.block.getHeader().getMineHash());
 
         // Read template map; if block already contained chain has not moved forward, simply return
@@ -2644,8 +2655,14 @@ public class ApiWeb3Aion extends ApiAion {
                 // Grab copy of best block
                 AionBlock bestBlock = templateMap.get(key);
                 if (bestBlock != null) {
-                    bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
-                    bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
+                    try {
+                        bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
+                    } catch (Exception e) {
+                        LOG.error("Finalize block failed!", e);
+                        obj.put("message", "failed: " + e.toString());
+                        obj.put("code", -1);
+                        return new RpcMsg(obj);
+                    }
 
                     // Directly submit to chain for new due to delays using event, explore event
                     // submission again
@@ -2699,7 +2716,7 @@ public class ApiWeb3Aion extends ApiAion {
                 // TODO: [Unity] This cast should be removed when we support staking blocks
                 AionBlock block = (AionBlock) getBlockRaw(bnInt);
                 if (block != null) {
-                    BlockHeader header = block.getHeader();
+                    A0BlockHeader header = block.getHeader();
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));

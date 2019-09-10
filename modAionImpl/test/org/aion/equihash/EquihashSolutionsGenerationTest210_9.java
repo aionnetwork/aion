@@ -366,16 +366,17 @@ public class EquihashSolutionsGenerationTest210_9 {
         Equihash spy = spy(new Equihash(n, k));
 
         // mock return the known solution
-        when(spy.getSolutionsForNonce(header.getMineHash(), header.getNonce()))
+        byte[] nonce = header.getNonce();
+        when(spy.getSolutionsForNonce(header.getMineHash(), nonce))
                 .thenReturn(
                         new int[][] {
                             EquiUtils.getIndicesFromMinimal(header.getSolution(), n / (k + 1))
                         });
 
         // use real method for mine call
-        when(spy.mine(block, header.getNonce())).thenCallRealMethod();
+        when(spy.mine(block, nonce)).thenCallRealMethod();
 
-        AionPowSolution sol = spy.mine(block, block.getNonce());
+        AionPowSolution sol = spy.mine(block, nonce);
 
         assertNotNull(sol);
         assertArrayEquals(header.getNonce(), sol.getNonce());

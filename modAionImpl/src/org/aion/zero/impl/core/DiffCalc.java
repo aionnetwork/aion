@@ -4,8 +4,8 @@ import static org.aion.util.biginteger.BIUtil.max;
 import static org.aion.util.biginteger.BIUtil.min;
 
 import java.math.BigInteger;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.types.IBlockConstants;
-import org.aion.zero.impl.types.AbstractBlockHeader;
 import org.aion.zero.impl.api.BlockConstants;
 
 public class DiffCalc {
@@ -18,7 +18,7 @@ public class DiffCalc {
         this.constants = constants;
     }
 
-    public BigInteger calcDifficulty(AbstractBlockHeader curBlock, AbstractBlockHeader parent) {
+    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
         BigInteger pd = parent.getDifficultyBI();
         BigInteger quotient = pd.divide(this.constants.getDifficultyBoundDivisor());
 
@@ -31,7 +31,7 @@ public class DiffCalc {
     }
 
     private static BigInteger getCalcDifficultyMultiplier(
-            AbstractBlockHeader curBlock, AbstractBlockHeader parent) {
+        BlockHeader curBlock, BlockHeader parent) {
         return BigInteger.valueOf(
                 curBlock.getTimestamp() >= (parent.getTimestamp() + BlockConstants.DURATION_LIMIT)
                         ? -1

@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
@@ -38,9 +37,18 @@ public class BlockchainConcurrencyTest {
 
                         List<AionTransaction> txList = Collections.emptyList();
                         AionBlock block =
-                                bc.createNewBlock(bc.genesis, Collections.emptyList(), false);
+                            null;
+                        try {
+                            block = bc.createNewBlock(bc.genesis, Collections.emptyList(), false);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         while (!Thread.currentThread().isInterrupted() && count < MAX_COUNT) {
-                            block = bc.createNewBlock(block, txList, false);
+                            try {
+                                block = bc.createNewBlock(block, txList, false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                             count++;
                         }
                         System.out.println("completed block creation");

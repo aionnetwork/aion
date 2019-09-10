@@ -34,7 +34,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
 import org.aion.vm.common.BlockCachingContext;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
@@ -367,7 +366,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             AionGenesis genesis;
             try {
                 genesis = genesisBuilder.build();
-            } catch (HeaderStructureException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             bc.genesis = genesis;
@@ -531,7 +530,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
                 // create a grandparent block if none exists
                 A0BlockHeader header =
-                        new A0BlockHeader.Builder()
+                        A0BlockHeader.Builder.newInstance()
                                 .withStateRoot(this.getBestBlock().getStateRoot())
                                 .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
                                 .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
@@ -556,7 +555,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             BlockHeader bestHeader = this.getBestBlock().getHeader();
             A0BlockHeader header =
-                    new A0BlockHeader.Builder()
+                    A0BlockHeader.Builder.newInstance()
                             .withParentHash(grandParentBlock.getHash())
                             .withStateRoot(this.getBestBlock().getStateRoot())
                             .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)

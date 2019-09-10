@@ -31,10 +31,12 @@ public final class ResBlocksHeaders extends Msg {
                 List<BlockHeader> blockHeaders = new ArrayList<>();
                 for (RLPElement aList : list) {
                     RLPList rlpData = ((RLPList) aList);
-                    blockHeaders.add(A0BlockHeader.fromRLP(rlpData, true));
+                    blockHeaders.add(
+                            A0BlockHeader.Builder.newInstance(true).withRlpList(rlpData).build());
                 }
                 return new ResBlocksHeaders(blockHeaders);
             } catch (Exception ex) {
+                //TODO: [unity] should print debugging message in here!
                 return null;
             }
         }

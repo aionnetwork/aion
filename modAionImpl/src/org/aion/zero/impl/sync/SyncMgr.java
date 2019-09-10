@@ -33,6 +33,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.apache.commons.collections4.map.LRUMap;
@@ -345,7 +346,7 @@ public final class SyncMgr {
         Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
         while (headerIt.hasNext() && bodyIt.hasNext()) {
-            AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
+            AionBlock block = AionBlock.createBlockFromNetwork((A0BlockHeader) headerIt.next(), bodyIt.next());
             if (block == null) {
                 log.error("<assemble-and-validate-blocks node={}>", _displayId);
                 break;

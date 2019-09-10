@@ -16,6 +16,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 
 /**
@@ -128,7 +129,13 @@ public class BlockchainTestUtils {
             repo.syncToRoot(originalRoot);
 
             block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-            block.setExtraData(String.valueOf(i).getBytes());
+
+            A0BlockHeader newBlockHeader =
+                    A0BlockHeader.Builder.newInstance()
+                            .withHeader(block.getHeader())
+                            .withExtraData(String.valueOf(i).getBytes())
+                            .build();
+            block.updateHeader(newBlockHeader);
 
             ImportResult result = chain.tryToConnectInternal(block, (time += 10));
             knownBlocks.add(block);
@@ -181,7 +188,13 @@ public class BlockchainTestUtils {
             }
 
             block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-            block.setExtraData(String.valueOf(i).getBytes());
+
+            A0BlockHeader newBlockHeader =
+                A0BlockHeader.Builder.newInstance()
+                    .withHeader(block.getHeader())
+                    .withExtraData(String.valueOf(i).getBytes())
+                    .build();
+            block.updateHeader(newBlockHeader);
 
             ImportResult result = chain.tryToConnectInternal(block, (time += 10));
             knownBlocks.add(block);
@@ -213,7 +226,13 @@ public class BlockchainTestUtils {
 
         long time = System.currentTimeMillis();
         block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-        block.setExtraData(String.valueOf(time).getBytes());
+
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader((A0BlockHeader) block.getHeader())
+                .withExtraData(String.valueOf(time).getBytes())
+                .build();
+        block.updateHeader(newBlockHeader);
         return block;
     }
 
@@ -240,7 +259,12 @@ public class BlockchainTestUtils {
 
         long time = System.currentTimeMillis();
         block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-        block.setExtraData(String.valueOf(time).getBytes());
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader((A0BlockHeader) block.getHeader())
+                .withExtraData(String.valueOf(time).getBytes())
+                .build();
+        block.updateHeader(newBlockHeader);
         return block;
     }
 }

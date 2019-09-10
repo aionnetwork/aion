@@ -34,6 +34,7 @@ import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Statefulness;
@@ -145,7 +146,12 @@ public class BlockchainForkingTest {
 
         ChainConfiguration cc = new ChainConfiguration();
         AionBlock higherDifficultyBlock = new AionBlock(standardBlock);
-        higherDifficultyBlock.getHeader().setTimestamp(bestBlock.getTimestamp() + 1);
+        A0BlockHeader newBlockHeader =
+                A0BlockHeader.Builder.newInstance()
+                        .withHeader(higherDifficultyBlock.getHeader())
+                        .withTimestamp(bestBlock.getTimestamp() + 1)
+                        .build();
+        higherDifficultyBlock.updateHeader(newBlockHeader);
 
         BigInteger difficulty =
                 cc.getDifficultyCalculator()
@@ -153,7 +159,13 @@ public class BlockchainForkingTest {
                                 higherDifficultyBlock.getHeader(), bestBlock.getHeader());
 
         assertThat(difficulty).isGreaterThan(standardBlock.getDifficultyBI());
-        higherDifficultyBlock.getHeader().setDifficulty(difficulty.toByteArray());
+
+        newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(higherDifficultyBlock.getHeader())
+                .withDifficulty(difficulty.toByteArray())
+                .build();
+        higherDifficultyBlock.updateHeader(newBlockHeader);
 
         System.out.println(
                 "before any processing: " + new ByteArrayWrapper(bc.getRepository().getRoot()));
@@ -294,7 +306,12 @@ public class BlockchainForkingTest {
                         .block;
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
 
-        slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(slowerSecondBlock.getHeader())
+                .withTimestamp(time / 1000L + 100)
+                .build();
+        slowerSecondBlock.updateHeader(newBlockHeader);
 
         assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
@@ -428,7 +445,12 @@ public class BlockchainForkingTest {
                         secondBlock.block, Collections.emptyList(), true, time / 1000L);
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
 
-        slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(slowerSecondBlock.getHeader())
+                .withTimestamp(time / 1000L + 100)
+                .build();
+        slowerSecondBlock.updateHeader(newBlockHeader);
 
         assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100))
                 .isEqualTo(ImportResult.IMPORTED_BEST);
@@ -492,7 +514,13 @@ public class BlockchainForkingTest {
 
         AionBlock invalidBlock =
                 bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
-        invalidBlock.getHeader().setDifficulty(BigInteger.ONE.toByteArray());
+
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(invalidBlock.getHeader())
+                .withDifficulty(BigInteger.ONE.toByteArray())
+                .build();
+        invalidBlock.updateHeader(newBlockHeader);
 
         // attempting to add invalid block
         assertThat(bc.tryToConnect(invalidBlock)).isEqualTo(ImportResult.INVALID_BLOCK);
@@ -599,7 +627,12 @@ public class BlockchainForkingTest {
                                         time / 10_000L)
                                 .block);
 
-        slowBlock.getHeader().setTimestamp(time / 10_000L + 100);
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(slowBlock.getHeader())
+                .withTimestamp(time / 10_000L + 100)
+                .build();
+        slowBlock.updateHeader(newBlockHeader);
 
         time += 100;
 
@@ -835,7 +868,13 @@ public class BlockchainForkingTest {
                                         time / 10_000L)
                                 .block);
 
-        slowBlock.getHeader().setTimestamp(time / 10_000L + 100);
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(slowBlock.getHeader())
+                .withTimestamp(time / 10_000L + 100)
+                .build();
+        slowBlock.updateHeader(newBlockHeader);
+
         time += 100;
 
         // sourceChain imports only fast block

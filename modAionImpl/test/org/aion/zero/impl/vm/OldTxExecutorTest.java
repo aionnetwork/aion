@@ -282,7 +282,7 @@ public class OldTxExecutorTest {
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
-        byte[] logsBloom = new byte[0];
+        byte[] logsBloom = new byte[256];
         byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;
         long timestamp = System.currentTimeMillis() / 1000;
@@ -292,7 +292,7 @@ public class OldTxExecutorTest {
         byte[] transactionsRoot = new byte[32];
         byte[] stateRoot = new byte[32];
         List<AionTransaction> transactionsList = Collections.emptyList();
-        byte[] solutions = new byte[0];
+        byte[] solutions = new byte[1408];
 
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(

@@ -2,6 +2,7 @@ package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.AccountState;
@@ -14,7 +15,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
 
 public class AionGenesis extends AionBlock {
@@ -34,7 +34,7 @@ public class AionGenesis extends AionBlock {
      */
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getParentHash()}, for purposes of the genesis
+     * Corresponds to {@link A0BlockHeader#getParentHash()}, for purposes of the genesis
      * blocks, this value could reference something arbitrary. We have chosen to arbitrarily set it
      * to a silly phrase.
      */
@@ -43,20 +43,20 @@ public class AionGenesis extends AionBlock {
                     "0000000000000000000000000000000000000000000000000000000000000000");
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getCoinbase()} that mined the first block. For
+     * Corresponds to {@link A0BlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
     protected static final AionAddress GENESIS_COINBASE = AddressUtils.ZERO_ADDRESS;
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getLogsBloom()} indicates the logsBloom of the
+     * Corresponds to {@link A0BlockHeader#getLogsBloom()} indicates the logsBloom of the
      * genesis block, because no transactions are included in this block. It defaults to empty.
      */
     protected static final byte[] GENESIS_LOGSBLOOM = new byte[256];
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getDifficulty()} and {@link
-     * AbstractBlockHeader#getDifficultyBI()}. This value represents the initial difficulty of the
+     * Corresponds to {@link A0BlockHeader#getDifficulty()} and {@link
+     * A0BlockHeader#getDifficultyBI()}. This value represents the initial difficulty of the
      * network, a very important value to set. It is not necessarily important to correctly set this
      * value as it will rise to based on the network hashing power.
      *
@@ -72,19 +72,19 @@ public class AionGenesis extends AionBlock {
             ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1024));
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getNumber()} the number. This is pretty self
+     * Corresponds to {@link A0BlockHeader#getNumber()} the number. This is pretty self
      * explanatory.
      */
     protected static final long GENESIS_NUMBER = 0;
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getTimestamp()} the timestamp that the block was
+     * Corresponds to {@link A0BlockHeader#getTimestamp()} the timestamp that the block was
      * forged. In terms of the genesis, we arbitrarily set it to 0.
      */
     protected static final long GENESIS_TIMESTAMP = 0;
 
     /**
-     * Corresponds to {@link AbstractBlockHeader#getNonce()} nonce of the block, we arbitrarily set
+     * Corresponds to {@link A0BlockHeader#getNonce()} nonce of the block, we arbitrarily set
      * this to 0 for now
      */
     protected static final byte[] GENESIS_NONCE = new byte[32];
@@ -138,8 +138,10 @@ public class AionGenesis extends AionBlock {
             long timestamp,
             byte[] extraData,
             byte[] nonce,
-            long energyLimit)
-            throws HeaderStructureException {
+            long energyLimit,
+            byte[] stateRoot,
+            byte[] receiptRoot,
+            byte[] txTrieRoot) {
         super(
                 parentHash,
                 coinbase,
@@ -150,6 +152,9 @@ public class AionGenesis extends AionBlock {
                 extraData,
                 nonce,
                 energyLimit);
+
+        updateTransactionAndState(
+                new ArrayList<>(), txTrieRoot, stateRoot, logsBloom, receiptRoot, 0L);
     }
 
     public Map<AionAddress, AccountState> getPremine() {
@@ -295,7 +300,7 @@ public class AionGenesis extends AionBlock {
          * Build the genesis block, after parameters have been set. Defaults back to default genesis
          * values if parameters are not specified.
          */
-        public AionGenesis build() throws HeaderStructureException {
+        public AionGenesis build() {
             if (this.parentHash == null) this.parentHash = GENESIS_PARENT_HASH;
 
             if (this.coinbase == null) this.coinbase = GENESIS_COINBASE;
@@ -314,7 +319,11 @@ public class AionGenesis extends AionBlock {
 
             if (this.networkBalance == null) this.networkBalance = GENESIS_NETWORK_BALANCE;
 
+            if (logsBloom == null) logsBloom = GENESIS_LOGSBLOOM;
+
             byte[] extraData = generateExtraData(this.chainId);
+
+            byte[] rootHash = generateRootHash();
 
             AionGenesis genesis =
                     new AionGenesis(
@@ -326,17 +335,14 @@ public class AionGenesis extends AionBlock {
                             this.timestamp,
                             extraData,
                             this.nonce,
-                            this.energyLimit);
+                            this.energyLimit,
+                            rootHash,
+                            HashUtil.EMPTY_TRIE_HASH,
+                            HashUtil.EMPTY_TRIE_HASH);
 
             // temporary solution, so as not to disrupt the constructors
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
-
-            byte[] rootHash = generateRootHash();
-
-            genesis.getHeader().setStateRoot(rootHash);
-            genesis.getHeader().setReceiptsRoot(HashUtil.EMPTY_TRIE_HASH);
-            genesis.getHeader().setTxTrieRoot(HashUtil.EMPTY_TRIE_HASH);
 
             return genesis;
         }

@@ -71,8 +71,6 @@ import org.aion.vm.common.BulkExecutor;
 import org.aion.vm.common.PostExecutionLogic;
 import org.aion.vm.common.PostExecutionWork;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
@@ -972,6 +970,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /**
      * Creates a new block, adding in context/metadata about the block
      *
+     * @implNote Must catch the exception when callling this method.
+     *
      * @param parent block
      * @param txs to be added into the block
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new
@@ -1005,34 +1005,35 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
         AionBlock block;
+        Block grandParent = this.getParent(parent.getHeader());
+
         try {
-            A0BlockHeader.Builder headerBuilder =
-                    new A0BlockHeader.Builder()
-                            .withVersion((byte) 1)
+            byte[] difficulty =
+                    ByteUtil.bigIntegerToBytes(
+                            this.chainConfiguration
+                                    .getDifficultyCalculator()
+                                    .calculateDifficulty(
+                                            parent.getHeader(),
+                                            grandParent == null ? null : grandParent.getHeader()),
+                            DIFFICULTY_BYTES);
+
+            A0BlockHeader headerBuilder =
+                    A0BlockHeader.Builder.newInstance()
                             .withParentHash(parent.getHash())
                             .withCoinbase(minerCoinbase)
                             .withNumber(parent.getNumber() + 1)
                             .withTimestamp(time)
                             .withExtraData(minerExtraData)
                             .withTxTrieRoot(calcTxTrie(txs))
-                            .withEnergyLimit(energyLimit);
-            block = new AionBlock(headerBuilder.build(), txs);
-        } catch (HeaderStructureException e) {
-            throw new RuntimeException(e);
+                            .withEnergyLimit(energyLimit)
+                            .withDifficulty(difficulty)
+                            .build();
+            block = new AionBlock(headerBuilder, txs);
+        } catch (Exception e) {
+            LOG.error("building block template failed!", e);
+            throw e;
         }
 
-        Block grandParent = this.getParent(parent.getHeader());
-        block.getHeader()
-                .setDifficulty(
-                        ByteUtil.bigIntegerToBytes(
-                                this.chainConfiguration
-                                        .getDifficultyCalculator()
-                                        .calculateDifficulty(
-                                                parent.getHeader(),
-                                                grandParent == null
-                                                        ? null
-                                                        : grandParent.getHeader()),
-                                DIFFICULTY_BYTES));
         /*
          * Begin execution phase
          */
@@ -1065,7 +1066,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             logBloom.or(receipt.getBloomFilter());
         }
 
-        block.seal(
+        block.updateTransactionAndState(
                 preBlock.txs,
                 calcTxTrie(preBlock.txs),
                 stateRoot,

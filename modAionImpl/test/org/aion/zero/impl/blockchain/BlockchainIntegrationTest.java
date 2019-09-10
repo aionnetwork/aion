@@ -23,6 +23,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
@@ -202,7 +203,13 @@ public class BlockchainIntegrationTest {
                 bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
         // set the block to be created 1 month in the future
-        block.getHeader().setTimestamp((System.currentTimeMillis() / 1000) + 2592000);
+        A0BlockHeader newBlockHeader =
+                A0BlockHeader.Builder.newInstance()
+                        .withHeader(block.getHeader())
+                        .withTimestamp((System.currentTimeMillis() / 1000) + 2592000)
+                        .build();
+        block.updateHeader(newBlockHeader);
+
         ImportResult result = bc.tryToConnect(block);
         assertThat(result.isSuccessful()).isFalse();
     }
@@ -327,7 +334,12 @@ public class BlockchainIntegrationTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now modify the block in some way
-        block.getHeader().setEnergyConsumed(42L);
+        A0BlockHeader newBlockHeader =
+            A0BlockHeader.Builder.newInstance()
+                .withHeader(block.getHeader())
+                .withEnergyConsumed(42L)
+                .build();
+        block.updateHeader(newBlockHeader);
 
         // now try submitting the block again
         result = bundle.bc.tryToConnect(block);

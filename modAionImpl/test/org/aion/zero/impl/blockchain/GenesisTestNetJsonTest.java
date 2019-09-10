@@ -13,7 +13,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisBlockLoader;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -31,15 +30,7 @@ public class GenesisTestNetJsonTest {
         // we run the test from
         try {
             genesis = GenesisBlockLoader.loadJSON(TESTNET_DEFAULT_LOCATION);
-        } catch (IOException | HeaderStructureException e) {
-
-            if (e instanceof HeaderStructureException) {
-                System.out.println(
-                        "header structure violated, something is wrong with the genesis files");
-                e.printStackTrace();
-                return;
-            }
-
+        } catch (IOException e) {
             System.out.println(
                     String.format("Failed to load genesis from: %s", TESTNET_DEFAULT_LOCATION));
         }

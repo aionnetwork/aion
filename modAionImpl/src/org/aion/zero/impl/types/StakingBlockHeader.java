@@ -1,13 +1,6 @@
 package org.aion.zero.impl.types;
 
-import static org.aion.util.bytes.ByteUtil.longToBytes;
-import static org.aion.util.bytes.ByteUtil.merge;
-import static org.aion.util.bytes.ByteUtil.oneByteToHexString;
-import static org.aion.util.bytes.ByteUtil.toHexString;
-import static org.aion.util.time.TimeUtils.longToDateTime;
-
 import com.google.common.annotations.VisibleForTesting;
-import java.math.BigInteger;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
@@ -15,17 +8,19 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
+
+import java.math.BigInteger;
 import org.json.JSONObject;
-import org.spongycastle.util.BigIntegers;
 
-/**
- * aion zero block header class. Specific for the PoW block.
- *
- * @author Ross
- */
-public final class A0BlockHeader implements BlockHeader {
+import static org.aion.util.bytes.ByteUtil.*;
+import static org.aion.util.time.TimeUtils.longToDateTime;
 
-    private static final int RPL_BH_SEALTYPE = 0;
+/** Represents a PoS block on a chain implementing Unity Consensus. */
+public class StakingBlockHeader  implements BlockHeader {
+
+    // Not used in the BlockHeader but been defined in rlpEncoded data.
+    //private static final int RPL_BH_SEALTYPE = 0;
+
     private static final int RLP_BH_NUMBER = 1;
     private static final int RLP_BH_PARENTHASH = 2;
     private static final int RLP_BH_COINBASE = 3;
@@ -38,10 +33,11 @@ public final class A0BlockHeader implements BlockHeader {
     private static final int RLP_BH_NRG_CONSUMED = 10;
     private static final int RLP_BH_NRG_LIMIT = 11;
     private static final int RLP_BH_TIMESTAMP = 12;
-    private static final int RLP_BH_NONCE = 13;
-    private static final int RLP_BH_SOLUTION = 14;
-    private static final BlockSealType sealType = BlockSealType.SEAL_POW_BLOCK;
-    private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {A0BlockHeader.sealType.getSealId()});
+    private static final int RLP_BH_SEED = 13;
+    private static final int RLP_BH_SIGNATURE = 14;
+    private static final int RLP_BH_SIGNING_PUBLICKEY = 15;
+    private static final BlockSealType sealType = BlockSealType.SEAL_POS_BLOCK;
+    private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {StakingBlockHeader.sealType.getSealId()});
 
     /** The SHA3 256-bit hash of the parent block, in its entirety */
     private final byte[] parentHash;
@@ -99,25 +95,32 @@ public final class A0BlockHeader implements BlockHeader {
     /** A long value containing energy limit of this block */
     private final long energyLimit;
 
-    /** The hash of block template for mining */
+    /** The hash of block template for signing */
     private byte[] mineHashBytes;
+    /**
+     * The seed of this block. It should be a verifiable signature of the seed of the previous PoS
+     * block.
+     */
+    private final byte[] seed;
+
+    private final byte[] signingPublicKey;
 
     /**
-     * A 256-bit hash which proves that a sufficient amount of computation has been carried out on
-     * this block
+     * A verifiable signature of the encoding of this block (without this field). The signer should
+     * be the same signer as the signer of the seed.
      */
-    private final byte[] nonce;
-
-    /////////////////////////////////////////////////////////////////
-    // (1344 in 200-9, 1408 in 210,9)
-    private final byte[] solution; // The equihash solution in compressed format
+    private final byte[] signature;
 
     private byte[] headerHash;
 
-    public static final int NONCE_LENGTH = 32;
-    public static final int SOLUTIONSIZE = 1408;
+    public static final int SIG_LENGTH = 64;
+    public static final int SEED_LENGTH = 64;
+    public static final int PUBKEY_LENGTH = 32;
 
-    public A0BlockHeader(A0BlockHeader.Builder builder) {
+    /**
+     * private constructor. use builder to construct the header class.
+     */
+    public StakingBlockHeader(StakingBlockHeader.Builder builder) {
         this.coinbase = builder.coinbase;
         this.stateRoot = builder.stateRoot;
         this.txTrieRoot = builder.txTrieRoot;
@@ -130,17 +133,58 @@ public final class A0BlockHeader implements BlockHeader {
         this.extraData = builder.extraData;
         this.energyConsumed = builder.energyConsumed;
         this.energyLimit = builder.energyLimit;
-        // New fields required for Equihash
-        this.solution = builder.solution;
-        this.nonce = builder.nonce;
+        this.seed = builder.seed;
+        this.signature = builder.signature;
+        this.signingPublicKey = builder.pubkey;
     }
 
-    public byte[] getSolution() {
-        return solution.clone();
+    @Override
+    public byte[] getEncoded() {
+        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
+        byte[] parentHash = RLP.encodeElement(this.parentHash);
+        byte[] coinbase = RLP.encodeElement(this.coinbase.toByteArray());
+        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
+        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
+        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
+        byte[] logsBloom = RLP.encodeElement(this.logsBloom);
+        byte[] difficulty = RLP.encodeElement(this.difficulty);
+        byte[] extraData = RLP.encodeElement(this.extraData);
+        byte[] energyConsumed = RLP.encodeBigInteger(BigInteger.valueOf(this.energyConsumed));
+        byte[] energyLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.energyLimit));
+        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
+        byte[] seed = RLP.encodeElement(this.seed);
+        byte[] signature = RLP.encodeElement(this.signature);
+        byte[] signingPublicKey = RLP.encodeElement(this.signingPublicKey);
+        return RLP.encodeList(
+                rlpEncodedSealType,
+                number,
+                parentHash,
+                coinbase,
+                stateRoot,
+                txTrieRoot,
+                receiptTrieRoot,
+                logsBloom,
+                difficulty,
+                extraData,
+                energyConsumed,
+                energyLimit,
+                timestamp,
+                seed,
+                signature,
+                signingPublicKey);
     }
 
-    public byte[] getNonce() {
-        return nonce.clone();
+
+    public byte[] getSeed() {
+        return seed.clone();
+    }
+
+    public byte[] getSignature() {
+        return signature.clone();
+    }
+
+    public byte[] getSigningPublicKey() {
+        return signingPublicKey.clone();
     }
 
     /**
@@ -150,18 +194,9 @@ public final class A0BlockHeader implements BlockHeader {
      */
     public byte[] getMineHash() {
         if (mineHashBytes == null) {
-            mineHashBytes = HashUtil.h256(getHeaderForMining());
+            mineHashBytes = HashUtil.h256(merge(getHeaderForMining(), seed));
         }
         return mineHashBytes.clone();
-    }
-
-    public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(
-                32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
-    }
-
-    public BigInteger getPowBoundaryBI() {
-        return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
     }
 
     /** Builder used to introduce blocks into system that come from unsafe sources */
@@ -178,14 +213,14 @@ public final class A0BlockHeader implements BlockHeader {
         protected byte[] extraData;
         protected long energyConsumed;
         protected long energyLimit;
-        protected byte[] solution;
-        protected byte[] nonce;
+        protected byte[] seed;
+        protected byte[] signature;
+        protected byte[] pubkey;
 
         /*
          * Builder parameters, not related to header data structure
          */
         boolean isFromUnsafeSource;
-        private static byte[] EMPTY_SOLUTION = new byte[SOLUTIONSIZE];
         private static byte[] EMPTY_BLOOM = new byte[BLOOM_BYTE_SIZE];
 
         public static Builder newInstance(boolean fromUnsafeSource)
@@ -200,6 +235,15 @@ public final class A0BlockHeader implements BlockHeader {
 
         private Builder(boolean fromUnsafeSource) {
             isFromUnsafeSource = fromUnsafeSource;
+        }
+        /**
+         * Indicates that the data is from an unsafe source
+         *
+         * @return {@code builder} same instance of builder
+         */
+        Builder fromUnsafeSource() {
+            isFromUnsafeSource = true;
+            return this;
         }
 
         public Builder withParentHash(byte[] parentHash) {
@@ -286,7 +330,7 @@ public final class A0BlockHeader implements BlockHeader {
                 }
                 if (difficulty.length > MAX_DIFFICULTY_LENGTH)
                     throw new IllegalArgumentException(
-                            "difficulty cannot be greater than 16 bytes");
+                        "difficulty cannot be greater than 16 bytes");
             }
             this.difficulty = difficulty;
             return this;
@@ -303,7 +347,7 @@ public final class A0BlockHeader implements BlockHeader {
             return this;
         }
 
-        protected Builder withTimestamp(byte[] timestamp) {
+        public Builder withTimestamp(byte[] timestamp) {
             if (isFromUnsafeSource) {
                 if (timestamp == null) {
                     throw new NullPointerException("timestamp cannot be null");
@@ -325,7 +369,7 @@ public final class A0BlockHeader implements BlockHeader {
             return this;
         }
 
-        protected Builder withNumber(byte[] number) {
+        Builder withNumber(byte[] number) {
             if (isFromUnsafeSource) {
                 if (number == null) {
                     throw new NullPointerException("number can not be null");
@@ -370,7 +414,7 @@ public final class A0BlockHeader implements BlockHeader {
                 }
                 if (_energyConsumed.length > Long.BYTES)
                     throw new IllegalArgumentException(
-                            "energyConsumed cannot be greater than 8 bytes");
+                        "energyConsumed cannot be greater than 8 bytes");
             }
 
             return withEnergyConsumed(ByteUtil.byteArrayToLong(_energyConsumed));
@@ -402,6 +446,49 @@ public final class A0BlockHeader implements BlockHeader {
             return withEnergyLimit(ByteUtil.byteArrayToLong(energyLimit));
         }
 
+        public Builder withSeed(byte[] seed) {
+            if (isFromUnsafeSource) {
+                if (seed == null) {
+                    throw new NullPointerException("seed cannot be null");
+                }
+
+                if (seed.length != SEED_LENGTH) {
+                    throw new IllegalArgumentException("invalid seed length");
+                }
+            }
+            this.seed = seed;
+            return this;
+        }
+
+        public Builder withSignature(byte[] signature) {
+            if (isFromUnsafeSource) {
+                if (signature == null) {
+                    throw new NullPointerException("signature cannot be null");
+                }
+
+                if (signature.length != SIG_LENGTH) {
+                    throw new IllegalArgumentException("invalid signature length");
+                }
+            }
+
+            this.signature = signature;
+            return this;
+        }
+
+        public Builder withSigningPublicKey(byte[] publicKey) {
+            if (isFromUnsafeSource) {
+                if (publicKey == null) {
+                    throw new NullPointerException("signingPublicKey cannot be null");
+                }
+
+                if (publicKey.length != PUBKEY_LENGTH) {
+                    throw new IllegalArgumentException("invalid signingPublicKey length");
+                }
+            }
+            this.pubkey = publicKey;
+            return this;
+        }
+
         /**
          * Construct a block header from RLP encoded data
          *
@@ -428,18 +515,6 @@ public final class A0BlockHeader implements BlockHeader {
                 throw new NullPointerException("rlpHeader can not be null");
             }
 
-            if (isFromUnsafeSource) {
-                byte[] sealType = rlpHeader.get(RPL_BH_SEALTYPE).getRLPData();
-
-                if (sealType == null || sealType.length != 1) {
-                    throw new IllegalArgumentException("Invalid Sealtype data length");
-                }
-
-                if (sealType[0] != BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                    throw new IllegalArgumentException("Invalid Seal type");
-                }
-            }
-
             withNumber(rlpHeader.get(RLP_BH_NUMBER).getRLPData());
             withParentHash(rlpHeader.get(RLP_BH_PARENTHASH).getRLPData());
             withCoinbase(new AionAddress(rlpHeader.get(RLP_BH_COINBASE).getRLPData()));
@@ -452,40 +527,14 @@ public final class A0BlockHeader implements BlockHeader {
             withEnergyConsumed(rlpHeader.get(RLP_BH_NRG_CONSUMED).getRLPData());
             withEnergyLimit(rlpHeader.get(RLP_BH_NRG_LIMIT).getRLPData());
             withTimestamp(rlpHeader.get(RLP_BH_TIMESTAMP).getRLPData());
-            withNonce(rlpHeader.get(RLP_BH_NONCE).getRLPData());
-            withSolution(rlpHeader.get(RLP_BH_SOLUTION).getRLPData());
+            withSeed(rlpHeader.get(RLP_BH_SEED).getRLPData());
+            withSignature(rlpHeader.get(RLP_BH_SIGNATURE).getRLPData());
+            withSigningPublicKey(rlpHeader.get(RLP_BH_SIGNING_PUBLICKEY).getRLPData());
 
             return this;
         }
 
-        public Builder withSolution(byte[] solution) {
-            if (isFromUnsafeSource) {
-
-                if (solution == null) throw new NullPointerException("solution cannot be null");
-
-                if (solution.length != SOLUTIONSIZE) {
-                    throw new IllegalArgumentException("solution invalid solution length");
-                }
-            }
-            this.solution = solution;
-            return this;
-        }
-
-        public Builder withNonce(byte[] _nonce) {
-            if (isFromUnsafeSource) {
-
-                if (_nonce == null) throw new NullPointerException("nonce cannot be null");
-
-                if (_nonce.length != NONCE_LENGTH) {
-                    throw new IllegalArgumentException("nonce cannot be greater than 32 bytes");
-                }
-            }
-
-            nonce = _nonce;
-            return this;
-        }
-
-        public A0BlockHeader build() {
+        public StakingBlockHeader build() {
             // Formalize the data
             parentHash = parentHash == null ? HashUtil.EMPTY_DATA_HASH : parentHash;
             coinbase = coinbase == null ? AddressUtils.ZERO_ADDRESS : coinbase;
@@ -495,13 +544,14 @@ public final class A0BlockHeader implements BlockHeader {
             logsBloom = logsBloom == null ? EMPTY_BLOOM : logsBloom;
             difficulty = difficulty == null ? ByteUtil.EMPTY_HALFWORD : difficulty;
             extraData = extraData == null ? ByteUtil.EMPTY_WORD : extraData;
-            nonce = nonce == null ? ByteUtil.EMPTY_WORD : nonce;
-            solution = solution == null ? EMPTY_SOLUTION : solution;
+            seed = seed == null ? new byte[SEED_LENGTH] : seed;
+            signature = signature == null ? new byte[SIG_LENGTH] : signature;
+            pubkey = pubkey == null ? new byte[PUBKEY_LENGTH] : pubkey;
 
-            return new A0BlockHeader(this);
+            return new StakingBlockHeader(this);
         }
 
-        public Builder withHeader(A0BlockHeader header) {
+        Builder withHeader(StakingBlockHeader header) {
             if (header == null) {
                 throw new NullPointerException();
             }
@@ -518,8 +568,9 @@ public final class A0BlockHeader implements BlockHeader {
             energyConsumed = header.getEnergyConsumed();
             energyLimit = header.getEnergyLimit();
             timestamp = header.getTimestamp();
-            nonce = header.getNonce();
-            solution = header.getSolution();
+            seed = header.getSeed();
+            signature = header.getSignature();
+            pubkey = header.getSigningPublicKey();
 
             return this;
         }
@@ -602,7 +653,6 @@ public final class A0BlockHeader implements BlockHeader {
         return number;
     }
 
-    @Override
     public byte[] getExtraData() {
         return extraData.clone();
     }
@@ -654,104 +704,72 @@ public final class A0BlockHeader implements BlockHeader {
     }
 
     @Override
-    public byte[] getEncoded() {
-        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-        byte[] parentHash = RLP.encodeElement(this.parentHash);
-        byte[] coinbase = RLP.encodeElement(this.coinbase.toByteArray());
-        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
-        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
-        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
-        byte[] logsBloom = RLP.encodeElement(this.logsBloom);
-        byte[] difficulty = RLP.encodeElement(this.difficulty);
-        byte[] extraData = RLP.encodeElement(this.extraData);
-        byte[] energyConsumed = RLP.encodeBigInteger(BigInteger.valueOf(this.energyConsumed));
-        byte[] energyLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.energyLimit));
-        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
-        byte[] solution = RLP.encodeElement(this.solution);
-        byte[] nonce = RLP.encodeElement(this.nonce);
-
-        return RLP.encodeList(
-                rlpEncodedSealType,
-                number,
-                parentHash,
-                coinbase,
-                stateRoot,
-                txTrieRoot,
-                receiptTrieRoot,
-                logsBloom,
-                difficulty,
-                extraData,
-                energyConsumed,
-                energyLimit,
-                timestamp,
-                nonce,
-                solution);
-    }
-
-    @Override
     public String toString() {
         return "  hash="
-                + toHexString(getHash())
-                + "  Length: "
-                + getHash().length
-                + "\n"
-                + "  sealType="
-                + Integer.toHexString(sealType.getSealId())
-                + "  Length: "
-                + "\n"
-                + "  number="
-                + number
-                + "\n"
-                + "  parentHash="
-                + toHexString(parentHash)
-                + "  parentHash: "
-                + parentHash.length
-                + "\n"
-                + "  coinbase="
-                + coinbase.toString()
-                + "  coinBase: "
-                + coinbase.toByteArray().length
-                + "\n"
-                + "  stateRoot="
-                + toHexString(stateRoot)
-                + "  stateRoot: "
-                + stateRoot.length
-                + "\n"
-                + "  txTrieHash="
-                + toHexString(txTrieRoot)
-                + "  txTrieRoot: "
-                + txTrieRoot.length
-                + "\n"
-                + "  receiptsTrieHash="
-                + toHexString(receiptTrieRoot)
-                + "  receiptTrieRoot: "
-                + receiptTrieRoot.length
-                + "\n"
-                + "  difficulty="
-                + toHexString(difficulty)
-                + "  difficulty: "
-                + difficulty.length
-                + "\n"
-                + "  energyConsumed="
-                + energyConsumed
-                + "\n"
-                + "  energyLimit="
-                + energyLimit
-                + "\n"
-                + "  extraData="
-                + toHexString(extraData)
-                + "\n"
-                + "  timestamp="
-                + timestamp
-                + " ("
-                + longToDateTime(timestamp)
-                + ")"
-                + "\n"
-                + "  nonce="
-                + toHexString(nonce)
-                + "\n"
-                + "  solution="
-                + toHexString(solution)
-                + "\n";
+            + toHexString(getHash())
+            + "  Length: "
+            + getHash().length
+            + "\n"
+            + "  sealType="
+            + Integer.toHexString(sealType.getSealId())
+            + "  Length: "
+            + "\n"
+            + "  number="
+            + number
+            + "\n"
+            + "  parentHash="
+            + toHexString(parentHash)
+            + "  parentHash: "
+            + parentHash.length
+            + "\n"
+            + "  coinbase="
+            + coinbase.toString()
+            + "  coinBase: "
+            + coinbase.toByteArray().length
+            + "\n"
+            + "  stateRoot="
+            + toHexString(stateRoot)
+            + "  stateRoot: "
+            + stateRoot.length
+            + "\n"
+            + "  txTrieHash="
+            + toHexString(txTrieRoot)
+            + "  txTrieRoot: "
+            + txTrieRoot.length
+            + "\n"
+            + "  receiptsTrieHash="
+            + toHexString(receiptTrieRoot)
+            + "  receiptTrieRoot: "
+            + receiptTrieRoot.length
+            + "\n"
+            + "  difficulty="
+            + toHexString(difficulty)
+            + "  difficulty: "
+            + difficulty.length
+            + "\n"
+            + "  energyConsumed="
+            + energyConsumed
+            + "\n"
+            + "  energyLimit="
+            + energyLimit
+            + "\n"
+            + "  extraData="
+            + toHexString(extraData)
+            + "\n"
+            + "  timestamp="
+            + timestamp
+            + " ("
+            + longToDateTime(timestamp)
+            + ")"
+            + "\n"
+            + "  seed="
+            + toHexString(seed)
+            + "\n"
+            + "  signature="
+            + toHexString(signature)
+            + "\n"
+            + "  signingPublicKey="
+            + toHexString(signingPublicKey)
+            + "\n";
     }
 }

@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
-import org.aion.zero.impl.types.AbstractBlockHeader;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.api.BlockConstants;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,9 +30,9 @@ public class OriginalDifficultyFunctionTest {
         }
     }
 
-    @Mock protected AbstractBlockHeader mockHeader;
+    @Mock protected BlockHeader mockHeader;
 
-    @Mock protected AbstractBlockHeader parentMockHeader;
+    @Mock protected BlockHeader parentMockHeader;
 
     @Parameter public InputParameters inputParameters;
 

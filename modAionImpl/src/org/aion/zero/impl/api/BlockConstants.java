@@ -2,7 +2,6 @@ package org.aion.zero.impl.api;
 
 import java.math.BigInteger;
 import org.aion.zero.impl.types.IBlockConstants;
-import org.aion.zero.impl.types.AbstractBlockHeader;
 
 public class BlockConstants implements IBlockConstants {
 

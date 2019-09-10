@@ -10,7 +10,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.base.AccountState;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.exceptions.HeaderStructureException;
 import org.junit.Test;
 
 /**
@@ -25,7 +24,7 @@ public class GenesisSpecificationTest {
      * Test that the default genesis block built from the builder produces the correct genesis specs
      */
     @Test
-    public void defaultGenesisBlockTest() throws HeaderStructureException {
+    public void defaultGenesisBlockTest() {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
         AionGenesis genesis = genesisBuilder.build();
 
@@ -57,7 +56,7 @@ public class GenesisSpecificationTest {
      * to the options provided by {@link AionGenesis.Builder}
      */
     @Test
-    public void overrideGenesisBlockTest() throws HeaderStructureException {
+    public void overrideGenesisBlockTest() {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
 
         // values to override defaults with
