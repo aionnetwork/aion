@@ -22,7 +22,6 @@ import org.aion.precompiled.encoding.ListFVM;
 import org.aion.precompiled.encoding.Uint128FVM;
 import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.precompiled.util.AddressUtils;
-import org.aion.precompiled.util.ByteArrayWrapper;
 import org.aion.precompiled.util.ByteUtil;
 import org.aion.precompiled.util.DataWord;
 import org.aion.types.TransactionStatus;
@@ -110,7 +109,7 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_CHANGE_OWNER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(newOwner)))
+                                new AddressFVM(newOwner))
                         .encodeBytes();
         System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
 
@@ -141,7 +140,7 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_CHANGE_OWNER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(newOwner)))
+                                new AddressFVM(newOwner))
                         .encodeBytes();
         System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
 
@@ -162,7 +161,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -189,7 +188,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -209,7 +208,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -221,7 +220,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -281,28 +280,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -393,7 +391,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -405,7 +403,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -464,28 +462,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -576,7 +573,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -588,7 +585,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -647,22 +644,21 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         // we create a new token bridge contract here because we
@@ -680,7 +676,7 @@ public class TokenBridgeContractTest {
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -705,7 +701,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -717,7 +713,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -762,28 +758,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -818,7 +813,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -830,7 +825,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -881,28 +876,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -937,7 +931,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // not initializing the ring
@@ -946,7 +940,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1005,28 +999,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -1072,7 +1065,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -1134,28 +1127,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -1201,7 +1193,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -1213,7 +1205,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1270,28 +1262,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -1338,7 +1329,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -1350,7 +1341,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1408,13 +1399,12 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
@@ -1423,15 +1413,15 @@ public class TokenBridgeContractTest {
         for (byte[] sig : signatures) {
             // add incorrect signatures, copies [0:32] for all chunks
             // verifyISig for testing will only fail if signature is empty byte array
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(ByteUtil.EMPTY_WORD)));
+            sigChunk1.add(new AddressFVM(ByteUtil.EMPTY_WORD));
+            sigChunk2.add(new AddressFVM(ByteUtil.EMPTY_WORD));
+            sigChunk3.add(new AddressFVM(ByteUtil.EMPTY_WORD));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -1478,7 +1468,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         byte[] payload =
@@ -1491,7 +1481,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1550,28 +1540,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -1901,7 +1890,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
@@ -1913,7 +1902,7 @@ public class TokenBridgeContractTest {
         byte[] callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(members[0])))
+                                new AddressFVM(members[0]))
                         .encodeBytes();
 
         PrecompiledTransactionResult transferResult =
@@ -1949,28 +1938,27 @@ public class TokenBridgeContractTest {
         ListFVM uintList = new ListFVM();
         for (BridgeTransfer b : transfers) {
             sourceTransactionList.add(
-                    new AddressFVM(ByteArrayWrapper.wrap(b.getSourceTransactionHash())));
-            addressList.add(new AddressFVM(ByteArrayWrapper.wrap(b.getRecipient())));
+                    new AddressFVM(b.getSourceTransactionHash()));
+            addressList.add(new AddressFVM(b.getRecipient()));
             uintList.add(
                     new Uint128FVM(
-                            ByteArrayWrapper.wrap(
-                                    PrecompiledUtilities.pad(
-                                            b.getTransferValue().toByteArray(), 16))));
+                            PrecompiledUtilities.pad(
+                                    b.getTransferValue().toByteArray(), 16)));
         }
 
         ListFVM sigChunk1 = new ListFVM();
         ListFVM sigChunk2 = new ListFVM();
         ListFVM sigChunk3 = new ListFVM();
         for (byte[] sig : signatures) {
-            sigChunk1.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 0, 32))));
-            sigChunk2.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 32, 64))));
-            sigChunk3.add(new AddressFVM(ByteArrayWrapper.wrap(Arrays.copyOfRange(sig, 64, 96))));
+            sigChunk1.add(new AddressFVM(Arrays.copyOfRange(sig, 0, 32)));
+            sigChunk2.add(new AddressFVM(Arrays.copyOfRange(sig, 32, 64)));
+            sigChunk3.add(new AddressFVM(Arrays.copyOfRange(sig, 64, 96)));
         }
 
         callPayload =
                 new AbiEncoder(
                                 BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
-                                new AddressFVM(ByteArrayWrapper.wrap(blockHash)),
+                                new AddressFVM(blockHash),
                                 sourceTransactionList,
                                 addressList,
                                 uintList,
@@ -2014,7 +2002,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         byte[] payload =
@@ -2058,7 +2046,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         byte[] payload =
@@ -2117,7 +2105,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         byte[] payload =
@@ -2163,7 +2151,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         byte[] payload =
@@ -2204,7 +2192,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // address null
@@ -2236,7 +2224,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // address null - fail
@@ -2286,7 +2274,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // lock the ring
@@ -2318,7 +2306,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // address null - fail
@@ -2382,7 +2370,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // address null - fail
@@ -2455,7 +2443,7 @@ public class TokenBridgeContractTest {
 
         ListFVM encodingList = new ListFVM();
         for (byte[] k : members) {
-            encodingList.add(new AddressFVM(ByteArrayWrapper.wrap(k)));
+            encodingList.add(new AddressFVM(k));
         }
 
         // address null

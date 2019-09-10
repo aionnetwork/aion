@@ -1,31 +1,23 @@
 package org.aion.precompiled.encoding;
 
-import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nonnull;
-import org.aion.precompiled.util.ByteArrayWrapper;
 
 public class AddressFVM extends BaseTypeFVM {
 
-    private final ByteArrayWrapper address;
+    private final byte[] address;
 
-    public AddressFVM(@Nonnull final ByteArrayWrapper address) {
-        assert address.toBytes().length == 32;
+    public AddressFVM(@Nonnull final byte[] address) {
+        assert address.length == 32;
         this.address = address;
     }
 
     @Override
     public byte[] serialize() {
-        return this.address.toBytes();
+        return this.address;
     }
 
     @Override
     public boolean isDynamic() {
         return false;
-    }
-
-    @Override
-    public Optional<List<BaseTypeFVM>> getEntries() {
-        return Optional.empty();
     }
 }
