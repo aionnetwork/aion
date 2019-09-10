@@ -1195,8 +1195,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            long stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
-            if (stakes < 1) {
+            BigInteger stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
+            if (stakes.signum() < 1) {
                 LOG.debug("The caller {} with coinbase {} has no stake ", signingAddress.toString(), coinbase.toString());
                 return null;
             }
@@ -1206,7 +1206,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     (long) (newDiff.doubleValue()
                         * (Math.log(BigInteger.TWO.pow(256).doubleValue())
                             - Math.log(new BigInteger(1, HashUtil.h256(newSeed)).doubleValue()))
-                        / (double) stakes),
+                        / stakes.longValue()),
                     1);
 
             newTimestamp =
@@ -1667,12 +1667,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 sealParent = parent;
             }
 
-            long stakeAmount =
+            BigInteger stake =
                 getStakingContractHelper()
                     .getEffectiveStake(
                         new AionAddress(AddressSpecs.computeA0Address(header.getSigningPublicKey())),
                         header.getCoinbase());
-            BigInteger stake = BigInteger.valueOf(stakeAmount);
 
             if (!sealParentBlockHeaderValidator.validate(header, sealParent.getHeader(), LOG, stake)) {
                 return false;
