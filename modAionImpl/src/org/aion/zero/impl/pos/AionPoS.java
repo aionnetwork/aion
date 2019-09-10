@@ -173,7 +173,7 @@ public class AionPoS {
                                             coinbase);
 
                                 // TODO: [unity] might change the threshold.
-                                if (stakes.compareTo(BigInteger.ONE) < 0) {
+                                if (stakes.signum() < 1) {
                                     continue;
                                 }
 
@@ -194,7 +194,7 @@ public class AionPoS {
                                                 .pow(256)
                                                 .divide(new BigInteger(1, HashUtil.h256(newSeed)))
                                                 .doubleValue())
-                                        / stakes.doubleValue();
+                                        / stakes.longValue();
 
                                 delta.set(Math.max((long) (newDelta * 1000), 500));
                             }
@@ -330,7 +330,7 @@ public class AionPoS {
 
             BigInteger vote = blockchain.getStakingContractHelper().getEffectiveStake(
                 stakerSigningAddress, coinbase);
-            if (vote.compareTo(BigInteger.ONE) < 0) {
+            if (vote.signum() < 1) {
                 LOG.warn("No stake for the internal staker creating the blockTemplate!");
                 return null;
             }
