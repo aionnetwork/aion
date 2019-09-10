@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.equihash.OptimizedEquiValidator;
+import org.aion.zero.impl.core.UnityBlockDiffCalculator;
 import org.aion.zero.impl.types.IBlockConstants;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.zero.impl.core.IRewardsCalculator;
@@ -50,6 +51,7 @@ public class ChainConfiguration {
             BlockConstants constants, Long monetaryUpdateBlkNum, BigInteger initialSupply) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
+        UnityBlockDiffCalculator unityCalc = new UnityBlockDiffCalculator(constants);
 
         RewardsCalculator rewardsCalcInternal =
                 new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
