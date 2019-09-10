@@ -40,7 +40,6 @@ import org.junit.Test;
  */
 public class TokenBridgeContractTest {
     private TokenBridgeContract contract;
-    private BridgeController controller;
     private BridgeStorageConnector connector;
     private RepositoryForPrecompiled repository;
 
@@ -76,7 +75,6 @@ public class TokenBridgeContractTest {
         // override defaults
         this.contract =
                 new TokenBridgeContract(dummyContext(), ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
     }
 
@@ -106,7 +104,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         byte[] newOwner = capabilities.computeA0Address(capabilities.blake2b("newOwner".getBytes()));
@@ -137,7 +134,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         byte[] newOwner = capabilities.computeA0Address(capabilities.blake2b("newOwner".getBytes()));
@@ -162,7 +158,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -190,7 +185,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -211,7 +205,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -245,7 +238,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -397,7 +389,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -431,7 +422,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -582,7 +572,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -616,7 +605,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -687,7 +675,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         callPayload =
@@ -714,7 +701,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -745,7 +731,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -829,7 +814,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -863,7 +847,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -950,7 +933,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -981,7 +963,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -1087,7 +1068,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -1112,7 +1092,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -1218,7 +1197,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -1252,7 +1230,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -1357,7 +1334,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -1391,7 +1367,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -1499,7 +1474,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -1534,7 +1508,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -1924,7 +1897,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         initializationContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -1958,7 +1930,6 @@ public class TokenBridgeContractTest {
         this.contract =
                 new TokenBridgeContract(
                         submitBundleContext, ExternalStateForTests.usingRepository(this.repository), OWNER_ADDR, CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // assemble the payload
@@ -2039,7 +2010,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2084,7 +2054,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2144,7 +2113,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2191,7 +2159,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2233,7 +2200,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2266,7 +2232,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2317,7 +2282,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2350,7 +2314,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2415,7 +2378,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2466,7 +2428,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         // failure, member exists but sender is no longer owner
@@ -2490,7 +2451,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         ListFVM encodingList = new ListFVM();
@@ -2522,7 +2482,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         byte[] sig2 = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature()).encodeBytes();
@@ -2544,7 +2503,6 @@ public class TokenBridgeContractTest {
                         ExternalStateForTests.usingRepository(this.repository),
                         OWNER_ADDR,
                         CONTRACT_ADDR);
-        this.controller = this.contract.getController();
         this.connector = this.contract.getConnector();
 
         assertThat(this.connector.getInitialized()).isFalse();

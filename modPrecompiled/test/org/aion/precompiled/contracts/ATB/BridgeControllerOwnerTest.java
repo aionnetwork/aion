@@ -11,7 +11,6 @@ import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.precompiled.type.CapabilitiesProvider;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
-import org.aion.util.bytes.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -73,7 +72,7 @@ public class BridgeControllerOwnerTest {
         assertThat(this.logs.size()).isEqualTo(1);
 
         Log changedOwnerLog = this.logs.get(0);
-        assertThat(changedOwnerLog.copyOfData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(changedOwnerLog.copyOfData()).isEqualTo(new byte[0]);
         assertThat(changedOwnerLog.copyOfTopics().get(0)).isEqualTo(transferOwnership);
         assertThat(changedOwnerLog.copyOfTopics().get(1)).isEqualTo(newOwner);
     }
