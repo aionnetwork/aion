@@ -130,9 +130,9 @@ public class Tx {
             obj.put("input", StringUtils.toJsonHex(transaction.getData()));
             obj.put("timestamp", new NumericalValue(transaction.getTimestamp()).toHexString());
             obj.put("error", info.getReceipt().getError());
-            obj.put("nonce", StringUtils.toJsonHex(transaction.getNonce()));
             obj.put("type", StringUtils.toJsonHex(transaction.getType()));
-            obj.put("value", new NumericalValue(transaction.getValueBI()).toHexString());
+            obj.put("nrgUsed", new NumericalValue(info.getReceipt().getEnergyUsed()).toHexString());
+            obj.put("gasUsed", new NumericalValue(info.getReceipt().getEnergyUsed()).toHexString());
             obj.put("hasInternalTransactions", info.hasInternalTransactions());
 
             JSONArray txLogs = new JSONArray();
