@@ -61,7 +61,7 @@ public class AccountManager {
         return new ArrayList<>(this.accounts.values());
     }
 
-    public boolean unlockAccount(AionAddress _address, String _password, int _timeout) {
+    public synchronized boolean unlockAccount(AionAddress _address, String _password, int _timeout) {
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
@@ -95,7 +95,7 @@ public class AccountManager {
         }
     }
 
-    public boolean lockAccount(AionAddress _address, String _password) {
+    public synchronized boolean lockAccount(AionAddress _address, String _password) {
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
