@@ -229,8 +229,8 @@ public abstract class ApiAion extends Api {
 
     protected Map.Entry<Block, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
-            return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
-                    .getChainBlockByNumberWithTotalDifficulty(blkNr);
+            Block block = this.ac.getBlockchain().getBlockStore().getChainBlockByNumber(blkNr);
+            return (Map.entry(block, block.getCumulativeDifficulty()));
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return Map.entry(

@@ -21,7 +21,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.mcf.config.CfgNetP2p;
-import org.aion.mcf.db.IBlockStorePow;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
@@ -278,7 +278,7 @@ public class AionHub {
         return blockchain;
     }
 
-    public IBlockStorePow getBlockStore() {
+    public IBlockStoreBase getBlockStore() {
         return this.repository.getBlockStore();
     }
 
@@ -441,11 +441,11 @@ public class AionHub {
 
         } else {
             blockchain.setBestBlock(bestBlock);
-            blockchain.setTotalDifficulty(this.repository.getBlockStore().getTotalDifficulty());
+            Block blockWithDifficulties = getBlockStore().getBestBlockWithInfo();
+            blockchain.setTotalDifficulty(blockWithDifficulties.getCumulativeDifficulty());
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
-                bestBlock.setCumulativeDifficulty(
-                        this.repository.getBlockStore().getTotalDifficulty());
+                bestBlock.setCumulativeDifficulty(blockWithDifficulties.getCumulativeDifficulty());
             }
 
             genLOG.info(

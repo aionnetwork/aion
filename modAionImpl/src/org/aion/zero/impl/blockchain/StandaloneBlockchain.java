@@ -391,7 +391,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             track.flush();
 
             bc.getRepository().commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
-            bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
+            //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+            bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), BigInteger.ONE, true);
             bc.setBestBlock(genesis);
             bc.setTotalDifficulty(genesis.getDifficultyBI());
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
@@ -403,11 +404,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             if (best != null
                     && totalDiff != null
                     && trieData != null
-                    && totalDiff != null
                     && parentBest != null
                     && totalDiffParent != null) {
-                bc.getRepository().getBlockStore().saveBlock(parentBest, totalDiffParent, true);
-                bc.getRepository().getBlockStore().saveBlock(best, totalDiff, true);
+                //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+                bc.getRepository().getBlockStore().saveBlock(parentBest, totalDiffParent, BigInteger.ONE, true);
+                bc.getRepository().getBlockStore().saveBlock(best, totalDiff, BigInteger.ONE, true);
                 bc.setBestBlock(best);
                 bc.setTotalDifficulty(totalDiff);
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
@@ -542,15 +543,15 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 Block block = new AionBlock(header, Collections.emptyList());
                 this.setBestBlock(block);
-                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+                //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), BigInteger.ONE, true);
                 grandParentBlock = block;
             } else {
                 // grab the grandparent block from the database if it exists
                 grandParentBlock =
                         this.getBlockStore()
                                 .getBlocksByNumber((int) blockNumber - 1)
-                                .get(0)
-                                .getKey();
+                                .get(0);
             }
 
             BlockHeader bestHeader = this.getBestBlock().getHeader();
@@ -567,7 +568,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             .build();
             AionBlock block = new AionBlock(header, Collections.emptyList());
             this.setBestBlock(block);
-            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+            //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), BigInteger.ONE, true);
         } catch (Exception e) {
             // any exception here should kill the tests
             // rethrow as runtime

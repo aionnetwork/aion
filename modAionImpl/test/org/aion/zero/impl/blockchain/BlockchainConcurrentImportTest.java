@@ -3,6 +3,7 @@ package org.aion.zero.impl.blockchain;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateTransactions;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -188,8 +189,9 @@ public class BlockchainConcurrentImportTest {
                         if (result == ImportResult.IMPORTED_BEST) {
                             // can't check for equality since other blocks may have already been
                             // imported
-                            assertThat(store.getTotalDifficulty()).isAtLeast(tdFromStore);
-                        }
+                            Block bestBlock = store.getBestBlock();
+                            assertNotNull(bestBlock);
+                            assertThat(bestBlock.getCumulativeDifficulty()).isAtLeast(tdFromStore);                        }
                     }
                 });
     }
@@ -252,7 +254,9 @@ public class BlockchainConcurrentImportTest {
                             if (result == ImportResult.IMPORTED_BEST) {
                                 // can't check for equality since other blocks may have already been
                                 // imported
-                                assertThat(store.getTotalDifficulty()).isAtLeast(tdFromStore);
+
+                                assertThat(store.getBestBlock().getCumulativeDifficulty())
+                                    .isAtLeast(tdFromStore);
                             }
 
                             // save the block for later comparison

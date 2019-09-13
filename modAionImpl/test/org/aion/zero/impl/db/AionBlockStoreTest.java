@@ -92,8 +92,8 @@ public class AionBlockStoreTest {
 
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getBlockByHash(first.getParentHash())).thenReturn(middle);
-        when(store.getBlockByHash(middle.getParentHash())).thenReturn(last);
+        when(store.getBlockByHashWithInfo(first.getParentHash())).thenReturn(middle);
+        when(store.getBlockByHashWithInfo(middle.getParentHash())).thenReturn(last);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
@@ -128,7 +128,7 @@ public class AionBlockStoreTest {
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
         // returning the block at a different number than its height
         when(store.getChainBlockByNumber(2L)).thenReturn(first);
-        when(store.getBlockByHash(first.getParentHash())).thenReturn(middle);
+        when(store.getBlockByHashWithInfo(first.getParentHash())).thenReturn(middle);
         when(store.getBlocksByRange(2L, 0L)).thenCallRealMethod();
 
         // the returned list has only 2 elements due to the null
@@ -138,9 +138,9 @@ public class AionBlockStoreTest {
         assertThat(returned.get(1)).isEqualTo(middle);
 
         // there should be no attempt to retrieve the genesis
-        verify(store, times(0)).getBlockByHash(last.getParentHash());
-        verify(store, times(0)).getBlockByHash(middle.getParentHash());
-        verify(store, times(1)).getBlockByHash(first.getParentHash());
+        verify(store, times(0)).getBlockByHashWithInfo(last.getParentHash());
+        verify(store, times(0)).getBlockByHashWithInfo(middle.getParentHash());
+        verify(store, times(1)).getBlockByHashWithInfo(first.getParentHash());
     }
 
     @Test
@@ -152,7 +152,7 @@ public class AionBlockStoreTest {
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
         when(store.getChainBlockByNumber(last.getNumber())).thenReturn(last);
-        when(store.getBlockByHash(last.getParentHash())).thenReturn(middle);
+        when(store.getBlockByHashWithInfo(last.getParentHash())).thenReturn(middle);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
@@ -170,7 +170,7 @@ public class AionBlockStoreTest {
         AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
         when(store.getChainBlockByNumber(last.getNumber())).thenReturn(last);
-        when(store.getBlockByHash(last.getParentHash())).thenReturn(null);
+        when(store.getBlockByHashWithInfo(last.getParentHash())).thenReturn(null);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         // the returned list is null due to missing block in range
@@ -189,7 +189,7 @@ public class AionBlockStoreTest {
         when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
         when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
         when(store.getBestBlock()).thenReturn(best);
-        when(store.getBlockByHash(best.getParentHash())).thenReturn(middle);
+        when(store.getBlockByHashWithInfo(best.getParentHash())).thenReturn(middle);
         when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
@@ -268,8 +268,8 @@ public class AionBlockStoreTest {
                         1);
         AionBlockStore store = new AionBlockStore(index, blocks, false);
 
-        store.saveBlock(blk1, BigInteger.TEN, true);
-        store.saveBlock(blk2, BigInteger.TEN.add(BigInteger.ONE), true);
+        store.saveBlock(blk1, BigInteger.TEN, BigInteger.ONE, true);
+        store.saveBlock(blk2, BigInteger.TEN.add(BigInteger.ONE), BigInteger.ONE, true);
 
         store.rollback(1);
 
@@ -283,7 +283,7 @@ public class AionBlockStoreTest {
     private void addThread_saveBlock(List<Runnable> threads, AionBlockStore store, Block block) {
         threads.add(
                 () -> {
-                    store.saveBlock(block, block.getDifficultyBI(), true);
+                    store.saveBlock(block, block.getDifficultyBI(), BigInteger.ONE, true);
                     assertThat(store.getBlockByHash(block.getHash())).isNotNull();
                 });
     }

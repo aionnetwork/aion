@@ -42,7 +42,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.core.FastImportResult;
@@ -333,7 +332,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public static Set<ByteArrayWrapper> getAncestors(
-            IBlockStorePow blockStore,
+            IBlockStoreBase blockStore,
             Block testedBlock,
             int limitNum,
             boolean isParentBlock) {
@@ -709,7 +708,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.NO_CHILD;
         } else {
             // the total difficulty will be updated after the chain is complete
-            getBlockStore().saveBlock(block, ZERO, true);
+            getBlockStore().saveBlock(block, ZERO, ZERO, true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -798,7 +797,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             if (!repository.isIndexed(block.getHash(), block.getNumber())) {
                 // correct the index for this block
-                recoverIndexEntry(repository, block);
+                //TODO: [unity] Temparary disable the functionality until it has been test with unity blocks
+                // relate with AKI-371
+                //recoverIndexEntry(repository, block);
             }
 
             // retry of well known block
@@ -1516,10 +1517,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
+        //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
         if (fork) {
-            getBlockStore().saveBlock(block, totalDifficulty, false);
+            getBlockStore().saveBlock(block, totalDifficulty, BigInteger.ONE, false);
         } else {
-            getBlockStore().saveBlock(block, totalDifficulty, true);
+            getBlockStore().saveBlock(block, totalDifficulty, BigInteger.ONE, true);
         }
 
         AionTxInfo info;
@@ -1680,6 +1682,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     @Override
     public List<BlockHeader> getListOfHeadersStartFrom(long blockNumber, int limit) {
+        if (limit <= 0) {
+            return emptyList();
+        }
 
         // identifying block we'll move from
         Block startBlock = getBlockByNumber(blockNumber);
@@ -2084,7 +2089,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getShortHash(),
                     other.getNumber(),
                     other.getTransactionsList().size());
-            totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff);
+            //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+            totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff, BigInteger.ONE);
         }
 
         // update the repository

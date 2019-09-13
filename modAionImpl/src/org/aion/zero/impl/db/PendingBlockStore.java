@@ -31,6 +31,7 @@ import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -39,6 +40,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
 /**
@@ -226,7 +228,20 @@ public class PendingBlockStore implements Closeable {
                     List<Block> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
-                        res.add(new AionBlock(aList.getRLPData()));
+                        // TODO : [unity] better way to avoid rlp decode?
+                        RLPList params = RLP.decode2(aList.getRLPData());
+                        RLPList block = (RLPList) params.get(0);
+                        RLPList header = (RLPList) block.get(0);
+                        byte[] sealType = header.get(0).getRLPData();
+                        if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
+                            res.add(new AionBlock(aList.getRLPData()));
+                        } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
+                            res.add(new StakingBlock(aList.getRLPData()));
+                        } else {
+                            throw new IllegalStateException(
+                                "Invalid rlp encode data: "
+                                    + ByteUtil.toHexString(aList.getRLPData()));
+                        }
                     }
                     return res;
                 }
@@ -681,7 +696,7 @@ public class PendingBlockStore implements Closeable {
     /**
      * Generates a number greater or equal to the given {@code current} number representing the base
      * value for a subsequent LIGHTNING request. The returned base is generated taking into
-     * consideration the status updates from {@link #addStatusBlock(AionBlock)} and the {@code
+     * consideration the status updates from {@link #addStatusBlock(Block)} and the {@code
      * knownBest} value for the peer for which this functionality is requested.
      *
      * <p>The bases are generated in an optimistic continuous manner based on the following

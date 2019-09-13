@@ -1429,7 +1429,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
-        List<Map.Entry<Block, Map.Entry<BigInteger, Boolean>>> blocks =
+        List<Block> blocks =
                 ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore())
                         .getBlocksByNumber(bn);
         if (blocks == null) {
@@ -1437,11 +1437,11 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         JSONArray response = new JSONArray();
-        for (Map.Entry<Block, Map.Entry<BigInteger, Boolean>> block : blocks) {
+        for (Block block : blocks) {
             JSONObject b =
                     (JSONObject)
-                            Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTx);
-            b.put("mainchain", block.getValue().getValue());
+                            Blk.AionBlockToJson(block, block.getCumulativeDifficulty(), _fullTx);
+            b.put("mainchain", block.isMainChain());
             response.put(b);
         }
         return new RpcMsg(response);

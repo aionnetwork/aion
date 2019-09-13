@@ -22,6 +22,7 @@ import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** @author Alexandra Roatis */
@@ -452,6 +453,7 @@ public class BlockchainDataRecoveryTest {
 
     /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
+    @Ignore // Todo: [unity] AKI-371
     public void testRecoverIndexWithPartialIndex_MainChain() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
@@ -565,6 +567,7 @@ public class BlockchainDataRecoveryTest {
 
     /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
+    @Ignore // Todo: [unity] AKI-371
     public void testRecoverIndexWithPartialIndex_ShorterSideChain() {
         final int EVEN_NUMBER_OF_BLOCKS =
                 NUMBER_OF_BLOCKS % 2 == 0 ? NUMBER_OF_BLOCKS : NUMBER_OF_BLOCKS + 1;
@@ -745,6 +748,7 @@ public class BlockchainDataRecoveryTest {
 
     /** Test the index recovery when the index database contains only the size and genesis index. */
     @Test
+    @Ignore // Todo: [unity] AKI-371
     public void testRecoverIndexWithStartFromGenesis() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
@@ -927,6 +931,7 @@ public class BlockchainDataRecoveryTest {
      * missing the size key.
      */
     @Test
+    @Ignore // Todo: [unity] AKI-371
     public void testRecoverIndexWithStartFromGenesisWithoutSize() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
@@ -1073,6 +1078,7 @@ public class BlockchainDataRecoveryTest {
     }
 
     @Test
+    @Ignore // Todo: [unity] AKI-371
     public void testRecoverIndex_wDeletedBlock() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
