@@ -1,0 +1,13 @@
+ext.moduleName = 'aion.avm.version1'
+
+dependencies {
+    compile project(':modCrypto')
+    compile project(':modMcf')
+    compile project(':modUtil')
+    compile project(':modAvmStub')
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-core-v1.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-api-v1.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-rt-v1.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-userlib-v1.jar")
+}

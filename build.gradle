@@ -417,6 +417,7 @@ task ciBuild {
             'modRlp',
             'modTxPool',
             'modVM',
+            'modAvmVersion1',
             'modAvmStub'
     ] 
 

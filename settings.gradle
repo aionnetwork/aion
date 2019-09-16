@@ -14,6 +14,7 @@ include 'modAionImpl',
     'modVM',
     'modApiServer',
     'modBoot',
+    'modAvmVersion1',
     'modAvmStub'
 
 // only build and distribute modGui only if explicitly specified
