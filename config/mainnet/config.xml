@@ -52,8 +52,14 @@
     </sync>
     <consensus>
         <mining>false</mining>
+        <!-- enable/disable the internal staker runner. -->
+        <staking>false</staking>
         <miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
-        <cpu-mine-threads>2</cpu-mine-threads>
+        <!-- staker's desired coinbase required by the internal staker runner. -->
+        <staker-coinbase>0000000000000000000000000000000000000000000000000000000000000000</staker-coinbase>
+        <!-- staker's 128 chars hex string signing private key required by the internal staker runner. -->
+        <!-- <staker-signing-key>cc76648ce8798bc18130bc9d637995e5c42a922ebeab78795fac58081b9cf9d4069346ca77152d3e42b1630826feef365683038c3b00ff20b0ea42d7c121fa9f</staker-signing-key> -->
+        <cpu-mine-threads>1</cpu-mine-threads>
         <extra-data>AION</extra-data>
         <nrg-strategy>
             <!-- <monotonic-increase></monotonic-increase> -->
