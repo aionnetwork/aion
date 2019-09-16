@@ -5,15 +5,16 @@ import java.util.Optional;
 import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.UnityChain;
 import org.aion.mcf.db.Repository;
 import org.aion.base.AionTxReceipt;
 
 /** Aion chain interface. */
 public interface IAionChain  {
 
-    IPowChain getBlockchain();
+    UnityChain getBlockchain();
 
-    void close();
+    void close() throws InterruptedException;
 
     void broadcastTransaction(AionTransaction transaction);
 

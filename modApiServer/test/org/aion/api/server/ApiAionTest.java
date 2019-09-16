@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.AionTransaction;
@@ -33,7 +34,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
@@ -70,8 +70,8 @@ public class ApiAionTest {
             return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
         }
 
-        private ApiAionImpl(AionImpl impl) {
-            super(impl);
+        private ApiAionImpl(AionImpl impl, ReentrantLock lock) {
+            super(impl, lock);
             onBlockFlag = false;
             pendingRcvdFlag = false;
             pendingUpdateFlag = false;
@@ -130,7 +130,7 @@ public class ApiAionTest {
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         impl = AionImpl.inst();
-        api = new ApiAionImpl(impl);
+        api = new ApiAionImpl(impl, new ReentrantLock());
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
         KEYSTORE_PATH = Keystore.getKeystorePath();
@@ -147,8 +147,6 @@ public class ApiAionTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
-        if (folder == null) return;
-
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
@@ -158,8 +156,6 @@ public class ApiAionTest {
             if (file.lastModified() >= testStartTime) file.delete();
         }
         folder = new File(DATABASE_PATH);
-
-        if (folder == null) return;
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -201,21 +197,21 @@ public class ApiAionTest {
         // retrieval based on block number
         assertTrue(api.getBlock(blk.getNumber()).isEqual(blk));
 
-        // retrieval based on block number that also gives total difficulty
-        Map.Entry<Block, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
+        // retrieval based on block number that also gives total difficulty info
+        Block rslt = api.getBlockWithInfo(blk.getNumber());
 
-        assertTrue(rslt.getKey().isEqual(blk));
+        assertTrue(rslt.isEqual(blk));
 
         // check because blk might be the genesis block
         assertEquals(
-                rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore())
+                rslt.getCumulativeDifficulty(),
+                impl.getBlockchain().getBlockStore()
                         .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
         assertEquals(
-                api.getBlockWithTotalDifficulty(0).getValue(),
-                CfgAion.inst().getGenesis().getDifficultyBI());
+                api.getBlockWithInfo(0).getCumulativeDifficulty(),
+                CfgAion.inst().getGenesis().getCumulativeDifficulty());
     }
 
     /**
@@ -291,7 +287,7 @@ public class ApiAionTest {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);

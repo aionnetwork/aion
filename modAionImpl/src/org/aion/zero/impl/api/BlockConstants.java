@@ -5,7 +5,7 @@ import org.aion.zero.impl.types.IBlockConstants;
 
 public class BlockConstants implements IBlockConstants {
 
-    /** Number of bytes that is allowed in {@link AbstractBlockHeader} field */
+    /** Number of bytes that is allowed in {@link AbstractBlockHeader#getExtraData()} field */
     private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
 
     /**

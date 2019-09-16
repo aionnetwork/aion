@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.mcf.blockchain.Block;
 import org.junit.Test;
 
 public class BlockchainDifficultyTest {
@@ -17,8 +17,8 @@ public class BlockchainDifficultyTest {
                         .withDefaultAccounts()
                         .build();
 
-        AionBlock firstBlock =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
+        Block firstBlock =
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
         assertThat(firstBlock.getDifficultyBI())
                 .isEqualTo(bundle.bc.getGenesis().getDifficultyBI());
         assertThat(bundle.bc.tryToConnect(firstBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -33,13 +33,13 @@ public class BlockchainDifficultyTest {
                         .withDefaultAccounts()
                         .build();
 
-        AionBlock firstBlock =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
+        Block firstBlock =
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(firstBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // connect second block
-        AionBlock secondBlock = bundle.bc.createNewBlock(firstBlock, Collections.emptyList(), true);
+        Block secondBlock = bundle.bc.createNewMiningBlock(firstBlock, Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(secondBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -55,13 +55,13 @@ public class BlockchainDifficultyTest {
                         .withDefaultAccounts()
                         .build();
 
-        AionBlock firstBlock =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
+        Block firstBlock =
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(firstBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // connect second block
-        AionBlock secondBlock = bundle.bc.createNewBlock(firstBlock, Collections.emptyList(), true);
+        Block secondBlock = bundle.bc.createNewMiningBlock(firstBlock, Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(secondBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -69,7 +69,7 @@ public class BlockchainDifficultyTest {
         assertThat(secondBlock.getDifficultyBI()).isLessThan(firstBlock.getDifficultyBI());
 
         // connect second block
-        AionBlock thirdBlock = bundle.bc.createNewBlock(secondBlock, Collections.emptyList(), true);
+        Block thirdBlock = bundle.bc.createNewMiningBlock(secondBlock, Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(thirdBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -84,12 +84,18 @@ public class BlockchainDifficultyTest {
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts()
                         .build();
+        
+        BigInteger genesisStakingDifficulty = bundle.bc.genesis.getStakingDifficulty();
 
-        AionBlock preBlock =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
+        Block preBlock =
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.emptyList(), true);
 
         assertThat(bundle.bc.tryToConnect(preBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
-        BigInteger td = bundle.bc.getGenesis().getDifficultyBI().add(preBlock.getDifficultyBI());
+        
+        // Assuming we added a PoW block
+        BigInteger miningDifficulty = bundle.bc.getGenesis().getDifficultyBI().add(preBlock.getDifficultyBI());
+        BigInteger td = miningDifficulty.multiply(genesisStakingDifficulty);
+
         assertThat(td).isEqualTo(bundle.bc.getCacheTD());
         System.out.println(
                 "new block: "
@@ -102,10 +108,13 @@ public class BlockchainDifficultyTest {
         assertThat(td).isEqualTo(bundle.bc.getTotalDifficulty());
 
         for (int i = 0; i < 10; i++) {
-            AionBlock newBlock = bundle.bc.createNewBlock(preBlock, Collections.emptyList(), true);
+            Block newBlock = bundle.bc.createNewMiningBlock(preBlock, Collections.emptyList(), true);
 
             assertThat(bundle.bc.tryToConnect(newBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
-            td = td.add(newBlock.getDifficultyBI());
+            
+            // The total difficulty increase upon adding a PoW block to a PoW-only chain
+            // is the blockDifficulty * genesisStakingDifficulty
+            td = td.add(newBlock.getDifficultyBI().multiply(genesisStakingDifficulty));
             assertThat(td).isEqualTo(bundle.bc.getCacheTD());
             System.out.println(
                     "new block: "

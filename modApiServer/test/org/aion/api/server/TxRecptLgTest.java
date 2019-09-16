@@ -88,7 +88,7 @@ public class TxRecptLgTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
+                bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
@@ -115,7 +115,7 @@ public class TxRecptLgTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 

@@ -18,7 +18,6 @@ import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.base.AionTxReceipt;
@@ -254,7 +253,7 @@ public class StatefulnessTest {
 
     private AionTxReceipt sendTransactions(AionTransaction... transactions) {
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block =
+        Block block =
                 this.blockchain.createBlock(
                         parentBlock,
                         Arrays.asList(transactions),

@@ -23,8 +23,12 @@ public final class CfgConsensusUnity extends CfgConsensus {
 
     CfgConsensusUnity() {
         this.mining = false;
+        staking = false;
         this.minerAddress = AddressUtils.ZERO_ADDRESS.toString();
-        this.cpuMineThreads = 1;
+        this.cpuMineThreads =
+                (byte)
+                        (Runtime.getRuntime().availableProcessors()
+                                >> 1); // half the available processors
         this.extraData = "AION";
         this.cfgEnergyStrategy = new CfgEnergyStrategy();
         this.seed = false;

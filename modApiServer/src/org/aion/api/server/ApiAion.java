@@ -30,28 +30,25 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.IPowChain;
 import org.aion.zero.impl.types.TxResponse;
+import org.aion.mcf.blockchain.UnityChain;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
-    public static final int SYNC_TOLERANCE = 1;
+    static final int SYNC_TOLERANCE = 1;
 
     // these variables get accessed by the api worker threads.
     // need to guarantee one of:
@@ -83,18 +80,40 @@ public abstract class ApiAion extends Api {
 
     protected EventExecuteService ees;
 
-    public ApiAion(final IAionChain _ac) {
-        this.ac = _ac;
-        this.installedFilters = new ConcurrentHashMap<>();
-        this.fltrIndex = new AtomicLong(0);
-        this.blockTemplateLock = new ReentrantLock();
+    /**
+     * The ApiAion0 constructor doesn't need blockTemplateLock cause there is no getblocktemplate
+     * method.
+     * @param _ac AionChain instance.
+     */
 
-        // register events
-        IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
+    //TODO : [unity] consider to remove this constructor by refatoring the java api init process.
+    public ApiAion(final IAionChain _ac) {
+        if (_ac == null) {
+            throw new NullPointerException();
+        }
+
+        init(_ac);
+    }
+
+    public ApiAion(final IAionChain _ac, final ReentrantLock _lock) {
+        if (_ac == null || _lock == null) {
+            throw new NullPointerException();
+        }
+
+        blockTemplateLock = _lock;
+        init(_ac);
+    }
+
+    private void init(final IAionChain _ac) {
+        ac = _ac;
+        installedFilters = new ConcurrentHashMap<>();
+        fltrIndex = new AtomicLong(0);
+
+        IEventMgr evtMgr = ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(
-                Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
+            Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(
-                Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+            Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
     }
 
     public final class EpApi implements Runnable {
@@ -176,6 +195,10 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    public Block getBestBlockWithInfo() {
+        return this.ac.getBlockchain().getBestBlockWithInfo();
+    }
+
     protected BlockContext getBlockTemplate() {
 
         blockTemplateLock.lock();
@@ -199,7 +222,7 @@ public abstract class ApiAion extends Api {
                 currentTemplate =
                         ac.getAionHub()
                                 .getBlockchain()
-                                .createNewBlockContext(bestBlock, new ArrayList<>(ret), false);
+                                .createNewMiningBlockContext(bestBlock, new ArrayList<>(ret), false);
             }
         } finally {
             blockTemplateLock.unlock();
@@ -212,30 +235,27 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBlockByHash(hash);
     }
 
+    public Block getBlockWithInfoByHash(byte[] hash) {
+        return ac.getBlockchain().getBlockWithInfoByHash(hash);
+    }
+
     @Override
     public Block getBlock(long blkNr) {
         if (blkNr == -1) {
             return this.ac.getBlockchain().getBestBlock();
-        } else if (blkNr > 0) {
+        } else if (blkNr >= 0) {
             return this.ac.getBlockchain().getBlockByNumber(blkNr);
-        } else if (blkNr == 0) {
-            AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;
         }
     }
 
-    protected Map.Entry<Block, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
-        if (blkNr > 0) {
-            Block block = this.ac.getBlockchain().getBlockStore().getChainBlockByNumber(blkNr);
-            return (Map.entry(block, block.getCumulativeDifficulty()));
-        } else if (blkNr == 0) {
-            AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return Map.entry(
-                    new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()),
-                    genBlk.getDifficultyBI());
+    protected Block getBlockWithInfo(long blkNr) {
+        if (blkNr == -1) {
+            return this.ac.getBlockchain().getBestBlockWithInfo();
+        } else if (blkNr >= 0) {
+            return this.ac.getBlockchain().getBlockByNumber(blkNr);
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;
@@ -768,7 +788,7 @@ public abstract class ApiAion extends Api {
     protected void initNrgOracle(IAionChain _ac) {
         if (NRG_ORACLE != null) return;
 
-        IPowChain bc = _ac.getBlockchain();
+        UnityChain bc = _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 

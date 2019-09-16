@@ -18,6 +18,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
 /** */
+//TODO: [Unity] Rename this to MinedBlock
 public class AionBlock extends AbstractBlock {
 
     /* Private */
@@ -378,6 +379,18 @@ public class AionBlock extends AbstractBlock {
     }
 
     @Override
+    public void updateHeaderDifficulty(byte[] diff) {
+        if (diff == null) {
+            throw new NullPointerException("difficulty is null");
+        }
+        this.header =
+                A0BlockHeader.Builder.newInstance()
+                        .withHeader(getHeader())
+                        .withDifficulty(diff)
+                        .build();
+    }
+
+    @Override
     public String toString() {
         StringBuilder toStringBuff = new StringBuilder();
         parseRLP();
@@ -398,6 +411,10 @@ public class AionBlock extends AbstractBlock {
 
         if (mainChain != null) {
             toStringBuff.append("  mainChain=").append(mainChain ? "yes" : "no").append("\n");
+        }
+
+        if (antiparentHash != null) {
+            toStringBuff.append("  antiparentHash=").append(ByteUtil.toHexString(antiparentHash)).append("\n");
         }
 
         if (!getTransactionsList().isEmpty()) {
@@ -528,46 +545,34 @@ public class AionBlock extends AbstractBlock {
         return block;
     }
 
-    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+    public static AionBlock fromRLPList(RLPList rlpEncoded, boolean isUnsafe) {
         if (rlpEncoded == null) {
             throw new NullPointerException("RlpEncoded data is null");
         }
 
-        RLPList params = RLP.decode2(rlpEncoded);
-
-        // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
-
-            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-
-                // Parse Header
-                RLPList headerRLP = (RLPList) blockRLP.get(0);
-                A0BlockHeader header;
-                try {
-                    header =
-                            A0BlockHeader.Builder.newInstance(isUnsafe)
-                                    .withRlpList(headerRLP)
-                                    .build();
-                } catch (Exception e) {
-                    return null;
-                }
-
-                AionBlock block = new AionBlock();
-                block.header = header;
-                block.parsed = true;
-
-                // Parse Transactions
-                RLPList transactions = (RLPList) blockRLP.get(1);
-                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-                    return null;
-                }
-
-                return block;
-            }
+        // Parse Header
+        RLPList headerRLP = (RLPList) rlpEncoded.get(0);
+        A0BlockHeader header;
+        try {
+            header =
+                    A0BlockHeader.Builder.newInstance(isUnsafe)
+                            .withRlpList(headerRLP)
+                            .build();
+        } catch (Exception e) {
+            return null;
         }
-        // not an AionBlock encoding
-        return null;
+
+        AionBlock block = new AionBlock();
+        block.header = header;
+        block.parsed = true;
+
+        // Parse Transactions
+        RLPList transactions = (RLPList) rlpEncoded.get(1);
+        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+            return null;
+        }
+
+        return block;
     }
 
     public void seal(byte[] nonce, byte[] solution) {

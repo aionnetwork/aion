@@ -54,7 +54,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             Block next =
-                    chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+                    chain.createNewMiningBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -96,7 +96,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             Block next =
-                    chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+                    chain.createNewMiningBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -134,18 +134,19 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            AionBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
-            next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             A0BlockHeader newBlockHeader =
-                    A0BlockHeader.Builder.newInstance()
-                            .withHeader(next.getHeader())
-                            .withExtraData("other".getBytes())
-                            .build();
+                A0BlockHeader.Builder.newInstance()
+                    .withHeader(next.getHeader())
+                    .withExtraData("other".getBytes())
+                    .build();
             next.updateHeader(newBlockHeader);
+
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         }
@@ -191,12 +192,12 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            AionBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // adding side chain
-            next = chain.createNewBlock(bestBlock, Collections.emptyList(), true);
+            next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             A0BlockHeader newBlockHeader =
                     A0BlockHeader.Builder.newInstance()
                             .withHeader(next.getHeader())

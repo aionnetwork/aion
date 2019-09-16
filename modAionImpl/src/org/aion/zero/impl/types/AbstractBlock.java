@@ -37,8 +37,6 @@ public abstract class AbstractBlock implements Block {
         return Arrays.equals(this.getHash(), block.getHash());
     }
 
-    public abstract String getShortDescr();
-
     abstract void parseRLP();
 
     /**
@@ -150,7 +148,7 @@ public abstract class AbstractBlock implements Block {
 
     @Override
     public boolean isMainChain() {
-        return mainChain;
+        return mainChain == null ? true : mainChain;
     }
 
     @Override

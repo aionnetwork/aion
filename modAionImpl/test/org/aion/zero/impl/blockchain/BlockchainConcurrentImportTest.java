@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ public class BlockchainConcurrentImportTest {
 
     private static StandaloneBlockchain testChain;
     private static StandaloneBlockchain sourceChain;
-    private static List<AionBlock> knownBlocks = new ArrayList<>();
+    private static List<Block> knownBlocks = new ArrayList<>();
 
     private static final List<ECKey> accounts = generateAccounts(10);
     private static final int MAX_TX_PER_BLOCK = 60;
@@ -80,7 +81,7 @@ public class BlockchainConcurrentImportTest {
         System.out.format("%nGenerating %d input blocks...%n", CONCURRENT_THREADS_PER_TYPE);
 
         Random rand = new Random();
-        AionBlock parent, block, mainChain;
+        Block parent, block, mainChain;
         mainChain = sourceChain.getGenesis();
         knownBlocks.add(mainChain);
 
@@ -105,16 +106,20 @@ public class BlockchainConcurrentImportTest {
             txs = generateTransactions(MAX_TX_PER_BLOCK, accounts, sourceRepo);
             sourceRepo.syncToRoot(originalRoot);
 
-            block = sourceChain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
 
+            block = sourceChain.createNewMiningBlock(parent, txs, true);
+
+            byte[] extraData = new byte[32];
+            byte[] var = String.valueOf(i).getBytes();
+            System.arraycopy(var, 0, extraData, 0, var.length);
             A0BlockHeader newBlockHeader =
                     A0BlockHeader.Builder.newInstance()
-                            .withHeader(block.getHeader())
-                            .withExtraData(String.valueOf(i).getBytes())
+                            .withHeader(((AionBlock)block).getHeader())
+                            .withExtraData(extraData)
                             .build();
             block.updateHeader(newBlockHeader);
 
-            ImportResult result = sourceChain.tryToConnectInternal(block, (time += 10));
+            ImportResult result = sourceChain.tryToConnect(block);
             knownBlocks.add(block);
             if (result == ImportResult.IMPORTED_BEST) {
                 mainChain = block;
@@ -151,7 +156,7 @@ public class BlockchainConcurrentImportTest {
      * @param _block the block to import
      */
     private void addThread_tryToConnect(
-            List<Runnable> _threads, StandaloneBlockchain _chain, AionBlock _block) {
+            List<Runnable> _threads, StandaloneBlockchain _chain, Block _block) {
         _threads.add(
                 () -> {
                     testChain.assertEqualTotalDifficulty();
@@ -191,7 +196,8 @@ public class BlockchainConcurrentImportTest {
                             // imported
                             Block bestBlock = store.getBestBlock();
                             assertNotNull(bestBlock);
-                            assertThat(bestBlock.getCumulativeDifficulty()).isAtLeast(tdFromStore);                        }
+                            assertThat(bestBlock.getCumulativeDifficulty()).isAtLeast(tdFromStore);
+                        }
                     }
                 });
     }
@@ -208,13 +214,13 @@ public class BlockchainConcurrentImportTest {
     private void addThread_tryToConnect(
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
-            ConcurrentLinkedQueue<AionBlock> _queue,
-            ConcurrentLinkedQueue<AionBlock> _imported) {
+            ConcurrentLinkedQueue<Block> _queue,
+            ConcurrentLinkedQueue<Block> _imported) {
         _threads.add(
                 () -> {
 
                     // get next block from queue
-                    AionBlock _block = _queue.poll();
+                    Block _block = _queue.poll();
 
                     if (_block != null) {
 
@@ -241,9 +247,12 @@ public class BlockchainConcurrentImportTest {
 
                             BigInteger tdFromStore =
                                     store.getTotalDifficultyForHash(_block.getHash());
-                            BigInteger tdCalculated =
-                                    store.getTotalDifficultyForHash(_block.getParentHash())
-                                            .add(_block.getDifficultyBI());
+                            
+                            // Assuming all added blocks are PoW blocks
+                            Block parentBlockWithDifficulties = store.getBlockByHashWithInfo(_block.getParentHash());
+                            BigInteger tdCalculated = parentBlockWithDifficulties
+                                    .getCumulativeDifficulty()
+                                    .add(_block.getDifficultyBI().multiply(parentBlockWithDifficulties.getStakingDifficulty()));
 
                             assertThat(tdFromStore).isEqualTo(tdCalculated);
                             assertThat(tdCalculated)
@@ -284,9 +293,9 @@ public class BlockchainConcurrentImportTest {
     private void addThread_createNewBlock(
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
-            AionBlock _parent,
+            Block _parent,
             int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue) {
+            ConcurrentLinkedQueue<Block> _queue) {
         _threads.add(
                 () -> {
 
@@ -301,20 +310,13 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = null;
-                        try {
-                            block = _chain.createNewBlock(_parent, txs, true);
-
-                            A0BlockHeader newBlockHeader =
-                                A0BlockHeader.Builder.newInstance()
-                                    .withHeader(block.getHeader())
-                                    .withExtraData(String.valueOf(_id).getBytes())
-                                    .build();
-
-                            block.updateHeader(newBlockHeader);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        Block block = _chain.createNewMiningBlock(_parent, txs, true);
+                        A0BlockHeader newBlockHeader =
+                            A0BlockHeader.Builder.newInstance()
+                                .withHeader(((AionBlock)block).getHeader())
+                                .withExtraData(String.valueOf(_id).getBytes())
+                                .build();
+                        block.updateHeader(newBlockHeader);
 
                         testChain.assertEqualTotalDifficulty();
 
@@ -363,7 +365,7 @@ public class BlockchainConcurrentImportTest {
             List<Runnable> _threads,
             StandaloneBlockchain _chain,
             int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue,
+            ConcurrentLinkedQueue<Block> _queue,
             int _startHeight) {
         _threads.add(
                 () -> {
@@ -381,20 +383,13 @@ public class BlockchainConcurrentImportTest {
                         List<AionTransaction> txs =
                                 generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = null;
-                        try {
-                            block = _chain.createNewBlock(_parent, txs, true);
-
-                            A0BlockHeader newBlockHeader =
+                        Block block = _chain.createNewMiningBlock(_parent, txs, true);
+                        A0BlockHeader newBlockHeader =
                                 A0BlockHeader.Builder.newInstance()
-                                    .withHeader(block.getHeader())
-                                    .withExtraData(String.valueOf(_id).getBytes())
-                                    .build();
-                            block.updateHeader(newBlockHeader);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
+                                        .withHeader(((AionBlock) block).getHeader())
+                                        .withExtraData(String.valueOf(_id).getBytes())
+                                        .build();
+                        block.updateHeader(newBlockHeader);
                         testChain.assertEqualTotalDifficulty();
 
                         // still adding this block
@@ -425,11 +420,11 @@ public class BlockchainConcurrentImportTest {
         List<Runnable> threads = new ArrayList<>();
 
         int start = (int) sourceChain.getBestBlock().getNumber() - 1;
-        ConcurrentLinkedQueue<AionBlock> queue = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<AionBlock> imported = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Block> queue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Block> imported = new ConcurrentLinkedQueue<>();
 
         int blockCount = CONCURRENT_THREADS_PER_TYPE + 1;
-        for (AionBlock blk : knownBlocks) {
+        for (Block blk : knownBlocks) {
             // connect to known blocks
             addThread_tryToConnect(threads, testChain, blk);
 
@@ -462,7 +457,7 @@ public class BlockchainConcurrentImportTest {
 
         // adding new blocks to source chain
         System.out.format("%nAdding new blocks to source chain for testing...%n");
-        AionBlock block = imported.poll();
+        Block block = imported.poll();
 
         while (block != null) {
             ImportResult result = sourceChain.tryToConnect(block);
@@ -489,7 +484,7 @@ public class BlockchainConcurrentImportTest {
         AionBlockStore sourceStore = sourceChain.getBlockStore();
 
         // comparing total diff for each block of the two chains
-        for (AionBlock blk : knownBlocks) {
+        for (Block blk : knownBlocks) {
             assertThat(testChain.getBlockStore().getTotalDifficultyForHash(blk.getHash()))
                     .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
             Hash256 hash = new Hash256(blk.getHash());

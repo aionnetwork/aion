@@ -68,7 +68,7 @@ public class AionGenesis extends AionBlock {
      * @implNote Updated April 7th, 2018. In light of changes to the original plan this value has
      *     been reduced to 1024 based on the heuristic data from the QA1 TestNet
      */
-    static final byte[] GENESIS_DIFFICULTY =
+    public static final byte[] GENESIS_DIFFICULTY =
             ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1024));
 
     /**
@@ -402,15 +402,20 @@ public class AionGenesis extends AionBlock {
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
 
-            GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(extraData);
-            genesis.setGenesisStakingBlock(genesisStakingBlock);
-            genesis.setAntiparentHash(genesisStakingBlock.getHash());
+            try {
+                GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(extraData);
+                genesis.setGenesisStakingBlock(genesisStakingBlock);
+                genesis.setAntiparentHash(genesisStakingBlock.getHash());
 
-            BigInteger miningDifficulty = genesis.getDifficultyBI();
-            genesis.setMiningDifficulty(miningDifficulty);
-            genesis.setStakingDifficulty(BigInteger.ONE);
-            genesis.setCumulativeDifficulty(miningDifficulty);
+                BigInteger miningDifficulty = genesis.getDifficultyBI();
 
+                genesis.setMiningDifficulty(miningDifficulty);
+                genesis.setStakingDifficulty(BigInteger.ONE);
+                genesis.setCumulativeDifficulty(miningDifficulty);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
             return genesis;
         }
 

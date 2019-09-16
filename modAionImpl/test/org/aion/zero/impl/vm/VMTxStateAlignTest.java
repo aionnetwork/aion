@@ -18,7 +18,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -82,7 +81,7 @@ public class VMTxStateAlignTest {
             deployAddr.add(TxUtil.calculateContractAddress(txList.get(i)));
         }
 
-        AionBlock deplayBlock = genNewBlock(txList, blockchainWoAVM);
+        Block deplayBlock = genNewBlock(txList, blockchainWoAVM);
         tryImportNewBlock(blockchainWoAVM, deplayBlock);
 
         txList.clear();
@@ -96,7 +95,7 @@ public class VMTxStateAlignTest {
                     makeFvmContractCallTransaction(senderKey, BigInteger.ONE, deployAddr.get(i)));
         }
 
-        AionBlock callBlock = genNewBlock(txList, blockchainWoAVM);
+        Block callBlock = genNewBlock(txList, blockchainWoAVM);
         tryImportNewBlock(blockchainWoAVM, callBlock);
 
         // Does not initial in the setup call due to the avmenable in the StandaloneBlockchain is a
@@ -158,12 +157,12 @@ public class VMTxStateAlignTest {
                 TransactionTypes.DEFAULT);
     }
 
-    private AionBlock genNewBlock(List<AionTransaction> transactions, StandaloneBlockchain bc) {
+    private Block genNewBlock(List<AionTransaction> transactions, StandaloneBlockchain bc) {
         Block parentBlock = bc.getBestBlock();
         return bc.createBlock(parentBlock, transactions, false, parentBlock.getTimestamp());
     }
 
-    private void tryImportNewBlock(StandaloneBlockchain bc, AionBlock block) {
+    private void tryImportNewBlock(StandaloneBlockchain bc, Block block) {
         Pair<ImportResult, AionBlockSummary> connectResult = bc.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         connectResult.getRight();

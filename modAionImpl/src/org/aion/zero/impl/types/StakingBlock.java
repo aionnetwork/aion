@@ -374,6 +374,18 @@ public class StakingBlock extends AbstractBlock {
     }
 
     @Override
+    public void updateHeaderDifficulty(byte[] diff) {
+        if (diff == null) {
+            throw new NullPointerException("difficulty is null");
+        }
+        this.header =
+                StakingBlockHeader.Builder.newInstance()
+                        .withHeader(getHeader())
+                        .withDifficulty(diff)
+                        .build();
+    }
+
+    @Override
     public String toString() {
         StringBuilder toStringBuff = new StringBuilder();
         parseRLP();
@@ -506,46 +518,32 @@ public class StakingBlock extends AbstractBlock {
         return block;
     }
 
-    public static StakingBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+    public static StakingBlock fromRLPList(RLPList rlpEncoded, boolean isUnsafe) {
         if (rlpEncoded == null) {
             throw new NullPointerException("RlpEncoded data is null");
         }
 
-        RLPList params = RLP.decode2(rlpEncoded);
-
-        // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
-
-            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-
-                // Parse Header
-                RLPList headerRLP = (RLPList) blockRLP.get(0);
-                StakingBlockHeader header;
-                try {
-                    header =
-                            StakingBlockHeader.Builder.newInstance(isUnsafe)
-                                    .withRlpList(headerRLP)
-                                    .build();
-                } catch (Exception e) {
-                    return null;
-                }
-
-                StakingBlock block = new StakingBlock();
-                block.header = header;
-                block.parsed = true;
-
-                // Parse Transactions
-                RLPList transactions = (RLPList) blockRLP.get(1);
-                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-                    return null;
-                }
-
-                return block;
-            }
+        // Parse Header
+        RLPList headerRLP = (RLPList) rlpEncoded.get(0);
+        StakingBlockHeader header;
+        try {
+            header =
+                    StakingBlockHeader.Builder.newInstance(isUnsafe).withRlpList(headerRLP).build();
+        } catch (Exception e) {
+            return null;
         }
-        // not an StakingBlock encoding
-        return null;
+
+        StakingBlock block = new StakingBlock();
+        block.header = header;
+        block.parsed = true;
+
+        // Parse Transactions
+        RLPList transactions = (RLPList) rlpEncoded.get(1);
+        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+            return null;
+        }
+
+        return block;
     }
 
     public void seal(byte[] sig, byte[] pubKey) {

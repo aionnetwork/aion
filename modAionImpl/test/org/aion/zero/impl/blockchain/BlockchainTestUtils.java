@@ -128,12 +128,15 @@ public class BlockchainTestUtils {
             txs = generateTransactions(txCount, accounts, repo);
             repo.syncToRoot(originalRoot);
 
-            block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 1000L).block;
+            byte[] extraData = new byte[32];
+            byte[] var = String.valueOf(i).getBytes();
+            System.arraycopy(var, 0, extraData, 0, var.length);
 
             A0BlockHeader newBlockHeader =
                     A0BlockHeader.Builder.newInstance()
                             .withHeader(block.getHeader())
-                            .withExtraData(String.valueOf(i).getBytes())
+                            .withExtraData(extraData)
                             .build();
             block.updateHeader(newBlockHeader);
 
@@ -187,12 +190,15 @@ public class BlockchainTestUtils {
                 }
             }
 
-            block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 1000L).block;
+            byte[] extraData = new byte[32];
+            byte[] var = String.valueOf(i).getBytes();
+            System.arraycopy(var, 0, extraData, 0, var.length);
 
             A0BlockHeader newBlockHeader =
                 A0BlockHeader.Builder.newInstance()
                     .withHeader(block.getHeader())
-                    .withExtraData(String.valueOf(i).getBytes())
+                    .withExtraData(extraData)
                     .build();
             block.updateHeader(newBlockHeader);
 
@@ -225,8 +231,7 @@ public class BlockchainTestUtils {
         List<AionTransaction> txs = generateTransactions(txCount, accounts, repo);
 
         long time = System.currentTimeMillis();
-        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
-
+        block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
         A0BlockHeader newBlockHeader =
             A0BlockHeader.Builder.newInstance()
                 .withHeader((A0BlockHeader) block.getHeader())
@@ -258,7 +263,7 @@ public class BlockchainTestUtils {
         repo.syncToRoot(originalRoot);
 
         long time = System.currentTimeMillis();
-        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
         A0BlockHeader newBlockHeader =
             A0BlockHeader.Builder.newInstance()
                 .withHeader((A0BlockHeader) block.getHeader())

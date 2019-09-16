@@ -15,6 +15,7 @@ import org.junit.Test;
 public class BlockInfoTest {
 
     private byte[] DEFAULT_HASH = HashUtil.h256("hello world".getBytes());
+    private byte[] DEFAULT_HASH_2 = HashUtil.h256("goodbye world".getBytes());
 
     private byte[] OLD_BLOCKINFO_DATA_1 =
             ByteUtil.hexStringToBytes(
@@ -23,7 +24,7 @@ public class BlockInfoTest {
     @Test
     public void testBlockInfoSerialization() {
         AionBlockStore.BlockInfo info =
-                new AionBlockStore.BlockInfo(DEFAULT_HASH, DEFAULT_HASH, BigInteger.ONE, BigInteger.ONE, true);
+                new AionBlockStore.BlockInfo(DEFAULT_HASH, DEFAULT_HASH_2, BigInteger.ONE, BigInteger.ONE, true);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Collections.singletonList(info));
@@ -35,17 +36,20 @@ public class BlockInfoTest {
 
         AionBlockStore.BlockInfo deserializedInfo = deserializedBlockInfos.get(0);
 
+        assertThat(deserializedInfo.getMiningDifficulty()).isEqualTo(info.getMiningDifficulty());
+        assertThat(deserializedInfo.getStakingDifficulty()).isEqualTo(info.getStakingDifficulty());
         assertThat(deserializedInfo.getCummDifficulty()).isEqualTo(info.getCummDifficulty());
         assertThat(deserializedInfo.getHash()).isEqualTo(info.getHash());
+        assertThat(deserializedInfo.getSealAntiparentHash()).isEqualTo(info.getSealAntiparentHash());
         assertThat(deserializedInfo.isMainChain()).isEqualTo(info.isMainChain());
     }
 
     @Test
     public void testBlockInfoMultipleSerialization() {
         AionBlockStore.BlockInfo info =
-                new AionBlockStore.BlockInfo(DEFAULT_HASH, DEFAULT_HASH, BigInteger.ONE, BigInteger.ONE, true);
+                new AionBlockStore.BlockInfo(DEFAULT_HASH, DEFAULT_HASH_2, BigInteger.ONE, BigInteger.ONE, true);
         AionBlockStore.BlockInfo info2 =
-                new AionBlockStore.BlockInfo(HashUtil.h256(DEFAULT_HASH), HashUtil.h256(DEFAULT_HASH), BigInteger.TWO, BigInteger.ONE, false);
+                new AionBlockStore.BlockInfo(HashUtil.h256(DEFAULT_HASH), DEFAULT_HASH_2, BigInteger.TWO, BigInteger.TWO, false);
 
         byte[] serialized =
                 AionBlockStore.BLOCK_INFO_SERIALIZER.serialize(Arrays.asList(info, info2));
@@ -57,14 +61,20 @@ public class BlockInfoTest {
 
         AionBlockStore.BlockInfo dInfo1 = deserializedBlockInfos.get(0);
 
-        assertThat(dInfo1.getCummDifficulty()).isEqualTo(info.getCummDifficulty());
+        assertThat(dInfo1.getMiningDifficulty()).isEqualTo(info.getMiningDifficulty());
+        assertThat(dInfo1.getStakingDifficulty()).isEqualTo(info.getStakingDifficulty());
+        assertThat(dInfo1.getCummDifficulty()).isEqualTo(info.getCummDifficulty());        
         assertThat(dInfo1.getHash()).isEqualTo(info.getHash());
+        assertThat(dInfo1.getSealAntiparentHash()).isEqualTo(info.getSealAntiparentHash());
         assertThat(dInfo1.isMainChain()).isEqualTo(info.isMainChain());
 
         AionBlockStore.BlockInfo dInfo2 = deserializedBlockInfos.get(1);
 
-        assertThat(dInfo2.getCummDifficulty()).isEqualTo(info2.getCummDifficulty());
+        assertThat(dInfo2.getMiningDifficulty()).isEqualTo(info2.getMiningDifficulty());
+        assertThat(dInfo2.getStakingDifficulty()).isEqualTo(info2.getStakingDifficulty());
+        assertThat(dInfo2.getCummDifficulty()).isEqualTo(info2.getCummDifficulty());      
         assertThat(dInfo2.getHash()).isEqualTo(info2.getHash());
+        assertThat(dInfo2.getSealAntiparentHash()).isEqualTo(info2.getSealAntiparentHash());
         assertThat(dInfo2.isMainChain()).isEqualTo(info2.isMainChain());
     }
 

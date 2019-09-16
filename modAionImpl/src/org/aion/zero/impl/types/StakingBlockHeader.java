@@ -17,7 +17,7 @@ import static org.aion.util.bytes.ByteUtil.*;
 import static org.aion.util.time.TimeUtils.longToDateTime;
 
 /** Represents a PoS block on a chain implementing Unity Consensus. */
-public class StakingBlockHeader  implements BlockHeader {
+public class StakingBlockHeader implements BlockHeader {
 
     // Not used in the BlockHeader but been defined in rlpEncoded data.
     //private static final int RPL_BH_SEALTYPE = 0;
@@ -552,7 +552,7 @@ public class StakingBlockHeader  implements BlockHeader {
             return new StakingBlockHeader(this);
         }
 
-        Builder withHeader(StakingBlockHeader header) {
+        public Builder withHeader(StakingBlockHeader header) {
             if (header == null) {
                 throw new NullPointerException();
             }

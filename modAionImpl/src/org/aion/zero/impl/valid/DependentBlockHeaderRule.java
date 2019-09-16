@@ -13,6 +13,8 @@ public abstract class DependentBlockHeaderRule {
      */
     public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors);
 
+    public abstract boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg);
+
     public void addError(String error, List<RuleError> errors) {
         errors.add(new RuleError(this.getClass(), error));
     }

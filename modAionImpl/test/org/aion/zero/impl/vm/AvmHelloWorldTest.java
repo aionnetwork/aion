@@ -16,10 +16,10 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
+import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.base.AionTxReceipt;
@@ -78,8 +78,8 @@ public class AvmHelloWorldTest {
                         1,
                         TransactionTypes.AVM_CREATE_CODE);
 
-        AionBlock block =
-                this.blockchain.createNewBlock(
+        Block block =
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -113,8 +113,8 @@ public class AvmHelloWorldTest {
                         1,
                         TransactionTypes.AVM_CREATE_CODE);
 
-        AionBlock block =
-                this.blockchain.createNewBlock(
+        Block block =
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -143,7 +143,7 @@ public class AvmHelloWorldTest {
                         TransactionTypes.DEFAULT);
 
         block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -188,7 +188,7 @@ public class AvmHelloWorldTest {
 
         ls.add(transaction2);
 
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), ls, false);
+        Block block = this.blockchain.createNewMiningBlock(this.blockchain.getBestBlock(), ls, false);
         Pair<ImportResult, AionBlockSummary> connectResult =
                 this.blockchain.tryToConnectAndFetchSummary(block);
 

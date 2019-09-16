@@ -102,7 +102,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        Block block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getParentHash()).isEqualTo(bc.getGenesis().getHash());
     }
 
@@ -133,7 +133,7 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        Block block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
         assertThat(block.getTxTrieRoot()).isEqualTo(ConstantUtil.EMPTY_TRIE_HASH);
@@ -171,7 +171,7 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        Block block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(1);
         assertThat(block.getTransactionsList().get(0)).isEqualTo(tx);
@@ -199,13 +199,13 @@ public class BlockchainIntegrationTest {
                         .build();
         StandaloneBlockchain bc = bundle.bc;
         Block parent = bc.getBestBlock();
-        AionBlock block =
+        Block block =
                 bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
         // set the block to be created 1 month in the future
         A0BlockHeader newBlockHeader =
                 A0BlockHeader.Builder.newInstance()
-                        .withHeader(block.getHeader())
+                        .withHeader(((AionBlock)block).getHeader())
                         .withTimestamp((System.currentTimeMillis() / 1000) + 2592000)
                         .build();
         block.updateHeader(newBlockHeader);
@@ -247,7 +247,7 @@ public class BlockchainIntegrationTest {
                         TransactionTypes.DEFAULT);
 
         // create a new block containing a single transaction (tx)
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        Block block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         // import the block to our blockchain
         ImportResult connection = bc.tryToConnect(block);
@@ -283,8 +283,8 @@ public class BlockchainIntegrationTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block =
-                blockchain.createNewBlock(
+        Block block =
+                blockchain.createNewMiningBlock(
                         blockchain.getGenesis(), Arrays.asList(contractDeploymentTx), true);
 
         Pair<ImportResult, AionBlockSummary> connectResult =
@@ -326,7 +326,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain bc = bundle.bc;
 
         // store this as the best block,
-        AionBlock block = bundle.bc.createNewBlock(bc.getGenesis(), Collections.emptyList(), true);
+        Block block = bundle.bc.createNewMiningBlock(bc.getGenesis(), Collections.emptyList(), true);
         byte[] block1Hash = block.getHash();
 
         // now modify this block to have a different value after connecting
@@ -336,7 +336,7 @@ public class BlockchainIntegrationTest {
         // now modify the block in some way
         A0BlockHeader newBlockHeader =
             A0BlockHeader.Builder.newInstance()
-                .withHeader(block.getHeader())
+                .withHeader(((AionBlock)block).getHeader())
                 .withEnergyConsumed(42L)
                 .build();
         block.updateHeader(newBlockHeader);
@@ -346,8 +346,8 @@ public class BlockchainIntegrationTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // now try creating a new block
-        AionBlock newBlock =
-                bundle.bc.createNewBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
+        Block newBlock =
+                bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
 
         // gets the first main-chain block
         Block storedBlock1 = bundle.bc.getBlockStore().getChainBlockByNumber(1L);
@@ -368,7 +368,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain bc = bundle.bc;
 
         BlockContext context =
-                bc.createNewBlockContext(bc.getBestBlock(), Collections.emptyList(), false);
+                bc.createNewMiningBlockContext(bc.getBestBlock(), Collections.emptyList(), false);
 
         ChainConfiguration configuration = new ChainConfiguration();
 

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc2.Rpc2Shim;
 
@@ -33,6 +34,9 @@ public abstract class RpcServer {
     private Integer ioPoolSize;
     private Integer requestQueueSize;
 
+    // blockTemplateLock needs for both rpc implementation.
+    private final ReentrantLock blockTemplateLock;
+
     protected RpcServer(RpcServerBuilder<?> builder) {
         // everything exposed by the builder is immutable, except for the List<String> & char[]
         // sslCertPass
@@ -51,7 +55,10 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
         List<String> disabledMethods =
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
-        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim());
+
+        blockTemplateLock = new ReentrantLock();
+
+        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim(blockTemplateLock), blockTemplateLock);
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {

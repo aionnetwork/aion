@@ -6,7 +6,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;

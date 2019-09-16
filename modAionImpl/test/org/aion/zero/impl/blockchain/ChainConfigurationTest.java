@@ -113,12 +113,12 @@ public class ChainConfigurationTest {
         assertThat(blockUpper).isEqualTo(config.getConstants().getBlockReward());
 
         // LOWER BOUNDS
-        when(header.getNumber()).thenReturn(0l);
+        when(header.getNumber()).thenReturn(0L);
         BigInteger blockReward0 = config.getRewardsCalculator().calculateReward(header.getNumber());
         assertThat(blockReward0).isEqualTo(new BigInteger("748994641621655092"));
 
         // first block (should have gas value of increment)
-        when(header.getNumber()).thenReturn(1l);
+        when(header.getNumber()).thenReturn(1L);
         BigInteger blockReward1 = config.getRewardsCalculator().calculateReward(header.getNumber());
         assertThat(blockReward1).isEqualTo(increment);
     }

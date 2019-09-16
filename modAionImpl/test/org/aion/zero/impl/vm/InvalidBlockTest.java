@@ -19,7 +19,6 @@ import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.Contract;
 import org.apache.commons.lang3.tuple.Pair;
@@ -73,7 +72,7 @@ public class InvalidBlockTest {
         List<AionTransaction> transactions = makeTransactions(20, nonce);
 
         Block parent = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createNewBlock(parent, transactions, false);
+        Block block = this.blockchain.createNewMiningBlock(parent, transactions, false);
 
         Pair<ImportResult, AionBlockSummary> res =
                 this.blockchain.tryToConnectAndFetchSummary(block);

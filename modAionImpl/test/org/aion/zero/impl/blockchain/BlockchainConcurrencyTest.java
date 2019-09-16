@@ -36,19 +36,10 @@ public class BlockchainConcurrencyTest {
                         int count = 0;
 
                         List<AionTransaction> txList = Collections.emptyList();
-                        AionBlock block =
-                            null;
-                        try {
-                            block = bc.createNewBlock(bc.genesis, Collections.emptyList(), false);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        Block block =
+                                bc.createNewMiningBlock(bc.genesis, Collections.emptyList(), false);
                         while (!Thread.currentThread().isInterrupted() && count < MAX_COUNT) {
-                            try {
-                                block = bc.createNewBlock(block, txList, false);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                            block = bc.createNewMiningBlock(block, txList, false);
                             count++;
                         }
                         System.out.println("completed block creation");

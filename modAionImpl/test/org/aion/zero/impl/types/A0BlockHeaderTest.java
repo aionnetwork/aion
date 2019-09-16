@@ -131,8 +131,6 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
         assertThat(reconstructed.getSealType() == header.getSealType());
-
-        byte[] difficulty = reconstructed.getDifficulty();
     }
 
     // verification tests, test that no properties are being violated

@@ -17,7 +17,6 @@ import org.aion.zero.impl.sync.SyncStats;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
-import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
@@ -45,7 +44,7 @@ public class BlockPropagationHandler {
 
     private final IP2pMgr p2pManager;
 
-    private final BlockHeaderValidator blockHeaderValidator;
+    private final BlockHeaderValidator unityBlockHeaderValidator;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -62,7 +61,7 @@ public class BlockPropagationHandler {
             final IAionBlockchain blockchain,
             final SyncStats syncStats,
             final IP2pMgr p2pManager,
-            BlockHeaderValidator headerValidator,
+            BlockHeaderValidator blockHeaderValidator,
             final boolean isSyncOnlyNode,
             final byte apiVersion,
             final AionPendingStateImpl pendingState) {
@@ -85,7 +84,7 @@ public class BlockPropagationHandler {
         // record our own nodeId to cover corner case
         this.p2pManager = p2pManager;
 
-        this.blockHeaderValidator = headerValidator;
+        unityBlockHeaderValidator = blockHeaderValidator;
 
         this.isSyncOnlyNode = isSyncOnlyNode;
         this.apiVersion = apiVersion;
@@ -93,7 +92,7 @@ public class BlockPropagationHandler {
     }
 
     // assumption here is that blocks propagated have unique hashes
-    public void propagateNewBlock(final AionBlock block) {
+    public void propagateNewBlock(final Block block) {
         if (block == null) return;
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
@@ -119,12 +118,14 @@ public class BlockPropagationHandler {
     }
 
     public PropStatus processIncomingBlock(
-            final int nodeId, final String displayId, final AionBlock block) {
+            final int nodeId, final String displayId, final Block block) {
         if (block == null) return PropStatus.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
-        if (!this.blockHeaderValidator.validate(block.getHeader(), log)) return PropStatus.DROPPED;
+        if (!unityBlockHeaderValidator.validate(block.getHeader(), log)) {
+            return PropStatus.DROPPED;
+        }
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized (this.cacheMap) {
@@ -251,7 +252,7 @@ public class BlockPropagationHandler {
         return PropStatus.DROPPED;
     }
 
-    private boolean send(AionBlock block, int nodeId) {
+    private boolean send(Block block, int nodeId) {
         if (isSyncOnlyNode) return true;
 
         // current proposal is to send to all peers with lower blockNumbers

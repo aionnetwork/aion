@@ -2,6 +2,7 @@ package org.aion.mcf.blockchain;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
+import org.aion.types.AionAddress;
 
 /**
  * The block header interface for cross-module usage purpose.
@@ -65,4 +66,6 @@ public interface BlockHeader {
     byte[] getMineHash();
 
     BlockSealType getSealType();
+
+    AionAddress getCoinbase();
 }

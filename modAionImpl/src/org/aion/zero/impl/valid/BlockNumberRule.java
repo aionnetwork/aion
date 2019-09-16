@@ -14,6 +14,12 @@ public class BlockNumberRule extends DependentBlockHeaderRule {
         return true;
     }
 
+    @Override
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors,
+        Object arg) {
+        return validate(header, dependency, errors);
+    }
+
     private static String formatError(long headerNumber, long parentNumber) {
         return "blockNumber ("
                 + headerNumber

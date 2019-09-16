@@ -9,7 +9,7 @@ public class GenesisStakingBlock extends StakingBlock {
     private final static BigInteger GENESIS_DIFFICULTY = BigInteger.valueOf(2_000_000_000L);
 
     //TODO: [unity] Hard code the genesis staking block, might refactor it before the feature release.
-    GenesisStakingBlock(byte[] extraData) {
+    public GenesisStakingBlock(byte[] extraData) {
         super(
                 new byte[32],
                 AddressUtils.ZERO_ADDRESS,

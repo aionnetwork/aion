@@ -11,7 +11,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.mcf.blockchain.Block;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ public class BlockchainAccountStateTest {
         // send a total of 100 bundles,
         // given the rate we're sending this should give us
         // a 400,000 accounts (not counting the 10 pre-generated for us)
-        AionBlock previousBlock = bc.genesis;
+        Block previousBlock = bc.genesis;
         for (int i = 0; i < 1000; i++) {
             previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
         }
@@ -42,8 +42,8 @@ public class BlockchainAccountStateTest {
 
     private static final byte[] ZERO_BYTE = new byte[0];
 
-    private static AionBlock createBundleAndCheck(
-            StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+    private static Block createBundleAndCheck(
+            StandaloneBlockchain bc, ECKey key, Block parentBlock) {
         BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
@@ -64,7 +64,7 @@ public class BlockchainAccountStateTest {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        Block block = bc.createNewMiningBlock(parentBlock, transactions, true);
         assertThat(block.getTransactionsList().size()).isEqualTo(400);
         // clear the trie
         bc.getRepository().flush();
@@ -100,14 +100,14 @@ public class BlockchainAccountStateTest {
         // send a total of 100 bundles,
         // given the rate we're sending this should give us
         // a 400,000 accounts (not counting the 10 pre-generated for us)
-        AionBlock previousBlock = bc.genesis;
+        Block previousBlock = bc.genesis;
         for (int i = 0; i < 1000; i++) {
             previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
         }
     }
 
-    private static AionBlock createContractBundle(
-            StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+    private static Block createContractBundle(
+            StandaloneBlockchain bc, ECKey key, Block parentBlock) {
         BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
@@ -127,7 +127,7 @@ public class BlockchainAccountStateTest {
             transactions.add(sendTransaction);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        Block block = bc.createNewMiningBlock(parentBlock, transactions, true);
         // clear the trie
         bc.getRepository().flush();
 

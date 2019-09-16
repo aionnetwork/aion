@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -48,7 +49,6 @@ public class DataSourceArrayTest {
 
     private static ByteArrayKeyValueDatabase db;
     private static ArrayStore<String> testStore;
-
     private static final Random random = new Random();
 
     @Before

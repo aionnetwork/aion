@@ -13,8 +13,6 @@ public interface IBlockStoreBase {
 
     byte[] getBlockHashByNumber(long blockNumber);
 
-    byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash);
-
     Block getChainBlockByNumber(long blockNumber);
 
     Block getBlockByHash(byte[] hash);

@@ -472,17 +472,17 @@ public final class A0BlockHeader implements BlockHeader {
             return this;
         }
 
-        public Builder withNonce(byte[] _nonce) {
+        public Builder withNonce(byte[] nonce) {
             if (isFromUnsafeSource) {
 
-                if (_nonce == null) throw new NullPointerException("nonce cannot be null");
+                if (nonce == null) throw new NullPointerException("nonce cannot be null");
 
-                if (_nonce.length != NONCE_LENGTH) {
+                if (nonce.length != NONCE_LENGTH) {
                     throw new IllegalArgumentException("nonce cannot be greater than 32 bytes");
                 }
             }
 
-            nonce = _nonce;
+            this.nonce = nonce;
             return this;
         }
 

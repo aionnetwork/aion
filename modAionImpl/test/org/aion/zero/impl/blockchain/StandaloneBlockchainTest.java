@@ -5,8 +5,8 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.crypto.ECKey;
+import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
 public class StandaloneBlockchainTest {
@@ -37,8 +37,8 @@ public class StandaloneBlockchainTest {
         assertThat(bundle.bc.getBestBlock().getStateRoot())
                 .isEqualTo(bundle.bc.genesis.getStateRoot());
 
-        AionBlock block =
-                bundle.bc.createNewBlock(bundle.bc.getBestBlock(), Collections.emptyList(), false);
+        Block block =
+                bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), false);
         assertThat(block).isNotNull();
         assertThat(block.getNumber()).isEqualTo(BLOCK_NUMBER + 1);
     }

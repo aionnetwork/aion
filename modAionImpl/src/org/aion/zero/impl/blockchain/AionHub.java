@@ -33,6 +33,7 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.DBUtils;
+import org.aion.zero.impl.pos.AionPoS;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.sync.SyncMgr;
@@ -45,6 +46,8 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
 public class AionHub {
@@ -72,6 +75,8 @@ public class AionHub {
     private IEventMgr eventMgr;
 
     private AionPoW pow;
+
+    private AionPoS pos;
 
     private AtomicBoolean start = new AtomicBoolean(true);
 
@@ -207,6 +212,9 @@ public class AionHub {
 
         this.pow = new AionPoW();
         this.pow.init(_blockchain, mempool, eventMgr);
+
+        pos = new AionPoS();
+        pos.init(_blockchain, mempool, eventMgr);
     }
 
     public static AionHub createForTesting(
@@ -378,13 +386,13 @@ public class AionHub {
                 // new best block after recovery
                 bestBlock = this.repository.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
-                    bestBlock.setCumulativeDifficulty(
-                            repository
-                                    .getBlockStore()
-                                    .getTotalDifficultyForHash(bestBlock.getHash()));
+                    Block blockWithDifficulties = getBlockStore().getBlockByHashWithInfo(bestBlock.getHash());
+                    bestBlock.setMiningDifficulty(blockWithDifficulties.getMiningDifficulty());
+                    bestBlock.setStakingDifficulty(blockWithDifficulties.getStakingDifficulty());
+                    bestBlock.setCumulativeDifficulty(blockWithDifficulties.getCumulativeDifficulty());
 
                     startingBlock = bestBlock;
-                    // TODO: The publicbestblock is a weird settings, should consider to remove it.
+                    // TODO: [unity] The publicbestblock is a weird settings, should consider to remove it.
                     ((AionBlockchainImpl) blockchain).resetPubBestBlock(bestBlock);
                 } else {
                     genLOG.error(
@@ -428,23 +436,47 @@ public class AionHub {
             AionHubUtils.buildGenesis(genesis, repository);
 
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
+
+            blockchain.setUnityTotalDifficulty(
+                    genesis.getDifficultyBI(),
+                    genesis.getMiningDifficulty(),
+                    genesis.getStakingDifficulty());
+
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
                 genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
             }
 
+            blockchain.setBestStakingBlock(cfg.getGenesisStakingBlock());
+            genLOG.info("load genesis Staking block!");
+
             genLOG.info(
                     "loaded genesis block <num={}, root={}>",
                     0,
                     ByteUtil.toHexString(genesis.getStateRoot()));
-
         } else {
             blockchain.setBestBlock(bestBlock);
+
+            if (bestBlock instanceof StakingBlock) {
+                blockchain.loadBestMiningBlock();
+            } else if (bestBlock instanceof AionBlock) {
+                blockchain.loadBestStakingBlock();
+            } else {
+                throw new IllegalStateException();
+            }
+
+
             Block blockWithDifficulties = getBlockStore().getBestBlockWithInfo();
-            blockchain.setTotalDifficulty(blockWithDifficulties.getCumulativeDifficulty());
+
+            blockchain.setUnityTotalDifficulty(
+                    blockWithDifficulties.getCumulativeDifficulty(),
+                    blockWithDifficulties.getMiningDifficulty(),
+                    blockWithDifficulties.getStakingDifficulty());
+
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
+                bestBlock.setMiningDifficulty(blockWithDifficulties.getMiningDifficulty());
+                bestBlock.setStakingDifficulty(blockWithDifficulties.getStakingDifficulty());
                 bestBlock.setCumulativeDifficulty(blockWithDifficulties.getCumulativeDifficulty());
             }
 

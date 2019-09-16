@@ -1,5 +1,6 @@
 package org.aion.zero.impl.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -7,23 +8,35 @@ import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.mcf.blockchain.UnityChain;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.StakingBlock;
 
 /** aion blockchain interface. */
-public interface IAionBlockchain extends IPowChain {
+public interface IAionBlockchain extends UnityChain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 
-    Block createNewBlock(
-            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+    AionBlock createNewMiningBlock(
+        Block parent,
+            List<AionTransaction> transactions,
+            boolean waitUntilBlockTime);
 
-    BlockContext createNewBlockContext(
-            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+    StakingBlock createNewStakingBlock(
+        Block parent,
+        List<AionTransaction> transactions,
+        byte[] seed);
+
+    BlockContext createNewMiningBlockContext(
+        Block parent,
+        List<AionTransaction> transactions,
+        boolean waitUntilBlockTime);
 
     Block getBestBlock();
 
@@ -154,11 +167,7 @@ public interface IAionBlockchain extends IPowChain {
 
     void setBestBlock(Block block);
 
-    boolean hasParentOnTheChain(Block block);
-
     void close();
-
-    void setTotalDifficulty(BigInteger totalDifficulty);
 
     byte[] getBestBlockHash();
 
@@ -172,13 +181,29 @@ public interface IAionBlockchain extends IPowChain {
 
     boolean isBlockStored(byte[] hash, long number);
 
-    List<BlockHeader> getListOfHeadersStartFrom(long number, int limit);
+    List<BlockHeader> getListOfHeadersStartFrom(long blockNumber, int limit);
 
-    // /** Returns the list of headers for the main chain.
-    //  *  Returns emptyList() for side chain blocks.
-    //  */
-    // List<BH> getListOfHeadersStartFrom(
-    //         BlockIdentifierImpl identifier, int skip, int limit, boolean reverse);
+    StakingContractHelper getStakingContractHelper();
 
-    List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
+    StakingBlock getBestStakingBlock();
+
+    AionBlock getBestMiningBlock();
+
+    void setBestStakingBlock(StakingBlock block);
+
+    void setBestMiningBlock(AionBlock block);
+
+    void loadBestMiningBlock();
+
+    void loadBestStakingBlock();
+
+    boolean isUnityForkEnabled();
+
+    StakingBlock trySealStakingBlock();
+
+    @VisibleForTesting
+    void setUnityForkNumber(long blockNumber);
+
+    void setUnityTotalDifficulty(BigInteger totalDifficulty, BigInteger miningDifficulty,
+        BigInteger stakingDifficulty);
 }

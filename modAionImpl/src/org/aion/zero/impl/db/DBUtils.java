@@ -573,12 +573,23 @@ public class DBUtils {
                 System.out.println("\nFinished rebuilding genesis block.");
                 startBlock = genesis;
                 currentBlock = 1L;
-                chain.setTotalDifficulty(genesis.getDifficultyBI()); // initial TD = genesis diff
+
+                chain.setUnityTotalDifficulty(
+                        genesis.getCumulativeDifficulty(),
+                        genesis.getMiningDifficulty(),
+                        genesis.getStakingDifficulty());
             } else {
                 startBlock = store.getChainBlockByNumber(startHeight - 1);
                 currentBlock = startHeight;
-                // initial TD = diff of parent of first block to import
-                chain.setTotalDifficulty(store.getTotalDifficultyForHash(startBlock.getHash()));
+                
+                // initial difficulties = diff of parent of first block to import
+
+                Block blockWithDifficulties = store.getBlockByHashWithInfo(startBlock.getHash());
+
+                chain.setUnityTotalDifficulty(
+                    blockWithDifficulties.getCumulativeDifficulty(),
+                    blockWithDifficulties.getMiningDifficulty(),
+                    blockWithDifficulties.getStakingDifficulty());
             }
 
             boolean fail = false;
@@ -735,37 +746,34 @@ public class DBUtils {
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
         try {
-            List<AionTxInfo> txInfoList = blockchain.getTransactionStore().get(txHash);
+            AionTxInfo txInfo = blockchain.getTransactionInfo(txHash);
 
-            if (txInfoList == null || txInfoList.isEmpty()) {
+            if (txInfo == null) {
                 System.out.println("Can not find the transaction with given hash.");
                 return Status.FAILURE;
             }
 
-            for (AionTxInfo info : txInfoList) {
-
-                Block block = blockchain.getBlockStore().getBlockByHash(info.getBlockHash());
-                if (block == null) {
-                    System.out.println(
-                            "Can not find the block data with given block hash of the transaction info.");
-                    System.out.println(
-                            "The database might corruption. Please consider to re-import the db by ./aion.sh -n <network> --redo-import");
-                    return Status.FAILURE;
-                }
-
-                AionTransaction tx = block.getTransactionsList().get(info.getIndex());
-
-                if (tx == null) {
-                    System.out.println("Can not find the transaction data with given hash.");
-                    System.out.println(
-                            "The database might corruption. Please consider to re-import the db by ./aion.sh -n <network> --redo-import");
-                    return Status.FAILURE;
-                }
-
-                System.out.println(tx.toString());
-                System.out.println(info.toString());
-                System.out.println();
+            Block block = blockchain.getBlockStore().getBlockByHash(txInfo.getBlockHash());
+            if (block == null) {
+                System.out.println(
+                        "Can not find the block data with given block hash of the transaction info.");
+                System.out.println(
+                        "The database might corruption. Please consider to re-import the db by ./aion.sh -n <network> --redo-import");
+                return Status.FAILURE;
             }
+
+            AionTransaction tx = block.getTransactionsList().get(txInfo.getIndex());
+
+            if (tx == null) {
+                System.out.println("Can not find the transaction data with given hash.");
+                System.out.println(
+                        "The database might corruption. Please consider to re-import the db by ./aion.sh -n <network> --redo-import");
+                return Status.FAILURE;
+            }
+
+            System.out.println(tx.toString());
+            System.out.println(txInfo.toString());
+            System.out.println();
 
             return Status.SUCCESS;
         } catch (Exception e) {
@@ -866,7 +874,7 @@ public class DBUtils {
             Repository<AccountState, IBlockStoreBase> repository =
                     blockchain
                             .getRepository()
-                            .getSnapshotTo(((AionBlock) bestBlock).getStateRoot())
+                            .getSnapshotTo(bestBlock.getStateRoot())
                             .startTracking();
 
             AccountState account = repository.getAccountState(address);

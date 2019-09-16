@@ -51,7 +51,6 @@ import org.aion.vm.avm.LongLivedAvm;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxExecSummary;
@@ -135,7 +134,7 @@ public class InternalTransactionTest {
                         TransactionTypes.DEFAULT);
 
         BlockContext context =
-                bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
+                bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -160,7 +159,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx3), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -187,7 +186,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx4), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx4), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -215,7 +214,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx6), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx6), false);
         result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -265,7 +264,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -290,7 +289,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
+        context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx2), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx2);
 
         assertEquals(2, summary.getInternalTransactions().size());
@@ -338,7 +337,7 @@ public class InternalTransactionTest {
                         1L,
                         TransactionTypes.DEFAULT);
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx1);
 
         System.out.println(summary.getReceipt());
@@ -387,7 +386,7 @@ public class InternalTransactionTest {
 
         Block parentBlock = bc.getBestBlock();
 
-        AionBlock newBlock =
+        Block newBlock =
                 bc.createBlock(
                         parentBlock,
                         Collections.singletonList(tx),
@@ -442,7 +441,7 @@ public class InternalTransactionTest {
 
         System.out.println("contractaddr: " + TxUtil.calculateContractAddress(tx));
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx), false);
+        BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx), false);
         AionTxExecSummary summary = executeTransaction(bc, context, tx);
 
         System.out.println(summary.getReceipt());
@@ -483,7 +482,7 @@ public class InternalTransactionTest {
             throws VMException {
         RepositoryCache cache = bc.getRepository().startTracking();
 
-        AionBlock block = context.block;
+        Block block = context.block;
         AionTxExecSummary summary =
                 BulkExecutor.executeTransactionWithNoPostExecutionWork(
                         block.getDifficulty(),

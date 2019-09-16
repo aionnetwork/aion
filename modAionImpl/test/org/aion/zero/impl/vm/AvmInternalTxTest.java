@@ -14,10 +14,10 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
+import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.AvmInternalTx;
 import org.aion.base.AionTxReceipt;
@@ -77,8 +77,8 @@ public class AvmInternalTxTest {
                         1,
                         TransactionTypes.AVM_CREATE_CODE);
 
-        AionBlock block =
-                this.blockchain.createNewBlock(
+        Block block =
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -118,8 +118,8 @@ public class AvmInternalTxTest {
                         1,
                         TransactionTypes.DEFAULT);
 
-        AionBlock block =
-                this.blockchain.createNewBlock(
+        Block block =
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
