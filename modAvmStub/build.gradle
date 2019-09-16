@@ -1,0 +1,7 @@
+ext.moduleName = 'aion.avm.stub'
+
+dependencies {
+    compile project(':modBase')
+    compile project(':modMcf')
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+}

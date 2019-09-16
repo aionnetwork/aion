@@ -416,7 +416,8 @@ task ciBuild {
             'modPrecompiled',
             'modRlp',
             'modTxPool',
-            'modVM'
+            'modVM',
+            'modAvmStub'
     ] 
 
     configure(subprojects.findAll { it.name in ciModules }) {

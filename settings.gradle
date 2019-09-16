@@ -13,7 +13,8 @@ include 'modAionImpl',
     'modPrecompiled',
     'modVM',
     'modApiServer',
-    'modBoot'
+    'modBoot',
+    'modAvmStub'
 
 // only build and distribute modGui only if explicitly specified
 if (hasProperty('modGuiPath') && !modGuiPath.empty) {
