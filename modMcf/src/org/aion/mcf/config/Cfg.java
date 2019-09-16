@@ -212,6 +212,9 @@ public abstract class Cfg {
                 case 31:
                     network = "avmtestnet";
                     break;
+                case 30:
+                    network = "amity";
+                    break;
                 default:
                     network = "custom";
                     break;
