@@ -167,6 +167,7 @@ public class AionHub {
         this.p2pMgr =
                 new P2pMgr(
                         AionLoggerFactory.getLogger(LogEnum.P2P.name()),
+                        AionLoggerFactory.getLogger(LogEnum.SURVEY.name()),
                         this.chainId,
                         Version.KERNEL_VERSION,
                         this.cfg.getId(),

@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 
 public class TaskSend implements Runnable {
 
-    private final Logger p2pLOG;
+    private final Logger p2pLOG, surveyLog;
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
     private final BlockingQueue<MsgOut> sendMsgQue;
@@ -29,6 +29,7 @@ public class TaskSend implements Runnable {
 
     public TaskSend(
             final Logger p2pLOG,
+            final Logger surveyLog,
             final IP2pMgr _mgr,
             final int _lane,
             final BlockingQueue<MsgOut> _sendMsgQue,
@@ -37,6 +38,7 @@ public class TaskSend implements Runnable {
             final Selector _selector) {
 
         this.p2pLOG = p2pLOG;
+        this.surveyLog = surveyLog;
         this.mgr = _mgr;
         this.lane = _lane;
         this.sendMsgQue = _sendMsgQue;
@@ -55,22 +57,33 @@ public class TaskSend implements Runnable {
 
     @Override
     public void run() {
+        // for runtime survey information
+        long startTime, duration;
+
         while (start.get()) {
             try {
+                startTime = System.nanoTime();
                 MsgOut mo = sendMsgQue.take();
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskSend: wait for msg, duration = {} ns.", duration);
 
+                startTime = System.nanoTime();
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug("timeout-msg to-node={} timestamp={}", mo.getDisplayId(), now);
                     }
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("TaskSend: timeout, duration = {} ns.", duration);
                     continue;
                 }
 
                 // if not belong to current lane, put it back.
                 if (mo.getLane() != lane) {
                     sendMsgQue.offer(mo);
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("TaskSend: put back, duration = {} ns.", duration);
                     continue;
                 }
 
@@ -94,7 +107,7 @@ public class TaskSend implements Runnable {
                         if (attachment != null) {
                             tpe.execute(
                                     new TaskWrite(
-                                            p2pLOG,
+                                            p2pLOG, surveyLog,
                                             node.getIdShort(),
                                             node.getChannel(),
                                             mo.getMsg(),
@@ -110,6 +123,8 @@ public class TaskSend implements Runnable {
                                 mo.getDisplayId());
                     }
                 }
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskSend: process message, duration = {} ns.", duration);
             } catch (InterruptedException e) {
                 p2pLOG.error("task-send-interrupted", e);
                 return;

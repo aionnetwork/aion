@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 
 public class TaskStatus implements Runnable {
 
-    private final Logger p2pLOG;
+    private final Logger p2pLOG, surveyLog;
     private final INodeMgr nodeMgr;
     private final String selfShortId;
     private final BlockingQueue<MsgOut> sendMsgQue;
@@ -18,12 +18,14 @@ public class TaskStatus implements Runnable {
 
     public TaskStatus(
             final Logger p2pLOG,
+            final Logger surveyLog,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
             final String _selfShortId,
             final BlockingQueue<MsgOut> _sendMsgQue,
             final BlockingQueue<MsgIn> _receiveMsgQue) {
         this.p2pLOG = p2pLOG;
+        this.surveyLog = surveyLog;
         this.nodeMgr = _nodeMgr;
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;
@@ -37,6 +39,9 @@ public class TaskStatus implements Runnable {
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_STATUS);
+
+                // not tracking sleep because it is not meaningful here
+                long startTime = System.nanoTime();
                 String status = nodeMgr.dumpNodeInfo(selfShortId, p2pLOG.isDebugEnabled());
 
                 if (p2pLOG.isDebugEnabled()) {
@@ -48,6 +53,8 @@ public class TaskStatus implements Runnable {
                 } else if (p2pLOG.isInfoEnabled()) {
                     p2pLOG.info(status);
                 }
+                long duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskStatus: duration = {} ns.", duration);
             } catch (InterruptedException e) {
                 p2pLOG.warn("P2p taskStatus InterruptedException! ", e);
             } catch (Exception e) {

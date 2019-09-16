@@ -5,7 +5,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -19,9 +21,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TaskRecvTest {
     @Mock private Logger p2pLOG;
+    private Logger surveyLog;
 
     @Mock private BlockingQueue<MsgIn> recvMsgQue;
 
@@ -32,12 +36,14 @@ public class TaskRecvTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        surveyLog = spy(LoggerFactory.getLogger("SURVEY"));
+        doNothing().when(surveyLog).info(any());
     }
 
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskReceive ts = new TaskReceive(p2pLOG, atb, recvMsgQue, handler);
+        TaskReceive ts = new TaskReceive(p2pLOG, surveyLog, atb, recvMsgQue, handler);
         assertNotNull(ts);
 
         Thread t = new Thread(ts);
@@ -53,7 +59,7 @@ public class TaskRecvTest {
     @Test(timeout = 10_000)
     public void testRunMsgIn() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskReceive ts = new TaskReceive(p2pLOG, atb, recvMsgQue, handler);
+        TaskReceive ts = new TaskReceive(p2pLOG, surveyLog, atb, recvMsgQue, handler);
         assertNotNull(ts);
 
         int route = 1;
@@ -82,7 +88,7 @@ public class TaskRecvTest {
     @Test(expected = Exception.class, timeout = 10_000)
     public void testRunMsgIn2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskReceive ts = new TaskReceive(p2pLOG, atb, recvMsgQue, handler);
+        TaskReceive ts = new TaskReceive(p2pLOG, surveyLog, atb, recvMsgQue, handler);
         assertNotNull(ts);
 
         int route = 1;

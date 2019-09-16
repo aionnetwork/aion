@@ -58,7 +58,7 @@ public final class P2pMgr implements IP2pMgr {
     public static int txBroadCastRoute =
             (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
-    public final Logger p2pLOG;
+    public final Logger p2pLOG, surveyLog;
 
     public static final int WORKER = 32;
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
@@ -104,6 +104,7 @@ public final class P2pMgr implements IP2pMgr {
      */
     public P2pMgr(
             final Logger _p2pLog,
+            final Logger surveyLog,
             final int chainId,
             final String _revision,
             final String _nodeId,
@@ -120,6 +121,7 @@ public final class P2pMgr implements IP2pMgr {
             throw new NullPointerException("A non-null logger must be provided in the constructor.");
         }
         this.p2pLOG = _p2pLog;
+        this.surveyLog = surveyLog;
         this.selfChainId = chainId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
@@ -449,6 +451,7 @@ public final class P2pMgr implements IP2pMgr {
     private TaskInbound getInboundInstance() {
         return new TaskInbound(
                 p2pLOG,
+                surveyLog,
                 this,
                 this.selector,
                 this.start,
@@ -460,15 +463,15 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskSend getSendInstance(int i) {
-        return new TaskSend(p2pLOG, this, i, sendMsgQue, start, nodeMgr, selector);
+        return new TaskSend(p2pLOG, surveyLog, this, i, sendMsgQue, start, nodeMgr, selector);
     }
 
     private TaskReceive getReceiveInstance() {
-        return new TaskReceive(p2pLOG, start, receiveMsgQue, handlers);
+        return new TaskReceive(p2pLOG, surveyLog, start, receiveMsgQue, handlers);
     }
 
     private TaskStatus getStatusInstance() {
-        return new TaskStatus(p2pLOG, start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
+        return new TaskStatus(p2pLOG, surveyLog, start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
     }
 
     private TaskClear getClearInstance() {

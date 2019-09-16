@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 /** @author chris */
 public class TaskWrite implements Runnable {
 
-    private final Logger p2pLOG;
+    private final Logger p2pLOG, surveyLog;
     private final String nodeShortId;
     private final SocketChannel sc;
     private final Msg msg;
@@ -23,12 +23,14 @@ public class TaskWrite implements Runnable {
 
     TaskWrite(
             final Logger p2pLOG,
+            final Logger surveyLog,
             final String _nodeShortId,
             final SocketChannel _sc,
             final Msg _msg,
             final ChannelBuffer _cb,
             final IP2pMgr _p2pMgr) {
         this.p2pLOG = p2pLOG;
+        this.surveyLog = surveyLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;
@@ -38,15 +40,25 @@ public class TaskWrite implements Runnable {
 
     @Override
     public void run() {
+        // for runtime survey information
+        long startTime, duration;
+
+        startTime = System.nanoTime();
         // reset allocated buffer and clear messages if the channel is closed
         if (channelBuffer.isClosed()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
             p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("TaskWrite: check if closed, duration = {} ns.", duration);
             return;
         }
+        duration = System.nanoTime() - startTime;
+        surveyLog.info("TaskWrite: check if closed, duration = {} ns.", duration);
 
+        long startTime2 = System.nanoTime();
         try {
+            startTime = System.nanoTime();
             channelBuffer.lock.lock();
 
             /*
@@ -73,10 +85,13 @@ public class TaskWrite implements Runnable {
                 buf.put(bodyBytes);
             }
             buf.flip();
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("TaskWrite: setup for write, duration = {} ns.", duration);
 
             long t1 = System.nanoTime(), t2;
             int wrote = 0;
             try {
+                startTime = System.nanoTime();
                 do {
                     int result = sc.write(buf);
                     wrote += result;
@@ -89,6 +104,8 @@ public class TaskWrite implements Runnable {
 
                     t2 = System.nanoTime() - t1;
                 } while (buf.hasRemaining() && (t2 < MAX_BUFFER_WRITE_TIME));
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskWrite: write, duration = {} ns.", duration);
 
                 if (p2pLOG.isTraceEnabled() && (t2 > MIN_TRACE_BUFFER_WRITE_TIME)) {
                     p2pLOG.trace(
@@ -127,6 +144,8 @@ public class TaskWrite implements Runnable {
         } catch (Exception e) {
             p2pLOG.error("TaskWrite exception.", e);
         } finally {
+            duration = System.nanoTime() - startTime2;
+            surveyLog.info("TaskWrite: start to end of try, duration = {} ns.", duration);
             channelBuffer.lock.unlock();
         }
     }
