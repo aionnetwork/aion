@@ -31,7 +31,7 @@ public class AionImpl implements IAionChain {
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-    private static final ECKey keyForCallandEstimate = ECKeyFac.inst().fromPrivate(new byte[64]);
+    static final ECKey keyForCallandEstimate = ECKeyFac.inst().fromPrivate(new byte[64]);
 
     public AionHub aionHub;
 
