@@ -31,6 +31,8 @@ dependencies {
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-userlib.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-api.jar")
 
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
 
