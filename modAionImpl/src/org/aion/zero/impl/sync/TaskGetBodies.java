@@ -31,7 +31,7 @@ final class TaskGetBodies implements Runnable {
 
     private final Map<Integer, PeerState> peerStates;
 
-    private final Logger log;
+    private final Logger log, surveyLog;
 
     private final SyncStats stats;
 
@@ -48,7 +48,8 @@ final class TaskGetBodies implements Runnable {
             final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
             final Map<Integer, PeerState> peerStates,
             final SyncStats _stats,
-            final Logger log) {
+            final Logger log,
+            final Logger surveyLog) {
         this.p2p = _p2p;
         this.run = _run;
         this.downloadedHeaders = _downloadedHeaders;
@@ -56,22 +57,34 @@ final class TaskGetBodies implements Runnable {
         this.peerStates = peerStates;
         this.stats = _stats;
         this.log = log;
+        this.surveyLog = surveyLog;
     }
 
     @Override
     public void run() {
+        // for runtime survey information
+        long startTime, duration;
+
         while (run.get()) {
+            startTime = System.nanoTime();
             HeadersWrapper hw;
             try {
                 hw = downloadedHeaders.take();
             } catch (InterruptedException e) {
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskGetBodies: wait for headers, duration = {} ns.", duration);
                 continue;
             }
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("TaskGetBodies: wait for headers, duration = {} ns.", duration);
 
+            startTime = System.nanoTime();
             int idHash = hw.getNodeIdHash();
             String displayId = hw.getDisplayId();
             List<BlockHeader> headers = hw.getHeaders();
             if (headers.isEmpty()) {
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
                 continue;
             }
 
@@ -99,6 +112,8 @@ final class TaskGetBodies implements Runnable {
             } else {
                 log.warn("Peer {} sent blocks that were not requested.", hw.getDisplayId());
             }
+            duration = System.nanoTime() - startTime;
+            surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
         }
     }
 }

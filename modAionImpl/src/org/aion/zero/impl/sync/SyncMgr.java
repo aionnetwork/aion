@@ -198,7 +198,7 @@ public final class SyncMgr {
                                 headersWithBodiesRequested,
                                 peerStates,
                                 stats,
-                                log),
+                                log, survey_log),
                         "sync-gb");
         syncGb.start();
         syncIb =
