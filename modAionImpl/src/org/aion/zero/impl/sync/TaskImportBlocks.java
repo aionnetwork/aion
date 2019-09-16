@@ -411,11 +411,15 @@ final class TaskImportBlocks implements Runnable {
                                         baseList,
                                         chain);
                     } // else already updated to a correct request
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
                     return state;
                 } else if (state.getMode() == BACKWARD || state.getMode() == FORWARD) {
                     // TODO: verify that this improves efficiency
                     // TODO: impact of allowing the LIGHTNING jump instead?
                     state.setMode(NORMAL);
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
                     return state;
                 }
             }
