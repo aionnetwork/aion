@@ -27,6 +27,7 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisBlockLoader;
+import org.aion.zero.impl.types.GenesisStakingBlock;
 
 /** @author chris */
 public final class CfgAion extends Cfg {
@@ -44,7 +45,7 @@ public final class CfgAion extends Cfg {
         this.id = UUID.randomUUID().toString();
         this.keystorePath = null;
         this.net = new CfgNet();
-        this.consensus = new CfgConsensusPow();
+        this.consensus = new CfgConsensusUnity();
         this.sync = new CfgSync();
         this.api = new CfgApi();
         this.db = new CfgDb();
@@ -90,13 +91,23 @@ public final class CfgAion extends Cfg {
         this.genesis = genesis;
     }
 
-    public CfgConsensusPow getConsensus() {
-        return (CfgConsensusPow) this.consensus;
+    public CfgConsensusUnity getConsensus() {
+        return (CfgConsensusUnity) this.consensus;
     }
 
-    public synchronized AionGenesis getGenesis() {
+    public AionGenesis getGenesis() {
         if (this.genesis == null) setGenesis();
         return this.genesis;
+    }
+
+    public GenesisStakingBlock getGenesisStakingBlock() {
+
+        // We need the extraData from the PoWGenesis block
+        if (genesis == null) {
+            setGenesis();
+        }
+
+        return genesis.getGenesisStakingBlock();
     }
 
     public static int getN() {

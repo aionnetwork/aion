@@ -238,6 +238,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             @Override
+            public AionAddress getStakerCoinbase() {
+                if (cfgAion.getConsensus().getStakerCoinbase() == null) {
+                    return null;
+                }
+
+                return AddressUtils.wrapAddress(cfgAion.getConsensus().getStakerCoinbase());
+            }
+
+            @Override
             public byte[] getExtraData() {
                 return cfgAion.getConsensus().getExtraData().getBytes();
             }
@@ -269,7 +278,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public boolean isInternalTransactionStorageEnabled() {
-                return cfgAion.inst().getDb().isInternalTxStorageEnabled();
+                return CfgAion.inst().getDb().isInternalTxStorageEnabled();
+            }
+
+            @Override
+            public boolean isInternalStakingEnabled() {
+                return CfgAion.inst().getConsensus().getStaking();
             }
         };
     }
