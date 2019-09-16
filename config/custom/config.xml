@@ -45,9 +45,18 @@
 		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
-		<mining>true</mining>
-		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
-		<cpu-mine-threads>2</cpu-mine-threads>
+                <!-- enable/disable the internal PoW block miner -->
+                <mining>false</mining>
+                <!-- miner's desired coinbase (no 0x prefix) required by the internal PoW block miner, the block reward will been sent to this address -->
+                <miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+                <!-- cpu threads been use in the internal PoW miner -->
+                <cpu-mine-threads>1</cpu-mine-threads>
+                <!-- enable/disable the internal staker runner -->
+                <staking>false</staking>
+                <!-- staker's desired coinbase (no 0x prefix) required by the internal staker runner, the block reward will been sent to this address -->
+                <staker-coinbase>0000000000000000000000000000000000000000000000000000000000000000</staker-coinbase>
+                <!-- staker's 128 chars hex string (no 0x prefix) signing private key required by the internal staker runner -->
+                <staker-signing-key>00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</staker-signing-key>
 		<extra-data>AION</extra-data>
 		<nrg-strategy>
 			<!-- <monotonic-increase></monotonic-increase> -->
