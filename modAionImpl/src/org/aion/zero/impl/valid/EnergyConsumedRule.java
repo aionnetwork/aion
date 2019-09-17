@@ -8,13 +8,14 @@ import org.aion.mcf.blockchain.BlockHeader;
  * Rule for checking that energyConsumed does not exceed energyLimit:
  * assert(blockHeader.energyConsumed <= blockHeader.energyLimit)
  */
-public class EnergyConsumedRule extends BlockHeaderRule {
+public class EnergyConsumedRule implements BlockHeaderRule {
 
     @Override
     public boolean validate(BlockHeader blockHeader, List<RuleError> error) {
         if (blockHeader.getEnergyConsumed() > blockHeader.getEnergyLimit()) {
-            addError(
+            BlockHeaderValidatorUtil.addError(
                     formatError(blockHeader.getEnergyConsumed(), blockHeader.getEnergyLimit()),
+                    this.getClass(),
                     error);
             return false;
         }

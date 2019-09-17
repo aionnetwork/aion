@@ -3,12 +3,15 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 
-public abstract class GrandParentDependantBlockHeaderRule
-    extends AbstractValidRule {
+public interface GrandParentDependantBlockHeaderRule {
 
     /**
      * A separate class of rules that infer a relationship between the current block, the block
      * preceding (parent) and the block preceding that block (grandparent)
      */
-    public abstract boolean validate(BlockHeader grandParent, BlockHeader parent, BlockHeader current, List<RuleError> errors);
+    boolean validate(
+            BlockHeader grandParent,
+            BlockHeader parent,
+            BlockHeader current,
+            List<RuleError> errors);
 }

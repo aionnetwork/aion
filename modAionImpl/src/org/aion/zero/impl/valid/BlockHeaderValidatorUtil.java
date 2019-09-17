@@ -3,14 +3,16 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 import org.slf4j.Logger;
 
-public class AbstractBlockHeaderValidator {
+class BlockHeaderValidatorUtil {
 
-    public void logErrors(final Logger logger, final List<RuleError> errors) {
-        if (errors.isEmpty()) return;
+    static void logErrors(final Logger logger, String className, final List<RuleError> errors) {
+        if (errors.isEmpty()) {
+            return;
+        }
 
         if (logger.isErrorEnabled()) {
             StringBuilder builder = new StringBuilder();
-            builder.append(this.getClass().getSimpleName());
+            builder.append(className);
             builder.append(" raised errors: \n");
             for (RuleError error : errors) {
                 builder.append(error.errorClass.getSimpleName());
@@ -20,5 +22,9 @@ public class AbstractBlockHeaderValidator {
             }
             logger.error(builder.toString());
         }
+    }
+
+    static void addError(String error, Class cls, List<RuleError> errors) {
+        errors.add(new RuleError(cls, error));
     }
 }

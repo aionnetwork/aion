@@ -10,7 +10,7 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 
 /** Checks block's difficulty against calculated difficulty value */
-public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
+public class AionDifficultyRule implements GrandParentDependantBlockHeaderRule {
 
     private IDifficultyCalculator diffCalc;
 
@@ -41,7 +41,8 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
 
         if (parent.getNumber() == 0L) {
             if (!isEqual(parent.getDifficultyBI(), currDiff)) {
-                addError(formatError(parent.getDifficultyBI(), currDiff), errors);
+                BlockHeaderValidatorUtil.addError(
+                        formatError(parent.getDifficultyBI(), currDiff), this.getClass(), errors);
                 return false;
             }
             return true;
@@ -50,7 +51,8 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule {
         BigInteger calcDifficulty = this.diffCalc.calculateDifficulty(parent, grandParent);
 
         if (!isEqual(calcDifficulty, currDiff)) {
-            addError(formatError(calcDifficulty, currDiff), errors);
+            BlockHeaderValidatorUtil.addError(
+                    formatError(calcDifficulty, currDiff), this.getClass(), errors);
             return false;
         }
         return true;

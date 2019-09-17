@@ -12,7 +12,7 @@ import org.aion.mcf.blockchain.BlockHeader;
  *
  * <p>This rule depends on the parent to implement
  */
-public class EnergyLimitRule extends DependentBlockHeaderRule {
+public class EnergyLimitRule implements DependentBlockHeaderRule {
 
     private final long energyLimitDivisor;
     private final long energyLimitLowerBounds;
@@ -30,12 +30,13 @@ public class EnergyLimitRule extends DependentBlockHeaderRule {
 
         // check that energy is atleast equal to lower bounds, otherwise block is invalid
         if (energyLimit < this.energyLimitLowerBounds) {
-            addError(
+            BlockHeaderValidatorUtil.addError(
                     "energyLimit ("
                             + energyLimit
                             + ") lower than lower bound ("
                             + this.energyLimitLowerBounds
                             + ")",
+                    this.getClass(),
                     errors);
             return false;
         }
@@ -43,7 +44,7 @@ public class EnergyLimitRule extends DependentBlockHeaderRule {
         // magnitude of distance between parent energy and current energy
         long energyDeltaMag = Math.abs(energyLimit - parentEnergyLimit);
         if (energyDeltaMag > parentEnergyQuotient) {
-            addError(
+            BlockHeaderValidatorUtil.addError(
                     "energyLimit ("
                             + energyLimit
                             + ") of current block has delta ("
@@ -51,9 +52,16 @@ public class EnergyLimitRule extends DependentBlockHeaderRule {
                             + ") greater than bounds ("
                             + parentEnergyQuotient
                             + ")",
+                    this.getClass(),
                     errors);
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean validate(
+            BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg) {
+        return validate(header, dependency, errors);
     }
 }

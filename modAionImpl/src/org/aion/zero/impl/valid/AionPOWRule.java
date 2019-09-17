@@ -7,7 +7,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.types.A0BlockHeader;
 
 /** Checks proof value against its boundary for the block header */
-public class AionPOWRule extends BlockHeaderRule {
+public class AionPOWRule implements BlockHeaderRule {
 
     @Override
     public boolean validate(BlockHeader header, List<RuleError> errors) {
@@ -29,7 +29,7 @@ public class AionPOWRule extends BlockHeaderRule {
         BigInteger hash = new BigInteger(1, HashUtil.h256(input));
 
         if (hash.compareTo(boundary) >= 0) {
-            addError(formatError(hash, boundary), errors);
+            BlockHeaderValidatorUtil.addError(formatError(hash, boundary), this.getClass(), errors);
             return false;
         }
         return true;

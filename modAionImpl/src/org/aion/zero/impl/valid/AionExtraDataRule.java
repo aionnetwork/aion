@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 
-public class AionExtraDataRule extends BlockHeaderRule {
+public class AionExtraDataRule implements BlockHeaderRule {
 
     private final int maximumExtraDataSize;
 
@@ -19,10 +19,11 @@ public class AionExtraDataRule extends BlockHeaderRule {
     public boolean validate(BlockHeader header, List<RuleError> errors) {
         if (header.getExtraData() != null
                 && header.getExtraData().length > this.maximumExtraDataSize) {
-            addError(
+            BlockHeaderValidatorUtil.addError(
                     String.format(
                             "extraData (%d) > MAXIMUM_EXTRA_DATA_SIZE (%d)",
                             header.getExtraData().length, this.maximumExtraDataSize),
+                    this.getClass(),
                     errors);
             return false;
         }

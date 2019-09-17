@@ -19,12 +19,14 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionGenesis;
+import org.aion.zero.impl.valid.BlockHeaderRule;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.RepositoryConfig;
@@ -343,15 +345,19 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                  * generated are valid.
                                  */
                                 @Override
-                                public BlockHeaderValidator
-                                        createBlockHeaderValidator() {
-                                    return new BlockHeaderValidator(
-                                            Arrays.asList(
-                                                    new AionExtraDataRule(
-                                                            this.constants
-                                                                    .getMaximumExtraDataSize()),
-                                                    new EnergyConsumedRule(),
-                                                    new AionHeaderVersionRule()));
+                                public BlockHeaderValidator createBlockHeaderValidator() {
+
+                                    List<BlockHeaderRule> powRules = Arrays.asList(
+                                        new AionExtraDataRule(
+                                            this.getConstants().getMaximumExtraDataSize()),
+                                        new EnergyConsumedRule(),
+                                        new AionHeaderVersionRule());
+
+                                    Map<Byte, List<BlockHeaderRule>> unityRules = new HashMap<>();
+                                    unityRules
+                                        .put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+
+                                    return new BlockHeaderValidator(unityRules);
                                 }
                             };
                 } else {
