@@ -44,8 +44,8 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
-import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
@@ -347,15 +347,27 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 @Override
                                 public BlockHeaderValidator createBlockHeaderValidator() {
 
-                                    List<BlockHeaderRule> powRules = Arrays.asList(
-                                        new AionExtraDataRule(
-                                            this.getConstants().getMaximumExtraDataSize()),
-                                        new EnergyConsumedRule(),
-                                        new AionHeaderVersionRule());
+                                    List<BlockHeaderRule> powRules =
+                                            Arrays.asList(
+                                                    new HeaderSealTypeRule(),
+                                                    new AionExtraDataRule(
+                                                            this.getConstants()
+                                                                    .getMaximumExtraDataSize()),
+                                                    new EnergyConsumedRule());
+
+                                    List<BlockHeaderRule> posRules =
+                                            Arrays.asList(
+                                                    new HeaderSealTypeRule(),
+                                                    new AionExtraDataRule(
+                                                            this.getConstants()
+                                                                    .getMaximumExtraDataSize()),
+                                                    new EnergyConsumedRule());
 
                                     Map<Byte, List<BlockHeaderRule>> unityRules = new HashMap<>();
-                                    unityRules
-                                        .put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+                                    unityRules.put(
+                                            BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+                                    unityRules.put(
+                                            BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
 
                                     return new BlockHeaderValidator(unityRules);
                                 }

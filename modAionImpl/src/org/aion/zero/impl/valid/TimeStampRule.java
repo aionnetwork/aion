@@ -6,8 +6,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 /** Validates whether the timestamp of the current block is > the timestamp of the parent block */
 public class TimeStampRule implements DependentBlockHeaderRule {
 
-    @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
+    private boolean validateInner(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
         if (header.getTimestamp() <= dependency.getTimestamp()) {
             BlockHeaderValidatorUtil.addError(
                     "timestamp ("
@@ -23,8 +22,13 @@ public class TimeStampRule implements DependentBlockHeaderRule {
     }
 
     @Override
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
+        return validateInner(header, dependency, errors);
+    }
+
+    @Override
     public boolean validate(
             BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg) {
-        return validate(header, dependency, errors);
+        return validateInner(header, dependency, errors);
     }
 }

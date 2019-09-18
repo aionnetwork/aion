@@ -22,8 +22,7 @@ public class EnergyLimitRule implements DependentBlockHeaderRule {
         this.energyLimitLowerBounds = energyLimitLowerBounds;
     }
 
-    @Override
-    public boolean validate(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
+    private boolean validateInner(BlockHeader header, BlockHeader parent, List<RuleError> errors) {
         long energyLimit = header.getEnergyLimit();
         long parentEnergyLimit = parent.getEnergyLimit();
         long parentEnergyQuotient = parentEnergyLimit / this.energyLimitDivisor;
@@ -60,8 +59,13 @@ public class EnergyLimitRule implements DependentBlockHeaderRule {
     }
 
     @Override
+    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
+        return validateInner(header, dependency, errors);
+    }
+
+    @Override
     public boolean validate(
             BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg) {
-        return validate(header, dependency, errors);
+        return validateInner(header, dependency, errors);
     }
 }
