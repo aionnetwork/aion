@@ -207,11 +207,9 @@ public final class P2pMgr implements IP2pMgr {
                         });
             }
 
-            for (int i = 0; i < WORKER; i++) {
-                Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
-                thrdOut.setPriority(Thread.NORM_PRIORITY);
-                thrdOut.start();
-            }
+            Thread thrdOut = new Thread(new TaskSend(p2pLOG, surveyLog, this, sendMsgQue, start, nodeMgr, selector), "p2p-out");
+            thrdOut.setPriority(Thread.MAX_PRIORITY);
+            thrdOut.start();
 
             for (int i = 0; i < WORKER; i++) {
                 Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
@@ -460,10 +458,6 @@ public final class P2pMgr implements IP2pMgr {
                 this.sendMsgQue,
                 cachedResHandshake1,
                 this.receiveMsgQue);
-    }
-
-    private TaskSend getSendInstance(int i) {
-        return new TaskSend(p2pLOG, surveyLog, this, i, sendMsgQue, start, nodeMgr, selector);
     }
 
     private TaskReceive getReceiveInstance() {

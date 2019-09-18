@@ -61,13 +61,4 @@ public class MsgOutTest {
         assertTrue(msgOut.getTimestamp() <= System.currentTimeMillis());
         assertTrue(0 < msgOut.getTimestamp());
     }
-
-    @Test
-    public void testGetLane() {
-        for (int i = 0; i < 1000; i++) {
-            int id = r.nextInt();
-            MsgOut msgOut = new MsgOut(id, "", msg, Dest.ACTIVE);
-            assertEquals(TaskSend.hash2Lane(id), msgOut.getLane());
-        }
-    }
 }

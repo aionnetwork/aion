@@ -8,7 +8,6 @@ public class MsgOut {
 
     private final int nodeId;
     private final String displayId;
-    private final int lane;
     private final Msg msg;
     private final Dest dest;
     private final long timestamp;
@@ -26,7 +25,6 @@ public class MsgOut {
         this.displayId = displayId;
         this.msg = msg;
         this.dest = dest;
-        this.lane = TaskSend.hash2Lane(nodeId);
         this.timestamp = System.currentTimeMillis();
     }
 
@@ -48,9 +46,5 @@ public class MsgOut {
 
     public long getTimestamp() {
         return this.timestamp;
-    }
-
-    int getLane() {
-        return this.lane;
     }
 }
