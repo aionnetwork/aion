@@ -129,6 +129,8 @@ public class ApiAionTest {
     @Before
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
+        CfgAion.inst().setGenesisForTest();
+
         impl = AionImpl.inst();
         api = new ApiAionImpl(impl);
         repo = AionRepositoryImpl.inst();

@@ -392,7 +392,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis genesis;
             try {
-                genesis = genesisBuilder.build();
+                genesis = genesisBuilder.buildForTest();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

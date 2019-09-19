@@ -26,7 +26,7 @@ public class GenesisSpecificationTest {
     @Test
     public void defaultGenesisBlockTest() {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
-        AionGenesis genesis = genesisBuilder.build();
+        AionGenesis genesis = genesisBuilder.buildForTest();
 
         assertThat(genesis.getParentHash()).isEqualTo(AionGenesis.GENESIS_PARENT_HASH);
         assertThat(genesis.getCoinbase()).isEqualTo(AionGenesis.GENESIS_COINBASE);
@@ -82,7 +82,7 @@ public class GenesisSpecificationTest {
                 .withTimestamp(overrideValue.longValue())
                 .addPreminedAccount(new AionAddress(overrideAddress), defaultAccountState);
 
-        AionGenesis genesis = genesisBuilder.build();
+        AionGenesis genesis = genesisBuilder.buildForTest();
 
         assertThat(genesis.getParentHash()).isEqualTo(overrideHash);
         assertThat(genesis.getCoinbase().toByteArray()).isEqualTo(overrideAddress);

@@ -118,6 +118,8 @@ public class ApiAion0Test {
     @Before
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
+        CfgAion.inst().setGenesisForTest();
+
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
 
