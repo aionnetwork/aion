@@ -118,7 +118,8 @@ public class ApiAion0Test {
     @Before
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
-        api = new ApiAion0(AionImpl.inst());
+
+        api = new ApiAion0(AionImpl.instForTest());
         testStartTime = System.currentTimeMillis();
 
         LongLivedAvm.createAndStartLongLivedAvm();
@@ -469,7 +470,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTR() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -599,7 +600,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxByBlockHashAndIndex() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -653,7 +654,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxByBlockNumberAndIndex() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -707,7 +708,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetBlockTxCountByNumber() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -759,7 +760,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetBlockTxCountByHash() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -811,7 +812,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxByHash() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -861,7 +862,7 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxCount() throws Exception {
-        AionImpl impl = AionImpl.inst();
+        AionImpl impl = AionImpl.instForTest();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         Block parentBlk = impl.getBlockchain().getBestBlock();
@@ -922,7 +923,7 @@ public class ApiAion0Test {
 
         Message.rsp_getActiveNodes rslt = Message.rsp_getActiveNodes.parseFrom(stripHeader(rsp));
         assertEquals(
-                AionImpl.inst().getAionHub().getP2pMgr().getActiveNodes().size(),
+                AionImpl.instForTest().getAionHub().getP2pMgr().getActiveNodes().size(),
                 rslt.getNodeCount());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getActiveNodes_VALUE);
@@ -1076,7 +1077,7 @@ public class ApiAion0Test {
                         5000,
                         TransactionTypes.DEFAULT);
 
-        assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
+        assertEquals(AionImpl.instForTest().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_estimateNrg_VALUE);
 

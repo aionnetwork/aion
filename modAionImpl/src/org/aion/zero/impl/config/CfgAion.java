@@ -71,13 +71,24 @@ public final class CfgAion extends Cfg {
 
     @Override
     public void setGenesis() {
+        setGenesisInner(false);
+    }
+
+    public void setGenesisForTest() {
+        setGenesisInner(true);
+    }
+
+    private void setGenesisInner(boolean forTest) {
         try {
             this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisFile().getAbsolutePath());
         } catch (IOException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
             try {
-                this.genesis = (new AionGenesis.Builder()).build();
+                this.genesis =
+                        forTest
+                                ? (new AionGenesis.Builder()).buildForTest()
+                                : (new AionGenesis.Builder()).build();
             } catch (Exception e2) {
                 // if this fails, it means our DEFAULT genesis violates header rules
                 // this is catastrophic
@@ -135,13 +146,12 @@ public final class CfgAion extends Cfg {
     //    }
 
     public void setForkProperties(String networkName, File forkFile) {
-        Properties properties = new Properties();
-
         // old kernel doesn't support the fork feature.
         if (networkName == null || networkName.equals("config")) {
             return;
         }
 
+        Properties properties = new Properties();
         try (FileInputStream fis =
                 (forkFile == null)
                         ? new FileInputStream(

@@ -13,7 +13,7 @@ public class RpcMethodsTest {
     @BeforeClass
     public static void setup() {
         // Initialize this instance at the start to make the tests run a little faster
-        AionImpl.inst();
+        AionImpl.instForTest();
     }
 
     @After

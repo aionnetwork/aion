@@ -39,8 +39,11 @@ public class AionImpl implements IAionChain {
 
     private TxCollector collector;
 
-    private AionImpl() {
+    private AionImpl(boolean forTest) {
         this.cfg = CfgAion.inst();
+        if (forTest) {
+            cfg.setGenesisForTest();
+        }
         aionHub = new AionHub();
         LOG_GEN.info(
                 "<node-started endpoint=p2p://"
@@ -56,6 +59,10 @@ public class AionImpl implements IAionChain {
 
     public static AionImpl inst() {
         return Holder.INSTANCE;
+    }
+
+    public static AionImpl instForTest() {
+        return HolderForTest.INSTANCE;
     }
 
     @Override
@@ -315,6 +322,10 @@ public class AionImpl implements IAionChain {
     }
 
     private static class Holder {
-        static final AionImpl INSTANCE = new AionImpl();
+        static final AionImpl INSTANCE = new AionImpl(false);
+    }
+
+    private static class HolderForTest {
+        static final AionImpl INSTANCE = new AionImpl(true);
     }
 }

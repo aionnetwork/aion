@@ -2,6 +2,7 @@ package org.aion.mcf.config;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,6 +31,11 @@ public class CfgForkTest {
         // Open given file in append mode.
         BufferedWriter out = new BufferedWriter(new FileWriter(forkFile, true));
         out.write("fork0.3.2=2000000");
+        out.newLine();
+        out.write("genesisStakingDifficulty=1");
+        out.newLine();
+        out.write("stakingContractAddress=a056337bb14e818f3f53e13ab0d93b6539aa570cba91ce65c716058241989be9");
+        out.newLine();
         out.close();
 
         cfg = CfgAion.inst();
@@ -53,5 +59,12 @@ public class CfgForkTest {
     public void getForkPropertyTest2() {
         String forkProperty = cfg.getFork().getProperties().getProperty("fork0.3.1");
         assertNull(forkProperty);
+    }
+
+    @Test
+    public void genesisStakingDifficultyTest() {
+        String forkProperty = cfg.getFork().getProperties().getProperty("genesisStakingDifficulty");
+        assertNotNull(forkProperty);
+        assertEquals("1", forkProperty);
     }
 }

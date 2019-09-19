@@ -88,9 +88,8 @@ public class Aion {
                     System.out.println(
                             "<Protocol name: "
                                     + k.toString()
-                                    + " block#: "
-                                    + v.toString()
-                                    + " updated!");
+                                    + (k.toString().contains("fork") ? " block#: " : ": ")
+                                    + v.toString());
                 });
 
         // Check ZMQ server secure connect settings, generate keypair when the settings enabled and

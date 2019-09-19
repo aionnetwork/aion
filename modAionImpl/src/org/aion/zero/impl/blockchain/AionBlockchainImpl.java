@@ -117,6 +117,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
+
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
      * being executed. This is simple for now but in the future we may have to create a "chain
@@ -208,6 +209,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     this.chainConfiguration.getConstants().getMaximumExtraDataSize());
         }
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
+
     }
 
     /**

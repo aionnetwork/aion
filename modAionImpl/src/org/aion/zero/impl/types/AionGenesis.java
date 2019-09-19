@@ -132,6 +132,8 @@ public class AionGenesis extends AionBlock {
      */
     private GenesisStakingBlock genesisStakingBlock;
 
+    private AionAddress stakingContractAddress;
+
     // TODO: verify whether setting the solution to null is okay
     // TODO: set energyLimit to a correct value (after genesis loader is
     // completed)
@@ -173,6 +175,10 @@ public class AionGenesis extends AionBlock {
 
     private void setNetworkBalance(Map<Integer, BigInteger> networkBalances) {
         this.networkBalances = networkBalances;
+    }
+
+    private void setStakingContractAddress(AionAddress address) {
+        stakingContractAddress = address;
     }
 
     public Map<Integer, BigInteger> getNetworkBalances() {
@@ -227,6 +233,9 @@ public class AionGenesis extends AionBlock {
 
         Map<Integer, BigInteger> networkBalance;
         Map<AionAddress, AccountState> premined;
+
+        protected AionAddress stakingContractAddress;
+        protected BigInteger genesisStakingDifficulty;
 
         public Builder withParentHash(final byte[] parentHash) {
             if (parentHash == null) {
@@ -354,11 +363,35 @@ public class AionGenesis extends AionBlock {
             return this;
         }
 
+        public Builder setStakingContractAddress(AionAddress address) {
+            if (address == null) {
+                throw new NullPointerException("staking contract address is null");
+            }
+            this.stakingContractAddress = address;
+            return this;
+        }
+
+        public Builder setGenesisStakingDifficulty(BigInteger difficulty) {
+            if (difficulty == null) {
+                throw new NullPointerException("genesisStakingDifficulty is null");
+            }
+            this.genesisStakingDifficulty = difficulty;
+            return this;
+        }
+
         /**
          * Build the genesis block, after parameters have been set. Defaults back to default genesis
          * values if parameters are not specified.
          */
         public AionGenesis build() {
+            return build(false);
+        }
+
+        public AionGenesis buildForTest() {
+            return build(true);
+        }
+
+        private AionGenesis build(boolean buildForTest) {
             if (this.parentHash == null) this.parentHash = GENESIS_PARENT_HASH;
 
             if (this.coinbase == null) this.coinbase = GENESIS_COINBASE;
@@ -402,7 +435,18 @@ public class AionGenesis extends AionBlock {
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
 
-            GenesisStakingBlock genesisStakingBlock = new GenesisStakingBlock(extraData);
+            BigInteger genesisStakingDifficulty =
+                    buildForTest
+                            ? BigInteger.valueOf(2_000_000_000L)
+                            : this.genesisStakingDifficulty;
+
+            if (genesisStakingDifficulty == null) {
+                throw new NullPointerException(
+                        "The genesisStakingDifficulty setting is null or incorrect, please check your genesis.json in the executing network folder");
+            }
+
+            GenesisStakingBlock genesisStakingBlock =
+                new GenesisStakingBlock(extraData, genesisStakingDifficulty);
             genesis.setGenesisStakingBlock(genesisStakingBlock);
             genesis.setAntiparentHash(genesisStakingBlock.getHash());
 
@@ -410,7 +454,7 @@ public class AionGenesis extends AionBlock {
             genesis.setMiningDifficulty(miningDifficulty);
             genesis.setStakingDifficulty(BigInteger.ONE);
             genesis.setCumulativeDifficulty(miningDifficulty);
-
+            genesis.setStakingContractAddress(this.stakingContractAddress);
             return genesis;
         }
 

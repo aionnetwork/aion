@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.aion.api.server.account.AccountManager;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
@@ -26,7 +27,8 @@ public class ApiWeb3AionTest {
 
     @Before
     public void setup() {
-        impl = AionImpl.inst();
+
+        impl = AionImpl.instForTest();
         web3Api = new ApiWeb3Aion(impl);
         accountManager = AccountManager.inst();
         LongLivedAvm.createAndStartLongLivedAvm();
