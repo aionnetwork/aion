@@ -181,4 +181,25 @@ public interface IAionBlockchain extends IPowChain {
     //         BlockIdentifierImpl identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
+
+    /**
+     * Checks whether a hash is indexed as main chain or side chain.
+     *
+     * @param hash the hash for which we check its chain status
+     * @param level the height at which the block should be indexed
+     * @return {@code true} if the block is indexed as a main chain block, {@code false} if the
+     *     block is not indexed or is a side chain block
+     */
+    boolean isMainChain(byte[] hash, long level);
+
+    /**
+     * Checks if a hash is indexed as main chain or side chain
+     *
+     * @param hash the hash for which we check its chain status
+     *
+     * @return {@code true} if the block is indexed as a main chain block, {@code false} if the
+     *     block is not indexed or is a side chain block
+     */
+    public boolean isMainChain(byte[] hash);
+
 }

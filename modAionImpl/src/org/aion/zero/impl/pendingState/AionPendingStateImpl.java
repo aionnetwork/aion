@@ -61,6 +61,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.valid.BeaconHashValidator;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.base.AionTxExecSummary;
@@ -144,6 +145,8 @@ public class AionPendingStateImpl implements IPendingState {
     private ScheduledExecutorService ex;
 
     private boolean closeToNetworkBest = true;
+
+    private BeaconHashValidator beaconHashValidator;
 
     private long fork040Block = -1;
     private boolean fork040Enable = false;
@@ -343,6 +346,8 @@ public class AionPendingStateImpl implements IPendingState {
     public void init(final AionBlockchainImpl blockchain, boolean test) {
 
         this.blockchain = blockchain;
+        this.beaconHashValidator = blockchain.beaconHashValidator;
+
         this.best = new AtomicReference<>();
         this.test = test;
 
@@ -452,7 +457,9 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public boolean isValid(AionTransaction tx) {
-        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx);
+        return TXValidator.isValid(tx)
+                && TransactionTypeValidator.isValid(tx)
+                && beaconHashValidator.validateTxForPendingState(tx);
     }
 
     /**
@@ -644,7 +651,7 @@ public class AionPendingStateImpl implements IPendingState {
                 txResponses.add(TxResponse.SUCCESS);
             } else {
                 LOGGER_TX.error(
-                        "tx sig does not match with the tx raw data, tx[{}]", tx.toString());
+                        "tx is not valid: tx[{}]", tx.toString());
                 txResponses.add(TxResponse.INVALID_TX);
             }
         }

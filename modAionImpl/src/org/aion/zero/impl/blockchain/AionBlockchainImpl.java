@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
@@ -52,6 +53,7 @@ import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
+import org.aion.zero.impl.valid.BeaconHashValidator;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
@@ -117,6 +119,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator parentHeaderValidator;
     private final BlockHeaderValidator blockHeaderValidator;
+    public final BeaconHashValidator beaconHashValidator;
 
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
@@ -210,6 +213,31 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
 
+        Optional<Long> maybeFork050 = load050ForkNumberFromConfig(CfgAion.inst());
+        if(! maybeFork050.isPresent()) {
+            this.beaconHashValidator = new BeaconHashValidator(this,
+                    BeaconHashValidator.FORK_050_DISABLED);
+        } else {
+            this.beaconHashValidator = new BeaconHashValidator(this,
+                    maybeFork050.get());
+        }
+
+    }
+
+    /**
+     * Determine fork 0.5.0 fork number from Aion Config.
+     *
+     * @param cfgAion configuration
+     * @return 0.5.0 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork0.5.0" present in the config, but not parseable
+     */
+    private static Optional<Long> load050ForkNumberFromConfig(CfgAion cfgAion) {
+        String fork050Cfg = cfgAion.getFork().getProperties().getProperty("fork0.5.0");
+        if(fork050Cfg == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(fork050Cfg));
+        }
     }
 
     /**
@@ -1322,7 +1350,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         .anyMatch(
                                 tx ->
                                         !TXValidator.isValid(tx)
-                                                || !TransactionTypeValidator.isValid(tx))) {
+                                                || !TransactionTypeValidator.isValid(tx)
+                                                || !beaconHashValidator.validateTxForBlock(tx, block))) {
                     LOG.error("Some transactions in the block are invalid");
                     if (TX_LOG.isDebugEnabled()) {
                         for (AionTransaction tx : txs) {
@@ -2180,4 +2209,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     void resetPubBestBlock(Block blk) {
         pubBestBlock = blk;
     }
+
+    public boolean isMainChain(byte[] hash, long level) {
+        return getBlockStore().isMainChain(hash, level);
+    }
+
+    public boolean isMainChain(byte[] hash) {
+        return getBlockStore().isMainChain(hash);
+    }
+
 }
