@@ -88,13 +88,13 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
-import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.StakingDeltaCalculator;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,6 +178,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long forkLevel = NO_FORK_LEVEL;
 
     private final boolean storeInternalTransactions;
+    //TODO : [unity] find the proper number for chaching the template.
+    private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
+        .synchronizedMap(new LRUMap<>(64));
 
     private AionBlockchainImpl() {
         this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration(), false);
@@ -1340,14 +1343,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             .withTxTrieRoot(calcTxTrie(txs))
                             .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
                             .withDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
-                            .withSeed(newSeed)
-                            .withSigningPublicKey(signingPublicKey);
+                            .withSeed(newSeed);
+
+            if (signingPublicKey != null) {
+                headerBuilder.withSigningPublicKey(signingPublicKey);
+            }
 
             block = new StakingBlock(headerBuilder.build(), txs);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         blockPreSeal(parentHdr, block);
+
+        if (signingPublicKey != null) {
+            stakingBlockTemplate.put(
+                ByteArrayWrapper.wrap(block.getHeader().getMineHash()), block);
+        }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("GetBlockTemp: {}", block.toString());
@@ -2671,6 +2682,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @see #createNewStakingBlock(Block, List, byte[], byte[])
      * @return staking block template
      */
+    @Override
     public synchronized StakingBlock createStakingBlockTemplate(
         List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed) {
         if (pendingTransactions == null) {
@@ -2693,5 +2705,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public StakingContractHelper getStakingContractHelper() {
         return stakingContractHelper;
+    }
+
+    @Override
+    public byte[] getSeed() {
+        return bestStakingBlock.getSeed();
+    }
+
+    @Override
+    public StakingBlock getCachingStakingBlockTemplate(byte[] hash) {
+        if (hash == null) {
+            throw new NullPointerException("The giving hash is null");
+        }
+
+        return stakingBlockTemplate.get(ByteArrayWrapper.wrap(hash));
     }
 }

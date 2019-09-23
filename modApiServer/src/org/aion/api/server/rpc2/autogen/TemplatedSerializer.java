@@ -1,4 +1,3 @@
-// == TemplatedDeserializer.java == 
 package org.aion.api.server.rpc2.autogen;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,7 +17,7 @@ import org.aion.api.server.rpc2.autogen.pod.CallRequest;
 public class TemplatedSerializer extends RpcTypeDeserializer {
     @Override
     public Object deserializeObject(JsonNode value,
-                                    NamedRpcType type) throws SchemaValidationException {
+        NamedRpcType type) throws SchemaValidationException {
         switch(type.getName()) {
             case "Transaction":
                 return new Transaction(

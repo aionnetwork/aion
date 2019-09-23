@@ -97,8 +97,6 @@ public interface IAionBlockchain extends UnityChain {
 
     long getSize();
 
-    ImportResult tryToConnect(Block block);
-
     /**
      * Attempts to store the given block in the pending block store, saving it to be imported later
      * when the chain has reached the required height.

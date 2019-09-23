@@ -51,7 +51,9 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
         List<String> disabledMethods =
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
-        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim());
+
+        rpcProcessor =
+                new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim());
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {

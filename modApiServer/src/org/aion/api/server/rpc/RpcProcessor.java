@@ -33,6 +33,23 @@ public class RpcProcessor {
         final List<String> enabledMethods,
         final List<String> disabledMethods,
         final Rpc2Shim rpc2Shim) {
+
+        if (enabledGroups == null) {
+            throw new NullPointerException("RpcProcessor enabledGroups is null");
+        }
+
+        if (enabledMethods == null) {
+            throw new NullPointerException("RpcProcessor enabledMethods is null");
+        }
+
+        if (disabledMethods == null) {
+            throw new NullPointerException("RpcProcessor disabledMethods is null");
+        }
+
+        if (rpc2Shim == null) {
+            throw new NullPointerException("RpcProcessor rpc2Shim is null");
+        }
+
         this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
         executor =
                 Executors.newFixedThreadPool(

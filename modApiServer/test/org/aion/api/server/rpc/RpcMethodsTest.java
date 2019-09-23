@@ -3,6 +3,7 @@ package org.aion.api.server.rpc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.After;
 import org.junit.Assert;

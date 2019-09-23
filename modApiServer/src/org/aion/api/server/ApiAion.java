@@ -3,7 +3,6 @@ package org.aion.api.server;
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,13 +40,13 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
-import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
+import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class ApiAion extends Api {
     public static final int SYNC_TOLERANCE = 1;
@@ -76,22 +75,24 @@ public abstract class ApiAion extends Api {
     protected final short FLTRS_MAX = 1024;
     protected final String clientVersion = computeClientVersion();
 
-    private ReentrantLock blockTemplateLock;
     private volatile BlockContext currentTemplate;
     private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
 
-    public ApiAion(final IAionChain _ac) {
-        this.ac = _ac;
-        pendingState =  ac.getAionHub().getPendingState();
+    /**
+     * @param ac AionChain instance.
+     */
+    public ApiAion(final IAionChain ac) {
+        if (ac == null) {
+            throw new NullPointerException("ApiAion construct IAionChain argument is null");
+        }
 
-        this.installedFilters = new ConcurrentHashMap<>();
-        this.fltrIndex = new AtomicLong(0);
-        this.blockTemplateLock = new ReentrantLock();
-
-        // register events
-        IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
+        this.ac = ac;
+        installedFilters = new ConcurrentHashMap<>();
+        fltrIndex = new AtomicLong(0);
+        pendingState = ac.getAionHub().getPendingState();
+        IEventMgr evtMgr = ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(
                 Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(
@@ -179,31 +180,11 @@ public abstract class ApiAion extends Api {
 
     protected BlockContext getBlockTemplate() {
 
-        blockTemplateLock.lock();
-        try {
-            Block bestBlock =
-                    ac.getAionHub().getPendingState().getBestBlock();
-            // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what does that mean for staking blocks?
-            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
+        Pair<BlockContext, byte[]> template = ac.getAionHub().getMiningBlockTemplate(currentBestBlockHash);
 
-            if (currentBestBlockHash == null
-                    || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
-
-                // Record new best block on the chain
-                currentBestBlockHash = bestBlockHash;
-
-                // Generate new block template
-                AionPendingStateImpl.TransactionSortedSet ret =
-                        new AionPendingStateImpl.TransactionSortedSet();
-                ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
-
-                currentTemplate =
-                        ac.getAionHub()
-                                .getBlockchain()
-                                .createNewMiningBlockContext(bestBlock, new ArrayList<>(ret), false);
-            }
-        } finally {
-            blockTemplateLock.unlock();
+        if (template.getLeft() != null) {
+            currentTemplate = template.getLeft();
+            currentBestBlockHash = template.getRight();
         }
 
         return currentTemplate;

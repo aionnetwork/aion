@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.ConstantUtil;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
@@ -46,8 +47,10 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.UnityDifficulty;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 public class AionHub {
@@ -89,6 +92,8 @@ public class AionHub {
      * A "cached" block that represents our local best block when the application is first booted.
      */
     private volatile Block startingBlock;
+
+    private ReentrantLock blockTemplateLock;
 
     /**
      * Initialize as per the <a href=
@@ -210,6 +215,8 @@ public class AionHub {
 
         this.pow = new AionPoW();
         this.pow.init(_blockchain, mempool, eventMgr);
+
+        blockTemplateLock = new ReentrantLock();
     }
 
     public static AionHub createForTesting(
@@ -605,5 +612,51 @@ public class AionHub {
             genLOG.error("Event manager is null!");
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
+    }
+
+    public Pair<BlockContext, byte[]> getMiningBlockTemplate(byte[] currentBestBlockHash) {
+
+        BlockContext context = null;
+
+        blockTemplateLock.lock();
+        try {
+            Block bestBlock = mempool.getBestBlock();
+            // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what
+            // does that mean for staking blocks?
+            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
+
+            if (currentBestBlockHash == null
+                    || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
+
+                // Record new best block on the chain
+                currentBestBlockHash = bestBlockHash;
+
+                // Generate new block template
+                AionPendingStateImpl.TransactionSortedSet ret =
+                        new AionPendingStateImpl.TransactionSortedSet();
+                ret.addAll(mempool.getPendingTransactions());
+
+                context =
+                        blockchain.createNewMiningBlockContext(
+                                bestBlock, new ArrayList<>(ret), false);
+            }
+        } finally {
+            blockTemplateLock.unlock();
+        }
+
+        return Pair.of(context, currentBestBlockHash);
+    }
+
+    public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey) {
+        StakingBlock blockTemplate;
+        blockTemplateLock.lock();
+        try {
+            blockTemplate = (StakingBlock) blockchain.createStakingBlockTemplate(
+                    mempool.getPendingTransactions(), signingPublicKey, newSeed);
+        } finally {
+            blockTemplateLock.unlock();
+        }
+
+        return blockTemplate;
     }
 }
