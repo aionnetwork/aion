@@ -443,6 +443,9 @@ public class AionHub {
                                 genesis.getMiningDifficulty(), genesis.getStakingDifficulty()));
             }
 
+            blockchain.setBestStakingBlock(cfg.getGenesisStakingBlock());
+            genLOG.info("load genesis Staking block!");
+
             genLOG.info(
                     "loaded genesis block <num={}, root={}>",
                     0,
@@ -450,6 +453,14 @@ public class AionHub {
 
         } else {
             blockchain.setBestBlock(bestBlock);
+            if (bestBlock instanceof StakingBlock) {
+                blockchain.loadBestMiningBlock();
+            } else if (bestBlock instanceof AionBlock) {
+                blockchain.loadBestStakingBlock();
+            } else {
+                throw new IllegalStateException();
+            }
+
             Block blockWithDifficulties = getBlockStore().getBestBlockWithInfo();
             blockchain.setUnityTotalDifficulty(
                     blockWithDifficulties.getMiningDifficulty(),

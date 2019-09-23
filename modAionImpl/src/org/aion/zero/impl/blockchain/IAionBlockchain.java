@@ -10,9 +10,11 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.StakingBlock;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain extends UnityChain {
@@ -202,4 +204,15 @@ public interface IAionBlockchain extends UnityChain {
      */
     public boolean isMainChain(byte[] hash);
 
+    StakingBlock getBestStakingBlock();
+
+    AionBlock getBestMiningBlock();
+
+    void setBestStakingBlock(StakingBlock block);
+
+    void setBestMiningBlock(AionBlock block);
+
+    void loadBestMiningBlock();
+
+    void loadBestStakingBlock();
 }

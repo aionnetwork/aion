@@ -53,6 +53,7 @@ import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.types.UnityDifficulty;
+import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.BeaconHashValidator;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
@@ -137,6 +138,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private RepositoryCache<AccountState, IBlockStoreBase> track;
     private TransactionStore transactionStore;
     private Block bestBlock;
+    private StakingBlock bestStakingBlock;
+    private AionBlock bestMiningBlock;
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
      * #getBestBlock()}), this is done because {@link #bestBlock} can slip into temporarily
@@ -594,6 +597,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
         State push = stateStack.push(new State());
         this.bestBlock = getBlockStore().getBlockByHashWithInfo(bestBlockHash);
 
+        if (bestBlock instanceof AionBlock) {
+            bestMiningBlock = (AionBlock) bestBlock;
+            bestStakingBlock =
+                    (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+        } else if (bestBlock instanceof StakingBlock) {
+            bestStakingBlock = (StakingBlock) bestBlock;
+            bestMiningBlock =
+                    (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+        } else {
+            throw new IllegalStateException("Invalid best block data!");
+        }
+
         unityDifficulty.set(
                 new UnityDifficulty(
                         bestBlock.getMiningDifficulty(), bestBlock.getStakingDifficulty()));
@@ -607,6 +622,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         State state = stateStack.pop();
         this.repository = state.savedRepo;
         this.bestBlock = state.savedBest;
+
+        bestMiningBlock = state.savedBestMining;
+        bestStakingBlock = state.savedBestStaking;
 
         unityDifficulty.set(state.ud);
     }
@@ -683,6 +701,65 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
             byte[] value, int limit, DatabaseType dbType) {
         return repository.getReferencedTrieNodes(value, limit, dbType);
+    }
+
+    @Override
+    public StakingBlock getBestStakingBlock() {
+        return bestStakingBlock;
+    }
+
+    @Override
+    public AionBlock getBestMiningBlock() {
+        return bestMiningBlock;
+    }
+
+    @Override
+    public void setBestStakingBlock(StakingBlock block) {
+        if (block == null) {
+            throw new NullPointerException("The best staking block is null");
+        }
+        bestStakingBlock = block;
+    }
+
+    @Override
+    public void setBestMiningBlock(AionBlock block) {
+        if (block == null) {
+            throw new NullPointerException("The best mining block us null");
+        }
+        bestMiningBlock = block;
+    }
+
+    //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
+    @Override
+    public void loadBestMiningBlock() {
+        if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            bestMiningBlock = (AionBlock) bestBlock;
+        } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+        } else {
+            throw new IllegalStateException("Invalid block type");
+        }
+    }
+
+    @Override
+    public void loadBestStakingBlock() {
+        long bestBlockNumber = bestBlock.getNumber();
+
+        if (bestStakingBlock == null) {
+            if (bestBlockNumber == 0) {
+                bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
+            } else {
+                if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                    bestStakingBlock = (StakingBlock) bestBlock;
+                } else {
+                    bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getAntiparentHash());
+
+                    if (bestStakingBlock == null) {
+                        bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1711,6 +1788,24 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public synchronized void setBestBlock(Block block) {
         bestBlock = block;
+        if (bestBlock instanceof AionBlock) {
+            bestMiningBlock = (AionBlock) bestBlock;
+        } else if (bestBlock instanceof StakingBlock) {
+            bestStakingBlock = (StakingBlock) bestBlock;
+        } else {
+            throw new IllegalStateException("Invalid Block instance");
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BestBlock {}", bestBlock.toString());
+            if (bestMiningBlock != null) {
+                LOG.debug("BestMiningBlock {}", bestMiningBlock.toString());
+            }
+
+            if (bestStakingBlock != null) {
+                LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
+            }
+        }
         updateBestKnownBlock(block);
         bestBlockNumber.set(bestBlock.getNumber());
     }
@@ -2121,6 +2216,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // Load bestblock for executing the CLI command.
             if (bestBlock == null) {
                 bestBlock = getBlockStore().getBestBlock();
+
+                if (bestBlock instanceof AionBlock) {
+                    bestMiningBlock = (AionBlock) bestBlock;
+                } else if (bestBlock instanceof StakingBlock) {
+                    bestStakingBlock = (StakingBlock) bestBlock;
+                } else {
+                    throw new IllegalStateException("Invalid best block!");
+                }
             }
 
             this.add(other, true);
@@ -2285,6 +2388,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private class State {
         AionRepositoryImpl savedRepo = repository;
         Block savedBest = bestBlock;
+        AionBlock savedBestMining = bestMiningBlock;
+        StakingBlock savedBestStaking = bestStakingBlock;
         UnityDifficulty ud = new UnityDifficulty(unityDifficulty.get());
     }
 
