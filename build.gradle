@@ -418,6 +418,7 @@ task ciBuild {
             'modTxPool',
             'modVM',
             'modAvmVersion1',
+            'modAvmProvider',
             'modAvmStub'
     ] 
 

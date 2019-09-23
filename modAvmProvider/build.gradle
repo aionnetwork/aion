@@ -1,0 +1,22 @@
+ext.moduleName = 'aion.avm.provider'
+test.dependsOn copyNativeLibsForModuleTests
+
+dependencies {
+    compile project(':modBase')
+    compile project(':modMcf')
+    compile project(':modAvmStub')
+    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    runtimeOnly group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
+
+    testCompile project(':modAionImpl');
+    testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+}
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+build.dependsOn.remove("check")
