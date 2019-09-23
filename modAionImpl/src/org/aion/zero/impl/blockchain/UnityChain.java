@@ -34,4 +34,8 @@ public interface UnityChain {
     Block getCachingStakingBlockTemplate(byte[] hash);
 
     ImportResult tryToConnect(Block block);
+
+    Block getBlockWithInfoByHash(byte[] hash);
+
+    Block getBestBlockWithInfo();
 }

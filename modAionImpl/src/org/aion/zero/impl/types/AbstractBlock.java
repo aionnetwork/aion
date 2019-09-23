@@ -119,7 +119,7 @@ public abstract class AbstractBlock implements Block {
 
     @Override
     public boolean isMainChain() {
-        return mainChain;
+        return mainChain == null ? true : mainChain;
     }
 
     @Override

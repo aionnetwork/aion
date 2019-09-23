@@ -48,6 +48,7 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
@@ -68,6 +69,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.types.StakingBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 
@@ -1890,8 +1892,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             blkNum = blkNum.subList(0, 1000);
                         }
 
-                        List<Map.Entry<Block, BigInteger>> blks =
-                                getBlkAndDifficultyForBlkNumList(blkNum);
+                        List<Block> blks = getBlocksForBlkNumList(blkNum);
 
                         if (blks == null) {
                             return ApiUtil.toReturnHeader(
@@ -1978,10 +1979,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         for (int i = 0; i < listLength; i++) {
                             long blkNum = blkStart + i;
-                            Map.Entry<Block, BigInteger> entry =
-                                    getBlockWithTotalDifficulty(blkNum);
-                            Block b = entry.getKey();
-                            BigInteger td = entry.getValue();
+
+                            Block b = getBlock(blkNum);
                             long blocktime;
                             if (blkNum != 0 && lastBlockTimestamp == null) {
                                 lastBlockTimestamp = getBlock(blkNum - 1).getTimestamp();
@@ -1994,7 +1993,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                             lastBlockTimestamp = b.getTimestamp();
 
-                            String blockSql = generateBlockSqlStatement(b, td, blocktime);
+                            String blockSql = generateBlockSqlStatement(b, b.getCumulativeDifficulty(), blocktime);
 
                             List<String> transactionSql = new ArrayList<>();
 
@@ -2206,10 +2205,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         for (int i = 0; i < listLength; i++) {
                             long blkNum = blkStart + i;
-                            Map.Entry<Block, BigInteger> entry =
-                                    getBlockWithTotalDifficulty(blkNum);
-                            Block b = entry.getKey();
-                            BigInteger td = entry.getValue();
+
+                            Block b = getBlockWithInfo(blkNum);
+                            if (b == null) {
+                                throw new NullPointerException(
+                                        "Can retrieve the block#" + blkNum + "in the database!");
+                            }
+
                             long blocktime = 0;
                             if (b.getNumber() > 0 && lastBlockTimestamp == null) {
                                 lastBlockTimestamp =
@@ -2223,7 +2225,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             lastBlockTimestamp = b.getTimestamp();
 
                             Message.t_BlockDetail.Builder blockDetails =
-                                    getBlockDetailsObj(b, td, blocktime);
+                                    getBlockDetailsObj(b, blocktime);
 
                             List<Message.t_TxDetail> txDetails = new ArrayList<>();
 
@@ -2380,8 +2382,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         .boxed()
                                         .collect(Collectors.toList());
 
-                        List<Map.Entry<Block, BigInteger>> blks =
-                                getBlkAndDifficultyForBlkNumList(blkNum);
+                        List<Block> blks = getBlocksForBlkNumList(blkNum);
 
                         if (blks == null) {
                             return ApiUtil.toReturnHeader(
@@ -2433,8 +2434,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                         .boxed()
                                         .collect(Collectors.toList());
 
-                        List<Map.Entry<Block, BigInteger>> blks =
-                                getBlkAndDifficultyForBlkNumList(blkNum);
+                        List<Block> blks = getBlocksForBlkNumList(blkNum);
 
                         if (blks == null) {
                             return ApiUtil.toReturnHeader(
@@ -2595,9 +2595,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
     private Message.rsp_getBlock getRsp_getBlock(
             Block genericBlock, List<ByteString> al, BigInteger td) {
-        // TODO: [Unity] Remove this cast when staked blocks are supported
-        AionBlock blk = (AionBlock) genericBlock;
-        return Message.rsp_getBlock
+
+        if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            AionBlock blk = (AionBlock) genericBlock;
+            return Message.rsp_getBlock
                 .newBuilder()
                 .setParentHash(ByteString.copyFrom(blk.getParentHash()))
                 .setMinerAddress(ByteString.copyFrom(blk.getCoinbase().toByteArray()))
@@ -2618,49 +2619,98 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setSize(blk.size())
                 .setTotalDifficulty(ByteString.copyFrom(td.toByteArray()))
                 .build();
+        } else if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            StakingBlock blk = (StakingBlock) genericBlock;
+            return Message.rsp_getBlock
+                .newBuilder()
+                .setParentHash(ByteString.copyFrom(blk.getParentHash()))
+                .setMinerAddress(ByteString.copyFrom(blk.getCoinbase().toByteArray()))
+                .setStateRoot(ByteString.copyFrom(blk.getStateRoot()))
+                .setTxTrieRoot(ByteString.copyFrom(blk.getTxTrieRoot()))
+                .setDifficulty(ByteString.copyFrom(blk.getDifficulty()))
+                .setExtraData(ByteString.copyFrom(blk.getExtraData()))
+                .setNrgConsumed(blk.getNrgConsumed())
+                .setNrgLimit(blk.getNrgLimit())
+                .setHash(ByteString.copyFrom(blk.getHash()))
+                .setLogsBloom(ByteString.copyFrom(blk.getLogBloom()))
+                .setNonce(ByteString.copyFrom(new byte[0]))
+                .setReceiptTrieRoot(ByteString.copyFrom(blk.getReceiptsRoot()))
+                .setTimestamp(blk.getTimestamp())
+                .setBlockNumber(blk.getNumber())
+                .setSolution(ByteString.copyFrom(new byte[0]))
+                .addAllTxHash(al)
+                .setSize(blk.size())
+                .setTotalDifficulty(ByteString.copyFrom(td.toByteArray()))
+                .build();
+        } else {
+            throw new IllegalStateException("Invalid block type!");
+        }
     }
 
-    private List<Message.t_Block> getRsp_getBlocks(List<Map.Entry<Block, BigInteger>> blks) {
-
+    private List<Message.t_Block> getRsp_getBlocks(List<Block> blks) {
         return blks.parallelStream()
-                .filter(Objects::nonNull)
-                .map(
-                        blk -> {
-                            // TODO: [Unity] Remove this cast when staked blocks are supported
-                            AionBlock b = (AionBlock) blk.getKey();
+            .filter(Objects::nonNull)
+            .map(
+                blk -> {
+                    if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                        AionBlock b = (AionBlock) blk;
+                        return Message.t_Block
+                            .newBuilder()
+                            .setBlockNumber(b.getNumber())
+                            .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
+                            .setExtraData(ByteString.copyFrom(b.getExtraData()))
+                            .setHash(ByteString.copyFrom(b.getHash()))
+                            .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
+                            .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                            .setNonce(ByteString.copyFrom(b.getNonce()))
+                            .setNrgConsumed(b.getNrgConsumed())
+                            .setNrgLimit(b.getNrgLimit())
+                            .setParentHash(ByteString.copyFrom(b.getParentHash()))
+                            .setTimestamp(b.getTimestamp())
+                            .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
+                            .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
+                            .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
+                            .setSize(b.size())
+                            .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
+                            .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()))
+                            .build();
+                    } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                        StakingBlock b = (StakingBlock) blk;
+                        return Message.t_Block
+                            .newBuilder()
+                            .setBlockNumber(b.getNumber())
+                            .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
+                            .setExtraData(ByteString.copyFrom(b.getExtraData()))
+                            .setHash(ByteString.copyFrom(b.getHash()))
+                            .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
+                            .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                            .setNonce(ByteString.copyFrom(new byte[0]))
+                            .setNrgConsumed(b.getNrgConsumed())
+                            .setNrgLimit(b.getNrgLimit())
+                            .setParentHash(ByteString.copyFrom(b.getParentHash()))
+                            .setTimestamp(b.getTimestamp())
+                            .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
+                            .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
+                            .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
+                            .setSize(b.size())
+                            .setSolution(ByteString.copyFrom(new byte[0]))
+                            .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()))
+                            .build();
+                    } else {
+                        throw new IllegalStateException("Invalid block type!");
+                    }
 
-                            return Message.t_Block
-                                    .newBuilder()
-                                    .setBlockNumber(b.getNumber())
-                                    .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
-                                    .setExtraData(ByteString.copyFrom(b.getExtraData()))
-                                    .setHash(ByteString.copyFrom(b.getHash()))
-                                    .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
-                                    .setMinerAddress(
-                                            ByteString.copyFrom(b.getCoinbase().toByteArray()))
-                                    .setNonce(ByteString.copyFrom(b.getNonce()))
-                                    .setNrgConsumed(b.getNrgConsumed())
-                                    .setNrgLimit(b.getNrgLimit())
-                                    .setParentHash(ByteString.copyFrom(b.getParentHash()))
-                                    .setTimestamp(b.getTimestamp())
-                                    .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
-                                    .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
-                                    .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
-                                    .setSize(b.size())
-                                    .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
-                                    .setTotalDifficulty(
-                                            ByteString.copyFrom(blk.getValue().toByteArray()))
-                                    .build();
-                        })
-                .collect(Collectors.toList());
+
+                })
+            .collect(Collectors.toList());
     }
 
     private Message.t_BlockDetail.Builder getBlockDetailsObj(
-            Block block, BigInteger td, long blocktime) {
-        
-        // TODO: [Unity] Remove this cast when staked blocks are supported
-        AionBlock b = (AionBlock) block;
-        return Message.t_BlockDetail
+            Block block, long blocktime) {
+
+        if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            AionBlock b = (AionBlock) block;
+            return Message.t_BlockDetail
                 .newBuilder()
                 .setBlockNumber(b.getNumber())
                 .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
@@ -2678,8 +2728,37 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                 .setSize(b.size())
                 .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
-                .setTotalDifficulty(ByteString.copyFrom(td.toByteArray()))
+                .setTotalDifficulty(ByteString.copyFrom(b.getCumulativeDifficulty().toByteArray()))
                 .setBlockTime(blocktime);
+        } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            StakingBlock b = (StakingBlock) block;
+            // The JavaAPI has no plan to support the staking block shape in the short term.
+            // Therefore, we just expose the data fields base on the current API protocol.
+            // Some data field will miss and the nonce and the solution will be zero.
+            return Message.t_BlockDetail
+                    .newBuilder()
+                    .setBlockNumber(b.getNumber())
+                    .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
+                    .setExtraData(ByteString.copyFrom(b.getExtraData()))
+                    .setHash(ByteString.copyFrom(b.getHash()))
+                    .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
+                    .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                    .setNonce(ByteString.copyFrom(new byte[0]))
+                    .setNrgConsumed(b.getNrgConsumed())
+                    .setNrgLimit(b.getNrgLimit())
+                    .setParentHash(ByteString.copyFrom(b.getParentHash()))
+                    .setTimestamp(b.getTimestamp())
+                    .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
+                    .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
+                    .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
+                    .setSize(b.size())
+                    .setSolution(ByteString.copyFrom(new byte[0]))
+                    .setTotalDifficulty(
+                            ByteString.copyFrom(b.getCumulativeDifficulty().toByteArray()))
+                    .setBlockTime(blocktime);
+        } else {
+            throw new IllegalStateException();
+        }
     }
 
     private Message.t_TxDetail getTxDetailsObj(
@@ -2902,166 +2981,127 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private List<Message.t_BlockDetail> getRsp_getBlockDetails(
-            List<Map.Entry<Block, BigInteger>> blks) {
+            List<Block> blks) {
 
         return blks.parallelStream()
-                .filter(Objects::nonNull)
-                .map(
-                        blk -> {
-                            // TODO: [Unity] Remove this cast when staked blocks are supported
-                            AionBlock b = (AionBlock) blk.getKey();
-                            Message.t_BlockDetail.Builder builder =
-                                    Message.t_BlockDetail
-                                            .newBuilder()
-                                            .setBlockNumber(b.getNumber())
-                                            .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
-                                            .setExtraData(ByteString.copyFrom(b.getExtraData()))
-                                            .setHash(ByteString.copyFrom(b.getHash()))
-                                            .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
-                                            .setMinerAddress(
-                                                    ByteString.copyFrom(
-                                                            b.getCoinbase().toByteArray()))
-                                            .setNonce(ByteString.copyFrom(b.getNonce()))
-                                            .setNrgConsumed(b.getNrgConsumed())
-                                            .setNrgLimit(b.getNrgLimit())
-                                            .setParentHash(ByteString.copyFrom(b.getParentHash()))
-                                            .setTimestamp(b.getTimestamp())
-                                            .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
-                                            .setReceiptTrieRoot(
-                                                    ByteString.copyFrom(b.getReceiptsRoot()))
-                                            .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
-                                            .setSize(b.size())
-                                            .setSolution(
-                                                    ByteString.copyFrom(
-                                                            b.getHeader().getSolution()))
-                                            .setTotalDifficulty(
-                                                    ByteString.copyFrom(
-                                                            blk.getValue().toByteArray()));
+            .filter(Objects::nonNull)
+            .map(
+                blk -> {
+                    Message.t_BlockDetail.Builder builder;
+                    if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                        AionBlock b = (AionBlock) blk;
+                        builder =
+                            Message.t_BlockDetail.newBuilder()
+                                .setBlockNumber(b.getNumber())
+                                .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
+                                .setExtraData(ByteString.copyFrom(b.getExtraData()))
+                                .setHash(ByteString.copyFrom(b.getHash()))
+                                .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
+                                .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                                .setNonce(ByteString.copyFrom(b.getNonce()))
+                                .setNrgConsumed(b.getNrgConsumed())
+                                .setNrgLimit(b.getNrgLimit())
+                                .setParentHash(ByteString.copyFrom(b.getParentHash()))
+                                .setTimestamp(b.getTimestamp())
+                                .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
+                                .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
+                                .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
+                                .setSize(b.size())
+                                .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
+                                .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()));
+                    } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                        StakingBlock b = (StakingBlock) blk;
+                        builder =
+                            Message.t_BlockDetail.newBuilder()
+                                .setBlockNumber(b.getNumber())
+                                .setDifficulty(ByteString.copyFrom(b.getDifficulty()))
+                                .setExtraData(ByteString.copyFrom(b.getExtraData()))
+                                .setHash(ByteString.copyFrom(b.getHash()))
+                                .setLogsBloom(ByteString.copyFrom(b.getLogBloom()))
+                                .setMinerAddress(ByteString.copyFrom(b.getCoinbase().toByteArray()))
+                                .setNonce(ByteString.copyFrom(new byte[0]))
+                                .setNrgConsumed(b.getNrgConsumed())
+                                .setNrgLimit(b.getNrgLimit())
+                                .setParentHash(ByteString.copyFrom(b.getParentHash()))
+                                .setTimestamp(b.getTimestamp())
+                                .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
+                                .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
+                                .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
+                                .setSize(b.size())
+                                .setSolution(ByteString.copyFrom(new byte[0]))
+                                .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()));
+                    } else {
+                        throw new IllegalStateException("Invalid block type!");
+                    }
 
-                            List<AionTransaction> txs = b.getTransactionsList();
+                    List<AionTransaction> txs = blk.getTransactionsList();
 
-                            List<Message.t_TxDetail> tds =
-                                    txs.parallelStream()
-                                            .filter(Objects::nonNull)
+                    List<Message.t_TxDetail> tds =
+                        txs.parallelStream()
+                            .filter(Objects::nonNull)
+                            .map(
+                                (AionTransaction tx) -> {
+                                    AionTxInfo ti = ((AionBlockchainImpl) this.ac
+                                        .getAionHub()
+                                        .getBlockchain())
+                                        .getTransactionInfoLite(
+                                            tx.getTransactionHash(),
+                                            blk.getHeader().getHash());
+
+                                    List<Message.t_LgEle> tles =
+                                        ti.getReceipt()
+                                            .getLogInfoList()
+                                            .parallelStream()
                                             .map(
-                                                    (AionTransaction tx) -> {
-                                                        AionTxInfo ti =
-                                                                ((AionBlockchainImpl)
-                                                                                this.ac
-                                                                                        .getAionHub()
-                                                                                        .getBlockchain())
-                                                                        .getTransactionInfoLite(
-                                                                                tx
-                                                                                        .getTransactionHash(),
-                                                                                b.getHash());
+                                                log -> {
+                                                    List<String> topics = new ArrayList<>();
+                                                    for (int i = 0; i < log.copyOfTopics().size(); i++) {
+                                                        topics.add(
+                                                            StringUtils.toJsonHex(log.copyOfTopics().get(i)));
+                                                    }
 
-                                                        List<Message.t_LgEle> tles =
-                                                                ti.getReceipt()
-                                                                        .getLogInfoList()
-                                                                        .parallelStream()
-                                                                        .map(
-                                                                                log -> {
-                                                                                    List<String>
-                                                                                            topics =
-                                                                                                    new ArrayList<>();
-                                                                                    for (int i = 0;
-                                                                                            i
-                                                                                                    < log.copyOfTopics()
-                                                                                                            .size();
-                                                                                            i++) {
-                                                                                        topics.add(
-                                                                                                StringUtils
-                                                                                                        .toJsonHex(
-                                                                                                                log.copyOfTopics()
-                                                                                                                        .get(
-                                                                                                                                i)));
-                                                                                    }
-
-                                                                                    return Message
-                                                                                            .t_LgEle
-                                                                                            .newBuilder()
-                                                                                            .setData(
-                                                                                                    ByteString
-                                                                                                            .copyFrom(
-                                                                                                                    log
-                                                                                                                            .copyOfData()))
-                                                                                            .setAddress(
-                                                                                                    ByteString
-                                                                                                            .copyFrom(
-                                                                                                                    log
-                                                                                                                            .copyOfAddress()))
-                                                                                            .addAllTopics(
-                                                                                                    topics)
-                                                                                            .build();
-                                                                                })
-                                                                        .filter(Objects::nonNull)
-                                                                        .collect(
-                                                                                Collectors
-                                                                                        .toList());
-
-                                                        Message.t_TxDetail.Builder tdBuilder =
-                                                                Message.t_TxDetail
-                                                                        .newBuilder()
-                                                                        .setData(
-                                                                                ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getData()))
-                                                                        .setTo(
-                                                                                ByteString.copyFrom(
-                                                                                        tx
-                                                                                                                .getDestinationAddress()
-                                                                                                        == null
-                                                                                                ? EMPTY_BYTE_ARRAY
-                                                                                                : tx.getDestinationAddress()
-                                                                                                        .toByteArray()))
-                                                                        .setFrom(
-                                                                                ByteString.copyFrom(
-                                                                                        tx.getSenderAddress()
-                                                                                                .toByteArray()))
-                                                                        .setNonce(
-                                                                                ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getNonce()))
-                                                                        .setValue(
-                                                                                ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getValue()))
-                                                                        .setNrgConsumed(
-                                                                                ti.getReceipt()
-                                                                                        .getEnergyUsed())
-                                                                        .setNrgPrice(
-                                                                                tx.getEnergyPrice())
-                                                                        .setTxHash(
-                                                                                ByteString.copyFrom(
-                                                                                        tx
-                                                                                                .getTransactionHash()))
-                                                                        .setTxIndex(ti.getIndex())
-                                                                        .setType(
-                                                                                ByteString.copyFrom(
-                                                                                        new byte[] {
-                                                                                            tx
-                                                                                                    .getType()
-                                                                                        }))
-                                                                        .addAllLogs(tles);
-
-                                                        return tdBuilder.build();
-                                                    })
+                                                    return Message.t_LgEle.newBuilder()
+                                                        .setData(ByteString.copyFrom(log.copyOfData()))
+                                                        .setAddress(ByteString.copyFrom(log.copyOfAddress()))
+                                                        .addAllTopics(topics)
+                                                        .build();
+                                                })
                                             .filter(Objects::nonNull)
                                             .collect(Collectors.toList());
 
-                            return builder.addAllTx(tds).build();
-                        })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                                    Message.t_TxDetail.Builder tdBuilder =
+                                        Message.t_TxDetail.newBuilder()
+                                            .setData(ByteString.copyFrom(tx.getData()))
+                                            .setTo(ByteString.copyFrom(
+                                                tx.getDestinationAddress() == null
+                                                ? EMPTY_BYTE_ARRAY
+                                                : tx.getDestinationAddress().toByteArray()))
+                                            .setFrom(ByteString.copyFrom(tx.getSenderAddress().toByteArray()))
+                                            .setNonce(ByteString.copyFrom(tx.getNonce()))
+                                            .setValue(ByteString.copyFrom(tx.getValue()))
+                                            .setNrgConsumed(ti.getReceipt().getEnergyUsed())
+                                            .setNrgPrice(tx.getEnergyPrice())
+                                            .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
+                                            .setTxIndex(ti.getIndex())
+                                            .setType(ByteString.copyFrom(new byte[] {tx.getType()}))
+                                            .addAllLogs(tles);
+                                    return tdBuilder.build();
+                                })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                    return builder.addAllTx(tds).build();
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     // all or nothing. if any block from list is not found, unchecked exception gets thrown by
     // Map.entry()
     // causes this function to return in Exception
-    private List<Map.Entry<Block, BigInteger>> getBlkAndDifficultyForBlkNumList(
-            List<Long> blkNum) {
+    private List<Block> getBlocksForBlkNumList(List<Long> blkNum) {
         return blkNum.parallelStream()
-                .map(this::getBlockWithTotalDifficulty)
+                .map(this::getBlockWithInfo)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

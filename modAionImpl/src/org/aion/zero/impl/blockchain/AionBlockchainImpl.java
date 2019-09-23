@@ -2720,4 +2720,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         return stakingBlockTemplate.get(ByteArrayWrapper.wrap(hash));
     }
+
+    @Override
+    public Block getBlockWithInfoByHash(byte[] hash) {
+        return getBlockStore().getBlockByHashWithInfo(hash);
+    }
+
+    @Override
+    public Block getBestBlockWithInfo() {
+        return getBlockStore().getBestBlockWithInfo();
+    }
 }

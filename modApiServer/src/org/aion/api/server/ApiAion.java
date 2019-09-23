@@ -198,11 +198,8 @@ public abstract class ApiAion extends Api {
     public Block getBlock(long blkNr) {
         if (blkNr == -1) {
             return this.ac.getBlockchain().getBestBlock();
-        } else if (blkNr > 0) {
+        } else if (blkNr >= 0) {
             return this.ac.getBlockchain().getBlockByNumber(blkNr);
-        } else if (blkNr == 0) {
-            AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;
@@ -791,5 +788,16 @@ public abstract class ApiAion extends Api {
 
     protected void shutDownES() {
         ees.shutdown();
+    }
+
+    protected Block getBlockWithInfo(long blkNr) {
+        if (blkNr == -1) {
+            return this.ac.getBlockchain().getBestBlockWithInfo();
+        } else if (blkNr >= 0) {
+            return this.ac.getBlockchain().getBlockByNumber(blkNr);
+        } else {
+            LOG.debug("ApiAion.getBlock - incorrect argument");
+            return null;
+        }
     }
 }
