@@ -32,6 +32,8 @@ import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.AddressSpecs;
+import org.aion.crypto.HashUtil;
+import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.db.impl.SystemExitCodes;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -1202,7 +1204,162 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
-    private BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
+    /**
+     * A method for creating a new staking block template for the internal staker or the tests
+     * @param parent the parent block of the chain, it is not equal to the seal parent block.
+     * @param transactions to be added into the block.
+     * @param seed the data decide the weight of the sealing difficulty.
+     * @return staking block template
+     */
+    public synchronized StakingBlock createNewStakingBlock(Block parent, List<AionTransaction> transactions, byte[] seed) {
+        if (parent == null) {
+            LOG.error("createNewStakingBlock failed, the parent block is null");
+            return null;
+        }
+
+        if (transactions == null) {
+            LOG.error("createNewStakingBlock failed, transaction list can not be null");
+            return null;
+        }
+
+        if (seed == null) {
+            LOG.error("createNewStakingBlock failed, the seed is null");
+            return null;
+        }
+
+        return createNewStakingBlock(parent, transactions, seed, null);
+    }
+
+    private StakingBlock createNewStakingBlock(
+            Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey) {
+        BlockHeader parentHdr = parent.getHeader();
+
+        if (parentHdr.getNumber() + 1 < FORK_5_BLOCK_NUMBER) {
+            LOG.debug("Unity fork has not been enabled! Can't create the staking blocks");
+            return null;
+        }
+
+        Block grandParentStakingBlock = null;
+        BlockHeader parentStakingBlockHeader = null;
+
+        if (parentHdr.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            parentStakingBlockHeader = parentHdr;
+            grandParentStakingBlock = getSealParentBlock(parentHdr);
+        } else if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            if (Arrays.equals(
+                    parent.getAntiparentHash(),
+                    CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                parentStakingBlockHeader = CfgAion.inst().getGenesisStakingBlock().getHeader();
+                grandParentStakingBlock = null;
+            } else {
+                Block parentMiningBlock = getBlockByHash(parent.getAntiparentHash());
+                if (parentMiningBlock != null) {
+                    parentStakingBlockHeader = parentMiningBlock.getHeader();
+                    grandParentStakingBlock = getSealParentBlock(parentStakingBlockHeader);
+                }
+            }
+        } else {
+            LOG.error("createNewStakingBlock failed. Invalid block type");
+            return null;
+        }
+
+        if (parentStakingBlockHeader == null) {
+            throw new IllegalStateException(
+                    "Can't find the parent staking block, the Database might be corrupted!");
+        }
+
+        long newTimestamp;
+
+        BigInteger newDiff =
+                chainConfiguration
+                        .getUnityDifficultyCalculator()
+                        .calculateDifficulty(
+                                parentStakingBlockHeader,
+                                grandParentStakingBlock == null
+                                        ? null
+                                        : grandParentStakingBlock.getHeader());
+
+        AionAddress coinbase;
+        if (signingPublicKey != null) { // Create block template for the external stakers.
+            AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
+            coinbase = stakingContractHelper.getCoinbaseForSigningAddress(signingAddress);
+            if (coinbase == null) {
+                LOG.debug(
+                        "Could not get the coinbase by given the signing publickey",
+                        ByteUtil.toHexString(signingPublicKey));
+                return null;
+            }
+
+            byte[] seed = ((StakingBlockHeader) parentStakingBlockHeader).getSeed();
+
+            if (!ECKeyEd25519.verify(seed, newSeed, signingPublicKey)) {
+                LOG.debug(
+                        "Seed verification failed! oldSeed:{} newSeed{} pKey{}",
+                        ByteUtil.toHexString(seed),
+                        ByteUtil.toHexString(newSeed),
+                        ByteUtil.toHexString(signingPublicKey));
+                return null;
+            }
+
+            BigInteger stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
+            if (stakes.signum() < 1) {
+                LOG.debug(
+                        "The caller {} with coinbase {} has no stake ",
+                        signingAddress.toString(),
+                        coinbase.toString());
+                return null;
+            }
+
+            long newDelta =
+                Long.max(
+                    (long) (newDiff.doubleValue()
+                        * (Math.log(BigInteger.TWO.pow(256).doubleValue())
+                            - Math.log(new BigInteger(1, HashUtil.h256(newSeed)).doubleValue())) / stakes.doubleValue())
+                    , 1);
+
+            newTimestamp =
+                    Long.max(
+                            parentStakingBlockHeader.getTimestamp() + newDelta,
+                            parent.getHeader().getTimestamp() + 1);
+        } else {
+            newTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+            if (parentHdr.getTimestamp() >= newTimestamp) {
+                newTimestamp = parentHdr.getTimestamp() + 1;
+            }
+
+            // Todo: [unity] currently it's for testing purpose unless we decide to integrate the internal staker tooling.
+            coinbase = AddressUtils.ZERO_ADDRESS;
+        }
+
+        StakingBlock block;
+        try {
+            StakingBlockHeader.Builder headerBuilder =
+                    StakingBlockHeader.Builder.newInstance()
+                            .withParentHash(parent.getHash())
+                            .withCoinbase(coinbase)
+                            .withNumber(parentHdr.getNumber() + 1)
+                            .withTimestamp(newTimestamp)
+                            .withExtraData(minerExtraData)
+                            .withTxTrieRoot(calcTxTrie(txs))
+                            .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
+                            .withDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
+                            .withSeed(newSeed)
+                            .withSigningPublicKey(signingPublicKey);
+
+            block = new StakingBlock(headerBuilder.build(), txs);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        blockPreSeal(parentHdr, block);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("GetBlockTemp: {}", block.toString());
+        }
+
+        return block;
+    }
+
+    private synchronized BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
         // Begin execution phase
         pushState(parentHdr.getHash());
         track = repository.startTracking();
@@ -2506,5 +2663,38 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public boolean isUnityForkEnabled() {
         return bestBlockNumber.get() >= FORK_5_BLOCK_NUMBER;
+    }
+
+    /**
+     * A method for creating a new staking block template for the external staker.
+     *
+     * @param pendingTransactions to be added into the block.
+     * @param signingPublicKey the staker's signing public key.
+     * @param newSeed the data decide the weight of the sealing difficulty.
+     * @see #createNewStakingBlock(Block, List, byte[], byte[])
+     * @return staking block template
+     */
+    public synchronized StakingBlock createStakingBlockTemplate(
+        List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed) {
+        if (pendingTransactions == null) {
+            LOG.error("createStakingBlockTemplate failed, The pendingTransactions list can not be null");
+            return null;
+        }
+
+        if (signingPublicKey == null) {
+            LOG.error("createStakingBlockTemplate failed, The signing public key is null");
+            return null;
+        }
+
+        if (newSeed == null) {
+            LOG.error("createStakingBlockTemplate failed, The seed is null");
+            return null;
+        }
+
+        return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey);
+    }
+
+    public StakingContractHelper getStakingContractHelper() {
+        return stakingContractHelper;
     }
 }
