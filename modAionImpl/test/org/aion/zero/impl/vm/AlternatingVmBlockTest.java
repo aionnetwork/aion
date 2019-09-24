@@ -8,20 +8,24 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -32,11 +36,25 @@ import org.junit.Test;
 public class AlternatingVmBlockTest {
     private static StandaloneBlockchain blockchain;
     private static ECKey deployerKey;
+    private static TestResourceProvider resourceProvider;
 
     @BeforeClass
-    public static void setupAvm() {
-        LongLivedAvm.createAndStartLongLivedAvm();
+    public static void setupAvm() throws Exception {
         TransactionTypeRule.allowAVMContractTransaction();
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @Before
@@ -52,9 +70,10 @@ public class AlternatingVmBlockTest {
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     /**
@@ -64,11 +83,11 @@ public class AlternatingVmBlockTest {
     @Test
     public void testFullBlockWithAlternatingVms() throws IOException {
         BigInteger nonce = BigInteger.ZERO;
-        long avmContractDeployEnergyUsed = getAvmContractDeploymentCost(nonce);
+        long avmContractDeployEnergyUsed = getAvmContractDeploymentCost(AvmVersion.VERSION_1, nonce);
         long fvmContractDeployEnergyUsed = getFvmContractDeploymentCost(nonce.add(BigInteger.ONE));
 
         List<AionTransaction> alternatingTransactions =
-                makeAlternatingAvmFvmContractCreateTransactions(4, nonce.add(BigInteger.TWO));
+                makeAlternatingAvmFvmContractCreateTransactions(AvmVersion.VERSION_1, 4, nonce.add(BigInteger.TWO));
 
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
@@ -97,11 +116,11 @@ public class AlternatingVmBlockTest {
         }
     }
 
-    /** Tests hitting the block energy limit and surpassing it with 5 alternating transactions. */
+    /** Tests hitting the block energy limit and surpassing it with 20 alternating transactions. */
     @Test
     public void testOverflowBlockWithAlternatingVms() throws Exception {
         List<AionTransaction> alternatingTransactions =
-                makeAlternatingAvmFvmContractCreateTransactions(5, BigInteger.ZERO);
+                makeAlternatingAvmFvmContractCreateTransactions(AvmVersion.VERSION_1, 20, BigInteger.ZERO);
 
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
@@ -114,20 +133,20 @@ public class AlternatingVmBlockTest {
         // transaction is rejected because
         // it would cause the block energy limit to be exceeded.
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
-        assertEquals(4, connectResult.getRight().getReceipts().size());
+        assertEquals(14, connectResult.getRight().getReceipts().size());
     }
 
     /**
-     * Tests a special case of the alternating transactions: the first 4 don't overflow the limit,
-     * the 5th does overflow it, but the 6th can fit into it.
+     * Tests a special case of the alternating transactions: the first 14 don't overflow the limit,
+     * the 15th does overflow it, but the 16th can fit into it.
      *
-     * <p>The problem: the nonce no longer makes any sense because the 5th transaction is kicked
+     * <p>The problem: the nonce no longer makes any sense because the 15th transaction is kicked
      * out.
      */
     @Test
     public void testOverflowBlockWithAlternatingVms2() throws Exception {
         List<AionTransaction> alternatingTransactions =
-                makeAlternatingAvmFvmContractCreateTransactions(6, BigInteger.ZERO);
+                makeAlternatingAvmFvmContractCreateTransactions(AvmVersion.VERSION_1, 16, BigInteger.ZERO);
 
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
@@ -142,18 +161,18 @@ public class AlternatingVmBlockTest {
         // now has an invalid nonce since
         // the previous transaction was rejected, so neither of these are included in the block.
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
-        assertEquals(4, connectResult.getRight().getReceipts().size());
+        assertEquals(14, connectResult.getRight().getReceipts().size());
     }
 
     private List<AionTransaction> makeAlternatingAvmFvmContractCreateTransactions(
-            int totalNum, BigInteger initialNonce) throws IOException {
+            AvmVersion version, int totalNum, BigInteger initialNonce) throws IOException {
         List<AionTransaction> transactions = new ArrayList<>();
 
         BigInteger currentNonce = initialNonce;
         for (int i = 0; i < totalNum; i++) {
 
             if (i % 2 == 0) {
-                transactions.add(makeAvmContractCreateTransaction(deployerKey, currentNonce));
+                transactions.add(makeAvmContractCreateTransaction(version, deployerKey, currentNonce));
             } else {
                 transactions.add(makeFvmContractCreateTransaction(deployerKey, currentNonce));
             }
@@ -163,8 +182,8 @@ public class AlternatingVmBlockTest {
         return transactions;
     }
 
-    private AionTransaction makeAvmContractCreateTransaction(ECKey sender, BigInteger nonce) {
-        byte[] jar = getJarBytes();
+    private AionTransaction makeAvmContractCreateTransaction(AvmVersion version, ECKey sender, BigInteger nonce) {
+        byte[] jar = getJarBytes(version);
         return AionTransaction.create(
                 sender,
                 nonce.toByteArray(),
@@ -176,11 +195,9 @@ public class AlternatingVmBlockTest {
                 TransactionTypes.AVM_CREATE_CODE, null);
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
     private AionTransaction makeFvmContractCreateTransaction(ECKey sender, BigInteger nonce)
@@ -197,8 +214,8 @@ public class AlternatingVmBlockTest {
                 TransactionTypes.DEFAULT, null);
     }
 
-    private long getAvmContractDeploymentCost(BigInteger nonce) {
-        AionTransaction avmDeploy = makeAvmContractCreateTransaction(deployerKey, nonce);
+    private long getAvmContractDeploymentCost(AvmVersion version, BigInteger nonce) {
+        AionTransaction avmDeploy = makeAvmContractCreateTransaction(version, deployerKey, nonce);
         Block parentBlock = blockchain.getBestBlock();
         AionBlock block =
                 blockchain.createBlock(

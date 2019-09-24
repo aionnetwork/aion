@@ -4,6 +4,9 @@ import org.aion.avm.core.AvmImpl;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IExternalStateBuilder;
+import org.aion.avm.stub.IContractFactory;
+import org.aion.avm.stub.IDecoder;
+import org.aion.avm.stub.IStreamingEncoder;
 import org.aion.avm.userlib.AionBuffer;
 
 /**
@@ -41,5 +44,20 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
         }
 
         return loader;
+    }
+
+    @Override
+    public IContractFactory newContractFactory() {
+        return new ContractFactory();
+    }
+
+    @Override
+    public IStreamingEncoder newStreamingEncoder() {
+        return new StreamingEncoder();
+    }
+
+    @Override
+    public IDecoder newDecoder(byte[] encoding) {
+        return new Decoder(encoding);
     }
 }

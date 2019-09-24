@@ -5,26 +5,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import avm.Address;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIStreamingEncoder;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.AvmLogTarget;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -34,18 +36,33 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AvmLogAndInternalTransactionTest {
+    private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
 
     @BeforeClass
-    public static void setupAvm() {
-        LongLivedAvm.createAndStartLongLivedAvm();
+    public static void setupAvm() throws Exception {
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Before
@@ -68,11 +85,13 @@ public class AvmLogAndInternalTransactionTest {
 
     @Test
     public void testLogAndInternalTransactionsOnSuccess() {
-        AionAddress contract = deployContract(BigInteger.ZERO);
-        AionAddress other = deployContract(BigInteger.ONE);
+        AvmVersion version = AvmVersion.VERSION_1;
+
+        AionAddress contract = deployContract(version, BigInteger.ZERO);
+        AionAddress other = deployContract(version, BigInteger.ONE);
 
         Pair<ImportResult, AionBlockSummary> connectResult =
-                callFireLogs(BigInteger.TWO, contract, other, "fireLogsOnSuccess");
+                callFireLogs(version, BigInteger.TWO, contract, other, "fireLogsOnSuccess");
         AionBlockSummary summary = connectResult.getRight();
 
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -89,11 +108,13 @@ public class AvmLogAndInternalTransactionTest {
 
     @Test
     public void testLogAndInternalTransactionsOnFailure() {
-        AionAddress contract = deployContract(BigInteger.ZERO);
-        AionAddress other = deployContract(BigInteger.ONE);
+        AvmVersion version = AvmVersion.VERSION_1;
+
+        AionAddress contract = deployContract(version, BigInteger.ZERO);
+        AionAddress other = deployContract(version, BigInteger.ONE);
 
         Pair<ImportResult, AionBlockSummary> connectResult =
-                callFireLogs(BigInteger.TWO, contract, other, "fireLogsAndFail");
+                callFireLogs(version, BigInteger.TWO, contract, other, "fireLogsAndFail");
         AionBlockSummary summary = connectResult.getRight();
 
         assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -109,12 +130,10 @@ public class AvmLogAndInternalTransactionTest {
     }
 
     public Pair<ImportResult, AionBlockSummary> callFireLogs(
-            BigInteger nonce, AionAddress address, AionAddress addressToCall, String methodName) {
-        byte[] data =
-                new ABIStreamingEncoder()
-                        .encodeOneString(methodName)
-                        .encodeOneAddress(new Address(addressToCall.toByteArray()))
-                        .toBytes();
+            AvmVersion version, BigInteger nonce, AionAddress address, AionAddress addressToCall, String methodName) {
+
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        byte[] data = factory.newStreamingEncoder().encodeOneString(methodName).encodeOneAddress(addressToCall).getEncoding();
 
         AionTransaction transaction =
                 AionTransaction.create(
@@ -136,9 +155,9 @@ public class AvmLogAndInternalTransactionTest {
         return this.blockchain.tryToConnectAndFetchSummary(block);
     }
 
-    public AionAddress deployContract(BigInteger nonce) {
+    public AionAddress deployContract(AvmVersion version, BigInteger nonce) {
         TransactionTypeRule.allowAVMContractTransaction();
-        byte[] jar = getJarBytes();
+        byte[] jar = getJarBytes(version);
         AionTransaction transaction =
                 AionTransaction.create(
                         deployerKey,
@@ -166,10 +185,8 @@ public class AvmLogAndInternalTransactionTest {
         return new AionAddress(receipt.getTransactionOutput());
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmLogTarget.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.LOG_TARGET);
     }
 }

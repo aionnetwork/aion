@@ -11,4 +11,5 @@ module aion.avm.v1 {
     requires org.aion.avm.userlib;
 
     exports org.aion.avm.version1;
+    exports org.aion.avm.version1.contracts;
 }

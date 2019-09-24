@@ -39,9 +39,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIEncoder;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.Constants;
 import org.aion.base.TransactionTypes;
@@ -53,6 +58,7 @@ import org.aion.fastvm.FastVmResultCode;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.base.TransactionTypeRule;
@@ -63,14 +69,11 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.avm.LongLivedAvm;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
@@ -93,6 +96,7 @@ import org.slf4j.Logger;
 @RunWith(Parameterized.class)
 public class ContractIntegTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
+    private TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey, senderKey;
     private AionAddress deployer, sender;
@@ -109,7 +113,7 @@ public class ContractIntegTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         StandaloneBlockchain.Bundle bundle =
                 (new Builder()).withValidatorConfiguration("simple").withDefaultAccounts().build();
         TransactionTypeRule.allowAVMContractTransaction();
@@ -124,11 +128,24 @@ public class ContractIntegTest {
         senderBalance = Builder.DEFAULT_BALANCE;
         senderNonce = BigInteger.ZERO;
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         blockchain = null;
         deployerKey = null;
         deployer = null;
@@ -139,11 +156,12 @@ public class ContractIntegTest {
         senderKey = null;
         senderNonce = null;
 
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Test
-    public void testFvmEmptyContract() throws IOException, VMException {
+    public void testFvmEmptyContract() throws Exception {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -210,7 +228,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testContractDeployCodeIsEmpty() throws VMException {
+    public void testContractDeployCodeIsEmpty() throws Exception {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger value = BigInteger.ZERO;
@@ -259,7 +277,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testContractDeployCodeIsNonsensical() throws VMException {
+    public void testContractDeployCodeIsNonsensical() throws Exception {
         byte[] deployCode = new byte[1];
         deployCode[0] = 0x1;
         long nrg = 1_000_000;
@@ -310,7 +328,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testDeployWithOutCode() throws VMException {
+    public void testDeployWithOutCode() throws Exception {
 
         long nrg = 1_000_000;
         long nrgPrice = 1;
@@ -358,7 +376,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testFvmTransferValueToNonPayableConstructor() throws IOException, VMException {
+    public void testFvmTransferValueToNonPayableConstructor() throws Exception {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -408,7 +426,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructor() throws IOException, VMException {
+    public void testTransferValueToPayableConstructor() throws Exception {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -459,7 +477,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructorInsufficientFunds() throws IOException, VMException {
+    public void testTransferValueToPayableConstructorInsufficientFunds() throws Exception {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -509,7 +527,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testFvmConstructorIsCalledOnCodeDeployment() throws IOException, VMException {
+    public void testFvmConstructorIsCalledOnCodeDeployment() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode =
                 ContractUtils.getContractDeployer(
@@ -564,7 +582,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testFvmCallFunction() throws IOException, VMException {
+    public void testFvmCallFunction() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -645,7 +663,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testFvmOverWithdrawFromContract() throws IOException, VMException {
+    public void testFvmOverWithdrawFromContract() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -704,7 +722,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testWithdrawFromFvmContract() throws IOException, VMException {
+    public void testWithdrawFromFvmContract() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -760,7 +778,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testSendContractFundsToOtherAddress() throws IOException, VMException {
+    public void testSendContractFundsToOtherAddress() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -823,7 +841,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testSendContractFundsToNonexistentAddress() throws IOException, VMException {
+    public void testSendContractFundsToNonexistentAddress() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -885,7 +903,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testCallContractViaAnotherContract() throws IOException, VMException {
+    public void testCallContractViaAnotherContract() throws Exception {
         // Deploy the MultiFeatureContract.
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
@@ -996,7 +1014,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testRecursiveStackoverflow() throws IOException, VMException {
+    public void testRecursiveStackoverflow() throws Exception {
         String contractName = "Recursive";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
@@ -1136,7 +1154,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testRedeployContractAtExistentContractAddress() throws IOException, VMException {
+    public void testRedeployContractAtExistentContractAddress() throws Exception {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -1181,7 +1199,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void tellFvmContractCallBalanceTransfer() throws IOException, VMException {
+    public void tellFvmContractCallBalanceTransfer() throws Exception {
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
             return;
         }
@@ -1354,7 +1372,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void tellFvmContractCallAvmContract() throws IOException, VMException {
+    public void tellFvmContractCallAvmContract() throws Exception {
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
             return;
         }
@@ -1383,7 +1401,7 @@ public class ContractIntegTest {
         assertNotNull(contract);
         repo = blockchain.getRepository().startTracking();
 
-        AionAddress avmAddress = deployAvmContract(nonce);
+        AionAddress avmAddress = deployAvmContract(AvmVersion.VERSION_1, nonce);
         assertNotNull(avmAddress);
 
         nonce = nonce.add(BigInteger.ONE);
@@ -1588,6 +1606,8 @@ public class ContractIntegTest {
 
     @Test
     public void testDeployAvmContractToAnExistedAccount() {
+        AvmVersion version = AvmVersion.VERSION_1;
+
         if (txType == TransactionTypes.DEFAULT) {
             return;
         }
@@ -1631,19 +1651,18 @@ public class ContractIntegTest {
 
         senderNonce = senderNonce.add(BigInteger.ONE);
 
-        AionAddress avmDeployedAddress = deployAvmContract(deployerNonce);
+        AionAddress avmDeployedAddress = deployAvmContract(version, deployerNonce);
         assertNotNull(avmAddress);
         assertEquals(avmAddress, avmDeployedAddress);
 
         repo = blockchain.getRepository().startTracking();
-        byte[] avmCode = JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class);
-        assertEquals(avmCode.length, repo.getCode(avmAddress).length);
-        // TODO: find a way to check the deploy code is consistent with the code get from the repo.
-        // assertArrayEquals(avmCode, repo.getCode(avmAddress));
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        byte[] avmCode = factory.newContractFactory().getJarBytes(AvmContract.HELLO_WORLD);
+         assertArrayEquals(avmCode, repo.getCode(avmAddress));
 
         assertEquals(BigInteger.ONE, repo.getBalance(avmAddress));
 
-        byte[] call = getCallArguments();
+        byte[] call = getCallArguments(version);
         tx =
                 AionTransaction.create(
                         deployerKey,
@@ -1748,7 +1767,7 @@ public class ContractIntegTest {
             long nrg,
             long nrgPrice,
             BigInteger nonce)
-            throws IOException, VMException {
+            throws IOException, VmFatalException {
 
         return deployContract(
                 repo, tx, contractName, contractFilename, value, nrg, nrgPrice, nonce, false);
@@ -1764,7 +1783,7 @@ public class ContractIntegTest {
             long nrgPrice,
             BigInteger nonce,
             boolean addToBlockChain)
-            throws IOException, VMException {
+            throws IOException, VmFatalException {
 
         assertTrue(tx.isContractCreationTransaction());
 
@@ -1926,7 +1945,7 @@ public class ContractIntegTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VmFatalException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),
@@ -1950,19 +1969,18 @@ public class ContractIntegTest {
                 parent, Collections.singletonList(tx), false, parent.getTimestamp());
     }
 
-    private byte[] getCallArguments() {
-        return ABIEncoder.encodeOneString("sayHello");
+    private byte[] getCallArguments(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        return factory.newStreamingEncoder().encodeOneString("sayHello").getEncoding();
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.HELLO_WORLD);
     }
 
-    private AionAddress deployAvmContract(BigInteger nonce) {
-        byte[] jar = getJarBytes();
+    private AionAddress deployAvmContract(AvmVersion version, BigInteger nonce) {
+        byte[] jar = getJarBytes(version);
         AionTransaction transaction =
                 AionTransaction.create(
                         deployerKey,

@@ -22,6 +22,7 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
@@ -32,19 +33,25 @@ import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
+import org.aion.avm.provider.AvmProvider;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -57,6 +64,24 @@ import org.zeromq.ZMQ;
 public class Aion {
 
     public static void main(String args[]) {
+        // ~~~~~~~~~~ initialize the avm before we do anything else (CLI depends on it) ~~~~~~~~~~~~
+        // Grab the project root directory and the set the energy limit rules.
+        String projectRootDirectory = System.getProperty("user.dir") + File.separator;
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
+        // because it handles balance transfers. The kernel is responsible for ensuring it is not called
+        // with anything else.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+
+        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory, energyRules);
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         // TODO: should we load native libraries first thing?
         NativeLibrary.checkNativeLibrariesLoaded();
@@ -200,7 +225,6 @@ public class Aion {
         genLog.info(path);
         genLog.info(logo);
 
-        LongLivedAvm.createAndStartLongLivedAvm();
         IAionChain ac = AionFactory.create();
 
         EquihashMiner nm = null;
@@ -375,8 +399,17 @@ public class Aion {
                                     genLog.info("Shutting down the AionHub...");
                                     ac.getAionHub().close();
 
-                                    genLog.info("Shutting down the virtual machines...");
-                                    LongLivedAvm.destroy();
+                                    genLog.info("Shutting down the Aion Virtual Machine...");
+                                    try {
+                                        // We don't want to block too long, shutdown hooks should execute as fast as possible.
+                                        if (AvmProvider.tryAcquireLock(2, TimeUnit.SECONDS)) {
+                                            AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+                                        }
+                                    } catch (IOException e) {
+                                        // Nothing to handle here, we are shutting down...
+                                    } finally{
+                                        AvmProvider.releaseLock();
+                                    }
 
                                     genLog.info("---------------------------------------------");
                                     genLog.info("| Aion kernel graceful shutdown successful! |");

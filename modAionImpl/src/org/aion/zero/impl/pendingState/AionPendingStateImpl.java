@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.avm.provider.types.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.PooledTransaction;
 import org.aion.base.TxUtil;
@@ -55,7 +56,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -1135,7 +1135,7 @@ public class AionPendingStateImpl implements IPendingState {
                     LOGGER_VM,
                     BlockCachingContext.PENDING,
                     bestBlk.getNumber());
-        } catch (VMException e) {
+        } catch (VmFatalException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);
             return null;

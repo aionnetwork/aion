@@ -1,9 +1,13 @@
 package org.aion.vm.common;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.core.ExecutionType;
+import org.aion.avm.provider.AvmTransactionExecutor;
+import org.aion.avm.provider.types.PostExecutionWork;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.AvmExecutionType;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
@@ -15,8 +19,6 @@ import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.vm.fvm.FvmTransactionExecutor;
 import org.aion.vm.precompiled.PrecompiledTransactionExecutor;
-import org.aion.vm.avm.AvmTransactionExecutor;
-import org.aion.vm.exception.VMException;
 import org.aion.base.AionTxExecSummary;
 import org.slf4j.Logger;
 
@@ -76,7 +78,7 @@ public final class BulkExecutor {
             PostExecutionWork postExecutionWork,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber)
-            throws VMException {
+            throws VmFatalException {
 
         if (blockDifficulty == null) {
             throw new NullPointerException("Cannot execute given a null block difficulty!");
@@ -152,7 +154,7 @@ public final class BulkExecutor {
             Logger logger,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber)
-            throws VMException {
+            throws VmFatalException {
 
         if (blockDifficulty == null) {
             throw new NullPointerException("Cannot execute given a null block difficulty!");
@@ -203,7 +205,7 @@ public final class BulkExecutor {
             boolean fork040enabled,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber)
-            throws VMException {
+            throws VmFatalException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
         long blockRemainingEnergy = blockNrgLimit;
@@ -219,7 +221,7 @@ public final class BulkExecutor {
                                 repository,
                                 transactions,
                                 currentIndex,
-                                blockDifficulty,
+                                new BigInteger(1, blockDifficulty),
                                 blockNumber,
                                 blockTimestamp,
                                 blockNrgLimit,
@@ -298,7 +300,7 @@ public final class BulkExecutor {
             RepositoryCache<AccountState, IBlockStoreBase> repository,
             List<AionTransaction> transactions,
             int currentIndex,
-            byte[] blockDifficulty,
+            BigInteger blockDifficulty,
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
@@ -309,9 +311,9 @@ public final class BulkExecutor {
             boolean incrementSenderNonce,
             boolean isLocalCall,
             long blockRemainingEnergy,
-            ExecutionType executionType,
+            AvmExecutionType executionType,
             long cachedBlockNumber)
-            throws VMException {
+            throws VmFatalException {
 
         // Grab the next batch of avm transactions to execute.
         List<AionTransaction> avmTransactionsToExecute =
@@ -330,7 +332,6 @@ public final class BulkExecutor {
                 blockCoinbase,
                 avmTransactions,
                 postExecutionWork,
-                logger,
                 checkBlockEnergyLimit,
                 incrementSenderNonce,
                 isLocalCall,
@@ -360,7 +361,7 @@ public final class BulkExecutor {
             boolean isLocalCall,
             long blockRemainingEnergy,
             boolean fork040enabled)
-            throws VMException {
+            throws VmFatalException {
 
         // Grab the next batch of fvm transactions to execute.
         List<AionTransaction> fvmTransactionsToExecute =

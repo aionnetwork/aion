@@ -1,10 +1,10 @@
-package org.aion.zero.impl.vm.contracts;
+package org.aion.avm.version1.contracts;
 
 import avm.Address;
 import avm.Blockchain;
 import org.aion.avm.userlib.abi.ABIDecoder;
 
-public final class Contract {
+public class GenericContract {
     private static final Address owner = Blockchain.getCaller();
 
     public static boolean isOwner() {
@@ -13,7 +13,7 @@ public final class Contract {
 
     public static void transfer(Address address) {
         Blockchain.call(
-                address, Blockchain.getValue(), new byte[0], Blockchain.getRemainingEnergy());
+            address, Blockchain.getValue(), new byte[0], Blockchain.getRemainingEnergy());
     }
 
     public static void output() {

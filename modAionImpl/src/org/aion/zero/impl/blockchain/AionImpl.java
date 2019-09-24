@@ -2,6 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.util.List;
 import java.util.Optional;
+import org.aion.avm.provider.types.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -18,7 +19,6 @@ import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -142,7 +142,7 @@ public class AionImpl implements IAionChain {
                             block.getNumber())
                     .getReceipt()
                     .getEnergyUsed();
-        } catch (VMException e) {
+        } catch (VmFatalException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);
             return 0;
@@ -179,7 +179,7 @@ public class AionImpl implements IAionChain {
                             BlockCachingContext.CALL,
                             block.getNumber())
                     .getReceipt();
-        } catch (VMException e) {
+        } catch (VmFatalException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);
             return null;

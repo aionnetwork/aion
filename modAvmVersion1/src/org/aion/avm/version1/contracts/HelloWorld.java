@@ -1,9 +1,9 @@
-package org.aion.zero.impl.vm.contracts;
+package org.aion.avm.version1.contracts;
 
 import avm.Blockchain;
 import org.aion.avm.userlib.abi.ABIDecoder;
 
-public class AvmHelloWorld {
+public class HelloWorld {
 
     public static void sayHello() {
         Blockchain.println("Hello World!");

@@ -4,22 +4,25 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
-import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.AvmInternalTx;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -29,18 +32,33 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AvmInternalTxTest {
+    private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
 
     @BeforeClass
-    public static void setupAvm() {
-        LongLivedAvm.createAndStartLongLivedAvm();
+    public static void setupAvm() throws Exception {
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Before
@@ -63,9 +81,11 @@ public class AvmInternalTxTest {
 
     @Test
     public void testDeployAndCallContract() {
+        AvmVersion version = AvmVersion.VERSION_1;
+
         TransactionTypeRule.allowAVMContractTransaction();
         // Deploy the contract.
-        byte[] jar = getJarBytes();
+        byte[] jar = getJarBytes(version);
         AionTransaction transaction =
                 AionTransaction.create(
                         deployerKey,
@@ -95,15 +115,14 @@ public class AvmInternalTxTest {
         // verify that the output is indeed the contract address
         assertThat(TxUtil.calculateContractAddress(transaction)).isEqualTo(contract);
 
-        byte[] call = ABIUtil.encodeMethodArguments("recursivelyGetValue");
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        byte[] call = factory.newStreamingEncoder().encodeOneString("recursivelyGetValue").getEncoding();
         makeCall(BigInteger.ONE, contract, call);
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmInternalTx.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.INTERNAL_TRANSACTION);
     }
 
     private void makeCall(BigInteger nonce, AionAddress contract, byte[] call) {

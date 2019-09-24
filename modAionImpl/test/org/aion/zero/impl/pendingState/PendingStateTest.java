@@ -7,13 +7,17 @@ import static org.junit.Assert.assertNotEquals;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIEncoder;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
@@ -23,11 +27,11 @@ import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
+import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.TestResourceProvider;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -44,13 +48,25 @@ public class PendingStateTest {
 
     @BeforeClass
     public static void setup() {
-        LongLivedAvm.createAndStartLongLivedAvm();
         TransactionTypeRule.allowAVMContractTransaction();
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void shutdown() {
-        LongLivedAvm.destroy();
+    public static void tearDown() {
+        AvmConfigurations.clear();
     }
 
     @Before
@@ -107,14 +123,12 @@ public class PendingStateTest {
     }
 
     @Test
-    public void testAddPendingTransaction_AVMContractDeploy_Success() {
+    public void testAddPendingTransaction_AVMContractDeploy_Success() throws Exception {
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+        IAvmResourceFactory resourceFactory = resourceProvider.factoryForVersion1;
 
         // Successful transaction
-        byte[] jar =
-                new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
-                                new byte[0])
-                        .encodeToBytes();
+        byte[] jar = resourceFactory.newContractFactory().getDeploymentBytes(AvmContract.HELLO_WORLD);
 
         AionTransaction transaction =
                 AionTransaction.create(
@@ -131,14 +145,12 @@ public class PendingStateTest {
     }
 
     @Test
-    public void testAddPendingTransaction_AVMContractCall_Success() {
+    public void testAddPendingTransaction_AVMContractCall_Success() throws Exception {
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+        IAvmResourceFactory resourceFactory = resourceProvider.factoryForVersion1;
 
         // Successful transaction
-        byte[] jar =
-                new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
-                                new byte[0])
-                        .encodeToBytes();
+        byte[] jar = resourceFactory.newContractFactory().getDeploymentBytes(AvmContract.HELLO_WORLD);
 
         AionTransaction createTransaction =
                 AionTransaction.create(
@@ -169,7 +181,7 @@ public class PendingStateTest {
 
         AionAddress contract = new AionAddress(receipt.getTransactionOutput());
 
-        byte[] call = ABIEncoder.encodeOneString("sayHello");
+        byte[] call = resourceFactory.newStreamingEncoder().encodeOneString("sayHello").getEncoding();
         AionTransaction callTransaction =
                 AionTransaction.create(
                         deployerKey,
@@ -716,7 +728,7 @@ public class PendingStateTest {
                         10_000_000_000L,
                         TransactionTypes.DEFAULT, null);
 
-        assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
+        assertEquals(pendingState.addPendingTransaction(tx), TxResponse.DROPPED);
 
         AionBlock block =
             blockchain.createNewMiningBlock(

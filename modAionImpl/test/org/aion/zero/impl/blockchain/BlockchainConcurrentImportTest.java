@@ -18,18 +18,22 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.base.TransactionTypeRule;
 import org.aion.util.types.Hash256;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.vm.AvmPathManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,7 +55,18 @@ public class BlockchainConcurrentImportTest {
 
     @BeforeClass
     public static void setup() {
-        TransactionTypeRule.disallowAVMContractTransaction();
+        // Configure the avm.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
 
         Map<String, String> cfg = new HashMap<>();
         cfg.put("DB", "ERROR");
@@ -72,7 +87,6 @@ public class BlockchainConcurrentImportTest {
                         .build()
                         .bc;
 
-        LongLivedAvm.createAndStartLongLivedAvm();
         generateBlocks();
     }
 
@@ -137,10 +151,9 @@ public class BlockchainConcurrentImportTest {
 
     @AfterClass
     public static void teardown() {
+        AvmConfigurations.clear();
         testChain.close();
         sourceChain.close();
-
-        LongLivedAvm.destroy();
     }
 
     /**

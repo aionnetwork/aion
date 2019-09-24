@@ -17,6 +17,10 @@ import java.util.List;
 import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
@@ -25,12 +29,12 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.api.server.account.AccountManager;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -137,12 +141,23 @@ public class ApiAionTest {
         KEYSTORE_PATH = Keystore.getKeystorePath();
         accountManager = AccountManager.inst();
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
     public void tearDown() {
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
         accountManager.removeAllAccounts();
 
         // get a list of all the files in keystore directory

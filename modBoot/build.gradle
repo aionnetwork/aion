@@ -7,6 +7,8 @@ dependencies {
     compile project(':modUtil')
     compile project(':modLogger')
     compile project(':modCrypto')
+    compile project(':modAvmStub')
+    compile project(':modAvmProvider')
 
     compile project(':modApiServer')
     compile project(':modAionImpl')

@@ -5,11 +5,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.aion.api.server.AvmPathManager;
 import org.aion.api.server.account.AccountManager;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,12 +33,24 @@ public class ApiWeb3AionTest {
         impl = AionImpl.instForTest();
         web3Api = new ApiWeb3Aion(impl);
         accountManager = AccountManager.inst();
-        LongLivedAvm.createAndStartLongLivedAvm();
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
     public void tearDown() {
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
         accountManager.removeAllAccounts();
     }
 

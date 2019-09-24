@@ -27,11 +27,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -50,13 +54,14 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.After;
 import org.slf4j.Logger;
 
 public class Benchmark {
@@ -79,7 +84,25 @@ public class Benchmark {
 
     private static Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.VM.name());
 
-    private static void prepare() throws IOException, VMException {
+    @After
+    public void tearDown() {
+        AvmConfigurations.clear();
+    }
+
+    private static void prepare() throws Exception {
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+
         long t1 = System.currentTimeMillis();
 
         // create owner account
@@ -184,7 +207,7 @@ public class Benchmark {
     }
 
     private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs)
-            throws VMException {
+            throws VmFatalException {
         long t1 = System.currentTimeMillis();
         List<AionTxReceipt> list = new ArrayList<>();
 
@@ -211,7 +234,7 @@ public class Benchmark {
         timeFlush = t2 - t1;
     }
 
-    private static void verifyState() throws VMException {
+    private static void verifyState() throws VmFatalException {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < recipients.size(); i++) {
@@ -241,7 +264,7 @@ public class Benchmark {
         }
     }
 
-    public static void main(String args[]) throws IOException, VMException {
+    public static void main(String args[]) throws Exception {
         int n = 10000;
         prepare();
         List<AionTransaction> list = signTransactions(n);
@@ -295,7 +318,7 @@ public class Benchmark {
     }
 
     private static AionTxExecSummary executeTransaction(AionTransaction transaction)
-            throws VMException {
+            throws VmFatalException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

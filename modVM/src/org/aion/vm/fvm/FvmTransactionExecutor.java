@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.avm.provider.types.PostExecutionWork;
+import org.aion.avm.provider.types.VmFatalException;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;
@@ -18,8 +20,6 @@ import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;
 import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.common.PostExecutionWork;
-import org.aion.vm.exception.VMException;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ public final class FvmTransactionExecutor {
             boolean isLocalCall,
             boolean fork040enabled,
             long initialBlockEnergyLimit)
-            throws VMException {
+            throws VmFatalException {
 
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
 
@@ -101,7 +101,7 @@ public final class FvmTransactionExecutor {
             List<AionAddress> deletedAddresses = wrappedResult.deletedAddresses;
 
             if (result.transactionStatus.isFatal()) {
-                throw new VMException(result.toString());
+                throw new VmFatalException(result.toString());
             }
 
             // Check the block energy limit & reject if necessary.

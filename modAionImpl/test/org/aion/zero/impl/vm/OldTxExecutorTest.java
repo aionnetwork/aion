@@ -26,12 +26,16 @@ package org.aion.zero.impl.vm;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -54,8 +58,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.avm.LongLivedAvm;
-import org.aion.vm.exception.VMException;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -96,17 +99,28 @@ public class OldTxExecutorTest {
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
     public void tearDown() {
         blockchain = null;
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
     }
 
     @Test
-    public void testCallTransaction() throws IOException, VMException {
+    public void testCallTransaction() throws Exception {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -154,7 +168,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testCreateTransaction() throws IOException, VMException {
+    public void testCreateTransaction() throws Exception {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -194,7 +208,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testPerformance() throws IOException, VMException {
+    public void testPerformance() throws Exception {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -245,7 +259,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testBasicTransactionCost() throws VMException {
+    public void testBasicTransactionCost() throws Exception {
         byte[] txNonce = BigInteger.ZERO.toByteArray();
         AionAddress to =
                 AddressUtils.wrapAddress(
@@ -314,7 +328,7 @@ public class OldTxExecutorTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            Repository repo, Block block, AionTransaction transaction) throws VMException {
+            Repository repo, Block block, AionTransaction transaction) throws VmFatalException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

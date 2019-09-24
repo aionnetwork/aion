@@ -33,6 +33,11 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -49,8 +54,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.avm.LongLivedAvm;
-import org.aion.vm.exception.VMException;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.types.BlockContext;
@@ -81,7 +85,18 @@ public class OpcodeIntegTest {
         deployer = new AionAddress(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
@@ -90,13 +105,13 @@ public class OpcodeIntegTest {
         deployerKey = null;
         deployer = null;
         deployerBalance = null;
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
     }
 
     // ====================== test repo & track flushing over multiple levels ======================
 
     @Test
-    public void testNoRevert() throws IOException, VMException {
+    public void testNoRevert() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
@@ -141,7 +156,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testRevertAtBottomLevel() throws IOException, VMException {
+    public void testRevertAtBottomLevel() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
@@ -182,7 +197,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testRevertAtMidLevel() throws IOException, VMException {
+    public void testRevertAtMidLevel() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "F", "F.sol", BigInteger.ZERO);
         long nrg = 1_000_000;
@@ -225,7 +240,7 @@ public class OpcodeIntegTest {
     // ======================================= test CALLCODE =======================================
 
     @Test
-    public void testCallcodeStorage() throws IOException, VMException {
+    public void testCallcodeStorage() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger n = new BigInteger("7638523");
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
@@ -307,7 +322,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testCallcodeActors() throws IOException, VMException {
+    public void testCallcodeActors() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -350,7 +365,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testCallcodeValueTransfer() throws IOException, VMException {
+    public void testCallcodeValueTransfer() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -399,7 +414,7 @@ public class OpcodeIntegTest {
     // ===================================== test DELEGATECALL =====================================
 
     @Test
-    public void testDelegateCallStorage() throws IOException, VMException {
+    public void testDelegateCallStorage() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -480,7 +495,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testDelegateCallActors() throws IOException, VMException {
+    public void testDelegateCallActors() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -524,7 +539,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testDelegateCallValueTransfer() throws IOException, VMException {
+    public void testDelegateCallValueTransfer() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress D = deployContract(repo, "D", "D.sol", BigInteger.ZERO);
         AionAddress E = deployContract(repo, "E", "D.sol", BigInteger.ZERO);
@@ -574,7 +589,7 @@ public class OpcodeIntegTest {
     // ============================= test CALL, CALLCODE, DELEGATECALL =============================
 
     @Test
-    public void testOpcodesActors() throws IOException, VMException {
+    public void testOpcodesActors() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         AionAddress callerContract = deployContract(repo, "Caller", "Opcodes.sol", BigInteger.ZERO);
         AionAddress calleeContract = deployContract(repo, "Callee", "Opcodes.sol", BigInteger.ZERO);
@@ -621,7 +636,7 @@ public class OpcodeIntegTest {
     // ======================================= test SUICIDE ========================================
 
     @Test
-    public void testSuicideRecipientExists() throws IOException, VMException {
+    public void testSuicideRecipientExists() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
         AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
@@ -668,7 +683,7 @@ public class OpcodeIntegTest {
     }
 
     @Test
-    public void testSuicideRecipientNewlyCreated() throws IOException, VMException {
+    public void testSuicideRecipientNewlyCreated() throws Exception {
         RepositoryCache repo = blockchain.getRepository().startTracking();
         BigInteger balance = new BigInteger("32522224");
         AionAddress recipient = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
@@ -722,7 +737,7 @@ public class OpcodeIntegTest {
      */
     private AionAddress deployContract(
             RepositoryCache repo, String contractName, String contractFilename, BigInteger value)
-            throws IOException, VMException {
+            throws Exception {
 
         byte[] deployCode = ContractUtils.getContractDeployer(contractFilename, contractName);
         long nrg = 1_000_000;
@@ -760,7 +775,7 @@ public class OpcodeIntegTest {
             long nrg,
             long nrgPrice,
             BigInteger expectedNonce)
-            throws IOException, VMException {
+            throws Exception {
 
         assertTrue(tx.isContractCreationTransaction());
         assertEquals(deployerBalance, repo.getBalance(deployer));
@@ -843,7 +858,7 @@ public class OpcodeIntegTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VmFatalException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

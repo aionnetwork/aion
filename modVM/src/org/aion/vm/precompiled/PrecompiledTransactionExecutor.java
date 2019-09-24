@@ -3,6 +3,7 @@ package org.aion.vm.precompiled;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.avm.provider.types.PostExecutionWork;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -18,7 +19,6 @@ import org.aion.types.TransactionStatus;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
-import org.aion.vm.common.PostExecutionWork;
 import org.slf4j.Logger;
 
 public final class PrecompiledTransactionExecutor {

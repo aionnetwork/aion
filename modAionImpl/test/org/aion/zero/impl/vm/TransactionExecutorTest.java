@@ -32,12 +32,18 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;
@@ -45,7 +51,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
@@ -78,6 +83,19 @@ public class TransactionExecutorTest {
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
         deployer = new AionAddress(deployerKey.getAddress());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
@@ -85,10 +103,11 @@ public class TransactionExecutorTest {
         blockchain = null;
         deployerKey = null;
         deployer = null;
+        AvmConfigurations.clear();
     }
 
     @Test
-    public void testExecutor() throws IOException, VMException {
+    public void testExecutor() throws Exception {
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
         long nrgPrice = 1;
@@ -188,7 +207,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testDeployedCodeFunctionality() throws IOException, VMException {
+    public void testDeployedCodeFunctionality() throws Exception {
         AionAddress contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(f_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
@@ -269,7 +288,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testGfunction() throws IOException, VMException {
+    public void testGfunction() throws Exception {
         AionAddress contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(g_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
@@ -347,7 +366,7 @@ public class TransactionExecutorTest {
 
     private AionTxExecSummary executeTransaction(
             RepositoryCache repo, BlockContext context, AionTransaction transaction)
-            throws VMException {
+            throws VmFatalException {
         AionBlock block = context.block;
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),

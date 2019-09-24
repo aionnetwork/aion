@@ -1,9 +1,13 @@
 package org.aion.zero.impl;
 
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
-import org.aion.vm.avm.LongLivedAvm;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.exceptions.HeaderStructureException;
@@ -15,6 +19,7 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
+import org.aion.zero.impl.vm.AvmPathManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,9 +46,21 @@ public class UnityTotalDifficultyTest {
     private final double delta = 5.695885915501662E9;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Configure the avm.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+
         MockitoAnnotations.initMocks(this);
-        LongLivedAvm.createAndStartLongLivedAvm();
         doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key = new ECKeyEd25519().fromPrivate(
                 StringUtils.StringHexToByteArray("0x042aea49b522407c0fadf19c184dc2d78b233c81b3951c0839967993d755dfde431efa65e0967765eaa2dc31f45e5df2f1a34751cf6e4ae0b6f10b7ee899094c"));
@@ -59,7 +76,7 @@ public class UnityTotalDifficultyTest {
 
     @After
     public void shutdown() {
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
         bc.setUnityForkNumber(Long.MAX_VALUE);
     }
 
