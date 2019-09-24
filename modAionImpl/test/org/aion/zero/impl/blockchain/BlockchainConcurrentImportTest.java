@@ -9,9 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -68,10 +66,7 @@ public class BlockchainConcurrentImportTest {
 
         AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
 
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "ERROR");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
 
         // build a blockchain with CONCURRENT_THREADS_PER_TYPE blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();

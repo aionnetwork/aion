@@ -45,10 +45,7 @@ public class JournalPruneDataSourceTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "WARN");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
     }
 
     @Before

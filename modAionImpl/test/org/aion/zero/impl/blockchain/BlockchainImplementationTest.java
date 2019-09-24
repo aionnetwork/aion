@@ -6,9 +6,7 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateRandomCh
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.aion.avm.provider.schedule.AvmVersionSchedule;
 import org.aion.avm.provider.types.AvmConfigurations;
@@ -49,9 +47,7 @@ public class BlockchainImplementationTest {
 
     @BeforeClass
     public static void beforeClass() {
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("ROOT", "ERROR");
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

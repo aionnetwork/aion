@@ -340,10 +340,7 @@ public class DriverBaseTest {
                     InvocationTargetException {
 
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "WARN");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
 
         this.constructor = constructor;
         this.args = args;

@@ -6,9 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.aion.avm.provider.schedule.AvmVersionSchedule;
 import org.aion.avm.provider.types.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
@@ -51,17 +49,7 @@ public class AvmBulkTransactionTest {
     @BeforeClass
     public static void setupAvm() throws Exception {
         // reduce default logging levels
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("API", "ERROR");
-        cfg.put("CONS", "ERROR");
-        cfg.put("DB", "ERROR");
-        cfg.put("GEM", "ERROR");
-        cfg.put("P2P", "ERROR");
-        cfg.put("ROOT", "ERROR");
-        cfg.put("SYNC", "ERROR");
-        cfg.put("TX", "ERROR");
-        cfg.put("VM", "ERROR");
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
 
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 

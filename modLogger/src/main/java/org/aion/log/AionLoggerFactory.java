@@ -14,6 +14,7 @@ import ch.qos.logback.core.rolling.helper.FileNamePattern;
 import ch.qos.logback.core.util.FileSize;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,33 @@ public class AionLoggerFactory {
     // https://docs.oracle.com/javase/specs/jls/se10/html/jls-12.html#jls-12.4.2
     static {
         context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    }
+
+    /**
+     * Initializes all the {@link LogEnum} logs to the {@link LogLevel#WARN} setting.
+     *
+     * @implNote Recommended for testing classes to avoid having the logs that are not specified set
+     *     to {@link Logger#ROOT_LOGGER_NAME} by {@link #getLogger(String)}.
+     */
+    public static void initAll() {
+        initAll(Collections.emptyMap());
+    }
+
+    /**
+     * Initializes the requested logs with the given levels and additionally sets all the
+     * non-specified {@link LogEnum} logs to the {@link LogLevel#WARN} setting.
+     *
+     * @implNote Recommended for testing classes to avoid having the logs that are not specified set
+     *     to {@link Logger#ROOT_LOGGER_NAME} by {@link #getLogger(String)}.
+     */
+    public static void initAll(Map<String, String> requestedLogLevels) {
+        Map<String, String> allLogs = new HashMap<>();
+        for (LogEnum log : LogEnum.values()) {
+            allLogs.put(log.name(), LogLevel.WARN.name());
+        }
+        allLogs.putAll(requestedLogLevels);
+
+        init(requestedLogLevels, false, "");
     }
 
     public static void init(Map<String, String> requestedLogLevels) {

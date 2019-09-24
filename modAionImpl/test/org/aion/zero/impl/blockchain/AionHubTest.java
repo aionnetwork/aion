@@ -53,9 +53,7 @@ public class AionHubTest {
         Map<String, String> cfg = new HashMap<>();
         cfg.put("GEN", "INFO");
         cfg.put("CONS", "INFO");
-        cfg.put("DB", "ERROR");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll(cfg);
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

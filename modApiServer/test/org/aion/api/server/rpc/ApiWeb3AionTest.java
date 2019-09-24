@@ -12,6 +12,7 @@ import org.aion.avm.provider.types.AvmConfigurations;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.vm.common.TxNrgRule;
+import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
@@ -30,6 +31,7 @@ public class ApiWeb3AionTest {
 
     @Before
     public void setup() {
+        AionLoggerFactory.initAll();
         impl = AionImpl.instForTest();
         web3Api = new ApiWeb3Aion(impl);
         accountManager = AccountManager.inst();

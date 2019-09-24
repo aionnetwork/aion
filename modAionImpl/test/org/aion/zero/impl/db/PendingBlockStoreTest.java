@@ -30,8 +30,7 @@ public class PendingBlockStoreTest {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
         cfg.put("DB", "INFO");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll(cfg);
     }
 
     @Test

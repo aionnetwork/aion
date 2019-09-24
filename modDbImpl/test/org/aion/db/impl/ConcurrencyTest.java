@@ -43,10 +43,7 @@ public class ConcurrencyTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "WARN");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
     }
 
     @AfterClass

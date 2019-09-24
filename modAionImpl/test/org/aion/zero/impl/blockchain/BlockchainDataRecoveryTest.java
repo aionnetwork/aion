@@ -41,10 +41,8 @@ public class BlockchainDataRecoveryTest {
     public static void setup() {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "ERROR");
         cfg.put("CONS", "INFO");
-
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll(cfg);
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

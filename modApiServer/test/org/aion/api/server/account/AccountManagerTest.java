@@ -11,8 +11,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
@@ -44,6 +46,8 @@ public class AccountManagerTest {
 
     @BeforeClass
     public static void setupClass() {
+        AionLoggerFactory.initAll(Map.of("API","DEBUG"));
+
         KEYSTORE_PATH = Keystore.getKeystorePath();
         k1 = ECKeyFac.inst().create();
         k2 = ECKeyFac.inst().create();

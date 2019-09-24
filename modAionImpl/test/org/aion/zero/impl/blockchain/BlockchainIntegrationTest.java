@@ -5,8 +5,6 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import org.aion.avm.provider.schedule.AvmVersionSchedule;
 import org.aion.avm.provider.types.AvmConfigurations;
 import org.aion.avm.stub.IEnergyRules;
@@ -51,17 +49,7 @@ public class BlockchainIntegrationTest {
     @Before
     public void setup() {
         // reduce default logging levels
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("API", "ERROR");
-        cfg.put("CONS", "ERROR");
-        cfg.put("DB", "ERROR");
-        cfg.put("GEM", "ERROR");
-        cfg.put("P2P", "ERROR");
-        cfg.put("ROOT", "ERROR");
-        cfg.put("SYNC", "ERROR");
-        cfg.put("TX", "ERROR");
-        cfg.put("VM", "ERROR");
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll();
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

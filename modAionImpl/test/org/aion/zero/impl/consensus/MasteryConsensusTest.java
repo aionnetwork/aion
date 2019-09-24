@@ -44,16 +44,8 @@ public class MasteryConsensusTest {
     public static void setup() {
         // reduce default logging levels
         Map<String, String> cfg = new HashMap<>();
-        cfg.put("API", "ERROR");
-        cfg.put("CONS", "ERROR");
-        cfg.put("DB", "ERROR");
-        cfg.put("GEM", "ERROR");
-        cfg.put("P2P", "ERROR");
-        cfg.put("ROOT", "ERROR");
-        cfg.put("SYNC", "ERROR");
-        cfg.put("TX", "ERROR");
         cfg.put("VM", "DEBUG");
-        AionLoggerFactory.init(cfg);
+        AionLoggerFactory.initAll(cfg);
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
