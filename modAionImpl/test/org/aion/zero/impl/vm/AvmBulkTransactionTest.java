@@ -468,7 +468,7 @@ public class AvmBulkTransactionTest {
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
 
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newDecoder(summary.getReceipts().get(0).getTransactionOutput()).decodeOneInteger();
     }
 
@@ -513,12 +513,12 @@ public class AvmBulkTransactionTest {
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
     private byte[] abiEncodeMethodCall(AvmVersion version, String method) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newStreamingEncoder().encodeOneString(method).getEncoding();
     }
 

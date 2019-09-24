@@ -115,13 +115,13 @@ public class AvmInternalTxTest {
         // verify that the output is indeed the contract address
         assertThat(TxUtil.calculateContractAddress(transaction)).isEqualTo(contract);
 
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         byte[] call = factory.newStreamingEncoder().encodeOneString("recursivelyGetValue").getEncoding();
         makeCall(BigInteger.ONE, contract, call);
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.INTERNAL_TRANSACTION);
     }
 
