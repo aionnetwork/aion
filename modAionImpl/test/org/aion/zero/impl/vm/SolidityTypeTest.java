@@ -30,6 +30,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
@@ -57,7 +62,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -84,11 +89,25 @@ public class SolidityTypeTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
     public void tearDown() {
         blockchain = null;
+        AvmConfigurations.clear();
     }
 
     private AionTransaction createTransaction(byte[] callData) {
@@ -132,7 +151,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testBool() throws IOException, VMException {
+    public void testBool() throws Exception {
         byte[] params = new BoolType().encode(true);
         System.out.println(Hex.toHexString(params));
 
@@ -148,7 +167,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testInt() throws IOException, VMException {
+    public void testInt() throws Exception {
         BigInteger bi = new BigInteger(1, Hex.decode("ffffffffffffffffffffffff"));
         byte[] params = new IntType("int96").encode(bi);
         System.out.println(Hex.toHexString(params));
@@ -166,7 +185,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testAddress() throws IOException, VMException {
+    public void testAddress() throws Exception {
         byte[] x = Hex.decode("1122334455667788112233445566778811223344556677881122334455667788");
         byte[] params = new AddressType().encode(x);
         System.out.println(Hex.toHexString(params));
@@ -183,7 +202,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testFixedBytes1() throws IOException, VMException {
+    public void testFixedBytes1() throws Exception {
         byte[] x = Hex.decode("1122334455");
         SolidityType type = new Bytes32Type("bytes5");
         byte[] params = type.encode(x);
@@ -201,7 +220,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testFixedBytes2() throws IOException, VMException {
+    public void testFixedBytes2() throws Exception {
         byte[] x = Hex.decode("1122334455667788112233445566778811223344");
         SolidityType type = new Bytes32Type("bytes20");
         byte[] params = type.encode(x);
@@ -219,7 +238,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testString1() throws IOException, VMException {
+    public void testString1() throws Exception {
         String x = "hello, world!";
         SolidityType type = new StringType();
         byte[] params =
@@ -238,7 +257,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testString2() throws IOException, VMException {
+    public void testString2() throws Exception {
         String x = "hello, world!hello, world!hello, world!hello, world!hello, world!hello, world!";
         SolidityType type = new StringType();
         byte[] params =
@@ -257,7 +276,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testBytes1() throws IOException, VMException {
+    public void testBytes1() throws Exception {
         byte[] x = Hex.decode("1122334455667788");
         SolidityType type = new BytesType();
         byte[] params =
@@ -276,7 +295,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testBytes2() throws IOException, VMException {
+    public void testBytes2() throws Exception {
         byte[] x =
                 Hex.decode(
                         "11223344556677881122334455667788112233445566778811223344556677881122334455667788");
@@ -297,7 +316,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testStaticArray1() throws IOException, VMException {
+    public void testStaticArray1() throws Exception {
         List<BigInteger> x = new ArrayList<>();
         x.add(BigInteger.valueOf(1L));
         x.add(BigInteger.valueOf(2L));
@@ -323,7 +342,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testStaticArray2() throws IOException, VMException {
+    public void testStaticArray2() throws Exception {
         List<byte[]> x = new ArrayList<>();
         x.add(Hex.decode("1122334455667788112233445566778811223344"));
         x.add(Hex.decode("2122334455667788112233445566778811223344"));
@@ -349,7 +368,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testDynamicArray1() throws IOException, VMException {
+    public void testDynamicArray1() throws Exception {
         List<BigInteger> x = new ArrayList<>();
         x.add(BigInteger.valueOf(1L));
         x.add(BigInteger.valueOf(2L));
@@ -376,7 +395,7 @@ public class SolidityTypeTest {
     }
 
     @Test
-    public void testDynamicArray2() throws IOException, VMException {
+    public void testDynamicArray2() throws Exception {
         List<byte[]> x = new ArrayList<>();
         x.add(Hex.decode("1122334455667788112233445566778811223344"));
         x.add(Hex.decode("2122334455667788112233445566778811223344"));
@@ -403,7 +422,7 @@ public class SolidityTypeTest {
     }
 
     private AionTxExecSummary executeTransaction(
-            AionTransaction tx, Block block, RepositoryCache repo) throws VMException {
+            AionTransaction tx, Block block, RepositoryCache repo) throws VmFatalException {
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

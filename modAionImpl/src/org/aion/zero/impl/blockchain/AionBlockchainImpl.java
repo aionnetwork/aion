@@ -28,6 +28,9 @@ import java.util.Properties;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.avm.provider.types.PostExecutionLogic;
+import org.aion.avm.provider.types.PostExecutionWork;
+import org.aion.avm.provider.types.VmFatalException;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
@@ -74,9 +77,6 @@ import org.aion.util.types.Hash256;
 import org.aion.utils.HeapDumper;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.common.PostExecutionLogic;
-import org.aion.vm.common.PostExecutionWork;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
@@ -1284,10 +1284,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                         ? null
                                         : grandParentStakingBlock.getHeader());
 
-        AionAddress coinbase;
+        AionAddress coinbase = null;
         if (signingPublicKey != null) { // Create block template for the external stakers.
             AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
-            coinbase = stakingContractHelper.getCoinbaseForSigningAddress(signingAddress);
+
+            try {
+                coinbase = stakingContractHelper.getCoinbaseForSigningAddress(signingAddress);
+            } catch (Exception e) {
+                LOG.error("Shutdown due to a fatal error encountered while getting coinbase for signing address.", e);
+                System.exit(SystemExitCodes.FATAL_VM_ERROR);
+            }
+
             if (coinbase == null) {
                 LOG.debug(
                         "Could not get the coinbase by given the signing publickey",
@@ -1306,7 +1313,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            BigInteger stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
+            BigInteger stakes = null;
+
+            try {
+                stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
+            } catch (Exception e) {
+                LOG.error("Shutdown due to a fatal error encountered while getting the effective stake.", e);
+                System.exit(SystemExitCodes.FATAL_VM_ERROR);
+            }
+
             if (stakes.signum() < 1) {
                 LOG.debug(
                         "The caller {} with coinbase {} has no stake ",
@@ -1647,12 +1662,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 sealParent = parent;
             }
 
-            BigInteger stake =
+            BigInteger stake = null;
+
+            try {
+                stake =
                     getStakingContractHelper().getEffectiveStake(
                             new AionAddress(
                                     AddressSpecs.computeA0Address(
                                             ((StakingBlockHeader) header).getSigningPublicKey())),
                             ((StakingBlockHeader) header).getCoinbase());
+            } catch (Exception e) {
+                LOG.error("Shutdown due to a fatal error encountered while getting the effective stake.", e);
+                System.exit(SystemExitCodes.FATAL_VM_ERROR);
+            }
 
             if (!sealParentBlockHeaderValidator.validate(header, sealParent.getHeader(), LOG, stake)) {
                 return false;
@@ -1825,7 +1847,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         summaries.add(summary);
                     }
                 }
-            } catch (VMException e) {
+            } catch (VmFatalException e) {
                 LOG.error("Shutdown due to a VM fatal error.", e);
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
@@ -1880,7 +1902,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     receipts.add(summary.getReceipt());
                     summaries.add(summary);
                 }
-            } catch (VMException e) {
+            } catch (VmFatalException e) {
                 LOG.error("Shutdown due to a VM fatal error.", e);
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }

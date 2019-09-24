@@ -3,11 +3,15 @@ package org.aion.zero.impl.blockchain;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.zero.impl.blockchain.AionImpl.keyForCallandEstimate;
 
-import avm.Address;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.avm.userlib.abi.ABIDecoder;
-import org.aion.avm.userlib.abi.ABIEncoder;
+import java.util.concurrent.TimeUnit;
+import org.aion.avm.provider.AvmProvider;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
@@ -19,10 +23,8 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.AddressUtils;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.exception.VMException;
 import org.slf4j.Logger;
 
 // TODO: [unity] It require avm libs, might consider to remove the dependency later
@@ -38,11 +40,10 @@ public class StakingContractHelper {
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     /**
-     * static byte array for skipping the abi encode the contract method during the contract call.
+     * cached byte array for skipping the abi encode the contract method during the contract call.
      */
-    private static byte[] getEffectiveStake = ABIEncoder.encodeOneString("getEffectiveStake");
-    private static byte[] getCoinbaseForSigningAddress =
-            ABIEncoder.encodeOneString("getCoinbaseAddressForSigningAddress");
+    private byte[] effectiveStake = null;
+    private byte[] coinbaseForSigningAddress = null;
 
     private static boolean deployed = false;
 
@@ -79,16 +80,27 @@ public class StakingContractHelper {
      * @param coinbase the staker's coinbase for receiving the block rewards
      * @return the stake amount of the staker
      */
-    public BigInteger getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) {
+    public BigInteger getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         if (signingAddress == null || coinbase == null) {
             throw new NullPointerException();
         }
 
+        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
+            throw new IllegalStateException("Failed to acquire the avm lock!");
+        }
+
+        AvmProvider.enableAvmVersion(AvmVersion.VERSION_1, AvmConfigurations.getProjectRootDirectory());
+        IAvmResourceFactory resourceFactory = AvmProvider.getResourceFactory(AvmVersion.VERSION_1);
+
+        if (this.effectiveStake == null) {
+            this.effectiveStake = resourceFactory.newStreamingEncoder().encodeOneString("getEffectiveStake").getEncoding();
+        }
+
         byte[] abi =
                 ByteUtil.merge(
-                        getEffectiveStake,
-                        ABIEncoder.encodeOneAddress(new Address(signingAddress.toByteArray())),
-                        ABIEncoder.encodeOneAddress(new Address(coinbase.toByteArray())));
+                        this.effectiveStake,
+                        resourceFactory.newStreamingEncoder().encodeOneAddress(signingAddress).getEncoding(),
+                        resourceFactory.newStreamingEncoder().encodeOneAddress(coinbase).getEncoding());
 
         AionTransaction callTx =
                 AionTransaction.create(
@@ -109,7 +121,12 @@ public class StakingContractHelper {
             return BigInteger.ZERO;
         }
 
-        return new ABIDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
+        BigInteger output = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
+
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+        AvmProvider.releaseLock();
+
+        return output;
     }
 
     private AionTxReceipt callConstant(AionTransaction tx) {
@@ -141,7 +158,7 @@ public class StakingContractHelper {
                             BlockCachingContext.CALL,
                             block.getNumber())
                     .getReceipt();
-        } catch (VMException e) {
+        } catch (VmFatalException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
             return null;
@@ -153,15 +170,26 @@ public class StakingContractHelper {
      * @param signingAddress the block signing address
      * @return the staker's coinbase relate with the signing address in the staking contract
      */
-    public AionAddress getCoinbaseForSigningAddress(AionAddress signingAddress) {
+    public AionAddress getCoinbaseForSigningAddress(AionAddress signingAddress) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         if (signingAddress == null) {
             throw new NullPointerException();
         }
 
+        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
+            throw new IllegalStateException("Failed to acquire the avm lock!");
+        }
+
+        AvmProvider.enableAvmVersion(AvmVersion.VERSION_1, AvmConfigurations.getProjectRootDirectory());
+        IAvmResourceFactory resourceFactory = AvmProvider.getResourceFactory(AvmVersion.VERSION_1);
+
+        if (this.coinbaseForSigningAddress == null) {
+            this.coinbaseForSigningAddress = resourceFactory.newStreamingEncoder().encodeOneString("getCoinbaseAddressForSigningAddress").getEncoding();
+        }
+
         byte[] abi =
                 ByteUtil.merge(
-                        getCoinbaseForSigningAddress,
-                        ABIEncoder.encodeOneAddress(new Address(signingAddress.toByteArray())));
+                        this.coinbaseForSigningAddress,
+                        resourceFactory.newStreamingEncoder().encodeOneAddress(signingAddress).getEncoding());
 
         AionTransaction callTx =
                 AionTransaction.create(
@@ -182,7 +210,10 @@ public class StakingContractHelper {
             return null;
         }
 
-        return AddressUtils.wrapAddress(
-                new ABIDecoder(receipt.getTransactionOutput()).decodeOneAddress().toString());
+        AionAddress address = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneAddress();
+
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+        AvmProvider.releaseLock();
+        return address;
     }
 }

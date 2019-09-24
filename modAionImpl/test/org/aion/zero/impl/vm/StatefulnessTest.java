@@ -5,22 +5,25 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
-import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,6 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 // this... You can make this change locally to verify these tests pass.
 @RunWith(Parameterized.class)
 public class StatefulnessTest {
+    private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private AionAddress deployer;
@@ -55,13 +59,27 @@ public class StatefulnessTest {
     }
 
     @BeforeClass
-    public static void setupAvm() {
-        LongLivedAvm.createAndStartLongLivedAvm();
+    public static void setupAvm() throws Exception {
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Before
@@ -86,7 +104,7 @@ public class StatefulnessTest {
 
     @Test
     public void testDeployContract() {
-        AionTxReceipt receipt = deployContract();
+        AionTxReceipt receipt = deployContract(AvmVersion.VERSION_1);
 
         if (txType == TransactionTypes.AVM_CREATE_CODE) {
             // Check the contract has the Avm prefix, and deployment succeeded.
@@ -106,7 +124,7 @@ public class StatefulnessTest {
         BigInteger deployerBalance = getBalance(this.deployer);
         BigInteger deployerNonce = getNonce(this.deployer);
 
-        AionTxReceipt receipt = deployContract();
+        AionTxReceipt receipt = deployContract(AvmVersion.VERSION_1);
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
         BigInteger contractBalance = BigInteger.ZERO;
@@ -136,12 +154,14 @@ public class StatefulnessTest {
 
     @Test
     public void testUsingCallInContract() {
+        AvmVersion version = AvmVersion.VERSION_1;
+
         if (txType == TransactionTypes.DEFAULT) {
             // skip this test cause the contract can't deploy successfully in the FVM.
             return;
         }
 
-        AionTxReceipt receipt = deployContract();
+        AionTxReceipt receipt = deployContract(version);
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
         assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
@@ -178,7 +198,7 @@ public class StatefulnessTest {
 
         // Call the contract to send value using an internal call.
         receipt =
-                callContract(
+                callContract(version,
                         contract,
                         "transferValue",
                         beneficiary.toByteArray(),
@@ -206,8 +226,8 @@ public class StatefulnessTest {
         assertEquals(contractInitialNonce.add(BigInteger.ONE), getNonce(contract));
     }
 
-    private AionTxReceipt deployContract() {
-        byte[] jar = getJarBytes();
+    private AionTxReceipt deployContract(AvmVersion version) {
+        byte[] jar = getJarBytes(version);
         AionTransaction transaction =
                 AionTransaction.create(
                         deployerKey,
@@ -222,14 +242,14 @@ public class StatefulnessTest {
         return sendTransactions(transaction);
     }
 
-    private AionTxReceipt callContract(AionAddress contract, String method, Object... arguments) {
+    private AionTxReceipt callContract(AvmVersion version, AionAddress contract, String method, byte[] beneficiary, long valueToSend) {
         AionTransaction transaction =
                 AionTransaction.create(
                         deployerKey,
                         getNonce(this.deployer).toByteArray(),
                         contract,
                         new byte[0],
-                        abiEncodeMethodCall(method, arguments),
+                        abiEncodeMethodCall(version, method, beneficiary, valueToSend),
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT, null);
@@ -266,15 +286,14 @@ public class StatefulnessTest {
         return connectResult.getRight().getReceipts().get(0);
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
-    private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIUtil.encodeMethodArguments(method, arguments);
+    private byte[] abiEncodeMethodCall(AvmVersion version, String method, byte[] beneficiary, long valueToSend) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newStreamingEncoder().encodeOneString(method).encodeOneByteArray(beneficiary).encodeOneLong(valueToSend).getEncoding();
     }
 
     private BigInteger getBalance(AionAddress address) {

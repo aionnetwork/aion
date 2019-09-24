@@ -75,6 +75,16 @@ public final class AvmProvider {
     }
 
     /**
+     * Returns {@code true} only if the calling thread is the owner of the avm provider's lock.
+     * Otherwise {@code false}.
+     *
+     * @return true only if the caller owns the lock.
+     */
+    public static boolean holdsLock() {
+        return LOCK.isHeldByCurrentThread();
+    }
+
+    /**
      * Returns the avm resource factory for the specified version of the avm.
      *
      * @param version The avm version of the factory.

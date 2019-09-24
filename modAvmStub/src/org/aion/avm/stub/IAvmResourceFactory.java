@@ -32,4 +32,26 @@ public interface IAvmResourceFactory {
      * @return the classloader that loaded all the resources.
      */
     public ClassLoader verifyAndReturnClassloader();
+
+    /**
+     * Returns a new contract factory.
+     *
+     * @return a new contract factory.
+     */
+    public IContractFactory newContractFactory();
+
+    /**
+     * Returns a new streaming encoder.
+     *
+     * @return a new streaming encoder.
+     */
+    public IStreamingEncoder newStreamingEncoder();
+
+    /**
+     * Returns a new decoder that will operate on the given encoding.
+     *
+     * @param encoding The encoding to decode.
+     * @return the decoder.
+     */
+    public IDecoder newDecoder(byte[] encoding);
 }

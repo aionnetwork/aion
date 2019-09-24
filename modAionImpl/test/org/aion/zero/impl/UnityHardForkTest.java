@@ -8,18 +8,23 @@ import static org.mockito.Mockito.spy;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
-import org.aion.vm.avm.LongLivedAvm;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StakingContractHelper;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.vm.AvmPathManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,9 +41,21 @@ public class UnityHardForkTest {
     StandaloneBlockchain bc;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Configure the avm.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+
         MockitoAnnotations.initMocks(this);
-        LongLivedAvm.createAndStartLongLivedAvm();
         doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key =
                 new ECKeyEd25519()
@@ -58,7 +75,7 @@ public class UnityHardForkTest {
 
     @After
     public void shutdown() {
-        LongLivedAvm.destroy();
+        AvmConfigurations.clear();
         bc.setUnityForkNumber(Long.MAX_VALUE);
     }
 

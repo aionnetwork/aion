@@ -9,9 +9,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
-import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -19,16 +23,15 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
@@ -40,12 +43,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AvmBulkTransactionTest {
+    private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private long energyPrice = 1;
 
     @BeforeClass
-    public static void setupAvm() {
+    public static void setupAvm() throws Exception {
         // reduce default logging levels
         Map<String, String> cfg = new HashMap<>();
         cfg.put("API", "ERROR");
@@ -59,12 +63,26 @@ public class AvmBulkTransactionTest {
         cfg.put("VM", "ERROR");
         AionLoggerFactory.init(cfg);
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Before
@@ -388,13 +406,13 @@ public class AvmBulkTransactionTest {
         // Call into the contract to get its current 'count' to verify its state is correct.
         int count =
                 getDeployedStatefulnessCountValue(
-                        this.deployerKey, expectedDeployerNonce, deployedContract);
+                        AvmVersion.VERSION_1, this.deployerKey, expectedDeployerNonce, deployedContract);
         assertEquals(numAvmCallTransactions, count);
     }
 
     // Deploys the Statefulness.java contract
     private AionTransaction makeAvmContractCreateTransaction(ECKey sender, BigInteger nonce) {
-        byte[] jar = getJarBytes();
+        byte[] jar = getJarBytes(AvmVersion.VERSION_1);
         return AionTransaction.create(
                 sender,
                 nonce.toByteArray(),
@@ -413,7 +431,7 @@ public class AvmBulkTransactionTest {
                 nonce.toByteArray(),
                 contract,
                 new byte[0],
-                abiEncodeMethodCall("incrementCounter"),
+                abiEncodeMethodCall(AvmVersion.VERSION_1, "incrementCounter"),
                 2_000_000,
                 this.energyPrice,
                 TransactionTypes.DEFAULT, null);
@@ -434,7 +452,7 @@ public class AvmBulkTransactionTest {
     }
 
     private int getDeployedStatefulnessCountValue(
-            ECKey sender, BigInteger nonce, AionAddress contract) {
+            AvmVersion version, ECKey sender, BigInteger nonce, AionAddress contract) {
 
         AionTransaction transaction =
                 AionTransaction.create(
@@ -442,14 +460,16 @@ public class AvmBulkTransactionTest {
                         nonce.toByteArray(),
                         contract,
                         new byte[0],
-                        abiEncodeMethodCall("getCount"),
+                        abiEncodeMethodCall(AvmVersion.VERSION_1, "getCount"),
                         2_000_000,
                         this.energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
-        return (int) ABIUtil.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
+
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newDecoder(summary.getReceipts().get(0).getTransactionOutput()).decodeOneInteger();
     }
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
@@ -492,15 +512,14 @@ public class AvmBulkTransactionTest {
         return accounts;
     }
 
-    private byte[] getJarBytes() {
-        return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
-                        new byte[0])
-                .encodeToBytes();
+    private byte[] getJarBytes(AvmVersion version) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
-    private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIUtil.encodeMethodArguments(method, arguments);
+    private byte[] abiEncodeMethodCall(AvmVersion version, String method) {
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        return factory.newStreamingEncoder().encodeOneString(method).getEncoding();
     }
 
     private List<BigInteger> getRandomValues(int num, int lowerBound, int upperBound) {

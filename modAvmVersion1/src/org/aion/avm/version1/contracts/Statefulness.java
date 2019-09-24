@@ -1,4 +1,4 @@
-package org.aion.zero.impl.vm.contracts;
+package org.aion.avm.version1.contracts;
 
 import avm.Address;
 import avm.Blockchain;
@@ -32,17 +32,17 @@ public class Statefulness {
     public static void transferValue(byte[] beneficiary, long amount) {
         Address recipient = new Address(beneficiary);
         if (Blockchain.call(
-                        recipient,
-                        BigInteger.valueOf(amount),
-                        new byte[0],
-                        Blockchain.getRemainingEnergy())
-                .isSuccess()) {
+            recipient,
+            BigInteger.valueOf(amount),
+            new byte[0],
+            Blockchain.getRemainingEnergy())
+            .isSuccess()) {
             Blockchain.println(
-                    "Transfer was a success. "
-                            + "Beneficiary balance = "
-                            + Blockchain.getBalance(recipient)
-                            + ", Contract balance = "
-                            + Blockchain.getBalance(Blockchain.getAddress()));
+                "Transfer was a success. "
+                    + "Beneficiary balance = "
+                    + Blockchain.getBalance(recipient)
+                    + ", Contract balance = "
+                    + Blockchain.getBalance(Blockchain.getAddress()));
         } else {
             Blockchain.println("Transfer was unsuccessful.");
         }

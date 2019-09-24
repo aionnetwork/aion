@@ -19,7 +19,6 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.blockchain.AionHubUtils;
@@ -795,7 +794,6 @@ public class DBUtils {
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
         try {
-            LongLivedAvm.createAndStartLongLivedAvm();
             List<Block> blocks = blockchain.getBlockStore().getAllChainBlockByNumber(nbBlock);
 
             if (blocks == null || blocks.isEmpty()) {
@@ -844,8 +842,6 @@ public class DBUtils {
             e.printStackTrace();
             System.out.println(e.toString());
             return Status.FAILURE;
-        } finally {
-            LongLivedAvm.destroy();
         }
     }
 
@@ -863,8 +859,6 @@ public class DBUtils {
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
         try {
-            LongLivedAvm.createAndStartLongLivedAvm();
-
             Block bestBlock = blockchain.getBlockStore().getBestBlock();
 
             Repository<AccountState, IBlockStoreBase> repository =
@@ -882,8 +876,6 @@ public class DBUtils {
         } catch (Exception e) {
             e.printStackTrace();
             return Status.FAILURE;
-        } finally {
-            LongLivedAvm.destroy();
         }
     }
 }

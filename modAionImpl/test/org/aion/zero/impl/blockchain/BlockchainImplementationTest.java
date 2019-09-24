@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.ECKey;
@@ -17,18 +21,18 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.config.CfgPrune;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.MockRepositoryConfig;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.vm.AvmPathManager;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,16 +52,24 @@ public class BlockchainImplementationTest {
         Map<String, String> cfg = new HashMap<>();
         cfg.put("ROOT", "ERROR");
         AionLoggerFactory.init(cfg);
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
-    @Before
-    public void setup() {
-        LongLivedAvm.createAndStartLongLivedAvm();
-    }
-
-    @After
-    public void shutdown() {
-        LongLivedAvm.destroy();
+    @AfterClass
+    public static void tearDown() {
+        AvmConfigurations.clear();
     }
 
     /**

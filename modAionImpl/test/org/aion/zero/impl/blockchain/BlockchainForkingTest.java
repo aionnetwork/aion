@@ -12,15 +12,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.tooling.ABIUtil;
-import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.base.TransactionTypeRule;
@@ -30,14 +34,14 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.common.BlockCachingContext;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.Statefulness;
+import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.TestResourceProvider;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -61,13 +65,25 @@ public class BlockchainForkingTest {
         cfg.put("VM", "DEBUG");
         AionLoggerFactory.init(cfg);
 
-        LongLivedAvm.createAndStartLongLivedAvm();
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @After
-    public void shutdown() {
-        LongLivedAvm.destroy();
+    public void tearDown() {
+        AvmConfigurations.clear();
     }
+
     /*-
      * Tests the case where multiple threads submit a single block (content) but
      * with different mining nonces and solutions. In this case our rules dictate
@@ -802,7 +818,10 @@ public class BlockchainForkingTest {
      * contract address X but using different VMs, then each chain will operate on the correct VM.
      */
     @Test
-    public void testVmTypeRetrieval_ForkWithConflictingContractVM() {
+    public void testVmTypeRetrieval_ForkWithConflictingContractVM() throws Exception {
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+        IAvmResourceFactory resourceFactory = resourceProvider.factoryForVersion1;
+
         // blocks to be built
         AionBlock block, fastBlock, slowBlock, lowBlock, highBlock;
 
@@ -849,7 +868,7 @@ public class BlockchainForkingTest {
         // ****** setup side chain ******
 
         // deploy contracts on different VMs for the two chains
-        deployOnAVM = deployStatefulnessAVMContract(sender);
+        deployOnAVM = deployStatefulnessAVMContract(resourceFactory, sender);
         fastBlock =
                 sourceChain.createNewMiningBlockInternal(
                                 sourceChain.getBestBlock(),
@@ -953,7 +972,7 @@ public class BlockchainForkingTest {
 
         int expectedCount = 3;
         List<AionTransaction> callTxOnAVM =
-                callStatefulnessAVM(sender, expectedCount, BigInteger.ONE, contract);
+                callStatefulnessAVM(resourceFactory, sender, expectedCount, BigInteger.ONE, contract);
         highBlock =
                 sourceChain.createNewMiningBlockInternal(fastBlock, callTxOnAVM, true, time / 10_000L)
                         .block;
@@ -975,13 +994,7 @@ public class BlockchainForkingTest {
         byte[] blockReceiptsRoot = blockSummary.getBlock().getReceiptsRoot();
         byte[] receiptTrieEncoded = receipt.getReceiptTrieEncoded();
 
-        int returnedCount =
-                (int)
-                        ABIUtil.decodeOneObject(
-                                blockSummary
-                                        .getReceipts()
-                                        .get(expectedCount)
-                                        .getTransactionOutput());
+        int returnedCount = resourceFactory.newDecoder(blockSummary.getReceipts().get(expectedCount).getTransactionOutput()).decodeOneInteger();
         assertThat(returnedCount).isEqualTo(expectedCount);
 
         // ****** test fork behavior ******
@@ -1006,22 +1019,12 @@ public class BlockchainForkingTest {
         assertThat(blockSummary.getBlock().getReceiptsRoot()).isEqualTo(blockReceiptsRoot);
         assertThat(receipt.getReceiptTrieEncoded()).isEqualTo(receiptTrieEncoded);
 
-        returnedCount =
-                (int)
-                        ABIUtil.decodeOneObject(
-                                blockSummary
-                                        .getReceipts()
-                                        .get(expectedCount)
-                                        .getTransactionOutput());
+        returnedCount = resourceFactory.newDecoder(blockSummary.getReceipts().get(expectedCount).getTransactionOutput()).decodeOneInteger();
         assertThat(returnedCount).isEqualTo(expectedCount);
     }
 
-    private AionTransaction deployStatefulnessAVMContract(ECKey sender) {
-        byte[] statefulnessAVM =
-                new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
-                                new byte[0])
-                        .encodeToBytes();
+    private AionTransaction deployStatefulnessAVMContract(IAvmResourceFactory resourceFactory, ECKey sender) {
+        byte[] statefulnessAVM = resourceFactory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
 
         return AionTransaction.create(
                 sender,
@@ -1035,7 +1038,7 @@ public class BlockchainForkingTest {
     }
 
     private List<AionTransaction> callStatefulnessAVM(
-            ECKey sender, int count, BigInteger nonce, AionAddress contract) {
+            IAvmResourceFactory resourceFactory, ECKey sender, int count, BigInteger nonce, AionAddress contract) {
 
         List<AionTransaction> txs = new ArrayList<>();
         AionTransaction transaction;
@@ -1048,7 +1051,7 @@ public class BlockchainForkingTest {
                             nonce.toByteArray(),
                             contract,
                             BigInteger.ZERO.toByteArray(),
-                            ABIUtil.encodeMethodArguments("incrementCounter"),
+                            resourceFactory.newStreamingEncoder().encodeOneString("incrementCounter").getEncoding(),
                             2_000_000L,
                             10_123_456_789L,
                             TransactionTypes.DEFAULT, null);
@@ -1064,7 +1067,7 @@ public class BlockchainForkingTest {
                         nonce.toByteArray(),
                         contract,
                         BigInteger.ZERO.toByteArray(),
-                        ABIUtil.encodeMethodArguments("getCount"),
+                        resourceFactory.newStreamingEncoder().encodeOneString("getCount").getEncoding(),
                         2_000_000L,
                         10_123_456_789L,
                         TransactionTypes.DEFAULT, null);

@@ -31,14 +31,19 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.provider.types.VmFatalException;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;
@@ -47,8 +52,6 @@ import org.aion.types.InternalTransaction;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.avm.LongLivedAvm;
-import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -56,8 +59,8 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxExecSummary;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -91,6 +94,27 @@ public class InternalTransactionTest {
       }
     }
     */
+
+    @BeforeClass
+    public static void setup() {
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        AvmConfigurations.clear();
+    }
 
     @Test
     public void testLogs() throws InterruptedException {
@@ -238,7 +262,7 @@ public class InternalTransactionTest {
     }
          */
     @Test
-    public void testRecursiveCall() throws InterruptedException, VMException {
+    public void testRecursiveCall() throws Exception {
         String contractA =
                 "0x605060405234156100105760006000fd5b610015565b60e9806100236000396000f30060506040526000356c01000000000000000000000000900463ffffffff168063ec77996414603157602b565b60006000fd5b3415603c5760006000fd5b605060048080359060100190919050506052565b005b600081131560b9573063ec779964600184036040518263ffffffff166c01000000000000000000000000028152600401808281526010019150506000604051808303816000888881813b151560a75760006000fd5b5af1151560b45760006000fd5b505050505b5b505600a165627a7a7230582033f76d593b80b3468bfb0f873882bc00903a790a9b996cb8ca3bac51295994cd0029";
 
@@ -311,7 +335,7 @@ public class InternalTransactionTest {
     }
          */
     @Test
-    public void testNestedCreate() throws VMException {
+    public void testNestedCreate() throws Exception {
         String contractA =
                 "0x60506040523415600f5760006000fd5b5b60166048565b604051809103906000f0801582151615602f5760006000fd5b60006000508282909180600101839055555050505b6057565b604051605a8061009f83390190565b603a806100656000396000f30060506040526008565b60006000fd00a165627a7a72305820c0eea40d4778b01848164e58898e9e8c8ab068ed5ee36ed6f0582d119ecbbede002960506040523415600f5760006000fd5b6013565b603a8060206000396000f30060506040526008565b60006000fd00a165627a7a723058208c13bc92baf844f8574632dca44c49776516cb6cd537b10ed700bf61392b6ae80029";
 
@@ -349,7 +373,7 @@ public class InternalTransactionTest {
     }
 
     @Test
-    public void testNestedCreateWithExistedAccount() throws VMException {
+    public void testNestedCreateWithExistedAccount() throws Exception {
         String contractA =
                 "0x60506040523415600f5760006000fd5b5b60166048565b604051809103906000f0801582151615602f5760006000fd5b60006000508282909180600101839055555050505b6057565b604051605a8061009f83390190565b603a806100656000396000f30060506040526008565b60006000fd00a165627a7a72305820c0eea40d4778b01848164e58898e9e8c8ab068ed5ee36ed6f0582d119ecbbede002960506040523415600f5760006000fd5b6013565b603a8060206000396000f30060506040526008565b60006000fd00a165627a7a723058208c13bc92baf844f8574632dca44c49776516cb6cd537b10ed700bf61392b6ae80029";
 
@@ -468,19 +492,9 @@ public class InternalTransactionTest {
         bc.close();
     }
 
-    @Before
-    public void setup() {
-        LongLivedAvm.createAndStartLongLivedAvm();
-    }
-
-    @After
-    public void teardown() {
-        LongLivedAvm.destroy();
-    }
-
     private AionTxExecSummary executeTransaction(
             StandaloneBlockchain bc, BlockContext context, AionTransaction transaction)
-            throws VMException {
+            throws VmFatalException {
         RepositoryCache cache = bc.getRepository().startTracking();
 
         AionBlock block = context.block;

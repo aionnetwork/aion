@@ -22,7 +22,6 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
@@ -428,9 +427,7 @@ public class Cli {
                 String parameter = options.isRedoImport();
 
                 if (parameter.isEmpty()) {
-                    LongLivedAvm.createAndStartLongLivedAvm();
                     DBUtils.redoMainChainImport(height);
-                    LongLivedAvm.destroy();
                     return EXIT;
                 } else {
                     try {
@@ -443,9 +440,7 @@ public class Cli {
                         return ERROR;
                     }
 
-                    LongLivedAvm.createAndStartLongLivedAvm();
                     DBUtils.redoMainChainImport(height);
-                    LongLivedAvm.destroy();
                     return EXIT;
                 }
             }

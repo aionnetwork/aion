@@ -1,23 +1,24 @@
-package org.aion.zero.impl.vm.contracts;
+package org.aion.avm.version1.contracts;
+
+import java.math.BigInteger;
 
 import avm.Blockchain;
 import avm.Result;
-import java.math.BigInteger;
 import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIEncoder;
 
-public class AvmInternalTx {
+public class InternalTransaction {
 
     private static int value;
 
     public static int recursivelyGetValue() {
         byte[] args = ABIEncoder.encodeOneString("getValue");
         Result result =
-                Blockchain.call(
-                        Blockchain.getAddress(),
-                        BigInteger.ZERO,
-                        args,
-                        Blockchain.getRemainingEnergy());
+            Blockchain.call(
+                Blockchain.getAddress(),
+                BigInteger.ZERO,
+                args,
+                Blockchain.getRemainingEnergy());
         Blockchain.require(result.isSuccess());
         ABIDecoder decoder = new ABIDecoder(result.getReturnData());
         return decoder.decodeOneInteger();

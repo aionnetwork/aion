@@ -5,23 +5,24 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.avm.core.dappreading.JarBuilder;
-import org.aion.avm.userlib.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIDecoder;
-import org.aion.avm.userlib.abi.ABIException;
-import org.aion.avm.userlib.abi.ABIToken;
+import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.avm.stub.IEnergyRules;
+import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
+import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
-import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.vm.contracts.Contract;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -30,20 +31,36 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class InvalidBlockTest {
+    private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private long energyPrice = 1;
 
     @BeforeClass
-    public static void setupAvm() {
-        LongLivedAvm.createAndStartLongLivedAvm();
+    public static void setupAvm() throws Exception {
         TransactionTypeRule.allowAVMContractTransaction();
+
+        resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+
+        // Configure the avm if it has not already been configured.
+        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        IEnergyRules energyRules = (t, l) -> {
+            if (t == TransactionType.CREATE) {
+                return TxNrgRule.isValidNrgContractCreate(l);
+            } else {
+                return TxNrgRule.isValidNrgTx(l);
+            }
+        };
+
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
     }
 
     @AfterClass
-    public static void tearDownAvm() {
-        LongLivedAvm.destroy();
+    public static void tearDownAvm() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
+        AvmConfigurations.clear();
+        resourceProvider.close();
     }
 
     @Before
@@ -70,7 +87,7 @@ public class InvalidBlockTest {
                 this.blockchain
                         .getRepository()
                         .getNonce(new AionAddress(this.deployerKey.getAddress()));
-        List<AionTransaction> transactions = makeTransactions(20, nonce);
+        List<AionTransaction> transactions = makeTransactions(AvmVersion.VERSION_1, 20, nonce);
 
         Block parent = this.blockchain.getBestBlock();
         AionBlock block = this.blockchain.createNewMiningBlock(parent, transactions, false);
@@ -84,14 +101,11 @@ public class InvalidBlockTest {
         assertEquals(13, res.getRight().getReceipts().size());
     }
 
-    private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
+    private List<AionTransaction> makeTransactions(AvmVersion version, int num, BigInteger initialNonce) {
         List<AionTransaction> transactions = new ArrayList<>();
 
-        byte[] jar =
-                new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClasses(Contract.class, ABIDecoder.class, ABIToken.class, ABIException.class),
-                                new byte[0])
-                        .encodeToBytes();
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        byte[] jar = factory.newContractFactory().getDeploymentBytes(AvmContract.GENERIC_CONTRACT);
         BigInteger nonce = initialNonce;
 
         for (int i = 0; i < num; i++) {
