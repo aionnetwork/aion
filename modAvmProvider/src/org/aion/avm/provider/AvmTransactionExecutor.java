@@ -143,7 +143,11 @@ public final class AvmTransactionExecutor {
         }
 
         if (versionToUse == AvmVersion.VERSION_1) {
+            disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_2, currentBlockNumber);
             ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_1, projectRootPath);
+        } else if (versionToUse == AvmVersion.VERSION_2) {
+            disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_1, currentBlockNumber);
+            ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_2, projectRootPath);
         } else {
             throw new IllegalStateException("Unknown avm version: " + versionToUse);
         }
@@ -229,6 +233,21 @@ public final class AvmTransactionExecutor {
 
         IAionVirtualMachine avm = AvmProvider.getAvm(versionToUse);
         return avm.run(externalState, toAionTypesTransactions(transactions), executionType, cachedBlockNumber);
+    }
+
+    /**
+     * If the specified version is enabled but it is prohibited to be enabled at the current block
+     * number, then that version will be shutdown and disabled. Otherwise this method does nothing.
+     *
+     * @param schedule The version schedule.
+     * @param version The version to check.
+     * @param currentBlockNumber The current block number.
+     */
+    private static void disableVersionIfEnabledAndProhibited(AvmVersionSchedule schedule, AvmVersion version, long currentBlockNumber) throws IOException {
+        if ((AvmProvider.isVersionEnabled(version)) && (schedule.isVersionProhibitedAtBlockNumber(version, currentBlockNumber))) {
+            AvmProvider.shutdownAvm(version);
+            AvmProvider.disableAvmVersion(version);
+        }
     }
 
     /**

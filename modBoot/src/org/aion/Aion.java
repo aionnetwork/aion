@@ -78,7 +78,16 @@ public class Aion {
         // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
         // because it handles balance transfers. The kernel is responsible for ensuring it is not called
         // with anything else.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+        // Create the multi-version schedule.
+        Properties forkProperties = CfgAion.inst().getFork().getProperties();
+        String fork2 = forkProperties.getProperty("fork0.5.0");
+
+        AvmVersionSchedule schedule;
+        if (fork2 != null) {
+            schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+        } else {
+            schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+        }
 
         AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory, energyRules);
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -404,6 +413,7 @@ public class Aion {
                                         // We don't want to block too long, shutdown hooks should execute as fast as possible.
                                         if (AvmProvider.tryAcquireLock(2, TimeUnit.SECONDS)) {
                                             AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+                                            AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
                                         }
                                     } catch (IOException e) {
                                         // Nothing to handle here, we are shutting down...
