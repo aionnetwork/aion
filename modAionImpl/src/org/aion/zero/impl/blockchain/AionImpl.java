@@ -21,6 +21,7 @@ import org.aion.vm.common.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.base.AionTxReceipt;
@@ -43,8 +44,11 @@ public class AionImpl implements IAionChain {
         this.cfg = CfgAion.inst();
         if (forTest) {
             cfg.setGenesisForTest();
+            aionHub = AionHub.createForTesting(cfg, AionBlockchainImpl.instForTest(), AionRepositoryImpl.inst());
+        } else {
+            aionHub = new AionHub();
         }
-        aionHub = new AionHub();
+
         LOG_GEN.info(
                 "<node-started endpoint=p2p://"
                         + cfg.getId()
@@ -66,7 +70,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IPowChain getBlockchain() {
+    public UnityChain getBlockchain() {
         return aionHub.getBlockchain();
     }
 

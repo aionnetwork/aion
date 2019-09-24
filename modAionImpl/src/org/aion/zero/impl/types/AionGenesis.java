@@ -132,7 +132,8 @@ public class AionGenesis extends AionBlock {
      */
     private GenesisStakingBlock genesisStakingBlock;
 
-    private AionAddress stakingContractAddress;
+    // Todo : [unity] remove default settings when we are able to remove singleton between Api, AionHub, PendingStateImpl, AionImpl. etc.
+    private AionAddress stakingContractAddress = AddressUtils.ZERO_ADDRESS;
 
     // TODO: verify whether setting the solution to null is okay
     // TODO: set energyLimit to a correct value (after genesis loader is
@@ -204,6 +205,10 @@ public class AionGenesis extends AionBlock {
         return ByteBuffer.wrap(this.getExtraData()).position(30).getShort() & 0xFFFF;
     }
 
+    public AionAddress getStakingContractAddress() {
+        return stakingContractAddress;
+    }
+
     /**
      * Genesis will fallback to a set of default values given that the loader does not override
      * them, note that because a block by default is not immutable we are required here to create a
@@ -234,7 +239,8 @@ public class AionGenesis extends AionBlock {
         Map<Integer, BigInteger> networkBalance;
         Map<AionAddress, AccountState> premined;
 
-        protected AionAddress stakingContractAddress;
+        // Todo : [unity] remove default settings when we are able to remove singleton between Api, AionHub, PendingStateImpl, AionImpl. etc.
+        protected AionAddress stakingContractAddress = AddressUtils.ZERO_ADDRESS;
         protected BigInteger genesisStakingDifficulty;
 
         public Builder withParentHash(final byte[] parentHash) {

@@ -15,7 +15,7 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
 
 /** aion blockchain interface. */
-public interface IAionBlockchain extends IPowChain {
+public interface IAionBlockchain extends UnityChain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 

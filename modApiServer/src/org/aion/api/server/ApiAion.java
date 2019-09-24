@@ -30,7 +30,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.blockchain.IPowChain;
+import org.aion.zero.impl.blockchain.UnityChain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -44,7 +44,6 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -85,6 +84,8 @@ public abstract class ApiAion extends Api {
 
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
+        pendingState =  ac.getAionHub().getPendingState();
+
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);
         this.blockTemplateLock = new ReentrantLock();
@@ -769,7 +770,7 @@ public abstract class ApiAion extends Api {
     protected void initNrgOracle(IAionChain _ac) {
         if (NRG_ORACLE != null) return;
 
-        IPowChain bc = _ac.getBlockchain();
+        UnityChain bc = _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 

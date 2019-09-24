@@ -15,8 +15,7 @@ public class UnityDifficultyRule implements GrandParentDependantBlockHeaderRule 
     private IDifficultyCalculator diffCalc;
 
     public UnityDifficultyRule(ChainConfiguration configuration) {
-        //TODO: [unity] remove comments when we introduce the UnityDifficulty calculator
-        //diffCalc = configuration.getUnityDifficultyCalculator();
+        diffCalc = configuration.getUnityDifficultyCalculator();
     }
 
     private static String formatError(BigInteger expectedDifficulty, BigInteger actualDifficulty) {

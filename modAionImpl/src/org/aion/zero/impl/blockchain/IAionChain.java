@@ -11,7 +11,7 @@ import org.aion.base.AionTxReceipt;
 /** Aion chain interface. */
 public interface IAionChain  {
 
-    IPowChain getBlockchain();
+    UnityChain getBlockchain();
 
     void close();
 

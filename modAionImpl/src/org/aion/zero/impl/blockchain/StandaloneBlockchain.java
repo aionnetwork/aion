@@ -82,14 +82,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             };
 
     protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
+        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, true);
     }
 
     protected StandaloneBlockchain(
             final A0BCConfig config,
             final ChainConfiguration chainConfig,
             RepositoryConfig repoConfig) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
+        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, true);
     }
 
     public void setGenesis(AionGenesis genesis) {

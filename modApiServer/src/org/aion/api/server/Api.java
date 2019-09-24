@@ -32,12 +32,10 @@ public abstract class Api {
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final AionPendingStateImpl pendingState;
+    protected AionPendingStateImpl pendingState;
 
     // This is the constructor that should always be used, unless testing
-    Api() {
-        pendingState = AionPendingStateImpl.inst();
-    }
+    Api() {}
 
     // Only for testing purposes
     @VisibleForTesting

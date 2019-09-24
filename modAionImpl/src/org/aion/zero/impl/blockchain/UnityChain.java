@@ -5,15 +5,9 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.util.types.Hash256;
 
-/**
- * proof of work chain interface.
- *
- */
-public interface IPowChain {
+public interface UnityChain {
 
     BigInteger getTotalDifficulty();
-
-    void setTotalDifficulty(BigInteger totalDifficulty);
 
     BigInteger getTotalDifficultyByHash(Hash256 hash);
 
@@ -26,4 +20,5 @@ public interface IPowChain {
     Block getBestBlock();
 
     void flush();
+
 }

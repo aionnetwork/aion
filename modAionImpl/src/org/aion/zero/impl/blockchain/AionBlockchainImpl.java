@@ -1,6 +1,5 @@
 package org.aion.zero.impl.blockchain;
 
-import static java.lang.Long.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
@@ -20,13 +19,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -42,6 +39,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -54,7 +52,6 @@ import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.valid.BeaconHashValidator;
-import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.base.TransactionTypeRule;
@@ -116,9 +113,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
     private static boolean fork040Enable;
-    private final GrandParentBlockHeaderValidator grandParentBlockHeaderValidator;
-    private final ParentBlockHeaderValidator parentHeaderValidator;
-    private final BlockHeaderValidator blockHeaderValidator;
+    private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
+    private final GrandParentBlockHeaderValidator unityGrandParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator chainParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
+    private final StakingContractHelper stakingContractHelper;
     public final BeaconHashValidator beaconHashValidator;
 
     /**
@@ -166,13 +165,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final boolean storeInternalTransactions;
 
     private AionBlockchainImpl() {
-        this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
+        this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration(), false);
     }
 
     protected AionBlockchainImpl(
             final A0BCConfig config,
             final AionRepositoryImpl repository,
-            final ChainConfiguration chainConfig) {
+            final ChainConfiguration chainConfig,
+            boolean forTest) {
 
         // TODO AKI-318: this specialized class is very cumbersome to maintain; could be replaced with CfgAion
         this.config = config;
@@ -185,10 +185,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        this.grandParentBlockHeaderValidator =
-                this.chainConfiguration.createGrandParentHeaderValidator();
-        this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
-        this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
+        sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
+        chainParentBlockHeaderValidator = chainConfig.createChainParentBlockHeaderValidator();
+        preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
+        unityGrandParentBlockHeaderValidator = chainConfiguration.createUnityGrandParentHeaderValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
 
@@ -222,6 +222,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     maybeFork050.get());
         }
 
+        stakingContractHelper =
+            new StakingContractHelper(
+                forTest
+                    ? AddressUtils.ZERO_ADDRESS
+                    : CfgAion.inst().getGenesis().getStakingContractAddress(),
+                this);
     }
 
     /**
@@ -331,6 +337,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return Holder.INSTANCE;
     }
 
+    public static AionBlockchainImpl instForTest() {
+        return HolderForTest.INSTANCE;
+    }
+
     private static byte[] calcTxTrie(List<AionTransaction> transactions) {
 
         if (transactions == null || transactions.isEmpty()) {
@@ -373,24 +383,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return retBloomFilter.getBloomFilterBytes();
-    }
-
-    public static Set<ByteArrayWrapper> getAncestors(
-            IBlockStoreBase blockStore,
-            Block testedBlock,
-            int limitNum,
-            boolean isParentBlock) {
-        Set<ByteArrayWrapper> ret = new HashSet<>();
-        limitNum = (int) max(0, testedBlock.getNumber() - limitNum);
-        Block it = testedBlock;
-        if (!isParentBlock) {
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        while (it != null && it.getNumber() >= limitNum) {
-            ret.add(new ByteArrayWrapper(it.getHash()));
-            it = blockStore.getBlockByHash(it.getParentHash());
-        }
-        return ret;
     }
 
     /**
@@ -1279,8 +1271,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getBlockStore().getBlockByHash(header.getParentHash());
     }
 
-    public boolean isValid(BlockHeader header) {
+    private Block getParentBlock(BlockHeader header) {
+        if (header.isGenesis()) {
+            return null;
+        }
 
+        Block parent = getParent(header);
+        if (parent.getHeader().getSealType() == header.getSealType()) {
+            return parent;
+        } else {
+            if (Arrays.equals(
+                    parent.getAntiparentHash(),
+                    CfgAion.inst().getGenesisStakingBlock().getHash())) {
+                return CfgAion.inst().getGenesisStakingBlock();
+            }
+            Block antiParentBlock =
+                    getBlockStore().getBlockByHashWithInfo(parent.getAntiparentHash());
+            if (antiParentBlock == null) {
+                return null;
+            }
+            return antiParentBlock;
+        }
+    }
+
+    public boolean isValid(BlockHeader header) {
         /*
          * Header should already be validated at this point, no need to check again
          * 1. Block came in from network; validated by P2P before processing further
@@ -1290,17 +1304,32 @@ public class AionBlockchainImpl implements IAionBlockchain {
         //            return false;
         //        }
 
-        Block parent = this.getParent(header);
-
-        if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
+        Block parent = getParent(header);
+        if (parent == null) {
             return false;
         }
 
-        Block grandParent = this.getParent(parent.getHeader());
+        Block sealParent;
+        if (parent.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            sealParent = getBlockByHash(parent.getAntiparentHash());
+        } else {
+            sealParent = parent;
+        }
 
-        return this.grandParentBlockHeaderValidator.validate(
-                grandParent == null ? null : grandParent.getHeader(),
-                parent.getHeader(),
+        if (sealParent == null) {
+            throw new IllegalStateException(
+                    "Can't find the sealParent block, the database might corrupt!");
+        }
+
+        if (!chainParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
+            return false;
+        }
+
+        Block grandSealParent = getParentBlock(sealParent.getHeader());
+
+        return preUnityGrandParentBlockHeaderValidator.validate(
+                grandSealParent == null ? null : grandSealParent.getHeader(),
+                sealParent.getHeader(),
                 header,
                 LOG);
     }
@@ -1563,11 +1592,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
         //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
-        if (fork) {
-            getBlockStore().saveBlock(block, totalDifficulty, BigInteger.ONE, false);
-        } else {
-            getBlockStore().saveBlock(block, totalDifficulty, BigInteger.ONE, true);
-        }
+        getBlockStore().saveBlock(block, totalDifficulty, BigInteger.ONE, !fork);
 
         AionTxInfo info;
         for (int i = 0; i < receipts.size(); i++) {
@@ -2135,6 +2160,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getNumber(),
                     other.getTransactionsList().size());
             //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
+            // AKI-389 check the correctness when porting the minging/staking difficulty
             totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff, BigInteger.ONE);
         }
 
@@ -2193,6 +2219,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private static class Holder {
         static final AionBlockchainImpl INSTANCE = new AionBlockchainImpl();
+    }
+
+    private static class HolderForTest {
+        static final AionBlockchainImpl INSTANCE =
+                new AionBlockchainImpl(
+                        generateBCConfig(CfgAion.inst()),
+                        AionRepositoryImpl.inst(),
+                        new ChainConfiguration(),
+                        true);
     }
 
     private class State {
