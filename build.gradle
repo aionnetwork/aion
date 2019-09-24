@@ -424,6 +424,7 @@ task ciBuild {
             'modVM',
             'modAvmVersion1',
             'modAvmProvider',
+            'modAvmVersion2',
             'modAvmStub'
     ] 
 
