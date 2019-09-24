@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.avm.provider.internal.AvmResourcesVersion1;
+import org.aion.avm.provider.internal.AvmResourcesVersion2;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -36,6 +37,7 @@ public final class AvmProvider {
 
     // If a particular avm resources version is non-null then it is enabled. If null it is disabled.
     private static AvmResourcesVersion1 avmResourcesVersion1 = null;
+    private static AvmResourcesVersion2 avmResourcesVersion2 = null;
 
     /**
      * Returns {@code true} only if the specified avm version is enabled, otherwise {@code false}.
@@ -50,6 +52,8 @@ public final class AvmProvider {
 
         if (version == AvmVersion.VERSION_1) {
             return avmResourcesVersion1 != null;
+        } else if (version == AvmVersion.VERSION_2) {
+            return avmResourcesVersion2 != null;
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -69,6 +73,8 @@ public final class AvmProvider {
 
         if (version == AvmVersion.VERSION_1) {
             return avmResourcesVersion1 != null  && avmResourcesVersion1.isAvmRunning();
+        } else if (version == AvmVersion.VERSION_2) {
+            return avmResourcesVersion2 != null && avmResourcesVersion2.isAvmRunning();
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -97,6 +103,8 @@ public final class AvmProvider {
 
         if (version == AvmVersion.VERSION_1) {
             return avmResourcesVersion1.resourceFactory;
+        } else if (version == AvmVersion.VERSION_2) {
+            return avmResourcesVersion2.resourceFactory;
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -117,6 +125,10 @@ public final class AvmProvider {
         if (version == AvmVersion.VERSION_1) {
             if (avmResourcesVersion1 == null) {
                 avmResourcesVersion1 = AvmResourcesVersion1.loadResources(projectRootDir);
+            }
+        } else if (version == AvmVersion.VERSION_2) {
+            if (avmResourcesVersion2 == null) {
+                avmResourcesVersion2 = AvmResourcesVersion2.loadResources(projectRootDir);
             }
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
@@ -140,6 +152,12 @@ public final class AvmProvider {
                 avmResourcesVersion1.shutdownAvm();
                 avmResourcesVersion1.close();
                 avmResourcesVersion1 = null;
+            }
+        } else if (version == AvmVersion.VERSION_2) {
+            if (avmResourcesVersion2 != null) {
+                avmResourcesVersion2.shutdownAvm();
+                avmResourcesVersion2.close();
+                avmResourcesVersion2 = null;
             }
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
@@ -166,6 +184,13 @@ public final class AvmProvider {
             }
             return avmResourcesVersion1.getAvm();
 
+        } else if (version == AvmVersion.VERSION_2) {
+
+            if (avmResourcesVersion2 == null) {
+                throw new IllegalStateException("Cannot get avm version 2 - verison has not been enabled yet!");
+            }
+            return avmResourcesVersion2.getAvm();
+
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -190,6 +215,13 @@ public final class AvmProvider {
             }
             avmResourcesVersion1.initializeAndStartNewAvm();
 
+        } else if (version == AvmVersion.VERSION_2) {
+
+            if (avmResourcesVersion2 == null) {
+                throw new IllegalStateException("Cannot start avm version 2 - verison has not been enabled yet!");
+            }
+            avmResourcesVersion2.initializeAndStartNewAvm();
+
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -213,6 +245,13 @@ public final class AvmProvider {
                 throw new IllegalStateException("Cannot shutdown avm version 1 - verison has not been enabled yet!");
             }
             avmResourcesVersion1.shutdownAvm();
+
+        } else if (version == AvmVersion.VERSION_2) {
+
+            if (avmResourcesVersion2 == null) {
+                throw new IllegalStateException("Cannot shutdown avm version 2 - verison has not been enabled yet!");
+            }
+            avmResourcesVersion2.shutdownAvm();
 
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
@@ -273,6 +312,13 @@ public final class AvmProvider {
                 throw new IllegalStateException("Cannot get builder for version 1 - version has not been enabled yet!");
             }
             return avmResourcesVersion1.resourceFactory.newExternalStateBuilder();
+
+        } else if (version == AvmVersion.VERSION_2) {
+
+            if (avmResourcesVersion2 == null) {
+                throw new IllegalStateException("Cannot get builder for version 2 - version has not been enabled yet!");
+            }
+            return avmResourcesVersion2.resourceFactory.newExternalStateBuilder();
 
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
