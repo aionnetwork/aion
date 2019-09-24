@@ -19,6 +19,8 @@ import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
@@ -50,9 +52,9 @@ public class AionHubTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("GEN", "INFO");
-        cfg.put("CONS", "INFO");
+        Map<LogEnum, LogLevel> cfg = new HashMap<>();
+        cfg.put(LogEnum.GEN, LogLevel.INFO);
+        cfg.put(LogEnum.CONS, LogLevel.INFO);
         AionLoggerFactory.initAll(cfg);
 
         // Configure the avm if it has not already been configured.

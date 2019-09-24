@@ -23,6 +23,8 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
@@ -53,9 +55,9 @@ public class BlockchainForkingTest {
     @Before
     public void setup() {
         // reduce default logging levels
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("TX", "DEBUG");
-        cfg.put("VM", "DEBUG");
+        Map<LogEnum, LogLevel> cfg = new HashMap<>();
+        cfg.put(LogEnum.TX, LogLevel.DEBUG);
+        cfg.put(LogEnum.VM, LogLevel.DEBUG);
         AionLoggerFactory.initAll(cfg);
 
         // Configure the avm if it has not already been configured.

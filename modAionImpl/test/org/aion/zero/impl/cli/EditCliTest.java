@@ -97,7 +97,7 @@ public class EditCliTest {
         assertThat(cfg.getSync().getShowStatus()).isEqualTo(showStatus);
 
         for (Object[] arr: logs){
-            assertThat(cfg.getLog().getModules()).containsEntry(arr[0].toString(),arr[1].toString());
+            assertThat(cfg.getLog().getModules()).containsEntry(arr[0], arr[1]);
         }
     }
 

@@ -17,32 +17,32 @@ import org.aion.log.LogLevel;
 /** @author chris */
 public class CfgLog {
 
-    private Map<String, String> modules;
+    private Map<LogEnum, LogLevel> modules;
     // TODO: rename to enabled; current name leads to confusion
     boolean logFile;
     String logPath;
 
     public CfgLog() {
-        modules = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        modules.put(LogEnum.ROOT.name(), LogLevel.WARN.name());
-        modules.put(LogEnum.CONS.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.CACHE.name(), LogLevel.ERROR.name());
-        modules.put(LogEnum.GEN.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.VM.name(), LogLevel.ERROR.name());
-        modules.put(LogEnum.DB.name(), LogLevel.ERROR.name());
-        modules.put(LogEnum.SYNC.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.API.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.TX.name(), LogLevel.ERROR.name());
-        modules.put(LogEnum.TXPOOL.name(), LogLevel.ERROR.name());
-        modules.put(LogEnum.GUI.name(), LogLevel.INFO.name());
-        modules.put(LogEnum.SURVEY.name(), LogLevel.ERROR.name());
+        modules = new HashMap<>();
+        modules.put(LogEnum.ROOT, LogLevel.WARN);
+        modules.put(LogEnum.CONS, LogLevel.INFO);
+        modules.put(LogEnum.CACHE, LogLevel.ERROR);
+        modules.put(LogEnum.GEN, LogLevel.INFO);
+        modules.put(LogEnum.VM, LogLevel.ERROR);
+        modules.put(LogEnum.DB, LogLevel.ERROR);
+        modules.put(LogEnum.SYNC, LogLevel.INFO);
+        modules.put(LogEnum.API, LogLevel.INFO);
+        modules.put(LogEnum.P2P, LogLevel.INFO);
+        modules.put(LogEnum.TX, LogLevel.ERROR);
+        modules.put(LogEnum.TXPOOL, LogLevel.ERROR);
+        modules.put(LogEnum.GUI, LogLevel.INFO);
+        modules.put(LogEnum.SURVEY, LogLevel.ERROR);
         this.logFile = false;
         this.logPath = "log";
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
-        this.modules = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.modules = new HashMap<>();
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
@@ -59,8 +59,17 @@ public class CfgLog {
                                 this.logPath = Cfg.readValue(sr);
                                 break;
                             default:
-                                if (LogEnum.contains(elementName))
-                                    this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                                // ensures the LogEnum can be decoded
+                                if (LogEnum.contains(elementName)) {
+                                    String level = Cfg.readValue(sr);
+                                    // ensures the LogLevel can be decoded
+                                    if (LogLevel.contains(level)) {
+                                        this.modules.put(LogEnum.valueOf(elementName.toUpperCase()), LogLevel.valueOf(level.toUpperCase()));
+                                    } else {
+                                        // default for incorrect levels
+                                        this.modules.put(LogEnum.valueOf(elementName.toUpperCase()), LogLevel.WARN);
+                                    }
+                                }
                                 break;
                         }
                         break;
@@ -110,10 +119,10 @@ public class CfgLog {
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
-            for (Map.Entry<String, String> module : this.modules.entrySet()) {
+            for (Map.Entry<LogEnum, LogLevel> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
-                xmlWriter.writeStartElement(module.getKey().toUpperCase());
-                xmlWriter.writeCharacters(module.getValue().toUpperCase());
+                xmlWriter.writeStartElement(module.getKey().name());
+                xmlWriter.writeCharacters(module.getValue().name());
                 xmlWriter.writeEndElement();
                 xmlWriter.writeCharacters("\r\n");
             }
@@ -130,12 +139,12 @@ public class CfgLog {
         }
     }
 
-    public Map<String, String> getModules() {
+    public Map<LogEnum, LogLevel> getModules() {
         return this.modules;
     }
 
-    public boolean updateModule(String logEnum, String logLevel){
-        if (modules.containsKey(logEnum) && !modules.get(logEnum).equalsIgnoreCase(logLevel)){
+    public boolean updateModule(LogEnum logEnum, LogLevel logLevel) {
+        if (modules.containsKey(logEnum) && !modules.get(logEnum).equals(logLevel)) {
             modules.replace(logEnum, logLevel);
             return true;
         } else if (!modules.containsKey(logEnum)) {

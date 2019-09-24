@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.config.CfgDb;
 import org.aion.base.AccountState;
@@ -53,9 +55,9 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "INFO");
-        cfgLog.put("GEN", "INFO");
+        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
+        cfgLog.put(LogEnum.DB, LogLevel.INFO);
+        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
         AionLoggerFactory.initAll(cfgLog);
 
         // get the current blockchain
@@ -78,9 +80,9 @@ public class DBUtils {
 
         cfg.getDb().setHeapCacheEnabled(false);
 
-        Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "INFO");
-        cfgLog.put("GEN", "INFO");
+        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
+        cfgLog.put(LogEnum.DB, LogLevel.INFO);
+        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
         AionLoggerFactory.initAll(cfgLog);
 
         // get the current blockchain
@@ -110,9 +112,9 @@ public class DBUtils {
 
         cfg.getDb().setHeapCacheEnabled(false);
 
-        Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "INFO");
-        cfgLog.put("GEN", "INFO");
+        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
+        cfgLog.put(LogEnum.DB, LogLevel.INFO);
+        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
         AionLoggerFactory.initAll(cfgLog);
 
         // get the current blockchain
@@ -514,9 +516,7 @@ public class DBUtils {
 
         System.out.println("\nImporting stored blocks INITIATED...\n");
 
-        Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("GEN", "INFO");
-        AionLoggerFactory.initAll(cfgLog);
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
 
         AionBlockchainImpl chain = AionBlockchainImpl.inst();
         AionRepositoryImpl repo = chain.getRepository();
@@ -761,10 +761,9 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        Map<String, String> logs = new HashMap<>();
         // TODO: add this log inside methods of interest
-        logs.put("QBCLI", "DEBUG");
-        AionLoggerFactory.initAll(logs);
+        // AionLoggerFactory.initAll(Map.of(LogEnum.QBCLI, LogLevel.DEBUG));
+        AionLoggerFactory.initAll();
 
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();

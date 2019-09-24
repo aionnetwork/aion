@@ -12,8 +12,7 @@ public enum LogLevel {
 
     public static boolean contains(String _level) {
         for (LogLevel level : values()) {
-            // maybe use equalsIgnoreCase here?
-            if (level.name().equals(_level)) return true;
+            if (level.name().equalsIgnoreCase(_level)) return true;
         }
         return false;
     }

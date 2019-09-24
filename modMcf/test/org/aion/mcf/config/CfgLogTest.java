@@ -13,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +39,7 @@ public class CfgLogTest extends CfgLog {
     private File testRoot; // Path: /home/joey/Desktop/IDE/aion/modMcf
     private File generatedPath;
     private String accumulatedPath;
-    private Map<String, String> _logModules;
+    private Map<LogEnum, LogLevel> _logModules;
 
     @Before
     public void setup() {

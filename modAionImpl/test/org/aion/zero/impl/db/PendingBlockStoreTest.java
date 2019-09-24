@@ -7,13 +7,14 @@ import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.util.TestResources;
@@ -28,9 +29,7 @@ public class PendingBlockStoreTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "INFO");
-        AionLoggerFactory.initAll(cfg);
+        AionLoggerFactory.initAll(Map.of(LogEnum.DB, LogLevel.INFO));
     }
 
     @Test

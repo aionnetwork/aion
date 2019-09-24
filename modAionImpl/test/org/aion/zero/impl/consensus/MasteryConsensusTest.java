@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.Map;
 import org.aion.avm.provider.schedule.AvmVersionSchedule;
 import org.aion.avm.provider.types.AvmConfigurations;
@@ -17,6 +16,8 @@ import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.log.AionLoggerFactory;
 import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -43,9 +44,7 @@ public class MasteryConsensusTest {
     @BeforeClass
     public static void setup() {
         // reduce default logging levels
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("VM", "DEBUG");
-        AionLoggerFactory.initAll(cfg);
+        AionLoggerFactory.initAll(Map.of(LogEnum.VM, LogLevel.DEBUG));
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

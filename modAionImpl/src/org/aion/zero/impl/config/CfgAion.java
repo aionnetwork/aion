@@ -14,6 +14,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgDb;
@@ -369,7 +371,16 @@ public final class CfgAion extends Cfg {
                         if ((i1 + 1) < max1) {
                             String _module = subArgsArr[i1].toUpperCase();
                             String _level = subArgsArr[++i1].toUpperCase();
-                            this.log.getModules().put(_module, _level);
+                            // ensures the LogEnum can be decoded
+                            if (LogEnum.contains(_module)) {
+                                // ensures the LogLevel can be decoded
+                                if (LogLevel.contains(_level)) {
+                                    this.log.getModules().put(LogEnum.valueOf(_module), LogLevel.valueOf(_level));
+                                } else {
+                                    // default for incorrect levels
+                                    this.log.getModules().put(LogEnum.valueOf(_module), LogLevel.WARN);
+                                }
+                            }
                         }
                     }
                 }

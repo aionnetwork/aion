@@ -5,13 +5,14 @@ import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.ArrayStore;
 import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.core.ImportResult;
@@ -29,9 +30,7 @@ public class BlockchainIndexIntegrityTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("CONS", "INFO");
-        AionLoggerFactory.initAll(cfg);
+        AionLoggerFactory.initAll(Map.of(LogEnum.CONS, LogLevel.INFO));
     }
 
     /**

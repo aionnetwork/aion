@@ -15,6 +15,8 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
@@ -40,9 +42,7 @@ public class BlockchainDataRecoveryTest {
     @BeforeClass
     public static void setup() {
         // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("CONS", "INFO");
-        AionLoggerFactory.initAll(cfg);
+        AionLoggerFactory.initAll(Map.of(LogEnum.CONS, LogLevel.INFO));
 
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);

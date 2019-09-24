@@ -80,36 +80,27 @@ public class AionLoggerFactory {
      * @implNote Recommended for testing classes to avoid having the logs that are not specified set
      *     to {@link Logger#ROOT_LOGGER_NAME} by {@link #getLogger(String)}.
      */
-    public static void initAll(Map<String, String> requestedLogLevels) {
-        Map<String, String> allLogs = new HashMap<>();
+    public static void initAll(Map<LogEnum, LogLevel> requestedLogLevels) {
+        Map<LogEnum, LogLevel> allLogs = new HashMap<>();
         for (LogEnum log : LogEnum.values()) {
-            allLogs.put(log.name(), LogLevel.WARN.name());
+            allLogs.put(log, LogLevel.WARN);
         }
         allLogs.putAll(requestedLogLevels);
 
         init(requestedLogLevels, false, "");
     }
 
-    public static void init(Map<String, String> requestedLogLevels) {
+    public static void init(Map<LogEnum, LogLevel> requestedLogLevels) {
         init(requestedLogLevels, false, "");
     }
 
-    private static Map<LogEnum, Level> constructModuleLoglevelMap(
-            Map<String, String> _moduleToLevelMap) {
-        // condition the input hashmap so keys are all uppercase
-        Map<String, String> moduleToLevelMap = new HashMap<>();
-        if (_moduleToLevelMap != null) {
-            _moduleToLevelMap.forEach(
-                    (module, level) -> moduleToLevelMap.put(module.toUpperCase(), level));
-        }
-
+    private static Map<LogEnum, Level> constructModuleLoglevelMap(Map<LogEnum, LogLevel> _moduleToLevelMap) {
         Map<LogEnum, Level> modules = new HashMap<>();
         for (LogEnum mod : LogEnum.values()) {
-            String modName = mod.name().toUpperCase();
-            String modLevel = moduleToLevelMap.get(modName);
+            LogLevel modLevel = _moduleToLevelMap.get(mod);
             if (modLevel != null) {
                 // if we can't translate log-level for some reason, default to WARN
-                Level level = Level.toLevel(modLevel, Level.WARN);
+                Level level = Level.toLevel(modLevel.name(), Level.WARN);
                 modules.put(mod, level);
             } else {
                 modules.put(mod, Level.WARN);
@@ -198,8 +189,7 @@ public class AionLoggerFactory {
         return appenders;
     }
 
-    public static synchronized void init(
-            Map<String, String> requestedLogLevels, boolean shouldLogToFile, String logDirectory) {
+    public static synchronized void init(Map<LogEnum, LogLevel> requestedLogLevels, boolean shouldLogToFile, String logDirectory) {
 
         Map<LogEnum, Level> modules = constructModuleLoglevelMap(requestedLogLevels);
         List<Appender<ILoggingEvent>> appenders = constructAppenders(shouldLogToFile, logDirectory);

@@ -200,9 +200,8 @@ public class EditCli {
         boolean res = false;
         if (log != null) {
             for (Object[] objects : log) {
-
-                if (cfgLog.updateModule(((LogEnum) objects[0]).name().toLowerCase(), ((LogLevel) objects[1]).name())) {
-                    System.out.println("Changed loglevel of "+objects[0].toString().toLowerCase() +" logger to " + objects[1].toString()  );
+                if (cfgLog.updateModule((LogEnum) objects[0], (LogLevel) objects[1])) {
+                    System.out.println("Changed log level of " + objects[0] + " logger to " + objects[1]);
                     res = true;
                 }
             }
