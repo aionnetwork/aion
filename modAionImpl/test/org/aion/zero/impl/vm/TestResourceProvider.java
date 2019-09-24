@@ -19,11 +19,15 @@ import org.aion.avm.stub.IAvmResourceFactory;
  */
 public final class TestResourceProvider implements Closeable {
     private final URLClassLoader classLoaderForVersion1;
+    private final URLClassLoader classLoaderForVersion2;
     public final IAvmResourceFactory factoryForVersion1;
+    public final IAvmResourceFactory factoryForVersion2;
 
-    private TestResourceProvider(URLClassLoader classLoaderForVersion1, IAvmResourceFactory version1) {
+    private TestResourceProvider(URLClassLoader classLoaderForVersion1, IAvmResourceFactory version1, URLClassLoader classLoaderForVersion2, IAvmResourceFactory version2) {
         this.classLoaderForVersion1 = classLoaderForVersion1;
+        this.classLoaderForVersion2 = classLoaderForVersion2;
         this.factoryForVersion1 = version1;
+        this.factoryForVersion2 = version2;
     }
 
     /**
@@ -34,13 +38,16 @@ public final class TestResourceProvider implements Closeable {
      */
     public static TestResourceProvider initializeAndCreateNewProvider(String projectRootDirectory) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         URLClassLoader version1 = newClassLoaderForAvmVersion(projectRootDirectory, AvmVersion.VERSION_1);
+        URLClassLoader version2 = newClassLoaderForAvmVersion(projectRootDirectory, AvmVersion.VERSION_2);
         IAvmResourceFactory factory1 = loadAvmResourceFactory(version1, AvmVersion.VERSION_1);
-        return new TestResourceProvider(version1, factory1);
+        IAvmResourceFactory factory2 = loadAvmResourceFactory(version2, AvmVersion.VERSION_2);
+        return new TestResourceProvider(version1, factory1, version2, factory2);
     }
 
     @Override
     public void close() throws IOException {
         this.classLoaderForVersion1.close();
+        this.classLoaderForVersion2.close();
     }
 
     /**
@@ -50,11 +57,11 @@ public final class TestResourceProvider implements Closeable {
      * @return the classloader with the version 1 dependencies.
      */
     private static URLClassLoader newClassLoaderForAvmVersion(String projectRootPath, AvmVersion version) throws MalformedURLException {
-        File modAvmVersionJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.jarPathForModAvmVersion1 : null));
-        File avmCoreJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.coreJarPathVersion1 : null));
-        File avmRtJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.rtJarPathVersion1 : null));
-        File avmUserlibJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.userlibJarPathVersion1 : null));
-        File avmApiJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.apiJarPathVersion1 : null));
+        File modAvmVersionJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.jarPathForModAvmVersion1 : AvmDependencyInfo.jarPathForModAvmVersion2));
+        File avmCoreJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.coreJarPathVersion1 : AvmDependencyInfo.coreJarPathVersion2));
+        File avmRtJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.rtJarPathVersion1 : AvmDependencyInfo.rtJarPathVersion2));
+        File avmUserlibJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.userlibJarPathVersion1 : AvmDependencyInfo.userlibJarPathVersion2));
+        File avmApiJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.apiJarPathVersion1 : AvmDependencyInfo.apiJarPathVersion2));
         URL[] urls = new URL[]{ modAvmVersionJar.toURI().toURL(), avmCoreJar.toURI().toURL(), avmRtJar.toURI().toURL(), avmUserlibJar.toURI().toURL(), avmApiJar.toURI().toURL() };
         return new URLClassLoader(urls);
     }
@@ -64,7 +71,7 @@ public final class TestResourceProvider implements Closeable {
      * in the avm version 1 module.
      */
     private static IAvmResourceFactory loadAvmResourceFactory(URLClassLoader classLoader, AvmVersion version) throws IllegalAccessException, InstantiationException, ClassNotFoundException, IOException {
-        Class<?> factory = classLoader.loadClass(version == AvmVersion.VERSION_1 ? AvmDependencyInfo.avmResourceFactoryClassNameVersion1 : null);
+        Class<?> factory = classLoader.loadClass(version == AvmVersion.VERSION_1 ? AvmDependencyInfo.avmResourceFactoryClassNameVersion1 : AvmDependencyInfo.avmResourceFactoryClassNameVersion2);
         IAvmResourceFactory resourceFactory = (IAvmResourceFactory) factory.newInstance();
 
         // Verify that the resources were loaded by the correct classloader.

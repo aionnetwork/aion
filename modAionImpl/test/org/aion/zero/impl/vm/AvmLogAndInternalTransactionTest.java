@@ -132,7 +132,7 @@ public class AvmLogAndInternalTransactionTest {
     public Pair<ImportResult, AionBlockSummary> callFireLogs(
             AvmVersion version, BigInteger nonce, AionAddress address, AionAddress addressToCall, String methodName) {
 
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         byte[] data = factory.newStreamingEncoder().encodeOneString(methodName).encodeOneAddress(addressToCall).getEncoding();
 
         AionTransaction transaction =
@@ -186,7 +186,7 @@ public class AvmLogAndInternalTransactionTest {
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.LOG_TARGET);
     }
 }

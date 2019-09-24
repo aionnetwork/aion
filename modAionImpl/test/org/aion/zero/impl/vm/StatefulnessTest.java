@@ -287,12 +287,12 @@ public class StatefulnessTest {
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
     private byte[] abiEncodeMethodCall(AvmVersion version, String method, byte[] beneficiary, long valueToSend) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newStreamingEncoder().encodeOneString(method).encodeOneByteArray(beneficiary).encodeOneLong(valueToSend).getEncoding();
     }
 

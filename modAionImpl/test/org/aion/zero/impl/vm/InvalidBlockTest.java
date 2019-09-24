@@ -104,7 +104,7 @@ public class InvalidBlockTest {
     private List<AionTransaction> makeTransactions(AvmVersion version, int num, BigInteger initialNonce) {
         List<AionTransaction> transactions = new ArrayList<>();
 
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         byte[] jar = factory.newContractFactory().getDeploymentBytes(AvmContract.GENERIC_CONTRACT);
         BigInteger nonce = initialNonce;
 

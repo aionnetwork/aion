@@ -1656,9 +1656,9 @@ public class ContractIntegTest {
         assertEquals(avmAddress, avmDeployedAddress);
 
         repo = blockchain.getRepository().startTracking();
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : this.resourceProvider.factoryForVersion2;
         byte[] avmCode = factory.newContractFactory().getJarBytes(AvmContract.HELLO_WORLD);
-         assertArrayEquals(avmCode, repo.getCode(avmAddress));
+        assertArrayEquals(avmCode, repo.getCode(avmAddress));
 
         assertEquals(BigInteger.ONE, repo.getBalance(avmAddress));
 
@@ -1970,12 +1970,12 @@ public class ContractIntegTest {
     }
 
     private byte[] getCallArguments(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : this.resourceProvider.factoryForVersion2;
         return factory.newStreamingEncoder().encodeOneString("sayHello").getEncoding();
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? this.resourceProvider.factoryForVersion1 : this.resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.HELLO_WORLD);
     }
 

@@ -196,7 +196,7 @@ public class AlternatingVmBlockTest {
     }
 
     private byte[] getJarBytes(AvmVersion version) {
-        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : null;
+        IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         return factory.newContractFactory().getDeploymentBytes(AvmContract.STATEFULNESS);
     }
 
