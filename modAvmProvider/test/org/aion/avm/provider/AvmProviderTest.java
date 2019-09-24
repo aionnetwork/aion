@@ -25,7 +25,7 @@ import org.junit.Test;
 
 /**
  * Tests more generic aspects of the {@link AvmProvider} class (specific version testing is done in
- * the the test class {@link AvmProviderVersion1Test}.
+ * the two test classes {@link AvmProviderVersion1Test} and {@link AvmProviderVersion2Test}).
  *
  * What's being tested here are methods related specifically to the provider at large, or more integ
  * style tests.
@@ -35,22 +35,24 @@ public class AvmProviderTest {
 
     @Before
     public void setup() throws Exception {
-        // Ensure we always begin with a disabled avm version.
+        // Ensure we always begin with disabled avm versions.
         if (!AvmProvider.holdsLock()) {
             Assert.assertTrue(AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES));
         }
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
         AvmProvider.releaseLock();
         this.projectRootDir = PathManager.fetchProjectRootDir();
     }
 
     @AfterClass
-    public static void tearDownClass() throws Exception {
-        // Ensure we never exit with an enabled avm version.
+    public static void tearDown() throws Exception {
+        // Ensure we never exit with enabled avm versions.
         if (!AvmProvider.holdsLock()) {
             Assert.assertTrue(AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES));
         }
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
         AvmProvider.releaseLock();
     }
 
@@ -86,6 +88,36 @@ public class AvmProviderTest {
 
         AvmProvider.shutdownAvm(AvmVersion.VERSION_1);
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+        AvmProvider.releaseLock();
+    }
+
+    @Test
+    public void testBalanceTransferTransactionVersion2() throws Exception {
+        Assert.assertTrue(AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES));
+        AvmProvider.enableAvmVersion(AvmVersion.VERSION_2, this.projectRootDir);
+        AvmProvider.startAvm(AvmVersion.VERSION_2);
+
+        // Set up the repo and give the sender account some balance.
+        RepositoryCache<AccountState, IBlockStoreBase> repository = newRepository();
+        AionAddress sender = randomAddress();
+        AionAddress recipient = randomAddress();
+        addBalance(repository, sender, BigInteger.valueOf(1_000_000));
+
+        // Run the transaction.
+        RepositoryCache<AccountState, IBlockStoreBase> repositoryChild = repository.startTracking();
+        IAvmExternalState externalState = newExternalState(AvmVersion.VERSION_2, repositoryChild, newEnergyRules());
+        Transaction transaction = newBalanceTransferTransaction(sender, recipient, BigInteger.TEN);
+        IAionVirtualMachine avm = AvmProvider.getAvm(AvmVersion.VERSION_2);
+        IAvmFutureResult[] futures = avm.run(externalState, new Transaction[]{ transaction }, AvmExecutionType.MINING, 0);
+
+        // Assert the result and state changes we expect.
+        Assert.assertEquals(1, futures.length);
+        TransactionResult result = futures[0].getResult();
+        Assert.assertTrue(result.transactionStatus.isSuccess());
+        Assert.assertEquals(BigInteger.TEN, repositoryChild.getBalance(recipient));
+
+        AvmProvider.shutdownAvm(AvmVersion.VERSION_2);
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
         AvmProvider.releaseLock();
     }
 
