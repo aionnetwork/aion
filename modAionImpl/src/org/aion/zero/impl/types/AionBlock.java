@@ -392,8 +392,8 @@ public class AionBlock extends AbstractBlock {
         }
 
 
-        if (totalDifficulty != null) {
-            toStringBuff.append("  cumulative difficulty=").append(totalDifficulty).append("\n");
+        if (unityDifficulty != null) {
+            toStringBuff.append("  difficulty=").append(unityDifficulty).append("\n");
         }
 
         if (mainChain != null) {

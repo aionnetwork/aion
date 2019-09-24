@@ -164,7 +164,7 @@ public class BlockchainIndexIntegrityTest {
         assertThat(infos.size()).isEqualTo(2);
 
         for (AionBlockStore.BlockInfo bi : infos) {
-            bi.setCummDifficulty(bi.getCummDifficulty().add(BigInteger.TEN));
+            bi.setMiningDifficulty(bi.getMiningDifficulty().add(BigInteger.TEN));
         }
         index.set(2, infos);
         index.commit();

@@ -158,7 +158,7 @@ public interface IAionBlockchain extends UnityChain {
 
     void close();
 
-    void setTotalDifficulty(BigInteger totalDifficulty);
+    void setUnityTotalDifficulty(BigInteger miningDifficulty, BigInteger stakingDifficulty);
 
     byte[] getBestBlockHash();
 

@@ -29,6 +29,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -45,6 +46,8 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
+import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.UnityDifficulty;
 import org.slf4j.Logger;
 
 public class AionHub {
@@ -378,13 +381,15 @@ public class AionHub {
                 // new best block after recovery
                 bestBlock = this.repository.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
-                    bestBlock.setCumulativeDifficulty(
-                            repository
-                                    .getBlockStore()
-                                    .getTotalDifficultyForHash(bestBlock.getHash()));
+                    Block blockWithDifficulties = getBlockStore().getBlockByHashWithInfo(bestBlock.getHash());
+
+                    bestBlock.setUnityDifficulty(
+                            new UnityDifficulty(
+                                    blockWithDifficulties.getMiningDifficulty(),
+                                    blockWithDifficulties.getStakingDifficulty()));
 
                     startingBlock = bestBlock;
-                    // TODO: The publicbestblock is a weird settings, should consider to remove it.
+                    // TODO : [unity] The publicbestblock is a weird settings, should consider to remove it.
                     ((AionBlockchainImpl) blockchain).resetPubBestBlock(bestBlock);
                 } else {
                     genLOG.error(
@@ -428,10 +433,14 @@ public class AionHub {
             AionHubUtils.buildGenesis(genesis, repository);
 
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
+            blockchain.setUnityTotalDifficulty(
+                    genesis.getMiningDifficulty(), genesis.getStakingDifficulty());
+
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
-                genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
+                genesis.setUnityDifficulty(
+                        new UnityDifficulty(
+                                genesis.getMiningDifficulty(), genesis.getStakingDifficulty()));
             }
 
             genLOG.info(
@@ -442,10 +451,15 @@ public class AionHub {
         } else {
             blockchain.setBestBlock(bestBlock);
             Block blockWithDifficulties = getBlockStore().getBestBlockWithInfo();
-            blockchain.setTotalDifficulty(blockWithDifficulties.getCumulativeDifficulty());
+            blockchain.setUnityTotalDifficulty(
+                    blockWithDifficulties.getMiningDifficulty(),
+                    blockWithDifficulties.getStakingDifficulty());
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
-                bestBlock.setCumulativeDifficulty(blockWithDifficulties.getCumulativeDifficulty());
+                bestBlock.setUnityDifficulty(
+                        new UnityDifficulty(
+                                blockWithDifficulties.getMiningDifficulty(),
+                                blockWithDifficulties.getStakingDifficulty()));
             }
 
             genLOG.info(

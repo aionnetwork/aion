@@ -38,8 +38,13 @@ public class AionHubUtils {
         track.flush();
 
         repository.commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
-        //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
-        repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), BigInteger.ONE, true);
+        repository
+                .getBlockStore()
+                .saveBlock(
+                        genesis,
+                        genesis.getMiningDifficulty(),
+                        genesis.getStakingDifficulty(),
+                        true);
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {

@@ -65,12 +65,8 @@ public interface Block {
 
     byte[] getExtraData();
 
-    /* these 3 setters are only relate with the consensus itself. Not been include inside the block data*/
-    void setMiningDifficulty(BigInteger totalDifficulty);
-
-    void setStakingDifficulty(BigInteger totalDifficulty);
-
-    void setCumulativeDifficulty(BigInteger totalDifficulty);
+    /* this setter is only relate with the consensus itself. Not been include inside the block data*/
+    void setUnityDifficulty(Difficulty ud);
 
     void setMainChain();
 

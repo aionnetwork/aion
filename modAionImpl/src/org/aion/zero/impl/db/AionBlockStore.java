@@ -41,6 +41,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.UnityDifficulty;
 import org.slf4j.Logger;
 
 public class AionBlockStore implements IBlockStoreBase {
@@ -185,9 +186,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 throw new IllegalStateException("The block info of the best block should not be null");
             }
 
-            bestBlock.setMiningDifficulty(bestBlockInfo.miningDifficulty);
-            bestBlock.setStakingDifficulty(bestBlockInfo.stakingDifficulty);
-            bestBlock.setCumulativeDifficulty(bestBlockInfo.cummDifficulty);
+            bestBlock.setUnityDifficulty(new UnityDifficulty(bestBlockInfo.miningDifficulty, bestBlockInfo.stakingDifficulty));
             bestBlock.setAntiparentHash(bestBlockInfo.sealAntiparentHash);
 
             return bestBlock;
@@ -378,10 +377,8 @@ public class AionBlockStore implements IBlockStoreBase {
                     byte[] hash = blockInfo.getHash();
                     Block block = blocks.get(hash);
                     if (block != null) {
-                        block.setCumulativeDifficulty(blockInfo.cummDifficulty);
                         block.setAntiparentHash(blockInfo.getSealAntiparentHash());
-                        block.setMiningDifficulty(blockInfo.miningDifficulty);
-                        block.setStakingDifficulty(blockInfo.stakingDifficulty);
+                        block.setUnityDifficulty(new UnityDifficulty(blockInfo.miningDifficulty, blockInfo.stakingDifficulty));
                         block.setMainChain();
                         return block;
                     }
@@ -438,10 +435,8 @@ public class AionBlockStore implements IBlockStoreBase {
                     b.setMainChain();
                 }
 
-                b.setCumulativeDifficulty(blockInfo.cummDifficulty);
                 b.setAntiparentHash(blockInfo.getSealAntiparentHash());
-                b.setMiningDifficulty(blockInfo.miningDifficulty);
-                b.setStakingDifficulty(blockInfo.stakingDifficulty);
+                b.setUnityDifficulty(new UnityDifficulty(blockInfo.miningDifficulty, blockInfo.stakingDifficulty));
                 blockList.add(b);
             }
 
@@ -631,9 +626,8 @@ public class AionBlockStore implements IBlockStoreBase {
                     if (blockInfo.isMainChain()) {
                         retBlock.setMainChain();
                     }
-                    retBlock.setMiningDifficulty(blockInfo.miningDifficulty);
-                    retBlock.setStakingDifficulty(blockInfo.stakingDifficulty);
-                    retBlock.setCumulativeDifficulty(blockInfo.cummDifficulty);
+
+                    retBlock.setUnityDifficulty(new UnityDifficulty(blockInfo.miningDifficulty, blockInfo.stakingDifficulty));
                     retBlock.setAntiparentHash(blockInfo.sealAntiparentHash);
                 }
                 return retBlock;
@@ -1274,8 +1268,7 @@ public class AionBlockStore implements IBlockStoreBase {
             levelBlocks.add(blockInfo);
             setBlockInfoForLevel(blockNumber, levelBlocks);
 
-            block.setMiningDifficulty(blockInfo.miningDifficulty);
-            block.setStakingDifficulty(blockInfo.stakingDifficulty);
+            block.setUnityDifficulty(new UnityDifficulty(blockInfo.miningDifficulty, blockInfo.stakingDifficulty));
 
             return block.getCumulativeDifficulty();
         } finally {
@@ -1653,8 +1646,8 @@ public class AionBlockStore implements IBlockStoreBase {
         }
 
         @VisibleForTesting
-        public void setCummDifficulty(BigInteger diff) {
-            cummDifficulty = diff;
+        public void setMiningDifficulty(BigInteger diff) {
+            miningDifficulty = diff;
         }
 
         public void setMainChain(boolean mainChain) {

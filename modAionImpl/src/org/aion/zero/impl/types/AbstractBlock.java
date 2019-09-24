@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.Difficulty;
 import org.aion.rlp.RLP;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -19,9 +20,7 @@ public abstract class AbstractBlock implements Block {
     // set from BlockInfos in index database
     byte[] antiparentHash;
 
-    private BigInteger miningDifficulty = null;
-    private BigInteger stakingDifficulty = null;
-    BigInteger totalDifficulty = null;
+    protected UnityDifficulty unityDifficulty;
 
     List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -94,58 +93,28 @@ public abstract class AbstractBlock implements Block {
     }
 
     public BigInteger getMiningDifficulty() {
-        if (miningDifficulty == null) {
+        if (unityDifficulty == null) {
             return BigInteger.ZERO;
         } else {
-            return miningDifficulty;
+            return unityDifficulty.getTotalMiningDifficulty();
         }
-    }
-
-    public void setMiningDifficulty(BigInteger miningDifficulty) {
-        if (miningDifficulty == null) {
-            throw new NullPointerException("miningDifficulty is null");
-        }
-
-        this.miningDifficulty = miningDifficulty;
-        if (this.stakingDifficulty != null) {
-            this.totalDifficulty = stakingDifficulty.multiply(miningDifficulty);
-        }    
     }
 
     public BigInteger getStakingDifficulty() {
-        if (stakingDifficulty == null) {
+        if (unityDifficulty == null) {
             return BigInteger.ZERO;
         } else {
-            return stakingDifficulty;
-        }
-    }
-
-    public void setStakingDifficulty(BigInteger stakingDifficulty) {
-        if (stakingDifficulty == null) {
-            throw new NullPointerException("stakingDifficulty is null");
-        }
-
-        this.stakingDifficulty = stakingDifficulty;
-        if (this.miningDifficulty != null) {
-            this.totalDifficulty = stakingDifficulty.multiply(miningDifficulty);
+            return unityDifficulty.getTotalStakingDifficulty();
         }
     }
 
     @Override
     public BigInteger getCumulativeDifficulty() {
-        if (totalDifficulty == null) {
+        if (unityDifficulty == null) {
             return BigInteger.ZERO;
         } else {
-            return totalDifficulty;
+            return unityDifficulty.getTotalDifficulty();
         }
-    }
-
-    @Override
-    public void setCumulativeDifficulty(BigInteger totalDifficulty) {
-        if (totalDifficulty == null) {
-            throw new NullPointerException("totalDifficulty is null");
-        }
-        this.totalDifficulty = totalDifficulty;
     }
 
     @Override
@@ -186,5 +155,10 @@ public abstract class AbstractBlock implements Block {
             parentHashWrapper = ByteArrayWrapper.wrap(getParentHash());
         }
         return parentHashWrapper;
+    }
+
+    @Override
+    public void setUnityDifficulty(Difficulty difficulty) {
+        unityDifficulty = (UnityDifficulty) difficulty;
     }
 }

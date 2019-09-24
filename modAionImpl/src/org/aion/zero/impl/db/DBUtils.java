@@ -573,12 +573,16 @@ public class DBUtils {
                 System.out.println("\nFinished rebuilding genesis block.");
                 startBlock = genesis;
                 currentBlock = 1L;
-                chain.setTotalDifficulty(genesis.getDifficultyBI()); // initial TD = genesis diff
+                chain.setUnityTotalDifficulty(
+                        genesis.getMiningDifficulty(), genesis.getStakingDifficulty());
             } else {
                 startBlock = store.getChainBlockByNumber(startHeight - 1);
                 currentBlock = startHeight;
                 // initial TD = diff of parent of first block to import
-                chain.setTotalDifficulty(store.getTotalDifficultyForHash(startBlock.getHash()));
+                Block blockWithDifficulties = store.getBlockByHashWithInfo(startBlock.getHash());
+                chain.setUnityTotalDifficulty(
+                        blockWithDifficulties.getMiningDifficulty(),
+                        blockWithDifficulties.getStakingDifficulty());
             }
 
             boolean fail = false;

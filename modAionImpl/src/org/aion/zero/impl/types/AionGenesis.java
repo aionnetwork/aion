@@ -455,11 +455,7 @@ public class AionGenesis extends AionBlock {
                 new GenesisStakingBlock(extraData, genesisStakingDifficulty);
             genesis.setGenesisStakingBlock(genesisStakingBlock);
             genesis.setAntiparentHash(genesisStakingBlock.getHash());
-
-            BigInteger miningDifficulty = genesis.getDifficultyBI();
-            genesis.setMiningDifficulty(miningDifficulty);
-            genesis.setStakingDifficulty(BigInteger.ONE);
-            genesis.setCumulativeDifficulty(miningDifficulty);
+            genesis.setUnityDifficulty(new UnityDifficulty(genesis.getDifficultyBI(), BigInteger.ONE));
             genesis.setStakingContractAddress(this.stakingContractAddress);
             return genesis;
         }
