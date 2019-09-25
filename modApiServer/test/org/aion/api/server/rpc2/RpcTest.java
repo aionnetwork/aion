@@ -3,7 +3,6 @@ package org.aion.api.server.rpc2;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.concurrent.locks.ReentrantLock;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.vm.avm.LongLivedAvm;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -26,6 +25,7 @@ public class RpcTest {
 
     @After
     public void tearDown() {
+        impl.aionHub.getBlockchain().setUnityForkNumber(Long.MAX_VALUE);
         LongLivedAvm.destroy();
     }
 

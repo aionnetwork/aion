@@ -123,7 +123,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static boolean fork040Enable;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
     private final GrandParentBlockHeaderValidator unityGrandParentBlockHeaderValidator;
-    private final ParentBlockHeaderValidator chainParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
     public final BeaconHashValidator beaconHashValidator;
@@ -201,7 +202,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         this.chainConfiguration = chainConfig;
         sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
-        chainParentBlockHeaderValidator = chainConfig.createChainParentBlockHeaderValidator();
+        preUnityParentBlockHeaderValidator = chainConfig.createPreUnityParentBlockHeaderValidator();
+        unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
         unityGrandParentBlockHeaderValidator = chainConfiguration.createUnityGrandParentHeaderValidator();
 
@@ -1598,24 +1600,24 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         "Can't find the sealParent block, the database might corrupt!");
             }
 
-            if (!chainParentBlockHeaderValidator.validate(header, chainParent.getHeader(), LOG, null)) {
-                return false;
-            }
-
             Block grandSealParent = getSealParentBlock(sealParent.getHeader());
 
             if (header.getNumber() >= FORK_5_BLOCK_NUMBER) {
-                return unityGrandParentBlockHeaderValidator.validate(
-                        grandSealParent == null ? null : grandSealParent.getHeader(),
-                        sealParent.getHeader(),
-                        header,
-                        LOG);
+                return  unityParentBlockHeaderValidator.validate(
+                                header, chainParent.getHeader(), LOG, null) &&
+                        unityGrandParentBlockHeaderValidator.validate(
+                                grandSealParent == null ? null : grandSealParent.getHeader(),
+                                sealParent.getHeader(),
+                                header,
+                                LOG);
             } else {
-                return preUnityGrandParentBlockHeaderValidator.validate(
-                        grandSealParent == null ? null : grandSealParent.getHeader(),
-                        sealParent.getHeader(),
-                        header,
-                        LOG);
+                return  preUnityParentBlockHeaderValidator.validate(
+                                header, chainParent.getHeader(), LOG, null) &&
+                        preUnityGrandParentBlockHeaderValidator.validate(
+                                grandSealParent == null ? null : grandSealParent.getHeader(),
+                                sealParent.getHeader(),
+                                header,
+                                LOG);
             }
         } else  if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             if (header.getNumber() < FORK_5_BLOCK_NUMBER) {
@@ -1627,7 +1629,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return false;
             }
 
-            if (!chainParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
+            if (!unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
                 return false;
             }
 

@@ -33,6 +33,8 @@ public class HeaderSealTypeRule implements BlockHeaderRule {
             BlockHeaderValidatorUtil.addError("Invalid header instance", this.getClass(), errors);
             return false;
         }
+        
+        byte[] parentHash = header.getParentHash();
 
         return true;
     }
