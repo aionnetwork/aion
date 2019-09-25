@@ -1,5 +1,6 @@
 package org.aion.zero.impl.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -215,4 +216,9 @@ public interface IAionBlockchain extends UnityChain {
     void loadBestMiningBlock();
 
     void loadBestStakingBlock();
+
+    boolean isUnityForkEnabled();
+
+    @VisibleForTesting
+    void setUnityForkNumber(long blockNumber);
 }
