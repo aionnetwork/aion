@@ -154,7 +154,7 @@ public class PendingStateTest {
         assertEquals(pendingState.addPendingTransaction(createTransaction), TxResponse.SUCCESS);
 
         AionBlock block =
-                blockchain.createNewBlock(
+                blockchain.createNewMiningBlock(
                         blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult =
                 blockchain.tryToConnectAndFetchSummary(block);
@@ -367,7 +367,7 @@ public class PendingStateTest {
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
 
@@ -436,7 +436,7 @@ public class PendingStateTest {
         assertEquals(pendingState.getPendingTransactions().get(0), tx1);
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), Collections.emptyList(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
@@ -476,7 +476,7 @@ public class PendingStateTest {
         assertEquals(pendingState.getPendingTransactions().get(0), tx1);
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
@@ -544,7 +544,7 @@ public class PendingStateTest {
         assertEquals(3, pendingState.getPendingTxSize());
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), Collections.emptyList(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
@@ -626,7 +626,7 @@ public class PendingStateTest {
         assertEquals(4, pendingState.getPendingTxSize());
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), Collections.emptyList(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
@@ -694,7 +694,7 @@ public class PendingStateTest {
         assertEquals(3, pendingState.getPendingTxSize());
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), Collections.emptyList(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
@@ -719,7 +719,7 @@ public class PendingStateTest {
         assertEquals(pendingState.addPendingTransaction(tx), TxResponse.SUCCESS);
 
         AionBlock block =
-            blockchain.createNewBlock(
+            blockchain.createNewMiningBlock(
                 blockchain.getBestBlock(), pendingState.getPendingTransactions(), false);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);

@@ -103,7 +103,7 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
@@ -152,7 +152,7 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         AionBlock block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
@@ -179,7 +179,7 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         assertTrue(block.getTransactionsList().isEmpty());
         results = this.blockchain.tryToConnectAndFetchSummary(block);
@@ -205,7 +205,7 @@ public class BalanceTransferConsensusTest {
         // Process the transaction.
         parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
         block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         results = this.blockchain.tryToConnectAndFetchSummary(block);
 
@@ -340,7 +340,7 @@ public class BalanceTransferConsensusTest {
     private Pair<ImportResult, AionBlockSummary> processTransactions(
             List<AionTransaction> transactions, int numNonRejectedTransactions) {
         Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
-        AionBlock block = this.blockchain.createNewBlock(parentBlock, transactions, false);
+        AionBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());

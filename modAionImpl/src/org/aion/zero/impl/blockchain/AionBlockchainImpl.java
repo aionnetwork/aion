@@ -1079,51 +1079,47 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Creates a new block, if you require more context refer to the blockContext creation method,
-     * which allows us to add metadata not usually associated with the block itself.
+     * Creates a new mining block, if you require more context refer to the blockContext creation
+     * method, which allows us to add metadata not usually associated with the block itself.
      *
      * @param parent block
-     * @param txs to be added into the block
-     * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new
-     *     block
-     * @see #createNewBlock(Block, List, boolean)
+     * @param transactions to be added into the block
+     * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new block
      * @return new block
      */
-    public synchronized AionBlock createNewBlock(
-            Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        return createNewBlockInternal(
-                        parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS)
-                .block;
+    public synchronized AionBlock createNewMiningBlock(
+            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
+        return createNewMiningBlockContext(parent, transactions, waitUntilBlockTime).block;
     }
 
     /**
-     * Creates a new block, adding in context/metadata about the block
+     * Creates a new mining block, adding in context/metadata about the block
      *
-     * @implNote Must catch the exception when callling this method.
-     *
-     * @param parent block
+     * @param parent the parent block
      * @param txs to be added into the block
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new
      *     block
-     * @see #createNewBlock(Block, List, boolean)
-     * @return new block
+     * @see #createNewMiningBlockContext(Block, List, boolean)
+     * @return a context with new mining block
      */
-    public synchronized BlockContext createNewBlockContext(
-            Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        return createNewBlockInternal(
-                parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
+    public synchronized BlockContext createNewMiningBlockContext(
+        Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
+        return createNewMiningBlockInternal(
+            parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
     }
 
-    BlockContext createNewBlockInternal(
-            Block parent,
-            List<AionTransaction> txs,
-            boolean waitUntilBlockTime,
-            long currTimeSeconds) {
-        long time = currTimeSeconds;
+    BlockContext createNewMiningBlockInternal(
+        Block parent,
+        List<AionTransaction> txs,
+        boolean waitUntilBlockTime,
+        long currTimeSeconds) {
 
-        if (parent.getTimestamp() >= time) {
-            time = parent.getTimestamp() + 1;
-            while (waitUntilBlockTime && System.currentTimeMillis() / THOUSAND_MS <= time) {
+        BlockHeader parentHdr = parent.getHeader();
+
+        long time = currTimeSeconds;
+        if (parentHdr.getTimestamp() >= time) {
+            time = parentHdr.getTimestamp() + 1;
+            while (waitUntilBlockTime && (System.currentTimeMillis() / THOUSAND_MS) <= time) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -1131,52 +1127,89 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
         }
-        long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
+        long energyLimit = this.energyLimitStrategy.getEnergyLimit(parentHdr);
 
         AionBlock block;
-        Block grandParent = this.getChainParent(parent.getHeader());
 
         try {
-            byte[] difficulty =
-                    ByteUtil.bigIntegerToBytes(
-                            this.chainConfiguration
-                                    .getDifficultyCalculator()
-                                    .calculateDifficulty(
-                                            parent.getHeader(),
-                                            grandParent == null ? null : grandParent.getHeader()),
-                            DIFFICULTY_BYTES);
-
-            A0BlockHeader headerBuilder =
-                    A0BlockHeader.Builder.newInstance()
-                            .withParentHash(parent.getHash())
-                            .withCoinbase(minerCoinbase)
-                            .withNumber(parent.getNumber() + 1)
-                            .withTimestamp(time)
-                            .withExtraData(minerExtraData)
-                            .withTxTrieRoot(calcTxTrie(txs))
-                            .withEnergyLimit(energyLimit)
-                            .withDifficulty(difficulty)
-                            .build();
-            block = new AionBlock(headerBuilder, txs);
+            A0BlockHeader.Builder headerBuilder =
+                A0BlockHeader.Builder.newInstance()
+                    .withParentHash(parent.getHash())
+                    .withCoinbase(minerCoinbase)
+                    .withNumber(parentHdr.getNumber() + 1)
+                    .withTimestamp(time)
+                    .withExtraData(minerExtraData)
+                    .withTxTrieRoot(calcTxTrie(txs))
+                    .withEnergyLimit(energyLimit);
+            block = new AionBlock(headerBuilder.build(), txs);
         } catch (Exception e) {
-            LOG.error("building block template failed!", e);
-            throw e;
+            LOG.error("Construct new mining block header exception:", e);
+            return null;
         }
 
-        /*
-         * Begin execution phase
-         */
-        pushState(parent.getHash());
+        Block grandParentMiningBlock = null;
+        BlockHeader parentMiningBlockHeader = null;
 
+        if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            parentMiningBlockHeader = parentHdr;
+            grandParentMiningBlock = getSealParentBlock(parentHdr);
+        } else if (parentHdr.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            Block parentMiningBlock = getBlockByHash(parent.getAntiparentHash());
+            if (parentMiningBlock != null) {
+                parentMiningBlockHeader = parentMiningBlock.getHeader();
+                grandParentMiningBlock = getSealParentBlock(parentMiningBlock.getHeader());
+            }
+        } else {
+            LOG.error("Construct new mining block exception: Invalid block type {}", parentHdr.getSealType());
+            return null;
+        }
+
+        if (block.getNumber() >= FORK_5_BLOCK_NUMBER) {
+            byte[] newDiff =
+                ByteUtil.bigIntegerToBytes(
+                    chainConfiguration
+                        .getUnityDifficultyCalculator()
+                        .calculateDifficulty(
+                            parentMiningBlockHeader,
+                            grandParentMiningBlock == null
+                                ? null
+                                : grandParentMiningBlock.getHeader()),
+                    DIFFICULTY_BYTES);
+
+            block.updateHeaderDifficulty(newDiff);
+        } else {
+            byte[] newDiff =
+                ByteUtil.bigIntegerToBytes(
+                    this.chainConfiguration
+                        .getDifficultyCalculator()
+                        .calculateDifficulty(
+                            parentMiningBlockHeader,
+                            grandParentMiningBlock == null
+                                ? null
+                                : grandParentMiningBlock.getHeader()),
+                    DIFFICULTY_BYTES);
+
+            block.updateHeaderDifficulty(newDiff);
+        }
+
+        BigInteger totalTransactionFee = blockPreSeal(parentHdr, block);
+
+        // derive base block reward
+        BigInteger baseBlockReward =
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
+        return new BlockContext(block, baseBlockReward, totalTransactionFee);
+    }
+
+    private BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
+        // Begin execution phase
+        pushState(parentHdr.getHash());
         track = repository.startTracking();
-
         RetValidPreBlock preBlock = generatePreBlock(block);
-
         track.flush();
 
-        /*
-         * Calculate the gas used for the included transactions
-         */
+        // Calculate the gas used for the included transactions
         long totalEnergyUsed = 0;
         BigInteger totalTransactionFee = BigInteger.ZERO;
         for (AionTxExecSummary summary : preBlock.summaries) {
@@ -1187,9 +1220,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         byte[] stateRoot = getRepository().getRoot();
         popState();
 
-        /*
-         * End execution phase
-         */
+        // End execution phase
         Bloom logBloom = new Bloom();
         for (AionTxReceipt receipt : preBlock.receipts) {
             logBloom.or(receipt.getBloomFilter());
@@ -1203,12 +1234,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 calcReceiptsTrie(preBlock.receipts),
                 totalEnergyUsed);
 
-        // derive base block reward
-        BigInteger baseBlockReward =
-                this.chainConfiguration
-                        .getRewardsCalculator()
-                        .calculateReward(block.getHeader().getNumber());
-        return new BlockContext(block, baseBlockReward, totalTransactionFee);
+        return totalTransactionFee;
     }
 
     private AionBlockSummary add(Block block) {

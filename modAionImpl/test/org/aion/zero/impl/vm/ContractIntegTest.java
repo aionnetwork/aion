@@ -1115,7 +1115,7 @@ public class ContractIntegTest {
         //
         //        assertFalse(CallMePrecompiledContract.youCalledMe);
         //        BlockContext context =
-        //                blockchain.createNewBlockContext(
+        //                blockchain.createNewMiningBlockContext(
         //                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
         //
         //        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo,
@@ -1656,7 +1656,7 @@ public class ContractIntegTest {
                         TransactionTypes.DEFAULT, null);
 
         block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(), Collections.singletonList(tx), false);
         Pair<ImportResult, AionBlockSummary> connectResult =
                 this.blockchain.tryToConnectAndFetchSummary(block);
@@ -1712,7 +1712,7 @@ public class ContractIntegTest {
         //        assertFalse(tx.isContractCreationTransaction());
         //
         //        BlockContext context =
-        //                blockchain.createNewBlockContext(
+        //                blockchain.createNewMiningBlockContext(
         //                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
         //
         //        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo,
@@ -1975,7 +1975,7 @@ public class ContractIntegTest {
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);

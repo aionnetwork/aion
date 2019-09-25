@@ -188,7 +188,7 @@ public class BlockchainAccountStateBenchmark {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
         assertThat(block.getTransactionsList().size()).isEqualTo(400);
         // clear the trie
         bc.getRepository().flush();
@@ -256,7 +256,7 @@ public class BlockchainAccountStateBenchmark {
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block =
-                bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
+                bc.createNewMiningBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
     }
 
@@ -295,7 +295,7 @@ public class BlockchainAccountStateBenchmark {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(repeat);
 

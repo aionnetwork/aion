@@ -59,7 +59,6 @@ import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.BeaconHashValidator;
 import org.aion.zero.impl.valid.TXValidator;
@@ -237,7 +236,7 @@ public class AionPendingStateImpl implements IPendingState {
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
                         && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     long t1 = System.currentTimeMillis();
-                    processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
+                    processBest((Block) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
 
                     if (LOGGER_TX.isDebugEnabled()) {
                         long t2 = System.currentTimeMillis();
@@ -818,7 +817,7 @@ public class AionPendingStateImpl implements IPendingState {
         return b1;
     }
 
-    public synchronized void processBest(AionBlock newBlock, List receipts) {
+    public synchronized void processBest(Block newBlock, List receipts) {
 
         if (isSeed) {
             // seed mode doesn't need to update the pendingState

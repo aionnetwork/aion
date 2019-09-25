@@ -489,7 +489,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -619,7 +619,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -673,7 +673,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -727,7 +727,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -779,7 +779,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -831,7 +831,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
 
@@ -881,7 +881,7 @@ public class ApiAion0Test {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().tryToConnect(blk);
         blk = api.getBlockByHash(blk.getHash());

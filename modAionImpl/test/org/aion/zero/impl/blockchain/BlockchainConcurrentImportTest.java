@@ -105,7 +105,7 @@ public class BlockchainConcurrentImportTest {
             txs = generateTransactions(MAX_TX_PER_BLOCK, accounts, sourceRepo);
             sourceRepo.syncToRoot(originalRoot);
 
-            block = sourceChain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+            block = sourceChain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
 
             A0BlockHeader newBlockHeader =
                     A0BlockHeader.Builder.newInstance()
@@ -303,7 +303,7 @@ public class BlockchainConcurrentImportTest {
 
                         AionBlock block = null;
                         try {
-                            block = _chain.createNewBlock(_parent, txs, true);
+                            block = _chain.createNewMiningBlock(_parent, txs, true);
 
                             A0BlockHeader newBlockHeader =
                                 A0BlockHeader.Builder.newInstance()
@@ -383,7 +383,7 @@ public class BlockchainConcurrentImportTest {
 
                         AionBlock block = null;
                         try {
-                            block = _chain.createNewBlock(_parent, txs, true);
+                            block = _chain.createNewMiningBlock(_parent, txs, true);
 
                             A0BlockHeader newBlockHeader =
                                 A0BlockHeader.Builder.newInstance()

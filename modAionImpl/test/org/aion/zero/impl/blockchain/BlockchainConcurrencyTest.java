@@ -39,13 +39,13 @@ public class BlockchainConcurrencyTest {
                         AionBlock block =
                             null;
                         try {
-                            block = bc.createNewBlock(bc.genesis, Collections.emptyList(), false);
+                            block = bc.createNewMiningBlock(bc.genesis, Collections.emptyList(), false);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                         while (!Thread.currentThread().isInterrupted() && count < MAX_COUNT) {
                             try {
-                                block = bc.createNewBlock(block, txList, false);
+                                block = bc.createNewMiningBlock(block, txList, false);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

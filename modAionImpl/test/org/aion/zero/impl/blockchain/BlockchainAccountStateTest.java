@@ -64,7 +64,7 @@ public class BlockchainAccountStateTest {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
         assertThat(block.getTransactionsList().size()).isEqualTo(400);
         // clear the trie
         bc.getRepository().flush();
@@ -127,7 +127,7 @@ public class BlockchainAccountStateTest {
             transactions.add(sendTransaction);
         }
 
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
         // clear the trie
         bc.getRepository().flush();
 

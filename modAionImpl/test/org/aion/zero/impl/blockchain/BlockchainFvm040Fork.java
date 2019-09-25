@@ -197,7 +197,7 @@ public class BlockchainFvm040Fork {
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block1 =
-                bc.createNewBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
+                bc.createNewMiningBlock(bc.getGenesis(), Collections.singletonList(deployTx), true);
 
         Pair<ImportResult, AionBlockSummary> result = bc.tryToConnectAndFetchSummary(block1);
         assertTrue(result.getLeft().isSuccessful());
@@ -217,7 +217,7 @@ public class BlockchainFvm040Fork {
                         1L,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block2 = bc.createNewBlock(block1, Collections.singletonList(txCall), true);
+        AionBlock block2 = bc.createNewMiningBlock(block1, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block2);
         assertSame(result.getLeft(), ImportResult.IMPORTED_BEST);
         assertEquals(
@@ -236,7 +236,7 @@ public class BlockchainFvm040Fork {
                         1L,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block3 = bc.createNewBlock(block2, Collections.singletonList(txCall), true);
+        AionBlock block3 = bc.createNewMiningBlock(block2, Collections.singletonList(txCall), true);
         result = bc.tryToConnectAndFetchSummary(block3);
 
         assertSame(result.getLeft(), ImportResult.IMPORTED_BEST);

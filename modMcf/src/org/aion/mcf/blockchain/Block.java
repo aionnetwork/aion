@@ -86,4 +86,14 @@ public interface Block {
 
     @VisibleForTesting
     void updateHeader(BlockHeader header);
+
+    void updateHeaderDifficulty(byte[] diff);
+
+    void updateTransactionAndState(
+            List<AionTransaction> transactions,
+            byte[] txTrieRoot,
+            byte[] stateRoot,
+            byte[] bloom,
+            byte[] receiptRoot,
+            long energyUsed);
 }

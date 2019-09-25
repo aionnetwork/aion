@@ -200,7 +200,7 @@ public abstract class ApiAion extends Api {
                 currentTemplate =
                         ac.getAionHub()
                                 .getBlockchain()
-                                .createNewBlockContext(bestBlock, new ArrayList<>(ret), false);
+                                .createNewMiningBlockContext(bestBlock, new ArrayList<>(ret), false);
             }
         } finally {
             blockTemplateLock.unlock();

@@ -301,7 +301,7 @@ public class BlockPropagationTest {
                         .build();
 
         AionBlock block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -356,7 +356,7 @@ public class BlockPropagationTest {
                         .build();
 
         AionBlock block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -425,7 +425,7 @@ public class BlockPropagationTest {
                         .build();
 
         AionBlock block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -492,7 +492,7 @@ public class BlockPropagationTest {
                         .build();
 
         AionBlock block =
-                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewMiningBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());

@@ -586,4 +586,43 @@ public class StakingBlock extends AbstractBlock {
 
         rlpEncoded = RLP.encodeList(elements);
     }
+
+    public static StakingBlock fromRLPList(RLPList rlpEncoded) {
+        if (rlpEncoded == null) {
+            throw new NullPointerException("RlpEncoded data is null");
+        }
+
+        // Parse Header
+        RLPList headerRLP = (RLPList) rlpEncoded.get(0);
+        StakingBlockHeader header;
+        try {
+            header = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+        } catch (Exception e) {
+            return null;
+        }
+
+        StakingBlock block = new StakingBlock();
+        block.header = header;
+        block.parsed = true;
+
+        // Parse Transactions
+        RLPList transactions = (RLPList) rlpEncoded.get(1);
+        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+            return null;
+        }
+
+        return block;
+    }
+
+    @Override
+    public void updateHeaderDifficulty(byte[] diff) {
+        if (diff == null) {
+            throw new NullPointerException("difficulty is null");
+        }
+        this.header =
+            StakingBlockHeader.Builder.newInstance()
+                .withHeader(getHeader())
+                .withDifficulty(diff)
+                .build();
+    }
 }

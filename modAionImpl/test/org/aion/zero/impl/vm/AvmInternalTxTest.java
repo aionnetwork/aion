@@ -78,7 +78,7 @@ public class AvmInternalTxTest {
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);
@@ -119,7 +119,7 @@ public class AvmInternalTxTest {
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block =
-                this.blockchain.createNewBlock(
+                this.blockchain.createNewMiningBlock(
                         this.blockchain.getBestBlock(),
                         Collections.singletonList(transaction),
                         false);

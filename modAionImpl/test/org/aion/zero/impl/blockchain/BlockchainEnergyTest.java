@@ -42,7 +42,7 @@ public class BlockchainEnergyTest {
 
         // in cases where no transactions are included (no energy usage)
         // the default energy limit should persist (it should not degrade)
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getNrgLimit()).isEqualTo(bc.getGenesis().getNrgLimit());
     }
 
@@ -79,13 +79,13 @@ public class BlockchainEnergyTest {
                             TransactionTypes.DEFAULT, null);
             txs.add(atx);
         }
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);
+        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), txs, true);
         ImportResult result = bc.tryToConnect(block);
 
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // proceed with connecting the next block, should observe an increase in energyLimit
-        AionBlock secondBlock = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        AionBlock secondBlock = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(secondBlock.getNrgLimit()).isEqualTo(block.getNrgLimit());
         System.out.println(
                 String.format("%d > %d", secondBlock.getNrgLimit(), block.getNrgLimit()));

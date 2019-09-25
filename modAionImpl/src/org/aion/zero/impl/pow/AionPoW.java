@@ -268,9 +268,13 @@ public class AionPoW {
 
             Block newBlock;
             try {
-                newBlock = blockchain.createNewBlock(bestBlock, txs, false);
+                newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
             } catch (Exception e) {
                 LOG.error("Create new block failed!", e);
+                return;
+            }
+
+            if (newBlock == null) {
                 return;
             }
 

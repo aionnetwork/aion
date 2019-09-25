@@ -292,7 +292,7 @@ public class ApiAionTest {
         Block blk =
                 impl.getAionHub()
                         .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
+                        .createNewMiningBlock(parentBlk, Collections.singletonList(tx), false);
 
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);
