@@ -23,6 +23,9 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'ch.qos.logback:logback-core:1.2.3'
     compile 'ch.qos.logback:logback-classic:1.2.3'
+
+    testCompile 'junit:junit:4.12'
+    testCompile "org.mockito:mockito-core:2.23.0"
 }
 
 sourceSets {

@@ -219,9 +219,9 @@ public class AionLoggerFactory {
     // note: this method is thread safe; delegated all thread safety down to logback
     public static Logger getLogger(String label) {
         Logger logger = context.exists(label);
-        if (logger != null) return logger;
+        if (logger != null) return AionLogger.wrap(logger);
 
         // root logger should always be available and should not return null
-        return context.getLogger(Logger.ROOT_LOGGER_NAME);
+        return AionLogger.wrap(context.getLogger(Logger.ROOT_LOGGER_NAME));
     }
 }
