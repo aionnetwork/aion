@@ -21,7 +21,6 @@ public class GenesisStakingBlock extends StakingBlock {
                 new byte[64]);
 
         GENESIS_DIFFICULTY = genesisDiff;
-        setUnityDifficulty(new UnityDifficulty(GENESIS_DIFFICULTY, GENESIS_DIFFICULTY));
     }
 
     public static BigInteger getGenesisDifficulty() {

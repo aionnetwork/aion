@@ -32,7 +32,6 @@ import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.db.impl.SystemExitCodes;
 import org.aion.equihash.EquihashMiner;
@@ -55,10 +54,8 @@ import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
-import org.aion.zero.impl.types.UnityDifficulty;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.BeaconHashValidator;
-import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
@@ -158,7 +155,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private volatile Block pubBestBlock;
 
     /** use AtomicReference to make sure the difficulty update at the same time */
-    private AtomicReference<UnityDifficulty> unityDifficulty = new AtomicReference<>(new UnityDifficulty());
+    private AtomicReference<BigInteger> totalDifficulty = new AtomicReference<>(ZERO);
 
     private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
@@ -618,10 +615,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             throw new IllegalStateException("Invalid best block data!");
         }
-
-        unityDifficulty.set(
-                new UnityDifficulty(
-                        bestBlock.getMiningDifficulty(), bestBlock.getStakingDifficulty()));
+        
+        totalDifficulty.set(bestBlock.getTotalDifficulty());
 
         this.repository =
                 (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
@@ -636,7 +631,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         bestMiningBlock = state.savedBestMining;
         bestStakingBlock = state.savedBestStaking;
 
-        unityDifficulty.set(state.ud);
+        totalDifficulty.set(state.td);
     }
 
     private void dropState() {
@@ -664,8 +659,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         if (summary != null
-                && isMoreThan(
-                        unityDifficulty.get().getTotalDifficulty(), savedState.ud.getTotalDifficulty())) {
+                && isMoreThan(totalDifficulty.get(), savedState.td)) {
             if (LOG.isInfoEnabled()) {
                 LOG.info(
                         "branching: from = {}/{}, to = {}/{}",
@@ -843,7 +837,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.NO_CHILD;
         } else {
             // the total difficulty will be updated after the chain is complete
-            getBlockStore().saveBlock(block, ZERO, ZERO, true);
+            getBlockStore().saveBlock(block, ZERO, true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1408,7 +1402,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (summary != null) {
             updateTotalDifficulty(block);
-            summary.setTotalDifficulty(block.getCumulativeDifficulty());
+            summary.setTotalDifficulty(block.getTotalDifficulty());
 
             storeBlock(block, summary.getReceipts(), summary.getSummaries());
 
@@ -1929,13 +1923,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void storeBlock(Block block, List<AionTxReceipt> receipts, List<AionTxExecSummary> summaries) {
 
-        UnityDifficulty ud = unityDifficulty.get();
-
+        BigInteger td = totalDifficulty.get();
+        
         getBlockStore()
                 .saveBlock(
                         block,
-                        ud.getTotalMiningDifficulty(),
-                        ud.getTotalStakingDifficulty(),
+                        td,
                         !fork);
 
         AionTxInfo info;
@@ -1956,7 +1949,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     "Block saved: number: {}, hash: {}, {}",
                     block.getNumber(),
                     block.getShortHash(),
-                    ud.toString());
+                    td.toString());
 
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
         }
@@ -2066,55 +2059,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger getTotalDifficulty() {
-        return getBestBlock().getCumulativeDifficulty();
+        return getBestBlock().getTotalDifficulty();
     }
 
     @Override
-    public void setUnityTotalDifficulty(BigInteger miningDifficulty, BigInteger stakingDifficulty) {
-        if (miningDifficulty == null || stakingDifficulty == null) {
-            throw new NullPointerException();
-        }
-
-        unityDifficulty.set(
-                new UnityDifficulty(miningDifficulty, stakingDifficulty));
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty.set(totalDifficulty);
     }
 
     @VisibleForTesting
     protected BigInteger getCacheTD() {
-        return unityDifficulty.get().getTotalDifficulty();
+        return totalDifficulty.get();
     }
 
     private BigInteger getInternalTD() {
-        return unityDifficulty.get().getTotalDifficulty();
+        return totalDifficulty.get();
     }
 
     private void updateTotalDifficulty(Block block) {
-        UnityDifficulty ud = unityDifficulty.get();
 
-        if (block.getNumber() == FORK_5_BLOCK_NUMBER) {
-            unityDifficulty.set(
-                    new UnityDifficulty(
-                            ud.getTotalMiningDifficulty(),
-                            GenesisStakingBlock.getGenesisDifficulty()));
-            ud = unityDifficulty.get();
-        }
-
-        BigInteger tmd = ud.getTotalMiningDifficulty();
-        BigInteger tsd = ud.getTotalStakingDifficulty();
-        if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            tmd = tmd.add(block.getDifficultyBI());
-        } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            tsd = tsd.add(block.getDifficultyBI());
-        } else {
-            throw new IllegalStateException("Invalid block type");
-        }
-
-        unityDifficulty.set(new UnityDifficulty(tmd, tsd));
-
-        block.setUnityDifficulty(unityDifficulty.get());
-
+        BigInteger newTotalDifficulty = totalDifficulty.get().add(block.getDifficultyBI());
+        totalDifficulty.set(newTotalDifficulty);
+        block.setTotalDifficulty(newTotalDifficulty);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("UnityDifficulty updated: {}", unityDifficulty.toString());
+            LOG.debug("UnityDifficulty updated: {}", newTotalDifficulty.toString());
         }
     }
 
@@ -2543,7 +2511,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Block parentBlock =
                 repo.getBlockStore().getBlockByHashWithInfo(dirtyBlocks.pop().getHash());
 
-        BigInteger totalDiff = parentBlock.getCumulativeDifficulty();
+        BigInteger totalDiff = parentBlock.getTotalDifficulty();
 
         LOG.info(
                 "Valid index found at block hash: {}, number: {}.",
@@ -2564,8 +2532,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     repo.getBlockStore()
                             .correctIndexEntry(
                                     other,
-                                    parentBlock.getMiningDifficulty(),
-                                    parentBlock.getStakingDifficulty());
+                                    parentBlock.getTotalDifficulty());
         }
 
         // update the repository
@@ -2639,7 +2606,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Block savedBest = bestBlock;
         AionBlock savedBestMining = bestMiningBlock;
         StakingBlock savedBestStaking = bestStakingBlock;
-        UnityDifficulty ud = new UnityDifficulty(unityDifficulty.get());
+        BigInteger td = totalDifficulty.get();
     }
 
     /**

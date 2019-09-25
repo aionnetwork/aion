@@ -42,8 +42,7 @@ public class AionHubUtils {
                 .getBlockStore()
                 .saveBlock(
                         genesis,
-                        genesis.getMiningDifficulty(),
-                        genesis.getStakingDifficulty(),
+                        genesis.getDifficultyBI(),
                         true);
     }
 

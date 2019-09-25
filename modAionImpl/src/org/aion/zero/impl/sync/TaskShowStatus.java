@@ -150,7 +150,7 @@ final class TaskShowStatus implements Runnable {
 
     private String getStatus() {
         Block selfBest = this.chain.getBestBlock();
-        String selfTd = selfBest.getCumulativeDifficulty().toString(10);
+        String selfTd = selfBest.getTotalDifficulty().toString(10);
 
         return "sync-status avg-import="
                 + String.format("%.2f", this.stats.getAvgBlocksPerSec())

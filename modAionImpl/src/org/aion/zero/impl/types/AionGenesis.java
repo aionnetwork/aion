@@ -1,21 +1,22 @@
 package org.aion.zero.impl.types;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
-import org.aion.zero.impl.trie.SecureTrie;
-import org.aion.zero.impl.trie.Trie;
-import org.aion.util.types.DataWord;
+import org.aion.base.ConstantUtil;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.db.AionContractDetailsImpl;
+import org.aion.zero.impl.trie.SecureTrie;
+import org.aion.zero.impl.trie.Trie;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AionGenesis extends AionBlock {
     /**
@@ -455,7 +456,7 @@ public class AionGenesis extends AionBlock {
                 new GenesisStakingBlock(extraData, genesisStakingDifficulty);
             genesis.setGenesisStakingBlock(genesisStakingBlock);
             genesis.setAntiparentHash(genesisStakingBlock.getHash());
-            genesis.setUnityDifficulty(new UnityDifficulty(genesis.getDifficultyBI(), BigInteger.ONE));
+            genesis.setTotalDifficulty(genesis.getDifficultyBI());
             genesis.setStakingContractAddress(this.stakingContractAddress);
             return genesis;
         }

@@ -75,14 +75,10 @@ public class UnityHardForkTest {
         Block blockOneInfoPOW =
                 bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockOnePOW.getHash());
 
-        Assert.assertEquals(genesis.getMiningDifficulty(), blockOneInfoPOW.getDifficultyBI());
+        Assert.assertEquals(genesis.getDifficultyBI(), blockOneInfoPOW.getDifficultyBI());
         Assert.assertEquals(
-                genesis.getMiningDifficulty().add(blockOneInfoPOW.getDifficultyBI()),
-                blockOneInfoPOW.getMiningDifficulty());
-        Assert.assertEquals(genesis.getStakingDifficulty(), blockOneInfoPOW.getStakingDifficulty());
-        Assert.assertEquals(
-                blockOneInfoPOW.getMiningDifficulty().multiply(genesis.getStakingDifficulty()),
-                blockOneInfoPOW.getCumulativeDifficulty());
+                genesis.getDifficultyBI().add(blockOneInfoPOW.getDifficultyBI()),
+                blockOneInfoPOW.getTotalDifficulty());
 
         Block blockTwoPOW = bc.createNewMiningBlock(blockOneInfoPOW, Collections.emptyList(), true);
         result = bc.tryToConnect(blockTwoPOW);
@@ -93,14 +89,8 @@ public class UnityHardForkTest {
 
         Assert.assertEquals(925, blockTwoInfoPOW.getDifficultyBI().intValue());
         Assert.assertEquals(
-                blockOnePOW.getCumulativeDifficulty().add(blockTwoInfoPOW.getDifficultyBI()),
-                blockTwoInfoPOW.getMiningDifficulty());
-        Assert.assertEquals(genesis.getStakingDifficulty(), blockTwoInfoPOW.getStakingDifficulty());
-        Assert.assertEquals(
-                blockTwoInfoPOW
-                        .getMiningDifficulty()
-                        .multiply(blockOneInfoPOW.getStakingDifficulty()),
-                blockTwoInfoPOW.getCumulativeDifficulty());
+                blockOnePOW.getTotalDifficulty().add(blockTwoInfoPOW.getDifficultyBI()),
+                blockTwoInfoPOW.getTotalDifficulty());
 
         StakingBlock blockThreePOS = createNewStakingBlock(blockTwoInfoPOW, new byte[64]);
         assertNotNull(blockThreePOS);
@@ -116,13 +106,13 @@ public class UnityHardForkTest {
                 GenesisStakingBlock.getGenesisDifficulty(),
                 blockThreeInfoPOS.getHeader().getDifficultyBI());
         Assert.assertEquals(
-                GenesisStakingBlock.getGenesisDifficulty().add(blockThreeInfoPOS.getDifficultyBI()),
-                blockThreeInfoPOS.getStakingDifficulty());
+                GenesisStakingBlock.getGenesisDifficulty().add(blockTwoPOW.getTotalDifficulty()),
+                blockThreeInfoPOS.getTotalDifficulty());
 
         Assert.assertTrue(
                 blockThreeInfoPOS
-                                .getCumulativeDifficulty()
-                                .compareTo(blockTwoInfoPOW.getCumulativeDifficulty())
+                                .getTotalDifficulty()
+                                .compareTo(blockTwoInfoPOW.getTotalDifficulty())
                         > 0);
     }
 
