@@ -155,6 +155,8 @@ public class BeaconHashValidatorTest {
 
         LinkedList<Block> sideChain = mockChain(fork050Number, 4, blockchain);
 
+        byte[] beaconHash = new byte[32];
+        System.arraycopy(sideChain.get(3).getHash(), 0, beaconHash, 0, 32);
         AionTransaction tx = AionTransaction.createWithoutKey(
                 new byte[] { 1 },                           // nonce - any val
                 new AionAddress(ByteUtil.hexStringToBytes(  // sender - any val
@@ -166,7 +168,7 @@ public class BeaconHashValidatorTest {
                 1l,                                         // energyLimit - any val
                 1l,                                         // energyPrice - any val
                 (byte) 1,                                   // type - any val
-                sideChain.get(3).getHash()                  // beacon hash
+                beaconHash                                  // beacon hash
         );
 
         BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
@@ -194,6 +196,9 @@ public class BeaconHashValidatorTest {
         when(blockchain.isMainChain(sideChain.get(2).getHash(), sideChain.get(2).getNumber())).thenReturn(true);
         when(blockchain.isMainChain(sideChain.get(4).getHash())).thenReturn(true);
 
+        byte[] beaconHash = new byte[32];
+        System.arraycopy(sideChain.get(4).getHash(), 0, beaconHash, 0, 32);
+
         AionTransaction tx = AionTransaction.createWithoutKey(
                 new byte[] { 1 },                           // nonce - any val
                 new AionAddress(ByteUtil.hexStringToBytes(  // sender - any val
@@ -205,7 +210,7 @@ public class BeaconHashValidatorTest {
                 1l,                                         // energyLimit - any val
                 1l,                                         // energyPrice - any val
                 (byte) 1,                                   // type - any val
-                sideChain.get(4).getHash()                  // beacon hash
+                beaconHash                                  // beacon hash
         );
 
         BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
@@ -241,6 +246,8 @@ public class BeaconHashValidatorTest {
         // need to set up the side chain so that its head block number is > mainchainOnlyBlockNum
         LinkedList<Block> sideChain = mockChain(0, 4, blockchain);
 
+        byte[] beaconHash = new byte[32];
+        System.arraycopy(mainchainOnlyBlockHash, 0, beaconHash, 0, 32);
         AionTransaction tx = AionTransaction.createWithoutKey(
                 new byte[] { 1 },                           // nonce - any val
                 new AionAddress(ByteUtil.hexStringToBytes(  // sender - any val
@@ -252,7 +259,7 @@ public class BeaconHashValidatorTest {
                 1l,                                         // energyLimit - any val
                 1l,                                         // energyPrice - any val
                 (byte) 1,                                   // type - any val
-                mainchainOnlyBlockHash                      // beacon hash
+                beaconHash                                  // beacon hash
         );
 
         BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);

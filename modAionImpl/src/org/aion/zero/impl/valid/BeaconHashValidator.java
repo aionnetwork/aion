@@ -10,6 +10,8 @@ import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 /** Validates beacon hash of transaction */
 public class BeaconHashValidator {
     private final IAionBlockchain blockchain;
@@ -153,7 +155,7 @@ public class BeaconHashValidator {
         long beaconNumber = beaconBlock.getNumber();
 
         while(null != cur) {
-            if(beaconHash.equals(cur.getHash())) {
+            if(Arrays.equals(beaconHash, cur.getHash())) {
                 return true;
             } else if(beaconNumber >= cur.getNumber()) {
                 TX_LOG.debug("BeaconHashValidator#checkSideChain: reached level of beacon hash block {}",
