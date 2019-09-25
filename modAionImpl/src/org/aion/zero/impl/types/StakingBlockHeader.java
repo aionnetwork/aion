@@ -552,7 +552,7 @@ public class StakingBlockHeader  implements BlockHeader {
             return new StakingBlockHeader(this);
         }
 
-        Builder withHeader(StakingBlockHeader header) {
+        public Builder withHeader(StakingBlockHeader header) {
             if (header == null) {
                 throw new NullPointerException();
             }

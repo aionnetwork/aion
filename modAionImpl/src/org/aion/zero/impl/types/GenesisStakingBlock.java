@@ -8,7 +8,7 @@ public class GenesisStakingBlock extends StakingBlock {
     //TODO: [unity] The GENESIS_DIFFICULTY will be changed before go production.
     private static BigInteger GENESIS_DIFFICULTY;
 
-    GenesisStakingBlock(byte[] extraData, BigInteger genesisDiff) {
+    public GenesisStakingBlock(byte[] extraData, BigInteger genesisDiff) {
         super(
                 new byte[32],
                 AddressUtils.ZERO_ADDRESS,

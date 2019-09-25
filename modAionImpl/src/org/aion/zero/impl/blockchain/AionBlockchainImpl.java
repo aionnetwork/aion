@@ -1640,7 +1640,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             BigInteger stake =
-                    stakingContractHelper.getEffectiveStake(
+                    getStakingContractHelper().getEffectiveStake(
                             new AionAddress(
                                     AddressSpecs.computeA0Address(
                                             ((StakingBlockHeader) header).getSigningPublicKey())),
