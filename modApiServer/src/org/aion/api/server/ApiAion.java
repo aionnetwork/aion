@@ -76,7 +76,6 @@ public abstract class ApiAion extends Api {
     protected final String clientVersion = computeClientVersion();
 
     private volatile BlockContext currentTemplate;
-    private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
 
@@ -180,13 +179,7 @@ public abstract class ApiAion extends Api {
 
     protected BlockContext getBlockTemplate() {
 
-        Pair<BlockContext, byte[]> template = ac.getAionHub().getMiningBlockTemplate(currentBestBlockHash);
-
-        if (template.getLeft() != null) {
-            currentTemplate = template.getLeft();
-            currentBestBlockHash = template.getRight();
-        }
-
+        currentTemplate = ac.getAionHub().getMiningBlockTemplate(currentTemplate);
         return currentTemplate;
     }
 

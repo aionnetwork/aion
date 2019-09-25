@@ -136,6 +136,15 @@ public final class A0BlockHeader implements BlockHeader {
         this.nonce = builder.nonce;
     }
 
+    /**
+     * Returns a new header that is identical to this one, except with a different timestamp
+     */    public A0BlockHeader updateTimestamp(long newTimestamp) {
+        return Builder.newInstance()
+                .withHeader(this)
+                .withTimestamp(newTimestamp)
+                .build();
+    }
+
     public byte[] getSolution() {
         return solution.clone();
     }

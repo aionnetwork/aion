@@ -30,6 +30,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
@@ -92,6 +93,11 @@ public class AionHub {
      */
     private volatile Block startingBlock;
 
+    /**
+     * The timestamp of the most recent mining block template we created
+     */
+    private long miningBlockTemplateTimestamp = 0L;
+    
     private ReentrantLock blockTemplateLock;
 
     /**
@@ -605,22 +611,17 @@ public class AionHub {
         }
     }
 
-    public Pair<BlockContext, byte[]> getMiningBlockTemplate(byte[] currentBestBlockHash) {
+    public BlockContext getMiningBlockTemplate(BlockContext currentBlockTemplate) {
 
         BlockContext context = null;
 
         blockTemplateLock.lock();
         try {
             Block bestBlock = mempool.getBestBlock();
-            // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what
-            // does that mean for staking blocks?
-            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
+            byte[] bestBlockHash = bestBlock.getHash();
 
-            if (currentBestBlockHash == null
-                    || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
-
-                // Record new best block on the chain
-                currentBestBlockHash = bestBlockHash;
+            if (currentBlockTemplate == null
+                    || !Arrays.equals(bestBlockHash, currentBlockTemplate.block.getParentHash())) {
 
                 // Generate new block template
                 AionPendingStateImpl.TransactionSortedSet ret =
@@ -630,12 +631,19 @@ public class AionHub {
                 context =
                         blockchain.createNewMiningBlockContext(
                                 bestBlock, new ArrayList<>(ret), false);
+                
+                miningBlockTemplateTimestamp = context.block.getTimestamp();
+            } else if ((System.currentTimeMillis() / 1000) > miningBlockTemplateTimestamp && blockchain.isUnityForkEnabled()) {
+                A0BlockHeader newHeader = currentBlockTemplate.block.getHeader().updateTimestamp(System.currentTimeMillis() / 1000);
+                AionBlock newBlock = new AionBlock(newHeader, currentBlockTemplate.block.getTransactionsList());
+                context = new BlockContext(newBlock, currentBlockTemplate.baseBlockReward, currentBlockTemplate.transactionFee);
+                miningBlockTemplateTimestamp = context.block.getTimestamp();
             }
         } finally {
             blockTemplateLock.unlock();
         }
 
-        return Pair.of(context, currentBestBlockHash);
+        return context;
     }
 
     public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey) {
