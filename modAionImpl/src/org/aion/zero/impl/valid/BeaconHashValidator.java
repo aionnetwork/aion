@@ -62,7 +62,7 @@ public class BeaconHashValidator {
         long t0 = System.nanoTime();
         try {
             Preconditions.checkNotNull(tx, "AionTransaction must not be null");
-            Preconditions.checkNotNull(tx, "Block must not be null");
+            Preconditions.checkNotNull(block, "Block must not be null");
 
             byte[] beaconHash = tx.getBeaconHash();
             if (beaconHash == null) {
