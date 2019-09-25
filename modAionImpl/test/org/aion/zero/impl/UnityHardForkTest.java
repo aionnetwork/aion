@@ -2,6 +2,7 @@ package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
+import org.junit.Ignore;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@Ignore
 public class UnityHardForkTest {
 
     private ECKey key;

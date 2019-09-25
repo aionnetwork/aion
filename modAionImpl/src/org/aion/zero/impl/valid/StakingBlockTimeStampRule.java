@@ -64,7 +64,7 @@ public class StakingBlockTimeStampRule implements DependentBlockHeaderRule {
 
         long offset = max(delta.longValueExact(), 1);
 
-        if (timeStamp < (parentTimeStamp + offset)) {
+        if (timeStamp != (parentTimeStamp + offset)) {
             BlockHeaderValidatorUtil.addError(
                     formatError(timeStamp, parentTimeStamp, delta), this.getClass(), errors);
             return false;
