@@ -2,6 +2,7 @@ package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
+import static org.aion.util.types.AddressUtils.ZERO_ADDRESS;
 import org.junit.Ignore;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -28,7 +29,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@Ignore
 public class UnityHardForkTest {
 
     private ECKey key;
@@ -41,7 +41,8 @@ public class UnityHardForkTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         LongLivedAvm.createAndStartLongLivedAvm();
-        doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
+        doReturn(new BigInteger("10000000000")).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
+        doReturn(ZERO_ADDRESS).when(stakingContractHelper).getCoinbaseForSigningAddress(any(AionAddress.class));
         key =
                 new ECKeyEd25519()
                         .fromPrivate(
@@ -66,7 +67,7 @@ public class UnityHardForkTest {
 
     @Test
     public void testBlockUnityHardFork() {
-        bc.setUnityForkNumber(3);
+        bc.setUnityForkNumber(4);
 
         Block genesis = bc.getBestBlock();
         Block blockOnePOW = bc.createNewMiningBlock(genesis, Collections.emptyList(), true);
@@ -94,34 +95,46 @@ public class UnityHardForkTest {
                 blockOnePOW.getTotalDifficulty().add(blockTwoInfoPOW.getDifficultyBI()),
                 blockTwoInfoPOW.getTotalDifficulty());
 
-        StakingBlock blockThreePOS = createNewStakingBlock(blockTwoInfoPOW, new byte[64]);
-        assertNotNull(blockThreePOS);
+        Block blockThreePOW = bc.createNewMiningBlock(blockTwoInfoPOW, Collections.emptyList(), true);
+        result = bc.tryToConnect(blockThreePOW);
+        assertThat(bc.getBestBlock() == blockThreePOW).isTrue();
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+        Block blockThreeInfoPOW =
+                bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockThreePOW.getHash());
 
-        result = bc.tryToConnect(blockThreePOS);
+        Assert.assertEquals(926, blockThreeInfoPOW.getDifficultyBI().intValue());
+        Assert.assertEquals(
+                blockTwoPOW.getTotalDifficulty().add(blockThreeInfoPOW.getDifficultyBI()),
+                blockThreeInfoPOW.getTotalDifficulty());
 
-        assertThat(bc.getBestBlock() == blockThreePOS).isTrue();
+        StakingBlock blockFourPOS = createNewStakingBlock(blockThreeInfoPOW, new byte[64]);
+        assertNotNull(blockFourPOS);
+
+        result = bc.tryToConnect(blockFourPOS);
+
+        assertThat(bc.getBestBlock() == blockFourPOS).isTrue();
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Block blockThreeInfoPOS =
-                bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockThreePOS.getHash());
+        Block blockFourInfoPOS =
+                bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockFourPOS.getHash());
         Assert.assertEquals(
                 GenesisStakingBlock.getGenesisDifficulty(),
-                blockThreeInfoPOS.getHeader().getDifficultyBI());
+                blockFourInfoPOS.getHeader().getDifficultyBI());
         Assert.assertEquals(
-                GenesisStakingBlock.getGenesisDifficulty().add(blockTwoPOW.getTotalDifficulty()),
-                blockThreeInfoPOS.getTotalDifficulty());
+                GenesisStakingBlock.getGenesisDifficulty().add(blockThreeInfoPOW.getTotalDifficulty()),
+                blockFourInfoPOS.getTotalDifficulty());
 
         Assert.assertTrue(
-                blockThreeInfoPOS
+                blockFourInfoPOS
                                 .getTotalDifficulty()
-                                .compareTo(blockTwoInfoPOW.getTotalDifficulty())
+                                .compareTo(blockThreeInfoPOW.getTotalDifficulty())
                         > 0);
     }
 
     private StakingBlock createNewStakingBlock(Block parent, byte[] parentSeed) {
         byte[] seedBlockOne = key.sign(parentSeed).getSignature();
         StakingBlock blockOnePOS =
-                bc.createNewStakingBlock(parent, Collections.emptyList(), seedBlockOne);
+                bc.createStakingBlockTemplate(Collections.emptyList(), key.getPubKey(), seedBlockOne);
 
         if (blockOnePOS == null) {
             return null;

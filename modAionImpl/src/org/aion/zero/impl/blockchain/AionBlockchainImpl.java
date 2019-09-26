@@ -126,8 +126,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
-    //TODO: We can probably eliminate this validator
-    private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
     public final BeaconHashValidator beaconHashValidator;
 
@@ -203,7 +201,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
         preUnityParentBlockHeaderValidator = chainConfig.createPreUnityParentBlockHeaderValidator();
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
@@ -1153,8 +1150,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         Block grandParentBlock = getChainParent(parentHdr);
-
-        if (block.getNumber() >= FORK_5_BLOCK_NUMBER) {
+        
+        // We want the fork block itself to be a PoW block subject to the old pre-Unity rules, 
+        // so we use a strict greater than here
+        if (block.getNumber() > FORK_5_BLOCK_NUMBER) {
             Block greatGrandParentBlock = getChainParent(grandParentBlock.getHeader());
             byte[] newDiff =
                     ByteUtil.bigIntegerToBytes(
@@ -1221,7 +1220,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey) {
         BlockHeader parentHdr = parent.getHeader();
 
-        if (parentHdr.getNumber() + 1 < FORK_5_BLOCK_NUMBER) {
+        if (parentHdr.getNumber() < FORK_5_BLOCK_NUMBER) {
             LOG.debug("Unity fork has not been enabled! Can't create the staking blocks");
             return null;
         }
@@ -1243,13 +1242,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         grandParent.getHeader()
                             , greatGrandParent.getHeader());
         }
-
-
+        
         long newTimestamp;
         AionAddress coinbase;
         if (signingPublicKey != null) { // Create block template for the external stakers.
             AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
-            coinbase = stakingContractHelper.getCoinbaseForSigningAddress(signingAddress);
+            coinbase = getStakingContractHelper().getCoinbaseForSigningAddress(signingAddress);
             if (coinbase == null) {
                 LOG.debug(
                         "Could not get the coinbase by given the signing publickey",
@@ -1268,7 +1266,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            BigInteger stakes = stakingContractHelper.getEffectiveStake(signingAddress, coinbase);
+            BigInteger stakes = getStakingContractHelper().getEffectiveStake(signingAddress, coinbase);
             if (stakes.signum() < 1) {
                 LOG.debug(
                         "The caller {} with coinbase {} has no stake ",
@@ -1281,7 +1279,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             newTimestamp =
                     Long.max(
-                            parentStakingBlock.getHeader().getTimestamp() + newDelta,
+                            parent.getHeader().getTimestamp() + newDelta,
                             parent.getHeader().getTimestamp() + 1);
         } else {
             newTimestamp = System.currentTimeMillis() / THOUSAND_MS;
@@ -1556,13 +1554,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             Block grandParent = getChainParent(parent.getHeader());
 
-            if (header.getNumber() >= FORK_5_BLOCK_NUMBER) {
+            // We want the fork block itself to be a PoW block subject to the old pre-Unity rules, 
+            // so we use a strict greater than here
+            if (header.getNumber() > FORK_5_BLOCK_NUMBER) {
                 if (grandParent == null) {
                     return false;
                 }
 
                 Block greatGrandParent = getChainParent(grandParent.getHeader());
-                if (greatGrandParent != null) {
+                if (greatGrandParent == null) {
                     return false;
                 }
 
@@ -1593,7 +1593,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return false;
             }
 
-            if (!unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
+            BigInteger stake =
+                    getStakingContractHelper().getEffectiveStake(
+                            new AionAddress(
+                                    AddressSpecs.computeA0Address(
+                                            ((StakingBlockHeader) header).getSigningPublicKey())),
+                            ((StakingBlockHeader) header).getCoinbase());
+
+            if (!unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, stake)) {
                 return false;
             }
 
@@ -1602,17 +1609,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             if (grandParent.getHeader().getSealType() != BlockSealType.SEAL_POS_BLOCK) {
                 grandParent = CfgAion.inst().getGenesisStakingBlock();
-            }
-
-            BigInteger stake =
-                    getStakingContractHelper().getEffectiveStake(
-                            new AionAddress(
-                                    AddressSpecs.computeA0Address(
-                                            ((StakingBlockHeader) header).getSigningPublicKey())),
-                            ((StakingBlockHeader) header).getCoinbase());
-
-            if (!sealParentBlockHeaderValidator.validate(header, grandParent.getHeader(), LOG, stake)) {
-                return false;
             }
 
             return unityGreatGrandParentBlockHeaderValidator.validate(
