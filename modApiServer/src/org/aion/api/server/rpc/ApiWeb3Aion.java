@@ -50,6 +50,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.config.CfgApi;
@@ -74,6 +75,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.AbstractBlock;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -89,6 +91,8 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.StakingBlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -2256,12 +2260,12 @@ public class ApiWeb3Aion extends ApiAion {
         } else {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
-        AionBlock block;
+        Block block;
         Long bn = this.parseBnOrId(_blockNumber);
 
         // user passed a Long block number
         if (bn != null && bn >= 0) {
-            block = (AionBlock) this.ac.getBlockchain().getBlockByNumber(bn);
+            block = this.ac.getBlockchain().getBlockByNumber(bn);
             if (block == null) {
                 return new RpcMsg(JSONObject.NULL);
             }
@@ -2311,14 +2315,14 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionBlock block = null;
+        Block block = null;
 
         Long bn = this.parseBnOrId(_bnOrHash);
 
         // user passed a Long block number
         if (bn != null) {
             if (bn >= 0) {
-                block = (AionBlock) this.ac.getBlockchain().getBlockByNumber(bn);
+                block = this.ac.getBlockchain().getBlockByNumber(bn);
                 if (block == null) {
                     return new RpcMsg(JSONObject.NULL);
                 }
@@ -2329,7 +2333,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         // see if the user passed in a hash
         if (block == null) {
-            block = (AionBlock) this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
+            block = this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
             if (block == null) {
                 return new RpcMsg(JSONObject.NULL);
             }
@@ -2369,7 +2373,6 @@ public class ApiWeb3Aion extends ApiAion {
 
         blk.put("difficulty", StringUtils.toJsonHex(block.getDifficulty()));
         blk.put("totalDifficulty", totalDiff.toString(16));
-        blk.put("nonce", StringUtils.toJsonHex(block.getNonce()));
 
         blk.put("blockReward", blkReward);
         blk.put("nrgConsumed", block.getNrgConsumed());
@@ -2378,8 +2381,18 @@ public class ApiWeb3Aion extends ApiAion {
         blk.put("size", block.size());
         blk.put("bloom", StringUtils.toJsonHex(block.getLogBloom()));
         blk.put("extraData", StringUtils.toJsonHex(block.getExtraData()));
-        blk.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
+        blk.put("sealType", StringUtils.toJsonHex(block.getHeader().getSealType().getSealId()));
 
+        if (isPowBlock(block)) {
+            AionBlock powBlock = (AionBlock) block;
+            blk.put("nonce", StringUtils.toJsonHex(powBlock.getNonce()));
+            blk.put("solution", StringUtils.toJsonHex(powBlock.getHeader().getSolution()));
+        } else if(isPosBlock(block)){
+            StakingBlock posBlock = (StakingBlock) block;
+            blk.put("seed", StringUtils.toJsonHex(posBlock.getHeader().getSeed()));
+            blk.put("publicKey", StringUtils.toJsonHex(posBlock.getHeader().getSigningPublicKey()));
+            blk.put("signature", StringUtils.toJsonHex(posBlock.getHeader().getSignature()));
+        }
         JSONObject result = new JSONObject();
         result.put("blk", blk);
 
@@ -2648,9 +2661,10 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public RpcMsg stratum_getmininginfo() {
-        // TODO: [Unity] This cast should be removed when we support staking blocks
-        AionBlock bestBlock = (AionBlock) getBestBlock();
-
+        Block bestBlock =  getBestBlock();
+        while(!isPowBlock(bestBlock)) {
+            bestBlock= this.ac.getBlockchain().getBlockByNumber(bestBlock.getNumber()-1);
+        }
         JSONObject obj = new JSONObject();
         obj.put("blocks", bestBlock.getNumber());
         obj.put("currentblocksize", bestBlock.size());
@@ -2744,10 +2758,9 @@ public class ApiWeb3Aion extends ApiAion {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
-                // TODO: [Unity] This cast should be removed when we support staking blocks
-                AionBlock block = (AionBlock) getBlockRaw(bnInt);
-                if (block != null) {
-                    A0BlockHeader header = block.getHeader();
+                Block block =  getBlockRaw(bnInt);
+                if (block != null && isPowBlock(block)) {
+                    A0BlockHeader header = (A0BlockHeader) block.getHeader();
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));
@@ -3065,6 +3078,14 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(
             Blk.aionBlockDetailsToJson(block, txInfoList, previousTimestamp, totalDiff, blkReward
             ));
+    }
+
+    private  boolean isPowBlock(Block block){
+        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK);
+    }
+
+    private boolean isPosBlock(Block block){
+        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK);
     }
 
     public void shutdown() {
