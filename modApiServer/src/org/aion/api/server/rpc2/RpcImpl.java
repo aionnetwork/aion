@@ -41,7 +41,7 @@ public class RpcImpl implements Rpc {
     }
 
     @Override
-    public byte[] submitseed(byte[] newSeed, byte[] signingPublicKey) throws RpcException {
+    public byte[] submitseed(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) throws NullReturnRpcException {
         if (!ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
             throw new NullReturnRpcException("unity fork is not enabled");
         }
@@ -54,6 +54,10 @@ public class RpcImpl implements Rpc {
             throw new NullReturnRpcException("the giving signing public key is null");
         }
 
+        if (coinbase == null) {
+            throw new NullReturnRpcException("the giving coinbase is null");
+        }
+
         if (newSeed.length != StakingBlockHeader.SEED_LENGTH) {
             throw new NullReturnRpcException("the giving seed length is incorrect");
         }
@@ -62,7 +66,11 @@ public class RpcImpl implements Rpc {
             throw new NullReturnRpcException("the giving signing public key length is incorrect");
         }
 
-        StakingBlock template = ac.getAionHub().getStakingBlockTemplate(newSeed, signingPublicKey);
+        if (coinbase.length != 32) {
+            throw new NullReturnRpcException("the giving coinbase length is incorrect");
+        }
+
+        StakingBlock template = ac.getAionHub().getStakingBlockTemplate(newSeed, signingPublicKey, coinbase);
 
         if (template == null) {
             throw new NullReturnRpcException("GetStakingBlockTemplate failed!");
@@ -72,7 +80,7 @@ public class RpcImpl implements Rpc {
     }
 
     @Override
-    public boolean submitsignature(byte[] signature, byte[] sealhash) throws RpcException {
+    public boolean submitsignature(byte[] signature, byte[] sealhash) throws NullReturnRpcException {
         if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
             throw new NullReturnRpcException("unity fork is not enabled");
         }
@@ -102,57 +110,5 @@ public class RpcImpl implements Rpc {
         block.seal(signature, block.getHeader().getSigningPublicKey());
         ImportResult result = ac.getBlockchain().tryToConnect(block);
         return (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST);
-    }
-
-    @Override
-    public Transaction eth_getTransactionByHash2(byte[] var0) {
-        AionTxInfo txInfo = AionImpl.inst().aionHub.getBlockchain().getTransactionInfo(var0);
-        if(txInfo == null) {
-            return null;
-        }
-
-        Block b = AionImpl.inst().aionHub.getBlockchain().getBlockByHash(txInfo.getBlockHash());
-        if (b == null) {
-            throw new RuntimeException("This is an internal error.");
-        }
-
-        return new Transaction(
-                txInfo.getBlockHash(),
-                BigInteger.valueOf(b.getNumber()),
-                txInfo.getReceipt().getTransaction().getSenderAddress().toByteArray(),
-                BigInteger.valueOf(txInfo.getReceipt().getTransaction().getEnergyLimit()),
-                BigInteger.valueOf(txInfo.getReceipt().getTransaction().getEnergyPrice()),
-                BigInteger.valueOf(txInfo.getReceipt().getTransaction().getEnergyLimit()),
-                BigInteger.valueOf(txInfo.getReceipt().getTransaction().getEnergyPrice()),
-                txInfo.getReceipt().getTransaction().getTransactionHash(),
-                txInfo.getReceipt().getTransaction().getData(),
-                txInfo.getReceipt().getTransaction().getNonceBI(),
-                txInfo.getReceipt().getTransaction().getDestinationAddress().toByteArray(),
-                BigInteger.valueOf(txInfo.getIndex()),
-                txInfo.getReceipt().getTransaction().getValueBI(),
-                BigInteger.valueOf(b.getTimestamp())
-        );
-    }
-
-    @Override
-    public byte[] eth_call2(CallRequest var0) {
-        AionTransaction tx =
-                AionTransaction.createWithoutKey(
-                        BigInteger.valueOf(0).toByteArray(),
-                        AddressUtils.ZERO_ADDRESS,
-                        AddressUtils.wrapAddress(ByteUtil.toHexString(var0.getTo())),
-                        var0.getValue().toByteArray(),
-                        var0.getData(),
-                        CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
-                        Long.MAX_VALUE,
-                        (byte)1,
-                        null
-                );
-        return AionImpl
-                .inst()
-                .callConstant(
-                        tx,
-                        AionImpl.inst().getBlockchain().getBestBlock()
-                ).getTransactionOutput();
     }
 }

@@ -1197,6 +1197,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param seed the data decide the weight of the sealing difficulty.
      * @return staking block template
      */
+    @VisibleForTesting
     public synchronized StakingBlock createNewStakingBlock(Block parent, List<AionTransaction> transactions, byte[] seed) {
         if (parent == null) {
             LOG.error("createNewStakingBlock failed, the parent block is null");
@@ -1213,11 +1214,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return null;
         }
 
-        return createNewStakingBlock(parent, transactions, seed, null);
+        return createNewStakingBlock(parent, transactions, seed, null, new byte[32]);
     }
 
     private StakingBlock createNewStakingBlock(
-            Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey) {
+            Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
         BlockHeader parentHdr = parent.getHeader();
 
         if (parentHdr.getNumber() < FORK_5_BLOCK_NUMBER) {
@@ -1244,19 +1245,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         
         long newTimestamp;
-        AionAddress coinbase;
+        AionAddress coinbaseAddress = new AionAddress(coinbase);
         if (signingPublicKey != null) { // Create block template for the external stakers.
-            AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
-            coinbase = getStakingContractHelper().getCoinbaseForSigningAddress(signingAddress);
-            if (coinbase == null) {
-                LOG.debug(
-                        "Could not get the coinbase by given the signing publickey",
-                        ByteUtil.toHexString(signingPublicKey));
-                return null;
-            }
-
             byte[] seed = parentStakingBlock.getHeader().getSeed();
-
             if (!ECKeyEd25519.verify(seed, newSeed, signingPublicKey)) {
                 LOG.debug(
                         "Seed verification failed! oldSeed:{} newSeed{} pKey{}",
@@ -1265,8 +1256,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ByteUtil.toHexString(signingPublicKey));
                 return null;
             }
-
-            BigInteger stakes = getStakingContractHelper().getEffectiveStake(signingAddress, coinbase);
+            
+            AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
+            BigInteger stakes = getStakingContractHelper().getEffectiveStake(signingAddress, coinbaseAddress);
             if (stakes.signum() < 1) {
                 LOG.debug(
                         "The caller {} with coinbase {} has no stake ",
@@ -1286,9 +1278,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (parentHdr.getTimestamp() >= newTimestamp) {
                 newTimestamp = parentHdr.getTimestamp() + 1;
             }
-
-            // Todo: [unity] currently it's for testing purpose unless we decide to integrate the internal staker tooling.
-            coinbase = AddressUtils.ZERO_ADDRESS;
         }
 
         StakingBlock block;
@@ -1296,7 +1285,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             StakingBlockHeader.Builder headerBuilder =
                     StakingBlockHeader.Builder.newInstance()
                             .withParentHash(parent.getHash())
-                            .withCoinbase(coinbase)
+                            .withCoinbase(coinbaseAddress)
                             .withNumber(parentHdr.getNumber() + 1)
                             .withTimestamp(newTimestamp)
                             .withExtraData(minerExtraData)
@@ -2604,12 +2593,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param pendingTransactions to be added into the block.
      * @param signingPublicKey the staker's signing public key.
      * @param newSeed the data decide the weight of the sealing difficulty.
-     * @see #createNewStakingBlock(Block, List, byte[], byte[])
+     * @see #createNewStakingBlock(Block, List, byte[], byte[], byte[])
      * @return staking block template
      */
     @Override
     public synchronized StakingBlock createStakingBlockTemplate(
-        List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed) {
+        List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed, byte[] coinbase) {
         if (pendingTransactions == null) {
             LOG.error("createStakingBlockTemplate failed, The pendingTransactions list can not be null");
             return null;
@@ -2625,7 +2614,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return null;
         }
 
-        return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey);
+        if (coinbase == null) {
+            LOG.error("createStakingBlockTemplate failed, The coinbase is null");
+            return null;
+        }
+
+        return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey, coinbase);
     }
 
     public StakingContractHelper getStakingContractHelper() {

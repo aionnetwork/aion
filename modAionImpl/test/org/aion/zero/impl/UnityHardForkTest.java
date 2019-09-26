@@ -67,7 +67,7 @@ public class UnityHardForkTest {
 
     @Test
     public void testBlockUnityHardFork() {
-        bc.setUnityForkNumber(4);
+        bc.setUnityForkNumber(3);
 
         Block genesis = bc.getBestBlock();
         Block blockOnePOW = bc.createNewMiningBlock(genesis, Collections.emptyList(), true);
@@ -107,7 +107,8 @@ public class UnityHardForkTest {
                 blockTwoPOW.getTotalDifficulty().add(blockThreeInfoPOW.getDifficultyBI()),
                 blockThreeInfoPOW.getTotalDifficulty());
 
-        StakingBlock blockFourPOS = createNewStakingBlock(blockThreeInfoPOW, new byte[64]);
+        // Genesis staking block seed is assumed to be all zeroes
+        StakingBlock blockFourPOS = createNewStakingBlock(new byte[64]);
         assertNotNull(blockFourPOS);
 
         result = bc.tryToConnect(blockFourPOS);
@@ -131,10 +132,10 @@ public class UnityHardForkTest {
                         > 0);
     }
 
-    private StakingBlock createNewStakingBlock(Block parent, byte[] parentSeed) {
+    private StakingBlock createNewStakingBlock(byte[] parentSeed) {
         byte[] seedBlockOne = key.sign(parentSeed).getSignature();
         StakingBlock blockOnePOS =
-                bc.createStakingBlockTemplate(Collections.emptyList(), key.getPubKey(), seedBlockOne);
+                bc.createStakingBlockTemplate(Collections.emptyList(), key.getPubKey(), seedBlockOne, ZERO_ADDRESS.toByteArray());
 
         if (blockOnePOS == null) {
             return null;
