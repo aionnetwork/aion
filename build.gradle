@@ -298,6 +298,11 @@ task pack(type: Tar) {
     into('/aion/jars') { 
         from dirRuntimeJars 
         include '*.jar', '*.so'
+        exclude 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar', 'modAvmVersion*.jar'
+    }
+    into('/aion/lib') {
+        from dirRuntimeJars
+        include 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar', 'modAvmVersion*.jar'
     }
     into('/aion/') { 
         from dirWorkspace
