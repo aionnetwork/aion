@@ -13,9 +13,9 @@ public class UnityBlockDiffCalculator {
     private static FixedPoint difficultyIncreaseRate = FixedPoint.fromString("1.05");
     private static FixedPoint difficultyDecreaseRate = FixedPoint.fromString("0.952381");
 
-    // Our barrier should be log2*40 = 13.862943611, 
-    // but we only compare it against integer values, so we use 14
-    private static long barrier = 14;
+    // Our barrier should be log2*10 = 6.9314718055994,
+    // but we only compare it against integer values, so we use 7
+    private static long barrier = 7;
 
     private BlockConstants constants;
 
@@ -23,20 +23,13 @@ public class UnityBlockDiffCalculator {
         constants = _constants;
     }
 
-    public BigInteger calcDifficulty(BlockHeader parent, BlockHeader grandParent) {
+    /*
+     * @implNote The unity hardfork can not start before the block 4
+     */
+    public BigInteger calcDifficulty(BlockHeader grandParent, BlockHeader greatGrandParent) {
 
-        // If not parent pos block, return the initial difficulty
-        if (parent == null) {
-            return constants.getMinimumDifficulty();
-        }
-
-        BigInteger pd = parent.getDifficultyBI();
-
-        if (grandParent == null) {
-            return pd;
-        }
-
-        long timeDelta = parent.getTimestamp() - grandParent.getTimestamp();
+        BigInteger pd = grandParent.getDifficultyBI();
+        long timeDelta = grandParent.getTimestamp() - greatGrandParent.getTimestamp();
         if (timeDelta < 1) {
             throw new IllegalStateException("Invalid parent timestamp & grandparent timestamp diff!");
         }
@@ -54,9 +47,9 @@ public class UnityBlockDiffCalculator {
             }
         }
 
-        if (parent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        if (grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
-        } else if (parent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        } else if (grandParent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             return max(constants.getMinimumDifficulty() , newDiff);
         } else {
             throw  new IllegalStateException("Invalid block seal type!");

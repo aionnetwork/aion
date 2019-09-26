@@ -18,6 +18,8 @@ import org.aion.zero.impl.valid.BlockNumberRule;
 import org.aion.zero.impl.valid.DependentBlockHeaderRule;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentDependantBlockHeaderRule;
+import org.aion.zero.impl.valid.GreatGrandParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.GreatGrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentOppositeTypeRule;
@@ -83,15 +85,9 @@ public class ChainConfiguration {
                 };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
 
+        // Todo : [unity] we are assuming the unity hardfork can not be proceed in the first 3 blocks.
         unityDifficultyCalculator =
-            (parent, grandParent) -> {
-                // special case to handle the corner case for first block
-                if (parent.getNumber() == 0L || parent.isGenesis()) {
-                    return parent.getDifficultyBI();
-                }
-
-                return unityCalc.calcDifficulty(parent, grandParent);
-            };
+            unityCalc::calcDifficulty;
     }
 
     public IBlockConstants getConstants() {
@@ -156,21 +152,16 @@ public class ChainConfiguration {
         return new GrandParentBlockHeaderValidator(unityRules);
     }
 
-    public GrandParentBlockHeaderValidator createUnityGrandParentHeaderValidator() {
+    public GreatGrandParentBlockHeaderValidator createUnityGreatGrandParentHeaderValidator() {
 
-        // Unity fork require 2 kinds of difficulty rules for pow block.
-
-        List<GrandParentDependantBlockHeaderRule> powRules =
+        List<GreatGrandParentDependantBlockHeaderRule> rules =
                 Collections.singletonList(new UnityDifficultyRule(this));
 
-        List<GrandParentDependantBlockHeaderRule> posRules =
-                Collections.singletonList(new UnityDifficultyRule(this));
+        Map<Byte, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new HashMap<>();
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), rules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), rules);
 
-        Map<Byte, List<GrandParentDependantBlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
-
-        return new GrandParentBlockHeaderValidator(unityRules);
+        return new GreatGrandParentBlockHeaderValidator(unityRules);
     }
 
     public ParentBlockHeaderValidator createPreUnityParentBlockHeaderValidator() {
