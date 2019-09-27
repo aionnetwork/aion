@@ -65,15 +65,8 @@ public class Aion {
 
     public static void main(String args[]) {
         // ~~~~~~~~~~ initialize the avm before we do anything else (CLI depends on it) ~~~~~~~~~~~~
-        // Grab the project root directory and the set the energy limit rules.
+        // Grab the project root directory.
         String projectRootDirectory = System.getProperty("user.dir") + File.separator;
-        IEnergyRules energyRules = (t, l) -> {
-            if (t == TransactionType.CREATE) {
-                return TxNrgRule.isValidNrgContractCreate(l);
-            } else {
-                return TxNrgRule.isValidNrgTx(l);
-            }
-        };
 
         // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
         // because it handles balance transfers. The kernel is responsible for ensuring it is not called
@@ -89,7 +82,7 @@ public class Aion {
             schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
         }
 
-        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory, energyRules);
+        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         // TODO: should we load native libraries first thing?

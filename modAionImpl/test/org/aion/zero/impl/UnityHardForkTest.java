@@ -10,14 +10,11 @@ import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.vm.avm.AvmConfigurations;
-import org.aion.avm.stub.IEnergyRules;
-import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
-import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StakingContractHelper;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.config.CfgAion;
@@ -45,15 +42,7 @@ public class UnityHardForkTest {
         // Configure the avm.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        IEnergyRules energyRules = (t, l) -> {
-            if (t == TransactionType.CREATE) {
-                return TxNrgRule.isValidNrgContractCreate(l);
-            } else {
-                return TxNrgRule.isValidNrgTx(l);
-            }
-        };
-
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
 
         MockitoAnnotations.initMocks(this);
         doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));

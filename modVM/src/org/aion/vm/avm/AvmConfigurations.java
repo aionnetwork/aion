@@ -2,6 +2,7 @@ package org.aion.vm.avm;
 
 import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.avm.stub.IEnergyRules;
+import org.aion.vm.common.TxNrgRule;
 
 /**
  * The class that holds all details pertaining to how the avm is set up.
@@ -11,7 +12,7 @@ public final class AvmConfigurations {
     private static boolean isReadOnly = false;
     private static AvmVersionSchedule multiVersionSchedule = null;
     private static String projectRootDir = null;
-    private static IEnergyRules energyRules = null;
+    private static IEnergyRules energyRules = (t, l) -> (t == IEnergyRules.TransactionType.CREATE) ? TxNrgRule.isValidNrgContractCreate(l) : TxNrgRule.isValidNrgTx(l);
 
     private AvmConfigurations() {}
 
@@ -26,9 +27,8 @@ public final class AvmConfigurations {
      *
      * @param schedule The multi-version schedule.
      * @param projectRootDirectory The directory of the project root.
-     * @param energyLimitRules The energy limit rules.
      */
-    public static void initializeConfigurationsAsReadOnly(AvmVersionSchedule schedule, String projectRootDirectory, IEnergyRules energyLimitRules) {
+    public static void initializeConfigurationsAsReadOnly(AvmVersionSchedule schedule, String projectRootDirectory) {
         if (isReadOnly) {
             throw new IllegalStateException("Cannot initialize avm configurations - this class has already been initialized as a Read-Only class!");
         }
@@ -38,15 +38,11 @@ public final class AvmConfigurations {
         if (projectRootDirectory == null) {
             throw new NullPointerException("Cannot initialize using a null projectRootDirectory!");
         }
-        if (energyLimitRules == null) {
-            throw new NullPointerException("Cannot initialize using a null energyLimitRules!");
-        }
 
         isReadOnly = true;
         isInitialized = true;
         multiVersionSchedule = schedule;
         projectRootDir = projectRootDirectory;
-        energyRules = energyLimitRules;
     }
 
     /**
@@ -58,9 +54,8 @@ public final class AvmConfigurations {
      *
      * @param schedule The multi-version schedule.
      * @param projectRootDirectory The directory of the project root.
-     * @param energyLimitRules The energy limit rules.
      */
-    public static void initializeConfigurationsAsReadAndWriteable(AvmVersionSchedule schedule, String projectRootDirectory, IEnergyRules energyLimitRules) {
+    public static void initializeConfigurationsAsReadAndWriteable(AvmVersionSchedule schedule, String projectRootDirectory) {
         if (isReadOnly) {
             throw new IllegalStateException("Cannot initialize avm configurations - this class has already been initialized as a Read-Only class!");
         }
@@ -70,14 +65,10 @@ public final class AvmConfigurations {
         if (projectRootDirectory == null) {
             throw new NullPointerException("Cannot initialize using a null projectRootDirectory!");
         }
-        if (energyLimitRules == null) {
-            throw new NullPointerException("Cannot initialize using a null energyLimitRules!");
-        }
 
         isInitialized = true;
         multiVersionSchedule = schedule;
         projectRootDir = projectRootDirectory;
-        energyRules = energyLimitRules;
     }
 
     /**
@@ -95,7 +86,6 @@ public final class AvmConfigurations {
         isInitialized = false;
         multiVersionSchedule = null;
         projectRootDir = null;
-        energyRules = null;
     }
 
     public static AvmVersionSchedule getAvmVersionSchedule() {

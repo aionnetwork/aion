@@ -36,8 +36,6 @@ import java.util.List;
 import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.vm.avm.AvmConfigurations;
 import org.aion.vm.common.VmFatalException;
-import org.aion.avm.stub.IEnergyRules;
-import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -54,7 +52,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.BulkExecutor;
-import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.types.BlockContext;
@@ -85,18 +82,10 @@ public class OpcodeIntegTest {
         deployer = new AionAddress(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
 
-        // Configure the avm if it has not already been configured.
+        // Configure the avm.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        IEnergyRules energyRules = (t, l) -> {
-            if (t == TransactionType.CREATE) {
-                return TxNrgRule.isValidNrgContractCreate(l);
-            } else {
-                return TxNrgRule.isValidNrgTx(l);
-            }
-        };
-
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
     }
 
     @After

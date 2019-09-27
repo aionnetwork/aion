@@ -25,7 +25,7 @@ public class AvmTransactionExecutorTest {
     @BeforeClass
     public static void setupClass() {
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForBothVersions(VERSION_1_FORK, VERSION_2_FORK, TOLERANCE);
-        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, PathManager.fetchProjectRootDir(), (t, l) -> {return true;});
+        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, PathManager.fetchProjectRootDir());
         projectRootDir = PathManager.fetchProjectRootDir();
     }
 

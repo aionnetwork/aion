@@ -10,14 +10,11 @@ import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
-import org.aion.avm.stub.IEnergyRules;
-import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
-import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
@@ -62,18 +59,10 @@ public class StatefulnessTest {
     public static void setupAvm() throws Exception {
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
-        // Configure the avm if it has not already been configured.
+        // Configure the avm.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        IEnergyRules energyRules = (t, l) -> {
-            if (t == TransactionType.CREATE) {
-                return TxNrgRule.isValidNrgContractCreate(l);
-            } else {
-                return TxNrgRule.isValidNrgTx(l);
-            }
-        };
-
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
     }
 
     @AfterClass

@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.vm.avm.AvmConfigurations;
-import org.aion.avm.stub.IEnergyRules;
-import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.base.TransactionTypes;
@@ -16,7 +14,6 @@ import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
-import org.aion.vm.common.TxNrgRule;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
@@ -54,15 +51,7 @@ public class BlockchainIntegrationTest {
         // Configure the avm if it has not already been configured.
         AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        IEnergyRules energyRules = (t, l) -> {
-            if (t == TransactionType.CREATE) {
-                return TxNrgRule.isValidNrgContractCreate(l);
-            } else {
-                return TxNrgRule.isValidNrgTx(l);
-            }
-        };
-
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot, energyRules);
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
     }
 
     @After
