@@ -1,4 +1,4 @@
-package org.aion.avm.provider.schedule;
+package org.aion.vm.avm.schedule;
 
 import org.aion.avm.stub.AvmVersion;
 

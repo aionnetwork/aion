@@ -33,7 +33,6 @@ dependencies {
     //testCompile 'network.aion:crypto4j:0.4.0'
     testCompile project(':modCrypto')
     testCompile project(':modAvmStub')
-    testCompile project(':modAvmProvider')
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

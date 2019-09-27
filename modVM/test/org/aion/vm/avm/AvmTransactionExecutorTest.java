@@ -1,9 +1,8 @@
-package org.aion.avm.provider;
+package org.aion.vm.avm;
 
 import java.util.concurrent.TimeUnit;
-import org.aion.avm.provider.resources.PathManager;
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
-import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.vm.avm.resources.PathManager;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.avm.stub.AvmVersion;
 import org.junit.AfterClass;
 import org.junit.Assert;

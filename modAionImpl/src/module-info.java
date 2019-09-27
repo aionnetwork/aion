@@ -27,7 +27,6 @@ module aion.zero.impl {
     requires aion.types;
     requires aion.base;
     requires core;
-    requires aion.avm.provider;
     requires aion.avm.stub;
 
     exports org.aion.equihash;

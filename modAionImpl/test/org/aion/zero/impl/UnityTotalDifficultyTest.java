@@ -1,7 +1,7 @@
 package org.aion.zero.impl;
 
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
-import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.crypto.ECKey;

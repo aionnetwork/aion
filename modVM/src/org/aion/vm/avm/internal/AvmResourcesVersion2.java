@@ -1,4 +1,4 @@
-package org.aion.avm.provider.internal;
+package org.aion.vm.avm.internal;
 
 import java.io.Closeable;
 import java.io.File;

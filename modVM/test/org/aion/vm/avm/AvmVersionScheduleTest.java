@@ -1,6 +1,6 @@
-package org.aion.avm.provider;
+package org.aion.vm.avm;
 
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.avm.stub.AvmVersion;
 import org.junit.Assert;
 import org.junit.Test;

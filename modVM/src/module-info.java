@@ -10,8 +10,9 @@ module aion.vm {
     requires aion.types;
     requires aion.base;
     requires aion.rlp;
-    requires aion.avm.provider;
     requires aion.avm.stub;
 
     exports org.aion.vm.common;
+    exports org.aion.vm.avm;
+    exports org.aion.vm.avm.schedule;
 }

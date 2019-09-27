@@ -2,7 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.util.List;
 import java.util.Optional;
-import org.aion.avm.provider.types.VmFatalException;
+import org.aion.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;

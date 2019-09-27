@@ -6,16 +6,17 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import org.aion.avm.provider.internal.AvmDependencyInfo;
+import org.aion.vm.avm.internal.AvmDependencyInfo;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
+import org.aion.vm.avm.AvmProvider;
 
 /**
  * A class that provides access to underlying test-only avm multi-versioned resources.
  *
  * @implNote The factories that are exposed by this provider are loaded in their own unique
  * classloader. Namely, these will not be loaded in the same classloader as the actual
- * {@link org.aion.avm.provider.AvmProvider} uses to load the factories.
+ * {@link AvmProvider} uses to load the factories.
  */
 public final class TestResourceProvider implements Closeable {
     private final URLClassLoader classLoaderForVersion1;

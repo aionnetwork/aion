@@ -3,7 +3,7 @@ package org.aion.vm.precompiled;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.avm.provider.types.PostExecutionWork;
+import org.aion.vm.common.PostExecutionWork;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.db.IBlockStoreBase;

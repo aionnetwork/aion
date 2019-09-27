@@ -1,10 +1,10 @@
-package org.aion.avm.provider;
+package org.aion.vm.avm;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.avm.provider.internal.AvmResourcesVersion1;
-import org.aion.avm.provider.internal.AvmResourcesVersion2;
+import org.aion.vm.avm.internal.AvmResourcesVersion1;
+import org.aion.vm.avm.internal.AvmResourcesVersion2;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;

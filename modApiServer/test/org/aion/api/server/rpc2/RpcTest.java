@@ -5,8 +5,8 @@ import static org.junit.Assert.assertNotNull;
 
 import org.aion.api.server.AvmPathManager;
 import org.aion.api.server.rpc2.autogen.Rpc;
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
-import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.vm.common.TxNrgRule;

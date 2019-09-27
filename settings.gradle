@@ -16,7 +16,6 @@ include 'modAionImpl',
     'modBoot',
     'modAvmVersion2',
     'modAvmVersion1',
-    'modAvmProvider',
     'modAvmStub'
 
 // only build and distribute modGui only if explicitly specified

@@ -4,8 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
-import org.aion.avm.provider.types.AvmConfigurations;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;

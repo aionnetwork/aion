@@ -1,4 +1,4 @@
-package org.aion.avm.provider.resources;
+package org.aion.vm.avm.resources;
 
 import org.junit.Assert;
 
@@ -10,7 +10,7 @@ public final class PathManager {
      */
     public static String fetchProjectRootDir() {
         String workingDir = System.getProperty("user.dir");
-        int indexOfRoot = workingDir.lastIndexOf("modAvmProvider");
+        int indexOfRoot = workingDir.lastIndexOf("modVM");
         Assert.assertTrue(indexOfRoot >= 0);
         return workingDir.substring(0, indexOfRoot);
     }

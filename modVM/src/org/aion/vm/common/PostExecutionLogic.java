@@ -1,4 +1,4 @@
-package org.aion.avm.provider.types;
+package org.aion.vm.common;
 
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;

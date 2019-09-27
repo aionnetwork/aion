@@ -16,7 +16,6 @@ module aion.boot {
 
     requires aion.vm;
     requires aion.util;
-    requires aion.avm.provider;
     requires aion.avm.stub;
 
     exports org.aion;

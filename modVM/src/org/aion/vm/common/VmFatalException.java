@@ -1,4 +1,4 @@
-package org.aion.avm.provider.types;
+package org.aion.vm.common;
 
 /**
  * Signals that a virtual machine encountered a fatal error and the kernel should be shut down.

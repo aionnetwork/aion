@@ -1,4 +1,4 @@
-package org.aion.avm.provider;
+package org.aion.vm.avm;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -6,10 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.aion.avm.provider.schedule.AvmVersionSchedule;
-import org.aion.avm.provider.types.AvmConfigurations;
-import org.aion.avm.provider.types.PostExecutionWork;
-import org.aion.avm.provider.types.VmFatalException;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.vm.common.PostExecutionWork;
+import org.aion.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmExecutionType;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;

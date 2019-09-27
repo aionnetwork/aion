@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.avm.provider.types.VmFatalException;
+import org.aion.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.PooledTransaction;
 import org.aion.base.TxUtil;

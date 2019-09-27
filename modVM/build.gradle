@@ -6,8 +6,7 @@ dependencies {
     compile project(':modMcf')
     compile project(':modPrecompiled')
     compile project(':modAvmStub')
-    compile project(':modAvmProvider')
-    
+
     compile files("${rootProject.projectDir}/lib/fastvm-f2a39b8.jar")
     compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
     compile 'com.google.code.findbugs:jsr305:3.0.2'
@@ -16,6 +15,17 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.10'
 
+    runtimeOnly group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
+
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 }
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+build.dependsOn.remove("check")

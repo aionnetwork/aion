@@ -1,8 +1,9 @@
-package org.aion.avm.provider;
+package org.aion.zero.impl.vm;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
-import org.aion.avm.provider.resources.PathManager;
+
+import org.aion.vm.avm.AvmProvider;
 import org.aion.avm.stub.AvmExecutionType;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
@@ -25,7 +26,7 @@ import org.junit.Test;
 
 /**
  * Tests more generic aspects of the {@link AvmProvider} class (specific version testing is done in
- * the two test classes {@link AvmProviderVersion1Test} and {@link AvmProviderVersion2Test}).
+ * the tests in modVM.
  *
  * What's being tested here are methods related specifically to the provider at large, or more integ
  * style tests.
@@ -42,7 +43,7 @@ public class AvmProviderTest {
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
         AvmProvider.releaseLock();
-        this.projectRootDir = PathManager.fetchProjectRootDir();
+        this.projectRootDir = AvmPathManager.getPathOfProjectRootDirectory();
     }
 
     @AfterClass
