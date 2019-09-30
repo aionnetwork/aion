@@ -52,13 +52,13 @@ public final class SyncMgr {
     private static final Logger survey_log = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
 
     private final NetworkStatus networkStatus = new NetworkStatus();
+
+    private SyncHeaderRequestManager syncHeaderRequestManager;
+
     // peer syncing states
     private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
     // store the downloaded headers from network
     private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>();
-    // store the headers whose bodies have been requested from corresponding peer
-    private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested =
-            new ConcurrentHashMap<>();
     // store the downloaded blocks that are ready to import
     private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
     // store the hashes of blocks which have been successfully imported
@@ -189,14 +189,15 @@ public final class SyncMgr {
         long selfBest = chain.getBestBlock().getNumber();
         stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
 
+        syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log);
+
         syncGb =
                 new Thread(
                         new TaskGetBodies(
                                 p2pMgr,
                                 start,
                                 downloadedHeaders,
-                                headersWithBodiesRequested,
-                                peerStates,
+                                syncHeaderRequestManager,
                                 stats,
                                 log, survey_log),
                         "sync-gb");
@@ -336,11 +337,13 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(
             int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
+        if (_bodies == null) return;
 
-        HeadersWrapper hw = this.headersWithBodiesRequested.remove(_nodeIdHashcode);
-        if (hw == null || _bodies == null) {
-            return;
-        }
+        // the requests are made such that the size varies to better map headers to bodies
+        HeadersWrapper hw = syncHeaderRequestManager.matchHeaders(_nodeIdHashcode, _bodies.size());
+        if (hw == null) return;
+
+        boolean assembleError = false;
 
         // assemble batch
         List<BlockHeader> headers = hw.getHeaders();
@@ -357,11 +360,17 @@ public final class SyncMgr {
             }
 
             if (block == null) {
-                log.error("<assemble-and-validate-blocks node={}>", _displayId);
+                log.error("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
+                assembleError = true;
                 break;
             } else {
                 blocks.add(block);
             }
+        }
+
+        if (!assembleError) {
+            // if correctly assembled, remove headers
+            syncHeaderRequestManager.dropHeaders(_nodeIdHashcode, _bodies.size(), hw);
         }
 
         int m = blocks.size();

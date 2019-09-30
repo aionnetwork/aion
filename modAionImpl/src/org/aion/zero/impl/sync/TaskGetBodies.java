@@ -1,15 +1,12 @@
 package org.aion.zero.impl.sync;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.IP2pMgr;
-import org.aion.zero.impl.sync.PeerState.State;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.statistics.RequestType;
 import org.slf4j.Logger;
@@ -27,9 +24,7 @@ final class TaskGetBodies implements Runnable {
 
     private final BlockingQueue<HeadersWrapper> downloadedHeaders;
 
-    private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested;
-
-    private final Map<Integer, PeerState> peerStates;
+    private final SyncHeaderRequestManager syncHeaderRequestManager;
 
     private final Logger log, surveyLog;
 
@@ -39,22 +34,19 @@ final class TaskGetBodies implements Runnable {
      * @param _p2p IP2pMgr
      * @param _run AtomicBoolean
      * @param _downloadedHeaders BlockingQueue
-     * @param _headersWithBodiesRequested ConcurrentHashMap
      */
     TaskGetBodies(
             final IP2pMgr _p2p,
             final AtomicBoolean _run,
             final BlockingQueue<HeadersWrapper> _downloadedHeaders,
-            final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
-            final Map<Integer, PeerState> peerStates,
+            final SyncHeaderRequestManager syncHeaderRequestManager,
             final SyncStats _stats,
             final Logger log,
             final Logger surveyLog) {
         this.p2p = _p2p;
         this.run = _run;
         this.downloadedHeaders = _downloadedHeaders;
-        this.headersWithBodiesRequested = _headersWithBodiesRequested;
-        this.peerStates = peerStates;
+        this.syncHeaderRequestManager = syncHeaderRequestManager;
         this.stats = _stats;
         this.log = log;
         this.surveyLog = surveyLog;
@@ -104,14 +96,9 @@ final class TaskGetBodies implements Runnable {
             stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
             stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
 
-            headersWithBodiesRequested.put(idHash, hw);
+            // save headers for matching with bodies
+            syncHeaderRequestManager.storeHeaders(idHash, hw);
 
-            PeerState peerState = peerStates.get(hw.getNodeIdHash());
-            if (peerState != null) {
-                peerState.setState(State.BODIES_REQUESTED);
-            } else {
-                log.warn("Peer {} sent blocks that were not requested.", hw.getDisplayId());
-            }
             duration = System.nanoTime() - startTime;
             surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
         }
