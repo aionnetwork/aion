@@ -39,8 +39,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -127,10 +125,7 @@ public class ContractIntegTest {
 
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
@@ -145,7 +140,7 @@ public class ContractIntegTest {
         senderKey = null;
         senderNonce = null;
 
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         resourceProvider.close();
     }
 

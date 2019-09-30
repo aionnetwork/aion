@@ -8,8 +8,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.log.AionLoggerFactory;
 import org.aion.base.AccountState;
 import org.aion.zero.impl.core.ImportResult;
@@ -29,7 +27,7 @@ import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -51,15 +49,12 @@ public class MainnetConsensusTest {
         cfg.put(LogEnum.VM, LogLevel.DEBUG);
         AionLoggerFactory.initAll(cfg);
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @AfterClass
     public static void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @Before

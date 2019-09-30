@@ -30,8 +30,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -87,16 +85,13 @@ public class SolidityTypeTest {
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
         blockchain = null;
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     private AionTransaction createTransaction(byte[] callData) {

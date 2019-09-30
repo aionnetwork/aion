@@ -5,10 +5,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.aion.api.server.AvmPathManager;
+import org.aion.api.server.AvmTestConfig;
 import org.aion.api.server.account.AccountManager;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
@@ -33,15 +31,12 @@ public class ApiWeb3AionTest {
         web3Api = new ApiWeb3Aion(impl);
         accountManager = AccountManager.inst();
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         accountManager.removeAllAccounts();
     }
 

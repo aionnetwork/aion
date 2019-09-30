@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
@@ -138,15 +136,12 @@ public class ApiAionTest {
         KEYSTORE_PATH = Keystore.getKeystorePath();
         accountManager = AccountManager.inst();
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         accountManager.removeAllAccounts();
 
         // get a list of all the files in keystore directory

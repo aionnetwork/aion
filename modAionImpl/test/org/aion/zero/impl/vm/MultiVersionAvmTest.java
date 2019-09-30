@@ -3,8 +3,6 @@ package org.aion.zero.impl.vm;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
@@ -37,16 +35,13 @@ public class MultiVersionAvmTest {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForBothVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportBothAvmVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED, 0);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         resourceProvider.close();
     }
 

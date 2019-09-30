@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.base.AionTransaction;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
@@ -26,7 +24,7 @@ import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -54,15 +52,12 @@ public class AionHubTest {
         cfg.put(LogEnum.CONS, LogLevel.INFO);
         AionLoggerFactory.initAll(cfg);
 
-        // Configure the avm if it has not already been configured.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @AfterClass
     public static void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @After

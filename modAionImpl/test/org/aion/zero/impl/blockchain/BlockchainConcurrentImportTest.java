@@ -16,8 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -28,7 +26,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,10 +48,7 @@ public class BlockchainConcurrentImportTest {
 
     @BeforeClass
     public static void setup() {
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
 
         AionLoggerFactory.initAll();
 
@@ -135,7 +130,7 @@ public class BlockchainConcurrentImportTest {
 
     @AfterClass
     public static void teardown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         testChain.close();
         sourceChain.close();
     }

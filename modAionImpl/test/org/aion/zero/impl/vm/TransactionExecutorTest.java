@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -81,10 +79,7 @@ public class TransactionExecutorTest {
         deployerKey = bundle.privateKeys.get(0);
         deployer = new AionAddress(deployerKey.getAddress());
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
@@ -92,7 +87,7 @@ public class TransactionExecutorTest {
         blockchain = null;
         deployerKey = null;
         deployer = null;
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @Test

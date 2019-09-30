@@ -38,8 +38,6 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -51,7 +49,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.sync.PeerState.Mode;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,15 +64,12 @@ public class TaskImportBlocksTest {
 
     @Before
     public void setup() {
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     /** @return parameters for {@link #testCountStates(long, long, Mode, Collection)} */

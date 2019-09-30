@@ -10,8 +10,6 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -29,7 +27,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
@@ -61,16 +59,13 @@ public class FvmBalanceTransferConsensusTest {
                         .build();
         this.blockchain = bundle.bc;
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
         this.blockchain = null;
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @Test

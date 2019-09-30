@@ -7,8 +7,6 @@ import static org.junit.Assert.assertNotEquals;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
 import org.aion.base.AionTransaction;
@@ -28,6 +26,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
@@ -46,16 +45,12 @@ public class PendingStateTest {
     @BeforeClass
     public static void setup() {
         TransactionTypeRule.allowAVMContractTransaction();
-
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @AfterClass
     public static void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @Before

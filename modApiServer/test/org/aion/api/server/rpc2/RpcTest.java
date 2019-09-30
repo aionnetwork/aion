@@ -3,10 +3,8 @@ package org.aion.api.server.rpc2;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.aion.api.server.AvmPathManager;
+import org.aion.api.server.AvmTestConfig;
 import org.aion.api.server.rpc2.autogen.Rpc;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -19,10 +17,7 @@ public class RpcTest {
 
     @Before
     public void setup() {
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
 
         impl = AionImpl.instForTest();
         impl.aionHub.getBlockchain().setUnityForkNumber(0);
@@ -31,7 +26,7 @@ public class RpcTest {
 
     @After
     public void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
     }
 
     @Test

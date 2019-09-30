@@ -8,8 +8,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
@@ -39,11 +37,7 @@ public class AlternatingVmBlockTest {
     public static void setupAvm() throws Exception {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @Before
@@ -61,7 +55,7 @@ public class AlternatingVmBlockTest {
     @AfterClass
     public static void tearDownAvm() throws Exception {
         TransactionTypeRule.disallowAVMContractTransaction();
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         resourceProvider.close();
     }
 

@@ -1,7 +1,5 @@
 package org.aion.zero.impl;
 
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
@@ -16,7 +14,7 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
-import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,10 +42,7 @@ public class UnityTotalDifficultyTest {
 
     @Before
     public void setup() throws Exception {
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
 
         MockitoAnnotations.initMocks(this);
         doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
@@ -65,7 +60,7 @@ public class UnityTotalDifficultyTest {
 
     @After
     public void shutdown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         bc.setUnityForkNumber(Long.MAX_VALUE);
     }
 

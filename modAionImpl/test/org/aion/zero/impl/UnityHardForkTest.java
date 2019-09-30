@@ -22,6 +22,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.vm.AvmPathManager;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,10 +40,7 @@ public class UnityHardForkTest {
 
     @Before
     public void setup() throws Exception {
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
 
         MockitoAnnotations.initMocks(this);
         doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
@@ -64,7 +62,7 @@ public class UnityHardForkTest {
 
     @After
     public void shutdown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         bc.setUnityForkNumber(Long.MAX_VALUE);
     }
 

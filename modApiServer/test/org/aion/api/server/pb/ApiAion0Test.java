@@ -15,10 +15,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.api.server.ApiUtil;
-import org.aion.api.server.AvmPathManager;
+import org.aion.api.server.AvmTestConfig;
 import org.aion.api.server.pb.Message.Funcs;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
@@ -126,15 +124,12 @@ public class ApiAion0Test {
         api = new ApiAion0(AionImpl.instForTest());
         testStartTime = System.currentTimeMillis();
 
-        // Configure the avm.
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
-        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+        AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
-        AvmConfigurations.clear();
+        AvmTestConfig.clearConfigurations();
         accountManager.removeAllAccounts();
 
         api.shutDown();
