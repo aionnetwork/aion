@@ -229,7 +229,6 @@ public final class SyncMgr {
                                     networkStatus,
                                     stats,
                                     p2pMgr,
-                                    peerStates,
                                     showStatistics,
                                     AionLoggerFactory.getLogger(LogEnum.P2P.name())),
                             "sync-ss");
