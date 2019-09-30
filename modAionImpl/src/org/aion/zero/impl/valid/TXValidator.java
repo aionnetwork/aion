@@ -1,6 +1,7 @@
 package org.aion.zero.impl.valid;
 
 import static org.aion.vm.common.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.vm.common.TxNrgRule.isValidNrgContractCreateAfterUnity;
 import static org.aion.vm.common.TxNrgRule.isValidNrgTx;
 
 import java.util.Collections;
@@ -39,6 +40,42 @@ public class TXValidator {
     }
 
     public static boolean isValid0(AionTransaction tx) {
+
+        long nrg = tx.getEnergyLimit();
+        if (tx.isContractCreationTransaction()) {
+            if (!isValidNrgContractCreate(nrg)) {
+                LOG.error("invalid contract create nrg!");
+                return false;
+            }
+        } else {
+            if (!isValidNrgTx(nrg)) {
+                LOG.error("invalid tx nrg!");
+                return false;
+            }
+        }
+
+        return isValidInner(tx);
+    }
+
+    public static boolean isValidAfterUnity(AionTransaction tx) {
+
+        long nrg = tx.getEnergyLimit();
+        if (tx.isContractCreationTransaction()) {
+            if (!isValidNrgContractCreateAfterUnity(nrg)) {
+                LOG.error("invalid contract create nrg!");
+                return false;
+            }
+        } else {
+            if (!isValidNrgTx(nrg)) {
+                LOG.error("invalid tx nrg!");
+                return false;
+            }
+        }
+
+        return isValidInner(tx);
+    }
+
+    private static boolean isValidInner(AionTransaction tx) {
         byte[] check = tx.getNonce();
         if (check == null || check.length > DataWord.BYTES) {
             LOG.error("invalid tx nonce!");
@@ -61,19 +98,6 @@ public class TXValidator {
         if (check == null) {
             LOG.error("invalid tx data!");
             return false;
-        }
-
-        long nrg = tx.getEnergyLimit();
-        if (tx.isContractCreationTransaction()) {
-            if (!isValidNrgContractCreate(nrg)) {
-                LOG.error("invalid contract create nrg!");
-                return false;
-            }
-        } else {
-            if (!isValidNrgTx(nrg)) {
-                LOG.error("invalid tx nrg!");
-                return false;
-            }
         }
 
         if (tx.getEnergyPrice() < 0) {

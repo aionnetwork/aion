@@ -35,6 +35,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -130,6 +131,7 @@ public class ContractIntegTest {
 
     @After
     public void tearDown() throws Exception {
+        blockchain.setUnityForkNumber(Long.MAX_VALUE);
         blockchain = null;
         deployerKey = null;
         deployer = null;
@@ -1995,5 +1997,155 @@ public class ContractIntegTest {
         assertThat(contractAddress.toByteArray()).isEqualTo(receipt.getTransactionOutput());
 
         return contractAddress;
+    }
+
+    @Test
+    public void testFvmEmptyContractWith200KEnrygyBeforeUnity() throws IOException, VmFatalException {
+        String contractName = "EmptyContract";
+        byte[] deployCode = getDeployCode(contractName);
+        long nrg = 200_000;
+        long nrgPrice = 1;
+        BigInteger value = BigInteger.ZERO;
+        BigInteger nonce = BigInteger.ZERO;
+
+        // to == null  signals that this is contract creation.
+        AionTransaction tx =
+            AionTransaction.create(
+                deployerKey,
+                nonce.toByteArray(),
+                null,
+                value.toByteArray(),
+                deployCode,
+                nrg,
+                nrgPrice,
+                txType, null);
+        assertTrue(tx.isContractCreationTransaction());
+
+        assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
+        assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
+
+        AionBlock block = makeBlock(tx);
+        RepositoryCache repo = blockchain.getRepository().startTracking();
+
+        AionTxExecSummary summary =
+            BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                tx,
+                repo,
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
+
+        if (txType == TransactionTypes.DEFAULT) {
+            assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
+
+            checkStateOfDeployer(repo, summary, nrgPrice, value, nonce.add(BigInteger.ONE));
+            assertEquals(nrg, summary.getReceipt().getEnergyUsed());
+            assertEquals(nrg, repo.getBalance(block.getCoinbase()).intValue());
+
+        } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
+            nonce = nonce.add(BigInteger.ONE);
+            checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
+            assertEquals(nrg, summary.getReceipt().getEnergyUsed());
+        }
+    }
+
+    @Test (expected = InvalidParameterException.class)
+    public void testFvmEmptyContractWith200KEnrygyAfterUnity() throws IOException {
+        blockchain.setUnityForkNumber(1);
+        String contractName = "EmptyContract";
+        byte[] deployCode = getDeployCode(contractName);
+        long nrg = 200_000;
+        long nrgPrice = 1;
+        BigInteger value = BigInteger.ZERO;
+        BigInteger nonce = BigInteger.ZERO;
+
+        // to == null  signals that this is contract creation.
+        AionTransaction tx =
+            AionTransaction.create(
+                deployerKey,
+                nonce.toByteArray(),
+                null,
+                value.toByteArray(),
+                deployCode,
+                nrg,
+                nrgPrice,
+                txType, null);
+        assertTrue(tx.isContractCreationTransaction());
+
+        assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
+        assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
+
+        // The transaction has invalid energylimit settings
+        AionBlock block = makeBlock(tx);
+    }
+
+    @Test
+    public void testFvmEmptyContractWith221KEnrygyAfterUnity() throws IOException, VmFatalException {
+        blockchain.setUnityForkNumber(1);
+        String contractName = "EmptyContract";
+        byte[] deployCode = getDeployCode(contractName);
+        long nrg = 221_000;
+        long nrgPrice = 1;
+        BigInteger value = BigInteger.ZERO;
+        BigInteger nonce = BigInteger.ZERO;
+
+        // to == null  signals that this is contract creation.
+        AionTransaction tx =
+            AionTransaction.create(
+                deployerKey,
+                nonce.toByteArray(),
+                null,
+                value.toByteArray(),
+                deployCode,
+                nrg,
+                nrgPrice,
+                txType, null);
+        assertTrue(tx.isContractCreationTransaction());
+
+        assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
+        assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
+
+        // The transaction has invalid energylimit settings
+        AionBlock block = makeBlock(tx);
+        RepositoryCache repo = blockchain.getRepository().startTracking();
+
+        AionTxExecSummary summary =
+            BulkExecutor.executeTransactionWithNoPostExecutionWork(
+                block.getDifficulty(),
+                block.getNumber(),
+                block.getTimestamp(),
+                block.getNrgLimit(),
+                block.getCoinbase(),
+                tx,
+                repo,
+                false,
+                true,
+                false,
+                false,
+                LOGGER_VM,
+                BlockCachingContext.PENDING,
+                block.getNumber() - 1);
+
+        if (txType == TransactionTypes.DEFAULT) {
+            assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
+            checkStateOfDeployer(repo, summary, nrgPrice, value, nonce.add(BigInteger.ONE));
+            assertEquals(nrg, summary.getReceipt().getEnergyUsed());
+            assertEquals(nrg, repo.getBalance(block.getCoinbase()).intValue());
+        } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
+            assertEquals("Failed: invalid data", summary.getReceipt().getError());
+            nonce = nonce.add(BigInteger.ONE);
+            checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
+            assertEquals(nrg, summary.getReceipt().getEnergyUsed());
+        }
     }
 }
