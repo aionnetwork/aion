@@ -22,7 +22,7 @@ dependencies {
     compile project(':modCrypto')
 
     compile project(':modAionImpl')
-    compile files("${rootProject.projectDir}/lib/fastvm-f2a39b8.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
     compile project(':modMcf')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
