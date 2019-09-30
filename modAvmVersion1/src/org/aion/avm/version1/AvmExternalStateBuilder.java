@@ -3,7 +3,7 @@ package org.aion.avm.version1;
 import java.math.BigInteger;
 import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IEnergyRules;
-import org.aion.avm.stub.IExternalStateBuilder;
+import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.version1.internal.ExternalStateForAvm;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -13,7 +13,7 @@ import org.aion.types.AionAddress;
 /**
  * Builds a new {@link IAvmExternalState} instance.
  */
-public final class AvmExternalStateBuilder implements IExternalStateBuilder {
+public final class AvmExternalStateBuilder implements IAvmExternalStateBuilder {
     private RepositoryCache<AccountState, IBlockStoreBase> repository = null;
     private BigInteger difficulty = null;
     private Long blockNumber = null;
@@ -25,55 +25,55 @@ public final class AvmExternalStateBuilder implements IExternalStateBuilder {
     private Boolean isLocalCall = null;
 
     @Override
-    public IExternalStateBuilder withRepository(RepositoryCache<AccountState, IBlockStoreBase> repository) {
+    public IAvmExternalStateBuilder withRepository(RepositoryCache<AccountState, IBlockStoreBase> repository) {
         this.repository = repository;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withDifficulty(BigInteger difficulty) {
+    public IAvmExternalStateBuilder withDifficulty(BigInteger difficulty) {
         this.difficulty = difficulty;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withBlockNumber(long blockNumber) {
+    public IAvmExternalStateBuilder withBlockNumber(long blockNumber) {
         this.blockNumber = blockNumber;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withBlockTimestamp(long timestamp) {
+    public IAvmExternalStateBuilder withBlockTimestamp(long timestamp) {
         this.timestamp = timestamp;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withBlockEnergyLimit(long blockEnergyLimit) {
+    public IAvmExternalStateBuilder withBlockEnergyLimit(long blockEnergyLimit) {
         this.blockEnergyLimit = blockEnergyLimit;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withMiner(AionAddress miner) {
+    public IAvmExternalStateBuilder withMiner(AionAddress miner) {
         this.miner = miner;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder withEnergyRules(IEnergyRules energyRules) {
+    public IAvmExternalStateBuilder withEnergyRules(IEnergyRules energyRules) {
         this.energyRules = energyRules;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder allowNonceIncrement(boolean allow) {
+    public IAvmExternalStateBuilder allowNonceIncrement(boolean allow) {
         this.allowNonceIncrement = allow;
         return this;
     }
 
     @Override
-    public IExternalStateBuilder isLocalCall(boolean isLocal) {
+    public IAvmExternalStateBuilder isLocalCall(boolean isLocal) {
         this.isLocalCall = isLocal;
         return this;
     }

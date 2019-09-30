@@ -8,7 +8,7 @@ import org.aion.vm.avm.internal.AvmResourcesVersion2;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
-import org.aion.avm.stub.IExternalStateBuilder;
+import org.aion.avm.stub.IAvmExternalStateBuilder;
 
 /**
  * A class that provides access to multi-versioned AVM-related resources.
@@ -301,7 +301,7 @@ public final class AvmProvider {
      * @throws IllegalMonitorStateException If the calling thread does not own the lock.
      * @return a new builder.
      */
-    public static IExternalStateBuilder newExternalStateBuilder(AvmVersion version) {
+    public static IAvmExternalStateBuilder newExternalStateBuilder(AvmVersion version) {
         if (!LOCK.isHeldByCurrentThread()) {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }

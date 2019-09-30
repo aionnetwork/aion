@@ -23,7 +23,7 @@ public interface IAvmResourceFactory {
      *
      * @return a new builder.
      */
-    public IExternalStateBuilder newExternalStateBuilder();
+    public IAvmExternalStateBuilder newExternalStateBuilder();
 
     /**
      * Verifies that all of the jars loaded by this factory were loaded by the same classloader

@@ -3,7 +3,7 @@ package org.aion.avm.version1;
 import org.aion.avm.core.AvmImpl;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
-import org.aion.avm.stub.IExternalStateBuilder;
+import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.stub.IContractFactory;
 import org.aion.avm.stub.IDecoder;
 import org.aion.avm.stub.IStreamingEncoder;
@@ -20,7 +20,7 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
     }
 
     @Override
-    public IExternalStateBuilder newExternalStateBuilder() {
+    public IAvmExternalStateBuilder newExternalStateBuilder() {
         return new AvmExternalStateBuilder();
     }
 
