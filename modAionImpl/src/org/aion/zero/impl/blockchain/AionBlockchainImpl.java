@@ -1734,10 +1734,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
 
+                boolean unityForkEnabled = block.getHeader().getNumber() >= FORK_5_BLOCK_NUMBER;
                 if (txs.parallelStream()
                         .anyMatch(
                                 tx ->
-                                        !TXValidator.isValid(tx)
+                                    unityForkEnabled ? !TXValidator.isValidAfterUnity(tx) : !TXValidator.isValid(tx)
                                                 || !TransactionTypeValidator.isValid(tx)
                                                 || !beaconHashValidator.validateTxForBlock(tx, block))) {
                     LOG.error("Some transactions in the block are invalid");

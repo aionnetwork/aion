@@ -559,8 +559,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             boolean waitUntilBlockTime,
             long currTimeSeconds) {
 
+        boolean unityForkEnabled = (parent.getHeader().getNumber() + 1) >= getUnityForkNumber();
         for (AionTransaction tx : txs) {
-            if (!TXValidator.isValid(tx)) {
+            if (unityForkEnabled ? !TXValidator.isValidAfterUnity(tx): !TXValidator.isValid(tx)) {
                 throw new InvalidParameterException("invalid transaction input! " + tx.toString());
             }
         }

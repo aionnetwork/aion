@@ -16,6 +16,11 @@ public class TxNrgRule {
         return (energyLimit >= CONTRACT_CREATE_TX_NRG_MIN) && (energyLimit <= CONTRACT_CREATE_TX_NRG_MAX);
     }
 
+    public static boolean isValidNrgContractCreateAfterUnity(long energyLimit) {
+        return (energyLimit >= (CONTRACT_CREATE_TX_NRG_MIN + TX_NRG_MIN))
+                && (energyLimit <= CONTRACT_CREATE_TX_NRG_MAX);
+    }
+
     public static boolean isValidNrgTx(long energyLimit) {
         return (energyLimit >= TX_NRG_MIN) && (energyLimit <= TX_NRG_MAX);
     }
