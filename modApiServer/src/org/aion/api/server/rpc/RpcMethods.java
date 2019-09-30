@@ -278,6 +278,5 @@ public class RpcMethods {
                             "priv_dumpBlockByNumber",
                             (params) -> api.priv_dumpBlockByNumber(params)),
                     Map.entry("priv_shortStats", (params) -> api.priv_shortStats()),
-                    Map.entry("priv_config", (params) -> api.priv_config()),
-                    Map.entry("priv_syncPeers", (params) -> api.priv_syncPeers()));
+                    Map.entry("priv_config", (params) -> api.priv_config()));
 }

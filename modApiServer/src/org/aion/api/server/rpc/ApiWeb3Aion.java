@@ -86,7 +86,6 @@ import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.NodeWrapper;
-import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -1661,57 +1660,6 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("network", network);
 
         return new RpcMsg(obj);
-    }
-
-    /**
-     * This may seem similar to a superset of peers, with the difference being that this should only
-     * contain a subset of peers we are actively syncing from
-     */
-    public RpcMsg priv_syncPeers() {
-        // contract here is we do NOT modify the peerStates in any way
-        Map<Integer, PeerState> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStates();
-
-        // also retrieve nodes from p2p to see if we can piece together a full state
-        Map<Integer, NodeWrapper> nodeState = this.ac.getAionHub().getActiveNodes();
-
-        JSONArray array = new JSONArray();
-        for (Map.Entry<Integer, PeerState> peerState : peerStates.entrySet()) {
-            // begin []
-            JSONObject peerObj = new JSONObject();
-            NodeWrapper node;
-            if ((node = nodeState.get(peerState.getKey())) != null) {
-                // base[].node
-                JSONObject nodeObj = new JSONObject();
-                nodeObj.put("id", new String(node.getId()));
-                nodeObj.put("totalDifficulty", node.getTotalDifficulty());
-                nodeObj.put("bestNumber", node.getBestBlockNumber());
-                nodeObj.put("version", node.getBinaryVersion());
-                nodeObj.put("timestamp", node.getTimestamp());
-                nodeObj.put(
-                        "timestampUTC",
-                        Instant.ofEpochMilli(node.getTimestamp())
-                                .atOffset(ZoneOffset.UTC)
-                                .toString());
-
-                // end
-                peerObj.put("node", nodeObj);
-            }
-
-            PeerState ps = peerState.getValue();
-            peerObj.put("idHash", peerState.getKey());
-            peerObj.put("lastRequestTimestamp", ps.getLastHeaderRequest());
-            peerObj.put(
-                    "lastRequestTimestampUTC",
-                    Instant.ofEpochMilli(ps.getLastHeaderRequest())
-                            .atOffset(ZoneOffset.UTC)
-                            .toString());
-            peerObj.put("mode", ps.getMode().toString());
-            peerObj.put("base", ps.getBase());
-
-            // end
-            array.put(peerObj);
-        }
-        return new RpcMsg(array);
     }
 
     public RpcMsg priv_config() {

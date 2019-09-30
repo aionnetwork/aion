@@ -409,10 +409,6 @@ public final class SyncMgr {
         }
     }
 
-    public Map<Integer, PeerState> getPeerStates() {
-        return new HashMap<>(this.peerStates);
-    }
-
     public SyncStats getSyncStats() {
         return this.stats;
     }
