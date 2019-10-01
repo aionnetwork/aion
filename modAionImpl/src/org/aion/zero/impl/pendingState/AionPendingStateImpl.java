@@ -326,7 +326,9 @@ public class AionPendingStateImpl implements IPendingState {
                     String.valueOf(
                             CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
             prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
-            prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
+            prop.put(
+                    ITxPool.PROP_TX_TIMEOUT,
+                    String.valueOf(CfgAion.inst().getTx().getTxPendingTimeout()));
 
             this.txPool = new TxPoolA0(prop);
 

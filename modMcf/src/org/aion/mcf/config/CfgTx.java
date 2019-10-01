@@ -17,6 +17,7 @@ public class CfgTx {
         this.buffer = true;
         this.poolDump = false;
         this.poolBackup = false;
+        this.pendingTransactionTimeout = 3600;
     }
 
     private int cacheMax;
@@ -26,6 +27,8 @@ public class CfgTx {
     private boolean poolDump;
 
     private boolean poolBackup;
+
+    private int pendingTransactionTimeout;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -52,6 +55,12 @@ public class CfgTx {
                         case "poolbackup":
                             this.poolBackup = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
+                        case "pendingtxtimeout":
+                            this.pendingTransactionTimeout = Integer.parseInt(Cfg.readValue(sr));
+                            if (this.pendingTransactionTimeout < 60) { // 1 min
+                                this.pendingTransactionTimeout = 60;
+                            }
+                            break;
                         default:
                             Cfg.skipElement(sr);
                             break;
@@ -74,8 +83,24 @@ public class CfgTx {
             xmlWriter.writeStartElement("tx");
 
             xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Sets max TransactionPoolCaching size by 0.1MB incremental unit");
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("cacheMax");
             xmlWriter.writeCharacters(String.valueOf(this.getCacheMax()));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Sets pending transaction timeout threshold in the transaction pool");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("txPendingTimeout");
+            xmlWriter.writeCharacters(String.valueOf(this.getTxPendingTimeout()));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Sets the pending transactions backup to the Database");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("poolBackup");
+            xmlWriter.writeCharacters(String.valueOf(this.getPoolBackup()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t");
@@ -90,6 +115,10 @@ public class CfgTx {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public int getTxPendingTimeout() {
+        return this.pendingTransactionTimeout;
     }
 
     public int getCacheMax() {
@@ -116,11 +145,12 @@ public class CfgTx {
         return cacheMax == cfgTx.cacheMax
                 && buffer == cfgTx.buffer
                 && poolDump == cfgTx.poolDump
-                && poolBackup == cfgTx.poolBackup;
+                && poolBackup == cfgTx.poolBackup
+                && pendingTransactionTimeout == cfgTx.pendingTransactionTimeout;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(cacheMax, buffer, poolDump, poolBackup);
+        return Objects.hashCode(cacheMax, buffer, poolDump, poolBackup, pendingTransactionTimeout);
     }
 }

@@ -39,13 +39,12 @@ public class TxPoolA0 implements ITxPool {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
 
     private int seqTxCountMax = 16;
-    private int txn_timeout = 86_400; // 1 day by seconds
+    private int txn_timeout = 3600; // 1 hour
     private int blkSizeLimit = Constant.MAX_BLK_SIZE; // 2MB
 
     private final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
     private final int multiplyM = 1_000_000;
     private final int TXN_TIMEOUT_MIN = 10; // 10s
-    private final int TXN_TIMEOUT_MAX = 86_400; // 1 day
 
     private final int BLK_SIZE_MAX = 16 * 1024 * 1024; // 16MB
     private final int BLK_SIZE_MIN = 1024 * 1024; // 1MB
@@ -64,8 +63,6 @@ public class TxPoolA0 implements ITxPool {
             txn_timeout = Integer.valueOf(config.get(PROP_TX_TIMEOUT).toString());
             if (txn_timeout < TXN_TIMEOUT_MIN) {
                 txn_timeout = TXN_TIMEOUT_MIN;
-            } else if (txn_timeout > TXN_TIMEOUT_MAX) {
-                txn_timeout = TXN_TIMEOUT_MAX;
             }
         }
 
