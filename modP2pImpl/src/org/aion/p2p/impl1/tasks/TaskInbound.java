@@ -1,7 +1,5 @@
 package org.aion.p2p.impl1.tasks;
 
-import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedSelectorException;
@@ -46,6 +44,10 @@ public class TaskInbound implements Runnable {
     private final ResHandshake1 cachedResHandshake1;
     private final BlockingQueue<MsgIn> receiveMsgQue;
 
+    // used to impose a low limit to this type of messages
+    private static final int ACT_BROADCAST_BLOCK = 7;
+    private static final int CTRL_SYNC = 1;
+
     public TaskInbound(
             final Logger p2pLOG,
             final Logger surveyLog,
@@ -82,18 +84,14 @@ public class TaskInbound implements Runnable {
 
             startTime = System.nanoTime();
             try {
-                Thread.sleep(0, 1);
-
-                if (this.selector.selectNow() == 0) {
+                // timeout set to 0.1 second
+                if (this.selector.select(100) == 0) {
                     duration = System.nanoTime() - startTime;
                     surveyLog.info("TaskInbound: find selectors, duration = {} ns.", duration);
                     continue;
                 }
             } catch (IOException | ClosedSelectorException e) {
                 p2pLOG.debug("inbound-select-exception.", e);
-                continue;
-            } catch (InterruptedException e) {
-                p2pLOG.error("inbound thread sleep exception.", e);
                 continue;
             }
             duration = System.nanoTime() - startTime;
@@ -308,12 +306,16 @@ public class TaskInbound implements Runnable {
         _cb.refreshHeader();
         _cb.refreshBody();
 
-        boolean underRC =
-                _cb.shouldRoute(
-                        h.getRoute(),
-                        ((h.getRoute() == txBroadCastRoute)
-                                ? P2pConstant.READ_MAX_RATE_TXBC
-                                : P2pConstant.READ_MAX_RATE));
+        int maxRequestsPerSecond = 0;
+
+        // TODO: refactor to remove knowledge of sync message types
+        if (h.getCtrl() == CTRL_SYNC && h.getAction() == ACT_BROADCAST_BLOCK) {
+            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE;
+        } else {
+            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE_TXBC;
+        }
+
+        boolean underRC = _cb.shouldRoute(h.getRoute(), maxRequestsPerSecond);
 
         if (!underRC) {
             if (p2pLOG.isDebugEnabled()) {

@@ -54,10 +54,6 @@ public final class P2pMgr implements IP2pMgr {
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int TIMEOUT_MSG_READ = 10000;
 
-    // TODO: need refactor by passing the parameter in the later version to P2pMgr.
-    public static int txBroadCastRoute =
-            (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
-
     public final Logger p2pLOG, surveyLog;
 
     public static final int WORKER = 32;
