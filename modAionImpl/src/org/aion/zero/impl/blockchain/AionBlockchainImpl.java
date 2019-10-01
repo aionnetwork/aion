@@ -2010,16 +2010,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public long nextBase(long current, long knownStatus) {
-        try {
-            return repository.getPendingBlockStore().nextBase(current, knownStatus);
-        } catch (Exception e) {
-            LOG.error("Unable to generate next LIGHTNING request base due to: ", e);
-            return current;
-        }
-    }
-
-    @Override
     public void dropImported(
             long level,
             List<ByteArrayWrapper> ranges,

@@ -17,26 +17,5 @@ public class P2pConstant {
             READ_MAX_RATE_TXBC = 20,
 
             // write queue timeout
-            WRITE_MSG_TIMEOUT = 5000,
-            REQUEST_SIZE = 24,
-            LARGE_REQUEST_SIZE = 40,
-
-            /**
-             * The number of blocks overlapping with the current chain requested at import when the
-             * local best block is far from the top block in the peer's chain.
-             */
-            FAR_OVERLAPPING_BLOCKS = 3,
-
-            /**
-             * The number of blocks overlapping with the current chain requested at import when the
-             * local best block is close to the top block in the peer's chain.
-             */
-            CLOSE_OVERLAPPING_BLOCKS = 15,
-            STEP_COUNT = 6,
-            MAX_NORMAL_PEERS = 16,
-            COEFFICIENT_NORMAL_PEERS = 3,
-
-            // NOTE: the 3 values below are interdependent
-            // do not change one without considering the impact to the others
-            BACKWARD_SYNC_STEP = REQUEST_SIZE * STEP_COUNT - 1;
+            WRITE_MSG_TIMEOUT = 5000;
 }

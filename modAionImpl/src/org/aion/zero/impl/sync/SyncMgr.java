@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +54,6 @@ public final class SyncMgr {
 
     private SyncHeaderRequestManager syncHeaderRequestManager;
 
-    // peer syncing states
-    private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
     // store the downloaded headers from network
     private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>();
     // store the downloaded blocks that are ready to import
@@ -70,18 +67,6 @@ public final class SyncMgr {
     private IEventMgr evtMgr;
     private SyncStats stats;
     private AtomicBoolean start = new AtomicBoolean(true);
-    // private ExecutorService workers = Executors.newFixedThreadPool(5);
-    private ExecutorService workers =
-            Executors.newCachedThreadPool(
-                    new ThreadFactory() {
-
-                        private AtomicInteger cnt = new AtomicInteger(0);
-
-                        @Override
-                        public Thread newThread(Runnable r) {
-                            return new Thread(r, "sync-gh-" + cnt.incrementAndGet());
-                        }
-                    });
 
     private Thread syncGb = null;
     private Thread syncIb = null;
@@ -212,7 +197,7 @@ public final class SyncMgr {
                                 stats,
                                 downloadedBlocks,
                                 importedBlockHashes,
-                                peerStates,
+                                syncHeaderRequestManager,
                                 _slowImportTime,
                                 _compactFrequency),
                         "sync-ib");
@@ -251,17 +236,8 @@ public final class SyncMgr {
                 log.debug("Downloaded blocks queue is full. Stop requesting headers");
             }
         } else {
-            if (!workers.isShutdown()) {
-                workers.submit(
-                        new TaskGetHeaders(
-                                p2pMgr,
-                                chain.getBestBlock().getNumber(),
-                                _selfTd,
-                                peerStates,
-                                stats,
-                                log));
-                queueFull.set(false);
-            }
+            syncHeaderRequestManager.sendHeadersRequests(chain.getBestBlock().getNumber(), _selfTd, p2pMgr, stats);
+            queueFull.set(false);
         }
     }
 
@@ -398,7 +374,6 @@ public final class SyncMgr {
 
     public synchronized void shutdown() {
         start.set(false);
-        workers.shutdown();
 
         interruptAndWait(syncGb, 10000);
         interruptAndWait(syncIb, 10000);

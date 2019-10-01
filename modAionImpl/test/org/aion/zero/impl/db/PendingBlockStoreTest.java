@@ -2,8 +2,6 @@ package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.db.DatabaseUtils.deleteRecursively;
-import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
-import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -398,114 +396,5 @@ public class PendingBlockStoreTest {
         assertThat(pb.getIndexSize()).isEqualTo(1);
         assertThat(pb.getLevelSize()).isEqualTo(1);
         assertThat(pb.getQueueSize()).isEqualTo(1);
-    }
-
-    @Test
-    public void testNextBase_wException() {
-        Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        PendingBlockStore pb = null;
-        try {
-            pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
-            e.printStackTrace();
-        }
-        assertThat(pb.isOpen()).isTrue();
-
-        Block block = TestResources.consecutiveBlocks(1).get(0);
-
-        long current = block.getNumber() + 1; // above last status
-        long knownBest = block.getNumber(); // will define the max status
-        long expected = current;
-
-        // closing the pending block store to cause exception
-        pb.close();
-
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
-    }
-
-    @Test
-    public void testNextBase_woStatus() {
-        Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        PendingBlockStore pb = null;
-        try {
-            pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
-            e.printStackTrace();
-        }
-        assertThat(pb.isOpen()).isTrue();
-
-        long current = 100L;
-        long knownBest = 0L; // not yet known
-        long expected = current + STEP_COUNT * LARGE_REQUEST_SIZE;
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
-    }
-
-    @Test
-    public void testNextBase_wSmallKnownBest() {
-        Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        PendingBlockStore pb = null;
-        try {
-            pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
-            e.printStackTrace();
-        }
-        assertThat(pb.isOpen()).isTrue();
-
-        long current = 100L;
-        long knownBest = current + LARGE_REQUEST_SIZE - 1;
-        long expected = current;
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
-    }
-
-    @Test
-    public void testNextBase_wSufficientKnownBest() {
-        Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        PendingBlockStore pb = null;
-        try {
-            pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
-            e.printStackTrace();
-        }
-        assertThat(pb.isOpen()).isTrue();
-
-        long current = 100L;
-        long knownBest = current + LARGE_REQUEST_SIZE;
-        long expected = current + STEP_COUNT * LARGE_REQUEST_SIZE;
-        // current will be chosen
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
-
-        knownBest = expected + LARGE_REQUEST_SIZE;
-        expected = expected + STEP_COUNT * LARGE_REQUEST_SIZE;
-        // maxRequest will be chosen
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
-    }
-
-    @Test
-    public void testNextBase_wFailedStatusSearch() {
-        Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        PendingBlockStore pb = null;
-        try {
-            pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
-            e.printStackTrace();
-        }
-        assertThat(pb.isOpen()).isTrue();
-
-        Block block = TestResources.consecutiveBlocks(1).get(0);
-
-        long current = block.getNumber() + 1; // above last status
-        long knownBest = block.getNumber(); // will define the max status
-        long expected = current;
-        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
     }
 }

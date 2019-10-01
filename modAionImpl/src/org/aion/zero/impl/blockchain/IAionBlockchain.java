@@ -121,17 +121,6 @@ public interface IAionBlockchain extends UnityChain {
     Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level);
 
     /**
-     * Returns a number greater or equal to the given {@code current} number representing the base
-     * value for a subsequent LIGHTNING request.
-     *
-     * @param current the starting point value for the next base
-     * @param knownStatus value retrieved from the last best block status update for the peer
-     *     requesting a base value for a subsequent LIGHTNING request.
-     * @return the next generated base value for the request.
-     */
-    long nextBase(long current, long knownStatus);
-
-    /**
      * Deletes the given blocks from the pending block storage.
      *
      * @param level the block height of the range starting point

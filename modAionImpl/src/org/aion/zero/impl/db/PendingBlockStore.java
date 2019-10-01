@@ -2,8 +2,6 @@ package org.aion.zero.impl.db;
 
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
-import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
-import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
@@ -63,7 +61,6 @@ import org.slf4j.Logger;
 public class PendingBlockStore implements Closeable {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-    private static final Logger LOG_SYNC = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private final ReadWriteLock databaseLock = new ReentrantReadWriteLock();
     private final Lock internalLock = new ReentrantLock();
@@ -87,11 +84,6 @@ public class PendingBlockStore implements Closeable {
     private ByteArrayKeyValueDatabase queueDatabase;
     /** Used to maps a block hash to its current queue identifier. */
     private ByteArrayKeyValueDatabase indexSource;
-
-    // tracking the status: with access managed by the `internalLock`
-    private long maxRequest = 0L, maxHeight = 0L;
-
-    private static final int FORWARD_SKIP = STEP_COUNT * LARGE_REQUEST_SIZE;
 
     /**
      * Constructor. Initializes the databases used for storage. If the database configuration used
@@ -511,82 +503,8 @@ public class PendingBlockStore implements Closeable {
             levelSource.flushBatch();
         } catch (Exception e) {
             LOG.error("Unable to delete used blocks due to: ", e);
-            return;
         } finally {
             databaseLock.writeLock().unlock();
-        }
-    }
-
-    /**
-     * Generates a number greater or equal to the given {@code current} number representing the base
-     * value for a subsequent LIGHTNING request. The returned base is generated taking into
-     * consideration the current {@code knownBest} value for the peer for which this functionality
-     * is requested and the maximum recorded best throughout calls.
-     *
-     * <p>The bases are generated in an optimistic continuous manner based on the following
-     * assumptions:
-     *
-     * <ol>
-     *   <li>the majority of peers are on the same (main) chain;
-     *   <li>bases that cannot be used are recycled in the functionality calling this method;
-     *   <li>chain continuity is ensured by employing NORMAL requests in addition to LIGHTNING ones.
-     * </ol>
-     *
-     * @param current the starting point value for the next base
-     * @param knownBest value retrieved from the last best block status update for the peer
-     *     requesting a base value for a subsequent LIGHTNING request.
-     * @return the next generated base value for the request.
-     */
-    public long nextBase(long current, long knownBest) {
-        internalLock.lock();
-
-        try {
-            long base = -1;
-
-            if (knownBest > maxHeight) {
-                maxHeight = knownBest;
-            }
-
-            if (maxHeight == 0) {
-                // optimistic jump forward
-                base = current > maxRequest ? current : maxRequest;
-                base += FORWARD_SKIP;
-            } else {
-                // same as initialization => no change from gap fill functionality
-                if (base == -1) {
-                    if (maxHeight < current + LARGE_REQUEST_SIZE) {
-                        // signal to switch back to / stay in NORMAL mode
-                        base = current;
-                    } else {
-                        // regular jump forward
-                        base = current > maxRequest ? current : maxRequest;
-                        base += FORWARD_SKIP;
-                    }
-                }
-            }
-
-            if (LOG_SYNC.isDebugEnabled()) {
-                LOG_SYNC.debug(
-                        "max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
-                        maxHeight,
-                        knownBest,
-                        maxRequest,
-                        current,
-                        base);
-            }
-
-            // keep track of base
-            if (base > maxRequest) {
-                maxRequest = base;
-            }
-
-            // return new base
-            return base;
-        } catch (Exception e) {
-            LOG.error("Unable to generate next LIGHTNING request base due to: ", e);
-            return current;
-        } finally {
-            internalLock.unlock();
         }
     }
 
