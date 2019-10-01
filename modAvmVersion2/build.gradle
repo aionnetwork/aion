@@ -6,7 +6,7 @@ dependencies {
     compile project(':modUtil')
     compile project(':modPrecompiled')
     compile project(':modAvmStub')
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile files("${rootProject.projectDir}/lib/org-aion-avm-core-v2.jar")
     compile files("${rootProject.projectDir}/lib/org-aion-avm-api-v2.jar")
     compile files("${rootProject.projectDir}/lib/org-aion-avm-rt-v2.jar")

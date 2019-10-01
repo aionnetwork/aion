@@ -26,7 +26,7 @@ dependencies {
     compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:4.0.0'
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
 
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
 

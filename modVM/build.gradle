@@ -8,7 +8,7 @@ dependencies {
     compile project(':modAvmStub')
     
     compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'

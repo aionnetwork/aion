@@ -2,7 +2,7 @@ ext.moduleName = 'aion.base'
 
 dependencies {
     compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile project(':modUtil')
     compile project(':modLogger')
     compile project(':modRlp')

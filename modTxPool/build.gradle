@@ -5,7 +5,7 @@ clean.dependsOn deleteNativeLibs
 
 dependencies {
     compile project(':modBase')
-    compile files("${rootProject.projectDir}/lib/aion-types-d6eb8f7.jar")
+    compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     
     testCompile 'junit:junit:4.12'
 }
