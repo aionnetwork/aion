@@ -1,5 +1,8 @@
 ext.moduleName = 'aion.base'
 
+test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs
+
 dependencies {
     compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
@@ -9,4 +12,11 @@ dependencies {
     compile project(':modCrypto')
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+
+    testCompile 'junit:junit:4.12'
 }
+
+// Skip unit tests when doing build task; unit tests are all mixed up with
+// long-running integration tests in this module,so doing this to avoid
+// build taking too long.
+build.dependsOn.remove("check")

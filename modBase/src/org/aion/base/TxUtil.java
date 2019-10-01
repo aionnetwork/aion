@@ -14,7 +14,6 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
-import org.aion.util.bytes.ByteUtil;
 import org.slf4j.Logger;
 
 public final class TxUtil {
