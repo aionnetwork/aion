@@ -11,6 +11,7 @@ import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,6 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -92,9 +91,6 @@ final class TaskImportBlocks implements Runnable {
         this.lastCompactTime = System.currentTimeMillis();
     }
 
-    ExecutorService executors =
-            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
     @Override
     public void run() {
         // for runtime survey information
@@ -163,7 +159,6 @@ final class TaskImportBlocks implements Runnable {
                             + Thread.currentThread().getName()
                             + "] performing block imports was shutdown.");
         }
-        executors.shutdown();
     }
 
     /**
@@ -305,8 +300,7 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    executors.submit(
-                            new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
+                    storePendingBlocks(batch, displayId);
 
                     if (log.isDebugEnabled()) {
                         log.debug(
@@ -753,8 +747,7 @@ final class TaskImportBlocks implements Runnable {
             }
 
             // remove imported data from storage
-            executors.submit(
-                    new TaskDropImportedBlocks(chain, level, importedQueues, levelFromDisk, log));
+            dropImportedBlocks(level, importedQueues, levelFromDisk);
 
             // increment level
             level++;
@@ -770,5 +763,35 @@ final class TaskImportBlocks implements Runnable {
 
     private long getBestBlockNumber() {
         return chain.getBestBlock() == null ? 0 : chain.getBestBlock().getNumber();
+    }
+
+    private void storePendingBlocks(final List<Block> batch, final String displayId) {
+        Block first = batch.get(0);
+        int stored = chain.storePendingBlockRange(batch);
+        this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
+
+        // log operation
+        log.info(
+                "<import-status: STORED {} out of {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
+                stored,
+                batch.size(),
+                displayId,
+                first.getShortHash(),
+                first.getNumber(),
+                first.getTransactionsList().size());
+    }
+
+    private void dropImportedBlocks(
+            final long level,
+            final List<ByteArrayWrapper> importedQueues,
+            final Map<ByteArrayWrapper, List<Block>> levelFromDisk) {
+
+        chain.dropImported(level, importedQueues, levelFromDisk);
+
+        // log operation
+        log.debug(
+                "Dropped from storage level = {} with queues = {}.",
+                level,
+                Arrays.toString(importedQueues.toArray()));
     }
 }
