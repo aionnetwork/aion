@@ -1,10 +1,12 @@
 package org.aion.avm.version2.internal;
 
+import java.math.BigInteger;
 import org.aion.avm.core.IExternalCapabilities;
+import org.aion.base.InvokableTxUtil;
 import org.aion.base.TxUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
-import org.aion.types.Transaction;
+import org.aion.types.InternalTransaction;
 
 public final class AionCapabilities implements IExternalCapabilities {
 
@@ -29,7 +31,12 @@ public final class AionCapabilities implements IExternalCapabilities {
     }
 
     @Override
-    public AionAddress generateContractAddress(Transaction tx) {
-        return TxUtil.calculateContractAddress(tx);
+    public AionAddress generateContractAddress(AionAddress deployerAddress, BigInteger nonce) {
+        return TxUtil.calculateContractAddress(deployerAddress.toByteArray(), nonce);
+    }
+
+    @Override
+    public InternalTransaction decodeSerializedTransaction(byte[] transactionPayload, AionAddress executor, long energyPrice, long energyLimit) {
+        return InvokableTxUtil.decode(transactionPayload, executor, energyPrice, energyLimit);
     }
 }
