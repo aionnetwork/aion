@@ -71,12 +71,10 @@ public class CliTest {
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, currentTestNetName);
 
-
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, currentTestNetName);
-
 
     private static final String module = "modAionImpl";
 
@@ -95,18 +93,15 @@ public class CliTest {
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
 
-
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
-
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
-
 
     private static final String DEFAULT_PORT = "30303";
     private static final String TEST_PORT = "12345";

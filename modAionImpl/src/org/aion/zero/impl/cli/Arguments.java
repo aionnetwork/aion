@@ -33,7 +33,7 @@ public class Arguments {
             arity = "0..1",
             paramLabel = "<network>",
             description =
-                    "create config for the selected network\noptions: mainnet, amity, custom")
+                    "create config for the selected network\noptions: mainnet, amity, custom, tetryon")
     private String config = null;
 
     // get information and version
@@ -79,7 +79,7 @@ public class Arguments {
     @Option(
             names = {"-n", "--network"},
             description =
-                    "execute kernel with selected network\noptions: mainnet, amity, custom")
+                    "execute kernel with selected network\noptions: mainnet, amity, custom, tetryon")
     private String network = null;
 
     @Option(

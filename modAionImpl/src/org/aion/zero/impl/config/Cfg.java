@@ -206,6 +206,9 @@ public abstract class Cfg {
                 case 28:
                     network = "amity";
                     break;
+                case 29:
+                    network = "tetryon";
+                    break;
                 default:
                     network = "custom";
                     break;

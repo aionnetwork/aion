@@ -1,0 +1,33 @@
+{
+  "alloc": {
+    "0xa0621728ff01e4770bf075dc7e34a198aa62d0136180c428546f2e9d0605955a": {
+      "balance": "200000000000000000000000000"
+    },
+    "0xa094190aebd030b60901f69c544c9cbcd489dce10dbb312df4a1fde77991d3ac": {
+      "balance": "200000000000000000000000000"
+    },
+    "0xa0720d48bb5ec64e117fc611f6c93827305c4b2688668601a866ba1549bd9f0c": {
+      "balance": "200000000000000000000000000"
+    },
+    "0xa09056d15871e425802c8ee62ed1b8167744ae012090ef2bf960aed5cf0bbdc2": {
+      "balance": "200000000000000000000000000"
+    },
+    "0xa0991a4287d81a7dd5e937532cc2ac383f12a213c97313e77cef4c4ae55f00be": {
+      "balance": "200000000000000000000000000"
+    }
+  },
+  "networkBalanceAllocs": {
+    "0": {
+      "balance": "465934586660000000000000000"
+    }
+  },
+  "energyLimit": "15000000",
+  "nonce": "0x00",
+  "difficulty": "0x0010",
+  "coinbase": "0xa00e7d012e80e11c75968ffc7657c81a116029cf1d8925f7a6e52580e26d865f",
+  "timestamp": "1567110000",
+  "parentHash": "0x10E71BF64DCB8C60766CCB491AB6E3ACEC1AB07D0D5A088FCF533CBFBC801295",
+  "chainId": "29",
+  "genesisStakingDifficulty": "2000000000",
+  "stakingContractAddress": "a056337bb14e818f3f53e13ab0d93b6539aa570cba91ce65c716058241989be9"
+}
