@@ -36,11 +36,11 @@ public class NodeMgrTest {
     private final int MAX_TEMP_NODES = 128;
     private final int MAX_ACTIVE_NODES = 128;
 
-    private final String nodeId1 = UUID.randomUUID().toString();
-    private final String nodeId2 = UUID.randomUUID().toString();
-    private final String ip1 = "127.0.0.1";
-    private final String ip2 = "192.168.0.11";
-    private int port1;
+    private String nodeId1 = UUID.randomUUID().toString();
+    private String nodeId2 = UUID.randomUUID().toString();
+    private String ip1 = "127.0.0.1";
+    private String ip2 = "192.168.0.11";
+    private int port1 = 30304;
 
     @Mock private Logger LOGGER;
 
@@ -60,8 +60,6 @@ public class NodeMgrTest {
 
         nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
         r = new Random();
-        port1 = 30000 + r.nextInt(500);
-        System.out.println("Using port=" + port1);
     }
 
     private byte[] randomIP() {
@@ -146,7 +144,7 @@ public class NodeMgrTest {
     @Test(timeout = 30_000)
     public void testTempNodesTake() throws InterruptedException {
 
-        int port2 = port1 + 1;
+        int port2 = 30305;
         String[] nodes =
                 new String[] {
                     "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
