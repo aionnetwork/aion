@@ -41,6 +41,7 @@ public class TxPoolA0 implements ITxPool {
     private int seqTxCountMax = 16;
     private int txn_timeout = 3600; // 1 hour
     private int blkSizeLimit = Constant.MAX_BLK_SIZE; // 2MB
+    public final static long MIN_ENERGY_CONSUME = 21_000L;
 
     private final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
     private final int multiplyM = 1_000_000;
@@ -504,7 +505,10 @@ public class TxPoolA0 implements ITxPool {
 
                         byte[] encodedItx = pendingTx.tx.getEncoded();
                         cnt_txSz += encodedItx.length;
-                        cnt_nrg += pendingTx.energyConsumed;
+                        // Set the lowerbound energy consume for the energy refund case.
+                        // In the solidity, the refund energy might exceed the transaction energy consume like 21K.
+                        // But the AVM does not. We use half of the Minimum energy consume as the transaction picking rule
+                        cnt_nrg += pendingTx.energyConsumed < (MIN_ENERGY_CONSUME / 2 ) ? (MIN_ENERGY_CONSUME / 2) : pendingTx.energyConsumed;
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
@@ -552,7 +556,10 @@ public class TxPoolA0 implements ITxPool {
 
                             byte[] encodedItx = pendingTx.tx.getEncoded();
                             cnt_txSz += encodedItx.length;
-                            cnt_nrg += pendingTx.energyConsumed;
+                            // Set the lowerbound energy consume for the energy refund case.
+                            // In the solidity, the refund energy might exceed the transaction energy consume like 21K.
+                            // But the AVM does not. We use half of the Minimum energy consume as the transaction picking rule
+                            cnt_nrg += pendingTx.energyConsumed < (MIN_ENERGY_CONSUME / 2 ) ? (MIN_ENERGY_CONSUME / 2) : pendingTx.energyConsumed;
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
@@ -770,9 +777,11 @@ public class TxPoolA0 implements ITxPool {
                         // considering refactor later
                         BigInteger nonce = pooledTx.tx.getNonceBI();
 
+                        long nrgConsumed = pooledTx.energyConsumed < (MIN_ENERGY_CONSUME / 2 ) ? (MIN_ENERGY_CONSUME / 2) : pooledTx.energyConsumed;
+
                         BigInteger nrgCharge =
                             BigInteger.valueOf(pooledTx.tx.getEnergyPrice())
-                                .multiply(BigInteger.valueOf(pooledTx.energyConsumed));
+                                .multiply(BigInteger.valueOf(nrgConsumed));
 
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(

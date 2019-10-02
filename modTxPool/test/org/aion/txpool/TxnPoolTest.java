@@ -1,6 +1,7 @@
-package org.aion.txpool.test;
+package org.aion.txpool;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.aion.txpool.TxPoolA0.MIN_ENERGY_CONSUME;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -17,8 +18,6 @@ import org.aion.base.PooledTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.txpool.ITxPool;
-import org.aion.txpool.TxPoolA0;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
@@ -115,7 +114,7 @@ public class TxnPoolTest {
                             "0000000000000000000000000000000000000000000000000000000000000001"),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
-                        10000L,
+                    MIN_ENERGY_CONSUME,
                         1L,
                         TransactionTypes.DEFAULT, null);
 
@@ -146,7 +145,7 @@ public class TxnPoolTest {
         List<PooledTransaction> txlrm = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
-            PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), 5000L);
+            PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), MIN_ENERGY_CONSUME);
             txl.add(tx);
             if (i < 10) {
                 txlrm.add(tx);
@@ -173,7 +172,7 @@ public class TxnPoolTest {
         List<PooledTransaction> txl = new ArrayList<>();
         int cnt = 20;
         for (int i = 0; i < cnt; i++) {
-            PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), 5000L);
+            PooledTransaction tx = genTransaction(BigInteger.valueOf(i).toByteArray(), MIN_ENERGY_CONSUME);
             txl.add(tx);
         }
 
@@ -228,7 +227,7 @@ public class TxnPoolTest {
                                 "0000000000000000000000000000000000000000000000000000000000000001"),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
-                        10000L,
+                    MIN_ENERGY_CONSUME,
                         1L,
                         TransactionTypes.DEFAULT, null);
         return new PooledTransaction(tx, energyConsumed);
@@ -243,7 +242,7 @@ public class TxnPoolTest {
                                 "0000000000000000000000000000000000000000000000000000000000000001"),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
-                        10000L,
+                    MIN_ENERGY_CONSUME,
                         1L,
                         TransactionTypes.DEFAULT, null);
         return new PooledTransaction(tx, energyConsumed);
@@ -256,7 +255,7 @@ public class TxnPoolTest {
                 AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
-                10000L,
+            MIN_ENERGY_CONSUME,
                 1L,
                 TransactionTypes.DEFAULT,
                 timeStamp, null);
@@ -268,12 +267,14 @@ public class TxnPoolTest {
                 AionTransaction.create(
                         key,
                         nonce,
-                        AddressUtils.wrapAddress("0000000000000000000000000000000000000000000000000000000000000001"),
+                        AddressUtils.wrapAddress(
+                                "0000000000000000000000000000000000000000000000000000000000000001"),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
-                        10000L,
-                        r.nextInt(1000),
-                        TransactionTypes.DEFAULT, null);
+                        MIN_ENERGY_CONSUME,
+                        1 + r.nextInt(1000),
+                        TransactionTypes.DEFAULT,
+                        null);
         return new PooledTransaction(tx, energyConsumed);
     }
 
@@ -354,7 +355,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransaction(nonce, i + 1);
+            PooledTransaction txn = genTransaction(nonce, i + MIN_ENERGY_CONSUME);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -382,7 +383,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransaction(nonce, 50 - i);
+            PooledTransaction txn = genTransaction(nonce, MIN_ENERGY_CONSUME + (1000L - i));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -410,7 +411,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransaction(nonce, r.nextInt(1000));
+            PooledTransaction txn = genTransaction(nonce, MIN_ENERGY_CONSUME + r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -440,7 +441,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), r.nextInt(1000));
+            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), MIN_ENERGY_CONSUME + r.nextInt(1000));
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -470,7 +471,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), 1000);
+            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), MIN_ENERGY_CONSUME);
 
             txnl.add(txn);
         }
@@ -501,7 +502,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), r.nextInt(1000));
+            PooledTransaction txn = genTransactionRandomPrice(nonce, key.get(0), MIN_ENERGY_CONSUME + r.nextInt(1000));
 
             txnl.add(txn);
         }
@@ -533,7 +534,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransaction(nonce, 0, 1);
+            PooledTransaction pooledTx = genTransaction(nonce, 0, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -545,7 +546,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTxn = genTransaction(nonce, 1, 1);
+            PooledTransaction pooledTxn = genTransaction(nonce, 1, MIN_ENERGY_CONSUME);
 
             txnl2.add(pooledTxn);
             txMap.put(ByteArrayWrapper.wrap(pooledTxn.tx.getTransactionHash()), pooledTxn);
@@ -577,7 +578,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransaction(nonce, 0, 1);
+            PooledTransaction pooledTx = genTransaction(nonce, 0, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -586,7 +587,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransaction(nonce, 1, 1);
+            PooledTransaction pooledTx = genTransaction(nonce, 1, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -595,7 +596,7 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransaction(nonce, 0, 1);
+            PooledTransaction pooledTx = genTransaction(nonce, 0, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -604,7 +605,7 @@ public class TxnPoolTest {
         for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransaction(nonce, 1, 1);
+            PooledTransaction pooledTx = genTransaction(nonce, 1, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -639,7 +640,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(0), timeStamp,1 );
+            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(0), timeStamp,MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -649,7 +650,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(1), timeStamp, 1);
+            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(1), timeStamp, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -659,7 +660,7 @@ public class TxnPoolTest {
         for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(0), timeStamp, 1);
+            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(0), timeStamp, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -669,7 +670,7 @@ public class TxnPoolTest {
         for (int i = cnt; i < 2 * cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
-            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(1), timeStamp, 1);
+            PooledTransaction pooledTx = genTransactionWithTimestamp(nonce, key.get(1), timeStamp, MIN_ENERGY_CONSUME);
 
             txnl.add(pooledTx);
             txMap.put(ByteArrayWrapper.wrap(pooledTx.tx.getTransactionHash()), pooledTx);
@@ -702,7 +703,7 @@ public class TxnPoolTest {
                         new AionAddress(key.get(0).getAddress()),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
-                        10000L,
+                    MIN_ENERGY_CONSUME,
                         1L,
                         TransactionTypes.DEFAULT, null);
 
@@ -729,7 +730,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction pooledTx = genTransaction(nonce, 50);
+            PooledTransaction pooledTx = genTransaction(nonce, MIN_ENERGY_CONSUME + 50);
             txnl.add(pooledTx);
         }
 
@@ -738,7 +739,7 @@ public class TxnPoolTest {
 
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
-        PooledTransaction pooledTx = genTransaction(nonce, 500);
+        PooledTransaction pooledTx = genTransaction(nonce, MIN_ENERGY_CONSUME + 500);
         tp.add(pooledTx);
 
         List<AionTransaction> snapshot = tp.snapshot();
@@ -760,7 +761,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
 
-            PooledTransaction pooledTx = genTransaction(nonce, 50);
+            PooledTransaction pooledTx = genTransaction(nonce, MIN_ENERGY_CONSUME + 50);
             txnl.add(pooledTx);
         }
 
@@ -770,7 +771,7 @@ public class TxnPoolTest {
 
         byte[] nonce = new byte[Long.BYTES];
         nonce[Long.BYTES - 1] = (byte) 5;
-        PooledTransaction pooledTx = genTransaction(nonce, 500);
+        PooledTransaction pooledTx = genTransaction(nonce, MIN_ENERGY_CONSUME + 500);
         tp.add(pooledTx);
 
         List<AionTransaction> snapshot = tp.snapshot();
@@ -785,8 +786,8 @@ public class TxnPoolTest {
         config.put("tx-timeout", "10");
         ITxPool tp = new TxPoolA0(config);
 
-        PooledTransaction pooledTx = genTransaction(BigInteger.ONE.toByteArray(), 100);
-        PooledTransaction pooledTx2 = genTransaction(BigInteger.ONE.toByteArray(), 100);
+        PooledTransaction pooledTx = genTransaction(BigInteger.ONE.toByteArray(), MIN_ENERGY_CONSUME + 100);
+        PooledTransaction pooledTx2 = genTransaction(BigInteger.ONE.toByteArray(), MIN_ENERGY_CONSUME + 100);
 
         tp.add(Collections.singletonList(pooledTx));
         tp.add(Collections.singletonList(pooledTx2));
@@ -822,10 +823,10 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+            PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME + 100);
             txnl.add(pooledTx);
         }
         tp.add(txnl);
@@ -863,10 +864,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME + 100);
                 txnl.add(pooledTx);
             }
         }
@@ -907,10 +908,10 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(txn, i + 1);
+            PooledTransaction pooledTx = new PooledTransaction(txn, i + MIN_ENERGY_CONSUME + 1);
             txnl.add(pooledTx);
         }
         tp.add(txnl);
@@ -924,7 +925,7 @@ public class TxnPoolTest {
 
         long val = 100;
         for (int i = 0; i < cnt; i++) {
-            Assert.assertEquals(0, nl.get(i).compareTo(BigInteger.valueOf(val--)));
+            Assert.assertEquals(0, nl.get(i).compareTo(BigInteger.valueOf(MIN_ENERGY_CONSUME + val--)));
         }
     }
 
@@ -941,7 +942,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
 
-            PooledTransaction txn = genTransaction(nonce, i + 1);
+            PooledTransaction txn = genTransaction(nonce, i + MIN_ENERGY_CONSUME + 1);
 
             txnl.add(txn);
         }
@@ -954,7 +955,7 @@ public class TxnPoolTest {
         List<BigInteger> nl = tp.getFeeList();
 
         Assert.assertEquals(1, nl.size());
-        Assert.assertEquals(0, nl.get(0).compareTo(BigInteger.valueOf(55 / 10)));
+        Assert.assertEquals(0, nl.get(0).compareTo(BigInteger.valueOf(MIN_ENERGY_CONSUME + 55 / 10)));
     }
 
     @Test
@@ -970,7 +971,7 @@ public class TxnPoolTest {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
 
-            PooledTransaction txn = genTransaction(nonce, i + 1);
+            PooledTransaction txn = genTransaction(nonce, i + MIN_ENERGY_CONSUME);
             txnl.add(txn);
         }
         tp.add(txnl);
@@ -982,8 +983,8 @@ public class TxnPoolTest {
         List<BigInteger> nl = tp.getFeeList();
 
         Assert.assertEquals(2, nl.size());
-        Assert.assertEquals(0, nl.get(0).compareTo(BigInteger.valueOf(17)));
-        Assert.assertEquals(0, nl.get(1).compareTo(BigInteger.valueOf(136 / 16)));
+        Assert.assertEquals(0, nl.get(0).compareTo(BigInteger.valueOf(MIN_ENERGY_CONSUME + (cnt - 1))));
+        Assert.assertEquals(0, nl.get(1).compareTo(BigInteger.valueOf(MIN_ENERGY_CONSUME + (136 / 16 - 1))));
     }
 
     @Test
@@ -1007,10 +1008,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
                 txnl.add(pooledTx);
             }
         }
@@ -1053,10 +1054,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
                 txnl.add(pooledTx);
             }
         }
@@ -1081,10 +1082,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
                 txnl.add(pooledTx);
             }
         }
@@ -1130,10 +1131,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
                 txnl.add(pooledTx);
             }
         }
@@ -1183,10 +1184,10 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+            PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
             txnl.add(pooledTx);
 
             if (i < rmCnt) {
@@ -1247,10 +1248,10 @@ public class TxnPoolTest {
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
-                                10000L,
+                            MIN_ENERGY_CONSUME,
                                 1L,
                                 TransactionTypes.DEFAULT, null);
-                PooledTransaction pooledTx = new PooledTransaction(txn, 100);
+                PooledTransaction pooledTx = new PooledTransaction(txn, MIN_ENERGY_CONSUME);
                 txnl.add(pooledTx);
             }
         }
@@ -1292,23 +1293,23 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(tx, 1);
+            PooledTransaction pooledTx = new PooledTransaction(tx, MIN_ENERGY_CONSUME);
             txs.add(pooledTx);
         }
 
         Properties config = new Properties();
         ITxPool tp = new TxPoolA0(config);
 
-        tp.add(txs.subList(0, 500));
-        assertEquals(500, tp.snapshot().size());
-        assertEquals(500, tp.snapshotAll().size());
+        tp.add(txs.subList(0, 476));
+        assertEquals(476, tp.snapshot().size());
+        assertEquals(476, tp.snapshotAll().size());
 
         tp.remove(txs.subList(0, 100));
-        assertEquals(400, tp.snapshot().size());
-        assertEquals(400, tp.snapshotAll().size());
+        assertEquals(376, tp.snapshot().size());
+        assertEquals(376, tp.snapshotAll().size());
     }
 
     @Test
@@ -1326,10 +1327,10 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(tx, 1);
+            PooledTransaction pooledTx = new PooledTransaction(tx, MIN_ENERGY_CONSUME);
             txs.add(pooledTx);
         }
 
@@ -1356,10 +1357,10 @@ public class TxnPoolTest {
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
-                            10000L,
+                        MIN_ENERGY_CONSUME,
                             1L,
                             TransactionTypes.DEFAULT, null);
-            PooledTransaction pooledTx = new PooledTransaction(tx, 100);
+            PooledTransaction pooledTx = new PooledTransaction(tx, MIN_ENERGY_CONSUME);
             txs.add(pooledTx);
         }
 
