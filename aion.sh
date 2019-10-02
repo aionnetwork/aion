@@ -2,11 +2,11 @@
 
 cd "$(dirname $(realpath $0))"
 
-KERVER=$(uname -r | grep -o "^4\.")
+KERVER=$(uname -r | grep -o "^[4-9]\.")
 
 export MALLOC_ARENA_MAX=4
 
-if [ "$KERVER" != "4." ]; then
+if [ "$KERVER" = "" ]; then
   echo "Warning! The linux kernel must be greater than or equal to version 4."
 fi
 
