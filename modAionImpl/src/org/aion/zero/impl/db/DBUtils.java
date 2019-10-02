@@ -714,7 +714,7 @@ public class DBUtils {
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
         try {
-            List<AionTxInfo> txInfoList = blockchain.getTransactionStore().get(txHash);
+            List<AionTxInfo> txInfoList = blockchain.getTransactionStore().getTxInfo(txHash);
 
             if (txInfoList == null || txInfoList.isEmpty()) {
                 System.out.println("Can not find the transaction with given hash.");

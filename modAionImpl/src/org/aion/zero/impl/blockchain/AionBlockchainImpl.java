@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -514,7 +515,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /* NOTE: only returns receipts from the main chain */
     public AionTxInfo getTransactionInfo(byte[] hash) {
 
-        List<AionTxInfo> infos = transactionStore.get(hash);
+        // Try to get info if the hash is from an invokable transaction
+        List<AionTxInfo> infos = getTransactionInfoByAlias(hash);
+
+        // If we didn't find the alias for an invokable
+        if (infos == null || infos.isEmpty()) {
+            infos = transactionStore.getTxInfo(hash);
+        }
 
         if (infos == null || infos.isEmpty()) {
             return null;
@@ -554,7 +561,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
     // returns transaction info (tx receipt) without the transaction embedded in it.
     // saves on db reads for api when processing large transactions
     public AionTxInfo getTransactionInfoLite(byte[] txHash, byte[] blockHash) {
-        return transactionStore.get(txHash, blockHash);
+        return transactionStore.getTxInfo(txHash, blockHash);
+    }
+
+    private List<AionTxInfo> getTransactionInfoByAlias(byte[] innerHash) {
+        Set<ByteArrayWrapper> metaTxHashes = transactionStore.getAliases(innerHash);
+
+        if (metaTxHashes == null) return null; // No aliases found
+
+        List<AionTxInfo> infoList = new ArrayList<>();
+        for (ByteArrayWrapper metaTxHash : metaTxHashes) {
+            List<AionTxInfo> metaTxInfos = transactionStore.getTxInfo(metaTxHash.toBytes());
+            if (metaTxInfos != null) {
+                infoList.addAll(metaTxInfos);
+            }
+        }
+        return infoList; // Had metaTx hash, but was not found in mainchain
     }
 
     @Override
@@ -1523,14 +1545,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (rebuild) {
             List<AionTxExecSummary> execSummaries = summary.getSummaries();
-            AionTxInfo info;
+
             for (int i = 0; i < receipts.size(); i++) {
+                AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, execSummaries.get(i).getInternalTransactions());
+
                 if (storeInternalTransactions) {
-                    info = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, execSummaries.get(i).getInternalTransactions());
+                    transactionStore.putTxInfoToBatch(infoWithInternalTxs);
                 } else {
-                    info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                    AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                    transactionStore.putTxInfoToBatch(info);
                 }
-                transactionStore.putToBatch(info);
+
+                if (execSummaries.get(i).getInternalTransactions().size() > 0) {
+                    transactionStore.putAliasesToBatch(infoWithInternalTxs);
+                }
             }
             transactionStore.flushBatch();
 
@@ -1960,14 +1988,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ud.getTotalStakingDifficulty(),
                         !fork);
 
-        AionTxInfo info;
         for (int i = 0; i < receipts.size(); i++) {
+            AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, summaries.get(i).getInternalTransactions());
+
             if (storeInternalTransactions) {
-                info = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, summaries.get(i).getInternalTransactions());
+                transactionStore.putTxInfoToBatch(infoWithInternalTxs);
             } else {
-                info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                AionTxInfo info = AionTxInfo.newInstance(receipts.get(i), block.getHash(), i);
+                transactionStore.putTxInfoToBatch(info);
             }
-            transactionStore.putToBatch(info);
+
+            if (summaries.get(i).getInternalTransactions().size() > 0) {
+                transactionStore.putAliasesToBatch(infoWithInternalTxs);
+            }
         }
         transactionStore.flushBatch();
 

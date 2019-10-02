@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.base.AccountState;
@@ -22,10 +21,8 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
-import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.trie.SecureTrie;
 import org.slf4j.Logger;
 
 public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase> {

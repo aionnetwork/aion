@@ -1031,7 +1031,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     private AionTxInfo getTransactionInfo(byte[] txHash, byte[] blockHash) {
-        AionTxInfo info = transactionStore.get(txHash, blockHash);
+        AionTxInfo info = transactionStore.getTxInfo(txHash, blockHash);
         AionTransaction tx =
                 blockchain
                         .getBlockByHash(info.getBlockHash())
