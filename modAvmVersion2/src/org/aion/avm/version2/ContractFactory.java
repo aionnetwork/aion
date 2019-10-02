@@ -11,6 +11,7 @@ import org.aion.avm.version2.contracts.GenericContract;
 import org.aion.avm.version2.contracts.HelloWorld;
 import org.aion.avm.version2.contracts.InternalTransaction;
 import org.aion.avm.version2.contracts.LogTarget;
+import org.aion.avm.version2.contracts.MetaTransactionProxy;
 import org.aion.avm.version2.contracts.Statefulness;
 import org.aion.avm.version2.contracts.TransactionHash;
 
@@ -35,6 +36,8 @@ public final class ContractFactory implements IContractFactory {
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(InternalTransaction.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
             case TRANSACTION_HASH:
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(TransactionHash.class), new byte[0]).encodeToBytes();
+            case META_TRANSACTION_PROXY:
+                return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(MetaTransactionProxy.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
             default : throw new IllegalStateException("The following contract is not supported by version 2 of the avm: " + contract);
         }
     }
@@ -58,7 +61,9 @@ public final class ContractFactory implements IContractFactory {
                 return JarBuilder.buildJarForMainAndClasses(InternalTransaction.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class);
             case TRANSACTION_HASH:
                 return JarBuilder.buildJarForMainAndClasses(TransactionHash.class);
-            default : throw new IllegalStateException("The following contract is not supported by version 1 of the avm: " + contract);
+            case META_TRANSACTION_PROXY:
+                return JarBuilder.buildJarForMainAndClasses(MetaTransactionProxy.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class);
+            default : throw new IllegalStateException("The following contract is not supported by version 2 of the avm: " + contract);
         }
     }
 }
