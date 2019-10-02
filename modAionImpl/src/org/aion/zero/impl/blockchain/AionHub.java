@@ -615,22 +615,21 @@ public class AionHub {
         }
     }
 
-    public Pair<BlockContext, byte[]> getMiningBlockTemplate(byte[] currentBestBlockHash) {
+    public Pair<BlockContext, byte[]> getMiningBlockTemplate(byte[] currentBestBlockMineHash) {
 
         BlockContext context = null;
 
         blockTemplateLock.lock();
         try {
             Block bestBlock = mempool.getBestBlock();
-            // TODO: [Unity] Is this the correct way to be checking the bestBlockHash? If so, what
-            // does that mean for staking blocks?
-            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
 
-            if (currentBestBlockHash == null
-                    || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
+            byte[] bestBlockMineHash = bestBlock.getHeader().getMineHash();
+
+            if (currentBestBlockMineHash == null
+                    || !Arrays.equals(bestBlockMineHash, currentBestBlockMineHash)) {
 
                 // Record new best block on the chain
-                currentBestBlockHash = bestBlockHash;
+                currentBestBlockMineHash = bestBlockMineHash;
 
                 // Generate new block template
                 AionPendingStateImpl.TransactionSortedSet ret =
@@ -645,7 +644,7 @@ public class AionHub {
             blockTemplateLock.unlock();
         }
 
-        return Pair.of(context, currentBestBlockHash);
+        return Pair.of(context, currentBestBlockMineHash);
     }
 
     public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey) {

@@ -30,8 +30,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.SystemExitCodes;
 import org.slf4j.Logger;
 
-// TODO: [unity] It require avm libs, might consider to remove the dependency later
-
 /**
  * @implNote this class implemented for querying staking contract status and return the data to the kernel
  * for the block creating/verifying purpose.
@@ -39,8 +37,9 @@ import org.slf4j.Logger;
 public class StakingContractHelper {
     private static AionAddress stakingContractAddr;
     private AionBlockchainImpl chain;
-    private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-    private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+    private final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
+    private final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+    private final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
     private static final AvmVersion LATEST_AVM_VERSION = AvmVersion.VERSION_2;
 
     /**
@@ -132,7 +131,7 @@ public class StakingContractHelper {
         }
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
-            // TODO: [unity] handle the error case.
+            LOG_CONS.debug("getEffectiveStake failed due to the " + (receipt == null ? "null receipt" : "empty transactionOutput"));
             return BigInteger.ZERO;
         }
 
@@ -223,7 +222,7 @@ public class StakingContractHelper {
         }
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
-            // TODO: [unity] handle the error case.
+            LOG_CONS.debug("getCoinbaseForSigningAddress failed due to the " + (receipt == null ? "null receipt" : "empty transactionOutput"));
             return null;
         }
 

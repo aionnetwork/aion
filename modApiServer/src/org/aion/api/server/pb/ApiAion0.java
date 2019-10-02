@@ -2815,8 +2815,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private String generateBlockSqlStatement(Block block, BigInteger td, long blocktime) {
-        // TODO: [Unity] Remove this cast when staked blocks are supported
-        AionBlock b = (AionBlock) block;
+
         /*
         create table block_cache(
             block_number bigint(64) primary key,
@@ -2846,7 +2845,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             block_time bigint(64));
          */
 
-        return b.getNumber()
+        if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+            AionBlock b = (AionBlock) block;
+            return b.getNumber()
                 + ","
                 + "'"
                 + ByteUtil.toHexString(b.getHash())
@@ -2895,6 +2896,63 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + b.getTransactionsList().size()
                 + ","
                 + blocktime;
+        } else if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+            StakingBlock b = (StakingBlock) block;
+            return b.getNumber()
+                + ","
+                + "'"
+                + ByteUtil.toHexString(b.getHash())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getCoinbase().toByteArray())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getParentHash())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getReceiptsRoot())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getStateRoot())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getTxTrieRoot())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getExtraData())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getLogBloom())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getDifficulty())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(td.toByteArray())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getHeader().getSeed())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getHeader().getSignature())
+                + "',"
+                + "'"
+                + ByteUtil.toHexString(b.getHeader().getSigningPublicKey())
+                + "',"
+                + b.getNrgConsumed()
+                + ","
+                + b.getNrgLimit()
+                + ","
+                + b.size()
+                + ","
+                + b.getTimestamp()
+                + ","
+                + b.getTransactionsList().size()
+                + ","
+                + blocktime;
+        } else {
+            return "Invalid block sealType";
+        }
     }
 
     private String generateTransactionSqlStatement(
