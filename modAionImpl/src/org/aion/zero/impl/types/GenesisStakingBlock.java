@@ -5,7 +5,6 @@ import org.aion.util.types.AddressUtils;
 
 public class GenesisStakingBlock extends StakingBlock {
 
-    //TODO: [unity] The GENESIS_DIFFICULTY will be changed before go production.
     private static BigInteger GENESIS_DIFFICULTY;
 
     public GenesisStakingBlock(byte[] extraData, BigInteger genesisDiff) {

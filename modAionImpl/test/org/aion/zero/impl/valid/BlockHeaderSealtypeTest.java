@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-//TODO: [unity] rename and revise the test cases
 public class BlockHeaderSealtypeTest {
 
     @Mock A0BlockHeader mockMiningHeader;

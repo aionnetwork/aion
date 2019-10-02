@@ -74,7 +74,7 @@ public class ResBlocksHeadersTest {
         }
         ResBlocksHeaders rbhs1 = new ResBlocksHeaders(bhs1);
         byte[] rbhsBytes = rbhs1.encode();
-        ResBlocksHeaders rbhs2 = ResBlocksHeaders.decode(rbhsBytes);
+        ResBlocksHeaders rbhs2 = ResBlocksHeaders.decode(rbhsBytes, null);
         List<BlockHeader> bhs2 = rbhs2.getHeaders();
         assertThat(bhs2.size()).isEqualTo(m);
     }

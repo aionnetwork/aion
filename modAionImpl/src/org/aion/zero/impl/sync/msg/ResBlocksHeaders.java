@@ -14,6 +14,7 @@ import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
+import org.slf4j.Logger;
 
 /** @author chris */
 public final class ResBlocksHeaders extends Msg {
@@ -25,7 +26,7 @@ public final class ResBlocksHeaders extends Msg {
         blockHeaders = _blockHeaders;
     }
 
-    public static ResBlocksHeaders decode(final byte[] _msgBytes) {
+    public static ResBlocksHeaders decode(final byte[] _msgBytes, Logger logger) {
         if (_msgBytes == null || _msgBytes.length == 0) return null;
         else {
             try {
@@ -48,7 +49,9 @@ public final class ResBlocksHeaders extends Msg {
                 }
                 return new ResBlocksHeaders(blockHeaders);
             } catch (Exception ex) {
-                //TODO: [unity] should print debugging message in here!
+                if (logger != null) {
+                    logger.debug("ResBlocksHeaders decode failed!", ex);
+                }
                 return null;
             }
         }
