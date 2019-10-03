@@ -122,16 +122,14 @@ public class NodeMgrTest {
         assertEquals(2, nMgr.tempNodesSize());
     }
 
-    @Test(timeout = 30_000)
-    public void testTempNodeMax_128() {
-
-        String[] nodes_max = new String[130];
+    @Test
+    public void testTempNodeMax() {
+        String[] nodes_max = new String[MAX_TEMP_NODES];
         int ip = 0;
 
         int port = 10000;
-        for (int i = 0; i < 130; i++) {
-            nodes_max[i] =
-                    "p2p://" + UUID.randomUUID().toString() + "@255.255.255." + ip++ + ":" + port++;
+        for (int i = 0; i < nodes_max.length; i++) {
+            nodes_max[i] = "p2p://" + UUID.randomUUID() + "@255.255.255." + ip++ + ":" + port++;
         }
 
         for (String nodeL : nodes_max) {
@@ -140,70 +138,49 @@ public class NodeMgrTest {
             nMgr.addTempNode(node);
             nMgr.seedIpAdd(node.getIpStr());
         }
-        assertEquals(128, nMgr.tempNodesSize());
-    }
+        assertEquals(MAX_TEMP_NODES, nMgr.tempNodesSize());
 
-    @Test(timeout = 30_000)
-    public void testTempNodesTake() {
-
-        int port2 = 30305;
-        String[] nodes =
-                new String[] {
-                    "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
-                    "p2p://" + nodeId2 + "@" + ip1 + ":" + port1,
-                };
-
-        NodeMgr mgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
-
-        for (String nodeL : nodes) {
-            Node node = Node.parseP2p(nodeL);
-            mgr.addTempNode(node);
-            assert node != null;
-            mgr.seedIpAdd(node.getIpStr());
-        }
-        assertEquals(2, mgr.tempNodesSize());
-
-        INode node;
-        while (mgr.tempNodesSize() != 0) {
-            node = mgr.tempNodesTake();
-            assertEquals(ip1, node.getIpStr());
-            assertTrue(node.getIfFromBootList());
-            assertTrue(mgr.isSeedIp(ip1));
-        }
-
-        assertEquals(0, mgr.tempNodesSize());
-    }
-
-    @Test(timeout = 30_000)
-    public void testTempNodeMax_Any() {
-
-        NodeMgr mgr = new NodeMgr(p2p, 512, 512, LOGGER);
-        String[] nodes_max = new String[512];
-
-        int ip = 0;
-        int port = 10000;
-        for (int i = 0; i < 256; i++) {
-            nodes_max[i] =
-                    "p2p://" + UUID.randomUUID().toString() + "@255.255.255." + ip++ + ":" + port++;
-        }
-
+        // future nodes will be rejected due to the reached limit
         ip = 0;
-        port = 10000;
-        for (int i = 256; i < 512; i++) {
-            nodes_max[i] =
-                    "p2p://" + UUID.randomUUID().toString() + "@255.255.254." + ip++ + ":" + port++;
+        for (int i = 0; i < nodes_max.length; i++) {
+            nodes_max[i] = "p2p://" + UUID.randomUUID() + "@255.255.254." + ip++ + ":" + port++;
         }
 
         for (String nodeL : nodes_max) {
-            Node node = Node.parseP2p(nodeL);
-            if (node == null) {
-                System.out.println("node is null");
-            }
-            mgr.addTempNode(node);
-            assert node != null;
-            mgr.seedIpAdd(node.getIpStr());
+            INode node = Node.parseP2p(nodeL);
+            assertNotNull(node);
+            nMgr.addTempNode(node);
+            nMgr.seedIpAdd(node.getIpStr());
+            assertEquals(MAX_TEMP_NODES, nMgr.tempNodesSize());
         }
-        assertEquals(512, mgr.tempNodesSize());
+    }
+
+    @Test
+    public void testTempNodesTake() {
+        String ip = "127.0.0.1";
+        String[] nodes =
+                new String[] {
+                    "p2p://" + UUID.randomUUID() + "@127.0.0.1:30123",
+                    "p2p://" + UUID.randomUUID() + "@127.0.0.1:30321"
+                };
+
+        for (String nodeL : nodes) {
+            Node node = Node.parseP2p(nodeL);
+            assertNotNull(node);
+            nMgr.addTempNode(node);
+            nMgr.seedIpAdd(node.getIpStr());
+        }
+        assertEquals(2, nMgr.tempNodesSize());
+
+        INode node;
+        while (nMgr.tempNodesSize() != 0) {
+            node = nMgr.tempNodesTake();
+            assertEquals(ip, node.getIpStr());
+            assertTrue(node.getIfFromBootList());
+            assertTrue(nMgr.isSeedIp(ip));
+        }
+
+        assertEquals(0, nMgr.tempNodesSize());
     }
 
     @Test(timeout = 30_000)
@@ -224,8 +201,6 @@ public class NodeMgrTest {
 
     @Test(timeout = 30_000)
     public void testGetActiveNodesList() {
-
-        NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
@@ -391,35 +366,55 @@ public class NodeMgrTest {
         assertEquals(node, nodeRandom);
     }
 
-    @Test(timeout = 30_000)
-    public void testMovePeerToActive() {
+    @Test
+    public void testMovePeerToActiveFromInbound() {
         INode node = nMgr.allocNode(ip2, 1);
         node.setChannel(channel);
         nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
         assertTrue(nMgr.getActiveNodesMap().isEmpty());
+
+        nMgr.addInboundNode(node);
+
+        // wrong type & key
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "outbound");
+        assertTrue(nMgr.getActiveNodesMap().isEmpty());
+
+        // move from inbound
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        assertEquals(1, nMgr.getActiveNodesMap().size());
+
+        // move same node again
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        assertEquals(1, nMgr.getActiveNodesMap().size());
     }
 
-    @Test(timeout = 30_000)
-    public void testMovePeerToActive2() {
-        nMgr = new NodeMgr(p2p, 2, 2, LOGGER);
+    @Test
+    public void testMovePeerToActiveFromOutbound() {
         INode node = nMgr.allocNode(ip2, 1);
+        node.setChannel(channel);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
-        nMgr.movePeerToActive(node.getIdHash(), "outbound");
 
+        // wrong type & key
+        nMgr.movePeerToActive(node.getIdHash(), "inbound");
+        assertTrue(nMgr.getActiveNodesMap().isEmpty());
+
+        // move first node
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+        assertEquals(1, nMgr.getActiveNodesMap().size());
+
+        // move different node
         node = nMgr.allocNode(ip1, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId2));
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
-
         assertEquals(2, nMgr.getActiveNodesMap().size());
 
-        node = nMgr.allocNode(ip1, port1);
-        addNodetoOutbound(node, UUID.randomUUID());
+        // move same node again
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
         assertEquals(2, nMgr.getActiveNodesMap().size());
     }
 
-    @Test(timeout = 30_000)
-    public void testMovePeerToActive3() {
+    @Test
+    public void testMoveSelfToActive() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
 
