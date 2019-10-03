@@ -23,7 +23,7 @@ public class TaskClear implements Runnable {
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_CLEAR);
-                nodeMgr.timeoutCheck();
+                nodeMgr.timeoutCheck(System.currentTimeMillis());
             } catch (Exception e) {
                 p2pLOG.error("TaskClear exception.", e);
             }

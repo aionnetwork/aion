@@ -41,7 +41,7 @@ public interface INodeMgr {
 
     Map<Integer, INode> getActiveNodesMap();
 
-    void timeoutCheck();
+    void timeoutCheck(long currentTimeMillis);
 
     void ban(int _nodeIdHash);
 

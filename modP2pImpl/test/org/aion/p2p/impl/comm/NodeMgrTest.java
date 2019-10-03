@@ -284,36 +284,21 @@ public class NodeMgrTest {
         assertFalse(node.getPeerMetric().notBan());
     }
 
-    @Test(timeout = 30_000)
+    @Test
     public void testTimeoutInbound() {
-
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoInbound(node, UUID.fromString(nodeId1));
 
-        // Sleep for MAX_INBOUND_TIMEOUT
-        try {
-            Thread.sleep(10_001);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        nMgr.timeoutCheck();
+        nMgr.timeoutCheck(System.currentTimeMillis() + NodeMgr.TIMEOUT_INBOUND_NODES + 1);
         assertNull(nMgr.getInboundNode(channel.hashCode()));
     }
 
-    @Test(timeout = 30_000)
+    @Test
     public void testTimeoutOutbound() {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoOutbound(node, UUID.fromString(nodeId1));
 
-        // Sleep for MAX_OUTBOUND_TIMEOUT
-        try {
-            Thread.sleep(20_001);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        nMgr.timeoutCheck();
+        nMgr.timeoutCheck(System.currentTimeMillis() + NodeMgr.TIMEOUT_OUTBOUND_NODES + 1);
         assertNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
@@ -327,22 +312,6 @@ public class NodeMgrTest {
         node = nMgr.allocNode(ip2, 1);
         assertNotNull(node);
         assertTrue(node.getIfFromBootList());
-    }
-
-    @Test(timeout = 30_000)
-    public void testGetOutBoundNode() {
-        INode node = nMgr.allocNode(ip2, 1);
-        addNodetoOutbound(node, UUID.fromString(nodeId1));
-
-        // Sleep for MAX_OUTBOUND_TIMEOUT
-        try {
-            Thread.sleep(20_001);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        nMgr.timeoutCheck();
-        assertNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
     @Test(timeout = 30_000)
@@ -371,7 +340,7 @@ public class NodeMgrTest {
         assertEquals(node, activeNode);
     }
 
-    @Test(timeout = 30_000)
+    @Test
     public void testTimeoutActive() throws InterruptedException {
         INode node = nMgr.allocNode(ip2, 1);
         addNodetoInbound(node, UUID.fromString(nodeId1));
@@ -381,9 +350,7 @@ public class NodeMgrTest {
         assertNotNull(activeNode);
         assertEquals(node, activeNode);
 
-        Thread.sleep(10_001);
-
-        nMgr.timeoutCheck();
+        nMgr.timeoutCheck(System.currentTimeMillis() + NodeMgr.MIN_TIMEOUT_ACTIVE_NODES + 1);
         assertNull(nMgr.getActiveNode(node.getIdHash()));
     }
 

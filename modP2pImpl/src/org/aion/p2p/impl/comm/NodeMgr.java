@@ -21,8 +21,12 @@ import org.slf4j.Logger;
 
 public class NodeMgr implements INodeMgr {
 
-    private static final int TIMEOUT_INBOUND_NODES = 10000;
-    private static final int TIMEOUT_OUTBOUND_NODES = 20000;
+    // node timeout constants
+    static final int TIMEOUT_INBOUND_NODES = 10_000;
+    static final int TIMEOUT_OUTBOUND_NODES = 20_000;
+    static final int MIN_TIMEOUT_ACTIVE_NODES = 10_000;
+    static final int MAX_TIMEOUT_ACTIVE_NODES = 60_000;
+
     private static final Random random = new SecureRandom();
     private static final char[] hexArray = "0123456789abcdef".toCharArray();
     private static Logger p2pLOG;
@@ -254,10 +258,10 @@ public class NodeMgr implements INodeMgr {
     }
 
     @Override
-    public void timeoutCheck() {
-        timeoutInbound();
-        timeoutOutBound();
-        timeoutActive();
+    public void timeoutCheck(long currentTimeMillis) {
+        timeoutInbound(currentTimeMillis);
+        timeoutOutbound(currentTimeMillis);
+        timeoutActive(currentTimeMillis);
     }
 
     @Override
@@ -265,13 +269,12 @@ public class NodeMgr implements INodeMgr {
         return !this.outboundNodes.containsKey(_nodeIdHash);
     }
 
-    private void timeoutOutBound() {
+    private void timeoutOutbound(long currentTimeMillis) {
         try {
             Iterator<Map.Entry<Integer, INode>> it = outboundNodes.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, INode> entry = it.next();
-                if (System.currentTimeMillis() - entry.getValue().getTimestamp()
-                        > TIMEOUT_OUTBOUND_NODES) {
+                if (currentTimeMillis - entry.getValue().getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
                     p2pMgr.closeSocket(
                             entry.getValue().getChannel(),
                             "outbound-timeout ip=" + entry.getValue().getIpStr());
@@ -371,13 +374,12 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    private void timeoutInbound() {
+    private void timeoutInbound(long currentTimeMillis) {
         try {
             Iterator<Map.Entry<Integer, INode>> it = inboundNodes.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, INode> entry = it.next();
-                if (System.currentTimeMillis() - entry.getValue().getTimestamp()
-                        > TIMEOUT_INBOUND_NODES) {
+                if (currentTimeMillis - entry.getValue().getTimestamp() > TIMEOUT_INBOUND_NODES) {
                     p2pMgr.closeSocket(
                             entry.getValue().getChannel(),
                             "inbound-timeout ip=" + entry.getValue().getIpStr());
@@ -389,14 +391,12 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    private void timeoutActive() {
-
-        long now = System.currentTimeMillis();
+    private void timeoutActive(long now) {
         OptionalDouble average =
                 activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
         this.avgLatency = (int) average.orElse(0);
         long timeout = ((long) average.orElse(4000)) * 5;
-        timeout = Math.max(10000, Math.min(timeout, 60000));
+        timeout = Math.max(MIN_TIMEOUT_ACTIVE_NODES, Math.min(timeout, MAX_TIMEOUT_ACTIVE_NODES));
         if (p2pLOG.isDebugEnabled()) {
             p2pLOG.debug("<average-delay={}ms>", this.avgLatency);
         }
