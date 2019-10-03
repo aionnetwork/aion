@@ -63,7 +63,7 @@ public final class AvmVersionSchedule {
             throw new IllegalArgumentException("Cannot create schedule with negative version 2 active block!");
         }
         if (blockNumberToActivateVersion1 >= blockNumberToActivateVersion2) {
-            throw new IllegalArgumentException("Cannot create schedule with version 1 active later than version 2!");
+            throw new IllegalArgumentException("Cannot create schedule with version 1 active later than, or at the same time as, version 2!");
         }
 
         return new AvmVersionSchedule(true, blockNumberToActivateVersion1, true, blockNumberToActivateVersion2, activeVersionTolerance);

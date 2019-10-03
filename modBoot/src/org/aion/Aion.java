@@ -64,27 +64,6 @@ import org.zeromq.ZMQ;
 public class Aion {
 
     public static void main(String args[]) {
-        // ~~~~~~~~~~ initialize the avm before we do anything else (CLI depends on it) ~~~~~~~~~~~~
-        // Grab the project root directory.
-        String projectRootDirectory = System.getProperty("user.dir") + File.separator;
-
-        // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
-        // because it handles balance transfers. The kernel is responsible for ensuring it is not called
-        // with anything else.
-        // Create the multi-version schedule.
-        Properties forkProperties = CfgAion.inst().getFork().getProperties();
-        String fork2 = forkProperties.getProperty("fork0.5.0");
-
-        AvmVersionSchedule schedule;
-        if (fork2 != null) {
-            schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
-        } else {
-            schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
-        }
-
-        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
         // TODO: should we load native libraries first thing?
         NativeLibrary.checkNativeLibrariesLoaded();
 
@@ -118,6 +97,31 @@ public class Aion {
                                     + (k.toString().contains("fork") ? " block#: " : ": ")
                                     + v.toString());
                 });
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ initialize the avm ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        try {
+            // Grab the project root directory.
+            String projectRootDirectory = System.getProperty("user.dir") + File.separator;
+
+            // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
+            // because it handles balance transfers. The kernel is responsible for ensuring it is not called
+            // with anything else.
+            Properties forkProperties = CfgAion.inst().getFork().getProperties();
+            String fork2 = forkProperties.getProperty("fork0.5.0");
+
+            AvmVersionSchedule schedule;
+            if (fork2 != null) {
+                schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+            } else {
+                schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+            }
+
+            AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
+        } catch (Exception e) {
+            System.out.println("A fatal error occurred attempting to configure the AVM: " + e.getMessage());
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
+        }
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         // Check ZMQ server secure connect settings, generate keypair when the settings enabled and
         // can't find the keypair.
