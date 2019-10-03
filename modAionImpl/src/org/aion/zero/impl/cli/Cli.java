@@ -15,7 +15,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.vm.avm.AvmConfigurations;
+import org.aion.vm.avm.AvmProvider;
+import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
@@ -423,6 +430,13 @@ public class Cli {
             }
 
             if (options.isRedoImport() != null) {
+                try {
+                    initializeMultiVersionAvmConfigurations();
+                } catch (Exception e) {
+                    System.out.println("Failed to configure the avm: " + e.getMessage());
+                    return ERROR;
+                }
+
                 long height = 0L;
                 String parameter = options.isRedoImport();
 
@@ -441,6 +455,13 @@ public class Cli {
                     }
 
                     DBUtils.redoMainChainImport(height);
+
+                    // Shutdown any avm versions that are still active.
+                    System.out.println("Shutting down the Aion Virtual Machine ...");
+                    if (AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES)) {
+                        AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+                        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
+                    }
                     return EXIT;
                 }
             }
@@ -454,6 +475,25 @@ public class Cli {
             e.printStackTrace();
             return ERROR;
         }
+    }
+
+    private static void initializeMultiVersionAvmConfigurations() {
+        String projectRootDirectory = System.getProperty("user.dir") + File.separator;
+
+        // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
+        // because it handles balance transfers. The kernel is responsible for ensuring it is not called
+        // with anything else.
+        Properties forkProperties = CfgAion.inst().getFork().getProperties();
+        String fork2 = forkProperties.getProperty("fork0.5.0");
+
+        AvmVersionSchedule schedule;
+        if (fork2 != null) {
+            schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+        } else {
+            schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+        }
+
+        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
     }
 
     private DBUtils.Status getBlockDetails(String blockNumber) {
