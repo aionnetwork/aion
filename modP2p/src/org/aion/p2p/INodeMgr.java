@@ -9,11 +9,11 @@ public interface INodeMgr {
 
     int activeNodesSize();
 
-    INode tempNodesTake() throws InterruptedException;
+    INode tempNodesTake();
 
     boolean isSeedIp(String _ip);
 
-    void addTempNode(INode _n) throws InterruptedException;
+    void addTempNode(INode _n);
 
     void addOutboundNode(INode _n);
 

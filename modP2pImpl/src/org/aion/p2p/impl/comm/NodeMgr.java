@@ -2,18 +2,18 @@ package org.aion.p2p.impl.comm;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingDeque;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
@@ -34,9 +34,8 @@ public class NodeMgr implements INodeMgr {
     private final int maxTempNodes;
     private final Set<String> seedIps = new HashSet<>();
     private final IP2pMgr p2pMgr;
-    private final ReentrantLock tempNodesLock = new ReentrantLock();
-    private final Map<Integer, INode> tempNodes =
-            Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Deque<INode> tempNodes;
+    private final Set<Integer> tempNodesKeys = new ConcurrentSkipListSet<>();
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
@@ -47,6 +46,10 @@ public class NodeMgr implements INodeMgr {
         this.maxTempNodes = _maxTempNodes;
         this.p2pMgr = _p2pMgr;
         p2pLOG = _logger;
+        // this data structure is preferable to ConcurrentLinkedDeque because
+        // 1. we only really need to access the data one thread at a time
+        // 2. it allows bounding the collection size
+        tempNodes = new LinkedBlockingDeque<>(maxTempNodes);
     }
 
     private static String bytesToHex(byte[] bytes) {
@@ -144,24 +147,15 @@ public class NodeMgr implements INodeMgr {
         return this.seedIps.contains(_ip);
     }
 
-    /** @param _n Node */
     @Override
-    public void addTempNode(final INode _n) throws InterruptedException {
-
+    public void addTempNode(final INode _n) {
         if (_n == null) return;
 
-        tempNodesLock.lockInterruptibly();
-
-        try {
-            if (tempNodes.size() < maxTempNodes
-                    && !tempNodes.containsKey(_n.getPeerId())
-                    && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
-                tempNodes.putIfAbsent(_n.getPeerId(), _n);
+        int key = _n.getIdHash();
+        if (!tempNodesKeys.contains(key) && notActiveNode(key)) {
+            if (tempNodes.offerLast(_n)) {
+                tempNodesKeys.add(key);
             }
-        } catch (Exception e) {
-            p2pLOG.error("<addTempNode exception>", e);
-        } finally {
-            tempNodesLock.unlock();
         }
     }
 
@@ -182,23 +176,11 @@ public class NodeMgr implements INodeMgr {
     }
 
     @Override
-    public INode tempNodesTake() throws InterruptedException {
-        INode node = null;
-
-        tempNodesLock.lockInterruptibly();
-
-        if (tempNodes.isEmpty()) {
-            return null;
+    public INode tempNodesTake() {
+        INode node = tempNodes.pollFirst();
+        if (node != null) {
+            tempNodesKeys.remove(node.getIdHash());
         }
-
-        try {
-            node = tempNodes.remove(tempNodes.keySet().iterator().next());
-        } catch (Exception e) {
-            p2pLOG.error("<tempNodesTake Exception>", e);
-        } finally {
-            tempNodesLock.unlock();
-        }
-
         return node;
     }
 
@@ -246,9 +228,8 @@ public class NodeMgr implements INodeMgr {
         return new ArrayList<>(activeNodes.values());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public HashMap getActiveNodesMap() {
+    public Map<Integer, INode> getActiveNodesMap() {
         return new HashMap<>(activeNodes);
     }
 

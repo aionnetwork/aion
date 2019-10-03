@@ -136,12 +136,7 @@ public final class P2pMgr implements IP2pMgr {
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
             if (validateNode(node)) {
-                try {
-                    nodeMgr.addTempNode(node);
-                } catch (InterruptedException e) {
-                    p2pLOG.error("p2pMgr construct InterruptedException! " + node.toString(), e);
-                    continue;
-                }
+                nodeMgr.addTempNode(node);
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }

@@ -81,15 +81,15 @@ public class P2pMgrTest {
 
     @Test
     public void testTempNodes() {
-
+        // the ip and port are not used in the id hash calculation, therefore the UUID must differ
         String[] nodes =
                 new String[] {
-                    "p2p://" + nodeId2 + "@" + ip1 + ":" + port2,
-                    "p2p://" + nodeId2 + "@" + ip2 + ":" + port1,
-                    "p2p://" + nodeId2 + "@" + ip2 + ":" + port2,
+                    "p2p://" + UUID.randomUUID() + "@" + ip1 + ":" + port2,
+                    "p2p://" + UUID.randomUUID() + "@" + ip2 + ":" + port1,
+                    "p2p://" + UUID.randomUUID() + "@" + ip2 + ":" + port2,
                 };
 
         P2pMgr p2p = new P2pMgr(p2pLOG, surveyLog, 0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, 50);
-        assertEquals(p2p.getTempNodesCount(), 3);
+        assertEquals(3, p2p.getTempNodesCount());
     }
 }
