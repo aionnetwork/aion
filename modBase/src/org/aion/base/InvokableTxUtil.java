@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 
 public class InvokableTxUtil {
 
+    private static final byte VERSION = 0;
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     private static final int
@@ -42,6 +43,19 @@ public class InvokableTxUtil {
         byte[] data,
         AionAddress executor) {
 
+        if (key == null) {
+            throw new NullPointerException("Key cannot be null");
+        }
+        if (nonce == null) {
+            throw new NullPointerException("Nonce cannot be null");
+        }
+        if (value == null) {
+            throw new NullPointerException("Value cannot be null");
+        }
+        if (data == null) {
+            throw new NullPointerException("Data cannot be null");
+        }
+
         byte[] rlpEncodingWithoutSignature =
             rlpEncodeWithoutSignature(
                 nonce,
@@ -50,7 +64,7 @@ public class InvokableTxUtil {
                 data,
                 executor);
 
-        ISignature signature = key.sign(HashUtil.h256(rlpEncodingWithoutSignature));
+        ISignature signature = key.sign(HashUtil.h256(prependVersion(rlpEncodingWithoutSignature)));
 
         byte[] encoding =
             rlpEncode(
@@ -62,7 +76,7 @@ public class InvokableTxUtil {
                 signature);
 
         // prepend version code
-        return ByteUtil.merge(new byte[] {0}, encoding);
+        return prependVersion(encoding);
     }
 
     private static byte[] rlpEncodeWithoutSignature(
@@ -111,11 +125,11 @@ public class InvokableTxUtil {
     }
 
 
-    public static InternalTransaction decode(byte[] encoding, AionAddress callingAddress, long energyPrice, long energyLimit) {
+    public static InternalTransaction decode(byte[] encodingWithVersion, AionAddress callingAddress, long energyPrice, long energyLimit) {
         // Right now we only have version 0, so if it is not 0, return null
-        if (encoding[0] != 0) { return null; }
+        if (encodingWithVersion[0] != 0) { return null; }
 
-        byte[] rlpEncoding = Arrays.copyOfRange(encoding, 1, encoding.length);
+        byte[] rlpEncoding = Arrays.copyOfRange(encodingWithVersion, 1, encodingWithVersion.length);
 
         RLPList decodedTxList;
         try {
@@ -177,7 +191,7 @@ public class InvokableTxUtil {
                 energyLimit,
                 energyPrice,
                 signature,
-                rlpEncoding);
+                encodingWithVersion);
         }
         catch (Exception e) {
             LOG.error("Invokable tx -> unable to decode rlpEncoding. " + e);
@@ -195,22 +209,23 @@ public class InvokableTxUtil {
         long energyLimit,
         long energyPrice,
         ISignature signature,
-        byte[] rlpEncoding) {
+        byte[] rlpEncodingWithVersion) {
 
         byte[] transactionHashWithoutSignature =
             HashUtil.h256(
-                InvokableTxUtil.rlpEncodeWithoutSignature(
-                    nonce,
-                    destination,
-                    value,
-                    data,
-                    executor));
+                prependVersion(
+                    InvokableTxUtil.rlpEncodeWithoutSignature(
+                        nonce,
+                        destination,
+                        value,
+                        data,
+                        executor)));
 
         if (!SignatureFac.verify(transactionHashWithoutSignature, signature)) {
             throw new IllegalStateException("Signature does not match Transaction Content");
         }
 
-        byte[] transactionHash = HashUtil.h256(rlpEncoding);
+        byte[] transactionHash = HashUtil.h256(rlpEncodingWithVersion);
 
         if (destination == null) {
             return
@@ -236,5 +251,12 @@ public class InvokableTxUtil {
                     energyPrice,
                     transactionHash);
         }
+    }
+
+    private static byte[] prependVersion(byte[] encoding) {
+        byte[] ret = new byte[encoding.length + 1];
+        ret[0] = VERSION;
+        System.arraycopy(encoding, 0, ret, 1, encoding.length);
+        return ret;
     }
 }
