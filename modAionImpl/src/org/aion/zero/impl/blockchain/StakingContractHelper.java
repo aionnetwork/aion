@@ -6,9 +6,13 @@ import static org.aion.zero.impl.blockchain.AionImpl.keyForCallandEstimate;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.aion.base.AionTxExecSummary;
 import org.aion.vm.avm.AvmProvider;
 import org.aion.vm.avm.AvmConfigurations;
+import org.aion.vm.avm.AvmTransactionExecutor;
+import org.aion.vm.common.BlockCachingContext;
 import org.aion.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -23,8 +27,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.common.BlockCachingContext;
-import org.aion.vm.common.BulkExecutor;
+import org.aion.zero.impl.SystemExitCodes;
 import org.slf4j.Logger;
 
 // TODO: [unity] It require avm libs, might consider to remove the dependency later
@@ -90,7 +93,10 @@ public class StakingContractHelper {
             throw new IllegalStateException("Failed to acquire the avm lock!");
         }
 
-        AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
+        if (!AvmProvider.isVersionEnabled(LATEST_AVM_VERSION)) {
+            AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
+        }
+
         IAvmResourceFactory resourceFactory = AvmProvider.getResourceFactory(LATEST_AVM_VERSION);
 
         if (this.effectiveStake == null) {
@@ -102,6 +108,8 @@ public class StakingContractHelper {
                         this.effectiveStake,
                         resourceFactory.newStreamingEncoder().encodeOneAddress(signingAddress).getEncoding(),
                         resourceFactory.newStreamingEncoder().encodeOneAddress(coinbase).getEncoding());
+
+        AvmProvider.releaseLock();
 
         AionTransaction callTx =
                 AionTransaction.create(
@@ -115,55 +123,52 @@ public class StakingContractHelper {
                         TransactionTypes.DEFAULT,
                         null);
 
-        AionTxReceipt receipt = callConstant(callTx);
+        AionTxReceipt receipt = null;
+        try {
+            receipt = callConstant(callTx);
+        } catch (VmFatalException e) {
+            LOG_VM.error("VM fatal exception! Shutting down the kernel!", e);
+            System.exit(SystemExitCodes.FATAL_VM_ERROR);
+        }
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
             // TODO: [unity] handle the error case.
             return BigInteger.ZERO;
         }
 
-        BigInteger output = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
+        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
+            throw new IllegalStateException("Failed to acquire the avm lock!");
+        }
 
-        AvmProvider.disableAvmVersion(LATEST_AVM_VERSION);
+        BigInteger output = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
         AvmProvider.releaseLock();
 
         return output;
     }
 
-    private AionTxReceipt callConstant(AionTransaction tx) {
+    private AionTxReceipt callConstant(AionTransaction tx)
+        throws VmFatalException {
         Block block = chain.getBestBlock();
 
         RepositoryCache repository =
                 chain.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
-        try {
-            // Booleans moved out here so their meaning is explicit.
-            boolean isLocalCall = true;
-            boolean incrementSenderNonce = false;
-            boolean fork040enabled = true;
-            boolean checkBlockEnergyLimit = false;
+            List<AionTxExecSummary> summaries = AvmTransactionExecutor.executeTransactions(repository
+                , block.getDifficultyBI()
+                , block.getNumber()
+                , block.getTimestamp()
+                , block.getNrgLimit()
+                , block.getCoinbase()
+                , new AionTransaction[]{tx}
+                , null
+                , false
+                ,false
+                , true
+                , block.getNrgLimit()
+                , BlockCachingContext.CALL.avmType
+                , 0);
 
-            return BulkExecutor.executeTransactionWithNoPostExecutionWork(
-                            block.getDifficulty(),
-                            block.getNumber(),
-                            block.getTimestamp(),
-                            block.getNrgLimit(),
-                            block.getCoinbase(),
-                            tx,
-                            repository,
-                            isLocalCall,
-                            incrementSenderNonce,
-                            fork040enabled,
-                            checkBlockEnergyLimit,
-                            LOG_VM,
-                            BlockCachingContext.CALL,
-                            block.getNumber())
-                    .getReceipt();
-        } catch (VmFatalException e) {
-            LOG_GEN.error("Shutdown due to a VM fatal error.", e);
-            System.exit(-1);
-            return null;
-        }
+            return summaries.get(0).getReceipt();
     }
 
     /**
@@ -180,7 +185,10 @@ public class StakingContractHelper {
             throw new IllegalStateException("Failed to acquire the avm lock!");
         }
 
-        AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
+        if (!AvmProvider.isVersionEnabled(LATEST_AVM_VERSION)) {
+            AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
+        }
+
         IAvmResourceFactory resourceFactory = AvmProvider.getResourceFactory(LATEST_AVM_VERSION);
 
         if (this.coinbaseForSigningAddress == null) {
@@ -191,6 +199,8 @@ public class StakingContractHelper {
                 ByteUtil.merge(
                         this.coinbaseForSigningAddress,
                         resourceFactory.newStreamingEncoder().encodeOneAddress(signingAddress).getEncoding());
+
+        AvmProvider.releaseLock();
 
         AionTransaction callTx =
                 AionTransaction.create(
@@ -204,16 +214,24 @@ public class StakingContractHelper {
                         TransactionTypes.DEFAULT,
                         null);
 
-        AionTxReceipt receipt = callConstant(callTx);
+        AionTxReceipt receipt = null;
+        try {
+            receipt = callConstant(callTx);
+        } catch (VmFatalException e) {
+            e.printStackTrace();
+            System.exit(SystemExitCodes.FATAL_VM_ERROR);
+        }
 
         if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
             // TODO: [unity] handle the error case.
             return null;
         }
 
-        AionAddress address = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneAddress();
+        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
+            throw new IllegalStateException("Failed to acquire the avm lock!");
+        }
 
-        AvmProvider.disableAvmVersion(LATEST_AVM_VERSION);
+        AionAddress address = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneAddress();
         AvmProvider.releaseLock();
         return address;
     }
