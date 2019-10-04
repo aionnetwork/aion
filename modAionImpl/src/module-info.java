@@ -12,7 +12,6 @@ module aion.zero.impl {
     requires aion.txpool;
     requires aion.crypto;
     requires aion.db.impl;
-    requires aion.vm;
     requires aion.precompiled;
     requires aion.fastvm;
     requires slf4j.api;
@@ -45,4 +44,6 @@ module aion.zero.impl {
     exports org.aion.utils;
     exports org.aion.zero.impl.keystore;
     exports org.aion.zero.impl.pendingState;
+    exports org.aion.zero.impl.vm.avm;
+    exports org.aion.zero.impl.vm.avm.schedule;
 }

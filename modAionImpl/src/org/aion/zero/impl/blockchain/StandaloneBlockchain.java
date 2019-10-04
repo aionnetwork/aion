@@ -36,7 +36,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
-import org.aion.vm.common.BlockCachingContext;
+import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionContractDetailsImpl;

@@ -1,4 +1,4 @@
-package org.aion.vm.common;
+package org.aion.zero.impl.vm.common;
 
 import org.aion.base.Constants;
 import org.aion.fastvm.FvmConstants;

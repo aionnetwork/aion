@@ -1,7 +1,7 @@
 package org.aion.zero.impl.vm;
 
 import java.util.concurrent.TimeUnit;
-import org.aion.vm.avm.AvmProvider;
+import org.aion.zero.impl.vm.avm.AvmProvider;
 import org.aion.avm.stub.AvmVersion;
 import org.junit.AfterClass;
 import org.junit.Assert;

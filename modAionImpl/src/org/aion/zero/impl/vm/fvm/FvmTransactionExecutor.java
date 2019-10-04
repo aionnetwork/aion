@@ -1,11 +1,11 @@
-package org.aion.vm.fvm;
+package org.aion.zero.impl.vm.fvm;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.vm.common.PostExecutionWork;
-import org.aion.vm.common.VmFatalException;
+import org.aion.zero.impl.vm.common.PostExecutionWork;
+import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;

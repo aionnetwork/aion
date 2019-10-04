@@ -1,10 +1,10 @@
-package org.aion.vm.common;
+package org.aion.zero.impl.vm.common;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.vm.avm.AvmTransactionExecutor;
+import org.aion.zero.impl.vm.avm.AvmTransactionExecutor;
 import org.aion.avm.stub.AvmExecutionType;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
@@ -14,8 +14,8 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
-import org.aion.vm.fvm.FvmTransactionExecutor;
-import org.aion.vm.precompiled.PrecompiledTransactionExecutor;
+import org.aion.zero.impl.vm.fvm.FvmTransactionExecutor;
+import org.aion.zero.impl.vm.precompiled.PrecompiledTransactionExecutor;
 import org.aion.base.AionTxExecSummary;
 import org.slf4j.Logger;
 

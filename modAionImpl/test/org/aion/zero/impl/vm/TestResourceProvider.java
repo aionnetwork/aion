@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import org.aion.vm.avm.internal.AvmDependencyInfo;
+import org.aion.zero.impl.vm.avm.internal.AvmDependencyInfo;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
-import org.aion.vm.avm.AvmProvider;
+import org.aion.zero.impl.vm.avm.AvmProvider;
 
 /**
  * A class that provides access to underlying test-only avm multi-versioned resources.

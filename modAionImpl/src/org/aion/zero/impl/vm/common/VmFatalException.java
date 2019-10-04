@@ -1,4 +1,4 @@
-package org.aion.vm.common;
+package org.aion.zero.impl.vm.common;
 
 /**
  * Signals that a virtual machine encountered a fatal error and the kernel should be shut down.

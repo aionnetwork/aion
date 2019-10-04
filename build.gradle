@@ -421,7 +421,6 @@ task ciBuild {
             'modPrecompiled',
             'modRlp',
             'modTxPool',
-            'modVM',
             'modAvmVersion1',
             'modAvmVersion2',
             'modAvmStub'

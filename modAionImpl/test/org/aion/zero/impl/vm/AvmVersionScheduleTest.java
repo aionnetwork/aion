@@ -1,6 +1,6 @@
 package org.aion.zero.impl.vm;
 
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.avm.stub.AvmVersion;
 import org.junit.Assert;
 import org.junit.Test;

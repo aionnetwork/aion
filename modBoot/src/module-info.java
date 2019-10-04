@@ -14,7 +14,6 @@ module aion.boot {
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.log.AionLoggerFactory;
 
-    requires aion.vm;
     requires aion.util;
     requires aion.avm.stub;
 

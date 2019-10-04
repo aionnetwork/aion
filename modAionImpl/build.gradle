@@ -11,6 +11,7 @@ sourceSets {
 }
 
 dependencies {
+    compile project(':modAvmStub')
     compile project(':modUtil')
     compile project(':modLogger')
     compile project(':modRlp')
@@ -21,18 +22,21 @@ dependencies {
     compile project(':modP2p')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
-    compile project(':modVM')
+    compile project(':modPrecompiled')
     compile project(':modTxPool')
     compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
 
+    runtimeOnly group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+    runtimeOnly group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
+    
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
-
-    //testCompile 'network.aion:crypto4j:0.4.0'
-    testCompile project(':modCrypto')
-    testCompile project(':modAvmStub')
+    
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

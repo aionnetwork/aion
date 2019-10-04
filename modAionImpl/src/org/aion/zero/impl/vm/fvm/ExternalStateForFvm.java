@@ -1,4 +1,4 @@
-package org.aion.vm.fvm;
+package org.aion.zero.impl.vm.fvm;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
@@ -18,8 +18,8 @@ import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.TransactionStatus;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.vm.precompiled.ExternalStateForPrecompiled;
-import org.aion.vm.common.TxNrgRule;
+import org.aion.zero.impl.vm.precompiled.ExternalStateForPrecompiled;
+import org.aion.zero.impl.vm.common.TxNrgRule;
 
 /**
  * An implementation of the {@link IExternalStateForFvm} interface defined in the FVM.

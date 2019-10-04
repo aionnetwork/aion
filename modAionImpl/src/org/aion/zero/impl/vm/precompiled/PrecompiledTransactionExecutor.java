@@ -1,9 +1,9 @@
-package org.aion.vm.precompiled;
+package org.aion.zero.impl.vm.precompiled;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.vm.common.PostExecutionWork;
+import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.db.RepositoryCache;

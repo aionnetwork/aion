@@ -29,7 +29,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.common.BlockCachingContext;
+import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;

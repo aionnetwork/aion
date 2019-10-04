@@ -1,4 +1,4 @@
-package org.aion.vm.precompiled;
+package org.aion.zero.impl.vm.precompiled;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
@@ -9,7 +9,7 @@ import org.aion.precompiled.type.PrecompiledDataWord;
 import org.aion.precompiled.type.PrecompiledDoubleDataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.vm.common.TxNrgRule;
+import org.aion.zero.impl.vm.common.TxNrgRule;
 
 /**
  * An implementation of the {@link IExternalStateForPrecompiled} interface defined in the precompiled

@@ -1,10 +1,10 @@
 package org.aion.zero.impl.vm;
 
 import java.util.concurrent.TimeUnit;
-import org.aion.vm.avm.AvmConfigurations;
-import org.aion.vm.avm.AvmProvider;
-import org.aion.vm.avm.AvmTransactionExecutor;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
+import org.aion.zero.impl.vm.avm.AvmConfigurations;
+import org.aion.zero.impl.vm.avm.AvmProvider;
+import org.aion.zero.impl.vm.avm.AvmTransactionExecutor;
+import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.avm.stub.AvmVersion;
 import org.junit.AfterClass;
 import org.junit.Assert;

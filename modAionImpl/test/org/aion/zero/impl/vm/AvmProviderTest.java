@@ -3,7 +3,7 @@ package org.aion.zero.impl.vm;
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 
-import org.aion.vm.avm.AvmProvider;
+import org.aion.zero.impl.vm.avm.AvmProvider;
 import org.aion.avm.stub.AvmExecutionType;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
@@ -24,8 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests more generic aspects of the {@link AvmProvider} class (specific version testing is done in
- * the tests in modVM.
+ * Tests more generic aspects of the {@link AvmProvider} class.
  *
  * What's being tested here are methods related specifically to the provider at large, or more integ
  * style tests.

@@ -1,4 +1,4 @@
-package org.aion.vm.avm.internal;
+package org.aion.zero.impl.vm.avm.internal;
 
 /**
  * Note that all paths listed here are relative, under the assumption that the program is being run
