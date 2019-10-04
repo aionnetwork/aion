@@ -36,9 +36,9 @@ public interface IBlockStoreBase {
     /** @return the common block that was found during the re-branching */
     long reBranch(Block forkBlock);
 
-    void revert(long previousLevel);
+    void revert(long previousLevel, long unityForkNumber);
 
-    void pruneAndCorrect();
+    void pruneAndCorrect(long unityForkNumber);
 
     void load();
 

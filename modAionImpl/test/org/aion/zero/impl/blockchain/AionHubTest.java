@@ -92,8 +92,6 @@ public class AionHubTest {
         StandaloneBlockchain chain = bundle.bc;
         chain.setBestBlock(chain.getGenesis());
 
-        CfgAion.inst().setGenesis(chain.getGenesis());
-
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
         checkHubNullity(hub);
 
@@ -113,8 +111,6 @@ public class AionHubTest {
         StandaloneBlockchain chain = bundle.bc;
         int expectedStartBlock = 6;
         generateRandomChainWithoutTransactions(chain, expectedStartBlock, 1);
-
-        CfgAion.inst().setGenesis(chain.getGenesis());
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
         checkHubNullity(hub);
@@ -181,8 +177,6 @@ public class AionHubTest {
 
         // ensure that the world state was corrupted
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
-
-        CfgAion.inst().setGenesis(chain.getGenesis());
 
         // recovery should be called by loadBlockchain()
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain, chain.getRepository());
@@ -263,9 +257,6 @@ public class AionHubTest {
 
         // ensure that the world state was corrupted
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
-
-        CfgAion.inst().setGenesis(chain.getGenesis());
-
         assertNotEquals(td6, chain.getTotalDifficulty());
 
         // Also, missing the block DB

@@ -864,7 +864,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.NO_CHILD;
         } else {
             // the total difficulty will be updated after the chain is complete
-            getBlockStore().saveBlock(block, ZERO, ZERO, true);
+            getBlockStore().saveBlock(block, ZERO, ZERO, true, FORK_5_BLOCK_NUMBER);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -953,9 +953,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             if (!repository.isIndexed(block.getHash(), block.getNumber())) {
                 // correct the index for this block
-                //TODO: [unity] Temparary disable the functionality until it has been test with unity blocks
-                // relate with AKI-371
-                //recoverIndexEntry(repository, block);
+                recoverIndexEntry(repository, block);
             }
 
             // retry of well known block
@@ -1986,7 +1984,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block,
                         ud.getTotalMiningDifficulty(),
                         ud.getTotalStakingDifficulty(),
-                        !fork);
+                        !fork,
+                        FORK_5_BLOCK_NUMBER);
 
         for (int i = 0; i < receipts.size(); i++) {
             AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHash(), i, summaries.get(i).getInternalTransactions());
@@ -2593,14 +2592,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getShortHash(),
                     other.getNumber(),
                     other.getTransactionsList().size());
-            //TODO: [unity] revise it after the blockchainImpl class introducing the unity difficulty concept
-            // AKI-389 check the correctness when porting the minging/staking difficulty
             totalDiff =
                     repo.getBlockStore()
                             .correctIndexEntry(
                                     other,
                                     parentBlock.getMiningDifficulty(),
-                                    parentBlock.getStakingDifficulty());
+                                    parentBlock.getStakingDifficulty(), FORK_5_BLOCK_NUMBER);
         }
 
         // update the repository
@@ -2685,25 +2682,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
         pubBestBlock = blk;
     }
 
+    @Override
     public boolean isMainChain(byte[] hash, long level) {
         return getBlockStore().isMainChain(hash, level);
     }
 
+    @Override
     public boolean isMainChain(byte[] hash) {
         return getBlockStore().isMainChain(hash);
     }
 
 
     @VisibleForTesting
+    @Override
     public void setUnityForkNumber(long unityForkNumber) {
         LOG.info("Unity enabled at fork number " + unityForkNumber);
         FORK_5_BLOCK_NUMBER = unityForkNumber;
     }
 
-    long getUnityForkNumber() {
+    @Override
+    public long getUnityForkNumber() {
         return FORK_5_BLOCK_NUMBER;
     }
 
+    @Override
     public boolean isUnityForkEnabled() {
         return bestBlockNumber.get() >= FORK_5_BLOCK_NUMBER;
     }
