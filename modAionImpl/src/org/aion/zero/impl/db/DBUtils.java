@@ -78,8 +78,6 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        cfg.getDb().setHeapCacheEnabled(false);
-
         Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
         cfgLog.put(LogEnum.DB, LogLevel.INFO);
         cfgLog.put(LogEnum.GEN, LogLevel.INFO);
@@ -110,8 +108,6 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        cfg.getDb().setHeapCacheEnabled(false);
-
         Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
         cfgLog.put(LogEnum.DB, LogLevel.INFO);
         cfgLog.put(LogEnum.GEN, LogLevel.INFO);
@@ -131,8 +127,6 @@ public class DBUtils {
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
-
-        cfg.getDb().setHeapCacheEnabled(false);
 
         AionLoggerFactory.initAll();
 
@@ -160,8 +154,6 @@ public class DBUtils {
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
-
-        cfg.getDb().setHeapCacheEnabled(false);
 
         AionLoggerFactory.initAll();
 

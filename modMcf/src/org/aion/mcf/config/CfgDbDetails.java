@@ -24,7 +24,6 @@ public class CfgDbDetails {
         this.enable_auto_commit = true;
         this.enable_db_cache = true;
         this.enable_db_compression = true;
-        this.enable_heap_cache = false;
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
@@ -47,7 +46,6 @@ public class CfgDbDetails {
     public boolean enable_db_compression;
 
     public boolean enable_auto_commit;
-    public boolean enable_heap_cache;
     public String max_heap_cache_size;
     public boolean enable_heap_cache_stats;
 
@@ -111,9 +109,6 @@ public class CfgDbDetails {
                             break;
                         case Props.ENABLE_DB_COMPRESSION:
                             this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
-                            break;
-                        case Props.ENABLE_HEAP_CACHE:
-                            this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.MAX_HEAP_CACHE_SIZE:
                             this.max_heap_cache_size = Cfg.readValue(sr);
@@ -229,7 +224,8 @@ public class CfgDbDetails {
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(this.cache_size));
 
         props.setProperty(Props.ENABLE_AUTO_COMMIT, String.valueOf(this.enable_auto_commit));
-        props.setProperty(Props.ENABLE_HEAP_CACHE, String.valueOf(this.enable_heap_cache));
+        // TODO AKI-425: fully remove heap cache functionality; replace with object caches
+        props.setProperty(Props.ENABLE_HEAP_CACHE, "false");
         props.setProperty(Props.MAX_HEAP_CACHE_SIZE, this.max_heap_cache_size);
         props.setProperty(
                 Props.ENABLE_HEAP_CACHE_STATS, String.valueOf(this.enable_heap_cache_stats));
@@ -250,7 +246,6 @@ public class CfgDbDetails {
         return enable_db_cache == that.enable_db_cache
                 && enable_db_compression == that.enable_db_compression
                 && enable_auto_commit == that.enable_auto_commit
-                && enable_heap_cache == that.enable_heap_cache
                 && enable_heap_cache_stats == that.enable_heap_cache_stats
                 && block_size == that.block_size
                 && max_fd_open_alloc == that.max_fd_open_alloc
@@ -268,7 +263,6 @@ public class CfgDbDetails {
                 enable_db_cache,
                 enable_db_compression,
                 enable_auto_commit,
-                enable_heap_cache,
                 max_heap_cache_size,
                 enable_heap_cache_stats,
                 block_size,
