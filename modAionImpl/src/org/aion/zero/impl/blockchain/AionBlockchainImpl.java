@@ -2598,6 +2598,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                     other,
                                     parentBlock.getMiningDifficulty(),
                                     parentBlock.getStakingDifficulty(), FORK_5_BLOCK_NUMBER);
+            parentBlock = other;
         }
 
         // update the repository
