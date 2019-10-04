@@ -44,7 +44,8 @@ public class AionHubUtils {
                         genesis,
                         genesis.getMiningDifficulty(),
                         genesis.getStakingDifficulty(),
-                        true);
+                        true,
+                        Long.MAX_VALUE);
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {

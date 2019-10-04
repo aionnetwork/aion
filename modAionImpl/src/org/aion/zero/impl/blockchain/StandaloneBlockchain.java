@@ -24,6 +24,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.UnityDifficulty;
@@ -403,6 +404,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             AionGenesis genesis;
             try {
                 genesis = genesisBuilder.buildForTest();
+                CfgAion.inst().setGenesis(genesis);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -436,7 +438,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             genesis,
                             genesis.getMiningDifficulty(),
                             genesis.getStakingDifficulty(),
-                            true);
+                            true,
+                            bc.getUnityForkNumber());
             bc.setBestBlock(genesis);
             bc.setUnityTotalDifficulty(
                     genesis.getMiningDifficulty(), genesis.getStakingDifficulty());
@@ -468,10 +471,16 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 parentBest,
                                 totalMiningDifficultyParent,
                                 totalStakingDifficultyParent,
-                                true);
+                                true,
+                                bc.getUnityForkNumber());
                 bc.getRepository()
                         .getBlockStore()
-                        .saveBlock(best, totalMiningDifficulty, totalStakingDifficulty, true);
+                        .saveBlock(
+                                best,
+                                totalMiningDifficulty,
+                                totalStakingDifficulty,
+                                true,
+                                bc.getUnityForkNumber());
                 bc.setBestBlock(best);
                 bc.setUnityTotalDifficulty(totalMiningDifficulty, totalStakingDifficulty);
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
@@ -612,7 +621,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 block,
                                 this.genesis.getMiningDifficulty(),
                                 genesis.getStakingDifficulty(),
-                                true);
+                                true,
+                                this.getUnityForkNumber());
                 grandParentBlock = block;
             } else {
                 // grab the grandparent block from the database if it exists
@@ -641,7 +651,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             block,
                             this.genesis.getMiningDifficulty(),
                             genesis.getStakingDifficulty(),
-                            true);
+                            true,
+                            this.getUnityForkNumber());
         } catch (Exception e) {
             // any exception here should kill the tests
             // rethrow as runtime

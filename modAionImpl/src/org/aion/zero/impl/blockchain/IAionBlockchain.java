@@ -197,4 +197,6 @@ public interface IAionBlockchain extends UnityChain {
 
     @VisibleForTesting
     void setUnityForkNumber(long blockNumber);
+
+    long getUnityForkNumber();
 }

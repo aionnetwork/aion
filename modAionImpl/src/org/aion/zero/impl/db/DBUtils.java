@@ -95,7 +95,7 @@ public class DBUtils {
         }
 
         // revert to block number and flush changes
-        store.pruneAndCorrect();
+        store.pruneAndCorrect(blockchain.getUnityForkNumber());
         store.flush();
 
         blockchain.getRepository().close();
@@ -308,7 +308,7 @@ public class DBUtils {
         }
 
         // revert to block number and flush changes
-        store.revert(nbBlock);
+        store.revert(nbBlock, blockchain.getUnityForkNumber());
         store.flush();
 
         nbBestBlock = store.getBestBlock().getNumber();

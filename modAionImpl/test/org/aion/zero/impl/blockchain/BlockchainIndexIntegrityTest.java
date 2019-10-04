@@ -71,7 +71,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery failed
-        assertThat(blockStore.indexIntegrityCheck())
+        assertThat(blockStore.indexIntegrityCheck(chain.getUnityForkNumber()))
                 .isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_GENESIS);
     }
 
@@ -113,7 +113,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery failed
-        assertThat(blockStore.indexIntegrityCheck())
+        assertThat(blockStore.indexIntegrityCheck(chain.getUnityForkNumber()))
                 .isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_LEVEL);
     }
 
@@ -161,7 +161,7 @@ public class BlockchainIndexIntegrityTest {
         List<BlockInfo> infos = index.get(2);
         assertThat(infos.size()).isEqualTo(2);
 
-        for (AionBlockStore.BlockInfo bi : infos) {
+        for (BlockInfo bi : infos) {
             bi.setMiningDifficulty(bi.getMiningDifficulty().add(BigInteger.TEN));
         }
         index.set(2, infos);
@@ -170,7 +170,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery succeeded
-        assertThat(blockStore.indexIntegrityCheck())
+        assertThat(blockStore.indexIntegrityCheck(chain.getUnityForkNumber()))
                 .isEqualTo(AionBlockStore.IntegrityCheckResult.FIXED);
     }
 
@@ -214,7 +214,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery succeeded
-        assertThat(blockStore.indexIntegrityCheck())
+        assertThat(blockStore.indexIntegrityCheck(chain.getUnityForkNumber()))
                 .isEqualTo(AionBlockStore.IntegrityCheckResult.CORRECT);
     }
 }
