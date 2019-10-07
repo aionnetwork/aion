@@ -35,8 +35,9 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     private final long blockTimestamp;
     private final long blockEnergyLimit;
     private final FvmDataWord blockDifficulty;
+    private final boolean isUnityForkEnabled;
 
-    public ExternalStateForFvm(RepositoryCache<AccountState, IBlockStoreBase> repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit) {
+    public ExternalStateForFvm(RepositoryCache<AccountState, IBlockStoreBase> repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled) {
         this.repository = repository;
         this.miner = miner;
         this.blockDifficulty = blockDifficulty;
@@ -46,6 +47,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
         this.blockNumber = blockNumber;
         this.blockTimestamp = blockTimestamp;
         this.blockEnergyLimit = blockEnergyLimit;
+        this.isUnityForkEnabled = unityForkEnabled;
     }
 
     /** Commits the changes in this world state to its parent world state. */
@@ -77,7 +79,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public IExternalStateForFvm newChildExternalState() {
-        return new ExternalStateForFvm(this.repository.startTracking(), this.miner, this.blockDifficulty, this.isLocalCall, this.allowNonceIncrement, this.isFork040enabled, this.blockNumber, this.blockTimestamp, this.blockEnergyLimit);
+        return new ExternalStateForFvm(this.repository.startTracking(), this.miner, this.blockDifficulty, this.isLocalCall, this.allowNonceIncrement, this.isFork040enabled, this.blockNumber, this.blockTimestamp, this.blockEnergyLimit, this.isUnityForkEnabled);
     }
 
     /**
@@ -307,7 +309,9 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public boolean isValidEnergyLimitForCreate(long energyLimit) {
-        return (this.isLocalCall) ? true : TxNrgRule.isValidNrgContractCreate(energyLimit);
+        return (this.isLocalCall) || ((this.isUnityForkEnabled)
+            ? TxNrgRule.isValidNrgContractCreateAfterUnity(energyLimit)
+            : TxNrgRule.isValidNrgContractCreate(energyLimit));
     }
 
     /**

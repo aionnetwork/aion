@@ -458,7 +458,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public boolean isValid(AionTransaction tx) {
-        return TXValidator.isValid(tx)
+        return blockchain.isUnityForkEnabled() ? TXValidator.isValidAfterUnity(tx) : TXValidator.isValid(tx)
                 && TransactionTypeValidator.isValid(tx)
                 && beaconHashValidator.validateTxForPendingState(tx);
     }
@@ -1136,7 +1136,8 @@ public class AionPendingStateImpl implements IPendingState {
                     checkBlockEnergyLimit,
                     LOGGER_VM,
                     BlockCachingContext.PENDING,
-                    bestBlk.getNumber());
+                    bestBlk.getNumber(),
+                    blockchain.isUnityForkEnabled());
         } catch (VmFatalException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);

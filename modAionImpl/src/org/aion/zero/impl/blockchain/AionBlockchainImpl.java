@@ -1864,7 +1864,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 LOGGER_VM,
                                 getPostExecutionWorkForGeneratePreBlock(repository),
                                 BlockCachingContext.PENDING,
-                                bestBlock.getNumber());
+                                bestBlock.getNumber(),
+                                isUnityForkEnabled());
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     if (!summary.isRejected()) {
@@ -1922,7 +1923,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 LOGGER_VM,
                                 getPostExecutionWorkForApplyBlock(repository),
                                 executionTypeForAVM,
-                                cachedBlockNumberForAVM);
+                                cachedBlockNumberForAVM,
+                                isUnityForkEnabled());
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     receipts.add(summary.getReceipt());

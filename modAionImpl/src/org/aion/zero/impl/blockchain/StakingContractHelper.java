@@ -165,7 +165,8 @@ public class StakingContractHelper {
                 , true
                 , block.getNrgLimit()
                 , BlockCachingContext.CALL.avmType
-                , 0);
+                , 0
+                , chain.isUnityForkEnabled());
 
             return summaries.get(0).getReceipt();
     }

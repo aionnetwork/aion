@@ -13,6 +13,11 @@ public final class AvmConfigurations {
     private static AvmVersionSchedule multiVersionSchedule = null;
     private static String projectRootDir = null;
     private static IEnergyRules energyRules = (t, l) -> (t == IEnergyRules.TransactionType.CREATE) ? TxNrgRule.isValidNrgContractCreate(l) : TxNrgRule.isValidNrgTx(l);
+    private static IEnergyRules energyRulesAfterUnityFork =
+            (t, l) ->
+                    (t == IEnergyRules.TransactionType.CREATE)
+                            ? TxNrgRule.isValidNrgContractCreateAfterUnity(l)
+                            : TxNrgRule.isValidNrgTx(l);
 
     private AvmConfigurations() {}
 
@@ -107,5 +112,12 @@ public final class AvmConfigurations {
             throw new IllegalStateException("Cannot get energy limit rules - this class has not been initialized yet!");
         }
         return energyRules;
+    }
+
+    public static IEnergyRules getEnergyLimitRulesAfterUnityFork() {
+        if (!isInitialized) {
+            throw new IllegalStateException("Cannot get energy limit rules after unity fork - this class has not been initialized yet!");
+        }
+        return energyRulesAfterUnityFork;
     }
 }

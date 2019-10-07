@@ -61,7 +61,7 @@ public final class AvmTransactionExecutor {
      * @return the execution summaries of the transactions.
      * @throws VmFatalException If a fatal error occurred and the kernel must be shut down.
      */
-    public static List<AionTxExecSummary> executeTransactions(RepositoryCache<AccountState, IBlockStoreBase> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber) throws VmFatalException {
+    public static List<AionTxExecSummary> executeTransactions(RepositoryCache<AccountState, IBlockStoreBase> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) throws VmFatalException {
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
         long blockEnergy = remainingBlockEnergy;
 
@@ -74,7 +74,7 @@ public final class AvmTransactionExecutor {
             // Ensure that the vm is in the correct state and grab the version of the avm we need to use for this block.
             AvmVersion versionToUse = updateAvmsAndGetVersionToUse(AvmConfigurations.getProjectRootDirectory(), blockNumber);
 
-            IAvmFutureResult[] futures = invokeAvm(versionToUse, repository, blockDifficulty, blockNumber, blockTimestamp, blockEnergyLimit, miner, transactions, allowNonceIncrement, isLocalCall, executionType, cachedBlockNumber);
+            IAvmFutureResult[] futures = invokeAvm(versionToUse, repository, blockDifficulty, blockNumber, blockTimestamp, blockEnergyLimit, miner, transactions, allowNonceIncrement, isLocalCall, executionType, cachedBlockNumber, unityForkEnabled);
 
             // Process the transaction results.
             int index = 0;
@@ -217,7 +217,7 @@ public final class AvmTransactionExecutor {
      * @param cachedBlockNumber The cached block number.
      * @return the future execution results.
      */
-    private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache<AccountState, IBlockStoreBase> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber) {
+    private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache<AccountState, IBlockStoreBase> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) {
         IAvmExternalState externalState = AvmProvider.newExternalStateBuilder(versionToUse)
             .withRepository(repository.startTracking())
             .withMiner(miner)
@@ -225,7 +225,7 @@ public final class AvmTransactionExecutor {
             .withBlockNumber(blockNumber)
             .withBlockTimestamp(blockTimestamp)
             .withBlockEnergyLimit(blockEnergyLimit)
-            .withEnergyRules(AvmConfigurations.getEnergyLimitRules())
+            .withEnergyRules(unityForkEnabled ? AvmConfigurations.getEnergyLimitRulesAfterUnityFork() : AvmConfigurations.getEnergyLimitRules())
             .allowNonceIncrement(allowNonceIncrement)
             .isLocalCall(isLocalCall)
             .build();

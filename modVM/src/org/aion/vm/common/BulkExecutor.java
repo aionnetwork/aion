@@ -75,7 +75,8 @@ public final class BulkExecutor {
             Logger logger,
             PostExecutionWork postExecutionWork,
             BlockCachingContext blockCachingContext,
-            long cachedBlockNumber)
+            long cachedBlockNumber,
+            boolean unityForkEnabled)
             throws VmFatalException {
 
         if (blockDifficulty == null) {
@@ -112,7 +113,8 @@ public final class BulkExecutor {
                 isLocalCall,
                 fork040Enable,
                 blockCachingContext,
-                cachedBlockNumber);
+                cachedBlockNumber,
+                unityForkEnabled);
     }
 
     /**
@@ -151,7 +153,8 @@ public final class BulkExecutor {
             boolean checkBlockEnergyLimit,
             Logger logger,
             BlockCachingContext blockCachingContext,
-            long cachedBlockNumber)
+            long cachedBlockNumber,
+            boolean unityforkEnabled)
             throws VmFatalException {
 
         if (blockDifficulty == null) {
@@ -182,7 +185,8 @@ public final class BulkExecutor {
                         isLocalCall,
                         fork040Enable,
                         blockCachingContext,
-                        cachedBlockNumber)
+                        cachedBlockNumber,
+                        unityforkEnabled)
                 .get(0);
     }
 
@@ -202,7 +206,8 @@ public final class BulkExecutor {
             boolean isLocalCall,
             boolean fork040enabled,
             BlockCachingContext blockCachingContext,
-            long cachedBlockNumber)
+            long cachedBlockNumber,
+            boolean unityForkEnabled)
             throws VmFatalException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
@@ -231,7 +236,8 @@ public final class BulkExecutor {
                                 isLocalCall,
                                 blockRemainingEnergy,
                                 blockCachingContext.avmType,
-                                cachedBlockNumber);
+                                cachedBlockNumber,
+                                unityForkEnabled);
             } else if (transactionIsForFastVirtualMachine(
                     repository, firstTransactionInNextBatch)) {
                 currentBatchOfSummaries =
@@ -250,7 +256,8 @@ public final class BulkExecutor {
                                 incrementSenderNonce,
                                 isLocalCall,
                                 blockRemainingEnergy,
-                                fork040enabled);
+                                fork040enabled,
+                                unityForkEnabled);
             } else if (transactionIsPrecompiledContractCall(firstTransactionInNextBatch)) {
                 currentBatchOfSummaries =
                         executeNextBatchOfPrecompiledTransactions(
@@ -310,7 +317,8 @@ public final class BulkExecutor {
             boolean isLocalCall,
             long blockRemainingEnergy,
             AvmExecutionType executionType,
-            long cachedBlockNumber)
+            long cachedBlockNumber,
+            boolean unityForkEnabled)
             throws VmFatalException {
 
         // Grab the next batch of avm transactions to execute.
@@ -335,7 +343,8 @@ public final class BulkExecutor {
                 isLocalCall,
                 blockRemainingEnergy,
                 executionType,
-                cachedBlockNumber);
+                cachedBlockNumber,
+                unityForkEnabled);
     }
 
     /**
@@ -358,7 +367,8 @@ public final class BulkExecutor {
             boolean incrementSenderNonce,
             boolean isLocalCall,
             long blockRemainingEnergy,
-            boolean fork040enabled)
+            boolean fork040enabled,
+            boolean unityForkEnabled)
             throws VmFatalException {
 
         // Grab the next batch of fvm transactions to execute.
@@ -383,7 +393,8 @@ public final class BulkExecutor {
                 incrementSenderNonce,
                 isLocalCall,
                 fork040enabled,
-                blockRemainingEnergy);
+                blockRemainingEnergy,
+                unityForkEnabled);
     }
 
     /**

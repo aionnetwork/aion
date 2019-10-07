@@ -497,7 +497,9 @@ public class InternalTransactionTest {
                         false,
                         LOGGER_VM,
                         BlockCachingContext.PENDING,
-                        block.getNumber() - 1);
+                        block.getNumber() - 1,
+                        false);
+
 
         cache.flush();
         return summary;

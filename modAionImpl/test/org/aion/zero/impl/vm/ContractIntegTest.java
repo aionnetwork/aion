@@ -189,7 +189,8 @@ public class ContractIntegTest {
                         false,
                         LOGGER_VM,
                         BlockCachingContext.PENDING,
-                        block.getNumber() - 1);
+                        block.getNumber() - 1,
+                        false);
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
@@ -1946,7 +1947,8 @@ public class ContractIntegTest {
                 false,
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
-                block.getNumber() - 1);
+                block.getNumber() - 1,
+                false);
     }
 
     private AionBlock makeBlock(AionTransaction tx) {
@@ -2042,7 +2044,8 @@ public class ContractIntegTest {
                 false,
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
-                block.getNumber() - 1);
+                block.getNumber() - 1,
+                false);
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
@@ -2134,7 +2137,8 @@ public class ContractIntegTest {
                 false,
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
-                block.getNumber() - 1);
+                block.getNumber() - 1,
+                false);
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("OUT_OF_NRG", summary.getReceipt().getError());

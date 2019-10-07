@@ -421,7 +421,8 @@ public class SolidityTypeTest {
                 false,
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
-                block.getNumber() - 1);
+                block.getNumber() - 1,
+                false);
     }
 
     private static AionBlock createDummyBlock() {

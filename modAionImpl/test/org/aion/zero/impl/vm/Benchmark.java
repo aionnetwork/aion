@@ -317,6 +317,7 @@ public class Benchmark {
                 false,
                 LOGGER,
                 BlockCachingContext.PENDING,
-                block.getNumber() - 1);
+                block.getNumber() - 1,
+                false);
     }
 }

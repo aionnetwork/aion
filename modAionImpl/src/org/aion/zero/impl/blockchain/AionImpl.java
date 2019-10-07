@@ -124,6 +124,7 @@ public class AionImpl implements IAionChain {
             boolean incrementSenderNonce = true;
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
+            boolean unityForkEnabled = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),
@@ -139,7 +140,8 @@ public class AionImpl implements IAionChain {
                             checkBlockEnergyLimit,
                             LOG_VM,
                             BlockCachingContext.CALL,
-                            block.getNumber())
+                            block.getNumber(),
+                            unityForkEnabled)
                     .getReceipt()
                     .getEnergyUsed();
         } catch (VmFatalException e) {
@@ -162,6 +164,7 @@ public class AionImpl implements IAionChain {
             boolean incrementSenderNonce = true;
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
+            boolean unityForkEnabled = false;
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),
@@ -177,7 +180,8 @@ public class AionImpl implements IAionChain {
                             checkBlockEnergyLimit,
                             LOG_VM,
                             BlockCachingContext.CALL,
-                            block.getNumber())
+                            block.getNumber(),
+                            unityForkEnabled)
                     .getReceipt();
         } catch (VmFatalException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);
