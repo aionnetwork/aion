@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;

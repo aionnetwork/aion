@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import com.google.common.base.Objects;
 import java.io.IOException;
@@ -6,7 +6,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;

@@ -1,13 +1,11 @@
-package org.aion.mcf.types;
+package org.aion.base;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
-import org.aion.base.AionTxReceipt;
 import org.aion.types.Log;
 import org.junit.Test;
 
@@ -28,8 +26,8 @@ public class AionTxReceiptTest {
         byte[] encoded = receipt.getEncoded();
         AionTxReceipt resp = new AionTxReceipt(encoded);
 
-        assertThat(resp.getTransactionOutput(), is(equalTo(receipt.getTransactionOutput())));
-        assertThat(resp.getBloomFilter(), is(equalTo(receipt.getBloomFilter())));
-        assertThat(resp.getError(), is(equalTo(receipt.getError())));
+        assertArrayEquals(resp.getTransactionOutput(), receipt.getTransactionOutput());
+        assertEquals(resp.getBloomFilter(), receipt.getBloomFilter());
+        assertEquals(resp.getError(), receipt.getError());
     }
 }

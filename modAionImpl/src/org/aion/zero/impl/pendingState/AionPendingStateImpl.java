@@ -39,7 +39,7 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.TxResponse;
-import org.aion.mcf.config.CfgFork;
+import org.aion.zero.impl.config.CfgFork;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;

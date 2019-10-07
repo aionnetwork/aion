@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 

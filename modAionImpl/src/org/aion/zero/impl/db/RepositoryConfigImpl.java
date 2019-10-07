@@ -2,8 +2,8 @@ package org.aion.zero.impl.db;
 
 import java.util.Map;
 import java.util.Properties;
-import org.aion.mcf.config.CfgDb;
-import org.aion.mcf.config.PruneConfig;
+import org.aion.zero.impl.config.CfgDb;
+import org.aion.zero.impl.config.PruneConfig;
 
 public class RepositoryConfigImpl implements RepositoryConfig {
 

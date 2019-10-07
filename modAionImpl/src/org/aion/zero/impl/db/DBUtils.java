@@ -12,7 +12,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.config.CfgDb;
+import org.aion.zero.impl.config.CfgDb;
 import org.aion.base.AccountState;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;

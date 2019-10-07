@@ -5,9 +5,9 @@ import junitparams.Parameters;
 import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.config.CfgDb;
-import org.aion.mcf.config.CfgDb.PruneOption;
-import org.aion.mcf.config.CfgPrune;
+import org.aion.zero.impl.config.CfgDb;
+import org.aion.zero.impl.config.CfgDb.PruneOption;
+import org.aion.zero.impl.config.CfgPrune;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Test;
@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.config.CfgDb.SPREAD_PRUNE_ARCHIVE_RATE;
-import static org.aion.mcf.config.CfgDb.SPREAD_PRUNE_BLOCK_COUNT;
-import static org.aion.mcf.config.CfgDb.TOP_PRUNE_BLOCK_COUNT;
+import static org.aion.zero.impl.config.CfgDb.SPREAD_PRUNE_ARCHIVE_RATE;
+import static org.aion.zero.impl.config.CfgDb.SPREAD_PRUNE_BLOCK_COUNT;
+import static org.aion.zero.impl.config.CfgDb.TOP_PRUNE_BLOCK_COUNT;
 import static org.aion.util.TestResources.TEST_RESOURCE_DIR;
 
 @RunWith(JUnitParamsRunner.class)

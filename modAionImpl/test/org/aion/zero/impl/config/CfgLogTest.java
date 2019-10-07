@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

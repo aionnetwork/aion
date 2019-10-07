@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.config.StatsType;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;

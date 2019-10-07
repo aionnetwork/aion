@@ -22,7 +22,7 @@ import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
-import org.aion.mcf.config.CfgNetP2p;
+import org.aion.zero.impl.config.CfgNetP2p;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;

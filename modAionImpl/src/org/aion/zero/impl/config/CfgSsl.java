@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import java.io.IOException;
 import java.io.StringWriter;

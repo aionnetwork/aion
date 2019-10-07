@@ -13,7 +13,7 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.config.CfgPrune;
+import org.aion.zero.impl.config.CfgPrune;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.types.ByteArrayWrapper;

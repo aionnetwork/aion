@@ -1,6 +1,6 @@
 package org.aion.zero.impl.config.dynamic;
 
-import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.config.Cfg;
 
 /**
  * A class which, given two {@link Cfg} objects, takes some action on the running Aion kernel based

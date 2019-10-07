@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.CfgFork;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class CfgForkTest {
         out.newLine();
         out.close();
 
-        cfg = CfgAion.inst();
+        cfg = new CfgAion();
     }
 
     @After

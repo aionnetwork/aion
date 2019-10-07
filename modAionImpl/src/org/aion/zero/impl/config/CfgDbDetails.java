@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 
 import com.google.common.base.Objects;
@@ -7,7 +7,7 @@ import java.util.Properties;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.mcf.config.CfgDb.Props;
+import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.util.others.Utils;
 
 public class CfgDbDetails {

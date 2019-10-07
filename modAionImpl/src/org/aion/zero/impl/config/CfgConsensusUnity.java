@@ -11,8 +11,6 @@ import javax.xml.stream.XMLStreamWriter;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.CfgConsensus;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;

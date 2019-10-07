@@ -3,8 +3,8 @@ package org.aion.zero.impl.db;
 import java.util.Properties;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.config.PruneConfig;
+import org.aion.zero.impl.config.CfgPrune;
+import org.aion.zero.impl.config.PruneConfig;
 
 public class MockRepositoryConfig implements RepositoryConfig {
 

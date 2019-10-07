@@ -15,7 +15,6 @@ module aion.mcf {
     requires org.json;
 
     exports org.aion.mcf.blockchain;
-    exports org.aion.mcf.config;
     exports org.aion.mcf.db;
     exports org.aion.mcf.db.exception;
 }

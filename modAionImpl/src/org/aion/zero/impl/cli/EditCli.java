@@ -3,8 +3,15 @@ package org.aion.zero.impl.cli;
 import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.config.*;
+import org.aion.zero.impl.config.Cfg;
+import org.aion.zero.impl.config.CfgApiRpc;
+import org.aion.zero.impl.config.CfgApiZmq;
+import org.aion.zero.impl.config.CfgConsensus;
 import org.aion.zero.impl.config.CfgConsensusUnity;
+import org.aion.zero.impl.config.CfgDb;
+import org.aion.zero.impl.config.CfgLog;
+import org.aion.zero.impl.config.CfgNetP2p;
+import org.aion.zero.impl.config.CfgSync;
 
 import java.util.Arrays;
 import java.util.List;

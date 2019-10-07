@@ -1,4 +1,4 @@
-package org.aion.mcf.config;
+package org.aion.zero.impl.config;
 
 import com.google.common.base.Objects;
 import javax.xml.stream.XMLStreamException;

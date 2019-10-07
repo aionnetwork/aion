@@ -24,7 +24,7 @@ import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.CfgApiZmq;
+import org.aion.zero.impl.config.CfgApiZmq;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.slf4j.Logger;

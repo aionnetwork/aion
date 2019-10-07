@@ -20,7 +20,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.config.StatsType;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;

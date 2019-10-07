@@ -15,7 +15,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.config.Cfg;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 

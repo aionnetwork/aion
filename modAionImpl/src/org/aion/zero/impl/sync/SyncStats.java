@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.config.StatsType;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.sync.statistics.RequestStatsTracker;
 import org.aion.zero.impl.sync.statistics.RequestType;
