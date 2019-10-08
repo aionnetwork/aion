@@ -6,13 +6,14 @@ import java.util.List;
 
 import java.util.Map;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.slf4j.Logger;
 
 public class BlockHeaderValidator {
 
-    private Map<Byte, List<BlockHeaderRule>> chainRules;
+    private Map<BlockSealType, List<BlockHeaderRule>> chainRules;
 
-    public BlockHeaderValidator(Map<Byte, List<BlockHeaderRule>> rules) {
+    public BlockHeaderValidator(Map<BlockSealType, List<BlockHeaderRule>> rules) {
         if (rules == null) {
             throw new NullPointerException("The blockHeaderRule can not be null");
         }
@@ -27,7 +28,7 @@ public class BlockHeaderValidator {
             return false;
         }
 
-        List<BlockHeaderRule> rules = chainRules.get(header.getSealType().getSealId());
+        List<BlockHeaderRule> rules = chainRules.get(header.getSealType());
         if (rules == null) {
             return false;
         } else {

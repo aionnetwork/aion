@@ -3,7 +3,7 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.equihash.OptimizedEquiValidator;
@@ -127,9 +127,9 @@ public class ChainConfiguration {
                         new EnergyConsumedRule(),
                         new SignatureRule());
 
-        Map<Byte, List<BlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
+        Map<BlockSealType, List<BlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
 
         return new BlockHeaderValidator(unityRules);
     }
@@ -138,8 +138,8 @@ public class ChainConfiguration {
         List<DependentBlockHeaderRule> posRules =
                 Arrays.asList(new StakingSeedRule(), new StakingBlockTimeStampRule());
 
-        Map<Byte, List<DependentBlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
+        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
 
         return new ParentBlockHeaderValidator(unityRules);
     }
@@ -149,8 +149,8 @@ public class ChainConfiguration {
         List<GrandParentDependantBlockHeaderRule> powRules =
                 Collections.singletonList(new AionDifficultyRule(this));
 
-        Map<Byte, List<GrandParentDependantBlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
+        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
 
         return new GrandParentBlockHeaderValidator(unityRules);
     }
@@ -165,9 +165,9 @@ public class ChainConfiguration {
         List<GrandParentDependantBlockHeaderRule> posRules =
                 Collections.singletonList(new UnityDifficultyRule(this));
 
-        Map<Byte, List<GrandParentDependantBlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
+        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
 
         return new GrandParentBlockHeaderValidator(unityRules);
     }
@@ -181,9 +181,9 @@ public class ChainConfiguration {
                                 getConstants().getEnergyDivisorLimitLong(),
                                 getConstants().getEnergyLowerBoundLong()));
 
-        Map<Byte, List<DependentBlockHeaderRule>> unityRules = new HashMap<>();
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK.getSealId(), rules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK.getSealId(), rules);
+        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
 
         return new ParentBlockHeaderValidator(unityRules);
     }

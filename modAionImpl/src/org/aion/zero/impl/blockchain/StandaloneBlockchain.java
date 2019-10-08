@@ -6,6 +6,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -372,11 +373,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                                     .getMaximumExtraDataSize()),
                                                     new EnergyConsumedRule());
 
-                                    Map<Byte, List<BlockHeaderRule>> unityRules = new HashMap<>();
-                                    unityRules.put(
-                                            BlockSealType.SEAL_POW_BLOCK.getSealId(), powRules);
-                                    unityRules.put(
-                                            BlockSealType.SEAL_POS_BLOCK.getSealId(), posRules);
+                                    Map<BlockSealType, List<BlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+                                    unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+                                    unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
 
                                     return new BlockHeaderValidator(unityRules);
                                 }
