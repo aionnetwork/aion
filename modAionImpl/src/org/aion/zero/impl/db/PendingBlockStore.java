@@ -28,15 +28,13 @@ import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.BlockUtil;
 import org.slf4j.Logger;
 
 /**
@@ -211,19 +209,16 @@ public class PendingBlockStore implements Closeable {
                     List<Block> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
-                        // TODO : [unity] better way to avoid rlp decode?
-                        RLPList params = RLP.decode2(aList.getRLPData());
-                        RLPList block = (RLPList) params.get(0);
-                        RLPList header = (RLPList) block.get(0);
-                        byte[] sealType = header.get(0).getRLPData();
-                        if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                            res.add(new AionBlock(aList.getRLPData()));
-                        } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
-                            res.add(new StakingBlock(aList.getRLPData()));
+                        Block block = BlockUtil.newBlockFromRlp(aList.getRLPData());
+                        if (block != null) {
+                            res.add(block);
                         } else {
-                            throw new IllegalStateException(
-                                "Invalid rlp encode data: "
-                                    + ByteUtil.toHexString(aList.getRLPData()));
+                            // logs a NPE to show the stack trace
+                            // does not throw the NPE since the program can continue working correctly
+                            LOG.warn(
+                                    "Unexpected null block retrieved from the pending blocks database for data="
+                                            + Arrays.toString(stream),
+                                    new NullPointerException());
                         }
                     }
                     return res;

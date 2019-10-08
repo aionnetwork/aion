@@ -1,7 +1,6 @@
 package org.aion.zero.impl.sync.handler;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -11,8 +10,7 @@ import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.BlockUtil;
 import org.slf4j.Logger;
 
 /** @author jay handler for new block broadcasted from network */
@@ -59,22 +57,12 @@ public final class BroadcastNewBlockHandler extends Handler {
         }
 
         try { // preventative try-catch: it's unlikely that exceptions can pass up to here
-            Block block;
             RLPList params = RLP.decode2(rawdata);
             RLPList blockRLP = (RLPList) params.get(0);
-            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-                // Parse Header
-                RLPList headerRLP = (RLPList) blockRLP.get(0);
-                byte[] type = headerRLP.get(0).getRLPData();
-                if (type[0] == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
-                    block = AionBlock.fromRLPList(blockRLP);
 
-                } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
-                    block = StakingBlock.fromRLPList(blockRLP);
-                } else {
-                    throw new IllegalStateException("Invalid block seal type!");
-                }
-
+            // returns null when decoding failed
+            Block block = BlockUtil.newBlockFromRlpList(blockRLP);
+            if (block != null) {
                 BlockPropagationHandler.PropStatus result =
                         this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 

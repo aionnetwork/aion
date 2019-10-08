@@ -3,9 +3,7 @@ package org.aion.zero.impl.sync.msg;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -13,8 +11,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.BlockUtil;
 
 /**
  * Response message to a request for a block range.
@@ -62,25 +59,9 @@ public final class ResponseBlocks extends Msg {
             }
 
             List<Block> blocks = new ArrayList<>();
-            Block current = null;
+            Block current;
             for (RLPElement encoded : list) {
-                try { // preventative try-catch: it's unlikely that exceptions can pass up to here
-                    RLPList params = RLP.decode2(encoded.getRLPData());
-                    RLPList blockRLP = (RLPList) params.get(0);
-                    if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-                        // Parse Header
-                        RLPList headerRLP = (RLPList) blockRLP.get(0);
-
-                        byte[] type = headerRLP.get(0).getRLPData();
-                        if (type[0] == BlockSealType.SEAL_POW_BLOCK.ordinal()) {
-                            current = AionBlock.fromRLPList(blockRLP);
-                        } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.ordinal()) {
-                            current = StakingBlock.fromRLPList(blockRLP);
-                        }
-                    }
-                } catch (Exception e) {
-                    return null;
-                }
+                current = BlockUtil.newBlockFromRlp(encoded.getRLPData());
                 if (current == null) {
                     return null;
                 } else {

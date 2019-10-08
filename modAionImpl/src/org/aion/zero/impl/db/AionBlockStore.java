@@ -36,8 +36,7 @@ import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.BlockUtil;
 import org.aion.zero.impl.types.UnityDifficulty;
 import org.slf4j.Logger;
 
@@ -87,18 +86,11 @@ public class AionBlockStore implements IBlockStoreBase {
 
             @Override
             public Block deserialize(byte[] bytes) {
-                // TODO : [unity] better way to avoid rlp decode?
-                RLPList params = RLP.decode2(bytes);
-                RLPList block = (RLPList) params.get(0);
-                RLPList header = (RLPList) block.get(0);
-                byte[] sealType = header.get(0).getRLPData();
-                if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                    return new AionBlock(bytes);
-                } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
-                    return new StakingBlock(bytes);
+                Block block = BlockUtil.newBlockFromRlp(bytes);
+                if (block != null) {
+                    return block;
                 } else {
-                    throw new IllegalStateException(
-                            "Invalid rlp encode data: " + ByteUtil.toHexString(bytes));
+                    throw new NullPointerException("Invalid rlp encode data: " + ByteUtil.toHexString(bytes));
                 }
             }
         };

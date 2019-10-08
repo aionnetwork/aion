@@ -11,13 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
@@ -25,7 +20,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.config.StatsType;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.bytes.ByteUtil;
@@ -33,10 +27,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.types.A0BlockHeader;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.StakingBlock;
-import org.aion.zero.impl.types.StakingBlockHeader;
+import org.aion.zero.impl.types.BlockUtil;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
@@ -327,14 +318,7 @@ public final class SyncMgr {
         Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
         while (headerIt.hasNext() && bodyIt.hasNext()) {
-            BlockHeader header = headerIt.next();
-            Block block = null;
-            if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                block = AionBlock.createBlockFromNetwork((A0BlockHeader) header, bodyIt.next());
-            } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                block = StakingBlock.createBlockFromNetwork((StakingBlockHeader) header, bodyIt.next());
-            }
-
+            Block block = BlockUtil.newBlockWithHeader(headerIt.next(), bodyIt.next());
             if (block == null) {
                 log.error("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
                 assembleError = true;
