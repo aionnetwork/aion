@@ -46,7 +46,6 @@ public class AionRepositoryImplTest {
                 public Properties getDatabaseConfig(String db_name) {
                     Properties props = new Properties();
                     props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
                     return props;
                 }
             };

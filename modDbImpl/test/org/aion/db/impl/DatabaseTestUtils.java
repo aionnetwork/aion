@@ -51,8 +51,6 @@ public class DatabaseTestUtils {
         List<Object> parameters = new ArrayList<>();
 
         sharedProps.setProperty(Props.ENABLE_LOCKING, disabled);
-        // adding database variations without heap caching
-        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, disabled);
         // the following parameters are irrelevant
         sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, enabled);
         sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, "0");
@@ -69,28 +67,6 @@ public class DatabaseTestUtils {
             sharedProps.setProperty(Props.DB_TYPE, vendor.toValue());
 
             addDatabaseWithCacheAndCompression(vendor, sharedProps, parameters);
-        }
-
-        // adding database variations with heap caching
-        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, enabled);
-
-        // all vendor options
-        for (DBVendor vendor : vendors) {
-            sharedProps.setProperty(Props.DB_TYPE, vendor.toValue());
-            // enable/disable auto_commit
-            for (String auto_commit : options) {
-                sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, auto_commit);
-                // unbounded/bounded max_heap_cache_size
-                for (String max_heap_cache_size : sizeHeapCache) {
-                    sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, max_heap_cache_size);
-                    // enable/disable heap_cache_stats
-                    for (String heap_cache_stats : options) {
-                        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, heap_cache_stats);
-
-                        addDatabaseWithCacheAndCompression(vendor, sharedProps, parameters);
-                    }
-                }
-            }
         }
 
         return parameters;

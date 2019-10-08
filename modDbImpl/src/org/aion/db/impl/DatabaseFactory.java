@@ -1,7 +1,6 @@
 package org.aion.db.impl;
 
 import java.util.Properties;
-import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.generic.TimedDatabase;
@@ -34,7 +33,6 @@ public abstract class DatabaseFactory {
         public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
         public static final String DB_CACHE_SIZE = "cache_size";
 
-        public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
         public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
         public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
 
@@ -71,12 +69,7 @@ public abstract class DatabaseFactory {
             if (enableLocking) {
                 db = connectWithLocks(info, log);
             } else {
-                // next check for heap cache
-                if (getBoolean(info, Props.ENABLE_HEAP_CACHE)) {
-                    db = connectWithCache(info, log);
-                } else {
-                    db = connectBasic(info, log);
-                }
+                db = connectBasic(info, log);
             }
         }
 
@@ -94,28 +87,12 @@ public abstract class DatabaseFactory {
      * @return A database implementation with read-write locks.
      */
     private static ByteArrayKeyValueDatabase connectWithLocks(Properties info, Logger log) {
-        boolean enableHeapCache = getBoolean(info, Props.ENABLE_HEAP_CACHE);
-        if (enableHeapCache) {
-            return new LockedDatabase(connectWithCache(info, log), log);
+        DBVendor vendor = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
+        if (vendor == DBVendor.LEVELDB || vendor == DBVendor.ROCKSDB) {
+            return new SpecialLockedDatabase(connectBasic(info, log), log);
         } else {
-            DBVendor vendor = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
-            if (vendor == DBVendor.LEVELDB || vendor == DBVendor.ROCKSDB) {
-                return new SpecialLockedDatabase(connectBasic(info, log), log);
-            } else {
-                return new LockedDatabase(connectBasic(info, log), log);
-            }
+            return new LockedDatabase(connectBasic(info, log), log);
         }
-    }
-
-    /** @return A database implementation with a caching layer. */
-    private static ByteArrayKeyValueDatabase connectWithCache(Properties info, Logger log) {
-        boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
-        return new DatabaseWithCache(
-                connectBasic(info, log),
-                log,
-                enableAutoCommit,
-                info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
-                getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
     }
 
     /** @return A database implementation for each of the vendors in {@link DBVendor}. */

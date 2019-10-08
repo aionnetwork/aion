@@ -52,10 +52,6 @@ public class CfgDb {
         public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
         public static final String DB_CACHE_SIZE = "cache_size";
 
-        public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
-        public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
-        public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
-
         public static final String ENABLE_LOCKING = "enable_locking";
 
         public static final String MAX_FD_ALLOC = "max_fd_alloc_size";
@@ -418,10 +414,6 @@ public class CfgDb {
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));
 
             props.setProperty(Props.ENABLE_AUTO_COMMIT, "true");
-            // TODO AKI-425: fully remove heap cache functionality; replace with object caches
-            props.setProperty(Props.ENABLE_HEAP_CACHE, "false");
-            props.setProperty(Props.MAX_HEAP_CACHE_SIZE, "32");
-            props.setProperty(Props.ENABLE_HEAP_CACHE_STATS, "false");
 
             props.setProperty(Props.MAX_FD_ALLOC, "1024");
             props.setProperty(Props.BLOCK_SIZE, String.valueOf(16 * (int) Utils.MEGA_BYTE));

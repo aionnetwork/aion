@@ -110,12 +110,6 @@ public class CfgDbDetails {
                         case Props.ENABLE_DB_COMPRESSION:
                             this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
-                        case Props.MAX_HEAP_CACHE_SIZE:
-                            this.max_heap_cache_size = Cfg.readValue(sr);
-                            break;
-                        case Props.ENABLE_HEAP_CACHE_STATS:
-                            this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
-                            break;
                         case Props.BLOCK_SIZE:
                             this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
                             break;
@@ -224,11 +218,6 @@ public class CfgDbDetails {
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(this.cache_size));
 
         props.setProperty(Props.ENABLE_AUTO_COMMIT, String.valueOf(this.enable_auto_commit));
-        // TODO AKI-425: fully remove heap cache functionality; replace with object caches
-        props.setProperty(Props.ENABLE_HEAP_CACHE, "false");
-        props.setProperty(Props.MAX_HEAP_CACHE_SIZE, this.max_heap_cache_size);
-        props.setProperty(
-                Props.ENABLE_HEAP_CACHE_STATS, String.valueOf(this.enable_heap_cache_stats));
 
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(this.max_fd_open_alloc));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(this.block_size));

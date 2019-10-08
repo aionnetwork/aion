@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
@@ -54,7 +53,6 @@ public class DriverBaseTest {
     private static final File testDir = new File(System.getProperty("user.dir"), "tmp");
     private static final String dbNamePrefix = "TestDB";
     private static final String dbPath = testDir.getAbsolutePath();
-    private static final String unboundHeapCache = "0";
     public static final Logger log = LoggerFactory.getLogger("DB");
 
     //    public static String boundHeapCache = "256";
@@ -66,8 +64,7 @@ public class DriverBaseTest {
                     // H2MVMap wo. db cache wo. compression
                     {
                         "H2MVMap",
-                        new boolean[] {false, false, false},
-                        // { isLocked, isHeapCacheEnabled, isAutocommitEnabled }
+                        new boolean[] {false}, // { isLocked }
                         H2MVMap.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -77,7 +74,7 @@ public class DriverBaseTest {
                     // H2MVMap w. db cache wo. compression
                     {
                         "H2MVMap+dbCache",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         H2MVMap.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -87,7 +84,7 @@ public class DriverBaseTest {
                     // H2MVMap wo. db cache w. compression
                     {
                         "H2MVMap+compression",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         H2MVMap.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -97,7 +94,7 @@ public class DriverBaseTest {
                     // H2MVMap w. db cache w. compression
                     {
                         "H2MVMap+dbCache+compression",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         H2MVMap.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -107,7 +104,7 @@ public class DriverBaseTest {
                     // LevelDB wo. db cache wo. compression
                     {
                         "LevelDB",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         LevelDB.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -117,7 +114,7 @@ public class DriverBaseTest {
                     // LevelDB w. db cache wo. compression
                     {
                         "LevelDB+dbCache",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         LevelDB.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -127,7 +124,7 @@ public class DriverBaseTest {
                     // LevelDB wo. db cache w. compression
                     {
                         "LevelDB+compression",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         LevelDB.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -137,7 +134,7 @@ public class DriverBaseTest {
                     // LevelDB w. db cache w. compression
                     {
                         "LevelDB+dbCache+compression",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         LevelDB.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -147,21 +144,21 @@ public class DriverBaseTest {
                     // MockDB
                     {
                         "MockDB",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         MockDB.class.getDeclaredConstructor(String.class, Logger.class),
                         new Object[] {dbNamePrefix, log}
                     },
                     // PersistentMockDB
                     {
                         "PersistentMockDB",
-                        new boolean[] {false, false, false},
+                        new boolean[] {false}, // { isLocked }
                         PersistentMockDB.class.getDeclaredConstructor(String.class, String.class, Logger.class),
                         new Object[] {dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log}
                     },
                     // H2MVMap
                     {
                         "H2MVMap+lock",
-                        new boolean[] {true, false, false},
+                        new boolean[] {true}, // { isLocked }
                         H2MVMap.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -171,7 +168,7 @@ public class DriverBaseTest {
                     // LevelDB wo. db cache wo. compression
                     {
                         "LevelDB+lock",
-                        new boolean[] {true, false, false},
+                        new boolean[] {true}, // { isLocked }
                         LevelDB.class.getDeclaredConstructor(
                                 String.class, String.class, Logger.class, boolean.class, boolean.class),
                         new Object[] {
@@ -181,88 +178,7 @@ public class DriverBaseTest {
                     // MockDB
                     {
                         "MockDB+lock",
-                        new boolean[] {true, false, false},
-                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
-                        new Object[] {dbNamePrefix, log}
-                    },
-                    // H2MVMap
-                    {
-                        "H2MVMap+heapCache",
-                        new boolean[] {false, true, false},
-                        H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // LevelDB wo. db cache wo. compression
-                    {
-                        "LevelDB+heapCache",
-                        new boolean[] {false, true, false},
-                        LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // MockDB
-                    {
-                        "MockDB+heapCache",
-                        new boolean[] {false, true, false},
-                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
-                        new Object[] {dbNamePrefix, log}
-                    },
-                    // H2MVMap
-                    {
-                        "H2MVMap+heapCache+lock",
-                        new boolean[] {true, true, false},
-                        H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // LevelDB wo. db cache wo. compression
-                    {
-                        "LevelDB+heapCache+lock",
-                        new boolean[] {true, true, false},
-                        LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // MockDB
-                    {
-                        "MockDB+heapCache+lock",
-                        new boolean[] {true, true, false},
-                        MockDB.class.getDeclaredConstructor(String.class, Logger.class),
-                        new Object[] {dbNamePrefix, log}
-                    },
-                    // H2MVMap
-                    {
-                        "H2MVMap+heapCache+autocommit",
-                        new boolean[] {false, true, true},
-                        H2MVMap.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // LevelDB wo. db cache wo. compression
-                    {
-                        "LevelDB+heapCache+autocommit",
-                        new boolean[] {false, true, true},
-                        LevelDB.class.getDeclaredConstructor(
-                                String.class, String.class, Logger.class, boolean.class, boolean.class),
-                        new Object[] {
-                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, log, false, false
-                        }
-                    },
-                    // MockDB
-                    {
-                        "MockDB+heapCache+autocommit",
-                        new boolean[] {false, true, true},
+                        new boolean[] {true}, // { isLocked }
                         MockDB.class.getDeclaredConstructor(String.class, Logger.class),
                         new Object[] {dbNamePrefix, log}
                     },
@@ -347,9 +263,6 @@ public class DriverBaseTest {
         this.dbName = (String) args[0];
         this.db = constructor.newInstance(args);
 
-        if (props[1]) {
-            this.db = new DatabaseWithCache((AbstractDB) this.db, log, props[2], "0", false);
-        }
         if (props[0]) {
             this.db = new LockedDatabase(this.db, log);
         }
