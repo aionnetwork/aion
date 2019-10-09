@@ -104,7 +104,7 @@ public class SyncHeaderRequestManager {
     private long localHeight, networkHeight, requestHeight;
     private final Logger syncLog, surveyLog;
 
-    public SyncHeaderRequestManager(Logger syncLog, Logger surveyLog) {
+    public SyncHeaderRequestManager(Logger syncLog, Logger surveyLog, long maxRequested) {
         Objects.requireNonNull(syncLog);
         Objects.requireNonNull(surveyLog);
 
@@ -123,7 +123,8 @@ public class SyncHeaderRequestManager {
         this.knownActiveNodes = new HashSet<>();
         this.localHeight = 0;
         this.networkHeight = 0;
-        this.requestHeight = 0;
+        // start from where the previous execution left off
+        this.requestHeight = maxRequested;
     }
 
     /**

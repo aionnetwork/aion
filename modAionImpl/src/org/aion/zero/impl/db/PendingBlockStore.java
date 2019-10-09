@@ -157,6 +157,19 @@ public class PendingBlockStore implements Closeable {
         }
     }
 
+    /**
+     * Returns the highest known block height in this store.
+     *
+     * @return the highest known block height in this store
+     */
+    public long getMaxRequested() {
+        if (!knownLevels.isEmpty()) {
+            return knownLevels.last();
+        } else {
+            return 0L;
+        }
+    }
+
     private InvalidFilePathException newException(String dbName, Properties props) {
         return new InvalidFilePathException(
                 "The «"

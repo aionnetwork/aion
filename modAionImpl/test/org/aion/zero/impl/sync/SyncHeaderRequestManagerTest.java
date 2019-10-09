@@ -44,7 +44,7 @@ public class SyncHeaderRequestManagerTest {
         surveyLog = spy(LoggerFactory.getLogger("SURVEY"));
         doNothing().when(surveyLog).info(any());
 
-        srm = new SyncHeaderRequestManager(syncLog, surveyLog);
+        srm = new SyncHeaderRequestManager(syncLog, surveyLog, 0L);
     }
 
     /**

@@ -1844,6 +1844,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         setBestBlock(block);
     }
 
+    /**
+     * Returns the highest known block height in pending block store.
+     *
+     * @return the highest known block height in pending block store
+     */
+    public long getMaxRequested() {
+        return repository.getPendingBlockStore().getMaxRequested();
+    }
+
     @Override
     public int storePendingBlockRange(List<Block> blocks) {
         try {

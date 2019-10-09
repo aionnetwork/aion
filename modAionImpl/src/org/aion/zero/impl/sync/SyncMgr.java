@@ -165,7 +165,7 @@ public final class SyncMgr {
         long selfBest = chain.getBestBlock().getNumber();
         stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
 
-        syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log);
+        syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log, chain.getMaxRequested());
 
         syncGb =
                 new Thread(
