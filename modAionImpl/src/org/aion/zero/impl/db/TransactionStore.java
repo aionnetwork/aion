@@ -1,7 +1,5 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.util.others.Utils.dummy;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,45 +15,35 @@ import org.aion.db.store.Stores;
 import org.aion.types.InternalTransaction;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.apache.commons.collections4.map.LRUMap;
 
 public class TransactionStore implements Closeable {
-    private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final ObjectStore<Map<ByteArrayWrapper, AionTxInfo>> txInfoSource;
     private final ObjectStore<Set<ByteArrayWrapper>> aliasSource;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(ByteArrayKeyValueDatabase txInfoSrc, Serializer<Map<ByteArrayWrapper, AionTxInfo>> serializer) {
+        // TODO AKI-436: introduce caching of recent transactions
         txInfoSource = Stores.newObjectStore(txInfoSrc, serializer);
         aliasSource = Stores.newObjectStore(txInfoSrc, aliasSerializer);
     }
 
-    public boolean putTxInfoToBatch(AionTxInfo tx) {
+    public void putTxInfoToBatch(AionTxInfo tx) {
 
         lock.writeLock().lock();
 
         try {
             byte[] txHash = tx.getReceipt().getTransaction().getTransactionHash();
 
-            Map<ByteArrayWrapper, AionTxInfo> existingInfos = null;
-            if (lastSavedTxHash.put(ByteArrayWrapper.wrap(txHash), dummy) != null
-                    || !lastSavedTxHash.isFull()) {
-                existingInfos = txInfoSource.get(txHash);
-            }
-
+            Map<ByteArrayWrapper, AionTxInfo> existingInfos = txInfoSource.get(txHash);
             if (existingInfos == null) {
                 existingInfos = new HashMap<>();
-            } else {
-                // TODO: switch to an overwrite policy
-                if (existingInfos.containsKey(tx.blockHash)) {
-                    return false;
-                }
             }
+
+            // overwrites existing entry to update it with/without internal transactions
+            // depending on the chosen configuration at block import
             existingInfos.put(tx.blockHash, tx);
             txInfoSource.putToBatch(txHash, existingInfos);
-
-            return true;
         } finally {
             lock.writeLock().unlock();
         }
