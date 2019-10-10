@@ -24,11 +24,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
-            if (origContract instanceof AbstractContractDetails) {
-                setCodes(((AbstractContractDetails) this.origContract).getCodes());
-            } else {
-                setCode(origContract.getCode());
-            }
+            setCodes(this.origContract.getCodes());
             this.origContract.setTransformedCode(origContract.getTransformedCode());
         }
     }
@@ -222,11 +218,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             }
         }
 
-        if (origContract instanceof AbstractContractDetails) {
-            ((AbstractContractDetails) origContract).appendCodes(getCodes());
-        } else {
-            origContract.setCode(getCode());
-        }
+        origContract.appendCodes(getCodes());
 
         origContract.setTransformedCode(getTransformedCode());
         origContract.setDirty(this.isDirty() || origContract.isDirty());

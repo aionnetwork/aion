@@ -76,6 +76,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
         setDirty(true);
     }
 
+    @Override
     public Map<ByteArrayWrapper, byte[]> getCodes() {
         return codes;
     }
@@ -84,6 +85,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
         this.codes = new HashMap<>(codes);
     }
 
+    @Override
     public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
         this.codes.putAll(codes);
     }

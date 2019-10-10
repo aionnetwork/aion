@@ -48,12 +48,18 @@ public interface ContractDetails {
      */
     byte[] getCode(byte[] codeHash);
 
+    /** Returns all the stored codes keyed by their code hashes. */
+    Map<ByteArrayWrapper, byte[]> getCodes();
+
     /**
      * Sets the code of the associated address to code.
      *
      * @param code The code to set.
      */
     void setCode(byte[] code);
+
+    /** Stores all the given codes. */
+    void appendCodes(Map<ByteArrayWrapper, byte[]> codes);
 
     /**
      * Returns the transformed code of the vm contract by giving the codeHash of the deploy code.
