@@ -151,15 +151,6 @@ public interface ContractDetails {
     Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
 
     /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage the specified mappings
-     * @apiNote Used for testing.
-     * @implNote A {@code null} value is interpreted as deletion.
-     */
-    void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage);
-
-    /**
      * Get the address associated with this ContractDetails.
      *
      * @return the associated address.

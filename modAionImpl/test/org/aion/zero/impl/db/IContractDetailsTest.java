@@ -5,13 +5,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.util.types.DataWord;
-import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -36,6 +34,26 @@ public class IContractDetailsTest {
     public void tearDown() {
         cache1 = null;
         cache2 = null;
+    }
+
+    /**
+     * Sets the storage to contain the specified key-value mappings.
+     *
+     * @param contractDetails the contract details that will store the data
+     * @param storage the specified mappings
+     * @implNote A {@code null} value is interpreted as deletion.
+     */
+    public void setStorage(ContractDetails contractDetails, Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
+            ByteArrayWrapper key = entry.getKey();
+            ByteArrayWrapper value = entry.getValue();
+
+            if (value != null) {
+                contractDetails.put(key, value);
+            } else {
+                contractDetails.delete(key);
+            }
+        }
     }
 
     @Test
@@ -199,10 +217,10 @@ public class IContractDetailsTest {
         int deleteOdds = 7;
         Map<ByteArrayWrapper, ByteArrayWrapper> storage =
                 getKeyValueMappingInBulk(numEntries, deleteOdds);
-        cache1.setStorage(storage);
+        setStorage(cache1, storage);
         checkKeyValueMapping(cache1, storage);
 
-        cache2.setStorage(storage);
+        setStorage(cache2, storage);
         checkKeyValueMapping(cache2, storage);
     }
 
@@ -492,7 +510,7 @@ public class IContractDetailsTest {
         ByteArrayWrapper key =
                 new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
         storage.put(key, null);
-        cache.setStorage(storage);
+        setStorage(cache, storage);
         checkGetNonExistentPairing(cache, key);
     }
 

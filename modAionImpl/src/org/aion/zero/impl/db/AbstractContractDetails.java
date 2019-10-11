@@ -4,7 +4,6 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -135,21 +134,6 @@ public abstract class AbstractContractDetails implements ContractDetails {
         }
 
         return ret;
-    }
-
-    @VisibleForTesting
-    @Override
-    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
-        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
-            ByteArrayWrapper key = entry.getKey();
-            ByteArrayWrapper value = entry.getValue();
-
-            if (value != null) {
-                put(key, value);
-            } else {
-                delete(key);
-            }
-        }
     }
 
     @Override
