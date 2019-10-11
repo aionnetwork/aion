@@ -1,8 +1,11 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,11 +18,22 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Node;
 
 /** Contract details cache implementation. */
-public class ContractDetailsCacheImpl extends AbstractContractDetails {
+public class ContractDetailsCacheImpl implements ContractDetails {
 
     private Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
 
     public ContractDetails origContract;
+
+    private boolean dirty = false;
+    private boolean deleted = false;
+
+    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    private byte[] transformedCode;
+    // classes extending this rely on this value starting off as null
+    private byte[] objectGraph = null;
+
+    // using the default transaction type to specify undefined VM
+    private InternalVmType vmType = InternalVmType.EITHER;
 
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
@@ -39,12 +53,102 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         copy.storage = new HashMap<>(cache.storage);
         copy.setDirty(cache.isDirty());
         copy.setDeleted(cache.isDeleted());
-        copy.prune = cache.prune;
-        copy.detailsInMemoryStorageLimit = cache.detailsInMemoryStorageLimit;
         if (cache.getTransformedCode() != null) {
             copy.setTransformedCode(cache.getTransformedCode().clone());
         }
         return copy;
+    }
+
+    @Override
+    public byte[] getCode() {
+        return codes.size() == 0 ? EMPTY_BYTE_ARRAY : codes.values().iterator().next();
+    }
+
+    @Override
+    public byte[] getCode(byte[] codeHash) {
+        if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
+            return EMPTY_BYTE_ARRAY;
+        }
+        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code;
+    }
+
+    @Override
+    public void setTransformedCode(byte[] transformedCode) {
+        // ensures that the object is not set to dirty when copied
+        if (!Arrays.equals(this.transformedCode, transformedCode)) {
+            this.transformedCode = transformedCode;
+            setDirty(true);
+        }
+    }
+
+    @Override
+    public void setCode(byte[] code) {
+        if (code == null) {
+            return;
+        }
+        try {
+            codes.put(ByteArrayWrapper.wrap(h256(code)), code);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        setDirty(true);
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, byte[]> getCodes() {
+        return codes;
+    }
+
+    private void setCodes(Map<ByteArrayWrapper, byte[]> codes) {
+        this.codes = new HashMap<>(codes);
+    }
+
+    @Override
+    public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+        this.codes.putAll(codes);
+    }
+
+    @Override
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    @Override
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+
+        if (keys == null) {
+            throw new IllegalArgumentException("Input keys cannot be null");
+        } else {
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    storage.put(key, value);
+                }
+            }
+        }
+
+        return storage;
     }
 
     /**
@@ -258,8 +362,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);
         }
         copy.storage = getDeepCopyOfStorage();
-        copy.prune = this.prune;
-        copy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
         copy.setCodes(getDeepCopyOfCodes());
         copy.setDirty(this.isDirty());
         copy.setDeleted(this.isDeleted());
