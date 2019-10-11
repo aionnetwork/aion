@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
@@ -57,11 +58,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             copy.setTransformedCode(cache.getTransformedCode().clone());
         }
         return copy;
-    }
-
-    @Override
-    public byte[] getCode() {
-        return codes.size() == 0 ? EMPTY_BYTE_ARRAY : codes.values().iterator().next();
     }
 
     @Override
@@ -406,16 +402,17 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         ret.append("  VM: ").append(vmType.toString()).append("\n");
         ret.append("  dirty: ").append(isDirty()).append("\n");
 
-        byte[] code = getCode();
-        if (code != null) {
+        if (codes.size() == 0) {
             ret.append("  Code: ")
-                    .append(
-                            (code.length < 2
-                                    ? Hex.toHexString(getCode())
-                                    : code.length + " versions"))
-                    .append("\n");
+                .append(Hex.toHexString(EMPTY_DATA_HASH))
+                .append(" -> {}")
+                .append("\n");
         } else {
-            ret.append("  Code: null\n");
+            ret.append("  Code: ")
+                .append(codes.keySet().stream()
+                    .map(key -> key + " -> " + Hex.toHexString(codes.get(key)))
+                    .collect(Collectors.joining(",\n          ", "{ ", " }")))
+                .append("\n");
         }
 
         byte[] storage = getStorageHash();

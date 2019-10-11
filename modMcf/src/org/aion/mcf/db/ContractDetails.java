@@ -33,14 +33,6 @@ public interface ContractDetails {
     ByteArrayWrapper get(ByteArrayWrapper key);
 
     /**
-     * Returns the code of the address associated with this ContractDetails class. This is for
-     * addresses that are smart contracts.
-     *
-     * @return the code of the associated address.
-     */
-    byte[] getCode();
-
-    /**
      * Returns the code whose hash is codeHash.
      *
      * @param codeHash The hashed code.

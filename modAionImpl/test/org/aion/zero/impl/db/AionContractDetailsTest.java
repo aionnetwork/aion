@@ -1,6 +1,7 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.crypto.HashUtil.h256;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
@@ -93,7 +94,8 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
 
-        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode()));
+        byte[] codeHash = h256(code);
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
 
         assertEquals(
                 ByteUtil.toHexString(val_1),
@@ -193,7 +195,8 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
 
-        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode()));
+        byte[] codeHash = h256(code);
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
 
         assertTrue(address.equals(contractDetails_.getAddress()));
 
@@ -292,7 +295,8 @@ public class AionContractDetailsTest {
 
         assertEquals(deserialized.externalStorage, true);
         assertTrue(address.equals(deserialized.getAddress()));
-        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
+        byte[] codeHash = h256(code);
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
@@ -359,7 +363,8 @@ public class AionContractDetailsTest {
 
         assertTrue(deserialized.externalStorage);
         assertEquals(address, deserialized.getAddress());
-        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
+        byte[] codeHash = h256(code);
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
