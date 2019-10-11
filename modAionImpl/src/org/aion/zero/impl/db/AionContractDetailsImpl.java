@@ -7,6 +7,7 @@ import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,8 +16,8 @@ import java.util.Optional;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
+import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -26,8 +27,26 @@ import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Node;
+import org.aion.zero.impl.trie.SecureTrie;
 
-public class AionContractDetailsImpl extends AbstractContractDetails {
+public class AionContractDetailsImpl implements ContractDetails {
+    private boolean dirty = false;
+    private boolean deleted = false;
+
+    // a value > 0 indicates that prune should be for that many blocks.
+    private int prune = 0;
+    // indicates the maximum storage size before shifting to the storage database
+    // NOTE: updating this value can lead to incompatible data storage
+    private int detailsInMemoryStorageLimit = 64 * 1024;
+
+    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    private byte[] transformedCode;
+    // classes extending this rely on this value starting off as null
+    private byte[] objectGraph = null;
+
+    // using the default transaction type to specify undefined VM
+    private InternalVmType vmType = InternalVmType.EITHER;
+
     private ByteArrayKeyValueStore dataSource;
     private ByteArrayKeyValueStore objectGraphSource = null;
 
@@ -81,6 +100,89 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
 
         decode(code);
+    }
+
+    @Override
+    public byte[] getCode() {
+        return codes.size() == 0 ? EMPTY_BYTE_ARRAY : codes.values().iterator().next();
+    }
+
+    @Override
+    public byte[] getCode(byte[] codeHash) {
+        if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
+            return EMPTY_BYTE_ARRAY;
+        }
+        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code;
+    }
+
+    @Override
+    public byte[] getTransformedCode() {
+        return transformedCode;
+    }
+
+    @Override
+    public void setTransformedCode(byte[] transformedCode) {
+        // ensures that the object is not set to dirty when copied
+        if (!Arrays.equals(this.transformedCode, transformedCode)) {
+            this.transformedCode = transformedCode;
+            setDirty(true);
+        }
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, byte[]> getCodes() {
+        return codes;
+    }
+
+    private void setCodes(Map<ByteArrayWrapper, byte[]> codes) {
+        this.codes = new HashMap<>(codes);
+    }
+
+    @Override
+    public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+        this.codes.putAll(codes);
+    }
+
+    @Override
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    @Override
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    @Override
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+
+        if (keys == null) {
+            throw new IllegalArgumentException("Input keys cannot be null");
+        } else {
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    storage.put(key, value);
+                }
+            }
+        }
+
+        return storage;
     }
 
     /**
@@ -146,10 +248,17 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void setCode(byte[] code) {
-        super.setCode(code);
-        if (isDirty()) {
-            rlpEncoded = null;
+        if (code == null) {
+            return;
         }
+        try {
+            codes.put(ByteArrayWrapper.wrap(h256(code)), code);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        setDirty(true);
+        rlpEncoded = null;
     }
 
     @Override
