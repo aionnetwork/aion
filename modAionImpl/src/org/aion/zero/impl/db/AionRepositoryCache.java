@@ -224,7 +224,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
             ContractDetails cd = getContractDetails(address);
             if (cd != null) {
                 cd.setTransformedCode(null);
-                cd.setDeleted(true);
+                cd.delete();
             }
         } finally {
             fullyWriteUnlock();

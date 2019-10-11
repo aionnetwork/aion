@@ -121,12 +121,8 @@ public interface ContractDetails {
      */
     void setDirty(boolean dirty);
 
-    /**
-     * Sets the deleted value to deleted.
-     *
-     * @param deleted the deleted value.
-     */
-    void setDeleted(boolean deleted);
+    /** Marks the contract as deleted. */
+    void delete();
 
     /**
      * Returns true iff the ContractDetails is dirty.

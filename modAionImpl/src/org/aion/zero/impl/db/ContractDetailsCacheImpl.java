@@ -52,7 +52,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         }
         copy.storage = new HashMap<>(cache.storage);
         copy.setDirty(cache.isDirty());
-        copy.setDeleted(cache.isDeleted());
+        copy.deleted = cache.deleted;
         if (cache.getTransformedCode() != null) {
             copy.setTransformedCode(cache.getTransformedCode().clone());
         }
@@ -121,8 +121,8 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     @Override
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
+    public void delete() {
+        this.deleted = true;
     }
 
     @Override
@@ -200,10 +200,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             }
         } else { // check local storage
             value = storage.get(key);
-
-            if (value != null) {
-                value = value;
-            }
         }
         return value;
     }
@@ -364,7 +360,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         copy.storage = getDeepCopyOfStorage();
         copy.setCodes(getDeepCopyOfCodes());
         copy.setDirty(this.isDirty());
-        copy.setDeleted(this.isDeleted());
+        copy.deleted = this.deleted;
         if (this.getTransformedCode() != null) {
             copy.setTransformedCode(this.getTransformedCode().clone());
         }

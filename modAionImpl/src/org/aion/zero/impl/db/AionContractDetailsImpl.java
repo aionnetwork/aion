@@ -154,9 +154,8 @@ public class AionContractDetailsImpl implements ContractDetails {
         return dirty;
     }
 
-    @Override
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
+    public void delete() {
+        this.deleted = true;
     }
 
     @Override
@@ -739,7 +738,7 @@ public class AionContractDetailsImpl implements ContractDetails {
         aionContractDetailsCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.setDirty(this.isDirty());
-        aionContractDetailsCopy.setDeleted(this.isDeleted());
+        aionContractDetailsCopy.deleted = this.deleted;
         aionContractDetailsCopy.address = this.address;
         aionContractDetailsCopy.rlpEncoded =
                 (this.rlpEncoded == null)
