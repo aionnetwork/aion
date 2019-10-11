@@ -50,7 +50,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             copy.objectGraph = Arrays.copyOf(cache.objectGraph, cache.objectGraph.length);
         }
         copy.storage = new HashMap<>(cache.storage);
-        copy.setDirty(cache.isDirty());
+        copy.dirty = cache.dirty;
         copy.deleted = cache.deleted;
         return copy;
     }
@@ -75,7 +75,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             e.printStackTrace();
             return;
         }
-        setDirty(true);
+        dirty = true;
     }
 
     @Override
@@ -89,12 +89,15 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     @Override
     public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+        if (!this.codes.keySet().containsAll(codes.keySet())) {
+            this.dirty = true;
+        }
         this.codes.putAll(codes);
     }
 
     @Override
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
+    public void markAsDirty() {
+        this.dirty = true;
     }
 
     @Override
@@ -104,6 +107,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     @Override
     public void delete() {
+        // TODO: should we set dirty=true?
         this.deleted = true;
     }
 
@@ -146,7 +150,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         Objects.requireNonNull(value);
 
         storage.put(key, value);
-        setDirty(true);
+        dirty = true;
     }
 
     @Override
@@ -154,7 +158,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         Objects.requireNonNull(key);
 
         storage.put(key, null);
-        setDirty(true);
+        dirty = true;
     }
 
     /**
@@ -217,7 +221,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         Objects.requireNonNull(graph);
 
         objectGraph = graph;
-        setDirty(true);
+        dirty = true;
     }
 
     /**
@@ -293,8 +297,9 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         }
 
         origContract.appendCodes(getCodes());
-
-        origContract.setDirty(this.isDirty() || origContract.isDirty());
+        if (this.isDirty()) {
+            origContract.markAsDirty();
+        }
     }
 
     /**
@@ -332,7 +337,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         }
         copy.storage = getDeepCopyOfStorage();
         copy.setCodes(getDeepCopyOfCodes());
-        copy.setDirty(this.isDirty());
+        copy.dirty = this.dirty;
         copy.deleted = this.deleted;
         return copy;
     }

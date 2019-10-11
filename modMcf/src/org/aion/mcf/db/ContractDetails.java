@@ -92,12 +92,8 @@ public interface ContractDetails {
      */
     byte[] getStorageHash();
 
-    /**
-     * Sets the dirty value to dirty.
-     *
-     * @param dirty The dirty value.
-     */
-    void setDirty(boolean dirty);
+    /** Marks the contract as dirty (i.e. to be written). */
+    void markAsDirty();
 
     /** Marks the contract as deleted. */
     void delete();
