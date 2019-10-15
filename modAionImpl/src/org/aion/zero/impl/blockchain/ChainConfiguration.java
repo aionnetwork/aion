@@ -21,6 +21,7 @@ import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.ParentOppositeTypeRule;
 import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.StakingBlockTimeStampRule;
 import org.aion.zero.impl.valid.StakingSeedRule;
@@ -175,10 +176,27 @@ public class ChainConfiguration {
         return new GrandParentBlockHeaderValidator(unityRules);
     }
 
-    public ParentBlockHeaderValidator createChainParentBlockHeaderValidator() {
+    public ParentBlockHeaderValidator createPreUnityParentBlockHeaderValidator() {
         List<DependentBlockHeaderRule> rules =
                 Arrays.asList(
                         new BlockNumberRule(),
+                        new TimeStampRule(),
+                        new EnergyLimitRule(
+                                getConstants().getEnergyDivisorLimitLong(),
+                                getConstants().getEnergyLowerBoundLong()));
+
+        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
+
+        return new ParentBlockHeaderValidator(unityRules);
+    }    
+    
+    public ParentBlockHeaderValidator createUnityParentBlockHeaderValidator() {
+        List<DependentBlockHeaderRule> rules =
+                Arrays.asList(
+                        new BlockNumberRule(),
+                        new ParentOppositeTypeRule(),
                         new TimeStampRule(),
                         new EnergyLimitRule(
                                 getConstants().getEnergyDivisorLimitLong(),
