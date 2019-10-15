@@ -41,7 +41,7 @@ public class UnityHardForkTest {
         AvmTestConfig.supportOnlyAvmVersion1();
 
         MockitoAnnotations.initMocks(this);
-        doReturn(BigInteger.ONE).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
+        doReturn(new BigInteger("10000000000")).when(stakingContractHelper).getEffectiveStake(any(AionAddress.class), any(AionAddress.class));
         key =
                 new ECKeyEd25519()
                         .fromPrivate(
