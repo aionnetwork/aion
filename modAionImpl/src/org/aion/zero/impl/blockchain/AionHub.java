@@ -95,19 +95,6 @@ public class AionHub {
 
     private ReentrantLock blockTemplateLock;
 
-    /**
-     * Initialize as per the <a href=
-     * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
-     * holder pattern
-     */
-    private static class Holder {
-        static final AionHub INSTANCE = new AionHub();
-    }
-
-    public static AionHub inst() {
-        return Holder.INSTANCE;
-    }
-
     public AionHub() {
         initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
     }
