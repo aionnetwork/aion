@@ -280,33 +280,10 @@ public class AionPendingStateImpl implements IPendingState {
         pendingTxCache.clearCacheTxHash();
     }
 
-    private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion,
-            AionRepositoryImpl _repository,
-            AionBlockchainImpl _blockchain,
-            boolean test) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
-        ps.init(_blockchain, test);
+    public static AionPendingStateImpl create(CfgAion cfgAion, AionBlockchainImpl blockchain, AionRepositoryImpl repository, boolean forTest) {
+        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, repository);
+        ps.init(blockchain, forTest);
         return ps;
-    }
-
-    private static class Holder {
-
-        static final AionPendingStateImpl INSTANCE =
-                initializeAionPendingState(
-                        CfgAion.inst(),
-                        AionRepositoryImpl.inst(),
-                        AionBlockchainImpl.inst(),
-                        false);
-    }
-
-    public static AionPendingStateImpl inst() {
-        return Holder.INSTANCE;
-    }
-
-    public static AionPendingStateImpl createForTesting(
-            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return initializeAionPendingState(_cfgAion, _repository, _blockchain, true);
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {

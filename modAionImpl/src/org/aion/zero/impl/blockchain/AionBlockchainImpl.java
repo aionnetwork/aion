@@ -181,8 +181,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
         .synchronizedMap(new LRUMap<>(64));
 
-    private AionBlockchainImpl() {
-        this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration(), false);
+    public AionBlockchainImpl(CfgAion cfgAion, boolean forTest) {
+        this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(), new ChainConfiguration(), forTest);
     }
 
     protected AionBlockchainImpl(
@@ -349,14 +349,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         String monetaryForkNum = properties.getProperty("fork0.4.0");
         return monetaryForkNum == null ? null : Long.valueOf(monetaryForkNum);
-    }
-
-    public static AionBlockchainImpl inst() {
-        return Holder.INSTANCE;
-    }
-
-    public static AionBlockchainImpl instForTest() {
-        return HolderForTest.INSTANCE;
     }
 
     private static byte[] calcTxTrie(List<AionTransaction> transactions) {
@@ -2479,24 +2471,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new NullPointerException();
         }
         return this.getBlockStore().getTotalDifficultyForHash(hash.toBytes());
-    }
-
-    /**
-     * Initialize as per the <a href=
-     * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
-     * holder pattern
-     */
-    private static class Holder {
-        static final AionBlockchainImpl INSTANCE = new AionBlockchainImpl();
-    }
-
-    private static class HolderForTest {
-        static final AionBlockchainImpl INSTANCE =
-                new AionBlockchainImpl(
-                        generateBCConfig(CfgAion.inst()),
-                        AionRepositoryImpl.inst(),
-                        new ChainConfiguration(),
-                        true);
     }
 
     private class State {

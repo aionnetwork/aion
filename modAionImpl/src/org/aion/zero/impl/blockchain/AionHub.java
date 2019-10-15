@@ -70,7 +70,7 @@ public class AionHub {
 
     private AionPendingStateImpl mempool;
 
-    private IAionBlockchain blockchain;
+    private AionBlockchainImpl blockchain;
 
     // TODO: Refactor to interface later
     private AionRepositoryImpl repository;
@@ -96,7 +96,7 @@ public class AionHub {
     private ReentrantLock blockTemplateLock;
 
     public AionHub() {
-        initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
+        initializeHub(CfgAion.inst(), null, AionRepositoryImpl.inst(), false);
     }
 
     private void initializeHub(
@@ -111,15 +111,15 @@ public class AionHub {
         loadEventMgr(forTest);
         registerBlockEvents();
 
-        _blockchain.setEventManager(this.eventMgr);
-        this.blockchain = _blockchain;
+        // the current unit tests require passing in a different repository instance
+        // during normal execution we need to instantiate the repository
+        // for this reason we pass in null when a new instance is required
+        this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, forTest) : _blockchain;
+        blockchain.setEventManager(this.eventMgr);
 
         this.repository = _repository;
 
-        this.mempool =
-                forTest
-                        ? AionPendingStateImpl.createForTesting(_cfgAion, _blockchain, _repository)
-                        : AionPendingStateImpl.inst();
+        this.mempool = AionPendingStateImpl.create(cfg, blockchain, repository, forTest);
 
         try {
             loadBlockchain();
@@ -169,7 +169,7 @@ public class AionHub {
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(
-                _blockchain,
+                blockchain,
                 p2pMgr,
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
@@ -202,7 +202,7 @@ public class AionHub {
         this.mempool.setP2pMgr(this.p2pMgr);
 
         this.pow = new AionPoW();
-        this.pow.init(_blockchain, mempool, eventMgr);
+        this.pow.init(blockchain, mempool, eventMgr);
 
         blockTemplateLock = new ReentrantLock();
     }

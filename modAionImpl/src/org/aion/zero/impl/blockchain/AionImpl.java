@@ -44,7 +44,7 @@ public class AionImpl implements IAionChain {
         this.cfg = CfgAion.inst();
         if (forTest) {
             cfg.setGenesisForTest();
-            aionHub = AionHub.createForTesting(cfg, AionBlockchainImpl.instForTest(), AionRepositoryImpl.inst());
+            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), AionRepositoryImpl.inst());
         } else {
             aionHub = new AionHub();
         }
