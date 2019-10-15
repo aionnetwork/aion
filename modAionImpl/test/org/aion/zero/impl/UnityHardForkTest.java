@@ -2,14 +2,13 @@ package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
+import static org.aion.util.types.AddressUtils.ZERO_ADDRESS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.vm.avm.AvmConfigurations;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.blockchain.Block;
@@ -21,7 +20,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.StakingBlock;
-import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.Assert;
@@ -106,7 +104,8 @@ public class UnityHardForkTest {
                         .multiply(blockOneInfoPOW.getStakingDifficulty()),
                 blockTwoInfoPOW.getCumulativeDifficulty());
 
-        StakingBlock blockThreePOS = createNewStakingBlock(blockTwoInfoPOW, new byte[64]);
+        // Genesis staking block seed is assumed to be all zeroes
+        StakingBlock blockThreePOS = createNewStakingBlock(new byte[64]);
         assertNotNull(blockThreePOS);
 
         result = bc.tryToConnect(blockThreePOS);
@@ -130,17 +129,17 @@ public class UnityHardForkTest {
                         > 0);
     }
 
-    private StakingBlock createNewStakingBlock(Block parent, byte[] parentSeed) {
-        byte[] seedBlockOne = key.sign(parentSeed).getSignature();
-        StakingBlock blockOnePOS =
-                bc.createNewStakingBlock(parent, Collections.emptyList(), seedBlockOne);
+    private StakingBlock createNewStakingBlock(byte[] parentSeed) {
+        byte[] newSeed = key.sign(parentSeed).getSignature();
+        StakingBlock newPoSBlock =
+                bc.createStakingBlockTemplate(Collections.emptyList(), key.getPubKey(), newSeed, ZERO_ADDRESS.toByteArray());
 
-        if (blockOnePOS == null) {
+        if (newPoSBlock == null) {
             return null;
         }
 
-        byte[] mineHashSig = key.sign(blockOnePOS.getHeader().getMineHash()).getSignature();
-        blockOnePOS.seal(mineHashSig, key.getPubKey());
-        return blockOnePOS;
+        byte[] mineHashSig = key.sign(newPoSBlock.getHeader().getMineHash()).getSignature();
+        newPoSBlock.seal(mineHashSig, key.getPubKey());
+        return newPoSBlock;
     }
 }

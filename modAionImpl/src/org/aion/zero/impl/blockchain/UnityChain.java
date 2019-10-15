@@ -29,7 +29,8 @@ public interface UnityChain {
     Block createStakingBlockTemplate(
         List<AionTransaction> pendingTransactions,
         byte[] publicKey,
-        byte[] seed);
+        byte[] seed,
+        byte[] coinbase);
 
     Block getCachingStakingBlockTemplate(byte[] hash);
 

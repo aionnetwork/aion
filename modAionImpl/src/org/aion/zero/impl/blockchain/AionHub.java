@@ -647,12 +647,12 @@ public class AionHub {
         return Pair.of(context, currentBestBlockMineHash);
     }
 
-    public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey) {
+    public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
         StakingBlock blockTemplate;
         blockTemplateLock.lock();
         try {
             blockTemplate = (StakingBlock) blockchain.createStakingBlockTemplate(
-                    mempool.getPendingTransactions(), signingPublicKey, newSeed);
+                    mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
         } finally {
             blockTemplateLock.unlock();
         }
