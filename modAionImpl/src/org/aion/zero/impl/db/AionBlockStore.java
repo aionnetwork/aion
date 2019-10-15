@@ -24,7 +24,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -33,7 +32,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.BlockUtil;
 import org.slf4j.Logger;
 
-public class AionBlockStore implements IBlockStoreBase {
+public class AionBlockStore {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.name());
@@ -176,7 +175,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
         lock.lock();
 
@@ -224,7 +222,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public void flush() {
         lock.lock();
 
@@ -318,7 +315,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public Block getChainBlockByNumber(long number) {
         lock.lock();
 
@@ -522,7 +518,6 @@ public class AionBlockStore implements IBlockStoreBase {
      * @return block data itself stored at the block database
      * @see #getBlockByHashWithInfo(byte[])
      */
-    @Override
     public Block getBlockByHash(byte[] hash) {
         if (hash == null) {
             return null;
@@ -546,7 +541,6 @@ public class AionBlockStore implements IBlockStoreBase {
      * @return block with forking information stored at the block and index database
      * @see #getBlockByHash(byte[])
      */
-    @Override
     public boolean isBlockStored(byte[] hash, long number) {
         if (hash == null) {
             return false;
@@ -571,7 +565,6 @@ public class AionBlockStore implements IBlockStoreBase {
      * @param hash given hash of the block
      * @return the block data has matched hash with unity protocol info
      */
-    @Override
     public Block getBlockByHashWithInfo(byte[] hash) {
         if (hash == null) {
             return null;
@@ -606,7 +599,6 @@ public class AionBlockStore implements IBlockStoreBase {
      * @return 0 when the hash info is not matched or database corruption. Otherwise, return the
      *     total difficulty info stored in the index database.
      */
-    @Override
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         if (hash == null) {
             return null;
@@ -652,7 +644,6 @@ public class AionBlockStore implements IBlockStoreBase {
         return info;
     }
 
-    @Override
     public long getMaxNumber() {
         lock.lock();
 
@@ -663,7 +654,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number) {
         lock.lock();
 
@@ -681,7 +671,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
         if (hash == null || qty < 0) {
             return null;
@@ -703,7 +692,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
         if (hash == null || qty < 0) {
             return null;
@@ -728,7 +716,7 @@ public class AionBlockStore implements IBlockStoreBase {
         return result;
     }
 
-    @Override
+    /** @return the common block that was found during the re-branching */
     public long reBranch(Block forkBlock) {
         lock.lock();
 
@@ -890,7 +878,6 @@ public class AionBlockStore implements IBlockStoreBase {
         return currentLevel;
     }
 
-    @Override
     public void revert(long previousLevel) {
         lock.lock();
 
@@ -1002,7 +989,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public void pruneAndCorrect() {
         lock.lock();
 
@@ -1612,12 +1598,11 @@ public class AionBlockStore implements IBlockStoreBase {
         return null;
     }
 
-    @Override
     public void load() {
         if (checkIntegrity) {
-            //TODO : [unity] Disable the IntegrityCheck until we have fully difficulty check and tests
-            // relate with AKI-370
-            //indexIntegrityCheck();
+            // the integrity check updates the total difficulty of each block on the chain
+            // it uses difficulty addition (not the temporary unity multiplication rule)
+            indexIntegrityCheck();
         }
     }
 
@@ -1783,7 +1768,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public void close() {
         lock.lock();
 
@@ -1802,7 +1786,6 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    @Override
     public void rollback(long blockNumber) {
         if (blockNumber < 0L) {
             throw new IllegalArgumentException();
