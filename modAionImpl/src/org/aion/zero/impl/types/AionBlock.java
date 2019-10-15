@@ -53,7 +53,20 @@ public class AionBlock extends AbstractBlock {
      * @return A new empty block.
      */
     public static AionBlock newEmptyBlock() {
-        return new AionBlock(A0BlockHeader.Builder.newInstance().build(), Collections.emptyList());
+        return new AionBlock(
+                A0BlockHeader.Builder.newInstance()
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .withDefaultLogsBloom()
+                        .withDefaultDifficulty()
+                        .withDefaultExtraData()
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .build(),
+                Collections.emptyList());
     }
 
     /**
@@ -171,7 +184,12 @@ public class AionBlock extends AbstractBlock {
                 .withTimestamp(timestamp)
                 .withExtraData(extraData)
                 .withNonce(nonce)
-                .withEnergyLimit(energyLimit);
+                .withEnergyLimit(energyLimit)
+                .withDefaultStateRoot()
+                .withDefaultTxTrieRoot()
+                .withDefaultReceiptTrieRoot()
+                .withDefaultSolution();
+
         this.header = builder.build();
         this.parsed = true;
     }

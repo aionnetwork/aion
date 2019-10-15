@@ -45,7 +45,10 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty()
+                .withDefaultSolution();
 
         A0BlockHeader header = builder.build();
 
@@ -78,7 +81,11 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty()
+                .withDefaultNonce()
+                .withDefaultSolution();
 
         A0BlockHeader header = builder.build();
 
@@ -113,7 +120,11 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty()
+                .withDefaultSolution()
+                .withDefaultStateRoot();
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();

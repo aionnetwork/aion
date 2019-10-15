@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -18,7 +19,22 @@ public class ResBlocksHeadersTest {
     static {
         // replace with well-formed header
         A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
-        bh1 = builder.build();
+        bh1 =
+                builder.withNumber(1)
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withEnergyConsumed(1)
+                        .withEnergyLimit(1)
+                        .withTimestamp(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDefaultExtraData()
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .build();
     }
 
     @Test

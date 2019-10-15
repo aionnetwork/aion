@@ -573,6 +573,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 .withEnergyLimit(this.genesis.getNrgLimit())
                                 .withDifficulty(this.genesis.getDifficulty())
                                 .withTimestamp(0)
+                                .withDefaultSolution()
+                                .withDefaultLogsBloom()
+                                .withDefaultNonce()
+                                .withDefaultParentHash()
+                                .withDefaultCoinbase()
+                                .withDefaultExtraData()
                                 .build();
 
                 Block block = new AionBlock(header, Collections.emptyList());
@@ -597,7 +603,13 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             .withEnergyLimit(this.getBestBlock().getNrgLimit())
                             .withTimestamp(1)
                             .withNumber(blockNumber)
+                            .withDefaultSolution()
+                            .withDefaultLogsBloom()
+                            .withDefaultNonce()
+                            .withDefaultCoinbase()
+                            .withDefaultExtraData()
                             .build();
+
             AionBlock block = new AionBlock(header, Collections.emptyList());
             this.setBestBlock(block);
             this.getBlockStore().saveBlock(block, this.genesis.getTotalDifficulty(), true);

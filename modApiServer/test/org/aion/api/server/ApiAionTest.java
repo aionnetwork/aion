@@ -32,7 +32,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
@@ -147,8 +146,6 @@ public class ApiAionTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
-        if (folder == null) return;
-
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
@@ -158,8 +155,6 @@ public class ApiAionTest {
             if (file.lastModified() >= testStartTime) file.delete();
         }
         folder = new File(DATABASE_PATH);
-
-        if (folder == null) return;
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -204,12 +199,13 @@ public class ApiAionTest {
         // retrieval based on block number that also gives total difficulty
         Map.Entry<Block, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
 
+        assertNotNull(rslt);
         assertTrue(rslt.getKey().isEqual(blk));
 
         // check because blk might be the genesis block
         assertEquals(
                 rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore())
+                impl.getBlockchain().getBlockStore()
                         .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty

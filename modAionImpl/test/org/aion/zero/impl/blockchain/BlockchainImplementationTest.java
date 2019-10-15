@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.aion.base.AionTransaction;
-import org.aion.base.ConstantUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
@@ -692,8 +691,15 @@ public class BlockchainImplementationTest {
                         .withNumber(parent.getNumber() + 1)
                         .withTimestamp(2 * System.currentTimeMillis())
                         .withExtraData(parent.getExtraData())
-                        .withTxTrieRoot(ConstantUtil.EMPTY_TRIE_HASH)
-                        .withEnergyLimit(parent.getNrgLimit());
+                        .withDefaultTxTrieRoot()
+                        .withEnergyLimit(parent.getNrgLimit())
+                        .withDefaultSolution()
+                        .withDefaultNonce()
+                        .withDefaultDifficulty()
+                        .withDefaultLogsBloom()
+                        .withDefaultReceiptTrieRoot()
+                        .withDefaultStateRoot();
+
         AionBlock block = new AionBlock(headerBuilder.build(), Collections.emptyList());
 
         assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.INVALID_BLOCK);

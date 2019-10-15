@@ -1153,7 +1153,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     .withTimestamp(time)
                     .withExtraData(minerExtraData)
                     .withTxTrieRoot(calcTxTrie(txs))
-                    .withEnergyLimit(energyLimit);
+                    .withEnergyLimit(energyLimit)
+                    .withDefaultStateRoot()
+                    .withDefaultReceiptTrieRoot()
+                    .withDefaultLogsBloom()
+                    .withDefaultDifficulty()
+                    .withDefaultNonce()
+                    .withDefaultSolution();
+
             block = new AionBlock(headerBuilder.build(), txs);
         } catch (Exception e) {
             LOG.error("Construct new mining block header exception:", e);

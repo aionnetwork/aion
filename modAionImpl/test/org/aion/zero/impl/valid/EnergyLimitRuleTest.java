@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.junit.Test;
@@ -22,12 +23,42 @@ public class EnergyLimitRuleTest {
                         constants.getEnergyDivisorLimitLong(), constants.getEnergyLowerBoundLong());
 
         A0BlockHeader parentHeader =
-                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL).build();
+                A0BlockHeader.Builder.newInstance()
+                        .withEnergyLimit(INITIAL_VAL)
+                        .withNumber(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withDefaultExtraData()
+                        .withEnergyConsumed(1)
+                        .withTimestamp(1)
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .build();
 
         long boundShiftLimit = INITIAL_VAL / DIVISOR;
 
         A0BlockHeader upperCurrentBlock =
-                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL + boundShiftLimit).build();
+                A0BlockHeader.Builder.newInstance()
+                        .withEnergyLimit(INITIAL_VAL + boundShiftLimit)
+                        .withNumber(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withDefaultExtraData()
+                        .withEnergyConsumed(1)
+                        .withTimestamp(1)
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .build();
 
         List<RuleError> errors = new ArrayList<>();
 
@@ -40,6 +71,19 @@ public class EnergyLimitRuleTest {
         A0BlockHeader invalidCurrentHeader =
                 A0BlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL + boundShiftLimit + 1)
+                        .withNumber(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withDefaultExtraData()
+                        .withEnergyConsumed(1)
+                        .withTimestamp(1)
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
                         .build();
 
         res = rule.validate(invalidCurrentHeader, parentHeader, errors);
@@ -49,7 +93,22 @@ public class EnergyLimitRuleTest {
 
         // lower bound
         A0BlockHeader lowerCurrentHeader =
-                A0BlockHeader.Builder.newInstance().withEnergyLimit(INITIAL_VAL - boundShiftLimit).build();
+                A0BlockHeader.Builder.newInstance()
+                        .withEnergyLimit(INITIAL_VAL - boundShiftLimit)
+                        .withNumber(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withDefaultExtraData()
+                        .withEnergyConsumed(1)
+                        .withTimestamp(1)
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .build();
 
         res = rule.validate(lowerCurrentHeader, parentHeader, errors);
         assertThat(res).isEqualTo(true);
@@ -59,6 +118,19 @@ public class EnergyLimitRuleTest {
         A0BlockHeader invalidLowerCurrentHeader =
                 A0BlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL - boundShiftLimit - 1)
+                        .withNumber(1)
+                        .withDefaultParentHash()
+                        .withDefaultCoinbase()
+                        .withDefaultLogsBloom()
+                        .withDifficulty(ByteUtil.intToBytes(1))
+                        .withDefaultExtraData()
+                        .withEnergyConsumed(1)
+                        .withTimestamp(1)
+                        .withDefaultNonce()
+                        .withDefaultSolution()
+                        .withDefaultStateRoot()
+                        .withDefaultTxTrieRoot()
+                        .withDefaultReceiptTrieRoot()
                         .build();
 
         res = rule.validate(invalidLowerCurrentHeader, parentHeader, errors);
@@ -71,9 +143,41 @@ public class EnergyLimitRuleTest {
     public void testEnergyLimitLowerBound() {
         final long INITIAL_VAL = 0l;
 
-        A0BlockHeader parentHeader = A0BlockHeader.Builder.newInstance().withEnergyLimit(0l).build();
+        A0BlockHeader parentHeader =
+                A0BlockHeader.Builder.newInstance()
+                        .withEnergyLimit(0l)
+                        .withDefaultExtraData()
+                        .withDefaultCoinbase()
+                        .withDefaultParentHash()
+                        .withDefaultNonce()
+                        .withDefaultLogsBloom()
+                        .withDefaultSolution()
+                        .withDefaultDifficulty()
+                        .withDefaultStateRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .withDefaultTxTrieRoot()
+                        .withTimestamp(0)
+                        .withEnergyConsumed(21000)
+                        .withNumber(1)
+                        .build();
 
-        A0BlockHeader currentHeader = A0BlockHeader.Builder.newInstance().withEnergyLimit(1l).build();
+        A0BlockHeader currentHeader =
+                A0BlockHeader.Builder.newInstance()
+                        .withEnergyLimit(1l)
+                        .withDefaultExtraData()
+                        .withDefaultCoinbase()
+                        .withDefaultParentHash()
+                        .withDefaultNonce()
+                        .withDefaultLogsBloom()
+                        .withDefaultSolution()
+                        .withDefaultDifficulty()
+                        .withDefaultStateRoot()
+                        .withDefaultReceiptTrieRoot()
+                        .withDefaultTxTrieRoot()
+                        .withTimestamp(1)
+                        .withEnergyConsumed(21000)
+                        .withNumber(2)
+                        .build();
 
         List<RuleError> errors = new ArrayList<>();
 

@@ -196,8 +196,8 @@ public final class A0BlockHeader implements BlockHeader {
          * Builder parameters, not related to header data structure
          */
         boolean isFromUnsafeSource;
-        private static byte[] EMPTY_SOLUTION = new byte[SOLUTIONSIZE];
-        private static byte[] EMPTY_BLOOM = new byte[BLOOM_BYTE_SIZE];
+        public static byte[] EMPTY_SOLUTION = new byte[SOLUTIONSIZE];
+        public static byte[] EMPTY_BLOOM = new byte[BLOOM_BYTE_SIZE];
 
         public static Builder newInstance(boolean fromUnsafeSource)
         {
@@ -498,16 +498,53 @@ public final class A0BlockHeader implements BlockHeader {
 
         public A0BlockHeader build() {
             // Formalize the data
-            parentHash = parentHash == null ? HashUtil.EMPTY_DATA_HASH : parentHash;
-            coinbase = coinbase == null ? AddressUtils.ZERO_ADDRESS : coinbase;
-            stateRoot = stateRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : stateRoot;
-            txTrieRoot = txTrieRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : txTrieRoot;
-            receiptTrieRoot = receiptTrieRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : receiptTrieRoot;
-            logsBloom = logsBloom == null ? EMPTY_BLOOM : logsBloom;
-            difficulty = difficulty == null ? ByteUtil.EMPTY_HALFWORD : difficulty;
-            extraData = extraData == null ? ByteUtil.EMPTY_WORD : extraData;
-            nonce = nonce == null ? ByteUtil.EMPTY_WORD : nonce;
-            solution = solution == null ? EMPTY_SOLUTION : solution;
+            if (parentHash == null) {
+                throw new NullPointerException("the header parentHash is null");
+            }
+
+            if (coinbase == null) {
+                throw new NullPointerException("the header coinbasae is null");
+            }
+
+            if (stateRoot == null) {
+                throw new NullPointerException("the header stateRoot is null");
+            }
+
+            if (txTrieRoot == null) {
+                throw new NullPointerException("the header txTrieRoot is null");
+            }
+
+            if (receiptTrieRoot == null) {
+                throw new NullPointerException("the header receiptTrieRoot is null");
+            }
+
+            if (logsBloom == null) {
+                throw new NullPointerException("the header logBloom is null");
+            }
+
+            if (difficulty == null) {
+                throw new NullPointerException("the header difficulty is null");
+            }
+
+            if (extraData == null) {
+                throw new NullPointerException("the header extraData is null");
+            }
+
+            if (nonce == null) {
+                throw new NullPointerException("the header nonce is null");
+            }
+
+            if (solution == null) {
+                throw new NullPointerException("the header solution is null");
+            }
+
+            if (energyLimit < 0L) {
+                throw new IllegalArgumentException("the header energyLimit can not lower than 0");
+            }
+
+            if (energyConsumed < 0L) {
+                throw new IllegalArgumentException("the header energyConsumed can not lower than 0");
+            }
 
             return new A0BlockHeader(this);
         }
@@ -533,6 +570,56 @@ public final class A0BlockHeader implements BlockHeader {
             solution = header.getSolution();
 
             return this;
+        }
+
+        public Builder withDefaultStateRoot() {
+            stateRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultReceiptTrieRoot() {
+            receiptTrieRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultTxTrieRoot() {
+            txTrieRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultLogsBloom() {
+            logsBloom = EMPTY_BLOOM;
+            return this;
+        }
+
+        public Builder withDefaultDifficulty() {
+            difficulty = ByteUtil.EMPTY_HALFWORD;
+            return this;
+        }
+
+        public Builder withDefaultNonce() {
+            nonce = ByteUtil.EMPTY_WORD;
+            return this;
+        }
+
+        public Builder withDefaultSolution() {
+            solution = EMPTY_SOLUTION;
+            return this;
+        }
+
+        public Builder withDefaultParentHash() {
+            parentHash = ByteUtil.EMPTY_WORD;
+            return this;
+        }
+
+        public Builder withDefaultCoinbase() {
+            coinbase = AddressUtils.ZERO_ADDRESS;
+            return this;
+        }
+
+        public Builder withDefaultExtraData() {
+            extraData = ByteUtil.EMPTY_WORD;
+            return  this;
         }
     }
 
