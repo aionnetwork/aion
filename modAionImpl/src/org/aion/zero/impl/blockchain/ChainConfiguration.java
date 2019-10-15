@@ -138,16 +138,6 @@ public class ChainConfiguration {
         return new BlockHeaderValidator(unityRules);
     }
 
-    public ParentBlockHeaderValidator createSealParentBlockHeaderValidator() {
-        List<DependentBlockHeaderRule> posRules =
-                Arrays.asList(new StakingSeedRule(), new StakingBlockTimeStampRule());
-
-        Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
-
-        return new ParentBlockHeaderValidator(unityRules);
-    }
-
     public GrandParentBlockHeaderValidator createPreUnityGrandParentHeaderValidator() {
 
         List<GrandParentDependantBlockHeaderRule> powRules =
@@ -193,7 +183,7 @@ public class ChainConfiguration {
     }    
     
     public ParentBlockHeaderValidator createUnityParentBlockHeaderValidator() {
-        List<DependentBlockHeaderRule> rules =
+        List<DependentBlockHeaderRule> PoWrules =
                 Arrays.asList(
                         new BlockNumberRule(),
                         new ParentOppositeTypeRule(),
@@ -201,10 +191,20 @@ public class ChainConfiguration {
                         new EnergyLimitRule(
                                 getConstants().getEnergyDivisorLimitLong(),
                                 getConstants().getEnergyLowerBoundLong()));
+        
+        List<DependentBlockHeaderRule> PoSrules =
+                Arrays.asList(
+                        new BlockNumberRule(),
+                        new ParentOppositeTypeRule(),
+                        new StakingBlockTimeStampRule(),
+                        new TimeStampRule(),
+                        new EnergyLimitRule(
+                                getConstants().getEnergyDivisorLimitLong(),
+                                getConstants().getEnergyLowerBoundLong()));
 
         Map<BlockSealType, List<DependentBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, PoWrules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, PoSrules);
 
         return new ParentBlockHeaderValidator(unityRules);
     }

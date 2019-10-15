@@ -28,10 +28,9 @@ public class StakingBlockTimeStampRule implements DependentBlockHeaderRule {
             BlockHeaderValidatorUtil.addError("Invalid header type", this.getClass(), errors);
             return false;
         }
-
-        if (!(dependency instanceof StakingBlockHeader)) {
-            BlockHeaderValidatorUtil.addError(
-                    "Invalid parent header type", this.getClass(), errors);
+        
+        if (dependency instanceof StakingBlockHeader) {
+            BlockHeaderValidatorUtil.addError("Invalid parent header type", this.getClass(), errors);
             return false;
         }
 

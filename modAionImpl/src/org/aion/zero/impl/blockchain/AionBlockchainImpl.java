@@ -128,7 +128,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator unityGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
-    private final ParentBlockHeaderValidator sealParentBlockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
     public final BeaconHashValidator beaconHashValidator;
 
@@ -204,7 +203,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        sealParentBlockHeaderValidator = chainConfiguration.createSealParentBlockHeaderValidator();
         preUnityParentBlockHeaderValidator = chainConfig.createPreUnityParentBlockHeaderValidator();
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
@@ -1331,7 +1329,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             newTimestamp =
                     Long.max(
-                            parentStakingBlockHeader.getTimestamp() + newDelta,
+                            parent.getHeader().getTimestamp() + newDelta,
                             parent.getHeader().getTimestamp() + 1);
         } else {
             newTimestamp = System.currentTimeMillis() / THOUSAND_MS;
@@ -1646,10 +1644,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return false;
             }
 
-            if (!unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, null)) {
-                return false;
-            }
-
             Block sealParent;
             if (parent.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
                 sealParent = getBlockByHash(parent.getAntiparentHash());
@@ -1674,7 +1668,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
 
-            if (!sealParentBlockHeaderValidator.validate(header, sealParent.getHeader(), LOG, stake)) {
+            if (!unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, stake)) {
                 return false;
             }
 
