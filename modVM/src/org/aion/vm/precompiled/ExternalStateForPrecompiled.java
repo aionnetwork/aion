@@ -2,7 +2,6 @@ package org.aion.vm.precompiled;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -17,7 +16,7 @@ import org.aion.vm.common.TxNrgRule;
  * contract module.
  */
 public final class ExternalStateForPrecompiled implements IExternalStateForPrecompiled {
-    private final RepositoryCache<AccountState, IBlockStoreBase> repository;
+    private final RepositoryCache<AccountState> repository;
     private final long blockNumber;
     private final boolean isLocalCall;
     private final boolean allowNonceIncrement;
@@ -34,7 +33,7 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      * @param isLocalCall Whether this is a local call or not (eth_call).
      * @param allowNonceIncrement Whether or not to increment account nonces.
      */
-    public ExternalStateForPrecompiled(RepositoryCache<AccountState, IBlockStoreBase> repository, long blockNumber, boolean isLocalCall, boolean fork032Enabled, boolean allowNonceIncrement) {
+    public ExternalStateForPrecompiled(RepositoryCache<AccountState> repository, long blockNumber, boolean isLocalCall, boolean fork032Enabled, boolean allowNonceIncrement) {
         if (repository == null) {
             throw new NullPointerException("Cannot create precompiled external state with null repository!");
         }

@@ -10,7 +10,6 @@ import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
@@ -67,7 +66,7 @@ public final class BulkExecutor {
             long blockNrgLimit,
             AionAddress blockCoinbase,
             List<AionTransaction> transactions,
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             boolean isLocalCall,
             boolean incrementSenderNonce,
             boolean fork040Enable,
@@ -146,7 +145,7 @@ public final class BulkExecutor {
             long blockNrgLimit,
             AionAddress blockCoinbase,
             AionTransaction transaction,
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             boolean isLocalCall,
             boolean incrementSenderNonce,
             boolean fork040Enable,
@@ -198,7 +197,7 @@ public final class BulkExecutor {
             long blockNrgLimit,
             AionAddress blockCoinbase,
             List<AionTransaction> transactions,
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             PostExecutionWork postExecutionWork,
             Logger logger,
             boolean checkBlockEnergyLimit,
@@ -302,7 +301,7 @@ public final class BulkExecutor {
      * list of transactions and includes all subsequent transactions that are avm-bound.
      */
     private static List<AionTxExecSummary> executeNextBatchOfAvmTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             List<AionTransaction> transactions,
             int currentIndex,
             BigInteger blockDifficulty,
@@ -353,7 +352,7 @@ public final class BulkExecutor {
      * list of transactions and includes all subsequent transactions that are fvm-bound.
      */
     private static List<AionTxExecSummary> executeNextBatchOfFvmTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             List<AionTransaction> transactions,
             int currentIndex,
             byte[] blockDifficulty,
@@ -404,7 +403,7 @@ public final class BulkExecutor {
      * that are precompiled-bound.
      */
     private static List<AionTxExecSummary> executeNextBatchOfPrecompiledTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             List<AionTransaction> transactions,
             int currentIndex,
             long blockNumber,
@@ -570,7 +569,7 @@ public final class BulkExecutor {
     private static InternalVmType getInternalVmType(
             RepositoryCache repository, AionAddress destination) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState, IBlockStoreBase> track = repository.startTracking();
+        RepositoryCache<AccountState> track = repository.startTracking();
         AccountState accountState = track.getAccountState(destination);
 
         InternalVmType vm;

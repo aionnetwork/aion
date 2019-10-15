@@ -41,7 +41,6 @@ import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.mcf.config.CfgFork;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.TransactionStore;
@@ -109,7 +108,7 @@ public class AionPendingStateImpl implements IPendingState {
 
     private IEventMgr evtMgr = null;
 
-    private RepositoryCache<AccountState, IBlockStoreBase> pendingState;
+    private RepositoryCache<AccountState> pendingState;
 
     private AtomicReference<Block> best;
 
@@ -430,7 +429,7 @@ public class AionPendingStateImpl implements IPendingState {
         this.evtMgr.registerEvent(evts);
     }
 
-    public synchronized RepositoryCache<?, ?> getRepository() {
+    public synchronized RepositoryCache<?> getRepository() {
         // Todo : no class use this method.
         return pendingState;
     }

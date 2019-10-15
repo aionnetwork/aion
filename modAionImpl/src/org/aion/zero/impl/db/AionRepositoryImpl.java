@@ -47,8 +47,7 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** Has direct database connection. */
-public class AionRepositoryImpl
-        extends AbstractRepository<AionBlockStore> {
+public class AionRepositoryImpl extends AbstractRepository {
 
     private TransactionStore transactionStore;
 

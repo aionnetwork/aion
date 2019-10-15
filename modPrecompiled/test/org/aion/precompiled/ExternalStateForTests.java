@@ -6,7 +6,6 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.RepositoryConfig;
@@ -23,9 +22,9 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
  * A basic testing implementation of the interface.
  */
 public final class ExternalStateForTests implements IExternalStateForPrecompiled {
-    private final RepositoryCache<AccountState, IBlockStoreBase> repository;
+    private final RepositoryCache<AccountState> repository;
 
-    private ExternalStateForTests(RepositoryCache<AccountState, IBlockStoreBase> repository) {
+    private ExternalStateForTests(RepositoryCache<AccountState> repository) {
         this.repository = repository;
     }
 
@@ -52,7 +51,7 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
         return new ExternalStateForTests(repository);
     }
 
-    public static ExternalStateForTests usingRepository(RepositoryCache<AccountState, IBlockStoreBase> repository) {
+    public static ExternalStateForTests usingRepository(RepositoryCache<AccountState> repository) {
         return new ExternalStateForTests(repository);
     }
 

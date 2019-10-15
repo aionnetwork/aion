@@ -3,7 +3,6 @@ package org.aion.vm.common;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 
@@ -28,7 +27,7 @@ public final class PostExecutionWork {
     /**
      * Performs some work.
      **/
-    public void doWork(RepositoryCache<AccountState, IBlockStoreBase> repositoryCache, AionTxExecSummary summary, AionTransaction transaction) {
+    public void doWork(RepositoryCache<AccountState> repositoryCache, AionTxExecSummary summary, AionTransaction transaction) {
         this.postExecutionLogic.apply(this.repository, repositoryCache, summary, transaction);
     }
 }

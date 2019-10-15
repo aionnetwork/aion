@@ -12,7 +12,6 @@ import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.FvmWrappedTransactionResult;
 import org.aion.fastvm.IExternalStateForFvm;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
@@ -59,7 +58,7 @@ public final class FvmTransactionExecutor {
      * @return a list of transaction summaries pertaining to the transactions.
      */
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             byte[] blockDifficulty,
             long blockNumber,
             long blockTimestamp,

@@ -1,5 +1,6 @@
 package org.aion.zero.impl.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,13 +23,13 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.mcf.config.CfgNetP2p;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
@@ -288,8 +289,13 @@ public class AionHub {
         return blockchain;
     }
 
-    public IBlockStoreBase getBlockStore() {
+    @VisibleForTesting
+    AionBlockStore getBlockStore() {
         return this.repository.getBlockStore();
+    }
+
+    public BigInteger getTotalDifficultyForHash(byte[] hash) {
+        return getBlockStore().getTotalDifficultyForHash(hash);
     }
 
     public AionPendingStateImpl getPendingState() {

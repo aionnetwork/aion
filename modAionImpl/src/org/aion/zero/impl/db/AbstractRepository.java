@@ -22,7 +22,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
 import org.aion.mcf.config.CfgDb.Props;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.zero.impl.trie.Trie;
@@ -32,8 +31,7 @@ import org.slf4j.Logger;
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 
 /** Abstract Repository class. */
-public abstract class AbstractRepository<BSB extends IBlockStoreBase>
-        implements Repository<AccountState, BSB> {
+public abstract class AbstractRepository implements Repository<AccountState> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -97,7 +95,7 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
     protected boolean pruneEnabled = true;
 
     // Current blockstore.
-    public BSB blockStore;
+    public AionBlockStore blockStore;
 
     // pending block store
     protected Properties pendingStoreProperties;
@@ -350,9 +348,13 @@ public abstract class AbstractRepository<BSB extends IBlockStoreBase>
                         + props);
     }
 
-    @Override
-    public BSB getBlockStore() {
+    public AionBlockStore getBlockStore() {
         return this.blockStore;
+    }
+
+    @Override
+    public byte[] getBlockHashByNumber(long blockNumber) {
+        return this.blockStore.getBlockHashByNumber(blockNumber);
     }
 
     @Override

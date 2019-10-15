@@ -15,7 +15,6 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.config.CfgDb;
 import org.aion.base.AccountState;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
@@ -86,7 +85,7 @@ public class DBUtils {
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
-        IBlockStoreBase store = blockchain.getBlockStore();
+        AionBlockStore store = blockchain.getBlockStore();
 
         Block bestBlock = store.getBestBlock();
         if (bestBlock == null) {
@@ -264,7 +263,7 @@ public class DBUtils {
 
     /** Used by internal world state recovery method. */
     public static Status revertTo(IAionBlockchain blockchain, long nbBlock) {
-        IBlockStoreBase store = blockchain.getBlockStore();
+        AionBlockStore store = blockchain.getBlockStore();
 
         Block bestBlock = store.getBestBlock();
         if (bestBlock == null) {
@@ -825,7 +824,7 @@ public class DBUtils {
         try {
             Block bestBlock = blockchain.getBlockStore().getBestBlock();
 
-            Repository<AccountState, IBlockStoreBase> repository =
+            Repository<AccountState> repository =
                     blockchain
                             .getRepository()
                             .getSnapshotTo(((AionBlock) bestBlock).getStateRoot())

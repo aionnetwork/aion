@@ -48,7 +48,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.core.FastImportResult;
@@ -141,7 +140,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
-    private RepositoryCache<AccountState, IBlockStoreBase> track;
+    private RepositoryCache<AccountState> track;
     private TransactionStore transactionStore;
     private Block bestBlock;
     private StakingBlock bestStakingBlock;

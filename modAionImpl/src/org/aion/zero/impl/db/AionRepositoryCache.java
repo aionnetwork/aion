@@ -16,7 +16,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -25,13 +24,13 @@ import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
-public class AionRepositoryCache implements RepositoryCache<AccountState, IBlockStoreBase> {
+public class AionRepositoryCache implements RepositoryCache<AccountState> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** the repository being tracked */
-    protected Repository<AccountState, IBlockStoreBase> repository;
+    protected Repository<AccountState> repository;
 
     /** local accounts cache */
     protected Map<AionAddress, AccountState> cachedAccounts;
@@ -423,14 +422,9 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
         return repository.getSnapshotTo(root);
     }
 
-    // This method was originally disabled because changes to the blockstore
-    // can not be reverted. The reason for re-enabling it is that we have no way
-    // to
-    // get a reference of the blockstore without using
-    // NProgInvoke/NcpProgInvoke.
     @Override
-    public IBlockStoreBase getBlockStore() {
-        return repository.getBlockStore();
+    public byte[] getBlockHashByNumber(long blockNumber) {
+        return repository.getBlockHashByNumber(blockNumber);
     }
 
     /** Lock to prevent writing on both accounts and details. */

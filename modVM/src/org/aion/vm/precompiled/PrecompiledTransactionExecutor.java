@@ -6,7 +6,6 @@ import java.util.List;
 import org.aion.vm.common.PostExecutionWork;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.ContractExecutor;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -24,7 +23,7 @@ import org.slf4j.Logger;
 public final class PrecompiledTransactionExecutor {
 
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState, IBlockStoreBase> repository,
+            RepositoryCache<AccountState> repository,
             long blockNumber,
             AionAddress blockCoinbase,
             AionTransaction[] transactions,

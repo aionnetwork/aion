@@ -4,9 +4,9 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.util.types.Hash256;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.db.AionBlockStore;
 
 public interface UnityChain {
 
@@ -18,7 +18,7 @@ public interface UnityChain {
 
     Block getBlockByHash(byte[] hash);
 
-    IBlockStoreBase getBlockStore();
+    AionBlockStore getBlockStore();
 
     Block getBestBlock();
 

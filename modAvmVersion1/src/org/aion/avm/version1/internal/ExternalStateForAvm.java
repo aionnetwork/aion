@@ -6,7 +6,6 @@ import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
@@ -22,7 +21,7 @@ import org.aion.util.types.ByteArrayWrapper;
  * a new equivalent object for whatever world we are talking to.
  */
 public final class ExternalStateForAvm implements IExternalState, IAvmExternalState {
-    private RepositoryCache<AccountState, IBlockStoreBase> repositoryCache;
+    private RepositoryCache<AccountState> repositoryCache;
     private BigInteger blockDifficulty;
     private AionAddress blockCoinbase;
     private IEnergyRules energyRules;
@@ -31,7 +30,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     private long blockTimestamp;
     private long blockNrgLimit;
 
-    public ExternalStateForAvm(RepositoryCache<AccountState, IBlockStoreBase> repositoryCache, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
+    public ExternalStateForAvm(RepositoryCache<AccountState> repositoryCache, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
         this.repositoryCache = repositoryCache;
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
@@ -63,7 +62,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
         this.repositoryCache.rollback();
     }
 
-    public RepositoryCache<AccountState, IBlockStoreBase> getRepositoryCache() {
+    public RepositoryCache<AccountState> getRepositoryCache() {
         return this.repositoryCache;
     }
 
@@ -160,7 +159,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
-        return this.repositoryCache.getBlockStore().getBlockHashByNumber(blockNumber);
+        return this.repositoryCache.getBlockHashByNumber(blockNumber);
     }
 
     @Override
@@ -215,7 +214,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     private InternalVmType getVmType(AionAddress destination) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState, IBlockStoreBase> track = repositoryCache.startTracking();
+        RepositoryCache<AccountState> track = repositoryCache.startTracking();
         AccountState accountState = track.getAccountState(destination);
 
         InternalVmType vm;

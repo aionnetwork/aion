@@ -2,7 +2,6 @@ package org.aion.avm.stub;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
@@ -11,7 +10,7 @@ import org.aion.types.AionAddress;
  */
 public interface IAvmExternalStateBuilder {
 
-    public IAvmExternalStateBuilder withRepository(RepositoryCache<AccountState, IBlockStoreBase> repository);
+    public IAvmExternalStateBuilder withRepository(RepositoryCache<AccountState> repository);
 
     public IAvmExternalStateBuilder withDifficulty(BigInteger difficulty);
 

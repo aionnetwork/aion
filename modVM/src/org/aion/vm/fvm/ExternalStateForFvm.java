@@ -8,7 +8,6 @@ import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
@@ -26,7 +25,7 @@ import org.aion.vm.common.TxNrgRule;
  * An implementation of the {@link IExternalStateForFvm} interface defined in the FVM.
  */
 public final class ExternalStateForFvm implements IExternalStateForFvm {
-    private final RepositoryCache<AccountState, IBlockStoreBase> repository;
+    private final RepositoryCache<AccountState> repository;
     private final AionAddress miner;
     private final boolean isLocalCall;
     private final boolean allowNonceIncrement;
@@ -37,7 +36,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     private final FvmDataWord blockDifficulty;
     private final boolean isUnityForkEnabled;
 
-    public ExternalStateForFvm(RepositoryCache<AccountState, IBlockStoreBase> repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled) {
+    public ExternalStateForFvm(RepositoryCache<AccountState> repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled) {
         this.repository = repository;
         this.miner = miner;
         this.blockDifficulty = blockDifficulty;
@@ -469,7 +468,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
-        return this.repository.getBlockStore().getBlockHashByNumber(blockNumber);
+        return this.repository.getBlockHashByNumber(blockNumber);
     }
 
     /**
@@ -485,7 +484,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
 
     private InternalVmType getVmType(AionAddress destination) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState, IBlockStoreBase> track = this.repository.startTracking();
+        RepositoryCache<AccountState> track = this.repository.startTracking();
         AccountState accountState = track.getAccountState(destination);
 
         InternalVmType vm;

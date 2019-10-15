@@ -16,7 +16,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -153,7 +152,7 @@ public class OldTxExecutorTest {
         AionBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        RepositoryCache<AccountState, IBlockStoreBase> repo = repoTop.startTracking();
+        RepositoryCache<AccountState> repo = repoTop.startTracking();
         repo.addBalance(tx.getSenderAddress(), BigInteger.valueOf(500_000L).multiply(BigInteger.valueOf(tx.getEnergyPrice())));
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();

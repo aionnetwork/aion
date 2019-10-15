@@ -9,7 +9,7 @@ import org.aion.types.AionAddress;
  *
  * @apiNote Allows only batch operations on data.
  */
-public interface Repository<AS, BSB> extends RepositoryQuery<AS> {
+public interface Repository<AS> extends RepositoryQuery<AS> {
 
     /**
      * Creates a tracker repository for caching future changes.
@@ -88,8 +88,7 @@ public interface Repository<AS, BSB> extends RepositoryQuery<AS> {
      */
     boolean isSnapshot();
 
-    // TODO: perhaps remove
-    BSB getBlockStore();
+    byte[] getBlockHashByNumber(long blockNumber);
 
     /** Performs batch transactions add. */
     void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool);

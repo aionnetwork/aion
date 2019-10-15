@@ -2304,7 +2304,7 @@ public class ApiWeb3Aion extends ApiAion {
                         .getRewardsCalculator()
                         .calculateReward(block.getHeader().getNumber());
         BigInteger totalDiff =
-                this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
+                this.ac.getAionHub().getTotalDifficultyForHash(block.getHash());
 
         JSONObject blk = new JSONObject();
         blk.put("timestampVal", block.getTimestamp());
@@ -3002,7 +3002,7 @@ public class ApiWeb3Aion extends ApiAion {
                 .getRewardsCalculator()
                 .calculateReward(block.getHeader().getNumber());
         BigInteger totalDiff =
-            this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
+            this.ac.getAionHub().getTotalDifficultyForHash(block.getHash());
 
         List<AionTxInfo> txInfoList = new ArrayList<>();
         for (AionTransaction transaction: block.getTransactionsList()){
