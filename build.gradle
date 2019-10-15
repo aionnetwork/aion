@@ -330,6 +330,11 @@ task pack(type: Tar) {
         from "${dirPack}/script"
         include 'generateSslCert.sh', 'nohup_wrapper.sh'
     }
+
+    into('/aion/tooling') {
+        from "${dirWorkspace}/tooling"
+        include '**'
+    }
 }
 
 task createPackConfigOverride(type: Copy) { 
