@@ -16,6 +16,7 @@ import org.aion.zero.impl.valid.BlockHeaderRule;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.valid.BlockNumberRule;
 import org.aion.zero.impl.valid.DependentBlockHeaderRule;
+import org.aion.zero.impl.valid.FutureBlockRule;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
@@ -115,6 +116,7 @@ public class ChainConfiguration {
         List<BlockHeaderRule> powRules =
                 Arrays.asList(
                         new HeaderSealTypeRule(),
+                        new FutureBlockRule(),
                         new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
                         new EnergyConsumedRule(),
                         new AionPOWRule(),
@@ -123,6 +125,7 @@ public class ChainConfiguration {
         List<BlockHeaderRule> posRules =
                 Arrays.asList(
                         new HeaderSealTypeRule(),
+                        new FutureBlockRule(),
                         new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
                         new EnergyConsumedRule(),
                         new SignatureRule());
