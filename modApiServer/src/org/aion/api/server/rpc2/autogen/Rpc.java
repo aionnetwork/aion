@@ -1,7 +1,7 @@
 // == Rpc.java == 
 package org.aion.api.server.rpc2.autogen;
-import org.aion.api.RpcException;
 import org.aion.api.server.rpc2.autogen.pod.*;
+import org.aion.api.server.rpc2.autogen.errors.*;
 
 /******************************************************************************
  *
@@ -16,20 +16,15 @@ public interface Rpc {
 
     byte[] submitseed(
         byte[] var0,
-        byte[] var1
-    ) throws RpcException;
+        byte[] var1,
+        byte[] var2
+    )
+        throws NullReturnRpcException;
 
     boolean submitsignature(
         byte[] var0,
         byte[] var1
-    ) throws RpcException;
-
-    Transaction eth_getTransactionByHash2(
-        byte[] var0
-    );
-
-    byte[] eth_call2(
-        CallRequest var0
-    );
+    )
+        throws NullReturnRpcException;
 
 }
