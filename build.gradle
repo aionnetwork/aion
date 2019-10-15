@@ -335,6 +335,11 @@ task pack(type: Tar) {
         from "${dirWorkspace}/tooling"
         include '**'
     }
+
+    into('/aion/') {
+        from dirWorkspace
+        include 'CUSTOM_NETWORK_SETUP.md'
+    }
 }
 
 task createPackConfigOverride(type: Copy) { 
