@@ -178,7 +178,13 @@ public class StakingBlock extends AbstractBlock {
                 .withTimestamp(timestamp)
                 .withExtraData(extraData)
                 .withEnergyLimit(energyLimit)
-                .withSeed(seed);
+                .withSeed(seed)
+                .withDefaultStateRoot()
+                .withDefaultSigningPublicKey()
+                .withDefaultSignature()
+                .withDefaultReceiptTrieRoot()
+                .withDefaultTxTrieRoot();
+
         this.header = builder.build();
         this.parsed = true;
     }

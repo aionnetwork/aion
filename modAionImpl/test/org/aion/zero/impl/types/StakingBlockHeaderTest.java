@@ -1,6 +1,7 @@
 package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.types.A0BlockHeader.Builder.EMPTY_BLOOM;
 
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
@@ -53,8 +54,9 @@ public class StakingBlockHeaderTest {
                 .withParentHash(PARENT_HASH)
                 .withSeed(SEED)
                 .withSignature(SIGNATURE)
-                .withSigningPublicKey(SIGNINGPUBKEY);
-
+                .withSigningPublicKey(SIGNINGPUBKEY)
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty();
         StakingBlockHeader header = builder.build();
 
         assertThat(header.getCoinbase().toByteArray()).isEqualTo(COINBASE);
@@ -88,7 +90,12 @@ public class StakingBlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withDefaultSignature()
+                .withDefaultSigningPublicKey()
+                .withDefaultSeed()
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty();
 
         StakingBlockHeader header = builder.build();
 
@@ -106,6 +113,7 @@ public class StakingBlockHeaderTest {
         assertThat(header.getSignature()).isEqualTo(new byte[64]);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
         assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
+        assertThat(header.getLogsBloom()).isEqualTo(EMPTY_BLOOM);
     }
 
     // Test is a self referencing
@@ -127,8 +135,10 @@ public class StakingBlockHeaderTest {
                 .withParentHash(PARENT_HASH)
                 .withSeed(SEED)
                 .withSigningPublicKey(SIGNINGPUBKEY)
-                .withSignature(SIGNATURE);
-
+                .withSignature(SIGNATURE)
+                .withDefaultStateRoot()
+                .withDefaultLogsBloom()
+                .withDefaultDifficulty();
         StakingBlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
 
@@ -145,11 +155,10 @@ public class StakingBlockHeaderTest {
         assertThat(reconstructed.getSeed()).isEqualTo(header.getSeed());
         assertThat(reconstructed.getSignature()).isEqualTo(header.getSignature());
         assertThat(reconstructed.getSigningPublicKey()).isEqualTo(header.getSigningPublicKey());
+        assertThat(reconstructed.getStateRoot()).isEqualTo(header.getStateRoot());
 
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
         assertThat(reconstructed.getSealType() == header.getSealType());
-
-        byte[] difficulty = reconstructed.getDifficulty();
     }
 
     // verification tests, test that no properties are being violated

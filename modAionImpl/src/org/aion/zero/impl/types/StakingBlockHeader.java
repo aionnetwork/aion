@@ -8,9 +8,9 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.AddressUtils;
 
 import java.math.BigInteger;
+import org.aion.util.types.AddressUtils;
 import org.json.JSONObject;
 
 import static org.aion.util.bytes.ByteUtil.*;
@@ -537,17 +537,57 @@ public class StakingBlockHeader  implements BlockHeader {
 
         public StakingBlockHeader build() {
             // Formalize the data
-            parentHash = parentHash == null ? HashUtil.EMPTY_DATA_HASH : parentHash;
-            coinbase = coinbase == null ? AddressUtils.ZERO_ADDRESS : coinbase;
-            stateRoot = stateRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : stateRoot;
-            txTrieRoot = txTrieRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : txTrieRoot;
-            receiptTrieRoot = receiptTrieRoot == null ? ConstantUtil.EMPTY_TRIE_HASH : receiptTrieRoot;
-            logsBloom = logsBloom == null ? EMPTY_BLOOM : logsBloom;
-            difficulty = difficulty == null ? ByteUtil.EMPTY_HALFWORD : difficulty;
-            extraData = extraData == null ? ByteUtil.EMPTY_WORD : extraData;
-            seed = seed == null ? new byte[SEED_LENGTH] : seed;
-            signature = signature == null ? new byte[SIG_LENGTH] : signature;
-            pubkey = pubkey == null ? new byte[PUBKEY_LENGTH] : pubkey;
+            if (parentHash == null) {
+                throw new NullPointerException("the header parentHash is null");
+            }
+
+            if (coinbase == null) {
+                throw new NullPointerException("the header coinbasae is null");
+            }
+
+            if (stateRoot == null) {
+                throw new NullPointerException("the header stateRoot is null");
+            }
+
+            if (txTrieRoot == null) {
+                throw new NullPointerException("the header txTrieRoot is null");
+            }
+
+            if (receiptTrieRoot == null) {
+                throw new NullPointerException("the header receiptTrieRoot is null");
+            }
+
+            if (logsBloom == null) {
+                throw new NullPointerException("the header logBloom is null");
+            }
+
+            if (difficulty == null) {
+                throw new NullPointerException("the header difficulty is null");
+            }
+
+            if (extraData == null) {
+                throw new NullPointerException("the header extraData is null");
+            }
+
+            if (seed == null) {
+                throw new NullPointerException("the header seed is null");
+            }
+
+            if (signature == null) {
+                throw new NullPointerException("the header signature is null");
+            }
+
+            if (pubkey == null) {
+                throw new NullPointerException("the header signing publicKey is null");
+            }
+
+            if (energyLimit < 0L) {
+                throw new IllegalArgumentException("the header energyLimit can not lower than 0");
+            }
+
+            if (energyConsumed < 0L) {
+                throw new IllegalArgumentException("the header energyConsumed can not lower than 0");
+            }
 
             return new StakingBlockHeader(this);
         }
@@ -574,6 +614,61 @@ public class StakingBlockHeader  implements BlockHeader {
             pubkey = header.getSigningPublicKey();
 
             return this;
+        }
+
+        public Builder withDefaultStateRoot() {
+            stateRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultReceiptTrieRoot() {
+            receiptTrieRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultTxTrieRoot() {
+            txTrieRoot = ConstantUtil.EMPTY_TRIE_HASH;
+            return this;
+        }
+
+        public Builder withDefaultLogsBloom() {
+            logsBloom = EMPTY_BLOOM;
+            return this;
+        }
+
+        public Builder withDefaultDifficulty() {
+            difficulty = ByteUtil.EMPTY_HALFWORD;
+            return this;
+        }
+
+        public Builder withDefaultParentHash() {
+            parentHash = ByteUtil.EMPTY_WORD;
+            return this;
+        }
+
+        public Builder withDefaultCoinbase() {
+            coinbase = AddressUtils.ZERO_ADDRESS;
+            return this;
+        }
+
+        public Builder withDefaultExtraData() {
+            extraData = ByteUtil.EMPTY_WORD;
+            return  this;
+        }
+
+        public Builder withDefaultSignature() {
+            signature = new byte[SIG_LENGTH];
+            return  this;
+        }
+
+        public Builder withDefaultSigningPublicKey() {
+            pubkey = ByteUtil.EMPTY_WORD;
+            return  this;
+        }
+
+        public Builder withDefaultSeed() {
+            seed = new byte[SEED_LENGTH];
+            return  this;
         }
     }
 

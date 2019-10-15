@@ -1292,8 +1292,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             .withTxTrieRoot(calcTxTrie(txs))
                             .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
                             .withDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
-                            .withSeed(newSeed);
-
+                            .withSeed(newSeed)
+                            .withDefaultStateRoot()
+                            .withDefaultReceiptTrieRoot()
+                            .withDefaultLogsBloom()
+                            .withDefaultSignature()
+                            .withDefaultSigningPublicKey();
             if (signingPublicKey != null) {
                 headerBuilder.withSigningPublicKey(signingPublicKey);
             }
