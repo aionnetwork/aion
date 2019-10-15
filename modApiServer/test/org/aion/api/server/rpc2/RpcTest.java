@@ -26,6 +26,7 @@ public class RpcTest {
 
     @After
     public void tearDown() {
+        impl.aionHub.getBlockchain().setUnityForkNumber(Long.MAX_VALUE);
         AvmTestConfig.clearConfigurations();
     }
 
