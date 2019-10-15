@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.aion.api.server.nrgprice.NrgOracle;
@@ -29,6 +29,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
+import org.aion.util.time.TimeUtils;
 import org.aion.zero.impl.blockchain.UnityChain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
@@ -46,7 +47,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
-import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class ApiAion extends Api {
     public static final int SYNC_TOLERANCE = 1;
@@ -76,7 +76,6 @@ public abstract class ApiAion extends Api {
     protected final String clientVersion = computeClientVersion();
 
     private volatile BlockContext currentTemplate;
-    private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
 
@@ -178,15 +177,9 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    //TODO: AKI-441: Should this method be synchronized? Should currentTemplate be volatile?
     protected BlockContext getBlockTemplate() {
-
-        Pair<BlockContext, byte[]> template = ac.getAionHub().getMiningBlockTemplate(currentBestBlockHash);
-
-        if (template.getLeft() != null) {
-            currentTemplate = template.getLeft();
-            currentBestBlockHash = template.getRight();
-        }
-
+        currentTemplate = ac.getAionHub().getNewMiningBlockTemplate(currentTemplate, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         return currentTemplate;
     }
 
