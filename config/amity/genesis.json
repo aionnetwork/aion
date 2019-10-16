@@ -18,7 +18,7 @@
   "coinbase": "0xa00e7d012e80e11c75968ffc7657c81a116029cf1d8925f7a6e52580e26d865f",
   "timestamp": "1567110000",
   "parentHash": "0x10E71BF64DCB8C60766CCB491AB6E3ACEC1AB07D0D5A088FCF533CBFBC801295",
-  "chainId": "30",
+  "chainId": "28",
   "genesisStakingDifficulty": "2000000000",
   "stakingContractAddress": "a056337bb14e818f3f53e13ab0d93b6539aa570cba91ce65c716058241989be9"
 }
