@@ -34,6 +34,8 @@ public class TxCollector {
 
     private IP2pMgr p2p;
 
+    private TxBroadcaster txBroadcaster;
+
     private AtomicInteger queueSizeBytes = new AtomicInteger();
     private AtomicLong lastBroadcast = new AtomicLong(System.currentTimeMillis());
     private LinkedBlockingQueue<AionTransaction> transactionQueue;
@@ -48,14 +50,14 @@ public class TxCollector {
         // TODO AKI-547: Leave unbounded for now, may need to restrict queue size and drop tx until able to process tx
         transactionQueue = new LinkedBlockingQueue<>();
 
+        txBroadcaster = new TxBroadcaster();
+
         ScheduledExecutorService broadcastTxExec = Executors.newSingleThreadScheduledExecutor();
         int broadcastLoop = 1;
         int initDelay = 10;
         broadcastTxExec.scheduleAtFixedRate(
                 this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
     }
-
-    public TxCollector(IP2pMgr p2pMgr) {}
 
     /*
      * Submit a batch list of tx
@@ -117,9 +119,8 @@ public class TxCollector {
                 LOG.trace("TxCollector.broadcastTx Tx#{}", transactions.size());
             }
 
-            TxBroadcaster.getInstance()
-                    .submitTransaction(
-                            new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
+            txBroadcaster.submitTransaction(
+                    new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
         }
     }
 
