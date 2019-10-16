@@ -17,7 +17,7 @@ pipeline {
         stage('Archive build output') {
             when {
                 expression { 
-                    GIT_BRANCH == 'master'
+                    GIT_BRANCH == 'master' || GIT_BRANCH == 'unity-master'
                 }
             }
 
