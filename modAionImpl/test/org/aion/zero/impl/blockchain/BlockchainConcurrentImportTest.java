@@ -183,7 +183,7 @@ public class BlockchainConcurrentImportTest {
                             // imported
                             Block bestBlock = store.getBestBlock();
                             assertNotNull(bestBlock);
-                            assertThat(bestBlock.getCumulativeDifficulty()).isAtLeast(tdFromStore);                        }
+                            assertThat(bestBlock.getTotalDifficulty()).isAtLeast(tdFromStore);                        }
                     }
                 });
     }
@@ -247,7 +247,7 @@ public class BlockchainConcurrentImportTest {
                                 // can't check for equality since other blocks may have already been
                                 // imported
 
-                                assertThat(store.getBestBlock().getCumulativeDifficulty())
+                                assertThat(store.getBestBlock().getTotalDifficulty())
                                     .isAtLeast(tdFromStore);
                             }
 

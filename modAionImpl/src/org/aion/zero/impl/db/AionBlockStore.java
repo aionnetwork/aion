@@ -616,7 +616,7 @@ public class AionBlockStore implements IBlockStoreBase {
         if (b == null) {
             return null;
         } else {
-            return b.getCumulativeDifficulty();
+            return b.getTotalDifficulty();
         }
     }
 
@@ -1043,7 +1043,7 @@ public class AionBlockStore implements IBlockStoreBase {
             // initial TD set to genesis TD
             level = 1;
             while (level <= initialLevel) {
-                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getCumulativeDifficulty());
+                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getTotalDifficulty());
                 if (totalDifficulty == null) {
                     LOG.error("CorrectTotalDifficulty failed! level:{}", level);
                     throw new IllegalStateException("The Index database might corrupt!");
@@ -1175,7 +1175,7 @@ public class AionBlockStore implements IBlockStoreBase {
 
             block.setTotalDifficulty(blockInfo.getTotalDifficulty());
 
-            return block.getCumulativeDifficulty();
+            return block.getTotalDifficulty();
         } finally {
             lock.unlock();
         }
@@ -1657,7 +1657,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     }
 
                     // it is correct if there is no inconsistency wrt to the parent
-                    BigInteger expectedTotalDifficulty = parentBlock.getCumulativeDifficulty().add(block.getDifficultyBI());
+                    BigInteger expectedTotalDifficulty = parentBlock.getTotalDifficulty().add(block.getDifficultyBI());
 
                     correct =
                         getTotalDifficultyForHash(block.getHash()).equals(expectedTotalDifficulty);
@@ -1722,7 +1722,7 @@ public class AionBlockStore implements IBlockStoreBase {
 
                     for (BlockInfo bi : infos) {
                         block = blocks.get(bi.getHash());
-                        bi = new BlockInfo(block.getHash(), block.getCumulativeDifficulty(), bi.isMainChain());
+                        bi = new BlockInfo(block.getHash(), block.getTotalDifficulty(), bi.isMainChain());
                         LOG_CONS.info(
                                 "Correcting total difficulty for block hash: {} number: {} to {}.",
                                 block.getShortHash(),

@@ -235,7 +235,7 @@ public class AionHubTest {
             blocksToImport.add(context.block);
 
             if (context.block.getNumber() == 6) {
-                td6 = context.block.getCumulativeDifficulty();
+                td6 = context.block.getTotalDifficulty();
             }
         }
 

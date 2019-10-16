@@ -68,7 +68,7 @@ public class BlockchainIntegrationTest {
         assertThat(bc.getBestBlock()).isNotEqualTo(null);
         assertThat(bc.getBlockStore()).isNotEqualTo(null);
         assertThat(bc.getRepository()).isNotEqualTo(null);
-        assertThat(bc.getTotalDifficulty()).isEqualTo(bc.getBestBlock().getCumulativeDifficulty());
+        assertThat(bc.getTotalDifficulty()).isEqualTo(bc.getBestBlock().getTotalDifficulty());
         assertThat(bc.getTransactionStore()).isNotEqualTo(null);
         assertThat(bc.getMinerCoinbase()).isNotEqualTo(null);
     }

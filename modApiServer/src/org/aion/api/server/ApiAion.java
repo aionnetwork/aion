@@ -29,7 +29,6 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
-import org.aion.util.time.TimeUtils;
 import org.aion.zero.impl.blockchain.UnityChain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
@@ -202,7 +201,7 @@ public abstract class ApiAion extends Api {
     protected Map.Entry<Block, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             Block block = this.ac.getBlockchain().getBlockStore().getChainBlockByNumber(blkNr);
-            return (Map.entry(block, block.getCumulativeDifficulty()));
+            return (Map.entry(block, block.getTotalDifficulty()));
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return Map.entry(

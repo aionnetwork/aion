@@ -92,7 +92,7 @@ public abstract class AbstractBlock implements Block {
     }
 
     @Override
-    public BigInteger getCumulativeDifficulty() {
+    public BigInteger getTotalDifficulty() {
         if (totalDifficulty == null) {
             return BigInteger.ZERO;
         } else {

@@ -1993,7 +1993,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                             lastBlockTimestamp = b.getTimestamp();
 
-                            String blockSql = generateBlockSqlStatement(b, b.getCumulativeDifficulty(), blocktime);
+                            String blockSql = generateBlockSqlStatement(b, b.getTotalDifficulty(), blocktime);
 
                             List<String> transactionSql = new ArrayList<>();
 
@@ -2672,7 +2672,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                             .setSize(b.size())
                             .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
-                            .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()))
+                            .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()))
                             .build();
                     } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                         StakingBlock b = (StakingBlock) blk;
@@ -2694,7 +2694,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                             .setSize(b.size())
                             .setSolution(ByteString.copyFrom(new byte[0]))
-                            .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()))
+                            .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()))
                             .build();
                     } else {
                         throw new IllegalStateException("Invalid block type!");
@@ -2728,7 +2728,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                 .setSize(b.size())
                 .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
-                .setTotalDifficulty(ByteString.copyFrom(b.getCumulativeDifficulty().toByteArray()))
+                .setTotalDifficulty(ByteString.copyFrom(b.getTotalDifficulty().toByteArray()))
                 .setBlockTime(blocktime);
         } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             StakingBlock b = (StakingBlock) block;
@@ -2754,7 +2754,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     .setSize(b.size())
                     .setSolution(ByteString.copyFrom(new byte[0]))
                     .setTotalDifficulty(
-                            ByteString.copyFrom(b.getCumulativeDifficulty().toByteArray()))
+                            ByteString.copyFrom(b.getTotalDifficulty().toByteArray()))
                     .setBlockTime(blocktime);
         } else {
             throw new IllegalStateException();
@@ -3066,7 +3066,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                                 .setSize(b.size())
                                 .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
-                                .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()));
+                                .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()));
                     } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                         StakingBlock b = (StakingBlock) blk;
                         builder =
@@ -3087,7 +3087,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
                                 .setSize(b.size())
                                 .setSolution(ByteString.copyFrom(new byte[0]))
-                                .setTotalDifficulty(ByteString.copyFrom(blk.getCumulativeDifficulty().toByteArray()));
+                                .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()));
                     } else {
                         throw new IllegalStateException("Invalid block type!");
                     }

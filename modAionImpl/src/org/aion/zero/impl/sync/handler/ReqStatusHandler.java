@@ -74,7 +74,7 @@ public final class ReqStatusHandler extends Handler {
                     cache =
                             new ResStatus(
                                     bestBlock.getNumber(),
-                                    bestBlock.getCumulativeDifficulty().toByteArray(),
+                                    bestBlock.getTotalDifficulty().toByteArray(),
                                     bestBlock.getHash(),
                                     this.genesisHash,
                                     this.apiVersion,

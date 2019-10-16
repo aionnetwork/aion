@@ -67,7 +67,7 @@ public interface Block {
 
     void setMainChain();
 
-    BigInteger getCumulativeDifficulty();
+    BigInteger getTotalDifficulty();
 
     void setTotalDifficulty(BigInteger totalDifficulty);
 

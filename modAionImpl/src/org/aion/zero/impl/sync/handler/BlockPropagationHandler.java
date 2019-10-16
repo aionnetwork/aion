@@ -198,7 +198,7 @@ public class BlockPropagationHandler {
         // notify higher td peers in order to limit the rebroadcast on delay of res status updating
         if (result.isBest()) {
             Block bestBlock = blockchain.getBestBlock();
-            BigInteger td = bestBlock.getCumulativeDifficulty();
+            BigInteger td = bestBlock.getTotalDifficulty();
             ResStatus rs =
                     new ResStatus(
                             bestBlock.getNumber(),

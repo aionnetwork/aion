@@ -638,7 +638,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid best block data!");
         }
 
-        totalDifficulty.set(bestBlock.getCumulativeDifficulty());
+        totalDifficulty.set(bestBlock.getTotalDifficulty());
 
         this.repository =
                 (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
@@ -1409,7 +1409,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (summary != null) {
             updateTotalDifficulty(block);
-            summary.setTotalDifficulty(block.getCumulativeDifficulty());
+            summary.setTotalDifficulty(block.getTotalDifficulty());
 
             storeBlock(block, summary.getReceipts(), summary.getSummaries());
 
@@ -2057,7 +2057,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger getTotalDifficulty() {
-        return getBestBlock().getCumulativeDifficulty();
+        return getBestBlock().getTotalDifficulty();
     }
 
     @Override
@@ -2511,7 +2511,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Block parentBlock =
                 repo.getBlockStore().getBlockByHashWithInfo(dirtyBlocks.pop().getHash());
 
-        BigInteger totalDiff = parentBlock.getCumulativeDifficulty();
+        BigInteger totalDiff = parentBlock.getTotalDifficulty();
 
         LOG.info(
                 "Valid index found at block hash: {}, number: {}.",
@@ -2528,7 +2528,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getTransactionsList().size());
             totalDiff =
                     repo.getBlockStore()
-                            .correctIndexEntry(other, parentBlock.getCumulativeDifficulty());
+                            .correctIndexEntry(other, parentBlock.getTotalDifficulty());
             parentBlock = other;
         }
 

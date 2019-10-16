@@ -438,7 +438,7 @@ public class AionHub {
             blockchain.setBestBlock(genesis);
             blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
-            if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+            if (genesis.getTotalDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
                 genesis.setTotalDifficulty(genesis.getDifficultyBI());
             }
@@ -461,9 +461,9 @@ public class AionHub {
                 throw new IllegalStateException();
             }
 
-            BigInteger totalDifficulty = getBlockStore().getBestBlockWithInfo().getCumulativeDifficulty();
+            BigInteger totalDifficulty = getBlockStore().getBestBlockWithInfo().getTotalDifficulty();
             blockchain.setTotalDifficulty(totalDifficulty);
-            if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+            if (bestBlock.getTotalDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
                 bestBlock.setTotalDifficulty(totalDifficulty);
             }

@@ -47,7 +47,7 @@ public class Blk {
                                 ? new byte[0]
                                 : block.getReceiptsRoot()));
         obj.put("difficulty", StringUtils.toJsonHex(block.getHeader().getDifficulty()));
-        obj.put("totalDifficulty", StringUtils.toJsonHex(block.getCumulativeDifficulty()));
+        obj.put("totalDifficulty", StringUtils.toJsonHex(block.getTotalDifficulty()));
         obj.put("timestamp", StringUtils.toJsonHex(block.getHeader().getTimestamp()));
         obj.put("miner", StringUtils.toJsonHex(block.getCoinbase().toString()));
         obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
@@ -218,7 +218,7 @@ public class Blk {
                                 ? new byte[0]
                                 : block.getReceiptsRoot()));
         obj.put("difficulty", StringUtils.toJsonHex(block.getHeader().getDifficulty()));
-        obj.put("totalDifficulty", StringUtils.toJsonHex(block.getCumulativeDifficulty()));
+        obj.put("totalDifficulty", StringUtils.toJsonHex(block.getTotalDifficulty()));
         obj.put("timestamp", StringUtils.toJsonHex(block.getHeader().getTimestamp()));
         obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
         obj.put("gasLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));

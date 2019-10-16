@@ -546,7 +546,7 @@ public class DBUtils {
                 currentBlock = startHeight;
                 // initial TD = diff of parent of first block to import
                 Block blockWithDifficulties = store.getBlockByHashWithInfo(startBlock.getHash());
-                chain.setTotalDifficulty(blockWithDifficulties.getCumulativeDifficulty());
+                chain.setTotalDifficulty(blockWithDifficulties.getTotalDifficulty());
             }
 
             boolean fail = false;

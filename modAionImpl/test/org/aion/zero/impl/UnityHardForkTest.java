@@ -81,7 +81,7 @@ public class UnityHardForkTest {
 
         Assert.assertEquals(genesis.getDifficultyBI(), blockOneInfoPOW.getDifficultyBI());
         Assert.assertEquals(genesis.getDifficultyBI().add(blockOneInfoPOW.getDifficultyBI()),
-                blockOneInfoPOW.getCumulativeDifficulty());
+                blockOneInfoPOW.getTotalDifficulty());
 
         Block blockTwoPOW = bc.createNewMiningBlock(blockOneInfoPOW, Collections.emptyList(), true);
         result = bc.tryToConnect(blockTwoPOW);
@@ -91,8 +91,8 @@ public class UnityHardForkTest {
                 bc.getRepository().getBlockStore().getBlockByHashWithInfo(blockTwoPOW.getHash());
 
         Assert.assertEquals(925, blockTwoInfoPOW.getDifficultyBI().intValue());
-        Assert.assertEquals(blockOnePOW.getCumulativeDifficulty().add(blockTwoInfoPOW.getDifficultyBI()),
-                blockTwoInfoPOW.getCumulativeDifficulty());
+        Assert.assertEquals(blockOnePOW.getTotalDifficulty().add(blockTwoInfoPOW.getDifficultyBI()),
+                blockTwoInfoPOW.getTotalDifficulty());
 
         // Genesis staking block seed is assumed to be all zeroes
         StakingBlock blockThreePOS = createNewStakingBlock(new byte[64]);
@@ -108,13 +108,13 @@ public class UnityHardForkTest {
         Assert.assertEquals(
                 GenesisStakingBlock.getGenesisDifficulty(),
                 blockThreeInfoPOS.getHeader().getDifficultyBI());
-        Assert.assertEquals(GenesisStakingBlock.getGenesisDifficulty().add(blockTwoPOW.getCumulativeDifficulty()),
-                blockThreeInfoPOS.getCumulativeDifficulty());
+        Assert.assertEquals(GenesisStakingBlock.getGenesisDifficulty().add(blockTwoPOW.getTotalDifficulty()),
+                blockThreeInfoPOS.getTotalDifficulty());
 
         Assert.assertTrue(
                 blockThreeInfoPOS
-                                .getCumulativeDifficulty()
-                                .compareTo(blockTwoInfoPOW.getCumulativeDifficulty())
+                                .getTotalDifficulty()
+                                .compareTo(blockTwoInfoPOW.getTotalDifficulty())
                         > 0);
     }
 
