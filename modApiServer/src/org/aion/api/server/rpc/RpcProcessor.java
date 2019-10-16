@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc2.Rpc2Shim;
+import org.aion.api.server.rpc3.Web3EntryPoint;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 public class RpcProcessor {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
+    private final Web3EntryPoint web3EntryPoint;
 
     private RpcMethods apiHolder;
 
@@ -34,7 +36,12 @@ public class RpcProcessor {
         final List<String> enabledMethods,
         final List<String> disabledMethods,
         final Rpc2Shim rpc2Shim,
-        final AccountManager am) {
+        final AccountManager am,
+        final Web3EntryPoint web3EntryPoint) {
+
+        if (web3EntryPoint == null) {
+            throw new NullPointerException("Web3EntryPoint is null");
+        }
 
         if (enabledGroups == null) {
             throw new NullPointerException("RpcProcessor enabledGroups is null");
@@ -62,6 +69,7 @@ public class RpcProcessor {
                         Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
         batchCallCompletionService = new ExecutorCompletionService<>(executor);
         this.rpc2Shim = rpc2Shim;
+        this.web3EntryPoint = web3EntryPoint;
     }
 
     public String process(String _requestBody) {
@@ -202,7 +210,10 @@ public class RpcProcessor {
             // This is a hook to to help transition to the new RPC server (TODO AKI-XXX).
             // If the new RPC server supports this method, delegate processing to the new RPC server
             String method = obj.optString("method");
-            if(method != null  && Rpc2Shim.supportsMethod(method)) {
+
+            if (method != null && web3EntryPoint.isExecutable(method)){
+                return web3EntryPoint.call(_reqBody);
+            } else if(method != null  && Rpc2Shim.supportsMethod(method)) {
                 return rpc2Shim.process(_reqBody);
             }
 

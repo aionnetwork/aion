@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc2.Rpc2Shim;
+import org.aion.api.server.rpc3.PersonalRPCImpl;
+import org.aion.api.server.rpc3.Web3EntryPoint;
 
 public abstract class RpcServer {
 
@@ -58,12 +60,13 @@ public abstract class RpcServer {
         accountManager = builder.accountManager;
 
         rpcProcessor =
-                new RpcProcessor(
-                        enabledEndpoints,
-                        enabledMethods,
-                        disabledMethods,
-                        new Rpc2Shim(),
-                        accountManager);
+                new RpcProcessor(enabledEndpoints,
+                    enabledMethods,
+                    disabledMethods,
+                    new Rpc2Shim(),
+                    accountManager,
+                    new Web3EntryPoint(new PersonalRPCImpl(), enabledEndpoints, enabledMethods, disabledMethods));
+
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {
