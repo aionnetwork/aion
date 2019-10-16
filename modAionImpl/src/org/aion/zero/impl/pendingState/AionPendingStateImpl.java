@@ -857,6 +857,8 @@ public class AionPendingStateImpl implements IPendingState {
                 rollback = blockchain.getBlockByHash(rollback.getParentHash());
             }
 
+            checkBeachHashesInTxPool();
+
             // rollback the state snapshot to the ancestor
             pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
 
@@ -1041,6 +1043,28 @@ public class AionPendingStateImpl implements IPendingState {
         return info;
     }
 
+    private void checkBeachHashesInTxPool() {
+        List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
+
+        for (AionTransaction tx : pendingTxl) {
+            if (LOGGER_TX.isTraceEnabled()) {
+                LOGGER_TX.trace("Rechecking beacon hashes - loop: " + tx.toString());
+            }
+
+            if (!beaconHashValidator.validateTxForPendingState(tx)) {
+                if (LOGGER_TX.isDebugEnabled()) {
+                    LOGGER_TX.debug("Invalid beacon hash in txpool: {}", tx);
+                }
+                // Transactions are removed based on hash, ignoring energyused, so the value we put here is irrelevant
+                txPool.remove(new PooledTransaction(tx, 1));
+
+                if (poolBackUp) {
+                    backupPendingPoolRemove.add(tx.getTransactionHash().clone());
+                }
+            }
+        }
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     private List<AionTransaction> rerunTxsInPool(Block block) {
 
@@ -1071,6 +1095,7 @@ public class AionPendingStateImpl implements IPendingState {
                 if (LOGGER_TX.isDebugEnabled()) {
                     LOGGER_TX.debug("Invalid transaction in txpool: {}", tx);
                 }
+                // Transactions are removed based on hash, ignoring energyused, so the value we put here is irrelevant
                 txPool.remove(new PooledTransaction(tx, receipt.getEnergyUsed()));
 
                 if (poolBackUp) {
