@@ -931,7 +931,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repository.compactState();
     }
 
-    // TEMPORARY: here to support the ConsensusTest
+    /* TODO AKI-440: We should either refactor this to remove the redundant parameter,
+        or provide it as an input to isValid() */
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
             Block block, long currTimeSeconds, boolean doExistCheck) {
         // Check block exists before processing more rules
@@ -958,18 +959,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             // retry of well known block
             return Pair.of(EXIST, null);
-        }
-
-        if (block.getTimestamp()
-                > (currTimeSeconds
-                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(
-                        "Block {} invalid due to timestamp {}.",
-                        Hex.toHexString(block.getHash()),
-                        block.getTimestamp());
-            }
-            return Pair.of(INVALID_BLOCK, null);
         }
 
         if (LOG.isDebugEnabled()) {

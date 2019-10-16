@@ -179,30 +179,6 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void testAppendIncorrectTimestampBlock() {
-        StandaloneBlockchain.Bundle bundle =
-                (new StandaloneBlockchain.Builder())
-                        .withValidatorConfiguration("simple")
-                        .withDefaultAccounts()
-                        .build();
-        StandaloneBlockchain bc = bundle.bc;
-        Block parent = bc.getBestBlock();
-        AionBlock block =
-                bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
-
-        // set the block to be created 1 month in the future
-        A0BlockHeader newBlockHeader =
-                A0BlockHeader.Builder.newInstance()
-                        .withHeader(block.getHeader())
-                        .withTimestamp((System.currentTimeMillis() / 1000) + 2592000)
-                        .build();
-        block.updateHeader(newBlockHeader);
-
-        ImportResult result = bc.tryToConnect(block);
-        assertThat(result.isSuccessful()).isFalse();
-    }
-
-    @Test
     public void testPruningEnabledBalanceTransfer() {
         // generate a recipient
         final AionAddress receiverAddress =
