@@ -5,6 +5,7 @@ import static org.aion.api.server.rpc3.types.RPCTypes.*;
 import static org.aion.api.server.rpc3.types.RPCTypesConverter.*;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.types.AionAddress;
+import java.util.Set;
 
 /******************************************************************************
 *
@@ -12,35 +13,38 @@ import org.aion.types.AionAddress;
 * BE WIPED OUT WHEN THIS FILE GETS RE-GENERATED OR UPDATED.
 *
 *****************************************************************************/
-public abstract class PersonalRPC{
+public interface PersonalRPC{
 
-    /**
-     *Allows you to interact with accounts on the aion network and provides a handful of crypto utilities
-     */
-    public String execute(String requestString){
+    default String execute(Request request){
+        Object res;
         try{
-
-            Request request = RequestConverter.decode(requestString);
             //check that the request can be fulfilled by this class
-            String interfaceName = request.method.split("_")[0];
-            if(interfaceName.equals("personal")){
-                if(request.method.equals("personal_ecRecover")){
-                    EcRecoverParams params=EcRecoverParamsConverter.decode(request.params);
-
-                    ByteArrayWrapper result = personal_ecRecover(params.dataThatWasSigned,params.signature);
-                    return DataHexStringConverter.encode(result);
+            if(request.method.equals("personal_ecRecover")){
+                EcRecoverParams params;
+                try{
+                    params=EcRecoverParamsConverter.decode(request.params);
+                }catch(Exception e){
+                    throw new InvalidParamsRPCException();
                 }
-                else
-                    throw new MethodNotFoundRPCException();
-            }
-            else{
-                throw new InternalErrorRPCException();
-            }
+                AionAddress result = this.personal_ecRecover(params.dataThatWasSigned,params.signature);
+                res = AionAddressConverter.encode(result);
+            }else
+                throw new MethodNotFoundRPCException();
         }
         catch(InvalidRequestRPCException |ParseErrorRPCException |MethodNotFoundRPCException |InvalidParamsRPCException |InternalErrorRPCException e){
             return e.getMessage();
         }
+        catch(Exception e){
+            return new InternalErrorRPCException().getMessage();
+        }
+        return ResponseConverter.encode(new Response(request.id, res , VersionType.Version2));
     }
 
-    abstract ByteArrayWrapper personal_ecRecover(ByteArrayWrapper dataThatWasSigned,ByteArrayWrapper signature);
+    boolean isExecutable(String method);
+
+    default Set<String> listMethods(){
+        return Set.of( "personal_ecRecover");
+    }
+
+    AionAddress personal_ecRecover(ByteArrayWrapper dataThatWasSigned, ByteArrayWrapper signature);
 }

@@ -21,6 +21,18 @@ public class RPCTypesConverter{
     private static final Pattern hexPattern= Pattern.compile("^0x[0-9a-fA-F]+");
     private static final Pattern decPattern = Pattern.compile("^[0-9]+");
 
+    public static class ObjectConverter{
+
+        public static String decode(Object s){
+            if(s==null) return null;
+            return s.toString();
+        }
+
+        public static Object encode(Object obj){
+            return obj;
+        }
+    }
+
     public static class StringConverter{
 
         public static String decode(Object s){
@@ -50,9 +62,9 @@ public class RPCTypesConverter{
             }
         }
 
-        public static String encode(Long s){
+        public static Long encode(Long s){
             try{
-                return s.toString();
+                return s;
             }catch (Exception e){
                 throw new ParseErrorRPCException();
             }
@@ -86,9 +98,9 @@ public class RPCTypesConverter{
             }
         }
 
-        public static String encode(Integer s){
+        public static Integer encode(Integer s){
             try{
-                return s.toString();
+                return s;
             }catch (Exception e){
                 throw new ParseErrorRPCException();
             }
@@ -193,7 +205,7 @@ public class RPCTypesConverter{
     public static class RequestConverter{
         public static Request decode(Object str){
             try{
-                JSONObject jsonObject = new JSONObject(str);
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
                 return new Request( IntegerConverter.decode(jsonObject.opt("id")) , StringConverter.decode(jsonObject.opt("method")) , StringConverter.decode(jsonObject.opt("params")) , VersionTypeConverter.decode(jsonObject.opt("jsonRPC")) );
             } catch (Exception e){
                 throw new ParseErrorRPCException();
@@ -208,7 +220,33 @@ public class RPCTypesConverter{
                 jsonObject.put("method", StringConverter.encode(obj.method));
                 jsonObject.put("params", StringConverter.encode(obj.params));
                 jsonObject.put("jsonRPC", VersionTypeConverter.encode(obj.jsonRPC));
-                return jsonObject.toString();
+                return jsonObject.toString().replaceAll("\"","\"");
+            }
+            catch (Exception e){
+                throw new ParseErrorRPCException();
+            }
+        }
+
+    }
+
+    public static class ResponseConverter{
+        public static Response decode(Object str){
+            try{
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
+                return new Response( IntegerConverter.decode(jsonObject.opt("id")) , ObjectConverter.decode(jsonObject.opt("result")) , VersionTypeConverter.decode(jsonObject.opt("jsonRPC")) );
+            } catch (Exception e){
+                throw new ParseErrorRPCException();
+            }
+        }
+
+        public static String encode( Response obj){
+            try{
+                if(obj==null) return null;
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", IntegerConverter.encode(obj.id));
+                jsonObject.put("result", ObjectConverter.encode(obj.result));
+                jsonObject.put("jsonRPC", VersionTypeConverter.encode(obj.jsonRPC));
+                return jsonObject.toString().replaceAll("\"","\"");
             }
             catch (Exception e){
                 throw new ParseErrorRPCException();
@@ -355,7 +393,7 @@ public class RPCTypesConverter{
 
     public static class EcRecoverParamsConverter{
         public static EcRecoverParams decode(Object object){
-            String s = object.toString();
+            String s = object.toString().replaceAll("\"","\"");
             try{
                 EcRecoverParams obj;
                 if(s.startsWith("[") && s.endsWith("]")){
@@ -380,7 +418,7 @@ public class RPCTypesConverter{
                 JSONArray arr = new JSONArray();
                 arr.put(0, DataHexStringConverter.encode(obj.dataThatWasSigned));
                                 arr.put(1, DataHexStringConverter.encode(obj.signature));
-                return arr.toString();
+                return arr.toString().replaceAll("\"","\"");
             }catch(Exception e){
                 throw new ParseErrorRPCException();
             }

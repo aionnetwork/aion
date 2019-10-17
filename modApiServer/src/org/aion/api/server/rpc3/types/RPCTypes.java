@@ -13,19 +13,33 @@ public class RPCTypes{
     /**
     * This is the standard request body for a JSON RPC Request
     */
-    public static class Request {
+    public static final class Request {
         public final Integer id;
         public final String method;
         public final String params;
         public final VersionType jsonRPC;
 
         public Request(Integer id ,String method ,String params ,VersionType jsonRPC ){
-            if(id==null) throw new ParseErrorRPCException();
             this.id=id;
             if(method==null) throw new ParseErrorRPCException();
             this.method=method;
             if(params==null) throw new ParseErrorRPCException();
             this.params=params;
+            this.jsonRPC=jsonRPC;
+        }
+    }
+    /**
+    * This is the standard request body for a JSON RPC Response
+    */
+    public static final class Response {
+        public final Integer id;
+        public final Object result;
+        public final VersionType jsonRPC;
+
+        public Response(Integer id ,Object result ,VersionType jsonRPC ){
+            this.id=id;
+            this.result=result;
+            if(jsonRPC==null) throw new ParseErrorRPCException();
             this.jsonRPC=jsonRPC;
         }
     }
@@ -45,7 +59,7 @@ public class RPCTypes{
         }
     }
 
-    public static class EcRecoverParams {
+    public static final class EcRecoverParams {
         public final ByteArrayWrapper dataThatWasSigned;
         public final ByteArrayWrapper signature;
 
