@@ -63,22 +63,21 @@ public class StakingBlockTimeStampRule implements DependentBlockHeaderRule {
 
         long offset = max(delta.longValueExact(), 1);
 
-        if (timeStamp < (parentTimeStamp + offset)) {
-            BlockHeaderValidatorUtil.addError(
-                    formatError(timeStamp, parentTimeStamp, delta), this.getClass(), errors);
+        if (timeStamp != (parentTimeStamp + offset)) {
+            BlockHeaderValidatorUtil.addError(formatError(timeStamp, parentTimeStamp, offset), this.getClass(), errors);
             return false;
         }
 
         return true;
     }
 
-    private static String formatError(long timeStamp, long parantTimeStamp, BigInteger delta) {
-        return "block timestamp output ("
+    private static String formatError(long timeStamp, long parentTimeStamp, long offset) {
+        return "block timestamp  ("
                 + timeStamp
-                + ") violates boundary condition ( parentTimeStamp:"
-                + parantTimeStamp
-                + " delta:"
-                + delta
+                + ") should be exactly ( parentTimeStamp:"
+                + parentTimeStamp
+                + " offset:"
+                + offset
                 + ")";
     }
 }
