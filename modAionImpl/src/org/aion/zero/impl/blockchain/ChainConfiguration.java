@@ -19,12 +19,13 @@ import org.aion.zero.impl.valid.DependentBlockHeaderRule;
 import org.aion.zero.impl.valid.FutureBlockRule;
 import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.GrandParentDependantBlockHeaderRule;
+import org.aion.zero.impl.valid.GreatGrandParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.GreatGrandParentDependantBlockHeaderRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentOppositeTypeRule;
 import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.StakingBlockTimeStampRule;
-import org.aion.zero.impl.valid.StakingSeedRule;
 import org.aion.zero.impl.valid.TimeStampRule;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
@@ -48,7 +49,7 @@ import org.aion.zero.impl.valid.UnityDifficultyRule;
 public class ChainConfiguration {
 
     protected BlockConstants constants;
-    protected IDifficultyCalculator difficultyCalculatorAdapter;
+    protected IDifficultyCalculator preUnityDifficultyCalculator;
     protected IDifficultyCalculator unityDifficultyCalculator;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
@@ -70,7 +71,7 @@ public class ChainConfiguration {
         RewardsCalculator rewardsCalcInternal =
                 new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
 
-        this.difficultyCalculatorAdapter =
+        this.preUnityDifficultyCalculator =
                 (parent, grandParent) -> {
                     // special case to handle the corner case for first block
                     if (parent.getNumber() == 0L || parent.isGenesis()) {
@@ -84,22 +85,14 @@ public class ChainConfiguration {
                 };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
 
-        unityDifficultyCalculator =
-            (parent, grandParent) -> {
-                // special case to handle the corner case for first block
-                if (parent.getNumber() == 0L || parent.isGenesis()) {
-                    return parent.getDifficultyBI();
-                }
-
-                return unityCalc.calcDifficulty(parent, grandParent);
-            };
+        unityDifficultyCalculator = unityCalc::calcDifficulty;
     }
 
     public IBlockConstants getConstants() {
         return constants;
     }
-    public IDifficultyCalculator getDifficultyCalculator() {
-        return difficultyCalculatorAdapter;
+    public IDifficultyCalculator getPreUnityDifficultyCalculator() {
+        return preUnityDifficultyCalculator;
     }
 
     public IRewardsCalculator getRewardsCalculator() {
@@ -149,21 +142,16 @@ public class ChainConfiguration {
         return new GrandParentBlockHeaderValidator(unityRules);
     }
 
-    public GrandParentBlockHeaderValidator createUnityGrandParentHeaderValidator() {
+    public GreatGrandParentBlockHeaderValidator createUnityGreatGrandParentHeaderValidator() {
 
-        // Unity fork require 2 kinds of difficulty rules for pow block.
-
-        List<GrandParentDependantBlockHeaderRule> powRules =
+        List<GreatGrandParentDependantBlockHeaderRule> rules =
                 Collections.singletonList(new UnityDifficultyRule(this));
 
-        List<GrandParentDependantBlockHeaderRule> posRules =
-                Collections.singletonList(new UnityDifficultyRule(this));
+        Map<BlockSealType, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
 
-        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
-
-        return new GrandParentBlockHeaderValidator(unityRules);
+        return new GreatGrandParentBlockHeaderValidator(unityRules);
     }
 
     public ParentBlockHeaderValidator createPreUnityParentBlockHeaderValidator() {

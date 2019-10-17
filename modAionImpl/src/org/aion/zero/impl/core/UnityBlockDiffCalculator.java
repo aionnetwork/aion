@@ -13,9 +13,9 @@ public class UnityBlockDiffCalculator {
     private static FixedPoint difficultyIncreaseRate = FixedPoint.fromString("1.05");
     private static FixedPoint difficultyDecreaseRate = FixedPoint.fromString("0.952381");
 
-    // Our barrier should be log2*40 = 13.862943611, 
-    // but we only compare it against integer values, so we use 14
-    private static long barrier = 14;
+    // Our barrier should be log2*10 = 6.9314718055994,
+    // but we only compare it against integer values, so we use 7
+    private static long barrier = 7;
 
     private BlockConstants constants;
 
@@ -23,43 +23,45 @@ public class UnityBlockDiffCalculator {
         constants = _constants;
     }
 
-    public BigInteger calcDifficulty(BlockHeader parent, BlockHeader grandParent) {
+    public BigInteger calcDifficulty(BlockHeader grandParent, BlockHeader greatGrandParent) {
 
         // If not parent pos block, return the initial difficulty
-        if (parent == null) {
+        if (grandParent == null) {
             return constants.getMinimumDifficulty();
         }
 
-        BigInteger pd = parent.getDifficultyBI();
+        BigInteger pd = grandParent.getDifficultyBI();
 
-        if (grandParent == null) {
+        if (grandParent.isGenesis() && grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            // this is the first PoS block, its difficulty is taken from the GenesisStakingBlock
             return pd;
-        }
-
-        long timeDelta = parent.getTimestamp() - grandParent.getTimestamp();
-        if (timeDelta < 1) {
-            throw new IllegalStateException("Invalid parent timestamp & grandparent timestamp diff!");
-        }
-
-        BigInteger newDiff;
-        if (timeDelta >= barrier) {
-            newDiff = difficultyDecreaseRate.multiplyInteger(pd).toBigInteger();
         } else {
-            newDiff = difficultyIncreaseRate.multiplyInteger(pd).toBigInteger();
-
-            // Unity protocol, increasing one difficulty if the difficulty changes too small can not
-            // be adjusted by the controlRate.
-            if (newDiff.equals(pd)) {
-                newDiff = newDiff.add(BigInteger.ONE);
+            long timeDelta = grandParent.getTimestamp() - greatGrandParent.getTimestamp();
+            if (timeDelta < 1) {
+                throw new IllegalStateException("Invalid parent timestamp & grandparent timestamp diff!");
             }
-        }
 
-        if (parent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
-        } else if (parent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            return max(constants.getMinimumDifficulty() , newDiff);
-        } else {
-            throw  new IllegalStateException("Invalid block seal type!");
+            BigInteger newDiff;
+            if (timeDelta >= barrier) {
+                newDiff = difficultyDecreaseRate.multiplyInteger(pd).toBigInteger();
+            } else {
+                newDiff = difficultyIncreaseRate.multiplyInteger(pd).toBigInteger();
+
+                // Unity protocol, increasing one difficulty if the difficulty changes too small can not
+                // be adjusted by the controlRate.
+                if (newDiff.equals(pd)) {
+                    newDiff = newDiff.add(BigInteger.ONE);
+                }
+            }
+
+            if (grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                // TODO: [unity] We should probably set a different minimum difficulty than the genesis difficulty
+                return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
+            } else if (grandParent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                return max(constants.getMinimumDifficulty(), newDiff);
+            } else {
+                throw new IllegalStateException("Invalid block seal type!");
+            }
         }
     }
 }

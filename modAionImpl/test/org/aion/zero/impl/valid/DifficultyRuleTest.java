@@ -94,7 +94,7 @@ public class DifficultyRuleTest {
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(parentHeader, grandParentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -124,14 +124,14 @@ public class DifficultyRuleTest {
 
         List<RuleError> errors = new LinkedList<>();
 
-        when(mockChainCfg.getDifficultyCalculator()).thenReturn(mockDiffCalculator);
+        when(mockChainCfg.getPreUnityDifficultyCalculator()).thenReturn(mockDiffCalculator);
         when(mockDiffCalculator.calculateDifficulty(parentHeader, grandParentHeader))
                 .thenReturn(BigInteger.ONE);
 
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(parentHeader, grandParentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isTrue();

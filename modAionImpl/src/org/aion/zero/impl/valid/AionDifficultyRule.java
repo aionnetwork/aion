@@ -15,7 +15,7 @@ public class AionDifficultyRule implements GrandParentDependantBlockHeaderRule {
     private IDifficultyCalculator diffCalc;
 
     public AionDifficultyRule(ChainConfiguration configuration) {
-        this.diffCalc = configuration.getDifficultyCalculator();
+        this.diffCalc = configuration.getPreUnityDifficultyCalculator();
     }
 
     /**
@@ -28,8 +28,8 @@ public class AionDifficultyRule implements GrandParentDependantBlockHeaderRule {
      */
     @Override
     public boolean validate(
-            BlockHeader grandParent,
             BlockHeader parent,
+            BlockHeader grandParent,
             BlockHeader current,
             List<RuleError> errors) {
 

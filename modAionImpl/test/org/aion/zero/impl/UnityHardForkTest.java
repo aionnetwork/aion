@@ -3,7 +3,6 @@ package org.aion.zero.impl;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 import static org.aion.util.types.AddressUtils.ZERO_ADDRESS;
-import org.junit.Ignore;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -65,10 +64,9 @@ public class UnityHardForkTest {
         bc.setUnityForkNumber(Long.MAX_VALUE);
     }
 
-    @Ignore
     @Test
     public void testBlockUnityHardFork() {
-        bc.setUnityForkNumber(3);
+        bc.setUnityForkNumber(2);
 
         Block genesis = bc.getBestBlock();
         Block blockOnePOW = bc.createNewMiningBlock(genesis, Collections.emptyList(), true);

@@ -29,7 +29,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.util.types.ByteArrayWrapper;
 import org.aion.vm.common.BlockCachingContext;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -150,7 +149,7 @@ public class BlockchainForkingTest {
         higherDifficultyBlock.updateHeader(newBlockHeader);
 
         BigInteger difficulty =
-                cc.getDifficultyCalculator()
+                cc.getPreUnityDifficultyCalculator()
                         .calculateDifficulty(
                                 higherDifficultyBlock.getHeader(), bestBlock.getHeader());
 
