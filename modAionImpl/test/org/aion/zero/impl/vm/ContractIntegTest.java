@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl.vm;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -55,6 +33,7 @@ import org.aion.fastvm.FastVmResultCode;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.base.TransactionTypeRule;
@@ -127,11 +106,12 @@ public class ContractIntegTest {
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
         AvmTestConfig.supportOnlyAvmVersion1();
+        blockchain.forkUtility.disableUnityFork();
     }
 
     @After
     public void tearDown() throws Exception {
-        blockchain.setUnityForkNumber(Long.MAX_VALUE);
+        blockchain.forkUtility.disableUnityFork();
         blockchain = null;
         deployerKey = null;
         deployer = null;
@@ -2063,8 +2043,11 @@ public class ContractIntegTest {
     }
 
     @Test (expected = InvalidParameterException.class)
-    public void testFvmEmptyContractWith200KEnrygyAfterUnity() throws IOException {
-        blockchain.setUnityForkNumber(1);
+    public void testFvmEmptyContractWith200KEnergyAfterUnity() throws IOException {
+        blockchain.forkUtility.enableUnityFork(2);
+        // populating the chain to be above the Unity for point
+        BlockchainTestUtils.generateRandomChainWithoutTransactions(blockchain, 2, 1);
+
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 200_000;
@@ -2092,9 +2075,9 @@ public class ContractIntegTest {
         AionBlock block = makeBlock(tx);
     }
 
-    @Test
-    public void testFvmEmptyContractWith221KEnrygyAfterUnity() throws IOException, VmFatalException {
-        blockchain.setUnityForkNumber(1);
+    @Test // TODO: determine why this test passes without the correct blockchain height
+    public void testFvmEmptyContractWith221KEnergyAfterUnity() throws IOException, VmFatalException {
+        blockchain.forkUtility.enableUnityFork(2);
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 221_000;

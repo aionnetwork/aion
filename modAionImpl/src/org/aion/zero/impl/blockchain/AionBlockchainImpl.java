@@ -53,6 +53,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.TransactionStore;
+import org.aion.zero.impl.forks.ForkUtility;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.trie.TrieNodeResult;
@@ -121,13 +122,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
-    private static long FORK_5_BLOCK_NUMBER = Long.MAX_VALUE;
     private static boolean fork040Enable;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
+    public final ForkUtility forkUtility;
     public final BeaconHashValidator beaconHashValidator;
 
     /**
@@ -230,16 +231,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
 
+        // initialize fork utility
+        this.forkUtility = new ForkUtility(); // forks are disabled by default
         Optional<Long> maybeFork050 = load050ForkNumberFromConfig(CfgAion.inst());
-        if(! maybeFork050.isPresent()) {
-            this.beaconHashValidator = new BeaconHashValidator(this,
-                    BeaconHashValidator.FORK_050_DISABLED);
-        } else {
-            this.beaconHashValidator = new BeaconHashValidator(this,
-                    maybeFork050.get());
-            FORK_5_BLOCK_NUMBER = maybeFork050.get();
+        if (maybeFork050.isPresent()) {
+            this.forkUtility.enableUnityFork(maybeFork050.get());
         }
-        
+
+        // initialize beacon hash validator
+        this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
+
         stakingContractHelper =
             new StakingContractHelper(
                 forTest
@@ -621,7 +622,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             bestMiningBlock = (AionBlock) bestBlock;            
-            if (bestBlock.getNumber() > getUnityForkNumber()) {
+            if (forkUtility.isUnityForkActive(bestBlock.getNumber())) {
                 bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getParentHash());
             } else {
                 bestStakingBlock = null;
@@ -766,7 +767,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long bestBlockNumber = bestBlock.getNumber();
 
         if (bestStakingBlock == null) {
-            if (bestBlockNumber <= getUnityForkNumber()) {
+            if (!forkUtility.isUnityForkActive(bestBlockNumber)) {
                 bestStakingBlock = CfgAion.inst().getGenesisStakingBlock();
             } else {
                 if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
@@ -1165,7 +1166,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         
         // We want the fork block itself to be a PoW block subject to the old pre-Unity rules, 
         // so we use a strict greater than here
-        if (block.getNumber() > FORK_5_BLOCK_NUMBER) {
+        if (forkUtility.isUnityForkActive(block.getNumber())) {
             if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
                 LOG.error("Tried to create 2 PoW block in a row");
                 return null;
@@ -1198,7 +1199,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
         BlockHeader parentHdr = parent.getHeader();
 
-        if (parentHdr.getNumber() < FORK_5_BLOCK_NUMBER) {
+        if (!forkUtility.isUnityForkActive(parentHdr.getNumber() + 1)) {
             LOG.debug("Unity fork has not been enabled! Can't create the staking blocks");
             return null;
         }
@@ -1211,7 +1212,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return null;
         } else if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
 
-            if (parentHdr.getNumber() == FORK_5_BLOCK_NUMBER) {
+            if (forkUtility.isUnityForkBlock(parentHdr.getNumber())) {
                 // this is the first PoS block
                 parentStakingBlock = CfgAion.inst().getGenesisStakingBlock().getHeader();
             } else {
@@ -1521,9 +1522,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Block grandParent = getParent(parent.getHeader());
         if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            // We want the fork block itself to be a PoW block subject to the old pre-Unity rules, 
-            // so we use a strict greater than here
-            if (header.getNumber() > FORK_5_BLOCK_NUMBER) {
+            if (forkUtility.isUnityForkActive(header.getNumber())) {
                 if (grandParent == null) {
                     return false;
                 }
@@ -1540,7 +1539,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         preUnityGrandParentBlockHeaderValidator.validate(parent.getHeader(), grandParent == null ? null : grandParent.getHeader(), header, LOG);
             }
         } else  if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            if (header.getNumber() <= FORK_5_BLOCK_NUMBER) {
+            if (!forkUtility.isUnityForkActive(header.getNumber())) {
                 return false;
             }
 
@@ -1614,7 +1613,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
 
-                boolean unityForkEnabled = block.getHeader().getNumber() >= FORK_5_BLOCK_NUMBER;
+                boolean unityForkEnabled = forkUtility.isUnityForkActive(block.getNumber());
                 if (txs.parallelStream()
                         .anyMatch(
                                 tx ->
@@ -1719,7 +1718,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 getPostExecutionWorkForGeneratePreBlock(repository),
                                 BlockCachingContext.PENDING,
                                 bestBlock.getNumber(),
-                                isUnityForkEnabled());
+                                forkUtility.isUnityForkActive(block.getNumber()));
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     if (!summary.isRejected()) {
@@ -1778,7 +1777,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 getPostExecutionWorkForApplyBlock(repository),
                                 executionTypeForAVM,
                                 cachedBlockNumberForAVM,
-                                isUnityForkEnabled());
+                                forkUtility.isUnityForkActive(block.getNumber()));
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     receipts.add(summary.getReceipt());
@@ -2499,22 +2498,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getBlockStore().isMainChain(hash);
     }
 
-
-    @VisibleForTesting
     @Override
-    public void setUnityForkNumber(long unityForkNumber) {
-        LOG.info("Unity enabled at fork number " + unityForkNumber);
-        FORK_5_BLOCK_NUMBER = unityForkNumber;
-    }
-
-    @Override
-    public long getUnityForkNumber() {
-        return FORK_5_BLOCK_NUMBER;
-    }
-
-    @Override
-    public boolean isUnityForkEnabled() {
-        return bestBlockNumber.get() >= FORK_5_BLOCK_NUMBER;
+    public boolean isUnityForkEnabledAtNextBlock() {
+        return forkUtility.isUnityForkActive(bestBlockNumber.get() + 1);
     }
 
     /**

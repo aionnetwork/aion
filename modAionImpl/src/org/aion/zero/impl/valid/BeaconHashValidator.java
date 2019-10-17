@@ -1,12 +1,12 @@
 package org.aion.zero.impl.valid;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.aion.base.AionTransaction;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
+import org.aion.zero.impl.forks.ForkUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,32 +15,20 @@ import java.util.Arrays;
 /** Validates beacon hash of transaction */
 public class BeaconHashValidator {
     private final IAionBlockchain blockchain;
-    private final long fork050Number;
+    private final ForkUtility forkUtility;
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
-
-    /**
-     * The value to use for fork050Number when calling constructor {@link
-     * #BeaconHashValidator(IAionBlockchain, long)} if beacon hash validation is
-     * disabled.
-     */
-    public static final long FORK_050_DISABLED = Long.MAX_VALUE;
 
     /**
      * Constructor.
      *
      * @param blockchain blockchain
-     * @param fork050Number the block number at which hard fork 0.5.0 takes effect.  Use
-     *                      {@link #FORK_050_DISABLED} if validation should be disabled;
-     *                      i.e. behave as if fork050 never happens and always return true
-     *                      when {@link #validateTxForBlock(AionTransaction, Block)} or
-     *                      {@link #validateTxForPendingState(AionTransaction)} is called
      */
-    public BeaconHashValidator(IAionBlockchain blockchain, long fork050Number) {
-        Preconditions.checkNotNull(blockchain, "Blockstore can't be null");
-        Preconditions.checkArgument(fork050Number >= 0, "Invalid fork0.5.0 block number: must be >= 0");
+    public BeaconHashValidator(IAionBlockchain blockchain, ForkUtility forkUtility) {
+        Preconditions.checkNotNull(blockchain, "Blockchain cannot be null");
+        Preconditions.checkNotNull(forkUtility, "Unity fork utility cannot be null");
 
         this.blockchain = blockchain;
-        this.fork050Number = fork050Number;
+        this.forkUtility = forkUtility;
     }
 
     /**
@@ -69,7 +57,7 @@ public class BeaconHashValidator {
                 return true;
             }
 
-            if (!isAfterFork050(block.getNumber()) && beaconHash != null) {
+            if (!forkUtility.isUnityForkActive(block.getNumber()) && beaconHash != null) {
                 return false;
             }
 
@@ -123,7 +111,7 @@ public class BeaconHashValidator {
             // the next block number might be larger than (current best + 1), but
             // we will tolerate false negatives
             long minNextBlockNumber = blockchain.getBestBlock().getNumber() + 1;
-            if (!isAfterFork050(minNextBlockNumber) && beaconHash != null) {
+            if (!forkUtility.isUnityForkActive(minNextBlockNumber) && beaconHash != null) {
                 return false;
             }
 
@@ -135,14 +123,6 @@ public class BeaconHashValidator {
             TX_LOG.debug("BeaconHashValidator#validateTxForPendingState: took {} usec",
                     (System.nanoTime() - t0)/1000);
         }
-    }
-
-    /**
-     * @return true if blockNumber >= fork050Number and fork050 not disabled;
-     *         false in all other cases
-     */
-    @VisibleForTesting boolean isAfterFork050(long blockNumber) {
-        return blockNumber >= fork050Number && fork050Number != FORK_050_DISABLED;
     }
 
     private boolean checkSideChain(byte[] beaconHash, Block sideChainHead) {

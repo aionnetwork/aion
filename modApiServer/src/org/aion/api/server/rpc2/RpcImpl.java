@@ -33,7 +33,7 @@ public class RpcImpl implements Rpc {
 
     @Override
     public byte[] getseed() {
-        if (!ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+        if (!ac.getAionHub().getBlockchain().isUnityForkEnabledAtNextBlock()) {
             return null;
         }
 
@@ -42,7 +42,7 @@ public class RpcImpl implements Rpc {
 
     @Override
     public byte[] submitseed(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) throws NullReturnRpcException {
-        if (!ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+        if (!ac.getAionHub().getBlockchain().isUnityForkEnabledAtNextBlock()) {
             throw new NullReturnRpcException("unity fork is not enabled");
         }
 
@@ -81,7 +81,7 @@ public class RpcImpl implements Rpc {
 
     @Override
     public boolean submitsignature(byte[] signature, byte[] sealhash) throws NullReturnRpcException {
-        if (! ac.getAionHub().getBlockchain().isUnityForkEnabled()) {
+        if (! ac.getAionHub().getBlockchain().isUnityForkEnabledAtNextBlock()) {
             throw new NullReturnRpcException("unity fork is not enabled");
         }
 

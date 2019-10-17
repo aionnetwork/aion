@@ -61,12 +61,12 @@ public class UnityHardForkTest {
     @After
     public void shutdown() {
         AvmTestConfig.clearConfigurations();
-        bc.setUnityForkNumber(Long.MAX_VALUE);
+        bc.forkUtility.disableUnityFork();
     }
 
     @Test
     public void testBlockUnityHardFork() {
-        bc.setUnityForkNumber(2);
+        bc.forkUtility.enableUnityFork(2);
 
         Block genesis = bc.getBestBlock();
         Block blockOnePOW = bc.createNewMiningBlock(genesis, Collections.emptyList(), true);

@@ -5,10 +5,10 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
+import org.aion.zero.impl.forks.ForkUtility;
 import org.junit.Test;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.Mockito.mock;
@@ -18,6 +18,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForBlockOnMainchainAndBeaconHashOnMainchain() {
         long fork050Number = 7;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         byte[] goodBlockHash = ByteUtil.hexStringToBytes("0xcafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafe");
@@ -42,16 +45,16 @@ public class BeaconHashValidatorTest {
                 goodBlockHash                               // beacon hash - exists in blockstore
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(block.getNumber()).thenReturn(fork050Number - 1);
         assertWithMessage("any beacon hash should fail if block_number < fork050_number")
                 .that(unit.validateTxForBlock(tx, block))
                 .isFalse();
         when(block.getNumber()).thenReturn(fork050Number);
-        assertWithMessage("beacon hash on chain of new block should pass if block_number = fork050_number")
+        assertWithMessage("beacon hash on chain of new block should fail if block_number = fork050_number")
                 .that(unit.validateTxForBlock(tx, block))
-                .isTrue();
+                .isFalse();
         when(block.getNumber()).thenReturn(fork050Number + 1);
         assertWithMessage("beacon hash on chain of new block should pass if block_number > fork050_number")
                 .that(unit.validateTxForBlock(tx, block))
@@ -61,6 +64,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForBlockOnMainchainAndBeaconHashNotOnMainchain() {
         long fork050Number = 13;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         byte[] nonExistentBlockhash = ByteUtil.hexStringToBytes("0xbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad0");
@@ -85,7 +91,7 @@ public class BeaconHashValidatorTest {
                 nonExistentBlockhash                        // beacon hash - does not exist in blockstore
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(block.getNumber()).thenReturn(fork050Number - 1);
         assertWithMessage("any beacon hash should fail if block_number < fork050_number")
@@ -104,6 +110,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForBlockOnMainchainAndBeaconHashNotGiven() {
         long fork050Number = 2;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         Block block = mock(Block.class);
@@ -125,7 +134,7 @@ public class BeaconHashValidatorTest {
                 null                                        // beacon hash - not present
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(block.getNumber()).thenReturn(fork050Number - 1);
         assertWithMessage("validation should pass if beacon hash not present")
@@ -151,6 +160,9 @@ public class BeaconHashValidatorTest {
          *          \--x--o--*  side chain
          */
         long fork050Number = 5;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         LinkedList<Block> sideChain = mockChain(fork050Number, 4, blockchain);
@@ -171,7 +183,7 @@ public class BeaconHashValidatorTest {
                 beaconHash                                  // beacon hash
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
         assertWithMessage("beacon hash on chain of new block should pass if block_number = fork050_number")
                 .that(unit.validateTxForBlock(tx, sideChain.get(0)))
                 .isTrue();
@@ -189,10 +201,13 @@ public class BeaconHashValidatorTest {
          *         |
          *          \--o--o--*  side chain
          */
-        long fork050Number = 0;
+        long fork050Number = 2;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
-        LinkedList<Block> sideChain = mockChain(0, 5, blockchain);
+        LinkedList<Block> sideChain = mockChain(fork050Number, 7, blockchain);
         when(blockchain.isMainChain(sideChain.get(2).getHash(), sideChain.get(2).getNumber())).thenReturn(true);
         when(blockchain.isMainChain(sideChain.get(4).getHash())).thenReturn(true);
 
@@ -213,7 +228,7 @@ public class BeaconHashValidatorTest {
                 beaconHash                                  // beacon hash
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
         assertWithMessage("beacon hash on chain of new block should pass if block_number = fork050_number")
                 .that(unit.validateTxForBlock(tx, sideChain.get(0)))
                 .isTrue();
@@ -231,7 +246,10 @@ public class BeaconHashValidatorTest {
          *         |
          *          \--o--o--*  side chain
          */
-        long fork050Number = 0;
+        long fork050Number = 2;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         // mocking up a block as if it were on the main chain but not the sidechain
@@ -244,7 +262,7 @@ public class BeaconHashValidatorTest {
         when(blockchain.getBlockByHash(mainchainOnlyBlockHash)).thenReturn(mainchainOnlyBlock);
 
         // need to set up the side chain so that its head block number is > mainchainOnlyBlockNum
-        LinkedList<Block> sideChain = mockChain(0, 4, blockchain);
+        LinkedList<Block> sideChain = mockChain(fork050Number, 6, blockchain);
 
         byte[] beaconHash = new byte[32];
         System.arraycopy(mainchainOnlyBlockHash, 0, beaconHash, 0, 32);
@@ -262,7 +280,7 @@ public class BeaconHashValidatorTest {
                 beaconHash                                  // beacon hash
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
         assertWithMessage("beacon hash not on chain of new block should fail if block_number = fork050_number")
                 .that(unit.validateTxForBlock(tx, sideChain.get(0)))
                 .isFalse();
@@ -280,13 +298,16 @@ public class BeaconHashValidatorTest {
          *         |
          *          \--o--o--*  side chain
          */
-        long fork050Number = 0;
+        long fork050Number = 2;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
 
         byte[] nonExistentBlockhash = ByteUtil.hexStringToBytes(
                 "0xbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad0");
 
-        LinkedList<Block> sideChain = mockChain(0, 4, blockchain);
+        LinkedList<Block> sideChain = mockChain(fork050Number, 6, blockchain);
 
         AionTransaction tx = AionTransaction.createWithoutKey(
                 new byte[] { 1 },                           // nonce - any val
@@ -302,7 +323,7 @@ public class BeaconHashValidatorTest {
                 nonExistentBlockhash                        // beacon hash
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
         assertWithMessage("beacon hash not on chain of new block should fail if block_number = fork050_number")
                 .that(unit.validateTxForBlock(tx, sideChain.get(0)))
                 .isFalse();
@@ -311,6 +332,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForPendingStateWhenBeaconHashOnMainchain() {
         long fork050Number = 7;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
         Block bestBlock = mock(Block.class);
 
@@ -333,16 +357,16 @@ public class BeaconHashValidatorTest {
                 goodBlockHash                               // beacon hash - exists in blockstore
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(bestBlock.getNumber()).thenReturn(fork050Number - 2);
         assertWithMessage("any beacon hash should fail for pending state if best_block_number+1 < fork050_number")
                 .that(unit.validateTxForPendingState(tx))
                 .isFalse();
         when(bestBlock.getNumber()).thenReturn(fork050Number - 1);
-        assertWithMessage("mainchain hash should pass for pending state if best_block_number+1 = fork050_number")
+        assertWithMessage("mainchain hash should fail for pending state if best_block_number+1 == fork050_number")
                 .that(unit.validateTxForPendingState(tx))
-                .isTrue();
+                .isFalse();
         when(bestBlock.getNumber()).thenReturn(fork050Number);
         assertWithMessage("mainchain hash should pass for pending state if best_block_number+1 > fork050_number")
                 .that(unit.validateTxForPendingState(tx))
@@ -352,6 +376,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForPendingStateWhenBeaconHashNotOnMainchain() {
         long fork050Number = 3;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
         Block bestBlock = mock(Block.class);
 
@@ -374,7 +401,7 @@ public class BeaconHashValidatorTest {
                 badBlockhash                                // beacon hash - does not exist in blockstore
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(bestBlock.getNumber()).thenReturn(fork050Number - 2);
         assertWithMessage("any beacon hash should fail for pending state if best_block_number+1 < fork050_number")
@@ -393,6 +420,9 @@ public class BeaconHashValidatorTest {
     @Test
     public void validateTxForPendingStateWithoutBeaconHash() {
         long fork050Number = 3;
+        ForkUtility forkUtility = new ForkUtility();
+        forkUtility.enableUnityFork(fork050Number);
+
         IAionBlockchain blockchain = mock(IAionBlockchain.class);
         Block bestBlock = mock(Block.class);
 
@@ -412,7 +442,7 @@ public class BeaconHashValidatorTest {
                 null                                        // beacon hash - absent
         );
 
-        BeaconHashValidator unit = new BeaconHashValidator(blockchain, fork050Number);
+        BeaconHashValidator unit = new BeaconHashValidator(blockchain, forkUtility);
 
         when(bestBlock.getNumber()).thenReturn(fork050Number - 2);
         assertWithMessage("validation should pass for pending state if beacon hash absent")
@@ -429,28 +459,26 @@ public class BeaconHashValidatorTest {
     }
 
     @Test
-    public void isAfterFork050AllCombinations() {
-        IAionBlockchain blockchain = mock(IAionBlockchain.class);
+    public void isUnityForkActiveAllCombinations() {
+        // unity fork disabled
+        ForkUtility forkUtility = new ForkUtility();
+        assertWithMessage("isUnityForkActive should always be false if fork 0.5.0 disabled")
+                .that(forkUtility.isUnityForkActive(312l))
+                .isFalse();
+        assertWithMessage("isUnityForkActive should always be false if fork 0.5.0 disabled")
+                .that(forkUtility.isUnityForkActive(Long.MAX_VALUE))
+                .isFalse();
 
-        assertWithMessage("isAfterFork050 should always be false if fork 0.5.0 disabled")
-                .that(new BeaconHashValidator(blockchain, BeaconHashValidator.FORK_050_DISABLED)
-                        .isAfterFork050(312l))
+        // unity fork enabled after block 1337
+        forkUtility.enableUnityFork(1337);
+        assertWithMessage("isUnityForkActive should be false if block_number < fork050_number")
+                .that(forkUtility.isUnityForkActive(1336))
                 .isFalse();
-        assertWithMessage("isAfterFork050 should always be false if fork 0.5.0 disabled")
-                .that(new BeaconHashValidator(blockchain, BeaconHashValidator.FORK_050_DISABLED)
-                        .isAfterFork050(BeaconHashValidator.FORK_050_DISABLED))
+        assertWithMessage("isUnityForkActive should be false if block_number = fork050_number")
+                .that(forkUtility.isUnityForkActive(1337))
                 .isFalse();
-        assertWithMessage("isAfterFork050 should be false if block_number < fork050_number")
-                .that(new BeaconHashValidator(blockchain, 1337)
-                        .isAfterFork050(1336))
-                .isFalse();
-        assertWithMessage("isAfterFork050 should be true if block_number = fork050_number")
-                .that(new BeaconHashValidator(blockchain, 1337)
-                        .isAfterFork050(1337))
-                .isTrue();
-        assertWithMessage("isAfterFork050 should be true if block_number > fork050_number")
-                .that(new BeaconHashValidator(blockchain, 1337)
-                        .isAfterFork050(1338))
+        assertWithMessage("isUnityForkActive should be true if block_number > fork050_number")
+                .that(forkUtility.isUnityForkActive(1338))
                 .isTrue();
     }
 

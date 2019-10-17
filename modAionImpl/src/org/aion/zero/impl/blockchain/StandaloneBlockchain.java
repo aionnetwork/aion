@@ -197,13 +197,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        private long unityForkNumber = Long.MAX_VALUE;
-
-        public Builder withUnityForkNumber(long unityForkNumber) {
-            this.unityForkNumber = unityForkNumber;
-            return this;
-        }
-
         private AionBlock best = null, parentBest = null;
         private byte[] trieData = null;
         private BigInteger totalDiff = null, totalDiffParent = null;
@@ -529,7 +522,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             boolean waitUntilBlockTime,
             long currTimeSeconds) {
 
-        boolean unityForkEnabled = (parent.getHeader().getNumber() + 1) >= getUnityForkNumber();
+        boolean unityForkEnabled = forkUtility.isUnityForkActive(parent.getNumber() + 1);
         for (AionTransaction tx : txs) {
             if (unityForkEnabled ? !TXValidator.isValidAfterUnity(tx): !TXValidator.isValid(tx)) {
                 throw new InvalidParameterException("invalid transaction input! " + tx.toString());
