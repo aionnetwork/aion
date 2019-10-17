@@ -57,7 +57,6 @@ public class Blk {
         obj.put("extraData", StringUtils.toJsonHex(block.getHeader().getExtraData()));
         obj.put("sealType", StringUtils.toJsonHex(block.getHeader().getSealType().getSealId()));
         obj.put("mainChain", block.isMainChain() ? "true" : "false");
-        obj.put("antiParentHash", block.getAntiparentHash());
 
         if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             AionBlock miningBlock = (AionBlock) block;
@@ -172,7 +171,6 @@ public class Blk {
 
         obj.put("sealType", StringUtils.toJsonHex(genericBlock.getHeader().getSealType().getSealId()));
         obj.put("mainChain", genericBlock.isMainChain() ? "true" : "false");
-        obj.put("antiParentHash", genericBlock.getAntiparentHash());
 
         obj.put("extraData", StringUtils.toJsonHex(genericBlock.getExtraData()));
         obj.put("size", genericBlock.size());
@@ -229,7 +227,6 @@ public class Blk {
         obj.put("miner", StringUtils.toJsonHex(block.getCoinbase().toString()));
         obj.put("sealType", StringUtils.toJsonHex(block.getHeader().getSealType().getSealId()));
         obj.put("mainChain", block.isMainChain() ? "true" : "false");
-        obj.put("antiParentHash", block.getAntiparentHash());
 
         if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             AionBlock miningBlock = (AionBlock) block;

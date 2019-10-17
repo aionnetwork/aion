@@ -73,10 +73,6 @@ public interface Block {
 
     int size();
 
-    byte[] getAntiparentHash();
-
-    void setAntiparentHash(byte[] antiparentHash);
-
     boolean isMainChain();
 
     @VisibleForTesting

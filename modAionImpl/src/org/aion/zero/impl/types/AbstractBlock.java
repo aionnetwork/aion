@@ -17,8 +17,6 @@ public abstract class AbstractBlock implements Block {
     Boolean mainChain;
     
     // set from BlockInfos in index database
-    byte[] antiparentHash;
-
     protected BigInteger totalDifficulty;
 
     List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
@@ -77,18 +75,6 @@ public abstract class AbstractBlock implements Block {
             ++i;
         }
         return RLP.encodeList(transactionsEncoded);
-    }
-
-    public byte[] getAntiparentHash() {
-        return antiparentHash;
-    }
-
-    public void setAntiparentHash(byte[] antiparentHash) {
-        if (antiparentHash == null) {
-            throw new NullPointerException("antiparentHash is null");
-        }
-
-        this.antiparentHash = antiparentHash;
     }
 
     @Override

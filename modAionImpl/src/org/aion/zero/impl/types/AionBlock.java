@@ -387,13 +387,8 @@ public class AionBlock extends AbstractBlock {
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
 
-        if (antiparentHash != null) {
-            toStringBuff.append("  antiparentHash=").append(ByteUtil.toHexString(antiparentHash)).append("\n");
-        }
-
-
         if (totalDifficulty != null) {
-            toStringBuff.append("  difficulty=").append(totalDifficulty).append("\n");
+            toStringBuff.append(" total difficulty=").append(totalDifficulty).append("\n");
         }
 
         if (mainChain != null) {
