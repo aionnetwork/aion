@@ -1,6 +1,8 @@
 package org.aion.api.server.rpc3.types;
 
-import org.json.JSONObject;
+import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.ByteArrayWrapper;
 import static org.aion.api.server.rpc3.types.RPCTypes.*;
 import java.util.regex.Pattern;
 import org.aion.api.server.rpc3.RPCExceptions.ParseErrorRPCException;
@@ -15,6 +17,9 @@ import java.math.BigInteger;
 *
 *****************************************************************************/
 public class RPCTypesConverter{
+
+    private static final Pattern hexPattern= Pattern.compile("^0x[0-9a-fA-F]+");
+    private static final Pattern decPattern = Pattern.compile("^[0-9]+");
 
     public static class StringConverter{
 
@@ -99,12 +104,10 @@ public class RPCTypesConverter{
     }
 
     public static class BigIntegerConverter{
-        private final static Pattern hexPattern = Pattern.compile("^0x[0-9a-fA-F]+");
-        private final static Pattern decPattern = Pattern.compile("^[0-9]+");
 
         public static String encodeHex(BigInteger bigInteger){
             try{
-                return "0x"+bigInteger.toString();
+                return "0x"+bigInteger.toString(16);
             } catch (Exception e){
                 throw new ParseErrorRPCException();
             }
@@ -112,7 +115,7 @@ public class RPCTypesConverter{
 
         public static String encode(BigInteger bigInteger){
             try{
-                return bigInteger.toString();
+                return bigInteger.toString(16);
             } catch(Exception e){
                 throw new ParseErrorRPCException();
             }
@@ -132,6 +135,60 @@ public class RPCTypesConverter{
             }
         }
     }
+
+    public static class ByteArrayWrapperConverter{
+        private static final Pattern hexPattern = Pattern.compile("^0x[0-9a-fA-F]+");
+
+        public static ByteArrayWrapper decode(Object obj){
+            if (obj == null){
+                return null;
+            }
+            else if(obj instanceof byte[]){
+                return ByteArrayWrapper.wrap(((byte[])obj));
+            }
+            else if (obj instanceof String){
+                if (hexPattern.matcher(((String)obj)).find()){
+                    return ByteArrayWrapper.wrap(ByteUtil.hexStringToBytes((String) obj));
+                } else {
+                    return ByteArrayWrapper.wrap(((String)obj).getBytes());
+                }
+            }
+            else {
+                    throw new ParseErrorRPCException();
+            }
+        }
+
+        public static String encode(ByteArrayWrapper bytes){
+            if (bytes == null) return null;
+            else return "0x" + bytes.toString();
+        }
+    }
+
+    public static class AionAddressConverter{
+        public static AionAddress decode(Object obj){
+            try{
+                if (obj == null){
+                    return null;
+                }
+                else if (obj instanceof String && hexPattern.matcher(((String)obj)).find()){
+                    return new AionAddress(ByteUtil.hexStringToBytes(((String) obj)));
+                }
+                else if (obj instanceof byte[]){
+                    return new AionAddress(((byte[])obj));
+                }
+                else {
+                    throw new ParseErrorRPCException();
+                }
+            }catch (Exception e){
+                throw new ParseErrorRPCException();
+            }
+        }
+
+        public static String encode(AionAddress address){
+            if (address==null) return null;
+            else return "0x"+address.toString();
+        }
+}
 
     public static class RequestConverter{
         public static Request decode(Object str){
@@ -163,10 +220,10 @@ public class RPCTypesConverter{
     public static class DataHexStringConverter{
         private static final Pattern regex = Pattern.compile("^0x([0-9a-fA-F][0-9a-fA-F])+");
 
-        public static String decode(Object object){
+        public static ByteArrayWrapper decode(Object object){
             try{
                 if (object!=null && checkConstraints(object.toString())){
-                    return StringConverter.decode(object);
+                    return ByteArrayWrapperConverter.decode(object);
                 }
                 else{
                     throw new ParseErrorRPCException();
@@ -176,9 +233,9 @@ public class RPCTypesConverter{
             }
         }
 
-        public static String encode(String obj){
+        public static String encode(ByteArrayWrapper obj){
             if (obj != null){
-                String result = StringConverter.encode(obj);
+                String result = ByteArrayWrapperConverter.encode(obj);
                 if(checkConstraints(result))
                     return result;
                 else
@@ -293,40 +350,6 @@ public class RPCTypesConverter{
 
         private static boolean checkConstraints(String s){
             return regex.matcher(s).find() && s.length() >= 3 && s.length() <= 11;
-        }
-    }
-
-    public static class AddressConverter{
-        private static final Pattern regex = Pattern.compile(".*");
-
-        public static String decode(Object object){
-            try{
-                if (object!=null && checkConstraints(object.toString())){
-                    return DataHexStringConverter.decode(object);
-                }
-                else{
-                    throw new ParseErrorRPCException();
-                }
-            } catch(Exception e){
-                throw new ParseErrorRPCException();
-            }
-        }
-
-        public static String encode(String obj){
-            if (obj != null){
-                String result = DataHexStringConverter.encode(obj);
-                if(checkConstraints(result))
-                    return result;
-                else
-                    throw new ParseErrorRPCException();
-            }
-            else{
-                throw new ParseErrorRPCException();
-            }
-        }
-
-        private static boolean checkConstraints(String s){
-            return regex.matcher(s).find() && s.length() >= 66 && s.length() <= 66;
         }
     }
 

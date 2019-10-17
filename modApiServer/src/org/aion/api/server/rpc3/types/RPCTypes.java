@@ -1,6 +1,8 @@
 package org.aion.api.server.rpc3.types;
 
 import org.aion.api.server.rpc3.RPCExceptions.ParseErrorRPCException;
+import org.aion.util.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
 
 /******************************************************************************
 *
@@ -46,14 +48,13 @@ public class RPCTypes{
 
     public static class EcRecoverParams {
         public final String dataThatWasSigned;
-        public final String signature;
+        public final ByteArrayWrapper signature;
 
-        public EcRecoverParams(String dataThatWasSigned ,String signature ){
+        public EcRecoverParams(String dataThatWasSigned ,ByteArrayWrapper signature ){
             if(dataThatWasSigned==null) throw new ParseErrorRPCException();
             this.dataThatWasSigned=dataThatWasSigned;
             if(signature==null) throw new ParseErrorRPCException();
             this.signature=signature;
         }
-
     }
 }

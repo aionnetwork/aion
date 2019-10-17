@@ -3,6 +3,9 @@ package org.aion.api.server.rpc3;
 import static org.aion.api.server.rpc3.RPCExceptions.*;
 import static org.aion.api.server.rpc3.types.RPCTypes.*;
 import static org.aion.api.server.rpc3.types.RPCTypesConverter.*;
+import org.aion.util.types.ByteArrayWrapper;
+import org.aion.types.AionAddress;
+
 
 /******************************************************************************
 *
@@ -18,29 +21,27 @@ public abstract class PersonalRPC{
     public String execute(String requestString){
         try{
 
-        Request request = RequestConverter.decode(requestString);
-        //check that the request can be fulfilled by this class
-        String interfaceName = request.method.split("_")[0];
-        if(interfaceName.equals("personal")){
+            Request request = RequestConverter.decode(requestString);
+            //check that the request can be fulfilled by this class
+            String interfaceName = request.method.split("_")[0];
+            if(interfaceName.equals("personal")){
                 if(request.method.equals("personal_ecRecover")){
                     EcRecoverParams params=EcRecoverParamsConverter.decode(request.params);
 
-                    String result = personal_ecRecover(params.dataThatWasSigned,params.signature);
-                    return DataHexStringConverter
-                            .encode(result);
+                    ByteArrayWrapper result = personal_ecRecover(params.dataThatWasSigned,params.signature);
+                    return DataHexStringConverter.encode(result);
                 }
                 else
                     throw new MethodNotFoundRPCException();
-        }
-        else{
-            throw new InternalErrorRPCException();
-        }
+            }
+            else{
+                throw new InternalErrorRPCException();
+            }
         }
         catch(InvalidRequestRPCException |ParseErrorRPCException |MethodNotFoundRPCException |InvalidParamsRPCException |InternalErrorRPCException e){
             return e.getMessage();
         }
-
     }
 
-    protected abstract String personal_ecRecover(String dataThatWasSigned,String signature);
+    protected abstract ByteArrayWrapper personal_ecRecover(String dataThatWasSigned,ByteArrayWrapper signature);
 }
