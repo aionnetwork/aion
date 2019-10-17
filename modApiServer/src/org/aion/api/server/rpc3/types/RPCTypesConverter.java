@@ -188,7 +188,7 @@ public class RPCTypesConverter{
             if (address==null) return null;
             else return "0x"+address.toString();
         }
-}
+    }
 
     public static class RequestConverter{
         public static Request decode(Object str){
@@ -360,11 +360,11 @@ public class RPCTypesConverter{
                 EcRecoverParams obj;
                 if(s.startsWith("[") && s.endsWith("]")){
                     JSONArray jsonArray = new JSONArray(s);
-                    obj = new EcRecoverParams( StringConverter.decode(jsonArray.opt(0)), DataHexStringConverter.decode(jsonArray.opt(1)));
+                    obj = new EcRecoverParams( DataHexStringConverter.decode(jsonArray.opt(0)), DataHexStringConverter.decode(jsonArray.opt(1)));
                 }
                 else if(s.startsWith("{") && s.endsWith("}")){
                     JSONObject jsonObject = new JSONObject(s);
-                    obj = new EcRecoverParams( StringConverter.decode(jsonObject.opt("dataThatWasSigned")), DataHexStringConverter.decode(jsonObject.opt("signature")));
+                    obj = new EcRecoverParams( DataHexStringConverter.decode(jsonObject.opt("dataThatWasSigned")), DataHexStringConverter.decode(jsonObject.opt("signature")));
                 }
                 else{
                     throw new ParseErrorRPCException();
@@ -378,7 +378,7 @@ public class RPCTypesConverter{
         public static String encode(EcRecoverParams obj){
             try{
                 JSONArray arr = new JSONArray();
-                arr.put(0, StringConverter.encode(obj.dataThatWasSigned));
+                arr.put(0, DataHexStringConverter.encode(obj.dataThatWasSigned));
                                 arr.put(1, DataHexStringConverter.encode(obj.signature));
                 return arr.toString();
             }catch(Exception e){

@@ -6,7 +6,6 @@ import static org.aion.api.server.rpc3.types.RPCTypesConverter.*;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.types.AionAddress;
 
-
 /******************************************************************************
 *
 * AUTO-GENERATED SOURCE FILE.  DO NOT EDIT MANUALLY -- YOUR CHANGES WILL
@@ -43,5 +42,5 @@ public abstract class PersonalRPC{
         }
     }
 
-    protected abstract ByteArrayWrapper personal_ecRecover(String dataThatWasSigned,ByteArrayWrapper signature);
+    abstract ByteArrayWrapper personal_ecRecover(ByteArrayWrapper dataThatWasSigned,ByteArrayWrapper signature);
 }
