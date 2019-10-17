@@ -388,8 +388,8 @@ public class StakingBlock extends AbstractBlock {
             toStringBuff.append("  antiparentHash=").append(ByteUtil.toHexString(antiparentHash)).append("\n");
         }
 
-        if (unityDifficulty != null) {
-            toStringBuff.append("  difficulty=").append(unityDifficulty).append("\n");
+        if (totalDifficulty != null) {
+            toStringBuff.append("  difficulty=").append(totalDifficulty).append("\n");
         }
 
         if (mainChain != null) {

@@ -180,7 +180,7 @@ public final class FastSyncManager {
             chain.setBestBlock(pivot);
 
             // walk through the chain to update the total difficulty
-            chain.getBlockStore().pruneAndCorrect(chain.getUnityForkNumber());
+            chain.getBlockStore().pruneAndCorrect();
             chain.getBlockStore().flush();
 
             completeBlocks.set(true);

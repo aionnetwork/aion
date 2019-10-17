@@ -48,8 +48,6 @@ public class Blk {
                                 : block.getReceiptsRoot()));
         obj.put("difficulty", StringUtils.toJsonHex(block.getHeader().getDifficulty()));
         obj.put("totalDifficulty", StringUtils.toJsonHex(block.getCumulativeDifficulty()));
-        obj.put("miningDifficulty", StringUtils.toJsonHex(block.getMiningDifficulty()));
-        obj.put("stakingDifficulty", StringUtils.toJsonHex(block.getStakingDifficulty()));
         obj.put("timestamp", StringUtils.toJsonHex(block.getHeader().getTimestamp()));
         obj.put("miner", StringUtils.toJsonHex(block.getCoinbase().toString()));
         obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
@@ -164,8 +162,6 @@ public class Blk {
                 genericBlock.getReceiptsRoot() == null ? new byte[0] : genericBlock.getReceiptsRoot()));
         obj.put("difficulty", StringUtils.toJsonHex(genericBlock.getDifficulty()));
         obj.put("totalDifficulty", StringUtils.toJsonHex(totalDifficulty));
-        obj.put("miningDifficulty", StringUtils.toJsonHex(genericBlock.getMiningDifficulty()));
-        obj.put("stakingDifficulty", StringUtils.toJsonHex(genericBlock.getStakingDifficulty()));
 
         obj.put("miner", StringUtils.toJsonHex(genericBlock.getCoinbase().toString()));
         obj.put("timestamp", StringUtils.toJsonHex(genericBlock.getTimestamp()));
@@ -223,8 +219,6 @@ public class Blk {
                                 : block.getReceiptsRoot()));
         obj.put("difficulty", StringUtils.toJsonHex(block.getHeader().getDifficulty()));
         obj.put("totalDifficulty", StringUtils.toJsonHex(block.getCumulativeDifficulty()));
-        obj.put("miningDifficulty", StringUtils.toJsonHex(block.getMiningDifficulty()));
-        obj.put("stakingDifficulty", StringUtils.toJsonHex(block.getStakingDifficulty()));
         obj.put("timestamp", StringUtils.toJsonHex(block.getHeader().getTimestamp()));
         obj.put("gasUsed", StringUtils.toJsonHex(block.getHeader().getEnergyConsumed()));
         obj.put("gasLimit", StringUtils.toJsonHex(block.getHeader().getEnergyLimit()));

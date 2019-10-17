@@ -7,7 +7,6 @@ import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -137,7 +136,7 @@ public interface IAionBlockchain extends UnityChain {
 
     void close();
 
-    void setUnityTotalDifficulty(BigInteger miningDifficulty, BigInteger stakingDifficulty);
+    void setTotalDifficulty(BigInteger totalDifficulty);
 
     byte[] getBestBlockHash();
 

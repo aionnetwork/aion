@@ -38,14 +38,7 @@ public class AionHubUtils {
         track.flush();
 
         repository.commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
-        repository
-                .getBlockStore()
-                .saveBlock(
-                        genesis,
-                        genesis.getMiningDifficulty(),
-                        genesis.getStakingDifficulty(),
-                        true,
-                        Long.MAX_VALUE);
+        repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {

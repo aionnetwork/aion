@@ -19,7 +19,6 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.db.InternalVmType;
@@ -28,7 +27,6 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionGenesis;
-import org.aion.zero.impl.types.UnityDifficulty;
 import org.aion.zero.impl.valid.BlockHeaderRule;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.util.types.DataWord;
@@ -208,24 +206,22 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         private AionBlock best = null, parentBest = null;
         private byte[] trieData = null;
-        private BigInteger totalMiningDifficulty = null, totalMiningDifficultyParent = null;
-        private BigInteger totalStakingDifficulty = null, totalStakingDifficultyParent = null;
+        private BigInteger totalDiff = null, totalDiffParent = null;
+
         /**
          * @param serializedTrieBestBlock data obtained by calling {@link
          *     AionRepositoryImpl#dumpImportableState(byte[], int, DatabaseType)}
          */
         public Builder withState(
                 AionBlock parentBestBlock,
-                BigInteger totalMiningDifficultyParent,
+                BigInteger totalDiffParent,
                 AionBlock bestBlock,
-                BigInteger totalMiningDifficulty,
+                BigInteger totalDiffBest,
                 byte[] serializedTrieBestBlock) {
             this.parentBest = parentBestBlock;
-            this.totalMiningDifficultyParent = totalMiningDifficultyParent;
+            this.totalDiffParent = totalDiffParent;
             this.best = bestBlock;
-            this.totalMiningDifficulty = totalMiningDifficulty;
-            // will get set to genesis staking difficulty when built
-            this.totalStakingDifficulty = BigInteger.ONE;
+            this.totalDiff = totalDiffBest;
             this.trieData = serializedTrieBestBlock;
             return this;
         }
@@ -429,57 +425,25 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.getRepository()
                     .commitBlock(
                             genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
-            bc.getRepository()
-                    .getBlockStore()
-                    .saveBlock(
-                            genesis,
-                            genesis.getMiningDifficulty(),
-                            genesis.getStakingDifficulty(),
-                            true,
-                            bc.getUnityForkNumber());
+            bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             bc.setBestBlock(genesis);
-            bc.setUnityTotalDifficulty(
-                    genesis.getMiningDifficulty(), genesis.getStakingDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
-                genesis.setUnityDifficulty(
-                        new UnityDifficulty(
-                                genesis.getMiningDifficulty(), genesis.getStakingDifficulty()));
-            }
-
-            if (totalStakingDifficulty == null) {
-                totalStakingDifficulty = genesis.getStakingDifficulty();
-            }
-
-            if (totalStakingDifficultyParent == null) {
-                totalStakingDifficultyParent = genesis.getStakingDifficulty();
+                genesis.setTotalDifficulty(genesis.getDifficultyBI());
             }
 
             // set specific block and state
             if (best != null
-                    && totalMiningDifficulty != null
+                    && totalDiff != null
                     && trieData != null
                     && parentBest != null
-                    && totalMiningDifficultyParent != null) {
-                bc.getRepository()
-                        .getBlockStore()
-                        .saveBlock(
-                                parentBest,
-                                totalMiningDifficultyParent,
-                                totalStakingDifficultyParent,
-                                true,
-                                bc.getUnityForkNumber());
-                bc.getRepository()
-                        .getBlockStore()
-                        .saveBlock(
-                                best,
-                                totalMiningDifficulty,
-                                totalStakingDifficulty,
-                                true,
-                                bc.getUnityForkNumber());
+                    && totalDiffParent != null) {
+                bc.getRepository().getBlockStore().saveBlock(parentBest, totalDiffParent, true);
+                bc.getRepository().getBlockStore().saveBlock(best, totalDiff, true);
                 bc.setBestBlock(best);
-                bc.setUnityTotalDifficulty(totalMiningDifficulty, totalStakingDifficulty);
+                bc.setTotalDifficulty(totalDiff);
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
                 bc.getRepository().getWorldState().setRoot(best.getStateRoot());
                 bc.getRepository().getWorldState().sync(false);
@@ -613,13 +577,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 Block block = new AionBlock(header, Collections.emptyList());
                 this.setBestBlock(block);
-                this.getBlockStore()
-                        .saveBlock(
-                                block,
-                                this.genesis.getMiningDifficulty(),
-                                genesis.getStakingDifficulty(),
-                                true,
-                                this.getUnityForkNumber());
+                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
                 grandParentBlock = block;
             } else {
                 // grab the grandparent block from the database if it exists
@@ -629,7 +587,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 .get(0);
             }
 
-            BlockHeader bestHeader = this.getBestBlock().getHeader();
             A0BlockHeader header =
                     A0BlockHeader.Builder.newInstance()
                             .withParentHash(grandParentBlock.getHash())
@@ -643,13 +600,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             .build();
             AionBlock block = new AionBlock(header, Collections.emptyList());
             this.setBestBlock(block);
-            this.getBlockStore()
-                    .saveBlock(
-                            block,
-                            this.genesis.getMiningDifficulty(),
-                            genesis.getStakingDifficulty(),
-                            true,
-                            this.getUnityForkNumber());
+            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
         } catch (Exception e) {
             // any exception here should kill the tests
             // rethrow as runtime

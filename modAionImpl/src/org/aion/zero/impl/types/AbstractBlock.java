@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.Difficulty;
 import org.aion.rlp.RLP;
 import org.aion.util.types.ByteArrayWrapper;
 
@@ -20,7 +19,7 @@ public abstract class AbstractBlock implements Block {
     // set from BlockInfos in index database
     byte[] antiparentHash;
 
-    protected UnityDifficulty unityDifficulty;
+    protected BigInteger totalDifficulty;
 
     List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
@@ -92,28 +91,20 @@ public abstract class AbstractBlock implements Block {
         this.antiparentHash = antiparentHash;
     }
 
-    public BigInteger getMiningDifficulty() {
-        if (unityDifficulty == null) {
-            return BigInteger.ZERO;
-        } else {
-            return unityDifficulty.getTotalMiningDifficulty();
-        }
-    }
-
-    public BigInteger getStakingDifficulty() {
-        if (unityDifficulty == null) {
-            return BigInteger.ZERO;
-        } else {
-            return unityDifficulty.getTotalStakingDifficulty();
-        }
-    }
-
     @Override
     public BigInteger getCumulativeDifficulty() {
-        if (unityDifficulty == null) {
+        if (totalDifficulty == null) {
             return BigInteger.ZERO;
         } else {
-            return unityDifficulty.getTotalDifficulty();
+            return totalDifficulty;
+        }
+    }
+    
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        if (null == totalDifficulty) {
+            throw new IllegalArgumentException("total difficulty is null");
+        } else {
+            this.totalDifficulty = totalDifficulty;
         }
     }
 
@@ -155,10 +146,5 @@ public abstract class AbstractBlock implements Block {
             parentHashWrapper = ByteArrayWrapper.wrap(getParentHash());
         }
         return parentHashWrapper;
-    }
-
-    @Override
-    public void setUnityDifficulty(Difficulty difficulty) {
-        unityDifficulty = (UnityDifficulty) difficulty;
     }
 }

@@ -1,13 +1,10 @@
 package org.aion.zero.impl.db;
 
-import static java.math.BigInteger.ZERO;
-
 import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -18,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.ArrayStore;
 import org.aion.db.store.ObjectStore;
@@ -28,16 +24,13 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.BlockUtil;
-import org.aion.zero.impl.types.UnityDifficulty;
 import org.slf4j.Logger;
 
 public class AionBlockStore implements IBlockStoreBase {
@@ -175,8 +168,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 throw new IllegalStateException("The block info of the best block should not be null");
             }
 
-            bestBlock.setUnityDifficulty(new UnityDifficulty(bestBlockInfo.getMiningDifficulty(), bestBlockInfo.getStakingDifficulty()));
-            bestBlock.setAntiparentHash(bestBlockInfo.getSealAntiparentHash());
+            bestBlock.setTotalDifficulty(bestBlockInfo.getTotalDifficulty());
 
             return bestBlock;
         } finally {
@@ -244,17 +236,13 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    public void saveBlock(Block block, BigInteger miningDifficulty, BigInteger stakingDifficulty, boolean mainChain, long unityForkNumber) {
+    public void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain) {
         if (block == null) {
             throw new NullPointerException("block is null");
         }
 
-        if (miningDifficulty == null ) {
-            throw new NullPointerException("miningDifficulty is null");
-        }
-
-        if (stakingDifficulty == null) {
-            throw new NullPointerException("StakingDifficulty is null");
+        if (totalDifficulty == null) {
+            throw new NullPointerException("Total difficulty is null");
         }
 
         lock.lock();
@@ -266,12 +254,6 @@ public class AionBlockStore implements IBlockStoreBase {
                 if (parent != null) {
                     if (LOG_CONS.isDebugEnabled()) {
                         LOG_CONS.debug("saveBlock: block {} parent {}", block.toString(), parent.toString());
-                    }
-
-                    if (block.getHeader().getSealType() == parent.getHeader().getSealType()) {
-                        block.setAntiparentHash(parent.getAntiparentHash());
-                    } else {
-                        block.setAntiparentHash(parent.getHash());
                     }
                 }
             }
@@ -295,17 +277,7 @@ public class AionBlockStore implements IBlockStoreBase {
                 }
             }
 
-            if (blockNumber >= unityForkNumber) {
-                blockInfos.add(
-                    new BlockInfoUnityV1(
-                        block.getHash(),
-                        block.getAntiparentHash(),
-                        miningDifficulty,
-                        stakingDifficulty,
-                        mainChain));
-            } else {
-                blockInfos.add(new BlockInfoV1(block.getHash(), miningDifficulty, mainChain));
-            }
+            blockInfos.add(new BlockInfo(block.getHash(), totalDifficulty, mainChain));
 
             blocks.put(block.getHash(), block);
             index.set(block.getNumber(), blockInfos);
@@ -370,8 +342,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     byte[] hash = blockInfo.getHash();
                     Block block = blocks.get(hash);
                     if (block != null) {
-                        block.setAntiparentHash(blockInfo.getSealAntiparentHash());
-                        block.setUnityDifficulty(new UnityDifficulty(blockInfo.getMiningDifficulty(), blockInfo.getStakingDifficulty()));
+                        block.setTotalDifficulty(blockInfo.getTotalDifficulty());
                         block.setMainChain();
                         return block;
                     }
@@ -428,8 +399,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     b.setMainChain();
                 }
 
-                b.setAntiparentHash(blockInfo.getSealAntiparentHash());
-                b.setUnityDifficulty(new UnityDifficulty(blockInfo.getMiningDifficulty(), blockInfo.getStakingDifficulty()));
+                b.setTotalDifficulty(blockInfo.getTotalDifficulty());
                 blockList.add(b);
             }
 
@@ -620,8 +590,7 @@ public class AionBlockStore implements IBlockStoreBase {
                         retBlock.setMainChain();
                     }
 
-                    retBlock.setUnityDifficulty(new UnityDifficulty(blockInfo.getMiningDifficulty(), blockInfo.getStakingDifficulty()));
-                    retBlock.setAntiparentHash(blockInfo.getSealAntiparentHash());
+                    retBlock.setTotalDifficulty(blockInfo.getTotalDifficulty());
                 }
                 return retBlock;
             }
@@ -922,7 +891,7 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     @Override
-    public void revert(long previousLevel, long unifyForkNumber) {
+    public void revert(long previousLevel) {
         lock.lock();
 
         try {
@@ -1008,38 +977,17 @@ public class AionBlockStore implements IBlockStoreBase {
                             throw new IllegalStateException("The Index database might corrupt!");
                         }
 
-                        BigInteger miningDifficulty = parentInfo.getMiningDifficulty();
-                        BigInteger stakingDifficulty = parentInfo.getStakingDifficulty();
-
-                        if (bestLine.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                            miningDifficulty = miningDifficulty.add(bestLine.getDifficultyBI());
-                        } else if (bestLine.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                            stakingDifficulty = stakingDifficulty.add(bestLine.getDifficultyBI());
-                        } else {
-                            LOG.error("The database is corrupted. There is a block of impossible sealType.");
-                            return;
-                        }
+                        BigInteger totalDifficulty = parentInfo.getTotalDifficulty().add(bestLine.getDifficultyBI());
 
                         // recreate missing block info
-                        if (bestLine.getNumber() >= unifyForkNumber) {
-                            blockInfo =
-                                new BlockInfoUnityV1(
-                                    bestLine.getHash(),
-                                    bestLine.getAntiparentHash(),
-                                    miningDifficulty,
-                                    stakingDifficulty,
-                                    true);
-                        } else {
-                            blockInfo = new BlockInfoV1(bestLine.getHash(), miningDifficulty, true);
-                        }
-
+                        blockInfo = new BlockInfo(bestLine.getHash(), totalDifficulty, true);
                         blocks.add(blockInfo);
                     }
 
                     // check for max total difficulty
                     BlockInfo maxTDInfo = blockInfo;
                     for (BlockInfo info : blocks) {
-                        if (info.getCummDifficulty().compareTo(maxTDInfo.getCummDifficulty()) > 0) {
+                        if (info.getTotalDifficulty().compareTo(maxTDInfo.getTotalDifficulty()) > 0) {
                             maxTDInfo = info;
                         }
                     }
@@ -1055,7 +1003,7 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     @Override
-    public void pruneAndCorrect(long unityForkNumber) {
+    public void pruneAndCorrect() {
         lock.lock();
 
         try {
@@ -1072,8 +1020,7 @@ public class AionBlockStore implements IBlockStoreBase {
 
             // top down pruning of nodes on side chains
             while (level > 0) {
-
-                pruneSideChains(block, unityForkNumber);
+                pruneSideChains(block);
                 block = blocks.get(block.getParentHash());
                 if (block == null) {
                     LOG.error(
@@ -1090,13 +1037,13 @@ public class AionBlockStore implements IBlockStoreBase {
             }
 
             // prune genesis
-            pruneSideChains(block, unityForkNumber);
+            pruneSideChains(block);
 
             // bottom up repair of information
             // initial TD set to genesis TD
             level = 1;
             while (level <= initialLevel) {
-                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getMiningDifficulty(), block.getStakingDifficulty(), unityForkNumber);
+                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getCumulativeDifficulty());
                 if (totalDifficulty == null) {
                     LOG.error("CorrectTotalDifficulty failed! level:{}", level);
                     throw new IllegalStateException("The Index database might corrupt!");
@@ -1116,7 +1063,7 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private void pruneSideChains(Block block, long unityForkNumber) {
+    private void pruneSideChains(Block block) {
         lock.lock();
 
         try {
@@ -1141,21 +1088,10 @@ public class AionBlockStore implements IBlockStoreBase {
                 blocks.delete(wrongBlock.getHash());
             }
 
-            if (block.getNumber() >= unityForkNumber) {
-                // set new block info with one type of totalDifficulty set to ZERO, and the other set to the block's difficulty
-                // These values are corrected in the correctTotalDifficulty() step of pruneAndCorrect()
-                if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                    blockInfo = new BlockInfoUnityV1(blockHash, block.getAntiparentHash(), block.getHeader().getDifficultyBI(), ZERO, true);
-                } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                    blockInfo = new BlockInfoUnityV1(blockHash, block.getAntiparentHash(), ZERO, block.getHeader().getDifficultyBI(), true);
-                } else {
-                    LOG.error("The database is corrupted. There is a block of impossible sealType.");
-                    throw new IllegalStateException("invalid block sealtype retrieve from index db, block#" + block.getNumber());
-                }
-            } else {
-                blockInfo = new BlockInfoV1(blockHash, block.getHeader().getDifficultyBI(), true);
-            }
+            // set new block info with total difficulty set to the block's difficulty
+            // This value is corrected in the correctTotalDifficulty() step of pruneAndCorrect()
 
+            blockInfo = new BlockInfo(blockHash, block.getHeader().getDifficultyBI(), true);
             levelBlocks = new ArrayList<>();
             levelBlocks.add(blockInfo);
 
@@ -1166,7 +1102,7 @@ public class AionBlockStore implements IBlockStoreBase {
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private BigInteger correctTotalDifficulty(long level, BigInteger parentMiningDifficulty, BigInteger parentStakingDifficulty, long unityForkNumber) {
+    private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty) {
         List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
 
         if (levelBlocks.size() != 1) {
@@ -1178,31 +1114,21 @@ public class AionBlockStore implements IBlockStoreBase {
             // correct block info
             BlockInfo blockInfo = levelBlocks.remove(0);
             // total difficulty previously set to block difficulty
-
-            if (level >= unityForkNumber) {
-                levelBlocks.add(
-                    new BlockInfoUnityV1(
-                        blockInfo.getHash(),
-                        blockInfo.getSealAntiparentHash(),
-                        blockInfo.getMiningDifficulty().add(parentMiningDifficulty),
-                        blockInfo.getStakingDifficulty().add(parentStakingDifficulty),
-                        blockInfo.isMainChain()));
-            } else {
-                levelBlocks.add(
-                    new BlockInfoV1(
-                        blockInfo.getHash(),
-                        blockInfo.getMiningDifficulty().add(parentMiningDifficulty),
-                        blockInfo.isMainChain()));
-            }
-
+            
+            BlockInfo newBlockInfo = new BlockInfo(
+                    blockInfo.getHash(),
+                    blockInfo.getTotalDifficulty().add(parentTotalDifficulty),
+                    blockInfo.isMainChain());
+            
+            levelBlocks.add(newBlockInfo);
             setBlockInfoForLevel(level, levelBlocks);
 
-            return blockInfo.getCummDifficulty();
+            return newBlockInfo.getTotalDifficulty();
         }
     }
 
-    public BigInteger correctIndexEntry(Block block, BigInteger miningDifficulty, BigInteger stakingDifficulty, long unityForkNumber) {
-        if (block == null || miningDifficulty == null || stakingDifficulty == null) {
+    public BigInteger correctIndexEntry(Block block, BigInteger parentTotalDifficulty) {
+        if (block == null || parentTotalDifficulty == null) {
             throw new NullPointerException();
         }
 
@@ -1223,50 +1149,9 @@ public class AionBlockStore implements IBlockStoreBase {
                 throw new IllegalStateException("The block database corruption");
             }
 
-            if (parent.getHeader().getSealType() == block.getHeader().getSealType()) {
-                block.setAntiparentHash(parent.getAntiparentHash());
-            } else {
-                parent = getBlockByHashWithInfo(block.getParentHash());
-                if (parent == null) {
-                    LOG.error("The block database corruption");
-                    LOG.error(
-                            " Please shutdown the kernel and re import the database by executing:\t./aion.sh -n <network> --redo-import");
-                    throw new IllegalStateException("The block database corruption");
-                }
-                block.setAntiparentHash(parent.getAntiparentHash());
-            }
-
             // correct block info
             // assuming side chain, with warnings upon encountered issues
-            BlockInfo blockInfo;
-
-            if (block.getNumber() >= unityForkNumber) {
-                if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                    blockInfo = new BlockInfoUnityV1(
-                        block.getHash(),
-                        block.getAntiparentHash(),
-                        block.getDifficultyBI().add(miningDifficulty),
-                        stakingDifficulty,
-                        false);
-                } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                    blockInfo = new BlockInfoUnityV1(
-                        block.getHash(),
-                        block.getAntiparentHash(),
-                        miningDifficulty,
-                        block.getDifficultyBI().add(stakingDifficulty),
-                        false);
-                } else {
-                    LOG.error("The database is corrupted. The block sealType is invalid.");
-                    LOG.error(
-                        " Please shutdown the kernel and re import the database by executing:\t./aion.sh -n <network> --redo-import");
-                    throw new IllegalStateException("The block database corruption");
-                }
-            } else {
-                blockInfo = new BlockInfoV1(
-                    block.getHash(),
-                    block.getDifficultyBI().add(miningDifficulty),
-                    false);
-            }
+            BlockInfo blockInfo = new BlockInfo(block.getHash(), block.getDifficultyBI().add(parentTotalDifficulty), false);
 
             // looking through the other block info on that level
             List<BlockInfo> mainChain = new ArrayList<>();
@@ -1288,7 +1173,7 @@ public class AionBlockStore implements IBlockStoreBase {
             levelBlocks.add(blockInfo);
             setBlockInfoForLevel(blockNumber, levelBlocks);
 
-            block.setUnityDifficulty(new UnityDifficulty(blockInfo.getMiningDifficulty(), blockInfo.getStakingDifficulty()));
+            block.setTotalDifficulty(blockInfo.getTotalDifficulty());
 
             return block.getCumulativeDifficulty();
         } finally {
@@ -1321,7 +1206,7 @@ public class AionBlockStore implements IBlockStoreBase {
                             "\nBlock hash from index database: "
                                     + Hex.toHexString(bi.getHash())
                                     + "\nTotal Difficulty: "
-                                    + bi.getCummDifficulty()
+                                    + bi.getTotalDifficulty()
                                     + "\nBlock on main chain: "
                                     + String.valueOf(bi.isMainChain()).toUpperCase());
                     writer.newLine();
@@ -1377,7 +1262,7 @@ public class AionBlockStore implements IBlockStoreBase {
                                 "\nBlock hash from index database: "
                                         + Hex.toHexString(bi.getHash())
                                         + "\nTotal Difficulty: "
-                                        + bi.getCummDifficulty()
+                                        + bi.getTotalDifficulty()
                                         + "\nBlock on main chain: "
                                         + String.valueOf(bi.isMainChain()).toUpperCase());
                         writer.newLine();
@@ -1557,283 +1442,84 @@ public class AionBlockStore implements IBlockStoreBase {
         }
     }
 
-    public interface BlockInfo {
-        byte[] getHash();
-
-        byte[] getSealAntiparentHash();
-
-        BigInteger getMiningDifficulty();
-
-        BigInteger getStakingDifficulty();
-
-        BigInteger getCummDifficulty();
-
-        @VisibleForTesting
-        void setMiningDifficulty(BigInteger diff);
-
-        void setMainChain(boolean mainChain);
-
-        boolean isMainChain();
-
-        byte[] getEncoded();
-
-        String toString();
-
-        boolean equals(Object o);
-    }
-
-    public static class BlockInfoV1 implements BlockInfo, Serializable {
+    public static class BlockInfo {
 
         /**
-         * Constructor of the BlockInfoV1 instead of the default constructor, requires 3 arguments
+         * Constructor of the BlockInfo requires 3 arguments
          * input.
          *
          * @param hash block hash
-         * @param cummDifficulty the cummulateDifficulty of this block
+         * @param totalDifficulty the totalDifficulty of this block
          * @param mainChain is belong to mainchain block
          */
-        public BlockInfoV1(byte[] hash, BigInteger cummDifficulty, boolean mainChain) {
-            if (hash == null || cummDifficulty == null || cummDifficulty.signum() == -1) {
+        public BlockInfo(byte[] hash, BigInteger totalDifficulty, boolean mainChain) {
+            if (hash == null || totalDifficulty == null || totalDifficulty.signum() == -1) {
                 throw new IllegalArgumentException();
             }
 
             this.hash = hash;
-            this.cummDifficulty = cummDifficulty;
+            this.totalDifficulty = totalDifficulty;
             this.mainChain = mainChain;
         }
 
-        BlockInfoV1(RLPList list) {
+        BlockInfo(RLPList list) {
             this.hash = list.get(0).getRLPData();
-            this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
+            this.totalDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
 
             byte[] boolData = list.get(2).getRLPData();
+
             this.mainChain =
-                !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
+                    !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
         }
-
-        private static final long serialVersionUID = 7279277944605144671L;
-
+        
         private byte[] hash;
 
-        private BigInteger cummDifficulty;
+        private BigInteger totalDifficulty;
 
         private boolean mainChain;
 
-        @Override
         public byte[] getHash() {
             return hash;
         }
 
-        @Override
-        public byte[] getSealAntiparentHash() {
-            return CfgAion.inst().getGenesis().getGenesisStakingBlock().getHash();
+        public void setTotalDifficulty(BigInteger totalDifficulty) {
+            this.totalDifficulty = totalDifficulty;
         }
 
-        @Override
-        public BigInteger getMiningDifficulty() {
-            return cummDifficulty;
+        public BigInteger getTotalDifficulty() {
+            return totalDifficulty;
         }
 
-        @Override
-        public BigInteger getStakingDifficulty() {
-            return BigInteger.ONE;
-        }
-
-        @Override
-        public BigInteger getCummDifficulty() {
-            return cummDifficulty;
-        }
-
-        @Override
-        public void setMiningDifficulty(BigInteger diff) {
-            cummDifficulty = diff;
-        }
-
-        @Override
         public void setMainChain(boolean mainChain) {
             this.mainChain = mainChain;
         }
 
-        @Override
-        public boolean isMainChain() {
+        boolean isMainChain() {
             return mainChain;
         }
 
-        @Override
         public byte[] getEncoded() {
             byte[] hashElement = RLP.encodeElement(hash);
-            byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
+            byte[] totalDiffElement = RLP.encodeElement(totalDifficulty.toByteArray());
             byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
-            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement);
+            return RLP.encodeList(hashElement, totalDiffElement, mainChainElement);
         }
 
         @Override
         public String toString() {
             return "Hash: " + Hex.toHexString(hash) +
-                "\ntotalDifficulty: " + cummDifficulty +
-                "\nisMainChain: " + (mainChain ? "true" : "false");
+                    "\ntotalDifficulty: " + totalDifficulty +
+                    "\nisMainChain: " + (mainChain ? "true" : "false");
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            BlockInfoV1 blockInfo = (BlockInfoV1) o;
+            BlockInfo blockInfo = (BlockInfo) o;
             return mainChain == blockInfo.mainChain &&
-                Arrays.equals(hash, blockInfo.hash) &&
-                cummDifficulty.equals(blockInfo.cummDifficulty);
-        }
-    }
-
-    /**
-     * @implNote
-     * This block info will be removed when we introduce the second unity implementation.
-     */
-    public static class BlockInfoUnityV1 implements BlockInfo, Serializable {
-
-        /**
-         * Constructor of the BlockInfoV1 instead of the default constructor, requires 5 arguments
-         * input.
-         *
-         * @param hash block hash
-         * @param sealAntiparentHash block hash of the sealAntiparent (the ancestor block of opposite sealType)
-         * @param miningDifficulty the sum of the difficulties of all PoW blocks in this chain
-         * @param stakingDifficulty the sum of the difficulties of all PoS blocks in this chain
-         * @param mainChain is belong to mainchain block
-         */
-        public BlockInfoUnityV1(byte[] hash, byte[] sealAntiparentHash, BigInteger miningDifficulty, BigInteger stakingDifficulty, boolean mainChain) {
-            if (hash == null ) {
-                throw new IllegalArgumentException("hash is null");
-            }
-
-            if (miningDifficulty == null) {
-                throw new IllegalArgumentException("miningDifficulty is null");
-            }
-
-            if (stakingDifficulty == null) {
-                throw new IllegalArgumentException("stakingDifficulty is null");
-            }
-
-            if (miningDifficulty.signum() == -1) {
-                throw new IllegalArgumentException("mining difficulties must be non-negative");
-            }
-
-            if (stakingDifficulty.signum() == -1) {
-                throw new IllegalArgumentException("staking difficulties must be non-negative");
-            }
-
-            this.hash = hash;
-            if (sealAntiparentHash != null) {
-                this.sealAntiparentHash = sealAntiparentHash;
-            } else {
-                //TODO: [Unity] This case should likely never happen by the end of Unity work
-                this.sealAntiparentHash = HashUtil.EMPTY_DATA_HASH;
-            }            this.miningDifficulty = miningDifficulty;
-            this.stakingDifficulty = stakingDifficulty;
-            this.cummDifficulty = miningDifficulty.multiply(stakingDifficulty);
-            this.mainChain = mainChain;
-        }
-
-        BlockInfoUnityV1(RLPList list) {
-            this.hash = list.get(0).getRLPData();
-            this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
-
-            byte[] boolData = list.get(2).getRLPData();
-
-            this.mainChain =
-                !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
-            this.sealAntiparentHash = list.get(3).getRLPData();
-            this.miningDifficulty = ByteUtil.bytesToBigInteger(list.get(4).getRLPData());
-            this.stakingDifficulty = ByteUtil.bytesToBigInteger(list.get(5).getRLPData());
-        }
-
-        private static final long serialVersionUID = 7279277944605144999L;
-
-        private byte[] hash;
-
-        private byte[] sealAntiparentHash;
-
-        private BigInteger miningDifficulty;
-
-        private BigInteger stakingDifficulty;
-
-        private BigInteger cummDifficulty;
-
-        private boolean mainChain;
-
-        @Override
-        public byte[] getHash() {
-            return hash;
-        }
-
-        @Override
-        public byte[] getSealAntiparentHash() {
-            return sealAntiparentHash;
-        }
-
-        @Override
-        public BigInteger getMiningDifficulty() {
-            return miningDifficulty;
-        }
-
-        @Override
-        public BigInteger getStakingDifficulty() {
-            return stakingDifficulty;
-        }
-
-        @Override
-        public BigInteger getCummDifficulty() {
-            return cummDifficulty;
-        }
-
-        @VisibleForTesting
-        @Override
-        public void setMiningDifficulty(BigInteger diff) {
-            miningDifficulty = diff;
-        }
-
-        @Override
-        public void setMainChain(boolean mainChain) {
-            this.mainChain = mainChain;
-        }
-
-        @Override
-        public boolean isMainChain() {
-            return mainChain;
-        }
-
-        @Override
-        public byte[] getEncoded() {
-            byte[] hashElement = RLP.encodeElement(hash);
-            byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
-            byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
-            byte[] antiParentElement = RLP.encodeElement(sealAntiparentHash);
-            byte[] miningDifficultyElement = RLP.encodeElement(miningDifficulty.toByteArray());
-            byte[] stakingDifficultyElement = RLP.encodeElement(stakingDifficulty.toByteArray());
-            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement, antiParentElement, miningDifficultyElement, stakingDifficultyElement);
-        }
-
-        @Override
-        public String toString() {
-            return "Hash: " + Hex.toHexString(hash) +
-                "\nsealAntiparentHash: " + Hex.toHexString(sealAntiparentHash) +
-                "\nminingDifficulty: " + miningDifficulty +
-                "\nstakingDifficulty: " + stakingDifficulty +
-                "\ntotalDifficulty: " + cummDifficulty +
-                "\nisMainChain: " + (mainChain ? "true" : "false");
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            BlockInfoUnityV1 blockInfo = (BlockInfoUnityV1) o;
-            return mainChain == blockInfo.mainChain &&
-                Arrays.equals(hash, blockInfo.hash) &&
-                Arrays.equals(sealAntiparentHash, blockInfo.sealAntiparentHash) &&
-                miningDifficulty.equals(blockInfo.miningDifficulty) &&
-                stakingDifficulty.equals(blockInfo.stakingDifficulty) &&
-                cummDifficulty.equals(blockInfo.cummDifficulty);
+                    Arrays.equals(hash, blockInfo.hash) &&
+                    totalDifficulty.equals(blockInfo.totalDifficulty);
         }
     }
 
@@ -1864,16 +1550,12 @@ public class AionBlockStore implements IBlockStoreBase {
                         RLPList outerList = RLP.decode2(aList.getRLPData());
                         if (outerList.isEmpty()) {
                             throw new IllegalArgumentException(
-                                "Rlp decode error during construct the BlockInfoV1.");
+                                "Rlp decode error during construct the BlockInfo.");
                         }
 
                         RLPList blockInfoRlp = (RLPList) outerList.get(0);
 
-                        if (blockInfoRlp.size() >= 6) {
-                            res.add(new BlockInfoUnityV1(blockInfoRlp));
-                        } else {
-                            res.add(new BlockInfoV1(blockInfoRlp));
-                        }
+                        res.add(new BlockInfo(blockInfoRlp));
                     }
                     return res;
                 }
@@ -1950,7 +1632,7 @@ public class AionBlockStore implements IBlockStoreBase {
     /**
      *  Don't remove it, see load method and AKI-370
      */
-    public IntegrityCheckResult indexIntegrityCheck(long unityforkNumber) {
+    public IntegrityCheckResult indexIntegrityCheck() {
         lock.lock();
 
         try {
@@ -1975,16 +1657,7 @@ public class AionBlockStore implements IBlockStoreBase {
                     }
 
                     // it is correct if there is no inconsistency wrt to the parent
-                    BigInteger expectedTotalDifficulty = parentBlock.getCumulativeDifficulty();
-
-                    if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                        expectedTotalDifficulty = expectedTotalDifficulty.add(parentBlock.getStakingDifficulty().multiply(block.getDifficultyBI()));
-                    } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                        expectedTotalDifficulty = expectedTotalDifficulty.add(parentBlock.getMiningDifficulty().multiply(block.getDifficultyBI()));
-                    } else {
-                        LOG.error("The database is corrupted. There is a block of impossible sealType.");
-                        return IntegrityCheckResult.ERROR;
-                    }
+                    BigInteger expectedTotalDifficulty = parentBlock.getCumulativeDifficulty().add(block.getDifficultyBI());
 
                     correct =
                         getTotalDifficultyForHash(block.getHash()).equals(expectedTotalDifficulty);
@@ -2020,12 +1693,9 @@ public class AionBlockStore implements IBlockStoreBase {
 
                 // check correct TD for genesis block
                 if (block.getNumber() == 0) {
-                    // Assumes genesis block is always a mining block
-                    BigInteger genesisTotalDifficulty = getTotalDifficultyForHash(block.getHash());
-                    correct = genesisTotalDifficulty.equals(block.getDifficultyBI().multiply(block.getStakingDifficulty()))
-                        && genesisTotalDifficulty.signum() > 0;
 
-                    System.out.println(getTotalDifficultyForHash(block.getHash()));
+                    correct = getTotalDifficultyForHash(block.getHash()).equals(block.getDifficultyBI());
+
                     if (!correct) {
                         LOG_CONS.info(
                                 "Total difficulty for block hash: {} number: {} is {}.",
@@ -2052,26 +1722,12 @@ public class AionBlockStore implements IBlockStoreBase {
 
                     for (BlockInfo bi : infos) {
                         block = blocks.get(bi.getHash());
-
-                        if (block.getNumber() >= unityforkNumber) {
-                            bi = new BlockInfoUnityV1(block.getHash(),
-                                block.getAntiparentHash(),
-                                block.getMiningDifficulty(),
-                                block.getStakingDifficulty(),
-                                bi.isMainChain());
-                        } else {
-                            bi = new BlockInfoV1(block.getHash(),
-                                block.getMiningDifficulty(),
-                                bi.isMainChain());
-                        }
-
+                        bi = new BlockInfo(block.getHash(), block.getCumulativeDifficulty(), bi.isMainChain());
                         LOG_CONS.info(
-                                "Correcting difficulties for block hash: {} number: {} to: miningDifficulty {} : stakingDifficulty : {} totalDifficulty : {}.",
+                                "Correcting total difficulty for block hash: {} number: {} to {}.",
                                 block.getShortHash(),
                                 block.getNumber(),
-                                bi.getMiningDifficulty(),
-                                bi.getStakingDifficulty(),
-                                bi.getCummDifficulty());
+                                bi.getTotalDifficulty());
                     }
                     setBlockInfoForLevel(0, infos);
 
@@ -2101,42 +1757,13 @@ public class AionBlockStore implements IBlockStoreBase {
                                 return IntegrityCheckResult.MISSING_LEVEL;
                             }
 
-                            BigInteger newMiningDifficulty = parentBlockInfo.getMiningDifficulty();
-                            BigInteger newStakingDifficulty = parentBlockInfo.getStakingDifficulty();
-
-
-                            if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                                newMiningDifficulty = newMiningDifficulty.add(block.getDifficultyBI());
-                            } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                                newStakingDifficulty = newStakingDifficulty.add(block.getDifficultyBI());
-                            } else {
-                                LOG.error("The database is corrupted. There is a block of impossible sealType.");
-                                return IntegrityCheckResult.ERROR;
-                            }
-
-                            if (block.getNumber() >= unityforkNumber) {
-                                bi =
-                                    new BlockInfoUnityV1(
-                                        block.getHash(),
-                                        block.getAntiparentHash(),
-                                        newMiningDifficulty,
-                                        newStakingDifficulty,
-                                        bi.isMainChain());
-                            } else {
-                                bi =
-                                    new BlockInfoV1(
-                                        block.getHash(),
-                                        newMiningDifficulty,
-                                        bi.isMainChain());
-                            }
-
+                            BigInteger newTotalDifficulty = parentBlockInfo.getTotalDifficulty().add(block.getDifficultyBI());
+                            
                             LOG_CONS.info(
-                                    "Correcting difficulties for block hash: {} number: {} to: miningDifficulty {} : stakingDifficulty : {} totalDifficulty : {}.",
+                                    "Correcting total difficulty for block hash: {} number: {} to {}.",
                                     block.getShortHash(),
                                     block.getNumber(),
-                                    bi.getMiningDifficulty(),
-                                    bi.getStakingDifficulty(),
-                                    bi.getCummDifficulty());
+                                    newTotalDifficulty);
                         }
                         setBlockInfoForLevel(level, infos);
 
