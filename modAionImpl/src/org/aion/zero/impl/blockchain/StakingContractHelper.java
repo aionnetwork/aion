@@ -46,7 +46,6 @@ public class StakingContractHelper {
      * cached byte array for skipping the abi encode the contract method during the contract call.
      */
     private byte[] effectiveStake = null;
-    private byte[] coinbaseForSigningAddress = null;
 
     private static boolean deployed = false;
 
@@ -169,70 +168,5 @@ public class StakingContractHelper {
                 , chain.isUnityForkEnabled());
 
             return summaries.get(0).getReceipt();
-    }
-
-    /**
-     * This method for getting the coinbase address by giving the signing address
-     * @param signingAddress the block signing address
-     * @return the staker's coinbase relate with the signing address in the staking contract
-     */
-    public AionAddress getCoinbaseForSigningAddress(AionAddress signingAddress) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
-        if (signingAddress == null) {
-            throw new NullPointerException();
-        }
-
-        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
-            throw new IllegalStateException("Failed to acquire the avm lock!");
-        }
-
-        if (!AvmProvider.isVersionEnabled(LATEST_AVM_VERSION)) {
-            AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
-        }
-
-        IAvmResourceFactory resourceFactory = AvmProvider.getResourceFactory(LATEST_AVM_VERSION);
-
-        if (this.coinbaseForSigningAddress == null) {
-            this.coinbaseForSigningAddress = resourceFactory.newStreamingEncoder().encodeOneString("getCoinbaseAddressForSigningAddress").getEncoding();
-        }
-
-        byte[] abi =
-                ByteUtil.merge(
-                        this.coinbaseForSigningAddress,
-                        resourceFactory.newStreamingEncoder().encodeOneAddress(signingAddress).getEncoding());
-
-        AvmProvider.releaseLock();
-
-        AionTransaction callTx =
-                AionTransaction.create(
-                        keyForCallandEstimate,
-                        BigInteger.ZERO.toByteArray(),
-                        stakingContractAddr,
-                        BigInteger.ZERO.toByteArray(),
-                        abi,
-                        2_000_000L,
-                        10_000_000_000L,
-                        TransactionTypes.DEFAULT,
-                        null);
-
-        AionTxReceipt receipt = null;
-        try {
-            receipt = callConstant(callTx);
-        } catch (VmFatalException e) {
-            e.printStackTrace();
-            System.exit(SystemExitCodes.FATAL_VM_ERROR);
-        }
-
-        if (receipt == null || Arrays.equals(receipt.getTransactionOutput(), new byte[0])) {
-            LOG_CONS.debug("getCoinbaseForSigningAddress failed due to the " + (receipt == null ? "null receipt" : "empty transactionOutput"));
-            return null;
-        }
-
-        if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
-            throw new IllegalStateException("Failed to acquire the avm lock!");
-        }
-
-        AionAddress address = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneAddress();
-        AvmProvider.releaseLock();
-        return address;
     }
 }
