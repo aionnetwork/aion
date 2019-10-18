@@ -91,7 +91,7 @@ public class AionPoW {
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call {@link #init(IAionBlockchain,
-     * IPendingState, IEventMgr)} to initialize the instance.
+     * IPendingState, IEventMgr, SyncMgr)} to initialize the instance.
      */
     public AionPoW() {}
 
@@ -102,12 +102,12 @@ public class AionPoW {
      * @param pendingState List of Aion transactions
      * @param eventMgr Event manager
      */
-    public void init(IAionBlockchain blockchain, IPendingState pendingState, IEventMgr eventMgr) {
+    public void init(IAionBlockchain blockchain, IPendingState pendingState, IEventMgr eventMgr, SyncMgr syncMgr) {
         if (initialized.compareAndSet(false, true)) {
             this.blockchain = blockchain;
             this.pendingState = pendingState;
             this.eventMgr = eventMgr;
-            this.syncMgr = SyncMgr.inst();
+            this.syncMgr = syncMgr;
 
             // return early if mining is disabled, otherwise we are doing needless
             // work by generating new block templates on IMPORT_BEST

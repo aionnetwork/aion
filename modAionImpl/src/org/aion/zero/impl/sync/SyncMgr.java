@@ -69,17 +69,93 @@ public final class SyncMgr {
     private SyncStats stats;
     private AtomicBoolean start = new AtomicBoolean(true);
 
-    private Thread syncGb = null;
-    private Thread syncIb = null;
-    private Thread syncFilter = null;
-    private Thread syncGs = null;
+    private Thread syncGb;
+    private Thread syncIb;
+    private Thread syncFilter;
+    private Thread syncGs;
     private Thread syncSs = null;
 
     private BlockHeaderValidator blockHeaderValidator;
     private volatile long timeUpdated = 0;
 
-    public static SyncMgr inst() {
-        return AionSyncMgrHolder.INSTANCE;
+    public SyncMgr(final AionBlockchainImpl _chain,
+        final IP2pMgr _p2pMgr,
+        final IEventMgr _evtMgr,
+        final boolean _showStatus,
+        final Set<StatsType> showStatistics,
+        final int _slowImportTime,
+        final int _compactFrequency,
+        final int maxActivePeers) {
+
+        p2pMgr = _p2pMgr;
+        chain = _chain;
+        evtMgr = _evtMgr;
+
+        blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
+
+        long selfBest = chain.getBestBlock().getNumber();
+        stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
+
+        syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log);
+
+        syncGb =
+            new Thread(
+                new TaskGetBodies(
+                    p2pMgr,
+                    start,
+                    downloadedHeaders,
+                    syncHeaderRequestManager,
+                    stats,
+                    log, survey_log),
+                "sync-gb");
+        syncGb.start();
+        syncFilter =
+            new Thread(
+                new TaskFilterBlocksBeforeImport(
+                    log,
+                    survey_log,
+                    chain,
+                    start,
+                    stats,
+                    downloadedBlocks,
+                    sortedBlocks),
+                "sync-filter");
+        syncFilter.start();
+        syncIb =
+            new Thread(
+                new TaskImportBlocks(
+                    log,
+                    survey_log,
+                    chain,
+                    start,
+                    stats,
+                    sortedBlocks,
+                    importedBlockHashes,
+                    syncHeaderRequestManager,
+                    _slowImportTime,
+                    _compactFrequency),
+                "sync-ib");
+        syncIb.start();
+        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");
+        syncGs.start();
+
+        if (_showStatus) {
+            syncSs =
+                new Thread(
+                    new TaskShowStatus(
+                        start,
+                        INTERVAL_SHOW_STATUS,
+                        chain,
+                        networkStatus,
+                        stats,
+                        p2pMgr,
+                        showStatistics,
+                        AionLoggerFactory.getLogger(LogEnum.P2P.name())),
+                    "sync-ss");
+            syncSs.start();
+        }
+
+        setupEventHandler();
     }
 
     /**
@@ -152,86 +228,6 @@ public final class SyncMgr {
                 }
             }
         }
-    }
-
-    public void init(
-            final AionBlockchainImpl _chain,
-            final IP2pMgr _p2pMgr,
-            final IEventMgr _evtMgr,
-            final boolean _showStatus,
-            final Set<StatsType> showStatistics,
-            final int _slowImportTime,
-            final int _compactFrequency,
-            final int maxActivePeers) {
-        p2pMgr = _p2pMgr;
-        chain = _chain;
-        evtMgr = _evtMgr;
-
-        blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
-
-        long selfBest = chain.getBestBlock().getNumber();
-        stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
-
-        syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log);
-
-        syncGb =
-                new Thread(
-                        new TaskGetBodies(
-                                p2pMgr,
-                                start,
-                                downloadedHeaders,
-                                syncHeaderRequestManager,
-                                stats,
-                                log, survey_log),
-                        "sync-gb");
-        syncGb.start();
-        syncFilter =
-                new Thread(
-                        new TaskFilterBlocksBeforeImport(
-                                log,
-                                survey_log,
-                                chain,
-                                start,
-                                stats,
-                                downloadedBlocks,
-                                sortedBlocks),
-                        "sync-filter");
-        syncFilter.start();
-        syncIb =
-                new Thread(
-                        new TaskImportBlocks(
-                                log,
-                                survey_log,
-                                chain,
-                                start,
-                                stats,
-                                sortedBlocks,
-                                importedBlockHashes,
-                                syncHeaderRequestManager,
-                                _slowImportTime,
-                                _compactFrequency),
-                        "sync-ib");
-        syncIb.start();
-        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");
-        syncGs.start();
-
-        if (_showStatus) {
-            syncSs =
-                    new Thread(
-                            new TaskShowStatus(
-                                    start,
-                                    INTERVAL_SHOW_STATUS,
-                                    chain,
-                                    networkStatus,
-                                    stats,
-                                    p2pMgr,
-                                    showStatistics,
-                                    AionLoggerFactory.getLogger(LogEnum.P2P.name())),
-                            "sync-ss");
-            syncSs.start();
-        }
-
-        setupEventHandler();
     }
 
     private void setupEventHandler() {
@@ -403,9 +399,5 @@ public final class SyncMgr {
 
     public SyncStats getSyncStats() {
         return this.stats;
-    }
-
-    private static final class AionSyncMgrHolder {
-        static final SyncMgr INSTANCE = new SyncMgr();
     }
 }

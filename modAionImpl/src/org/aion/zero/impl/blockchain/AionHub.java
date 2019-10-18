@@ -167,8 +167,7 @@ public class AionHub {
                         cfgNetP2p.getBootlistSyncOnly(),
                         cfgNetP2p.getErrorTolerance());
 
-        this.syncMgr = SyncMgr.inst();
-        this.syncMgr.init(
+        this.syncMgr = new SyncMgr(
                 blockchain,
                 p2pMgr,
                 eventMgr,
@@ -201,7 +200,8 @@ public class AionHub {
         this.mempool.setP2pMgr(this.p2pMgr);
 
         this.pow = new AionPoW();
-        this.pow.init(blockchain, mempool, eventMgr);
+
+        this.pow.init(blockchain, mempool, eventMgr, syncMgr);
 
         blockTemplateLock = new ReentrantLock();
 
