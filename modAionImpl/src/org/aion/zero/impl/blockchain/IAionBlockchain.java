@@ -178,18 +178,4 @@ public interface IAionBlockchain extends UnityChain {
      *     block is not indexed or is a side chain block
      */
     public boolean isMainChain(byte[] hash);
-
-    StakingBlock getBestStakingBlock();
-
-    AionBlock getBestMiningBlock();
-
-    void setBestStakingBlock(StakingBlock block);
-
-    void setBestMiningBlock(AionBlock block);
-
-    void loadBestMiningBlock();
-
-    void loadBestStakingBlock();
-
-    boolean isUnityForkEnabledAtNextBlock();
 }

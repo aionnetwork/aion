@@ -7,6 +7,8 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.util.types.Hash256;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.StakingBlock;
 
 public interface UnityChain {
 
@@ -39,4 +41,18 @@ public interface UnityChain {
     Block getBlockWithInfoByHash(byte[] hash);
 
     Block getBestBlockWithInfo();
+
+    StakingBlock getBestStakingBlock();
+
+    AionBlock getBestMiningBlock();
+
+    void setBestStakingBlock(StakingBlock block);
+
+    void setBestMiningBlock(AionBlock block);
+    
+    void loadBestStakingBlock();
+    
+    void loadBestMiningBlock();
+    
+    boolean isUnityForkEnabledAtNextBlock();
 }

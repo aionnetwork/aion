@@ -2603,14 +2603,12 @@ public class ApiWeb3Aion extends ApiAion {
         /*
          * Return the highest known difficulty
          */
-        return new RpcMsg(getBestBlock().getDifficultyBI().toString(16));
+        return new RpcMsg(getBestMiningBlock().getDifficultyBI().toString(16));
     }
 
     public RpcMsg stratum_getmininginfo() {
-        Block bestBlock =  getBestBlock();
-        while(!isPowBlock(bestBlock)) {
-            bestBlock= this.ac.getBlockchain().getBlockByNumber(bestBlock.getNumber()-1);
-        }
+        Block bestBlock =  getBestMiningBlock();
+
         JSONObject obj = new JSONObject();
         obj.put("blocks", bestBlock.getNumber());
         obj.put("currentblocksize", bestBlock.size());

@@ -176,6 +176,10 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    public Block getBestMiningBlock() {
+        return this.ac.getBlockchain().getBestMiningBlock();
+    }
+
     //TODO: AKI-441: Should this method be synchronized? Should currentTemplate be volatile?
     protected BlockContext getBlockTemplate() {
         currentTemplate = ac.getAionHub().getNewMiningBlockTemplate(currentTemplate, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
