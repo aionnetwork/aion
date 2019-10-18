@@ -1,5 +1,6 @@
 package org.aion.zero.impl.pow;
 
+import org.aion.mcf.blockchain.BlockHeader;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
 
 import java.util.ArrayList;
@@ -257,33 +258,36 @@ public class AionPoW {
                 return;
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Creating a new block template");
-            }
-
             Block bestBlock =
                     blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
-
-            List<AionTransaction> txs = pendingState.getPendingTransactions();
-
-            Block newBlock;
-            try {
-                newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
-            } catch (Exception e) {
-                LOG.error("Create new block failed!", e);
+            
+            if (blockchain.isUnityForkEnabledAtNextBlock() && bestBlock.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
                 return;
+            } else {
+
+                LOG.debug("Internal miner creating a new mining block template");
+
+                List<AionTransaction> txs = pendingState.getPendingTransactions();
+
+                Block newBlock;
+                try {
+                    newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
+                } catch (Exception e) {
+                    LOG.error("Create new block failed!", e);
+                    return;
+                }
+
+                if (newBlock == null) {
+                    return;
+                }
+
+                EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
+                ev.setFuncArgs(Collections.singletonList(newBlock));
+                eventMgr.newEvent(ev);
+
+                // update last timestamp
+                lastUpdate.set(System.currentTimeMillis());
             }
-
-            if (newBlock == null) {
-                return;
-            }
-
-            EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
-            ev.setFuncArgs(Collections.singletonList(newBlock));
-            eventMgr.newEvent(ev);
-
-            // update last timestamp
-            lastUpdate.set(System.currentTimeMillis());
         }
     }
 
