@@ -80,21 +80,7 @@ public class EquihashMiner {
         }
     }
 
-    private static class Holder {
-        static final EquihashMiner INSTANCE = new EquihashMiner();
-    }
-
-    /**
-     * Singleton instance
-     *
-     * @return Equihash miner instance
-     */
-    public static EquihashMiner inst() {
-        return Holder.INSTANCE;
-    }
-
-    /** Private constructor; called by singleton instance once */
-    private EquihashMiner() {
+    public EquihashMiner() {
         this.cfg = CfgAion.inst();
 
         IAionChain a0Chain = AionImpl.inst();

@@ -217,7 +217,7 @@ public class Aion {
 
         EquihashMiner nm = null;
 
-        if (!cfg.getConsensus().isSeed()) {
+        if (cfg.getConsensus().getMining() && !cfg.getConsensus().isSeed()) {
             nm = ac.getBlockMiner();
         }
 

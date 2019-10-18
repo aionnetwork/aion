@@ -666,7 +666,7 @@ public abstract class ApiAion extends Api {
     //    }
 
     public boolean isMining() {
-        return this.ac.getBlockMiner().isMining();
+        return ac.getBlockMiner() != null && ac.getBlockMiner().isMining();
     }
 
     protected int peerCount() {

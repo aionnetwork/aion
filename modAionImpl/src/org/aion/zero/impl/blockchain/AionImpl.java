@@ -15,7 +15,6 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
-import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
@@ -39,6 +38,8 @@ public class AionImpl implements IAionChain {
     private CfgAion cfg;
 
     private TxCollector collector;
+
+    private EquihashMiner equihashMiner;
 
     private AionImpl(boolean forTest) {
         this.cfg = CfgAion.inst();
@@ -86,13 +87,15 @@ public class AionImpl implements IAionChain {
     @Override
     public EquihashMiner getBlockMiner() {
 
-        try {
-            AddressUtils.wrapAddress(this.cfg.getConsensus().getMinerAddress());
-            return EquihashMiner.inst();
-        } catch (Exception e) {
-            LOG_GEN.info("Miner address is not set");
-            return null;
+        if (equihashMiner == null) {
+            try {
+                equihashMiner = new EquihashMiner();
+            } catch (Exception e) {
+                LOG_GEN.error("Init miner failed!", e);
+                return null;
+            }
         }
+        return equihashMiner;
     }
 
     @Override
