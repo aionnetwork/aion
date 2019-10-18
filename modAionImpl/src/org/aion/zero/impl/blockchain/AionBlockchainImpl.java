@@ -1099,7 +1099,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public synchronized AionBlock createNewMiningBlock(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
-        return createNewMiningBlockContext(parent, transactions, waitUntilBlockTime).block;
+        BlockContext newBlockContext = createNewMiningBlockContext(parent, transactions, waitUntilBlockTime);
+        return null == newBlockContext ? null : newBlockContext.block;
     }
 
     /**
