@@ -18,6 +18,7 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Methods used by several classes testing the blockchain functionality.
@@ -87,18 +88,22 @@ public class BlockchainTestUtils {
      * @param frequency every multiple of frequency block will be on the main chain
      * @param accounts existing accounts
      * @param txCount maximum number of transactions per block
+     * @apiNote Supports only chains that do not include the Unity fork.
      */
     public static void generateRandomChain(
             StandaloneBlockchain chain,
-            int blocks,
+            long blocks,
             int frequency,
             List<ECKey> accounts,
             int txCount) {
+        long seed = rand.nextLong();
+        rand.setSeed(seed);
+        System.out.println("Random seed used: " + seed);
 
-        AionBlock parent, block, mainChain;
+        Block parent, block, mainChain;
         mainChain = chain.getGenesis();
 
-        List<AionBlock> knownBlocks = new ArrayList<>();
+        List<Block> knownBlocks = new ArrayList<>();
         knownBlocks.add(mainChain);
 
         List<AionTransaction> txs;
@@ -128,28 +133,18 @@ public class BlockchainTestUtils {
             txs = generateTransactions(txCount, accounts, repo);
             repo.syncToRoot(originalRoot);
 
-            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
-
-            A0BlockHeader newBlockHeader =
-                    A0BlockHeader.Builder.newInstance()
-                            .withHeader(block.getHeader())
-                            .withExtraData(String.valueOf(i).getBytes())
-                            .build();
-            block.updateHeader(newBlockHeader);
-
-            ImportResult result = chain.tryToConnectInternal(block, (time += 10));
-            knownBlocks.add(block);
-            if (result == ImportResult.IMPORTED_BEST) {
-                mainChain = block;
+            if (!chain.forkUtility.isUnityForkActive(parent.getNumber() + 1)) {
+                // create and import pre-unity block
+                Pair<Block, ImportResult> importPair = addMiningBlock(chain, parent, txs, time, String.valueOf(i).getBytes());
+                time += 10;
+                block = importPair.getLeft();
+                knownBlocks.add(block);
+                if (importPair.getRight() == ImportResult.IMPORTED_BEST) {
+                    mainChain = block;
+                }
+            } else {
+                throw new IllegalStateException("This method cannot create Unity chains.");
             }
-
-            System.out.format(
-                    "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
-                    block.getShortHash(),
-                    block.getNumber(),
-                    new String(block.getExtraData()),
-                    block.getTransactionsList().size(),
-                    result.toString());
         }
     }
 
@@ -157,14 +152,17 @@ public class BlockchainTestUtils {
      * @param chain blockchain implementation to be populated
      * @param blocks number of blocks in the chain
      * @param frequency every multiple of frequency block will be on the main chain
+     * @apiNote Supports only chains that do not include the Unity fork.
      */
-    public static void generateRandomChainWithoutTransactions(
-            StandaloneBlockchain chain, int blocks, int frequency) {
+    public static void generateRandomChainWithoutTransactions(StandaloneBlockchain chain, long blocks, int frequency) {
+        long seed = rand.nextLong();
+        rand.setSeed(seed);
+        System.out.println("Random seed used: " + seed);
 
-        AionBlock parent, block, mainChain;
+        Block parent, block, mainChain;
         mainChain = chain.getGenesis();
 
-        List<AionBlock> knownBlocks = new ArrayList<>();
+        List<Block> knownBlocks = new ArrayList<>();
         knownBlocks.add(mainChain);
 
         List<AionTransaction> txs = Collections.emptyList();
@@ -187,29 +185,38 @@ public class BlockchainTestUtils {
                 }
             }
 
-            block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
-
-            A0BlockHeader newBlockHeader =
-                A0BlockHeader.Builder.newInstance()
-                    .withHeader(block.getHeader())
-                    .withExtraData(String.valueOf(i).getBytes())
-                    .build();
-            block.updateHeader(newBlockHeader);
-
-            ImportResult result = chain.tryToConnectInternal(block, (time += 10));
-            knownBlocks.add(block);
-            if (result == ImportResult.IMPORTED_BEST) {
-                mainChain = block;
+            if (!chain.forkUtility.isUnityForkActive(parent.getNumber() + 1)) {
+                // create and import pre-unity block
+                Pair<Block, ImportResult> importPair = addMiningBlock(chain, parent, txs, time, String.valueOf(i).getBytes());
+                time += 10;
+                block = importPair.getLeft();
+                knownBlocks.add(block);
+                if (importPair.getRight() == ImportResult.IMPORTED_BEST) {
+                    mainChain = block;
+                }
+            } else {
+                throw new IllegalStateException("This method cannot create Unity chains.");
             }
-
-            System.out.format(
-                    "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
-                    block.getShortHash(),
-                    block.getNumber(),
-                    new String(block.getExtraData()),
-                    block.getTransactionsList().size(),
-                    result.toString());
         }
+    }
+
+    private static Pair<Block, ImportResult> addMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, long time, byte[] extraData) {
+        AionBlock block = chain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
+
+        A0BlockHeader newBlockHeader = A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).withExtraData(extraData).build();
+        block.updateHeader(newBlockHeader);
+
+        ImportResult result = chain.tryToConnectInternal(block, (time + 10));
+
+        System.out.format(
+                "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
+                block.getShortHash(),
+                block.getNumber(),
+                new String(block.getExtraData()),
+                block.getTransactionsList().size(),
+                result.toString());
+
+        return Pair.of(block, result);
     }
 
     /**
