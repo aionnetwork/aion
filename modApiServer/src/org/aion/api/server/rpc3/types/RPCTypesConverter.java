@@ -205,7 +205,7 @@ public class RPCTypesConverter{
         public static Request decode(Object str){
             try{
                 if(str==null) return null;
-                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\\\\",""));
                 return new Request( IntegerConverter.decode(jsonObject.opt("id")) , StringConverter.decode(jsonObject.opt("method")) , StringConverter.decode(jsonObject.opt("params")) , VersionTypeConverter.decode(jsonObject.opt("jsonrpc")) );
             } catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -220,7 +220,7 @@ public class RPCTypesConverter{
                 jsonObject.put("method", StringConverter.encode(obj.method));
                 jsonObject.put("params", StringConverter.encode(obj.params));
                 jsonObject.put("jsonrpc", VersionTypeConverter.encode(obj.jsonrpc));
-                return jsonObject.toString().replaceAll("\"","\"");
+                return jsonObject.toString().replaceAll("\\\\","");
             }
             catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -233,7 +233,7 @@ public class RPCTypesConverter{
         public static Response decode(Object str){
             try{
                 if(str==null) return null;
-                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\\\\",""));
                 return new Response( IntegerConverter.decode(jsonObject.opt("id")) , ObjectConverter.decode(jsonObject.opt("result")) , ErrorConverter.decode(jsonObject.opt("error")) , VersionTypeConverter.decode(jsonObject.opt("jsonrpc")) );
             } catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -248,7 +248,7 @@ public class RPCTypesConverter{
                 jsonObject.put("result", ObjectConverter.encode(obj.result));
                 jsonObject.put("error", ErrorConverter.encode(obj.error));
                 jsonObject.put("jsonrpc", VersionTypeConverter.encode(obj.jsonrpc));
-                return jsonObject.toString().replaceAll("\"","\"");
+                return jsonObject.toString().replaceAll("\\\\","");
             }
             catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -261,7 +261,7 @@ public class RPCTypesConverter{
         public static Error decode(Object str){
             try{
                 if(str==null) return null;
-                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\\\\",""));
                 return new Error( IntegerConverter.decode(jsonObject.opt("code")) , StringConverter.decode(jsonObject.opt("message")) );
             } catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -274,7 +274,7 @@ public class RPCTypesConverter{
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("code", IntegerConverter.encode(obj.code));
                 jsonObject.put("message", StringConverter.encode(obj.message));
-                return jsonObject.toString().replaceAll("\"","\"");
+                return jsonObject.toString().replaceAll("\\\\","");
             }
             catch (Exception e){
                 throw ParseErrorRPCException.INSTANCE;
@@ -422,7 +422,7 @@ public class RPCTypesConverter{
     public static class EcRecoverParamsConverter{
         public static EcRecoverParams decode(Object object){
             if(object==null) return null;
-            String s = object.toString().replaceAll("\"","\"");
+            String s = object.toString().replaceAll("\\\\","");
             try{
                 EcRecoverParams obj;
                 if(s.startsWith("[") && s.endsWith("]")){
@@ -447,7 +447,7 @@ public class RPCTypesConverter{
                 JSONArray arr = new JSONArray();
                 arr.put(0, DataHexStringConverter.encode(obj.dataThatWasSigned));
                                 arr.put(1, DataHexStringConverter.encode(obj.signature));
-                return arr.toString().replaceAll("\"","\"");
+                return arr.toString().replaceAll("\\\\","");
             }catch(Exception e){
                 throw ParseErrorRPCException.INSTANCE;
             }
