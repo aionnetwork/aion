@@ -235,6 +235,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.forkUtility = new ForkUtility(); // forks are disabled by default
         Optional<Long> maybeFork050 = load050ForkNumberFromConfig(CfgAion.inst());
         if (maybeFork050.isPresent()) {
+            if (maybeFork050.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
+                LOG.warn("The unity fork number cannot be less than 2, set the fork number to 2");
+                maybeFork050 = Optional.of(2L);
+            }
+
             this.forkUtility.enableUnityFork(maybeFork050.get());
         }
 
