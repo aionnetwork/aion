@@ -15,7 +15,7 @@ import java.util.Set;
 *****************************************************************************/
 public interface PersonalRPC{
 
-    default String execute(Request request){
+    default Object execute(Request request){
         Object res;
         try{
             //check that the request can be fulfilled by this class
@@ -24,20 +24,20 @@ public interface PersonalRPC{
                 try{
                     params=EcRecoverParamsConverter.decode(request.params);
                 }catch(Exception e){
-                    throw new InvalidParamsRPCException();
+                    throw InvalidParamsRPCException.INSTANCE;
                 }
                 AionAddress result = this.personal_ecRecover(params.dataThatWasSigned,params.signature);
                 res = AionAddressConverter.encode(result);
             }else
-                throw new MethodNotFoundRPCException();
+                throw MethodNotFoundRPCException.INSTANCE;
         }
         catch(InvalidRequestRPCException |ParseErrorRPCException |MethodNotFoundRPCException |InvalidParamsRPCException |InternalErrorRPCException e){
-            return e.getMessage();
+            throw e;
         }
         catch(Exception e){
-            return new InternalErrorRPCException().getMessage();
+            throw InternalErrorRPCException.INSTANCE;
         }
-        return ResponseConverter.encode(new Response(request.id, res , VersionType.Version2));
+        return res;
     }
 
     boolean isExecutable(String method);

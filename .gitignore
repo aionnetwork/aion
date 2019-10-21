@@ -68,3 +68,6 @@ tmp/
 # openjdk artifacts
 openjdk*.tar.gz
 openjfx*.zip
+
+#rpc
+/modApiServer/keystore/

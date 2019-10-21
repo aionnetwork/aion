@@ -2,6 +2,7 @@ package org.aion.api.server.rpc3;
 
 import java.util.Objects;
 import java.util.Set;
+import org.aion.api.server.rpc3.RPCExceptions.InvalidParamsRPCException;
 import org.aion.api.server.rpc3.types.RPCTypes.Request;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
@@ -32,7 +33,7 @@ public class PersonalRPCImpl implements PersonalRPC {
         logger.debug("Running personal_ecRecover");
         ISignature signature1 = SignatureFac.fromBytes(signature.toBytes());
         if (signature1 == null) {
-            throw new RPCExceptions.InvalidParamsRPCException();
+            throw InvalidParamsRPCException.INSTANCE;
         }
         byte[] pk = signature1.getAddress();
         if (SignatureFac.verify(dataThatWasSigned.toBytes(), signature1)) {

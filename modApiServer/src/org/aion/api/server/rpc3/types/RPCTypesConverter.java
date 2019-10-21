@@ -1,9 +1,13 @@
 package org.aion.api.server.rpc3.types;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.aion.api.server.rpc3.types.RPCTypes.Error;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
-import static org.aion.api.server.rpc3.types.RPCTypes.*;
+import org.aion.api.server.rpc3.types.RPCTypes.*;
 import java.util.regex.Pattern;
 import org.aion.api.server.rpc3.RPCExceptions.ParseErrorRPCException;
 import org.json.JSONArray;
@@ -19,7 +23,7 @@ import java.math.BigInteger;
 public class RPCTypesConverter{
 
     private static final Pattern hexPattern= Pattern.compile("^0x[0-9a-fA-F]+");
-    private static final Pattern decPattern = Pattern.compile("^[0-9]+");
+    private static final Pattern decPattern = Pattern.compile("^-?[0-9]+");
 
     public static class ObjectConverter{
 
@@ -46,8 +50,6 @@ public class RPCTypesConverter{
     }
 
     public static class LongConverter{
-        private static final Pattern hexPattern = Pattern.compile("^0x[0-9a-fA-F]+");
-        private static final Pattern decPattern = Pattern.compile("^[0-9]+");
 
         public static Long decode(Object s){
             if(s==null) return null;
@@ -58,7 +60,7 @@ public class RPCTypesConverter{
                 return Long.parseLong(s.toString());
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -66,7 +68,7 @@ public class RPCTypesConverter{
             try{
                 return s;
             }catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -74,7 +76,7 @@ public class RPCTypesConverter{
             try{
                 return "0x"+Long.toHexString(s);
             }catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -82,8 +84,6 @@ public class RPCTypesConverter{
 
 
     public static class IntegerConverter{
-        private final static Pattern hexPattern = Pattern.compile("^0x[0-9a-fA-F]+");
-        private final static Pattern decPattern = Pattern.compile("^[0-9]+");
 
         public static Integer decode(Object s){
             if(s==null) return null;
@@ -94,7 +94,7 @@ public class RPCTypesConverter{
                 return Integer.parseInt(s.toString());
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -102,7 +102,7 @@ public class RPCTypesConverter{
             try{
                 return s;
             }catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -110,7 +110,7 @@ public class RPCTypesConverter{
             try{
                 return "0x"+Integer.toHexString(s);
             }catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
     }
@@ -121,7 +121,7 @@ public class RPCTypesConverter{
             try{
                 return "0x"+bigInteger.toString(16);
             } catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -129,7 +129,7 @@ public class RPCTypesConverter{
             try{
                 return bigInteger.toString(16);
             } catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -143,13 +143,12 @@ public class RPCTypesConverter{
                 return new BigInteger(s.toString());
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
     }
 
     public static class ByteArrayWrapperConverter{
-        private static final Pattern hexPattern = Pattern.compile("^0x[0-9a-fA-F]+");
 
         public static ByteArrayWrapper decode(Object obj){
             if (obj == null){
@@ -166,7 +165,7 @@ public class RPCTypesConverter{
                 }
             }
             else {
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -189,10 +188,10 @@ public class RPCTypesConverter{
                     return new AionAddress(((byte[])obj));
                 }
                 else {
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
             }catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -205,10 +204,11 @@ public class RPCTypesConverter{
     public static class RequestConverter{
         public static Request decode(Object str){
             try{
+                if(str==null) return null;
                 JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
-                return new Request( IntegerConverter.decode(jsonObject.opt("id")) , StringConverter.decode(jsonObject.opt("method")) , StringConverter.decode(jsonObject.opt("params")) , VersionTypeConverter.decode(jsonObject.opt("jsonRPC")) );
+                return new Request( IntegerConverter.decode(jsonObject.opt("id")) , StringConverter.decode(jsonObject.opt("method")) , StringConverter.decode(jsonObject.opt("params")) , VersionTypeConverter.decode(jsonObject.opt("jsonrpc")) );
             } catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -219,11 +219,11 @@ public class RPCTypesConverter{
                 jsonObject.put("id", IntegerConverter.encode(obj.id));
                 jsonObject.put("method", StringConverter.encode(obj.method));
                 jsonObject.put("params", StringConverter.encode(obj.params));
-                jsonObject.put("jsonRPC", VersionTypeConverter.encode(obj.jsonRPC));
+                jsonObject.put("jsonrpc", VersionTypeConverter.encode(obj.jsonrpc));
                 return jsonObject.toString().replaceAll("\"","\"");
             }
             catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -232,10 +232,11 @@ public class RPCTypesConverter{
     public static class ResponseConverter{
         public static Response decode(Object str){
             try{
+                if(str==null) return null;
                 JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
-                return new Response( IntegerConverter.decode(jsonObject.opt("id")) , ObjectConverter.decode(jsonObject.opt("result")) , VersionTypeConverter.decode(jsonObject.opt("jsonRPC")) );
+                return new Response( IntegerConverter.decode(jsonObject.opt("id")) , ObjectConverter.decode(jsonObject.opt("result")) , ErrorConverter.decode(jsonObject.opt("error")) , VersionTypeConverter.decode(jsonObject.opt("jsonrpc")) );
             } catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -245,11 +246,38 @@ public class RPCTypesConverter{
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", IntegerConverter.encode(obj.id));
                 jsonObject.put("result", ObjectConverter.encode(obj.result));
-                jsonObject.put("jsonRPC", VersionTypeConverter.encode(obj.jsonRPC));
+                jsonObject.put("error", ErrorConverter.encode(obj.error));
+                jsonObject.put("jsonrpc", VersionTypeConverter.encode(obj.jsonrpc));
                 return jsonObject.toString().replaceAll("\"","\"");
             }
             catch (Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
+            }
+        }
+
+    }
+
+    public static class ErrorConverter{
+        public static Error decode(Object str){
+            try{
+                if(str==null) return null;
+                JSONObject jsonObject = new JSONObject(((String) str).replaceAll("\"","\""));
+                return new Error( IntegerConverter.decode(jsonObject.opt("code")) , StringConverter.decode(jsonObject.opt("message")) );
+            } catch (Exception e){
+                throw ParseErrorRPCException.INSTANCE;
+            }
+        }
+
+        public static String encode( Error obj){
+            try{
+                if(obj==null) return null;
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("code", IntegerConverter.encode(obj.code));
+                jsonObject.put("message", StringConverter.encode(obj.message));
+                return jsonObject.toString().replaceAll("\"","\"");
+            }
+            catch (Exception e){
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -264,10 +292,10 @@ public class RPCTypesConverter{
                     return ByteArrayWrapperConverter.decode(object);
                 }
                 else{
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
             } catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -277,10 +305,10 @@ public class RPCTypesConverter{
                 if(checkConstraints(result))
                     return result;
                 else
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -298,10 +326,10 @@ public class RPCTypesConverter{
                     return BigIntegerConverter.decode(object);
                 }
                 else{
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
             } catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -311,10 +339,10 @@ public class RPCTypesConverter{
                 if(checkConstraints(result))
                     return result;
                 else
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -332,10 +360,10 @@ public class RPCTypesConverter{
                     return LongConverter.decode(object);
                 }
                 else{
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
             } catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -345,10 +373,10 @@ public class RPCTypesConverter{
                 if(checkConstraints(result))
                     return result;
                 else
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -366,10 +394,10 @@ public class RPCTypesConverter{
                     return IntegerConverter.decode(object);
                 }
                 else{
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
             } catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -379,10 +407,10 @@ public class RPCTypesConverter{
                 if(checkConstraints(result))
                     return result;
                 else
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
             }
             else{
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -393,6 +421,7 @@ public class RPCTypesConverter{
 
     public static class EcRecoverParamsConverter{
         public static EcRecoverParams decode(Object object){
+            if(object==null) return null;
             String s = object.toString().replaceAll("\"","\"");
             try{
                 EcRecoverParams obj;
@@ -405,11 +434,11 @@ public class RPCTypesConverter{
                     obj = new EcRecoverParams( DataHexStringConverter.decode(jsonObject.opt("dataThatWasSigned")), DataHexStringConverter.decode(jsonObject.opt("signature")));
                 }
                 else{
-                    throw new ParseErrorRPCException();
+                    throw ParseErrorRPCException.INSTANCE;
                 }
                 return obj;
             }catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
 
@@ -420,7 +449,7 @@ public class RPCTypesConverter{
                                 arr.put(1, DataHexStringConverter.encode(obj.signature));
                 return arr.toString().replaceAll("\"","\"");
             }catch(Exception e){
-                throw new ParseErrorRPCException();
+                throw ParseErrorRPCException.INSTANCE;
             }
         }
     }
@@ -436,4 +465,49 @@ public class RPCTypesConverter{
             return obj.x;
         }
     }
+
+    public static class RequestListConverter{
+        public static List<Request> decode(Object object){
+            if(object == null) return null;
+            JSONArray arr = new JSONArray(object.toString());
+            List<Request> temp = new ArrayList<>();
+            for(int i=0; i < arr.length(); i++){
+                temp.add(RequestConverter.decode(arr.opt(i)));
+            }
+            return Collections.unmodifiableList(temp);
+        }
+
+        public static String encode(List<Request> list){
+            if(list==null) return null;
+            JSONArray arr = new JSONArray();
+
+            for(int i=0; i < list.size();i++){
+                arr.put(RequestConverter.encode(list.get(i)));
+            }
+            return arr.toString();
+        }
+    }
+
+    public static class ResponseListConverter{
+        public static List<Response> decode(Object object){
+            if(object == null) return null;
+            JSONArray arr = new JSONArray(object.toString());
+            List<Response> temp = new ArrayList<>();
+            for(int i=0; i < arr.length(); i++){
+                temp.add(ResponseConverter.decode(arr.opt(i)));
+            }
+            return Collections.unmodifiableList(temp);
+        }
+
+        public static String encode(List<Response> list){
+            if(list==null) return null;
+            JSONArray arr = new JSONArray();
+
+            for(int i=0; i < list.size();i++){
+                arr.put(ResponseConverter.encode(list.get(i)));
+            }
+            return arr.toString();
+        }
+    }
+
 }

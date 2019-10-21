@@ -7,6 +7,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 
+import java.util.function.Supplier;
+import org.aion.api.server.rpc3.RPCExceptions.InternalErrorRPCException;
+import org.aion.api.server.rpc3.RPCExceptions.InvalidParamsRPCException;
+import org.aion.api.server.rpc3.RPCExceptions.MethodNotFoundRPCException;
 import org.aion.api.server.rpc3.types.RPCTypes.EcRecoverParams;
 import org.aion.api.server.rpc3.types.RPCTypes.Request;
 import org.aion.api.server.rpc3.types.RPCTypes.VersionType;
@@ -86,7 +90,7 @@ public class PersonalRPCImplTest {
                 EcRecoverParamsConverter.encode(
                     new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, ResponseConverter.decode(rpc.execute(request)).result);
+        assertEquals(pubKey, rpc.execute(request));
         // incorrect method name
         request =
             new Request(
@@ -95,14 +99,18 @@ public class PersonalRPCImplTest {
                 EcRecoverParamsConverter.encode(
                     new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(
-            new RPCExceptions.MethodNotFoundRPCException().getMessage(),
-            rpc.execute(request));
+        try{
+            rpc.execute(request);
+            fail();
+        }catch (MethodNotFoundRPCException e){}
+
         // incorrect params
         request = new Request(2, "personal_ecRecover", "[]", VersionType.Version2);
-        assertEquals(
-            new RPCExceptions.InvalidParamsRPCException().getMessage(),
-            rpc.execute(request));
+
+        try{
+            rpc.execute(request);
+            fail();
+        }catch (InvalidParamsRPCException e){}
 
         Mockito.doThrow(NullPointerException.class).when(rpc).personal_ecRecover(any(), any());
         // well formed request but fails internally
@@ -113,9 +121,10 @@ public class PersonalRPCImplTest {
                 EcRecoverParamsConverter.encode(
                     new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(
-            new RPCExceptions.InternalErrorRPCException().getMessage(),
-            rpc.execute(request));
+        try{
+            rpc.execute(request);
+            fail();
+        }catch (InternalErrorRPCException e){}
     }
 
     @Test
