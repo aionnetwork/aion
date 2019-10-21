@@ -19,6 +19,7 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -41,10 +42,14 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
 
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
+    /** local transformed code cache */
+    protected Map<AionAddress, TransformedCodeInfo> cachedTransformedCode;
+
     public AionRepositoryCache(final Repository trackedRepository) {
         this.repository = trackedRepository;
         this.cachedAccounts = new HashMap<>();
         this.cachedDetails = new HashMap<>();
+        this.cachedTransformedCode = new HashMap<>();
     }
 
     @Override
@@ -223,7 +228,6 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
             getAccountState(address).delete();
             ContractDetails cd = getContractDetails(address);
             if (cd != null) {
-                cd.setTransformedCode(null);
                 cd.delete();
             }
         } finally {
@@ -313,12 +317,43 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
     }
 
     @Override
-    public byte[] getTransformedCode(AionAddress address) {
-        if (!hasAccountState(address)) {
-            return null;
-        }
+    public byte[] getTransformedCode(AionAddress address, byte[] codeHash, int avmVersion) {
+        fullyReadLock();
 
-        return getContractDetails(address).getTransformedCode();
+        try {
+            TransformedCodeInfo transformedCodeInfo = cachedTransformedCode.get(address);
+            byte[] transformedCode = null;
+
+            if (transformedCodeInfo != null) {
+                transformedCode = transformedCodeInfo.getTransformedCode(ByteArrayWrapper.wrap(codeHash), avmVersion);
+            }
+            // If we don't find it in the cache, go to the underlying repo
+            return transformedCode != null ? transformedCode : repository.getTransformedCode(address, codeHash, avmVersion);
+        }
+        finally {
+            fullyReadUnlock();
+        }
+    }
+
+    @Override
+    public void setTransformedCode(AionAddress address, byte[] codeHash, int avmVersion, byte[] transformedCode) {
+        if (address == null || codeHash == null || transformedCode == null) {
+            throw new NullPointerException();
+        }
+        fullyWriteLock();
+
+        try {
+            TransformedCodeInfo transformedCodeInfo = cachedTransformedCode.get(address);
+
+            if (transformedCodeInfo == null) {
+                transformedCodeInfo = new TransformedCodeInfo();
+            }
+            transformedCodeInfo.add(ByteArrayWrapper.wrap(codeHash), avmVersion, transformedCode);
+            cachedTransformedCode.put(address, transformedCodeInfo);
+        }
+        finally {
+            fullyWriteUnlock();
+        }
     }
 
     @Override
@@ -495,10 +530,11 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
                 }
             }
 
-            other.updateBatch(cleanedCacheAccounts, cachedDetails);
+            other.updateBatch(cleanedCacheAccounts, cachedDetails, cachedTransformedCode);
             if (clearStateAfterFlush) {
                 cachedAccounts.clear();
                 cachedDetails.clear();
+                cachedTransformedCode.clear();
             }
         } finally {
             fullyWriteUnlock();
@@ -518,12 +554,22 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
     @Override
     public void updateBatch(
             Map<AionAddress, AccountState> accounts,
-            final Map<AionAddress, ContractDetails> details) {
+            final Map<AionAddress, ContractDetails> details,
+            Map<AionAddress, TransformedCodeInfo> transformedCodeCache) {
+
         fullyWriteLock();
         try {
 
             for (Map.Entry<AionAddress, AccountState> accEntry : accounts.entrySet()) {
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
+            }
+
+            for (Map.Entry<AionAddress, TransformedCodeInfo> entry : transformedCodeCache.entrySet()) {
+                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : entry.getValue().transformedCodeMap.entrySet()) {
+                    for (Map.Entry<Integer, byte[]> innerEntry : infoMap.getValue().entrySet()) {
+                        setTransformedCode(entry.getKey(), infoMap.getKey().toBytes(), innerEntry.getKey(), innerEntry.getValue());
+                    }
+                }
             }
 
             for (Map.Entry<AionAddress, ContractDetails> ctdEntry : details.entrySet()) {
@@ -616,32 +662,6 @@ public class AionRepositoryCache implements RepositoryCache<AccountState> {
 
     public InternalVmType getVMUsed(AionAddress contract, byte[] codeHash) {
         return repository.getVMUsed(contract, codeHash);
-    }
-
-    @Override
-    public void setTransformedCode(AionAddress contractAddr, byte[] code) {
-        if (contractAddr == null || code == null) {
-            throw new NullPointerException();
-        }
-
-        fullyWriteLock();
-        try {
-            if (!hasAccountState(contractAddr)) {
-                LOG.debug("No accountState of the account: {}", contractAddr);
-                return;
-            }
-
-            ContractDetails cd = getContractDetails(contractAddr);
-            if (cd == null) {
-                LOG.debug("No contract detail of account: {}", contractAddr);
-                return;
-            }
-
-            cd.setTransformedCode(code);
-            cd.setDirty(true);
-        } finally {
-            fullyWriteUnlock();
-        }
     }
 
     @Override

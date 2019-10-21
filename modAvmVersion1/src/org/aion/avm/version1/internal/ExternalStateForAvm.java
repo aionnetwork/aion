@@ -57,15 +57,6 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
         this.repositoryCache.flushTo(((ExternalStateForAvm) target).repositoryCache, false);
     }
 
-    // the below two methods are temporary and will be removed by the upcoming refactorings.
-    public void rollback() {
-        this.repositoryCache.rollback();
-    }
-
-    public RepositoryCache<AccountState> getRepositoryCache() {
-        return this.repositoryCache;
-    }
-
     @Override
     public void createAccount(AionAddress address) {
         this.repositoryCache.createAccount(address);
@@ -98,12 +89,20 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public byte[] getTransformedCode(AionAddress address) {
-        return this.repositoryCache.getTransformedCode(address);
+        // will load contract into memory otherwise leading to consensus issues
+        RepositoryCache<AccountState> track = repositoryCache.startTracking();
+        byte[] codeHash = track.getAccountState(address).getCodeHash();
+
+        return this.repositoryCache.getTransformedCode(address, codeHash, 1);
     }
 
     @Override
     public void setTransformedCode(AionAddress address, byte[] transformedCode) {
-        this.repositoryCache.setTransformedCode(address, transformedCode);
+        // will load contract into memory otherwise leading to consensus issues
+        RepositoryCache<AccountState> track = repositoryCache.startTracking();
+        byte[] codeHash = track.getAccountState(address).getCodeHash();
+
+        this.repositoryCache.setTransformedCode(address, codeHash, 1,  transformedCode);
         setVmType(address);
     }
 

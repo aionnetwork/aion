@@ -41,7 +41,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     private int detailsInMemoryStorageLimit = 64 * 1024;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    private byte[] transformedCode;
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
@@ -110,20 +109,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         }
         byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
         return code == null ? EMPTY_BYTE_ARRAY : code;
-    }
-
-    @Override
-    public byte[] getTransformedCode() {
-        return transformedCode;
-    }
-
-    @Override
-    public void setTransformedCode(byte[] transformedCode) {
-        // ensures that the object is not set to dirty when copied
-        if (!Arrays.equals(this.transformedCode, transformedCode)) {
-            this.transformedCode = transformedCode;
-            setDirty(true);
-        }
     }
 
     @Override
@@ -680,7 +665,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         details.externalStorage = this.externalStorage;
         details.externalStorageDataSource = this.externalStorageDataSource;
         details.dataSource = dataSource;
-        details.setTransformedCode(this.getTransformedCode());
 
         return details;
     }
@@ -742,7 +726,6 @@ public class AionContractDetailsImpl implements ContractDetails {
                         : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
         aionContractDetailsCopy.storageTrie =
                 (this.storageTrie == null) ? null : this.storageTrie.copy();
-        aionContractDetailsCopy.setTransformedCode(this.getTransformedCode());
         return aionContractDetailsCopy;
     }
 

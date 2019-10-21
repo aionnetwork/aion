@@ -32,7 +32,9 @@ public interface Repository<AS> {
      * @param contractDetails cached contract details
      */
     void updateBatch(
-            Map<AionAddress, AS> accountStates, Map<AionAddress, ContractDetails> contractDetails);
+            Map<AionAddress, AS> accountStates,
+            Map<AionAddress, ContractDetails> contractDetails,
+            Map<AionAddress, TransformedCodeInfo> transformedCodeCache);
 
     /** Reverts all the changes performed by this repository. */
     void rollback();
@@ -121,9 +123,9 @@ public interface Repository<AS> {
      * Set the transformed code to the account associated with the given address.
      *
      * @param address the address of the account of interest
-     * @param code the transformed code
+     * @param transformedCode the transformed code
      */
-    void setTransformedCode(AionAddress address, byte[] code);
+    void setTransformedCode(AionAddress address, byte[] codeHash, int avmVersion, byte[] transformedCode);
 
     /**
      * Retrieves the transformed code for the account associated with the given address.
@@ -131,7 +133,7 @@ public interface Repository<AS> {
      * @param address the address of the account of interest
      * @return the transformed code associated to the account in {@code byte} array format
      */
-    byte[] getTransformedCode(AionAddress address);
+    byte[] getTransformedCode(AionAddress address, byte[] codeHash, int avmVersion);
 
     /**
      * Retrieves the code for the account associated with the given address.

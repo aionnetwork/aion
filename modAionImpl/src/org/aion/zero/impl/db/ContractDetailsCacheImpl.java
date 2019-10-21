@@ -29,7 +29,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     private boolean deleted = false;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    private byte[] transformedCode;
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
@@ -40,7 +39,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         this.origContract = origContract;
         if (origContract != null) {
             setCodes(this.origContract.getCodes());
-            this.origContract.setTransformedCode(origContract.getTransformedCode());
         }
     }
 
@@ -54,9 +52,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         copy.storage = new HashMap<>(cache.storage);
         copy.setDirty(cache.isDirty());
         copy.deleted = cache.deleted;
-        if (cache.getTransformedCode() != null) {
-            copy.setTransformedCode(cache.getTransformedCode().clone());
-        }
         return copy;
     }
 
@@ -67,15 +62,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         }
         byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
         return code == null ? EMPTY_BYTE_ARRAY : code;
-    }
-
-    @Override
-    public void setTransformedCode(byte[] transformedCode) {
-        // ensures that the object is not set to dirty when copied
-        if (!Arrays.equals(this.transformedCode, transformedCode)) {
-            this.transformedCode = transformedCode;
-            setDirty(true);
-        }
     }
 
     @Override
@@ -234,14 +220,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         setDirty(true);
     }
 
-    @Override
-    public byte[] getTransformedCode() {
-        if (transformedCode == null && this.origContract != null) {
-            transformedCode = origContract.getTransformedCode();
-        }
-        return transformedCode;
-    }
-
     /**
      * Returns the storage hash.
      *
@@ -316,7 +294,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
         origContract.appendCodes(getCodes());
 
-        origContract.setTransformedCode(getTransformedCode());
         origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
@@ -357,9 +334,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         copy.setCodes(getDeepCopyOfCodes());
         copy.setDirty(this.isDirty());
         copy.deleted = this.deleted;
-        if (this.getTransformedCode() != null) {
-            copy.setTransformedCode(this.getTransformedCode().clone());
-        }
         return copy;
     }
 

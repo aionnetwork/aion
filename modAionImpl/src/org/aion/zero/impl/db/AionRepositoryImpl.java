@@ -28,6 +28,7 @@ import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
+import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
@@ -56,6 +57,9 @@ public class AionRepositoryImpl extends AbstractRepository {
 
     // inferred contract information not used for consensus
     private ObjectStore<ContractInformation> contractInfoSource;
+
+    // Stored transformed code. Not necessary, but speeds up AVM contract calls.
+    private ObjectStore<TransformedCodeInfo> transformedCodeSource;
 
     // TODO: include in the repository config after the FVM is decoupled or remove RepositoryConfig and pass individual parameters
     private int blockCacheSize;
@@ -96,6 +100,7 @@ public class AionRepositoryImpl extends AbstractRepository {
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10);
+            this.transformedCodeSource = Stores.newObjectStore(contractPerformCodeDatabase, TransformedCodeSerializer.RLP_SERIALIZER);
 
             // Setup world trie.
             worldState = createStateTrie();
@@ -123,7 +128,8 @@ public class AionRepositoryImpl extends AbstractRepository {
     @Override
     public void updateBatch(
             Map<AionAddress, AccountState> stateCache,
-            Map<AionAddress, ContractDetails> detailsCache) {
+            Map<AionAddress, ContractDetails> detailsCache,
+            Map<AionAddress, TransformedCodeInfo> transformedCodeCache) {
         rwLock.writeLock().lock();
 
         try {
@@ -213,37 +219,28 @@ public class AionRepositoryImpl extends AbstractRepository {
                 }
             }
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            for (Map.Entry<AionAddress, TransformedCodeInfo> entry : transformedCodeCache.entrySet()) {
+                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : entry.getValue().transformedCodeMap.entrySet()) {
+                    for (Map.Entry<Integer, byte[]> innerEntry : infoMap.getValue().entrySet()) {
+                        setTransformedCode(entry.getKey(), infoMap.getKey().toBytes(), innerEntry.getKey(), innerEntry.getValue());
+                    }
+                }
             }
+
+            LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+
             stateCache.clear();
             detailsCache.clear();
+            transformedCodeCache.clear();
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private void updateContractDetails(
-            final AionAddress address, final AionContractDetailsImpl contractDetails) {
+    private void updateContractDetails(final AionAddress address, final AionContractDetailsImpl contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
-
-        // TODO: add vmtype check after merge PR867
-        if (contractPerformCodeDatabase != null) {
-            Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
-            byte[] tc = contractDetails.getTransformedCode();
-            if (code.isPresent()) {
-                if (tc == null) {
-                    contractPerformCodeDatabase.delete(address.toByteArray());
-                }
-            } else {
-                if (tc != null) {
-                    contractPerformCodeDatabase.put(
-                            address.toByteArray(), contractDetails.getTransformedCode());
-                }
-            }
-        }
     }
 
     @Override
@@ -413,15 +410,41 @@ public class AionRepositoryImpl extends AbstractRepository {
     }
 
     @Override
-    public byte[] getTransformedCode(AionAddress address) {
-        AccountState accountState = getAccountState(address);
+    public byte[] getTransformedCode(AionAddress address, byte[] codeHash, int avmVersion) {
+        rwLock.readLock().lock();
 
-        if (accountState == null) {
-            return null;
+        try {
+            TransformedCodeInfo transformedCodeInfo = transformedCodeSource
+                .get(address.toByteArray());
+
+            if (transformedCodeInfo == null) {
+                return null;
+            } else {
+                return transformedCodeInfo.getTransformedCode(ByteArrayWrapper.wrap(codeHash), avmVersion);
+            }
         }
+        finally {
+            rwLock.readLock().unlock();
+        }
+    }
 
-        ContractDetails details = getContractDetails(address);
-        return (details == null) ? null : details.getTransformedCode();
+    @Override
+    public void setTransformedCode(AionAddress address, byte[] codeHash, int avmVersion, byte[] transformedCode) {
+        rwLock.writeLock().lock();
+
+        try {
+            TransformedCodeInfo transformedCodeInfo = transformedCodeSource.get(address.toByteArray());
+
+            if (transformedCodeInfo == null) {
+                transformedCodeInfo = new TransformedCodeInfo();
+            }
+
+            transformedCodeInfo.add(ByteArrayWrapper.wrap(codeHash), avmVersion, transformedCode);
+            transformedCodeSource.put(address.toByteArray(), transformedCodeInfo);
+        }
+        finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -478,10 +501,6 @@ public class AionRepositoryImpl extends AbstractRepository {
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot, vm);
-                Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
-                if (code.isPresent()) {
-                    details.setTransformedCode(code.get());
-                }
             }
 
             return details;
@@ -550,10 +569,6 @@ public class AionRepositoryImpl extends AbstractRepository {
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
-        Optional<byte[]> code = contractPerformCodeDatabase.get(address.toByteArray());
-        if (code.isPresent()) {
-            details.setTransformedCode(code.get());
-        }
 
         cacheAccounts.put(address, account);
         cacheDetails.put(address, details);
@@ -660,7 +675,7 @@ public class AionRepositoryImpl extends AbstractRepository {
             AionRepositoryImpl repo = new AionRepositoryImpl();
             repo.blockStore = blockStore;
             repo.contractInfoSource = contractInfoSource;
-            repo.contractPerformCodeDatabase = contractPerformCodeDatabase;
+            repo.transformedCodeSource = transformedCodeSource;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
@@ -823,10 +838,10 @@ public class AionRepositoryImpl extends AbstractRepository {
             }
 
             try {
-                if (contractPerformCodeDatabase != null) {
-                    contractPerformCodeDatabase.close();
-                    LOGGEN.info("contractPerformCodeDatabase store closed.");
-                    contractPerformCodeDatabase = null;
+                if (transformedCodeSource != null) {
+                    transformedCodeSource.close();
+                    LOGGEN.info("transformedCodeSource store closed.");
+                    transformedCodeSource = null;
                 }
             } catch (Exception e) {
                 LOGGEN.error(
@@ -1188,20 +1203,6 @@ public class AionRepositoryImpl extends AbstractRepository {
                     }
                 }
             }
-        }
-    }
-
-    @Override
-    public void setTransformedCode(AionAddress contractAddr, byte[] code) {
-        AccountState accountState = getAccountState(contractAddr);
-
-        if (accountState == null) {
-            return;
-        }
-
-        ContractDetails details = getContractDetails(contractAddr);
-        if (details != null) {
-            details.setTransformedCode(code);
         }
     }
 
