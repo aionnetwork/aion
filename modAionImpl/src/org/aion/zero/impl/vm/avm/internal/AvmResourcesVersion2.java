@@ -103,9 +103,10 @@ public final class AvmResourcesVersion2 implements Closeable {
         File avmCoreJar = new File(projectRootPath + AvmDependencyInfo.coreJarPathVersion2);
         File avmRtJar = new File(projectRootPath + AvmDependencyInfo.rtJarPathVersion2);
         File avmUserlibJar = new File(projectRootPath + AvmDependencyInfo.userlibJarPathVersion2);
+        File avmToolingJar = new File(projectRootPath + AvmDependencyInfo.toolingJarPathVersion2);
         File avmApiJar = new File(projectRootPath + AvmDependencyInfo.apiJarPathVersion2);
         File avmUtilitiesJar = new File(projectRootPath + AvmDependencyInfo.utilitiesJarPathVersion2);
-        URL[] urls = new URL[]{ modAvmVersionJar.toURI().toURL(), avmCoreJar.toURI().toURL(), avmRtJar.toURI().toURL(), avmUserlibJar.toURI().toURL(), avmApiJar.toURI().toURL(), avmUtilitiesJar.toURI().toURL() };
+        URL[] urls = new URL[]{ modAvmVersionJar.toURI().toURL(), avmCoreJar.toURI().toURL(), avmRtJar.toURI().toURL(), avmUserlibJar.toURI().toURL(), avmToolingJar.toURI().toURL(), avmApiJar.toURI().toURL(), avmUtilitiesJar.toURI().toURL() };
         return new URLClassLoader(urls);
     }
 

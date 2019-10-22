@@ -11,6 +11,7 @@ public final class AvmDependencyInfo {
     public static final String apiJarPathVersion1 = "lib/org-aion-avm-api-v1.jar";
     public static final String rtJarPathVersion1 = "lib/org-aion-avm-rt-v1.jar";
     public static final String userlibJarPathVersion1 = "lib/org-aion-avm-userlib-v1.jar";
+    public static final String toolingJarPathVersion1 = "lib/org-aion-avm-tooling-v1.jar";
 
     public static final String avmResourceFactoryClassNameVersion2 = "org.aion.avm.version2.AvmResourceFactory";
     public static final String jarPathForModAvmVersion2 = "lib/modAvmVersion2.jar";
@@ -18,5 +19,6 @@ public final class AvmDependencyInfo {
     public static final String apiJarPathVersion2 = "lib/org-aion-avm-api-v2.jar";
     public static final String rtJarPathVersion2 = "lib/org-aion-avm-rt-v2.jar";
     public static final String userlibJarPathVersion2 = "lib/org-aion-avm-userlib-v2.jar";
+    public static final String toolingJarPathVersion2 = "lib/org-aion-avm-tooling-v2.jar";
     public static final String utilitiesJarPathVersion2 = "lib/org-aion-avm-utilities-v2.jar";
 }

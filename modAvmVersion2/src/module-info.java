@@ -11,6 +11,7 @@ module aion.avm.v2 {
     requires org.aion.avm.rt;
     requires org.aion.avm.userlib;
     requires org.aion.avm.utilities;
+    requires org.aion.avm.tooling;
 
     exports org.aion.avm.version2;
 }

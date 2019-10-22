@@ -12,4 +12,5 @@ dependencies {
     compile files("${rootProject.projectDir}/lib/org-aion-avm-rt-v2.jar")
     compile files("${rootProject.projectDir}/lib/org-aion-avm-userlib-v2.jar")
     compile files("${rootProject.projectDir}/lib/org-aion-avm-utilities-v2.jar")
+    compile files("${rootProject.projectDir}/lib/org-aion-avm-tooling-v2.jar")
 }

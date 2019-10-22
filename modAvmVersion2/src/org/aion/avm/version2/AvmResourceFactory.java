@@ -1,14 +1,11 @@
 package org.aion.avm.version2;
 
-import org.aion.avm.core.AvmImpl;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory;
 import org.aion.avm.stub.IDecoder;
 import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.stub.IStreamingEncoder;
-import org.aion.avm.userlib.AionBuffer;
-import org.aion.avm.utilities.JarBuilder;
 
 /**
  * A factory class that is able to produce the various resources offered by this avm version.
@@ -60,6 +57,9 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
         }
         if (org.aion.avm.utilities.JarBuilder.class.getClassLoader() != loader) {
             throw new IllegalStateException("Avm utilities jar was loaded by the wrong classloader: " + org.aion.avm.utilities.JarBuilder.class.getClassLoader());
+        }
+        if (org.aion.avm.tooling.deploy.OptimizedJarBuilder.class.getClassLoader() != loader) {
+            throw new IllegalStateException("Avm tooling jar was loaded by the wrong classloader: " + org.aion.avm.tooling.deploy.OptimizedJarBuilder.class.getClassLoader());
         }
 
         return loader;

@@ -2,6 +2,7 @@ package org.aion.avm.version1;
 
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.stub.IContractFactory;
+import org.aion.avm.tooling.deploy.OptimizedJarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIEncoder;
@@ -12,6 +13,10 @@ import org.aion.avm.version1.contracts.HelloWorld;
 import org.aion.avm.version1.contracts.InternalTransaction;
 import org.aion.avm.version1.contracts.LogTarget;
 import org.aion.avm.version1.contracts.Statefulness;
+import org.aion.avm.version1.contracts.unity.StakerRegistry;
+import org.aion.avm.version1.contracts.unity.StakerRegistryEvents;
+import org.aion.avm.version1.contracts.unity.StakerRegistryStorage;
+import org.aion.avm.version1.contracts.unity.StakerStorageObjects;
 
 public final class ContractFactory implements IContractFactory {
 
@@ -32,6 +37,12 @@ public final class ContractFactory implements IContractFactory {
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(GenericContract.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
             case INTERNAL_TRANSACTION:
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(InternalTransaction.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
+            case UNITY_STAKER_REGISTRY:
+                byte[] jar = JarBuilder.buildJarForMainAndClasses(StakerRegistry.class, StakerRegistryEvents.class, StakerStorageObjects.class, StakerRegistryStorage.class);
+                byte[] compiledJar = new OptimizedJarBuilder(false, jar, 1).withUnreachableMethodRemover().withConstantRemover().getOptimizedBytes();
+                // alternative without optimizations; can be used for debugging
+                // byte[] compiledJar = ABICompiler.compileJarBytes(jar, 1).getJarFileBytes();
+                return new CodeAndArguments(compiledJar, new byte[0]).encodeToBytes();
             default : throw new IllegalStateException("The following contract is not supported by version 1 of the avm: " + contract);
         }
     }

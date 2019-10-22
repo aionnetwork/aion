@@ -303,7 +303,7 @@ task pack(type: Tar) {
     }
     into('/aion/lib') {
         from dirLibFile
-        include 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar', 'org-aion-avm-utilities-v*.jar', 'modAvmVersion*.jar'
+        include 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar',  'org-aion-avm-tooling-v*.jar', 'org-aion-avm-utilities-v*.jar', 'modAvmVersion*.jar'
     }
     into('/aion/') { 
         from dirWorkspace
