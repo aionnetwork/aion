@@ -52,18 +52,51 @@ public final class TestResourceProvider implements Closeable {
     }
 
     /**
+     * Loads all of the required dependencies that are unique to the specified versionof the avm
+     * in a new classloader and returns this classloader.
+     *
+     * @return the classloader with the specified version dependencies.
+     */
+    private static URLClassLoader newClassLoaderForAvmVersion(String projectRootPath, AvmVersion version) throws MalformedURLException {
+        if (version == AvmVersion.VERSION_1) {
+            return newClassLoaderForAvmVersion1(projectRootPath);
+        }
+        if (version == AvmVersion.VERSION_2) {
+            return newClassLoaderForAvmVersion2(projectRootPath);
+        }
+        throw new IllegalArgumentException("AVM Version not supported: " + version.name());
+    }
+
+    /**
      * Loads all of the required dependencies that are unique to version 1 of the avm in a new
      * classloader and returns this classloader.
      *
      * @return the classloader with the version 1 dependencies.
      */
-    private static URLClassLoader newClassLoaderForAvmVersion(String projectRootPath, AvmVersion version) throws MalformedURLException {
-        File modAvmVersionJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.jarPathForModAvmVersion1 : AvmDependencyInfo.jarPathForModAvmVersion2));
-        File avmCoreJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.coreJarPathVersion1 : AvmDependencyInfo.coreJarPathVersion2));
-        File avmRtJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.rtJarPathVersion1 : AvmDependencyInfo.rtJarPathVersion2));
-        File avmUserlibJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.userlibJarPathVersion1 : AvmDependencyInfo.userlibJarPathVersion2));
-        File avmApiJar = new File(projectRootPath + (version == AvmVersion.VERSION_1 ? AvmDependencyInfo.apiJarPathVersion1 : AvmDependencyInfo.apiJarPathVersion2));
+    private static URLClassLoader newClassLoaderForAvmVersion1(String projectRootPath) throws MalformedURLException {
+        File modAvmVersionJar = new File(projectRootPath + AvmDependencyInfo.jarPathForModAvmVersion1);
+        File avmCoreJar = new File(projectRootPath + AvmDependencyInfo.coreJarPathVersion1);
+        File avmRtJar = new File(projectRootPath + AvmDependencyInfo.rtJarPathVersion1);
+        File avmUserlibJar = new File(projectRootPath + AvmDependencyInfo.userlibJarPathVersion1);
+        File avmApiJar = new File(projectRootPath + AvmDependencyInfo.apiJarPathVersion1);
         URL[] urls = new URL[]{ modAvmVersionJar.toURI().toURL(), avmCoreJar.toURI().toURL(), avmRtJar.toURI().toURL(), avmUserlibJar.toURI().toURL(), avmApiJar.toURI().toURL() };
+        return new URLClassLoader(urls);
+    }
+
+    /**
+     * Loads all of the required dependencies that are unique to version 2 of the avm in a new
+     * classloader and returns this classloader.
+     *
+     * @return the classloader with the version 2 dependencies.
+     */
+    private static URLClassLoader newClassLoaderForAvmVersion2(String projectRootPath) throws MalformedURLException {
+        File modAvmVersionJar = new File(projectRootPath + AvmDependencyInfo.jarPathForModAvmVersion2);
+        File avmCoreJar = new File(projectRootPath + AvmDependencyInfo.coreJarPathVersion2);
+        File avmRtJar = new File(projectRootPath + AvmDependencyInfo.rtJarPathVersion2);
+        File avmUserlibJar = new File(projectRootPath + AvmDependencyInfo.userlibJarPathVersion2);
+        File avmApiJar = new File(projectRootPath + AvmDependencyInfo.apiJarPathVersion2);
+        File avmUtilitiesJar = new File(projectRootPath + AvmDependencyInfo.utilitiesJarPathVersion2);
+        URL[] urls = new URL[]{ modAvmVersionJar.toURI().toURL(), avmCoreJar.toURI().toURL(), avmRtJar.toURI().toURL(), avmUserlibJar.toURI().toURL(), avmApiJar.toURI().toURL(), avmUtilitiesJar.toURI().toURL() };
         return new URLClassLoader(urls);
     }
 

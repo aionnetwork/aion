@@ -10,6 +10,7 @@ module aion.avm.v2 {
     requires org.aion.avm.api;
     requires org.aion.avm.rt;
     requires org.aion.avm.userlib;
+    requires org.aion.avm.utilities;
 
     exports org.aion.avm.version2;
 }

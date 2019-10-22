@@ -8,6 +8,7 @@ import org.aion.avm.stub.IDecoder;
 import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.stub.IStreamingEncoder;
 import org.aion.avm.userlib.AionBuffer;
+import org.aion.avm.utilities.JarBuilder;
 
 /**
  * A factory class that is able to produce the various resources offered by this avm version.
@@ -45,8 +46,8 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
 
         // Verify that all of the avm jars were loaded by the same classloader as this class.
         // We simply pick random classes in each of the jars to test, there is nothing special about these classes in particular.
-        if (AvmImpl.class.getClassLoader() != loader) {
-            throw new IllegalStateException("Avm core jar was loaded by the wrong classloader: " + AvmImpl.class.getClassLoader());
+        if (org.aion.avm.core.AvmImpl.class.getClassLoader() != loader) {
+            throw new IllegalStateException("Avm core jar was loaded by the wrong classloader: " + org.aion.avm.core.AvmImpl.class.getClassLoader());
         }
         if (avm.Blockchain.class.getClassLoader() != loader) {
             throw new IllegalStateException("Avm api jar was loaded by the wrong classloader: " + avm.Blockchain.class.getClassLoader());
@@ -54,8 +55,11 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
         if (p.avm.Blockchain.class.getClassLoader() != loader) {
             throw new IllegalStateException("Avm rt jar was loaded by the wrong classloader: " + p.avm.Blockchain.class.getClassLoader());
         }
-        if (AionBuffer.class.getClassLoader() != loader) {
-            throw new IllegalStateException("Avm userlib jar was loaded by the wrong classloader: " + AionBuffer.class.getClassLoader());
+        if (org.aion.avm.userlib.AionBuffer.class.getClassLoader() != loader) {
+            throw new IllegalStateException("Avm userlib jar was loaded by the wrong classloader: " + org.aion.avm.userlib.AionBuffer.class.getClassLoader());
+        }
+        if (org.aion.avm.utilities.JarBuilder.class.getClassLoader() != loader) {
+            throw new IllegalStateException("Avm utilities jar was loaded by the wrong classloader: " + org.aion.avm.utilities.JarBuilder.class.getClassLoader());
         }
 
         return loader;
