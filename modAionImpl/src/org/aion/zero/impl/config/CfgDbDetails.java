@@ -99,37 +99,37 @@ public class CfgDbDetails {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "vendor":
-                            this.vendor = Cfg.readValue(sr);
+                            this.vendor = ConfigUtil.readValue(sr);
                             break;
                         case Props.ENABLE_AUTO_COMMIT:
-                            this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enable_auto_commit = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case Props.ENABLE_DB_CACHE:
-                            this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enable_db_cache = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case Props.ENABLE_DB_COMPRESSION:
-                            this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enable_db_compression = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case Props.BLOCK_SIZE:
-                            this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
+                            this.block_size = parseFileSizeSafe(ConfigUtil.readValue(sr), this.block_size);
                             break;
                         case Props.MAX_FD_ALLOC:
-                            int i = Integer.parseInt(Cfg.readValue(sr));
+                            int i = Integer.parseInt(ConfigUtil.readValue(sr));
                             this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
                             break;
                         case Props.WRITE_BUFFER_SIZE:
                             this.write_buffer_size =
-                                    parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                                    parseFileSizeSafe(ConfigUtil.readValue(sr), this.write_buffer_size);
                             break;
                         case Props.READ_BUFFER_SIZE:
                             this.read_buffer_size =
-                                    parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);
+                                    parseFileSizeSafe(ConfigUtil.readValue(sr), this.read_buffer_size);
                             break;
                         case Props.DB_CACHE_SIZE:
-                            this.cache_size = parseFileSizeSafe(Cfg.readValue(sr), this.cache_size);
+                            this.cache_size = parseFileSizeSafe(ConfigUtil.readValue(sr), this.cache_size);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

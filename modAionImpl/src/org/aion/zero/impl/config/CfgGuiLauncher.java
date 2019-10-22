@@ -41,19 +41,19 @@ public class CfgGuiLauncher {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "autodetect":
-                            this.autodetectJavaRuntime = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.autodetectJavaRuntime = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "java-home":
-                            this.javaHome = Cfg.readValue(sr);
+                            this.javaHome = ConfigUtil.readValue(sr);
                             break;
                         case "aion-sh":
-                            this.aionSh = Cfg.readValue(sr);
+                            this.aionSh = ConfigUtil.readValue(sr);
                         case "working-dir":
-                            this.workingDir = Cfg.readValue(sr);
+                            this.workingDir = ConfigUtil.readValue(sr);
                             break;
                             //                        case "keep-kernel-on-exit":
                             //                            this.keepKernelOnExit =
-                            // Boolean.parseBoolean(Cfg.readValue(sr));
+                            // Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             //                            break;
                         default:
                             break;

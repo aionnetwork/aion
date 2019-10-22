@@ -52,15 +52,15 @@ public class CfgLog {
                         String elementName = sr.getLocalName().toLowerCase();
                         switch (elementName) {
                             case "log-file":
-                                this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                                this.logFile = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                                 break;
                             case "log-path":
-                                this.logPath = Cfg.readValue(sr);
+                                this.logPath = ConfigUtil.readValue(sr);
                                 break;
                             default:
                                 // ensures the LogEnum can be decoded
                                 if (LogEnum.contains(elementName)) {
-                                    String level = Cfg.readValue(sr);
+                                    String level = ConfigUtil.readValue(sr);
                                     // ensures the LogLevel can be decoded
                                     if (LogLevel.contains(level)) {
                                         this.modules.put(LogEnum.valueOf(elementName.toUpperCase()), LogLevel.valueOf(level.toUpperCase()));

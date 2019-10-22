@@ -37,7 +37,7 @@ public final class CfgNet {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "id":
-                            int _id = Integer.parseInt(Cfg.readValue(sr));
+                            int _id = Integer.parseInt(ConfigUtil.readValue(sr));
                             this.id = _id < 0 ? 0 : _id;
                             break;
                         case "nodes":
@@ -47,7 +47,7 @@ public final class CfgNet {
                                 int eventType1 = sr.next();
                                 switch (eventType1) {
                                     case XMLStreamReader.START_ELEMENT:
-                                        nodes.add(Cfg.readValue(sr));
+                                        nodes.add(ConfigUtil.readValue(sr));
                                         break;
                                     case XMLStreamReader.END_ELEMENT:
                                         this.nodes = nodes.toArray(new String[nodes.size()]);
@@ -59,7 +59,7 @@ public final class CfgNet {
                             this.p2p.fromXML(sr);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

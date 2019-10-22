@@ -54,27 +54,27 @@ public class CfgPrune implements PruneConfig {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "enabled":
-                            this.enabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "archived":
-                            this.archived = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.archived = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "current_count":
-                            this.current_count = Integer.parseInt(Cfg.readValue(sr));
+                            this.current_count = Integer.parseInt(ConfigUtil.readValue(sr));
                             // must be at least MINIMUM_CURRENT_COUNT
                             if (this.current_count < MINIMUM_CURRENT_COUNT) {
                                 this.current_count = MINIMUM_CURRENT_COUNT;
                             }
                             break;
                         case "archive_rate":
-                            this.archive_rate = Integer.parseInt(Cfg.readValue(sr));
+                            this.archive_rate = Integer.parseInt(ConfigUtil.readValue(sr));
                             // must be at least MINIMUM_ARCHIVE_RATE
                             if (this.archive_rate < MINIMUM_ARCHIVE_RATE) {
                                 this.archive_rate = MINIMUM_ARCHIVE_RATE;
                             }
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

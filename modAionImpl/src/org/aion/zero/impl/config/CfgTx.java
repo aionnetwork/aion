@@ -39,7 +39,7 @@ public class CfgTx {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "cachemax":
-                            this.cacheMax = Integer.parseInt(Cfg.readValue(sr));
+                            this.cacheMax = Integer.parseInt(ConfigUtil.readValue(sr));
                             if (this.cacheMax < 128) {
                                 this.cacheMax = 128;
                             } else if (this.cacheMax > 16384) { // 16GB
@@ -47,22 +47,22 @@ public class CfgTx {
                             }
                             break;
                         case "buffer":
-                            this.buffer = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.buffer = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "pooldump":
-                            this.poolDump = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.poolDump = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "poolbackup":
-                            this.poolBackup = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.poolBackup = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "pendingtxtimeout":
-                            this.pendingTransactionTimeout = Integer.parseInt(Cfg.readValue(sr));
+                            this.pendingTransactionTimeout = Integer.parseInt(ConfigUtil.readValue(sr));
                             if (this.pendingTransactionTimeout < 60) { // 1 min
                                 this.pendingTransactionTimeout = 60;
                             }
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

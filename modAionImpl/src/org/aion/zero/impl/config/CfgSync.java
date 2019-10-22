@@ -43,16 +43,16 @@ public final class CfgSync {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "show-status":
-                            this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.showStatus = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "show-statistics":
-                            parseSelectedStats(showStatistics, Cfg.readValue(sr));
+                            parseSelectedStats(showStatistics, ConfigUtil.readValue(sr));
                             break;
                         case "compact":
                             parseCompact(sr);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

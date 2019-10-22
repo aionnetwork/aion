@@ -42,25 +42,25 @@ public final class CfgConsensusUnity extends CfgConsensus {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "mining":
-                            this.mining = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.mining = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "seed":
-                            this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.seed = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "miner-address":
-                            this.minerAddress = Cfg.readValue(sr);
+                            this.minerAddress = ConfigUtil.readValue(sr);
                             break;
                         case "cpu-mine-threads":
-                            this.cpuMineThreads = Byte.valueOf(Cfg.readValue(sr));
+                            this.cpuMineThreads = Byte.valueOf(ConfigUtil.readValue(sr));
                             break;
                         case "extra-data":
-                            this.extraData = Cfg.readValue(sr);
+                            this.extraData = ConfigUtil.readValue(sr);
                             break;
                         case "nrg-strategy":
                             this.cfgEnergyStrategy.fromXML(sr);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

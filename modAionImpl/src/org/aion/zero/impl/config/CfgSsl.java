@@ -36,7 +36,7 @@ public class CfgSsl {
                     switch (elementName) {
                         case ENABLED_TAG:
                             try {
-                                this.enabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                this.enabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: "
@@ -49,7 +49,7 @@ public class CfgSsl {
                             break;
                         case CERTIFICATE_TAG:
                             try {
-                                this.cert = String.valueOf(Cfg.readValue(sr));
+                                this.cert = String.valueOf(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: "
@@ -62,7 +62,7 @@ public class CfgSsl {
                             break;
                         case PASSWORD_TAG:
                             try {
-                                this.pass = String.valueOf(Cfg.readValue(sr)).toCharArray();
+                                this.pass = String.valueOf(ConfigUtil.readValue(sr)).toCharArray();
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: "
@@ -73,7 +73,7 @@ public class CfgSsl {
                             }
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

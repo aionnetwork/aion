@@ -50,34 +50,34 @@ public final class CfgNetP2p {
                     String elelmentName = sr.getLocalName().toLowerCase();
                     switch (elelmentName) {
                         case "ip":
-                            this.ip = Cfg.readValue(sr);
+                            this.ip = ConfigUtil.readValue(sr);
                             break;
                         case "port":
-                            this.port = Integer.parseInt(Cfg.readValue(sr));
+                            this.port = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         case "discover":
-                            this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.discover = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "cluster-node-mode":
-                            this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.clusterNodeMode = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "bootlist-sync-only":
-                            this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.bootlistSyncOnly = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "sync-only-mode":
-                            this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.syncOnlyMode = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "max-temp-nodes":
-                            this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
+                            this.maxTempNodes = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         case "max-active-nodes":
-                            this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
+                            this.maxActiveNodes = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         case "err-tolerance":
-                            this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
+                            this.errorTolerance = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         default:
-                            // Cfg.skipElement(sr);
+                            // ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

@@ -75,7 +75,7 @@ public final class CfgApiRpc {
                     switch (elementName) {
                         case "cors-enabled":
                             try {
-                                corsEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                corsEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: aion.api.rpc.cors-enabled; using preset: "
@@ -85,7 +85,7 @@ public final class CfgApiRpc {
                             break;
                         case "cors-origin":
                             try {
-                                corsOrigin = Cfg.readValue(sr).trim();
+                                corsOrigin = ConfigUtil.readValue(sr).trim();
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: aion.api.rpc.cors-origin; using preset: "
@@ -94,7 +94,7 @@ public final class CfgApiRpc {
                             }
                             break;
                         case "apis-enabled":
-                            String cs = Cfg.readValue(sr).trim();
+                            String cs = ConfigUtil.readValue(sr).trim();
                             this.enabled =
                                     new ArrayList<>(
                                             Stream.of(cs.split(","))
@@ -103,7 +103,7 @@ public final class CfgApiRpc {
                                                     .collect(Collectors.toList()));
                             break;
                         case "api-methods-enabled":
-                            String enabledMethods = Cfg.readValue(sr).trim();
+                            String enabledMethods = ConfigUtil.readValue(sr).trim();
                             this.enabledMethods =
                                     new ArrayList<>(
                                             Stream.of(enabledMethods.split(","))
@@ -112,7 +112,7 @@ public final class CfgApiRpc {
                                                     .collect(Collectors.toList()));
                             break;
                         case "api-methods-disabled":
-                            String disabledMethods = Cfg.readValue(sr).trim();
+                            String disabledMethods = ConfigUtil.readValue(sr).trim();
                             this.disabledMethods =
                                     new ArrayList<>(
                                             Stream.of(disabledMethods.split(","))
@@ -122,7 +122,7 @@ public final class CfgApiRpc {
                             break;
                         case "vendor":
                             try {
-                                this.vendor = Cfg.readValue(sr).trim();
+                                this.vendor = ConfigUtil.readValue(sr).trim();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -130,7 +130,7 @@ public final class CfgApiRpc {
                         case "worker-threads":
                             {
                                 try {
-                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    int t = Integer.parseInt(ConfigUtil.readValue(sr));
                                     // filter out negative counts
                                     if (t > 0) this.workerThreads = t;
                                     // otherwise, accept default set in constructor
@@ -145,7 +145,7 @@ public final class CfgApiRpc {
                         case "io-threads":
                             {
                                 try {
-                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    int t = Integer.parseInt(ConfigUtil.readValue(sr));
                                     // filter out negative counts
                                     if (t > 0) this.ioThreads = t;
                                     // otherwise, accept default set in constructor
@@ -160,7 +160,7 @@ public final class CfgApiRpc {
                         case "request-queue-size":
                             {
                                 try {
-                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    int t = Integer.parseInt(ConfigUtil.readValue(sr));
                                     // filter out negative counts
                                     if (t > 0) this.requestQueueSize = t;
                                     // otherwise, accept default set in constructor
@@ -176,7 +176,7 @@ public final class CfgApiRpc {
                             {
                                 try {
                                     stuckThreadDetectorEnabled =
-                                            Boolean.parseBoolean(Cfg.readValue(sr));
+                                            Boolean.parseBoolean(ConfigUtil.readValue(sr));
                                 } catch (Exception e) {
                                     System.out.println(
                                             "failed to read config node: aion.api.rpc.stuckThreadDetectorEnabled; using preset: "
@@ -188,7 +188,7 @@ public final class CfgApiRpc {
                         case "filters-enabled":
                             {
                                 try {
-                                    filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                    filtersEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                                 } catch (Exception e) {
                                     System.out.println(
                                             "failed to read config node: aion.api.rpc.filters-enabled; using preset: "
@@ -201,7 +201,7 @@ public final class CfgApiRpc {
                             this.ssl.fromXML(sr);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

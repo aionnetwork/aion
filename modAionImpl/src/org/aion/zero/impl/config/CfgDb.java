@@ -102,24 +102,24 @@ public class CfgDb {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "path":
-                            this.path = Cfg.readValue(sr);
+                            this.path = ConfigUtil.readValue(sr);
                             break;
                         case "check_integrity":
-                            this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.check_integrity = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "state-storage":
-                            setPrune(Cfg.readValue(sr));
+                            setPrune(ConfigUtil.readValue(sr));
                             break;
                         case "internal-tx-storage":
-                            this.internalTxStorage = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.internalTxStorage = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                             // parameter considered only when expert==false
                         case "vendor":
-                            this.vendor = Cfg.readValue(sr);
+                            this.vendor = ConfigUtil.readValue(sr);
                             break;
                             // parameter considered only when expert==false
                         case Props.ENABLE_DB_COMPRESSION:
-                            this.compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.compression = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                             // parameter considered only when expert==true
                         case Names.DEFAULT:
@@ -194,7 +194,7 @@ public class CfgDb {
                                 break;
                             }
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

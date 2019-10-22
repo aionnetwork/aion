@@ -175,7 +175,7 @@ public final class CfgAion extends Cfg {
                                 this.db.fromXML(sr);
                                 break;
                             default:
-                                skipElement(sr);
+                                ConfigUtil.skipElement(sr);
                                 break;
                         }
                         break;
@@ -202,7 +202,7 @@ public final class CfgAion extends Cfg {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "id":
-                            String nodeId = readValue(sr);
+                            String nodeId = ConfigUtil.readValue(sr);
                             if (NODE_ID_PLACEHOLDER.equals(nodeId)) {
                                 this.id = UUID.randomUUID().toString();
                                 shouldWriteBackToFile = true;
@@ -211,7 +211,7 @@ public final class CfgAion extends Cfg {
                             }
                             break;
                         case "mode":
-                            this.mode = readValue(sr);
+                            this.mode = ConfigUtil.readValue(sr);
                             break;
                         case "api":
                             this.api.fromXML(sr);
@@ -241,7 +241,7 @@ public final class CfgAion extends Cfg {
                             this.gui.fromXML(sr);
                             break;
                         default:
-                            skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

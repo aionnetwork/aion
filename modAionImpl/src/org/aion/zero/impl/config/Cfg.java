@@ -511,33 +511,6 @@ public abstract class Cfg {
         return baseForkFile;
     }
 
-    public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
-        StringBuilder str = new StringBuilder();
-        readLoop:
-        while (sr.hasNext()) {
-            int eventType = sr.next();
-            switch (eventType) {
-                case XMLStreamReader.CHARACTERS:
-                    str.append(sr.getText());
-                    break;
-                case XMLStreamReader.END_ELEMENT:
-                    break readLoop;
-            }
-        }
-        return str.toString();
-    }
-
-    public static void skipElement(final XMLStreamReader sr) throws XMLStreamException {
-        skipLoop:
-        while (sr.hasNext()) {
-            int eventType = sr.next();
-            switch (eventType) {
-                case XMLStreamReader.END_ELEMENT:
-                    break skipLoop;
-            }
-        }
-    }
-
     /**
      * Loads the configuration from the default config file. Returns a boolean value used to
      * determine if the configuration needs to be saved back to disk with a valid peer identifier.

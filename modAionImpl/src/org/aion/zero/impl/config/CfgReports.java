@@ -45,25 +45,25 @@ public class CfgReports {
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "enable":
-                            this.enable = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enable = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "path":
-                            this.path = Cfg.readValue(sr);
+                            this.path = ConfigUtil.readValue(sr);
                             break;
                         case "dump_interval":
-                            this.dump_interval = Integer.parseInt(Cfg.readValue(sr));
+                            this.dump_interval = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         case "block_frequency":
-                            this.block_frequency = Integer.parseInt(Cfg.readValue(sr));
+                            this.block_frequency = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         case "enable_heap_dumps":
-                            this.enable_heap_dumps = Boolean.parseBoolean(Cfg.readValue(sr));
+                            this.enable_heap_dumps = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "heap_dump_interval":
-                            this.heap_dump_interval = Integer.parseInt(Cfg.readValue(sr));
+                            this.heap_dump_interval = Integer.parseInt(ConfigUtil.readValue(sr));
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

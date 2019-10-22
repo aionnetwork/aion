@@ -51,7 +51,7 @@ public final class CfgApi {
                             this.nrg.fromXML(sr);
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

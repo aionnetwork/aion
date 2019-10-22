@@ -48,7 +48,7 @@ public class CfgApiZmq {
                     switch (elementName) {
                         case "filters-enabled":
                             try {
-                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                filtersEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 LOG_GEN.warn(
                                         "failed to read config node: aion.api.zmq.filters-enabled; using preset: {}\n {}"
@@ -59,7 +59,7 @@ public class CfgApiZmq {
                             break;
                         case "block-summary-cache":
                             try {
-                                blockSummaryCacheEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                blockSummaryCacheEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 LOG_GEN.warn(
                                         "failed to read config node: aion.api.zmq.block-summary-cache; using preset: {}\n {}",
@@ -69,7 +69,7 @@ public class CfgApiZmq {
                             break;
                         case "secure-connect":
                             try {
-                                secureConnectEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                secureConnectEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 LOG_GEN.warn(
                                         "failed to read config node: aion.api.zmq.secure-connect; using preset: {}\n {}"
@@ -78,7 +78,7 @@ public class CfgApiZmq {
                             }
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;

@@ -56,7 +56,7 @@ public final class CfgApiNrg {
                     switch (elementName) {
                         case "oracle-enabled":
                             try {
-                                oracleEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                oracleEnabled = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: aion.api.nrg.enable; using preset: "
@@ -68,7 +68,7 @@ public final class CfgApiNrg {
                             try {
                                 // using BigDecimal here only because of [BigDecimal -> String ->
                                 // BigDecimal] preservation property
-                                defaultPrice = (new BigDecimal(Cfg.readValue(sr))).longValueExact();
+                                defaultPrice = (new BigDecimal(ConfigUtil.readValue(sr))).longValueExact();
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: aion.api.nrg.default; using preset: "
@@ -79,7 +79,7 @@ public final class CfgApiNrg {
                             break;
                         case "max":
                             try {
-                                maxPrice = (new BigDecimal(Cfg.readValue(sr))).longValueExact();
+                                maxPrice = (new BigDecimal(ConfigUtil.readValue(sr))).longValueExact();
                             } catch (Exception e) {
                                 System.out.println(
                                         "failed to read config node: aion.api.nrg.maxPrice; using preset: "
@@ -88,7 +88,7 @@ public final class CfgApiNrg {
                             }
                             break;
                         default:
-                            Cfg.skipElement(sr);
+                            ConfigUtil.skipElement(sr);
                             break;
                     }
                     break;
