@@ -256,6 +256,8 @@ task collectDependentJars(type: Copy) {
     from { subprojects.jar}
     from { file("lib/libminiupnpc.so") } // called by a jar that expects this to be in same dir
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude "modAvmVersion*.jar"
+    exclude "org-aion-avm-*.jar"
 }
 
 build { 
@@ -298,10 +300,9 @@ task pack(type: Tar) {
     into('/aion/jars') { 
         from dirRuntimeJars 
         include '*.jar', '*.so'
-        exclude 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar', 'modAvmVersion*.jar'
     }
     into('/aion/lib') {
-        from dirRuntimeJars
+        from dirLibFile
         include 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar', 'modAvmVersion*.jar'
     }
     into('/aion/') { 
