@@ -57,7 +57,7 @@ public class Web3EntryPoint {
             String group = request.method.split("_")[0];
             if (groupMap.containsKey(group) &&
                 checkMethod(request.method)){
-                return ResponseConverter.encode(new Response(request.id, groupMap.get(group).apply(request), null, VersionType.Version2));
+                return ResponseConverter.encodeStr(new Response(request.id, groupMap.get(group).apply(request), null, VersionType.Version2));
             }else {
                 err= RPCExceptions.InvalidRequestRPCException.INSTANCE.getError();
             }
@@ -67,7 +67,7 @@ public class Web3EntryPoint {
         catch (Exception e){
             err= InternalErrorRPCException.INSTANCE.getError();
         }
-        return ResponseConverter.encode(new Response(id, null, err, VersionType.Version2));
+        return ResponseConverter.encodeStr(new Response(id, null, err, VersionType.Version2));
     }
 
     private static Request readRequest(String requestString) {

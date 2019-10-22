@@ -16,10 +16,10 @@ public class RPCTypes{
     public static final class Request {
         public final Integer id;
         public final String method;
-        public final String params;
+        public final Object params;
         public final VersionType jsonrpc;
 
-        public Request(Integer id ,String method ,String params ,VersionType jsonrpc ){
+        public Request(Integer id ,String method ,Object params ,VersionType jsonrpc ){
             this.id=id;
             if(method==null) throw ParseErrorRPCException.INSTANCE;
             this.method=method;
@@ -68,6 +68,7 @@ public class RPCTypes{
         }
 
         public static VersionType fromString(String x){
+            if(x==null) throw ParseErrorRPCException.INSTANCE;
             if(x.equals("2.0")){
                 return Version2;
             }else
