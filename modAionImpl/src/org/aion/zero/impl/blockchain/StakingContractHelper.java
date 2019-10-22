@@ -51,7 +51,7 @@ public class StakingContractHelper {
         stakingContractAddr = contractDestination;
         chain = _chain;
     }
-
+    
     AionAddress getStakingContractAddress() {
         return stakingContractAddr;
     }

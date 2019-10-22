@@ -55,8 +55,7 @@ public class UnityBlockDiffCalculator {
             }
 
             if (grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                // TODO: [unity] We should probably set a different minimum difficulty than the genesis difficulty
-                return max(GenesisStakingBlock.getGenesisDifficulty(), newDiff);
+                return max(constants.getMinimumDifficulty(), newDiff);
             } else if (grandParent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
                 return max(constants.getMinimumDifficulty(), newDiff);
             } else {

@@ -431,8 +431,8 @@ public class StakingBlock extends AbstractBlock {
 
     @Override
     public boolean isGenesis() {
-        return Arrays.equals(
-                header.getHash(), CfgAion.inst().getGenesis().getGenesisStakingBlock().getHash());
+        // we never expect a Staking Block to be genesis
+        return false;
     }
 
     @Override

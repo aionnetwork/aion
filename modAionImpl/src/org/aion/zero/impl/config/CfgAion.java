@@ -19,7 +19,6 @@ import org.aion.log.LogLevel;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisBlockLoader;
-import org.aion.zero.impl.types.GenesisStakingBlock;
 
 /** @author chris */
 public final class CfgAion extends Cfg {
@@ -101,16 +100,6 @@ public final class CfgAion extends Cfg {
     public AionGenesis getGenesis() {
         if (this.genesis == null) setGenesis();
         return this.genesis;
-    }
-
-    public GenesisStakingBlock getGenesisStakingBlock() {
-
-        // We need the extraData from the PoWGenesis block
-        if (genesis == null) {
-            setGenesis();
-        }
-
-        return genesis.getGenesisStakingBlock();
     }
 
     public static int getN() {

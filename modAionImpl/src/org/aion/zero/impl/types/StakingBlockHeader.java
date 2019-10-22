@@ -117,6 +117,8 @@ public class StakingBlockHeader  implements BlockHeader {
     public static final int SIG_LENGTH = 64;
     public static final int SEED_LENGTH = 64;
     public static final int PUBKEY_LENGTH = 32;
+    
+    public static final byte[] GENESIS_SEED = new byte[SEED_LENGTH];
 
     /**
      * private constructor. use builder to construct the header class.

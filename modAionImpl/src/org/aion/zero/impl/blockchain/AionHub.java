@@ -436,14 +436,6 @@ public class AionHub {
                 genesis.setTotalDifficulty(genesis.getDifficultyBI());
             }
 
-            blockchain.setBestStakingBlock(cfg.getGenesisStakingBlock());
-            genLOG.info("load genesis Staking block!");
-
-            genLOG.info(
-                    "loaded genesis block <num={}, root={}>",
-                    0,
-                    ByteUtil.toHexString(genesis.getStateRoot()));
-
         } else {
             blockchain.setBestBlock(bestBlock);
             if (bestBlock instanceof StakingBlock) {

@@ -126,11 +126,6 @@ public class AionGenesis extends AionBlock {
      */
     private Map<AionAddress, AccountState> premine = new HashMap<>();
 
-    /**
-     * The virtual staking block, which determines the difficulty of the first PoS block.
-     */
-    private GenesisStakingBlock genesisStakingBlock;
-
     // Todo : [unity] remove default settings when we are able to remove singleton between Api, AionHub, PendingStateImpl, AionImpl. etc.
     private AionAddress stakingContractAddress = AddressUtils.ZERO_ADDRESS;
 
@@ -185,14 +180,6 @@ public class AionGenesis extends AionBlock {
         return this.networkBalances;
     }
 
-    public GenesisStakingBlock getGenesisStakingBlock() {
-        return this.genesisStakingBlock;
-    }
-
-    private void setGenesisStakingBlock(GenesisStakingBlock genesisStakingBlock) {
-        this.genesisStakingBlock = genesisStakingBlock;
-    }
-
     /**
      * ChainID is defined to be the last two bytes of the extra data field in the header of a
      * genesis block.
@@ -240,7 +227,6 @@ public class AionGenesis extends AionBlock {
 
         // Todo : [unity] remove default settings when we are able to remove singleton between Api, AionHub, PendingStateImpl, AionImpl. etc.
         protected AionAddress stakingContractAddress = AddressUtils.ZERO_ADDRESS;
-        protected BigInteger genesisStakingDifficulty;
 
         public Builder withParentHash(final byte[] parentHash) {
             if (parentHash == null) {
@@ -376,14 +362,6 @@ public class AionGenesis extends AionBlock {
             return this;
         }
 
-        public Builder setGenesisStakingDifficulty(BigInteger difficulty) {
-            if (difficulty == null) {
-                throw new NullPointerException("genesisStakingDifficulty is null");
-            }
-            this.genesisStakingDifficulty = difficulty;
-            return this;
-        }
-
         /**
          * Build the genesis block, after parameters have been set. Defaults back to default genesis
          * values if parameters are not specified.
@@ -439,20 +417,6 @@ public class AionGenesis extends AionBlock {
             // temporary solution, so as not to disrupt the constructors
             genesis.setPremine(this.premined);
             genesis.setNetworkBalance(this.networkBalance);
-
-            BigInteger genesisStakingDifficulty =
-                    buildForTest
-                            ? BigInteger.valueOf(2_000_000_000L)
-                            : this.genesisStakingDifficulty;
-
-            if (genesisStakingDifficulty == null) {
-                throw new NullPointerException(
-                        "The genesisStakingDifficulty setting is null or incorrect, please check your genesis.json in the executing network folder");
-            }
-
-            GenesisStakingBlock genesisStakingBlock =
-                new GenesisStakingBlock(extraData, genesisStakingDifficulty);
-            genesis.setGenesisStakingBlock(genesisStakingBlock);
             genesis.setTotalDifficulty(genesis.getDifficultyBI());
             genesis.setStakingContractAddress(this.stakingContractAddress);
             return genesis;

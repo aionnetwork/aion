@@ -139,11 +139,6 @@ public class GenesisBlockLoader {
                         AddressUtils.wrapAddress(mapper.getString("stakingContractAddress")));
                 }
 
-                if (mapper.has("genesisStakingDifficulty")) {
-                    genesisBuilder.setGenesisStakingDifficulty(
-                            new BigInteger(mapper.getString("genesisStakingDifficulty")));
-                }
-
                 return genesisBuilder.build();
             } catch (IOException | JSONException e) {
                 throw new IOException(e);
