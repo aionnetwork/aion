@@ -91,6 +91,13 @@ final class TaskShowStatus implements Runnable {
                 }
             }
 
+            if (showStatistics.contains(StatsType.SYSTEMINFO)) {
+                requestedStats = stats.dumpSystemInfo();
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
+                }
+            }
+
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {

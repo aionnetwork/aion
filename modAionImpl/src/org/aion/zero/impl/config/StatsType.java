@@ -16,11 +16,12 @@ public enum StatsType {
     SEEDS,
     LEECHES,
     RESPONSES,
+    SYSTEMINFO,
     NONE; // used as default for invalid settings
 
     private static final List<StatsType> allSpecificTypes =
             Collections.unmodifiableList(
-                    Arrays.asList(REQUESTS, SEEDS, LEECHES, RESPONSES));
+                    Arrays.asList(REQUESTS, SEEDS, LEECHES, RESPONSES, SYSTEMINFO));
 
     /**
      * List of all the specific types of statistics that can be displayed, i.e. excluding the {@link

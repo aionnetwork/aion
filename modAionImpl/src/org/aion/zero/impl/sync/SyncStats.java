@@ -1,11 +1,22 @@
 package org.aion.zero.impl.sync;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.StatsType;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.sync.statistics.RequestStatsTracker;
@@ -36,6 +47,11 @@ public final class SyncStats {
 
     private final ResponseStatsTracker responseTracker;
     private final boolean responseEnabled;
+
+    private final boolean systemInfoEnabled;
+    private static long MB = 1024 * 1024;
+    private static long GB = MB * 1024;
+    private File dbDir;
 
     /**
      * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
@@ -86,6 +102,11 @@ public final class SyncStats {
             responseTracker = new ResponseStatsTracker(maxActivePeers);
         } else {
             responseTracker = null;
+        }
+
+        systemInfoEnabled = showStatistics.contains(StatsType.SYSTEMINFO);
+        if (systemInfoEnabled) {
+            dbDir = CfgAion.inst().getDatabaseDir();
         }
     }
 
@@ -303,5 +324,45 @@ public final class SyncStats {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Obtain system info including cpu/mem usage, thread number and the disk free space.
+     */
+    String dumpSystemInfo() {
+        if (systemInfoEnabled) {
+            return "System resources: "
+                + "CPU load = " + getProcessCpuLoad() +"%"
+                + ", JVM used mem = " + String.format("%.1f", ((double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MB)) + "MB"
+                + ", Thread # = " + Thread.activeCount()
+                + ", Disk free space = " + (dbDir == null ? "N/A" : String.format("%.1f", (double) dbDir.getFreeSpace() / GB) + "GB");
+        } else {
+            return "";
+        }
+    }
+
+    private static double getProcessCpuLoad() {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        AttributeList list = null;
+        try {
+            ObjectName name = ObjectName.getInstance("java.lang:type=OperatingSystem");
+            list = mbs.getAttributes(name, new String[] {"ProcessCpuLoad"});
+        } catch (InstanceNotFoundException | ReflectionException | MalformedObjectNameException e) {
+            e.printStackTrace();
+        }
+
+        if (Objects.requireNonNull(list).isEmpty()) {
+            return Double.NaN;
+        }
+
+        Attribute att = (Attribute) list.get(0);
+        Double value = (Double) att.getValue();
+
+        // usually takes a couple of seconds before we get real values
+        if (value == -1.0) {
+            return Double.NaN;
+        }
+        // returns a percentage value with 1 decimal point precision
+        return ((int) (value * 1000) / 10.0);
     }
 }
