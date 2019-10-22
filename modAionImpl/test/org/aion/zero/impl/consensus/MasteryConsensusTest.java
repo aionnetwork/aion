@@ -28,6 +28,7 @@ import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -35,6 +36,7 @@ import org.junit.Test;
  *
  * @author Alexandra Roatis
  */
+@Ignore
 public class MasteryConsensusTest {
     @BeforeClass
     public static void setup() {
