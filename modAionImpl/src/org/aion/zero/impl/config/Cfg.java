@@ -22,7 +22,7 @@ public abstract class Cfg {
 
     protected CfgNet net;
 
-    protected CfgConsensus consensus;
+    protected CfgConsensusUnity consensus;
 
     protected CfgSync sync;
 
@@ -110,11 +110,11 @@ public abstract class Cfg {
         return this.net.getNodes();
     }
 
-    public CfgConsensus getConsensus() {
+    public CfgConsensusUnity getConsensus() {
         return this.consensus;
     }
 
-    public void setConsensus(CfgConsensus _consensus) {
+    public void setConsensus(CfgConsensusUnity _consensus) {
         this.consensus = _consensus;
     }
 

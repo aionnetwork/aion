@@ -6,7 +6,6 @@ import org.aion.log.LogLevel;
 import org.aion.zero.impl.config.Cfg;
 import org.aion.zero.impl.config.CfgApiRpc;
 import org.aion.zero.impl.config.CfgApiZmq;
-import org.aion.zero.impl.config.CfgConsensus;
 import org.aion.zero.impl.config.CfgConsensusUnity;
 import org.aion.zero.impl.config.CfgDb;
 import org.aion.zero.impl.config.CfgLog;
@@ -170,14 +169,12 @@ public class EditCli {
         }
     }
 
-    private boolean updateMining(CfgConsensus cfgConsensus) {
-        if (cfgConsensus instanceof CfgConsensusUnity) {
-            if (mining != null && mining != ((CfgConsensusUnity) cfgConsensus).getMining()) {
-                System.out.println(boolToMessage(mining) + " mining.");
+    private boolean updateMining(CfgConsensusUnity cfgConsensus) {
+        if (mining != null && mining != cfgConsensus.getMining()) {
+            System.out.println(boolToMessage(mining) + " mining.");
 
-                ((CfgConsensusUnity) cfgConsensus).setMining(mining);
-                return true;
-            }
+            cfgConsensus.setMining(mining);
+            return true;
         }
 
         return false;

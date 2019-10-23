@@ -10,7 +10,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import org.aion.util.types.AddressUtils;
 
-public final class CfgConsensusUnity extends CfgConsensus {
+public final class CfgConsensusUnity {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
