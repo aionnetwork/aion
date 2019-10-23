@@ -1243,7 +1243,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             BigInteger stakes = null;
 
             try {
-                stakes = getStakingContractHelper().getEffectiveStake(signingAddress, coinbaseAddress);
+                stakes = getStakingContractHelper().getEffectiveStake(signingAddress, coinbaseAddress, parent);
             } catch (Exception e) {
                 LOG.error("Shutdown due to a fatal error encountered while getting the effective stake.", e);
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
@@ -1554,7 +1554,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             BigInteger stake = null;
 
             try {
-                stake = getStakingContractHelper().getEffectiveStake(new AionAddress(AddressSpecs.computeA0Address(((StakingBlockHeader) header).getSigningPublicKey())), ((StakingBlockHeader) header).getCoinbase());
+                stake = getStakingContractHelper().getEffectiveStake(new AionAddress(AddressSpecs.computeA0Address(((StakingBlockHeader) header).getSigningPublicKey())), ((StakingBlockHeader) header).getCoinbase(), parent);
             } catch (Exception e) {
                 LOG.error("Shutdown due to a fatal error encountered while getting the effective stake.", e);
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);

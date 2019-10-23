@@ -1,6 +1,5 @@
 package org.aion.zero.impl.blockchain;
 
-import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.zero.impl.blockchain.AionImpl.keyForCallandEstimate;
 
 import java.io.IOException;
@@ -16,14 +15,12 @@ import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.TransactionTypes;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -35,10 +32,9 @@ import org.slf4j.Logger;
  * for the block creating/verifying purpose.
  */
 public class StakingContractHelper {
-    private static AionAddress stakingContractAddr;
+    private AionAddress stakingContractAddr;
     private AionBlockchainImpl chain;
     private final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-    private final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
     private static final AvmVersion LATEST_AVM_VERSION = AvmVersion.VERSION_2;
 
@@ -46,9 +42,7 @@ public class StakingContractHelper {
      * cached byte array for skipping the abi encode the contract method during the contract call.
      */
     private byte[] effectiveStake = null;
-
-    private static boolean deployed = false;
-
+    
     public StakingContractHelper(AionAddress contractDestination, AionBlockchainImpl _chain) {
         if (contractDestination == null || _chain == null) {
             throw new NullPointerException();
@@ -58,21 +52,7 @@ public class StakingContractHelper {
         chain = _chain;
     }
 
-    /**
-     * @implNote Check the staking contract has been deployed and set flag to true when first time get the correct the account state of the staking contract.
-     */
-    public boolean isContractDeployed() {
-        if (!deployed) {
-            Repository r = chain.getRepository().startTracking();
-            AccountState as = (AccountState) r.getAccountState(stakingContractAddr);
-            deployed = !Arrays.equals(as.getCodeHash(), EMPTY_DATA_HASH);
-        }
-
-        // Once found contract has been deployed, no need to ask the db again.
-        return deployed;
-    }
-
-    static AionAddress getStakingContractAddress() {
+    AionAddress getStakingContractAddress() {
         return stakingContractAddr;
     }
 
@@ -82,7 +62,7 @@ public class StakingContractHelper {
      * @param coinbase the staker's coinbase for receiving the block rewards
      * @return the stake amount of the staker
      */
-    public BigInteger getEffectiveStake(AionAddress signingAddress, AionAddress coinbase) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+    public BigInteger getEffectiveStake(AionAddress signingAddress, AionAddress coinbase, Block block) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         if (signingAddress == null || coinbase == null) {
             throw new NullPointerException();
         }
@@ -123,7 +103,7 @@ public class StakingContractHelper {
 
         AionTxReceipt receipt = null;
         try {
-            receipt = callConstant(callTx);
+            receipt = callConstant(callTx, block);
         } catch (VmFatalException e) {
             LOG_VM.error("VM fatal exception! Shutting down the kernel!", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);
@@ -144,9 +124,8 @@ public class StakingContractHelper {
         return output;
     }
 
-    private AionTxReceipt callConstant(AionTransaction tx)
+    private AionTxReceipt callConstant(AionTransaction tx, Block block)
         throws VmFatalException {
-        Block block = chain.getBestBlock();
 
         RepositoryCache repository =
                 chain.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
