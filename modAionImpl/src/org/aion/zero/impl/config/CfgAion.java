@@ -35,6 +35,61 @@ public final class CfgAion extends Cfg {
 
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
 
+    protected String mode;
+    protected String id;
+    protected String keystorePath;
+
+    protected CfgApi api;
+    protected CfgNet net;
+    protected CfgConsensusUnity consensus;
+    protected CfgSync sync;
+    protected CfgDb db;
+    protected CfgLog log;
+    protected CfgTx tx;
+    protected CfgReports reports;
+    protected CfgGui gui;
+    protected CfgFork fork;
+
+    /* ------------ execution path management ------------ */
+
+    // names
+    private final String configDirName = "config";
+    private final String configFileName = "config.xml";
+    private final String genesisFileName = "genesis.json";
+    private final String keystoreDirName = "keystore";
+    private final String forkFileName = "fork.properties";
+
+    // base path
+    private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
+
+    // directories containing the configuration files
+    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
+    private File networkConfigDir = null;
+
+    // base configuration: old kernel OR using network config
+    private File baseConfigFile = null;
+    private File baseGenesisFile = null;
+    private File baseForkFile = null;
+
+    // can be absolute in config file OR depend on execution path
+    private File logDir = null;
+    private File databaseDir = null;
+    private File keystoreDir = null;
+    private boolean absoluteLogDir = false;
+    private boolean absoluteDatabaseDir = false;
+    private boolean absoluteKeystoreDir = false;
+
+    // impact execution path
+    private String network = null;
+    private File dataDir = null;
+
+    /** Data directory with network. */
+    private File execDir = null;
+    private File execConfigDir = null;
+    private File execConfigFile = null;
+    private File execGenesisFile = null;
+    private File execForkFile = null;
+
     public CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
@@ -442,31 +497,7 @@ public final class CfgAion extends Cfg {
         return Objects.hashCode(genesis);
     }
 
-    protected String mode;
 
-    protected String id;
-
-    protected String keystorePath = null;
-
-    protected CfgApi api;
-
-    protected CfgNet net;
-
-    protected CfgConsensusUnity consensus;
-
-    protected CfgSync sync;
-
-    protected CfgDb db;
-
-    protected CfgLog log;
-
-    protected CfgTx tx;
-
-    protected CfgReports reports;
-
-    protected CfgGui gui;
-
-    protected CfgFork fork;
 
     public void setId(final String _id) {
         this.id = _id;
@@ -544,47 +575,6 @@ public final class CfgAion extends Cfg {
         this.consensus = _consensus;
     }
 
-    /* ------------ execution path management ------------ */
-
-    // names
-    private final String configDirName = "config";
-    private final String configFileName = "config.xml";
-    private final String genesisFileName = "genesis.json";
-    private final String keystoreDirName = "keystore";
-    private final String forkFileName = "fork.properties";
-
-    // base path
-    private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
-
-    // directories containing the configuration files
-    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
-    private File networkConfigDir = null;
-
-    // base configuration: old kernel OR using network config
-    private File baseConfigFile = null;
-    private File baseGenesisFile = null;
-    private File baseForkFile = null;
-
-    // can be absolute in config file OR depend on execution path
-    private File logDir = null;
-    private File databaseDir = null;
-    private File keystoreDir = null;
-    private boolean absoluteLogDir = false;
-    private boolean absoluteDatabaseDir = false;
-    private boolean absoluteKeystoreDir = false;
-
-    // impact execution path
-    private String network = null;
-    private File dataDir = null;
-
-    /** Data directory with network. */
-    private File execDir = null;
-
-    private File execConfigDir = null;
-    private File execConfigFile = null;
-    private File execGenesisFile = null;
-    private File execForkFile = null;
-
     /** Resets internal data containing network and path. */
     @VisibleForTesting
     public void resetInternal() {
@@ -611,7 +601,7 @@ public final class CfgAion extends Cfg {
      * Determines the location of the initial configuration files ensuring compatibility with old
      * kernels.
      */
-    protected void initializeConfiguration() {
+    private void initializeConfiguration() {
         // use old config location for compatibility with old kernels
         baseConfigFile = new File(CONFIG_DIR, configFileName);
         baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
