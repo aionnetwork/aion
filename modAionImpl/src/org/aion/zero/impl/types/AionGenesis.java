@@ -1,5 +1,6 @@
 package org.aion.zero.impl.types;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -172,7 +173,8 @@ public class AionGenesis extends AionBlock {
         this.networkBalances = networkBalances;
     }
 
-    private void setStakingContractAddress(AionAddress address) {
+    @VisibleForTesting
+    public void setStakingContractAddress(AionAddress address) {
         stakingContractAddress = address;
     }
 

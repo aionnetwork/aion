@@ -130,7 +130,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
-    private final StakingContractHelper stakingContractHelper;
+    private StakingContractHelper stakingContractHelper = null;
     public final ForkUtility forkUtility;
     public final BeaconHashValidator beaconHashValidator;
 
@@ -248,13 +248,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
-
-        stakingContractHelper =
-            new StakingContractHelper(
-                forTest
-                    ? AddressUtils.ZERO_ADDRESS
-                    : CfgAion.inst().getGenesis().getStakingContractAddress(),
-                this);
     }
 
     /**
@@ -2546,6 +2539,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public StakingContractHelper getStakingContractHelper() {
+        if (stakingContractHelper == null) {
+            stakingContractHelper = new StakingContractHelper(CfgAion.inst().getGenesis().getStakingContractAddress(), this);
+        }
         return stakingContractHelper;
     }
 
