@@ -9,13 +9,20 @@ public class BlockConstants implements IBlockConstants {
     private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
 
     /**
-     * The lower bound of difficulty, this value is currently set to 32 to accomodate for single
+     * The lower bound of the difficulty of a mining block, this value is currently set to 16 to accommodate for single
      * node testing.
      */
-    private static final long MINIMUM_DIFFICULTY_LONG = 16;
+    private static final long MINIMUM_MINING_DIFFICULTY_LONG = 16;
 
-    private static final BigInteger MINIMUM_DIFFICULTY =
-            BigInteger.valueOf(MINIMUM_DIFFICULTY_LONG);
+    private static final BigInteger MINIMUM_MINING_DIFFICULTY =
+            BigInteger.valueOf(MINIMUM_MINING_DIFFICULTY_LONG);
+
+    /**
+     * The lower bound of the difficulty of a staking block, this value is currently set to 10^22, based on the fact that
+     * the minimum stake is 10^21 nAmps, and our target block time is 10 seconds.
+     */
+
+    private static final BigInteger MINIMUM_STAKING_DIFFICULTY = BigInteger.TEN.pow(22);
 
     /** Divisor for the maximum increase or decrease in energyLimit from one block to the next. */
     private static final long ENERGY_LIMIT_DIVISOR_LONG = 1024;
@@ -74,8 +81,13 @@ public class BlockConstants implements IBlockConstants {
     }
 
     @Override
-    public BigInteger getMinimumDifficulty() {
-        return MINIMUM_DIFFICULTY;
+    public BigInteger getMinimumMiningDifficulty() {
+        return MINIMUM_MINING_DIFFICULTY;
+    }
+
+    @Override
+    public BigInteger getMinimumStakingDifficulty() {
+        return MINIMUM_STAKING_DIFFICULTY;
     }
 
     @Override

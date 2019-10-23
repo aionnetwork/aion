@@ -44,7 +44,7 @@ public class ScalingDifficultyFunctionTest {
                                     // special case test lower bound of difficulty
                                     {
                                         new InputParameters(0, 0, new BigInteger("0")),
-                                        constants.getMinimumDifficulty()
+                                        constants.getMinimumMiningDifficulty()
                                     },
                                     {
                                         new InputParameters(0, 0, new BigInteger("1000000")),

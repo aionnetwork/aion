@@ -11,8 +11,11 @@ public interface IBlockConstants {
     /** Upper bound of the extra data that may be placed into a block */
     int getMaximumExtraDataSize();
 
-    /** Lower bound of difficulty */
-    BigInteger getMinimumDifficulty();
+    /** Lower bound of mining difficulty */
+    BigInteger getMinimumMiningDifficulty();
+
+    /** Lower bound of staking difficulty */
+    BigInteger getMinimumStakingDifficulty();
 
     /** The divisor for energy, energy being the units consumed by VM operations and Transactions */
     BigInteger getEnergyDivisorLimit();

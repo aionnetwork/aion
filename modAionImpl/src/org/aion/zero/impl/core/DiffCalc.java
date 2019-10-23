@@ -25,7 +25,7 @@ public class DiffCalc {
         BigInteger sign = getCalcDifficultyMultiplier(curBlock, parent);
 
         BigInteger fromParent = pd.add(quotient.multiply(sign));
-        BigInteger difficulty = max(this.constants.getMinimumDifficulty(), fromParent);
+        BigInteger difficulty = max(this.constants.getMinimumMiningDifficulty(), fromParent);
 
         return difficulty;
     }
@@ -79,7 +79,7 @@ public class DiffCalc {
             outputDifficulty = parentDifficulty.subtract(multiplier.multiply(diffBase));
         }
         // minimum lower bound difficulty requirement
-        outputDifficulty = max(this.constants.getMinimumDifficulty(), outputDifficulty);
+        outputDifficulty = max(this.constants.getMinimumMiningDifficulty(), outputDifficulty);
         return outputDifficulty;
     }
 }

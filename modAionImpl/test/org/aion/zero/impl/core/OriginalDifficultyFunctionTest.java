@@ -53,7 +53,7 @@ public class OriginalDifficultyFunctionTest {
                         new BigInteger("999512")
                     },
                     // check that difficulty has a lower bound
-                    {new InputParameters(new BigInteger("0"), 0), constants.getMinimumDifficulty()},
+                    {new InputParameters(new BigInteger("0"), 0), constants.getMinimumMiningDifficulty()},
                 });
     }
 
