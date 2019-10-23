@@ -47,7 +47,8 @@ public final class CfgAion extends Cfg {
     protected CfgLog log;
     protected CfgTx tx;
     protected CfgReports reports;
-    protected CfgGui gui;
+    // TODO: [GUI] disable GUI config features
+    //protected CfgGui gui;
     protected CfgFork fork;
 
     /* ------------ execution path management ------------ */
@@ -102,7 +103,8 @@ public final class CfgAion extends Cfg {
         this.log = new CfgLog();
         this.tx = new CfgTx();
         this.reports = new CfgReports();
-        this.gui = new CfgGui();
+        // TODO: [GUI] disable GUI config features
+        //this.gui = new CfgGui();
         this.fork = new CfgFork();
         initializeConfiguration();
     }
@@ -115,11 +117,6 @@ public final class CfgAion extends Cfg {
         return CfgAionHolder.inst;
     }
 
-    public static void setInst(CfgAion cfgAion) {
-        CfgAionHolder.inst = cfgAion;
-    }
-
-    @Override
     public void setGenesis() {
         setGenesisInner(false);
     }
@@ -297,7 +294,8 @@ public final class CfgAion extends Cfg {
                             this.reports.fromXML(sr);
                             break;
                         case "gui":
-                            this.gui.fromXML(sr);
+                            // TODO: [GUI] disable GUI config features
+                            // this.gui.fromXML(sr);
                             break;
                         default:
                             ConfigUtil.skipElement(sr);
@@ -462,7 +460,8 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getLog().toXML());
             sw.writeCharacters(this.getTx().toXML());
             sw.writeCharacters(this.getReports().toXML());
-            sw.writeCharacters(this.getGui().toXML());
+            // TODO: [GUI] disable GUI config features
+            //sw.writeCharacters(this.getGui().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();
@@ -559,8 +558,9 @@ public final class CfgAion extends Cfg {
         return this.reports;
     }
 
+    // TODO: [GUI] disable GUI config features
     public CfgGui getGui() {
-        return this.gui;
+        throw new UnsupportedOperationException();
     }
 
     public CfgFork getFork() {
@@ -601,7 +601,7 @@ public final class CfgAion extends Cfg {
      * Determines the location of the initial configuration files ensuring compatibility with old
      * kernels.
      */
-    private void initializeConfiguration() {
+    protected void initializeConfiguration() {
         // use old config location for compatibility with old kernels
         baseConfigFile = new File(CONFIG_DIR, configFileName);
         baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
@@ -618,15 +618,6 @@ public final class CfgAion extends Cfg {
             switch (this.net.getId()) {
                 case 256:
                     network = "mainnet";
-                    break;
-                case 128:
-                    network = "conquest";
-                    break;
-                case 32:
-                    network = "mastery";
-                    break;
-                case 31:
-                    network = "avmtestnet";
                     break;
                 case 28:
                     network = "amity";

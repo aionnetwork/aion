@@ -1,8 +1,6 @@
 package org.aion.zero.impl.config.dynamic;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.CharSource;
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -10,13 +8,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.config.Cfg;
-import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
 /**
@@ -58,31 +52,34 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     @Override
     public synchronized ConfigProposalResult propose(String configXmlText)
             throws RollbackException {
-        LOG.trace("Received new configuration XML");
-        LOG.trace(configXmlText);
-        CfgAion newCfg = new CfgAion();
-        try {
-            XMLStreamReader xmlStream =
-                    XMLInputFactory.newInstance()
-                            .createXMLStreamReader(CharSource.wrap(configXmlText).openStream());
-            newCfg.fromXML(xmlStream);
-        } catch (XMLStreamException | IOException | NumberFormatException ex) {
-            LOG.error(
-                    "Error constructing Cfg from given XML.  Rejecting Cfg proposal.  Exception was: {}",
-                    ex);
-            return new ConfigProposalResult(false, ex);
-        }
-
-        ConfigProposalResult result = applyNewConfig(newCfg);
-        if (result.isSuccess()) {
-            // At kernel start-up time, values from CfgAion.inst() are read and copied
-            // to other places.  Right now we don't do anything to find/update those
-            // values (assume the IDynamicConfigApplier subclasses will all do the
-            // necessary updating correctly).  Revisit this that becomes too
-            // confusing/spaghetti-like.
-            CfgAion.setInst(newCfg);
-        }
-        return result;
+        //TODO: [GUI] disable the dynamic config settings
+        throw new UnsupportedOperationException();
+//        LOG.trace("Received new configuration XML");
+//        LOG.trace(configXmlText);
+//        CfgAion newCfg = new CfgAion();
+//        try {
+//            XMLStreamReader xmlStream =
+//                    XMLInputFactory.newInstance()
+//                            .createXMLStreamReader(CharSource.wrap(configXmlText).openStream());
+//            newCfg.fromXML(xmlStream);
+//        } catch (XMLStreamException | IOException | NumberFormatException ex) {
+//            LOG.error(
+//                    "Error constructing CfgAion from given XML.  Rejecting CfgAion proposal.  Exception was: {}",
+//                    ex);
+//            return new ConfigProposalResult(false, ex);
+//        }
+//
+//        ConfigProposalResult result = applyNewConfig(newCfg);
+//        if (result.isSuccess()) {
+//            // At kernel start-up time, values from CfgAion.inst() are read and copied
+//            // to other places.  Right now we don't do anything to find/update those
+//            // values (assume the IDynamicConfigApplier subclasses will all do the
+//            // necessary updating correctly).  Revisit this that becomes too
+//            // confusing/spaghetti-like.
+//
+//            CfgAion.setInst(newCfg);
+//        }
+//        return result;
     }
 
     @VisibleForTesting

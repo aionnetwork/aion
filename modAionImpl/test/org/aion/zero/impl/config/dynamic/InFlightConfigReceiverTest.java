@@ -14,8 +14,10 @@ import org.aion.zero.impl.config.Cfg;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class InFlightConfigReceiverTest {
     private LinkedHashMap<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>>
             registryMap;
