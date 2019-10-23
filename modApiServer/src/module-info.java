@@ -25,6 +25,7 @@ module aion.apiserver {
     //requires jackson.databind;
     requires AionRpc;
     requires com.fasterxml.jackson.databind;
+    requires rpc.lib4j;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;

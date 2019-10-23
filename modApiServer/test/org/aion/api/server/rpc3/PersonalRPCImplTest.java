@@ -7,19 +7,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 
-import java.util.function.Supplier;
-import org.aion.api.server.rpc3.RPCExceptions.InternalErrorRPCException;
-import org.aion.api.server.rpc3.RPCExceptions.InvalidParamsRPCException;
-import org.aion.api.server.rpc3.RPCExceptions.MethodNotFoundRPCException;
-import org.aion.api.server.rpc3.types.RPCTypes.EcRecoverParams;
-import org.aion.api.server.rpc3.types.RPCTypes.Request;
-import org.aion.api.server.rpc3.types.RPCTypes.VersionType;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.AionAddressConverter;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.DataHexStringConverter;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.EcRecoverParamsConverter;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.ResponseConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
+import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
+import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
+import org.aion.rpc.types.RPCTypes.ByteArray;
+import org.aion.rpc.types.RPCTypes.EcRecoverParams;
+import org.aion.rpc.types.RPCTypes.Request;
+import org.aion.rpc.types.RPCTypes.VersionType;
+import org.aion.rpc.types.RPCTypesConverter.AionAddressConverter;
+import org.aion.rpc.types.RPCTypesConverter.DataHexStringConverter;
+import org.aion.rpc.types.RPCTypesConverter.EcRecoverParamsConverter;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
@@ -40,12 +39,12 @@ public class PersonalRPCImplTest {
         ECKey ecKey = ECKeyFac.inst().create();
         String helloMessage = "Hello World";
         String byeMessage = "Bye World";
-        ByteArrayWrapper helloByteMessage = ByteArrayWrapper.wrap(helloMessage.getBytes());
-        ByteArrayWrapper byeByteMessage = ByteArrayWrapper.wrap(byeMessage.getBytes());
+        ByteArray helloByteMessage = ByteArray.wrap(helloMessage.getBytes());
+        ByteArray byeByteMessage = ByteArray.wrap(byeMessage.getBytes());
 
         //Create the signed message
-        ByteArrayWrapper signedMessage =
-                ByteArrayWrapper.wrap(ecKey.sign(helloByteMessage.toBytes()).toBytes());
+        ByteArray signedMessage =
+            ByteArray.wrap(ecKey.sign(helloByteMessage.toBytes()).toBytes());
 
         //append 0x to make params valid
         String hexString = "0x" + ByteUtil.toHexString(signedMessage.toBytes());
@@ -74,11 +73,11 @@ public class PersonalRPCImplTest {
     public void executePersonal_ecRecover() {
         ECKey ecKey = ECKeyFac.inst().create();
         String helloMessage = "Hello World";
-        ByteArrayWrapper helloByteMessage = ByteArrayWrapper.wrap(helloMessage.getBytes());
+        ByteArray helloByteMessage = ByteArray.wrap(helloMessage.getBytes());
 
         // Create the signed message
-        ByteArrayWrapper signedMessage =
-            ByteArrayWrapper.wrap(ecKey.sign(helloByteMessage.toBytes()).toBytes());
+        ByteArray signedMessage =
+            ByteArray.wrap(ecKey.sign(helloByteMessage.toBytes()).toBytes());
 
         // append 0x to make params valid
         String pubKey = "0x" + ByteUtil.toHexString(ecKey.getAddress());

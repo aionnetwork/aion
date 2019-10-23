@@ -2,23 +2,23 @@ package org.aion.api.server.rpc3;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import org.aion.api.server.rpc3.RPCExceptions.InternalErrorRPCException;
-import org.aion.api.server.rpc3.RPCExceptions.InvalidRequestRPCException;
-import org.aion.api.server.rpc3.types.RPCTypes.Error;
-import org.aion.api.server.rpc3.types.RPCTypes.Request;
-import org.aion.api.server.rpc3.types.RPCTypes.Response;
-import org.aion.api.server.rpc3.types.RPCTypes.VersionType;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.ErrorConverter;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.RequestConverter;
-import org.aion.api.server.rpc3.types.RPCTypesConverter.ResponseConverter;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.rpc.errors.RPCExceptions;
+import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
+import org.aion.rpc.errors.RPCExceptions.InvalidRequestRPCException;
+import org.aion.rpc.server.PersonalRPC;
+import org.aion.rpc.types.RPCTypes.RPCError;
+import org.aion.rpc.types.RPCTypes.Request;
+import org.aion.rpc.types.RPCTypes.Response;
+import org.aion.rpc.types.RPCTypes.VersionType;
+import org.aion.rpc.types.RPCTypesConverter.RequestConverter;
+import org.aion.rpc.types.RPCTypesConverter.ResponseConverter;
 import org.slf4j.Logger;
 
 public class Web3EntryPoint {
@@ -48,7 +48,7 @@ public class Web3EntryPoint {
     public String call(String requestString){
         logger.debug("Received request: {}",requestString);
         Request request = null;
-        Error err;
+        RPCError err;
         Integer id = null;
         try{
             request = readRequest(requestString);
