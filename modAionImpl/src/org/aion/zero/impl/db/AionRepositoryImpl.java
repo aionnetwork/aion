@@ -193,8 +193,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                     // this method requires the encoding functionality therefore can be applied only to AionContractDetailsImpl
                     updateContractDetails(address, (AionContractDetailsImpl) contractDetails);
 
-                    // TODO: incorrect check codeHash != trie hash
-                    if (!Arrays.equals(accountState.getCodeHash(), ConstantUtil.EMPTY_TRIE_HASH)) {
+                    if (!Arrays.equals(accountState.getCodeHash(), EMPTY_DATA_HASH)) {
                         accountState.setStateRoot(contractDetails.getStorageHash());
                     }
 
