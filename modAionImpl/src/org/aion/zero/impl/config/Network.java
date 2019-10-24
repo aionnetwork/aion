@@ -3,15 +3,12 @@ package org.aion.zero.impl.config;
 import java.util.Arrays;
 
 /**
- * Defines different Aion networks.
+ * Defines currently valid Aion networks.
  *
  * @author Alexandra Roatis
  */
 public enum Network {
     MAINNET("mainnet", 256),
-    CONQUEST("conquest", 128),
-    MASTERY("mastery", 32),
-    AVMTESTNET("avmtestnet", 31), // temporary chainid
     AMITY("amity", 28),
     CUSTOM("custom", 0);
 
@@ -51,7 +48,7 @@ public enum Network {
         String netStr = network.toLowerCase();
 
         if (netStr.equals("testnet")) {
-            return Network.MASTERY;
+            return Network.AMITY;
         }
 
         for (Network net : Network.values()) {

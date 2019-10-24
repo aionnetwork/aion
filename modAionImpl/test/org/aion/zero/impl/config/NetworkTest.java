@@ -27,8 +27,8 @@ public class NetworkTest {
             parameters.add(new Object[] {net.toString().toUpperCase(), net});
         }
 
-        parameters.add(new Object[] {"testnet", Network.MASTERY});
-        parameters.add(new Object[] {"TESTNET", Network.MASTERY});
+        parameters.add(new Object[] {"testnet", Network.AMITY});
+        parameters.add(new Object[] {"TESTNET", Network.AMITY});
 
         parameters.add(new Object[] {"custom", Network.CUSTOM});
         parameters.add(new Object[] {"CUSTOM", Network.CUSTOM});

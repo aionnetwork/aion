@@ -61,8 +61,7 @@ tmp/
 
 # network data
 /mainnet/
-/conquest/
-/mastery/
+/amity/
 /custom/
 
 # openjdk artifacts

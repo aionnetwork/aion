@@ -203,15 +203,6 @@ public abstract class Cfg {
                 case 256:
                     network = "mainnet";
                     break;
-                case 128:
-                    network = "conquest";
-                    break;
-                case 32:
-                    network = "mastery";
-                    break;
-                case 31:
-                    network = "avmtestnet";
-                    break;
                 case 28:
                     network = "amity";
                     break;

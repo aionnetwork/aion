@@ -6,7 +6,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -62,20 +61,19 @@ public class CliTest {
     private final CfgAion cfg = CfgAion.inst();
     private final Cli mockCli = spy(cli);
 
+    // NOTE: Do not add more networks!! Simply update testnet name when the current one is outdated.
+    private static final String currentTestNetName = "amity";
+
     // base paths
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
-    private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
-    private static final File AVM_TEST_BASE_PATH = new File(BASE_PATH, "avmtestnet");
-    private static final File AMITY_BASE_PATH = new File(BASE_PATH, "amity");
+    private static final File TEST_BASE_PATH = new File(BASE_PATH, currentTestNetName);
 
 
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
-    private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
-    private static final File AVM_TEST_CONFIG_PATH = new File(CONFIG_PATH, "avmtestnet");
-    private static final File AMITY_CONFIG_PATH = new File(CONFIG_PATH, "amity");
+    private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, currentTestNetName);
 
 
     private static final String module = "modAionImpl";
@@ -94,24 +92,18 @@ public class CliTest {
     private static final File oldConfig = new File(CONFIG_PATH, configFileName);
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
-    private static final File avmtestnetConfig = new File(AVM_TEST_CONFIG_PATH, configFileName);
-    private static final File amityConfig = new File(AMITY_CONFIG_PATH, configFileName);
 
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
-    private static final File avmtestnetGenesis = new File(AVM_TEST_CONFIG_PATH, genesisFileName);
-    private static final File amityGenesis = new File(AMITY_CONFIG_PATH, genesisFileName);
 
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
-    private static final File avmtestnetFork = new File(AVM_TEST_CONFIG_PATH, forkFileName);
-    private static final File amityFork = new File(AMITY_CONFIG_PATH, forkFileName);
 
 
     private static final String DEFAULT_PORT = "30303";
@@ -148,26 +140,6 @@ public class CliTest {
             Cli.copyRecursively(fork, testnetFork);
         }
 
-        if (BASE_PATH.contains(module) && !avmtestnetConfig.exists()) {
-            // save config to disk at expected location for new kernel
-            if (!AVM_TEST_CONFIG_PATH.exists()) {
-                assertThat(AVM_TEST_CONFIG_PATH.mkdir()).isTrue();
-            }
-            Cli.copyRecursively(config, avmtestnetConfig);
-            Cli.copyRecursively(genesis, avmtestnetGenesis);
-            Cli.copyRecursively(fork, avmtestnetFork);
-        }
-
-        if (BASE_PATH.contains(module) && !amityConfig.exists()) {
-            // save config to disk at expected location for new kernel
-            if (!AMITY_CONFIG_PATH.exists()) {
-                assertThat(AMITY_CONFIG_PATH.mkdir()).isTrue();
-            }
-            Cli.copyRecursively(config, amityConfig);
-            Cli.copyRecursively(genesis, amityGenesis);
-            Cli.copyRecursively(fork, amityFork);
-        }
-
         cfg.resetInternal();
         doReturn("password").when(mockpr).readPassword(any(), any());
         doCallRealMethod().when(mockCli).call(any(), any());
@@ -190,8 +162,6 @@ public class CliTest {
 
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
-        deleteRecursively(AVM_TEST_BASE_PATH);
-        deleteRecursively(AMITY_BASE_PATH);
     }
 
     @AfterClass
@@ -267,8 +237,7 @@ public class CliTest {
             // without parameter
             parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
             // with two parameters
-            parameters.add(
-                    new Object[] {new String[] {op, "testnet", "mastery"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "testnet", currentTestNetName}, ERROR, expOnError});
             // invalid parameter
             parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expected});
             // mainnet as parameter
@@ -276,31 +245,17 @@ public class CliTest {
         }
 
         // network alone with testnet
-        net_values = new String[] {"mastery", "testnet"};
+        net_values = new String[] {currentTestNetName, "testnet"};
         expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             for (String netVal : net_values) {
-                // mastery as parameter
+                // testnet name as parameter
                 parameters.add(new Object[] {new String[] {op, netVal}, RUN, expected});
             }
         }
 
-        // network alone with avmtestnet
-        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
-        for (String op : net_options) {
-            // avmtestnet as parameter
-            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
-        }
-
-        // network alone with alone
-        expected = AMITY_BASE_PATH.getAbsolutePath();
-        for (String op : net_options) {
-            // amity as parameter
-            parameters.add(new Object[] {new String[] {op, "amity"}, RUN, expected});
-        }
-
         // network and directory with testnet
-        expected = new File(path, "mastery").getAbsolutePath();
+        expected = new File(path, currentTestNetName).getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opNet : net_options) {
                 for (String netVal : net_values) {
@@ -446,26 +401,10 @@ public class CliTest {
         expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
-            // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, testnetConfig, expected});
+            // testnet name as parameter
+            parameters.add(new Object[] {new String[] {op, currentTestNetName}, testnetConfig, expected});
             // testnet as parameter
             parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
-        }
-
-        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
-
-        for (String op : options) {
-            // avmtestnet as parameter
-            parameters.add(
-                    new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
-        }
-
-        expected = AMITY_BASE_PATH.getAbsolutePath();
-
-        for (String op : options) {
-            // amity as parameter
-            parameters.add(
-                new Object[] {new String[] {op, "amity"}, amityConfig, expected});
         }
 
         // config and directory
@@ -507,12 +446,9 @@ public class CliTest {
         }
 
         // config and directory with testnet
-        net_values = new String[] {"mastery", "testnet"};
-        config =
-                new File(
-                        path,
-                        "mastery" + File.separator + "config" + File.separator + configFileName);
-        expected = new File(path, "mastery").getAbsolutePath();
+        net_values = new String[] {currentTestNetName, "testnet"};
+        config = new File(path, currentTestNetName + File.separator + "config" + File.separator + configFileName);
+        expected = new File(path, currentTestNetName).getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
                 for (String netVal : net_values) {
@@ -588,8 +524,8 @@ public class CliTest {
         expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
-            // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, expected});
+            // testnet name as parameter
+            parameters.add(new Object[] {new String[] {op, currentTestNetName}, expected});
             // testnet as parameter
             parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
         }
@@ -787,7 +723,7 @@ public class CliTest {
         }
 
         // network and port with testnet
-        netValues = new String[] {"mastery", "testnet"};
+        netValues = new String[] {currentTestNetName, "testnet"};
         expectedPath = TEST_BASE_PATH.getAbsolutePath();
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
@@ -866,7 +802,7 @@ public class CliTest {
         }
 
         // network, directory and port
-        netValues = new String[] {"mainnet", "mastery"};
+        netValues = new String[] {"mainnet", currentTestNetName};
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
                 for (String opDir : dirOptions) {
@@ -1150,7 +1086,7 @@ public class CliTest {
                     });
         }
         // compact with network testnet
-        netValues = new String[] {"mastery", "testnet"};
+        netValues = new String[] {currentTestNetName, "testnet"};
         expectedPath = TEST_BASE_PATH.getAbsolutePath();
         for (String valNet : netValues) {
             parameters.add(
@@ -1277,7 +1213,7 @@ public class CliTest {
                 });
 
         // compact with network, directory and port
-        netValues = new String[] {"mainnet", "mastery"};
+        netValues = new String[] {"mainnet", currentTestNetName};
         for (String valNet : netValues) {
             for (String valDir : dirValues) {
                 expectedPath = new File(path, valNet).getAbsolutePath();
@@ -1395,12 +1331,11 @@ public class CliTest {
         // with network
         expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : options) {
-            // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT, expected});
-            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT, expected});
+            // testnet name as parameter
+            parameters.add(new Object[] {new String[] {op, "-n", currentTestNetName}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-n", currentTestNetName, op}, EXIT, expected});
             // invalid parameter
-            parameters.add(
-                    new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "value", "-n", currentTestNetName}, ERROR, expOnError});
         }
 
         // with directory
@@ -1469,38 +1404,38 @@ public class CliTest {
         }
 
         // with network and directory
-        expected = new File(path, "mastery").getAbsolutePath();
+        expected = new File(path, currentTestNetName).getAbsolutePath();
 
         for (String op : options) {
             // with relative path
             parameters.add(
                     new Object[] {
-                        new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT, expected
+                        new String[] {op, "-d", dataDirectory, "-n", currentTestNetName}, EXIT, expected
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT, expected
+                        new String[] {"-n", currentTestNetName, op, "-d", dataDirectory}, EXIT, expected
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT, expected
+                        new String[] {"-n", currentTestNetName, "-d", dataDirectory, op}, EXIT, expected
                     });
             // with absolute path
             parameters.add(
                     new Object[] {
-                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()},
+                        new String[] {op, "-n", currentTestNetName, "-d", path.getAbsolutePath()},
                         EXIT,
                         expected
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"},
+                        new String[] {"-d", path.getAbsolutePath(), op, "-n", currentTestNetName},
                         EXIT,
                         expected
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op},
+                        new String[] {"-d", path.getAbsolutePath(), "-n", currentTestNetName, op},
                         EXIT,
                         expected
                     });
@@ -1581,11 +1516,11 @@ public class CliTest {
             String[] params = op.split("\\s");
             String param1 =params[0];
             String param2 =params[1];
-            // mastery as parameter
-            parameters.add(new Object[] {new String[] {param1, param2, "-n", "mastery"}, ERROR});
-            parameters.add(new Object[] {new String[] {"-n", "mastery", param1, param2}, EXIT});
+            // testnet name as parameter
+            parameters.add(new Object[] {new String[] {param1, param2, "-n", currentTestNetName}, ERROR});
+            parameters.add(new Object[] {new String[] {"-n", currentTestNetName, param1, param2}, EXIT});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {param1, param2, "value", "-n", "mastery"}, ERROR});
+            parameters.add(new Object[] {new String[] {param1, param2, "value", "-n", currentTestNetName}, ERROR});
         }
 
         // with directory
@@ -1612,24 +1547,21 @@ public class CliTest {
             String param1 =params[0];
             String param2 =params[1];
             // with relative path
-            parameters.add(
-                    new Object[] {new String[] {param1, param2, "-d", dataDirectory, "-n", "mastery"}, ERROR});
-            parameters.add(
-                    new Object[] {new String[] {"-n", "mastery", param1, param2, "-d", dataDirectory}, ERROR});
-            parameters.add(
-                    new Object[] {new String[] {"-n", "mastery", "-d", dataDirectory, param1, param2}, EXIT});
+            parameters.add(new Object[] {new String[] {param1, param2, "-d", dataDirectory, "-n", currentTestNetName}, ERROR});
+            parameters.add(new Object[] {new String[] {"-n", currentTestNetName, param1, param2, "-d", dataDirectory}, ERROR});
+            parameters.add(new Object[] {new String[] {"-n", currentTestNetName, "-d", dataDirectory, param1, param2}, EXIT});
             // with absolute path
             parameters.add(
                     new Object[] {
-                        new String[] {param1, param2, "-n", "mastery", "-d", path.getAbsolutePath()}, ERROR
+                        new String[] {param1, param2, "-n", currentTestNetName, "-d", path.getAbsolutePath()}, ERROR
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), param1, param2, "-n", "mastery"}, ERROR
+                        new String[] {"-d", path.getAbsolutePath(), param1, param2, "-n", currentTestNetName}, ERROR
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", param1, param2}, EXIT
+                        new String[] {"-d", path.getAbsolutePath(), "-n", currentTestNetName, param1, param2}, EXIT
                     });
         }
 
@@ -1709,11 +1641,11 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export","account|e"})
     public void testExportPrivateKey_withNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"-n", "mastery","a","c"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-n", currentTestNetName,"a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, account, "-n", "mastery"}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", command, option, account}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, account, "-n", currentTestNetName}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", currentTestNetName, command, option, account}, cfg));
     }
 
     /**
@@ -1724,22 +1656,19 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export", "account|e"})
     public void testExportPrivateKey_withDataDirAndNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "-n", "mastery" ,"a","c" }, cfg))
+        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "-n", currentTestNetName ,"a","c" }, cfg))
                 .isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
         assertEquals(
                 ERROR,
-                mockCli.call(
-                        new String[] {"-n", "mastery", command, option, account, "-d", dataDirectory}, cfg));
+                mockCli.call(new String[] {"-n", currentTestNetName, command, option, account, "-d", dataDirectory}, cfg));
         assertEquals(
                 EXIT,
-                mockCli.call(
-                        new String[] {"-n", "mastery", "-d", dataDirectory, command, option, account}, cfg));
+                mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, account}, cfg));
         assertEquals(
                 ERROR,
-                mockCli.call(
-                        new String[] {command, option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                mockCli.call(new String[] {command, option, account, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
     }
 
     /**
@@ -1810,17 +1739,17 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-n", "mastery"}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-n", currentTestNetName}, cfg));
         assertThat(Keystore.list().length).isEqualTo(0);
 
         // test 2: -n first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", command, option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", currentTestNetName, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
         // test 3: known key
-        assertEquals(ERROR, mockCli.call(new String[] { "-n", "mastery", command, option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] { "-n", currentTestNetName, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1837,8 +1766,7 @@ public class CliTest {
 
         assertEquals(
                 ERROR,
-                mockCli.call(
-                        new String[] {command, option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                mockCli.call(new String[] {command, option, pKey, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
         assertThat(Keystore.list().length).isEqualTo(0);
 
 
@@ -1848,15 +1776,13 @@ public class CliTest {
 
         assertEquals(
             EXIT,
-            mockCli.call(
-                new String[] {"-n", "mastery", "-d", dataDirectory, command, option, pKey}, cfg));
+            mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: duplicate key
         assertEquals(
             ERROR,
-            mockCli.call(
-                new String[] {"-n", "mastery", "-d", dataDirectory, command, option, pKey}, cfg));
+            mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 4: ai middle
@@ -1865,8 +1791,7 @@ public class CliTest {
 
         assertEquals(
                 ERROR,
-                mockCli.call(
-                        new String[] {"-n", "mastery", command, option, pKey, "-d", dataDirectory}, cfg));
+                mockCli.call(new String[] {"-n", currentTestNetName, command, option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 

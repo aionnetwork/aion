@@ -68,7 +68,5 @@ else:
     root = sys.argv[1]
 
 go(root + '/mainnet/config.xml')
-go(root + '/mastery/config.xml')
+go(root + '/amity/config.xml')
 go(root + '/custom/config.xml')
-go(root + '/conquest/config.xml')
-go(root + '/avmtestnet/config.xml')
