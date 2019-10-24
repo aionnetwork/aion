@@ -524,7 +524,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         boolean unityForkEnabled = forkUtility.isUnityForkActive(parent.getNumber() + 1);
         for (AionTransaction tx : txs) {
-            if (unityForkEnabled ? !TXValidator.isValidAfterUnity(tx): !TXValidator.isValid(tx)) {
+            if (!TXValidator.isValid(tx, unityForkEnabled)) {
                 throw new InvalidParameterException("invalid transaction input! " + tx.toString());
             }
         }

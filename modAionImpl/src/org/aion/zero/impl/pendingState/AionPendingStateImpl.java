@@ -434,7 +434,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public boolean isValid(AionTransaction tx) {
-        return (blockchain.isUnityForkEnabledAtNextBlock() ? TXValidator.isValidAfterUnity(tx) : TXValidator.isValid(tx))
+        return (TXValidator.isValid(tx, blockchain.isUnityForkEnabledAtNextBlock()))
                 && TransactionTypeValidator.isValid(tx)
                 && beaconHashValidator.validateTxForPendingState(tx);
     }

@@ -1615,21 +1615,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 if (txs.parallelStream()
                         .anyMatch(
                                 tx ->
-                                    unityForkEnabled ? !TXValidator.isValidAfterUnity(tx) : !TXValidator.isValid(tx)
+                                     !TXValidator.isValid(tx, unityForkEnabled)
                                                 || !TransactionTypeValidator.isValid(tx)
                                                 || !beaconHashValidator.validateTxForBlock(tx, block))) {
                     LOG.error("Some transactions in the block are invalid");
-                    if (TX_LOG.isDebugEnabled()) {
-                        for (AionTransaction tx : txs) {
-                            TX_LOG.debug(
-                                    "Tx valid ["
-                                            + TXValidator.isValid(tx)
-                                            + "]. Type valid ["
-                                            + TransactionTypeValidator.isValid(tx)
-                                            + "]\n"
-                                            + tx.toString());
-                        }
+
+                    for (AionTransaction tx : txs) {
+                        TX_LOG.debug(
+                                "Tx valid ["
+                                        + TXValidator.isValid(tx, unityForkEnabled)
+                                        + "]. Type valid ["
+                                        + TransactionTypeValidator.isValid(tx)
+                                        + "]\n"
+                                        + tx.toString());
                     }
+
                     return false;
                 }
 
