@@ -3,7 +3,8 @@ package org.aion.api.server.rpc2;
 import java.util.concurrent.TimeUnit;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.errors.NullReturnRpcException;
-import org.aion.util.time.TimeUtils;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.StakingBlock;
@@ -104,6 +105,18 @@ public class RpcImpl implements Rpc {
 
         block.seal(signature, block.getHeader().getSigningPublicKey());
         ImportResult result = ac.getBlockchain().tryToConnect(block);
-        return (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST);
+
+        boolean sealed = (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST);
+        if (sealed) {
+            AionLoggerFactory.getLogger(LogEnum.CONS.toString())
+                    .info(
+                            "Staking block sealed <num={}, hash={}, diff={}, tx={}>",
+                            block.getNumber(),
+                            block.getShortHash(),
+                            block.getDifficultyBI(),
+                            block.getTransactionsList().size());
+        }
+
+        return sealed;
     }
 }
