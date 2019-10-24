@@ -1,21 +1,11 @@
 package org.aion.api.server.rpc2;
 
-import org.aion.api.RpcException;
+import java.util.concurrent.TimeUnit;
 import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.errors.NullReturnRpcException;
-import org.aion.api.server.rpc2.autogen.pod.CallRequest;
-import org.aion.api.server.rpc2.autogen.pod.Transaction;
-import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.Block;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.util.time.TimeUtils;
 import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionTxInfo;
-
-import java.math.BigInteger;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
@@ -104,6 +94,11 @@ public class RpcImpl implements Rpc {
 
         StakingBlock block = (StakingBlock) ac.getBlockchain().getCachingStakingBlockTemplate(sealhash);
         if (block == null) {
+            return false;
+        }
+
+        // Cannot submit a future block to the kernel
+        if (block.getTimestamp() > TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) + 1) {
             return false;
         }
 
