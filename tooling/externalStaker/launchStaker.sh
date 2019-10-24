@@ -1,4 +1,6 @@
 #!/bin/bash
+set -x
+
 echo
 echo "Launching external staker..."
 echo
@@ -8,7 +10,7 @@ COINBASE_ADDRESS="0xa02df9004be3c4a20aeb50c459212412b1d0a58da3e1ac70ba74dde6b4ac
 NODE_IP="127.0.0.1"
 NODE_PORT="8545"
 
-java -jar external_staker.jar $SIGNING_ADDRESS_PRIVATE_KEY $COINBASE_ADDRESS $NODE_IP $NODE_PORT
+java -cp "external_staker.jar:lib/*" org.aion.staker.ExternalStaker $SIGNING_ADDRESS_PRIVATE_KEY $COINBASE_ADDRESS $NODE_IP $NODE_PORT
 
 echo
 echo "Shutting down the external staker..."
