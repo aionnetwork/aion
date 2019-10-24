@@ -24,12 +24,16 @@ public class TXValidator {
     private static final Map<ByteArrayWrapper, Boolean> cache =
             Collections.synchronizedMap(new LRUMap<>(16 * 1024));
 
-    public static boolean isValid(AionTransaction tx) {
+    public static boolean isValid(AionTransaction tx, boolean unityForkEnabled) {
         Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
         if (valid != null) {
             return valid;
         } else {
-            valid = isValid0(tx);
+            if (unityForkEnabled) {
+                valid = isValidAfterUnity(tx);
+            } else {
+                valid = isValid0(tx);
+            }
             cache.put(ByteArrayWrapper.wrap(tx.getTransactionHash()), valid);
             return valid;
         }
@@ -39,7 +43,7 @@ public class TXValidator {
         return cache.get(hash) != null;
     }
 
-    public static boolean isValid0(AionTransaction tx) {
+    private static boolean isValid0(AionTransaction tx) {
 
         long nrg = tx.getEnergyLimit();
         if (tx.isContractCreationTransaction()) {
@@ -57,8 +61,7 @@ public class TXValidator {
         return isValidInner(tx);
     }
 
-    public static boolean isValidAfterUnity(AionTransaction tx) {
-
+    private static boolean isValidAfterUnity(AionTransaction tx) {
         long nrg = tx.getEnergyLimit();
         if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreateAfterUnity(nrg)) {
