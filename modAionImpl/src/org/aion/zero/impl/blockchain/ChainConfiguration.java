@@ -131,6 +131,18 @@ public class ChainConfiguration {
         return new BlockHeaderValidator(unityRules);
     }
 
+    public BlockHeaderValidator createSimpleBlockHeaderValidator() {
+
+        List<BlockHeaderRule> rules =
+            Collections.singletonList(new FutureBlockRule());
+
+        Map<BlockSealType, List<BlockHeaderRule>> unitySimpleRules = new EnumMap<>(BlockSealType.class);
+        unitySimpleRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
+        unitySimpleRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
+
+        return new BlockHeaderValidator(unitySimpleRules);
+    }
+
     public GrandParentBlockHeaderValidator createPreUnityGrandParentHeaderValidator() {
 
         List<GrandParentDependantBlockHeaderRule> powRules =

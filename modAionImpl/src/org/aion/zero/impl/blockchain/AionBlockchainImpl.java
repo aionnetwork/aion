@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.zero.impl.vm.common.PostExecutionLogic;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.zero.impl.vm.common.VmFatalException;
@@ -127,6 +128,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
+    private final BlockHeaderValidator simpleBlockHeaderValidator;
     private final StakingContractHelper stakingContractHelper;
     public final ForkUtility forkUtility;
     public final BeaconHashValidator beaconHashValidator;
@@ -207,6 +209,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
         unityGreatGrandParentBlockHeaderValidator = chainConfiguration.createUnityGreatGrandParentHeaderValidator();
+        simpleBlockHeaderValidator = chainConfiguration.createSimpleBlockHeaderValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
 
@@ -1508,10 +1511,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * Header should already be validated at this point, no need to check again
          * 1. Block came in from network; validated by P2P before processing further
          * 2. Block was submitted locally - adding invalid data to your own chain
+         * Only verify the future timestamp rule when import block locally.
          */
-        //        if (!this.blockHeaderValidator.validate(header, LOG)) {
-        //            return false;
-        //        }
+
+        if (!simpleBlockHeaderValidator.validate(header, LOG)) {
+            return false;
+        }
 
         Block parent = getParent(header);
         if (parent == null) {
