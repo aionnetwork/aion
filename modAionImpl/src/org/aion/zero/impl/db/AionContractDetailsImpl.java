@@ -327,7 +327,7 @@ public class AionContractDetailsImpl implements ContractDetails {
             // revert back from storing the VM type in details
             // force a save with new encoding
             throw new IllegalStateException(
-                    "Incompatible data storage. Please shutdown the kernel and perform migration to version 0.4.1 of the kernel as instructed in the release.");
+                    "Incompatible data storage. Please shutdown the kernel and perform database migration to version 1.0 (Denali) of the kernel as instructed in the release.");
         } else {
             // keep encoding when compatible with new style
             this.rlpEncoded = rlpCode;
