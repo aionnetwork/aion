@@ -8,11 +8,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
-import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 
 public final class CfgConsensusUnity extends CfgConsensus {
@@ -26,22 +21,13 @@ public final class CfgConsensusUnity extends CfgConsensus {
         this.extraData = "AION";
         this.cfgEnergyStrategy = new CfgEnergyStrategy();
         this.seed = false;
-        this.stakerCoinbase = AddressUtils.ZERO_ADDRESS.toString();
     }
 
     private boolean mining;
 
-    private boolean staking;
-
     private boolean seed;
 
     private String minerAddress;
-
-    private String stakerSigningAddress;
-
-    private String stakerCoinbase;
-
-    private ECKey stakerSigningKey;
 
     private byte cpuMineThreads;
 
@@ -58,20 +44,11 @@ public final class CfgConsensusUnity extends CfgConsensus {
                         case "mining":
                             this.mining = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
-                        case "staking":
-                            staking = Boolean.parseBoolean(Cfg.readValue(sr));
                         case "seed":
                             this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case "miner-address":
                             this.minerAddress = Cfg.readValue(sr);
-                            break;
-                        case "staker-coinbase":
-                            stakerCoinbase = Cfg.readValue(sr);
-                            break;
-                        case "staker-signing-key":
-                            String sk = Cfg.readValue(sr);
-                            convertToStakerKeyAndAddress(sk);
                             break;
                         case "cpu-mine-threads":
                             this.cpuMineThreads = Byte.valueOf(Cfg.readValue(sr));
@@ -91,15 +68,6 @@ public final class CfgConsensusUnity extends CfgConsensus {
                     break loop;
             }
         }
-    }
-
-    private void convertToStakerKeyAndAddress(String sk) {
-        if (sk == null) {
-            throw  new NullPointerException();
-        }
-
-        stakerSigningKey = ECKeyFac.inst().fromPrivate(ByteUtil.hexStringToBytes(sk));
-        stakerSigningAddress = new AionAddress(AddressSpecs.computeA0Address(stakerSigningKey.getPubKey())).toString();
     }
 
     String toXML() {
@@ -133,29 +101,6 @@ public final class CfgConsensusUnity extends CfgConsensus {
             xmlWriter.writeStartElement("cpu-mine-threads");
             xmlWriter.writeCharacters(this.getCpuMineThreads() + "");
             xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("enable/disable the internal staker runner");
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("staking");
-            xmlWriter.writeCharacters(getStaking() + "");
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("staker's desired coinbase (no 0x prefix) required by the internal staker runner, the block reward will been sent to this address");
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("staker-coinbase");
-            xmlWriter.writeCharacters(this.getStakerCoinbase());
-            xmlWriter.writeEndElement();
-
-            if (getStakerSigningKey() != null) {
-                xmlWriter.writeCharacters("\r\n\t\t");
-                xmlWriter.writeComment("staker's 128 chars hex string (no 0x prefix) signing private key required by the internal staker runner");
-                xmlWriter.writeCharacters("\r\n\t\t");
-                xmlWriter.writeStartElement("staker-signing-key");
-                xmlWriter.writeCharacters(ByteUtil.toHexString(getStakerSigningKey().getPrivKeyBytes()));
-                xmlWriter.writeEndElement();
-            }
 
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("extra-data");
@@ -192,22 +137,6 @@ public final class CfgConsensusUnity extends CfgConsensus {
 
     public boolean getMining() {
         return this.mining;
-    }
-
-    public boolean getStaking() {
-        return staking;
-    }
-
-    public String getStakerSigningAddress() {
-        return stakerSigningAddress;
-    }
-
-    public ECKey getStakerSigningKey() {
-        return stakerSigningKey;
-    }
-
-    public String getStakerCoinbase() {
-        return stakerCoinbase;
     }
 
     public byte getCpuMineThreads() {

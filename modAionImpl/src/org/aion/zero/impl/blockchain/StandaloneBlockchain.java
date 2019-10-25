@@ -302,11 +302,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 }
 
                                 @Override
-                                public AionAddress getStakerCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
                                 public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
                                     return new TargetStrategy(
                                             configuration.getConstants().getEnergyLowerBoundLong(),
@@ -318,10 +313,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                                 public boolean isInternalTransactionStorageEnabled() {
                                     return true;
-                                }
-
-                                public boolean isInternalStakingEnabled() {
-                                    return false;
                                 }
                             }
                             : this.a0Config;

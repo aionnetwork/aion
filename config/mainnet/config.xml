@@ -57,12 +57,6 @@
         <miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
         <!-- cpu threads been use in the internal PoW miner -->
         <cpu-mine-threads>1</cpu-mine-threads>
-        <!-- enable/disable the internal staker runner --> 
-        <staking>false</staking>
-        <!-- staker's desired coinbase (no 0x prefix) required by the internal staker runner, the block reward will been sent to this address -->
-        <staker-coinbase>0000000000000000000000000000000000000000000000000000000000000000</staker-coinbase>
-        <!-- staker's 128 chars hex string (no 0x prefix) signing private key required by the internal staker runner -->
-        <staker-signing-key>00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</staker-signing-key>        
         <extra-data>AION</extra-data>
         <nrg-strategy>
             <!-- <monotonic-increase></monotonic-increase> -->
