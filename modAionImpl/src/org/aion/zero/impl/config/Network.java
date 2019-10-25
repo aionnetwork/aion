@@ -9,7 +9,7 @@ import java.util.Arrays;
  */
 public enum Network {
     MAINNET("mainnet", 256),
-    AMITY("amity", 28),
+    AMITY("amity", 27),
     CUSTOM("custom", 0);
 
     private final String name;
