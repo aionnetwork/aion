@@ -163,7 +163,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /** use AtomicReference to make sure the difficulty update at the same time */
     private AtomicReference<BigInteger> totalDifficulty = new AtomicReference<>(ZERO);
 
-    private ChainStatistics chainStats;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<>();
     private boolean fork = false;
     private AionAddress minerCoinbase;
@@ -198,7 +197,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // TODO AKI-318: this specialized class is very cumbersome to maintain; could be replaced with CfgAion
         this.config = config;
         this.repository = repository;
-        this.chainStats = new ChainStatistics();
         this.storeInternalTransactions = config.isInternalTransactionStorageEnabled();
 
         /**
@@ -1720,9 +1718,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         Map<AionAddress, BigInteger> rewards = addReward(block);
-
-        long totalTime = System.nanoTime() - saveTime;
-        chainStats.addBlockExecTime(totalTime);
         return new RetValidPreBlock(transactions, rewards, receipts, summaries);
     }
 
@@ -1775,10 +1770,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
         Map<AionAddress, BigInteger> rewards = addReward(block);
-
-        long totalTime = System.nanoTime() - saveTime;
-        chainStats.addBlockExecTime(totalTime);
-
         return new AionBlockSummary(block, rewards, receipts, summaries);
     }
 
