@@ -276,6 +276,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public void updateChainInfo(long blockNumber, byte[] blockHash, BigInteger blockTD) {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
         public int getAvgLatency() {
             return 0;
         }

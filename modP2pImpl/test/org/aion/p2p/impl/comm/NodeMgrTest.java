@@ -60,7 +60,7 @@ public class NodeMgrTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
+        nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER, null);
         r = new Random();
     }
 

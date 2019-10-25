@@ -1,6 +1,7 @@
 package org.aion.p2p.impl1;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SelectionKey;
@@ -131,7 +132,11 @@ public final class P2pMgr implements IP2pMgr {
         this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
 
-        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes, p2pLOG);
+        INode myNode = new Node(false, selfNodeId, selfIp, selfPort);
+        myNode.setBinaryVersion(selfRevision);
+        myNode.setConnection("self");
+
+        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes, p2pLOG, myNode);
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -435,6 +440,11 @@ public final class P2pMgr implements IP2pMgr {
         return selfNodeIdHash == node.getIdHash()
                 && selfPort == node.getPort()
                 && Arrays.equals(selfNodeId, node.getId());
+    }
+
+    @Override
+    public void updateChainInfo(long blockNumber, byte[] blockHash, BigInteger blockTD) {
+        nodeMgr.updateChainInfo(blockNumber, blockHash, blockTD);
     }
 
     private TaskInbound getInboundInstance() {
