@@ -1,6 +1,7 @@
 package org.aion.p2p;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
@@ -68,4 +69,6 @@ public interface IP2pMgr {
      *     manager's definition of node equality, {@code false} otherwise
      */
     boolean isSelf(INode node);
+
+    void updateChainInfo(long blockNumber, byte[] blockHash, BigInteger blockTD);
 }

@@ -1,5 +1,6 @@
 package org.aion.p2p.impl.comm;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -40,8 +41,9 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
     private int avgLatency = 0;
+    private final INode myNode;
 
-    public NodeMgr(IP2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes, Logger _logger) {
+    public NodeMgr(IP2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes, Logger _logger, INode myNode) {
         this.maxActiveNodes = _maxActiveNodes;
         this.maxTempNodes = _maxTempNodes;
         this.p2pMgr = _p2pMgr;
@@ -50,6 +52,8 @@ public class NodeMgr implements INodeMgr {
         // 1. we only really need to access the data one thread at a time
         // 2. it allows bounding the collection size
         tempNodes = new LinkedBlockingDeque<>(maxTempNodes);
+
+        this.myNode = myNode;
     }
 
     private static String bytesToHex(byte[] bytes) {
@@ -80,6 +84,11 @@ public class NodeMgr implements INodeMgr {
                         activeNodes.size()));
 
         sb.append(appendColumnFormat());
+
+        if (myNode != null) {
+            sb.append(appendNodeInfo(myNode)).append("\n");
+        }
+
         List<INode> sorted = new ArrayList<>(activeNodes.values());
         if (sorted.size() > 0) {
             sorted.sort(
@@ -353,6 +362,12 @@ public class NodeMgr implements INodeMgr {
                 p2pLOG.trace("<movePeerToActive empty {} {}>", _type, _hash);
             }
         }
+    }
+
+    @Override
+    public void updateChainInfo(long blockNumber, byte[] blockHash, BigInteger blockTD) {
+        // We only need the block information
+        myNode.updateStatus(blockNumber, blockHash, blockTD, (byte)0, (short) 0, 0, 0);
     }
 
     private void timeoutInbound(long currentTimeMillis) {
