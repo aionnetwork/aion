@@ -381,7 +381,7 @@ public class AionHub {
                 genLOG.info("Rebuild state FAILED. Reverting to previous block.");
 
                 --blockNumber;
-                DBUtils.Status status = DBUtils.revertTo(this.blockchain, blockNumber);
+                DBUtils.Status status = DBUtils.revertTo(this.blockchain, blockNumber, genLOG);
 
                 recovered =
                         (status == DBUtils.Status.SUCCESS)
