@@ -1,5 +1,6 @@
 package org.aion.p2p;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -58,4 +59,12 @@ public interface INodeMgr {
      * @param _type the string represent "inbound" or "outbound"
      */
     void movePeerToActive(int _hash, String _type);
+
+    /**
+     * This method is updating the kernel best block to the peerlist information
+     * @param blockNumber blockNumber of the bestblock
+     * @param blockHash blockHash of the bestblock
+     * @param blockTD blockTD of the bestblock
+     */
+    void updateChainInfo(long blockNumber, byte[] blockHash, BigInteger blockTD);
 }

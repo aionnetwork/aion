@@ -985,6 +985,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
+
+            //TODO: AKI-387 [REMOVE SINGLETON] refactor this when we doing the SIGNLETON objects removing
+            AionImpl.inst().aionHub.getP2pMgr().updateChainInfo(block.getNumber(), block.getHash().clone(), block.getDifficultyBI());
         }
 
         // fire block events
