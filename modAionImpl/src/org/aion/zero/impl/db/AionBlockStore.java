@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.ArrayStore;
 import org.aion.db.store.ObjectStore;
@@ -420,95 +421,89 @@ public class AionBlockStore {
      *     {@code first < last} the blocks are returned in ascending order of their height.
      */
     public List<Block> getBlocksByRange(long first, long last) {
-        if (first <= 0L) {
+        if (first <= 0L && last <= 0L) {
+            // no actual blocks can be retrieved since the genesis should not be returned
             return null;
         }
 
         lock.lock();
 
         try {
-            Block block = getChainBlockByNumber(first);
-            if (block == null) {
-                // invalid request
-                return null;
+            long top, bottom;
+            boolean mustReverse;
+            if (first > last) { // first is highest
+                top = first;
+                bottom = last;
+                mustReverse = false;
+            } else { // last is highest
+                top = last;
+                bottom = first;
+                mustReverse = true;
             }
 
-            if (first == last) {
-                return List.of(block);
-            } else if (first > last) { // first is highest -> can query directly by parent hash
-                List<Block> blocks = new ArrayList<>();
-                blocks.add(block);
+            if (top == bottom) {
+                return List.of(getChainBlockByNumber(top));
+            } else {
+                byte[] firstBlockHash = getChainBlockHashByNumber(top);
+                if (firstBlockHash == null) {
+                    // invalid request
+                    return null;
+                }
 
-                for (long i = first - 1; i >= (last > 0 ? last : 1); i--) {
-                    block = getBlockByHashWithInfo(block.getParentHash());
-                    if (block == null) {
-                        // the block should have been stored but null was returned above
-                        LOG.error(
-                                "Encountered a kernel database corruption: cannot find block at level {} in data store.",
-                                i);
-                        LOG.error(
-                                " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                                i - 1);
+                LinkedList<byte[]> blockHashes = new LinkedList<>();
+                blockHashes.add(firstBlockHash);
+
+                for (long i = top - 1; i >= (bottom > 0 ? bottom : 1); i--) {
+                    firstBlockHash = getChainBlockHashByNumber(i);
+                    if (firstBlockHash == null) {
+                        // the block hash should have been stored but null was returned above
+                        LOG.error("Encountered a kernel database corruption: cannot find block hash at level {} in data store."
+                                + " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}", i, i - 1);
                         return null; // stops at any invalid data
                     } else {
-                        blocks.add(block);
+                        if (mustReverse) {
+                            blockHashes.addFirst(firstBlockHash);
+                        } else {
+                            blockHashes.addLast(firstBlockHash);
+                        }
                     }
                 }
-                return blocks;
-            } else { // last is highest
-                LinkedList<Block> blocks = new LinkedList<>();
-                Block lastBlock = getChainBlockByNumber(last);
-
-                if (lastBlock == null) { // assuming height was above best block
-                    // attempt to get best block
-                    lastBlock = getBestBlock();
-                    if (lastBlock == null) {
-                        LOG.error(
-                                "Encountered a kernel database corruption: cannot find best block in data store.");
-                        LOG.error(
-                                "Please reboot your node to trigger automatic database recovery by the kernel.");
-                        return null;
-                    } else if (last < lastBlock.getNumber()) {
-                        // the block should have been stored but null was returned above
-                        LOG.error(
-                                "Encountered a kernel database corruption: cannot find block at level {} in data store.",
-                                last);
-                        LOG.error(
-                                " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                                last - 1);
-                        return null;
-                    }
+                List<Block> result = blockHashes.stream().map(b -> blocks.get(b)).collect(Collectors.toList());
+                if (result.contains(null)) {
+                    // the block should have been stored but null was returned above
+                    LOG.error("Encountered a kernel database corruption: null block in data store encountered in range {} to {}."
+                            + " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}", bottom, top, bottom - 1);
+                    return null;
+                } else {
+                    return result;
                 }
-                // the block was not null
-                // or  it was higher than the best block and replaced with the best block
-
-                // building existing range
-                blocks.addFirst(lastBlock);
-                long newLast = lastBlock.getNumber();
-                for (long i = newLast - 1; i > first; i--) {
-                    lastBlock = getBlockByHashWithInfo(lastBlock.getParentHash());
-                    if (lastBlock == null) {
-                        LOG.error(
-                                "Encountered a kernel database corruption: cannot find block at level {} in block data store.",
-                                i);
-                        LOG.error(
-                                " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                                i - 1);
-                        return null;
-                    } else {
-                        // always adding at the beginning of the list
-                        // to return the expected order of blocks
-                        blocks.addFirst(lastBlock);
-                    }
-                }
-
-                // adding the initial block
-                blocks.addFirst(block);
-                return blocks;
             }
         } finally {
             lock.unlock();
         }
+    }
+
+    @VisibleForTesting
+    byte[] getChainBlockHashByNumber(long number) {
+        long size = index.size();
+        if (number < 0L || number >= size) {
+            return null;
+        }
+
+        List<BlockInfo> blockInfos = index.get(number);
+
+        if (blockInfos == null) {
+            LOG.debug("Can't find the block info at the level {} in the index Database", number);
+            return null;
+        }
+
+        for (BlockInfo blockInfo : blockInfos) {
+            if (blockInfo.isMainChain()) {
+                return blockInfo.getHash();
+            }
+        }
+
+        return null;
     }
 
     /**

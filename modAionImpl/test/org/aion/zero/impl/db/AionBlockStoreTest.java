@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,10 +45,19 @@ public class AionBlockStoreTest {
     // returns a list of blocks in ascending order of height
     List<Block> consecutiveBlocks = TestResources.consecutiveBlocks(4);
 
+    AionBlockStore store;
+
     @Before
     public void openDatabases() {
         index.open();
         blocks.open();
+
+        // setting up the store with the blocks
+        store = new AionBlockStore(index, blocks, false);
+        for (Block b : consecutiveBlocks) {
+            // the fake TD is not part of the test
+            store.saveBlock(b, BigInteger.ONE, true);
+        }
     }
 
     @After
@@ -58,28 +68,91 @@ public class AionBlockStoreTest {
 
     @Test
     public void testGetBlocksByRange_withGensisFirstBlock() {
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        assertThat(store.getBlocksByRange(0L, 11L)).isNull();
+        assertThat(store.getBlocksByRange(-1L, 0L)).isNull();
     }
 
     @Test
-    public void testGetBlocksByRange_withNullFirstBlock() {
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(10L)).thenReturn(null);
-        when(store.getBlocksByRange(10L, 11L)).thenCallRealMethod();
+    public void testGetBlocksByRange_withNullBottomBlock() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block top = consecutiveBlocks.get(2);
 
-        assertThat(store.getBlocksByRange(10L, 11L)).isNull();
+        // removing the db entry to cause a null return
+        blocks.delete(bottom.getHash());
+
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlocksByRange_withNullMiddleBlock() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block middle = consecutiveBlocks.get(1);
+        Block top = consecutiveBlocks.get(2);
+
+        // removing the db entry to cause a null return
+        blocks.delete(middle.getHash());
+
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlocksByRange_withNullTopBlock() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block top = consecutiveBlocks.get(2);
+
+        // removing the db entry to cause a null return
+        blocks.delete(top.getHash());
+
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlocksByRange_withNullBottomBlockHash() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block top = consecutiveBlocks.get(2);
+
+        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
+        when(store.getChainBlockHashByNumber(bottom.getNumber())).thenReturn(null);
+
+        // the returned list is null due to missing block in range
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlocksByRange_withNullMiddleBlockHash() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block middle = consecutiveBlocks.get(1);
+        Block top = consecutiveBlocks.get(2);
+
+        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
+        when(store.getChainBlockHashByNumber(middle.getNumber())).thenReturn(null);
+
+        // the returned list is null due to missing block in range
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlocksByRange_withNullTopBlockHash() {
+        Block bottom = consecutiveBlocks.get(0);
+        Block top = consecutiveBlocks.get(2);
+
+        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
+        when(store.getChainBlockHashByNumber(top.getNumber())).thenReturn(null);
+
+        // the returned list is null due to missing block in range
+        assertThat(store.getBlocksByRange(bottom.getNumber(), top.getNumber())).isNull();
+        assertThat(store.getBlocksByRange(top.getNumber(), bottom.getNumber())).isNull();
     }
 
     @Test
     public void testGetBlocksByRange_withSingleBlock() {
         Block block = consecutiveBlocks.get(0);
 
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(10L)).thenReturn(block);
-        when(store.getBlocksByRange(10L, 10L)).thenCallRealMethod();
-
-        List<Block> returned = store.getBlocksByRange(10L, 10L);
+        List<Block> returned = store.getBlocksByRange(block.getNumber(), block.getNumber());
         assertThat(returned.size()).isEqualTo(1);
         assertThat(returned).contains(block);
     }
@@ -90,12 +163,6 @@ public class AionBlockStoreTest {
         Block middle = consecutiveBlocks.get(1);
         Block last = consecutiveBlocks.get(0);
 
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getBlockByHashWithInfo(first.getParentHash())).thenReturn(middle);
-        when(store.getBlockByHashWithInfo(middle.getParentHash())).thenReturn(last);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
-
         List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
         assertThat(returned.size()).isEqualTo(3);
         assertThat(returned.get(0)).isEqualTo(first);
@@ -104,31 +171,17 @@ public class AionBlockStoreTest {
     }
 
     @Test
-    public void testGetBlocksByRange_withDescendingOrderAndNullLast() {
-        Block first = consecutiveBlocks.get(2);
-        Block middle = consecutiveBlocks.get(1);
-        Block last = consecutiveBlocks.get(0);
-
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getBlockByHash(first.getParentHash())).thenReturn(middle);
-        when(store.getBlockByHash(middle.getParentHash())).thenReturn(null);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
-
-        // the returned list is null due to missing block in range
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
-    }
-
-    @Test
     public void testGetBlocksByRange_withDescendingOrderAndGenesisLast() {
         Block first = consecutiveBlocks.get(2); // assigning it height 2
         Block middle = consecutiveBlocks.get(1); // assumed height 1
         Block last = consecutiveBlocks.get(0); // assumed height 0
 
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
+        ByteArrayKeyValueDatabase spyBlocks = spy(blocks);
+        AionBlockStore store = spy(new AionBlockStore(index, spyBlocks, false));
         // returning the block at a different number than its height
-        when(store.getChainBlockByNumber(2L)).thenReturn(first);
-        when(store.getBlockByHashWithInfo(first.getParentHash())).thenReturn(middle);
+        when(store.getChainBlockHashByNumber(2L)).thenReturn(first.getHash());
+        when(store.getChainBlockHashByNumber(1L)).thenReturn(middle.getHash());
+        when(store.getChainBlockHashByNumber(0L)).thenReturn(last.getHash());
         when(store.getBlocksByRange(2L, 0L)).thenCallRealMethod();
 
         // the returned list has only 2 elements due to the null
@@ -138,9 +191,8 @@ public class AionBlockStoreTest {
         assertThat(returned.get(1)).isEqualTo(middle);
 
         // there should be no attempt to retrieve the genesis
-        verify(store, times(0)).getBlockByHashWithInfo(last.getParentHash());
-        verify(store, times(0)).getBlockByHashWithInfo(middle.getParentHash());
-        verify(store, times(1)).getBlockByHashWithInfo(first.getParentHash());
+        verify(store, times(0)).getChainBlockHashByNumber(0L);
+        verify(spyBlocks, times(0)).get(last.getHash());
     }
 
     @Test
@@ -148,12 +200,6 @@ public class AionBlockStoreTest {
         Block first = consecutiveBlocks.get(0);
         Block middle = consecutiveBlocks.get(1);
         Block last = consecutiveBlocks.get(2);
-
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getChainBlockByNumber(last.getNumber())).thenReturn(last);
-        when(store.getBlockByHashWithInfo(last.getParentHash())).thenReturn(middle);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
 
         List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
         assertThat(returned.size()).isEqualTo(3);
@@ -163,74 +209,35 @@ public class AionBlockStoreTest {
     }
 
     @Test
-    public void testGetBlocksByRange_withAscendingOrderAndNullMiddle() {
-        Block first = consecutiveBlocks.get(0);
-        Block last = consecutiveBlocks.get(2);
+    public void testGetBlocksByRange_withAscendingOrderAndGenesisLast() {
+        Block first = consecutiveBlocks.get(2); // assigning it height 2
+        Block middle = consecutiveBlocks.get(1); // assumed height 1
+        Block last = consecutiveBlocks.get(0); // assumed height 0
 
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getChainBlockByNumber(last.getNumber())).thenReturn(last);
-        when(store.getBlockByHashWithInfo(last.getParentHash())).thenReturn(null);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
+        ByteArrayKeyValueDatabase spyBlocks = spy(blocks);
+        AionBlockStore store = spy(new AionBlockStore(index, spyBlocks, false));
+        // returning the block at a different number than its height
+        when(store.getChainBlockHashByNumber(2L)).thenReturn(first.getHash());
+        when(store.getChainBlockHashByNumber(1L)).thenReturn(middle.getHash());
+        when(store.getChainBlockHashByNumber(0L)).thenReturn(last.getHash());
+        when(store.getBlocksByRange(0L, 2L)).thenCallRealMethod();
 
-        // the returned list is null due to missing block in range
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
-    }
+        // the returned list has only 2 elements due to the null
+        List<Block> returned = store.getBlocksByRange(0L, 2L);
+        assertThat(returned.size()).isEqualTo(2);
+        assertThat(returned.get(0)).isEqualTo(middle);
+        assertThat(returned.get(1)).isEqualTo(first);
 
-    @Test
-    public void testGetBlocksByRange_withAscendingOrderAndNullLast() {
-        Block first = consecutiveBlocks.get(0);
-        Block middle = consecutiveBlocks.get(1);
-        Block best = consecutiveBlocks.get(2);
-        Block last = consecutiveBlocks.get(3);
-
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
-        when(store.getBestBlock()).thenReturn(best);
-        when(store.getBlockByHashWithInfo(best.getParentHash())).thenReturn(middle);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
-
-        List<Block> returned = store.getBlocksByRange(first.getNumber(), last.getNumber());
-        assertThat(returned.size()).isEqualTo(3);
-        assertThat(returned.get(0)).isEqualTo(first);
-        assertThat(returned.get(1)).isEqualTo(middle);
-        assertThat(returned.get(2)).isEqualTo(best);
-    }
-
-    @Test
-    public void testGetBlocksByRange_withAscendingOrderAndNullBest() {
-        Block first = consecutiveBlocks.get(0);
-        Block last = consecutiveBlocks.get(3);
-
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
-        when(store.getBestBlock()).thenReturn(null);
-        when(store.getBlocksByRange(first.getNumber(), last.getNumber())).thenCallRealMethod();
-
-        // the returned list is null due to corrupt kernel
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
-    }
-
-    @Test
-    public void testGetBlocksByRange_withAscendingOrderAndIncorrectHeight() {
-        Block first = consecutiveBlocks.get(0);
-        Block last = consecutiveBlocks.get(1);
-        Block best = consecutiveBlocks.get(2);
-
-        AionBlockStore store = spy(new AionBlockStore(index, blocks, false));
-        when(store.getChainBlockByNumber(first.getNumber())).thenReturn(first);
-        when(store.getChainBlockByNumber(last.getNumber())).thenReturn(null);
-        when(store.getBestBlock()).thenReturn(best);
-
-        // the returned list is null due to corrupt kernel
-        assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
+        // there should be no attempt to retrieve the genesis
+        verify(store, times(0)).getChainBlockHashByNumber(0L);
+        verify(spyBlocks, times(0)).get(last.getHash());
     }
 
     @Test
     public void testRollback() {
+        // ensuring empty db
+        index.drop();
+        blocks.drop();
 
         AionBlock blk1 =
                 new AionBlock(
