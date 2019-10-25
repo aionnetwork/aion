@@ -69,11 +69,11 @@ public class NodeMgr implements INodeMgr {
         sb.append("\n");
         sb.append(
                 String.format(
-                        "======================================================================== p2p-status-%6s =========================================================================\n",
+                        "=========================================================================== p2p-status-%6s =============================================================================\n",
                         selfShortId));
         sb.append(
                 String.format(
-                        "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                                         s - seed node, td - total difficulty, # - block number, bv - binary version\n",
+                        " temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                           id - node short id, s - seed node, td - total difficulty, # - block number, bv - binary version\n",
                         tempNodesSize(),
                         inboundNodes.size(),
                         outboundNodes.size(),
@@ -109,21 +109,22 @@ public class NodeMgr implements INodeMgr {
     }
 
     private static String appendColumnFormat() {
-        return "\n          s"
-                + "               td"
-                + "          #"
-                + "                                                             hash"
-                + "              ip"
-                + "  port"
-                + "     conn"
-                + "              bv"
-                + "           ci\n"
-                + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+        return "\n"
+                + String.format(" %6s", "id")
+                + String.format(" %c", 's')
+                + String.format(" %39s", "td")
+                + String.format(" %8s", "#")
+                + String.format(" %64s", "hash")
+                + String.format(" %15s", "ip")
+                + String.format(" %5s", "port")
+                + String.format(" %8s", "conn")
+                + String.format(" %16s", "bv")
+                + "\n---------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
     }
 
     private String appendNodeInfo(INode n) {
         return String.format(
-                "id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
+                " %6s %c %39s %8d %64s %15s %5d %8s %16s\n",
                 n.getIdShort(),
                 n.getIfFromBootList() ? 'y' : ' ',
                 n.getTotalDifficulty().toString(10),
@@ -132,8 +133,7 @@ public class NodeMgr implements INodeMgr {
                 n.getIpStr(),
                 n.getPort(),
                 n.getConnection(),
-                n.getBinaryVersion(),
-                n.getChannel().hashCode());
+                n.getBinaryVersion());
     }
 
     /** @param _ip String */
