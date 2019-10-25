@@ -31,6 +31,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
 /**
  * Methods used by CLI calls for debugging the local blockchain data.
@@ -506,9 +507,10 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        System.out.println("\nImporting stored blocks INITIATED...\n");
-
         AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+        LOG.info("Importing stored blocks INITIATED...");
 
         AionBlockchainImpl chain = new AionBlockchainImpl(cfg, false);
         AionRepositoryImpl repo = chain.getRepository();
@@ -519,14 +521,13 @@ public class DBUtils {
         Block startBlock;
         long currentBlock;
         if (block != null && startHeight <= block.getNumber()) {
-            System.out.println(
-                    "\nImporting the main chain from block #"
+            LOG.info("Importing the main chain from block #"
                             + startHeight
                             + " to block #"
                             + block.getNumber()
                             + ". This may take a while.\n"
                             + "The time estimates are optimistic based on current progress.\n"
-                            + "It is expected that later blocks take a longer time to import due to the increasing size of the database.\n");
+                            + "It is expected that later blocks take a longer time to import due to the increasing size of the database.");
 
             if (startHeight == 0L) {
                 // dropping databases that can be inferred when starting from genesis
@@ -537,7 +538,7 @@ public class DBUtils {
                 AionGenesis genesis = cfg.getGenesis();
                 store.redoIndexWithoutSideChains(genesis); // clear the index entry
                 AionHubUtils.buildGenesis(genesis, repo);
-                System.out.println("\nFinished rebuilding genesis block.");
+                LOG.info("Finished rebuilding genesis block.");
                 startBlock = genesis;
                 currentBlock = 1L;
                 chain.setTotalDifficulty(genesis.getDifficultyBI());
@@ -552,10 +553,7 @@ public class DBUtils {
             boolean fail = false;
 
             if (startBlock == null) {
-                System.out.println(
-                        "The main chain block at level "
-                                + currentBlock
-                                + " is missing from the database. Cannot continue importing stored blocks.");
+                LOG.info("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
                 fail = true;
             } else {
                 chain.setBestBlock(startBlock);
@@ -572,10 +570,7 @@ public class DBUtils {
                 while (currentBlock <= topBlockNumber) {
                     block = store.getChainBlockByNumber(currentBlock);
                     if (block == null) {
-                        System.out.println(
-                                "The main chain block at level "
-                                        + currentBlock
-                                        + " is missing from the database. Cannot continue importing stored blocks.");
+                        LOG.error("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
                         fail = true;
                         break;
                     }
@@ -588,7 +583,7 @@ public class DBUtils {
                                 chain.tryToConnectAndFetchSummary(
                                         block, System.currentTimeMillis() / THOUSAND_MS, false);
                         long t2 = System.currentTimeMillis();
-                        System.out.println("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
+                        LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
                                                + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()
                                                + ", time elapsed = " + (t2 - t1) + " ms, td = " + chain.getTotalDifficulty() + ">");
                     } catch (Throwable t) {
@@ -596,7 +591,7 @@ public class DBUtils {
                         t.printStackTrace();
                         if (t.getMessage() != null
                                 && t.getMessage().contains("Invalid Trie state, missing node ")) {
-                            System.out.println(
+                            LOG.info(
                                     "The exception above is likely due to a pruned database and NOT a consensus problem.\n"
                                             + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
                         }
@@ -622,16 +617,15 @@ public class DBUtils {
                     }
 
                     if (!result.getLeft().isSuccessful()) {
-                        System.out.println("Consensus break at block:\n" + block);
-                        System.out.println(
-                                "Import attempt returned result "
+                        LOG.error("Consensus break at block:\n" + block);
+                        LOG.info("Import attempt returned result "
                                         + result.getLeft()
                                         + " with summary\n"
                                         + result.getRight());
 
                         if (repo.isValidRoot(store.getBestBlock().getStateRoot())) {
-                            System.out.println("The repository state trie was:\n");
-                            System.out.println(repo.getTrieDump());
+                            LOG.info("The repository state trie was:\n");
+                            LOG.info(repo.getTrieDump());
                         }
 
                         fail = true;
@@ -645,8 +639,7 @@ public class DBUtils {
                         long remainingBlocks = topBlockNumber - currentBlock;
                         double estimate =
                                 (timePerBlock * remainingBlocks) / 60_000 + 1; // in minutes
-                        System.out.println(
-                                "Finished with blocks up to "
+                        LOG.info("Finished with blocks up to "
                                         + currentBlock
                                         + " in "
                                         + String.format("%.0f", time)
@@ -663,21 +656,19 @@ public class DBUtils {
 
                     currentBlock++;
                 }
-                System.out.println("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
+                LOG.info("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
             }
 
             if (fail) {
-                System.out.println("Importing stored blocks FAILED.");
+                LOG.info("Importing stored blocks FAILED.");
             } else {
-                System.out.println("Importing stored blocks SUCCESSFUL.");
+                LOG.info("Importing stored blocks SUCCESSFUL.");
             }
         } else {
             if (block == null) {
-                System.out.println(
-                        "The best known block in null. The given database is likely empty. Nothing to do.");
+                LOG.info("The best known block in null. The given database is likely empty. Nothing to do.");
             } else {
-                System.out.println(
-                        "The given height "
+                LOG.info("The given height "
                                 + startHeight
                                 + " is above the best known block "
                                 + block.getNumber()
@@ -685,10 +676,10 @@ public class DBUtils {
             }
         }
 
-        System.out.println("Closing databases...");
+        LOG.info("Closing databases...");
         repo.close();
 
-        System.out.println("Importing stored blocks COMPLETE.");
+        LOG.info("Importing stored blocks COMPLETE.");
     }
 
     /** @implNote Used by the CLI call. */
