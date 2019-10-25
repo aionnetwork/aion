@@ -878,113 +878,69 @@ public class AionBlockStore {
         return currentLevel;
     }
 
-    public void revert(long previousLevel) {
+    /**
+     * Reverts the blockchain to the given height.
+     *
+     * @param targetLevel the height of the blockchain that we must revert to
+     */
+    public void revert(long targetLevel) {
         lock.lock();
 
         try {
+            LOG.info("Block store revert STARTED.");
+
             Block bestBlock = getBestBlock();
             if (bestBlock == null) {
-                LOG.error("Can't find the best block. Revert failed!");
-                LOG.error(
-                    "Please reboot your node to trigger automatic database recovery by the kernel.");
+                LOG.error("Can't find the best block. Revert failed!"
+                        + "Please reboot your node to trigger automatic database recovery by the kernel.");
                 throw new IllegalStateException("Missing the best block from the database.");
             }
 
             long currentLevel = bestBlock.getNumber();
+            final long TARGET_BATCH_SIZE = 1_000,  TEN_SEC = 10_000_000_000L;
+            long currentBatchSize = 0;
+            long time = System.nanoTime();
 
             // ensure that the given level is lower than current
-            if (previousLevel >= currentLevel) {
+            if (targetLevel >= currentLevel) {
                 return;
             }
 
             // walk back removing blocks greater than the given level value
-            Block bestLine = bestBlock;
-            while (currentLevel > previousLevel) {
-
+            while (currentLevel > targetLevel) {
                 // remove all the blocks at that level
                 List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
                 if (currentLevelBlocks == null || currentLevelBlocks.isEmpty()) {
-                    blocks.delete(bestLine.getHash());
-                    LOG.error(
-                            "Null block information found at "
-                                    + currentLevel
-                                    + " when information should exist.");
-
-                    LOG.error(
-                            "Please reboot your node to trigger automatic database recovery by the kernel.");
+                    LOG.error("Null block information found at " + currentLevel + " when information should exist."
+                            + "Please reboot your node to trigger automatic database recovery by the kernel.");
                 } else {
                     for (BlockInfo bk_info : currentLevelBlocks) {
-                        blocks.delete(bk_info.getHash());
+                        blocks.deleteInBatch(bk_info.getHash());
+                        currentBatchSize++;
                     }
                 }
 
                 // remove the level
                 index.remove(currentLevel);
-                if (bestLine != null) {
-                    bestLine = this.blocks.get(bestLine.getParentHash());
-                } else {
-                    // attempt to find another block at the parent level
-                    bestLine = getChainBlockByNumber(currentLevel - 1);
+                if (currentBatchSize >= TARGET_BATCH_SIZE) {
+                    blocks.flushBatch();
+                    if (System.nanoTime() - time > TEN_SEC) {
+                        LOG.info("Progress report: current height=" + currentLevel);
+                        time = System.nanoTime();
+                    }
+                    currentBatchSize = 0;
                 }
                 --currentLevel;
             }
+            blocks.flushBatch();
 
-            if (bestLine == null) {
-                LOG.error(
-                        "Block at level #"
-                                + previousLevel
-                                + " is null. Reverting further back may be required.");
-                LOG.error(
-                        " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
-                        previousLevel - 1);
-            } else {
-                // update the main chain based on difficulty, if needed
-                List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
-                BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
-
-                // no side chains at this level
-                if (blocks.size() == 1 && blockInfo != null) {
-                    if (!blockInfo.isMainChain()) {
-                        blockInfo.setMainChain(true);
-                        setBlockInfoForLevel(previousLevel, blocks);
-                    }
-                } else {
-                    if (blockInfo == null) {
-                        LOG.error(
-                                "Null block information found at "
-                                        + previousLevel
-                                        + " when data should exist. "
-                                        + "Rebuilding information.");
-
-                        BlockInfo parentInfo = getBlockInfoForHash(bestLine.getParentHash(), bestLine.getNumber() - 1);
-                        if (parentInfo == null) {
-                            LOG.error(
-                                "Could not find the parent Block info {}, the index database might corrupted. Please redo import your database",
-                                bestLine.getHeader().getNumber() - 1);
-                            throw new IllegalStateException("The Index database might corrupt!");
-                        }
-
-                        BigInteger totalDifficulty = parentInfo.getTotalDifficulty().add(bestLine.getDifficultyBI());
-
-                        // recreate missing block info
-                        blockInfo = new BlockInfo(bestLine.getHash(), totalDifficulty, true);
-                        blocks.add(blockInfo);
-                    }
-
-                    // check for max total difficulty
-                    BlockInfo maxTDInfo = blockInfo;
-                    for (BlockInfo info : blocks) {
-                        if (info.getTotalDifficulty().compareTo(maxTDInfo.getTotalDifficulty()) > 0) {
-                            maxTDInfo = info;
-                        }
-                    }
-
-                    // 2. Loop back on each level until common block
-                    Block forkLine = this.blocks.get(maxTDInfo.getHash());
-                    loopBackToCommonBlock(bestLine, forkLine);
-                }
-            }
+            LOG.warn("Revert complete. Please be aware that the current main chain is the same as at the start of the operation."
+                    + "To keep this revert operation fast the main chain has not been updated based on existing side chains.");
+        } catch (Exception e) {
+            // making sure the blocks get deleted if interrupted
+            blocks.flushBatch();
         } finally {
+            LOG.info("Block store revert COMPLETE.");
             lock.unlock();
         }
     }
