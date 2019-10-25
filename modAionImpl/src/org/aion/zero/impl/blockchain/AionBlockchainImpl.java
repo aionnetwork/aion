@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -99,6 +100,7 @@ import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,6 +123,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
+    private static final Logger SYNC_LOG = LoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
@@ -884,6 +887,72 @@ public class AionBlockchainImpl implements IAionBlockchain {
             System.exit(SystemExitCodes.NORMAL);
         }
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+    }
+
+    /**
+     * Imports a batch of blocks.
+     *
+     * @param blockRange the block range to be imported
+     * @param peerDisplayId the display identifier for the peer who provided the batch
+     * @return a {@link Triple} containing:
+     * <ol>
+     *     <li>the best block height after the imports,</li>
+     *     <li>the set of imported hashes,</li>
+     *     <li>the import result for the last imported block</li>
+     * </ol>
+     */
+    public synchronized Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId) {
+        ImportResult importResult = null;
+        Set<ByteArrayWrapper> imported = new HashSet<>();
+        for (Block block : blockRange) {
+            if (bestBlock.getNumber() == shutdownHook) {
+                LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
+
+                try {
+                    HeapDumper.dumpHeap(new File(System.currentTimeMillis() + "-heap-report.hprof").getAbsolutePath(), true);
+                } catch (Exception e) {
+                    LOG.error("Unable to dump heap due to exception:", e);
+                }
+
+                // requested shutdown
+                System.exit(SystemExitCodes.NORMAL);
+            }
+
+            long t1 = System.currentTimeMillis();
+            importResult = tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+            long t2 = System.currentTimeMillis();
+            if (SYNC_LOG.isDebugEnabled()) {
+                // printing additional information when debug is enabled
+                SYNC_LOG.debug(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms, block td = {}, chain td = {}>",
+                        peerDisplayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        block.getTimestamp(),
+                        importResult,
+                        t2 - t1,
+                        block.getTotalDifficulty(),
+                        getTotalDifficulty());
+            } else {
+                SYNC_LOG.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        peerDisplayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        importResult,
+                        t2 - t1);
+            }
+
+            // stop at invalid blocks
+            if (!importResult.isStored()) {
+                return Triple.of(bestBlock.getNumber(), imported, importResult);
+            } else {
+                imported.add(block.getHashWrapper());
+            }
+        }
+        return Triple.of(bestBlock.getNumber(), imported, importResult);
     }
 
     public synchronized void compactState() {
