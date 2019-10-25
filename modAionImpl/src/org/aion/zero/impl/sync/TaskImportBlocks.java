@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.statistics.BlockType;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 
 /**
@@ -204,57 +206,52 @@ final class TaskImportBlocks implements Runnable {
         }
 
         // remembering imported range
-        long first = -1L, last = -1L;
-        ImportResult importResult;
+        Block firstInBatch = batch.get(0);
+        long first = firstInBatch.getNumber(), last = -1L, currentBest;
+        ImportResult importResult = null;
         SyncMode returnMode = syncMode;
 
         startTime = System.nanoTime();
-        for (Block b : batch) {
-            try {
-                importResult = importBlock(b, displayId, syncMode);
+        try {
+            Triple<Long, Set<ByteArrayWrapper>, ImportResult> resultTriple = chain.tryToConnect(batch, displayId);
 
-                if (importResult.isStored()) {
-                    importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
-                    this.syncStats.updatePeerBlocks(displayId, 1, BlockType.IMPORTED);
+            currentBest = resultTriple.getLeft();
+            Set<ByteArrayWrapper> importedHashes = resultTriple.getMiddle();
+            importResult = resultTriple.getRight();
 
-                    if (last <= b.getNumber()) {
-                        last = b.getNumber() + 1;
-                    }
-                }
-            } catch (Exception e) {
-                log.error("<import-block throw> ", e);
-
-                if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
-                    log.error("Shutdown due to lack of disk space.", e);
-                    System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
-                }
-                break;
+            int count = importedHashes.size();
+            if (currentBest >= first) {
+                last = currentBest + 1;
+                importedHashes.stream().forEach(v -> importedBlockHashes.put(v, true));
+                syncStats.updatePeerBlocks(displayId, count, BlockType.IMPORTED);
             }
+        } catch (Exception e) {
+            log.error("<import-block throw> ", e);
 
-            // decide whether to change mode based on the first
-            if (b == batch.get(0)) {
-                first = b.getNumber();
+            if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
+                log.error("Shutdown due to lack of disk space.", e);
+                System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
+            }
+        }
 
-                // if any block results in NO_PARENT, all subsequent blocks will too
-                if (importResult == ImportResult.NO_PARENT) {
-                    storePendingBlocks(batch, displayId);
+        // if any block results in NO_PARENT, all subsequent blocks will too
+        if (importResult == ImportResult.NO_PARENT) {
+            storePendingBlocks(batch, displayId);
 
-                    // check if it is below the current importable blocks
-                    if (b.getNumber() <= getBestBlockNumber() + 1) {
-                        duration = System.nanoTime() - startTime;
-                        surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
-                        return BACKWARD;
-                    }
-                    duration = System.nanoTime() - startTime;
-                    surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
-                    return returnMode;
-                } else if (importResult.isStored()) {
-                    if (syncMode == BACKWARD) {
-                        returnMode = FORWARD;
-                    } else if (syncMode == FORWARD && importResult.isBest()) {
-                        returnMode = NORMAL;
-                    }
-                }
+            // check if it is below the current importable blocks
+            if (firstInBatch.getNumber() <= getBestBlockNumber() + 1) {
+                duration = System.nanoTime() - startTime;
+                surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+                return BACKWARD;
+            }
+            duration = System.nanoTime() - startTime;
+            surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+            return returnMode;
+        } else if (importResult.isStored()) {
+            if (syncMode == BACKWARD) {
+                returnMode = FORWARD;
+            } else if (syncMode == FORWARD && importResult.isBest()) {
+                returnMode = NORMAL;
             }
         }
         duration = System.nanoTime() - startTime;
@@ -283,41 +280,6 @@ final class TaskImportBlocks implements Runnable {
      */
     static boolean isAlreadyStored(AionBlockStore store, Block block) {
         return store.getMaxNumber() >= block.getNumber() && store.isBlockStored(block.getHash(), block.getNumber());
-    }
-
-    private ImportResult importBlock(Block b, String displayId, SyncMode mode) {
-        ImportResult importResult;
-        long t1 = System.nanoTime();
-        importResult = this.chain.tryToConnect(b);
-        long import_time = (System.nanoTime() - t1);
-        if (log.isDebugEnabled()) {
-            // printing sync mode only when debug is enabled
-            log.debug(
-                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms, td = {}>",
-                    displayId,
-                    mode,
-                    b.getShortHash(),
-                    b.getNumber(),
-                    b.getTransactionsList().size(),
-                    b.getTimestamp(),
-                    importResult,
-                    import_time / DIVISOR_MS,
-                    chain.getTotalDifficulty());
-        } else {
-            // not printing this message when the state is in fast mode with no parent result
-            // a different message will be printed to indicate the storage of blocks
-            if (importResult != ImportResult.NO_PARENT) {
-                log.info(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        displayId,
-                        b.getShortHash(),
-                        b.getNumber(),
-                        b.getTransactionsList().size(),
-                        importResult,
-                        import_time / DIVISOR_MS);
-            }
-        }
-        return importResult;
     }
 
     /**
@@ -387,32 +349,30 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 startTime = System.nanoTime();
-                for (Block b : batchFromDisk) {
-                    try {
-                        importResult = importBlock(b, "STORAGE", givenMode);
+                try {
+                    first = batchFromDisk.get(0).getNumber();
+                    Triple<Long, Set<ByteArrayWrapper>, ImportResult> resultTriple = chain.tryToConnect(batchFromDisk, "STORAGE");
 
-                        if (importResult.isStored()) {
-                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+                    long currentBest = resultTriple.getLeft();
+                    Set<ByteArrayWrapper> importedHashes = resultTriple.getMiddle();
+                    importResult = resultTriple.getRight();
 
-                            batch++;
-
-                            if (last == b.getNumber()) {
-                                // can try importing more
-                                last = b.getNumber() + 1;
-                            }
-                        } else {
-                            // do not delete queue from storage
-                            importedQueues.remove(entry.getKey());
-                            // stop importing this queue
-                            break;
-                        }
-                    } catch (Exception e) {
-                        log.error("<import-block throw> ", e);
-                        if (e.getMessage() != null
-                                && e.getMessage().contains("No space left on device")) {
-                            log.error("Shutdown due to lack of disk space.", e);
-                            System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
-                        }
+                    batch = importedHashes.size();
+                    if (currentBest >= first) {
+                        last = currentBest + 1;
+                        importedHashes.stream().forEach(v -> importedBlockHashes.put(v, true));
+                    } else {
+                        // do not delete queue from storage
+                        importedQueues.remove(entry.getKey());
+                        // stop importing this queue
+                        break;
+                    }
+                } catch (Exception e) {
+                    log.error("<import-block throw> ", e);
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("No space left on device")) {
+                        log.error("Shutdown due to lack of disk space.", e);
+                        System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
                     }
                 }
                 duration = System.nanoTime() - startTime;

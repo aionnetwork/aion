@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -109,6 +110,7 @@ import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,6 +133,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
     private static final Logger SURVEY_LOG = LoggerFactory.getLogger(LogEnum.SURVEY.name());
+    private static final Logger SYNC_LOG = LoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
     private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
@@ -974,7 +977,76 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectWithTimedExecution(block);
+        return tryToConnectWithTimedExecution(block).getLeft();
+    }
+
+    /**
+     * Imports a batch of blocks.
+     *
+     * @param blockRange the block range to be imported
+     * @param peerDisplayId the display identifier for the peer who provided the batch
+     * @return a {@link Triple} containing:
+     * <ol>
+     *     <li>the best block height after the imports,</li>
+     *     <li>the set of imported hashes,</li>
+     *     <li>the import result for the last imported block</li>
+     * </ol>
+     */
+    public synchronized Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId) {
+        ImportResult importResult = null;
+        Set<ByteArrayWrapper> imported = new HashSet<>();
+        for (Block block : blockRange) {
+            if (bestBlock.getNumber() == shutdownHook) {
+                LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
+
+                try {
+                    HeapDumper.dumpHeap(new File(System.currentTimeMillis() + "-heap-report.hprof").getAbsolutePath(), true);
+                } catch (Exception e) {
+                    LOG.error("Unable to dump heap due to exception:", e);
+                }
+
+                // requested shutdown
+                System.exit(SystemExitCodes.NORMAL);
+            } else if (enableFullSyncCheck && reachedFullSync) {
+                LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
+                System.exit(SystemExitCodes.NORMAL);
+            }
+
+            Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(block);
+            importResult = result.getLeft();
+            long importTime = result.getRight();
+
+            // printing additional information when debug is enabled
+            SYNC_LOG.debug(
+                    "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms, block td = {}, chain td = {}>",
+                    peerDisplayId,
+                    block.getShortHash(),
+                    block.getNumber(),
+                    block.getTransactionsList().size(),
+                    block.getTimestamp(),
+                    importResult,
+                    importTime,
+                    block.getTotalDifficulty(),
+                    getTotalDifficulty());
+            if (!SYNC_LOG.isDebugEnabled()) {
+                SYNC_LOG.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        peerDisplayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        importResult,
+                        importTime);
+            }
+
+            // stop at invalid blocks
+            if (!importResult.isStored()) {
+                return Triple.of(bestBlock.getNumber(), imported, importResult);
+            } else {
+                imported.add(block.getHashWrapper());
+            }
+        }
+        return Triple.of(bestBlock.getNumber(), imported, importResult);
     }
 
     private long surveyTotalImportTime = 0;
@@ -986,7 +1058,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final long DIVISOR_MS = 1_000_000L;
     private final long ONE_SECOND = 1_000L * DIVISOR_MS;
 
-    public ImportResult tryToConnectWithTimedExecution(Block block) {
+    public Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
         ImportResult importResult = tryToConnectAndFetchSummary(block, true).getLeft();
         importTime = (System.nanoTime() - importTime);
@@ -1013,7 +1085,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 surveyLastLogImportTime = System.currentTimeMillis();
             }
         }
-        return importResult;
+        return Pair.of(importResult, importTime);
     }
 
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
