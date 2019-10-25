@@ -269,7 +269,11 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      * @param amount The amount.
      */
     @Override
-    public void addBalance(AionAddress address, BigInteger amount) {
+    public void addBalance(AionAddress address, BigInteger amount)
+    {
+        if (!this.isLocalCall && getBalance(address).add(amount).signum() < 0) {
+            throw new IllegalArgumentException("This balance adjustment leads to a negative balance!");
+        }
         this.repository.addBalance(address, amount);
     }
 
@@ -376,6 +380,9 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     @Override
     public void deductEnergyCost(AionAddress address, BigInteger energyCost) {
         if (!this.isLocalCall) {
+            if (getBalance(address).subtract(energyCost).signum() < 0) {
+                throw new IllegalArgumentException("This energy cost deduction leads to a negative balance!");
+            }
             this.repository.addBalance(address, energyCost.negate());
         }
     }

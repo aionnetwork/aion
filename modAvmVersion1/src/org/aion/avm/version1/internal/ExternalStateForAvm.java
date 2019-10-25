@@ -153,6 +153,9 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public void adjustBalance(AionAddress address, BigInteger delta) {
+        if (!this.isLocalCall && getBalance(address).add(delta).signum() < 0) {
+            throw new IllegalArgumentException("This balance adjustment leads to a negative balance!");
+        }
         this.repositoryCache.addBalance(address, delta);
     }
 
@@ -176,6 +179,9 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     @Override
     public void refundAccount(AionAddress address, BigInteger amount) {
         if (!this.isLocalCall) {
+            if (getBalance(address).add(amount).signum() < 0) {
+                throw new IllegalArgumentException("This refund leads to a negative balance!");
+            }
             this.repositoryCache.addBalance(address, amount);
         }
     }
