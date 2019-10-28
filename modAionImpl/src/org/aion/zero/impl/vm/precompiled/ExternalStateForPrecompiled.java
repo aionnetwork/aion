@@ -133,6 +133,9 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      */
     @Override
     public void addBalance(AionAddress address, BigInteger amount) {
+        if (!this.isLocalCall && getBalance(address).add(amount).signum() < 0) {
+            throw new IllegalArgumentException("This balance adjustment leads to a negative balance!");
+        }
         this.repository.addBalance(address, amount);
     }
 
@@ -255,6 +258,9 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
     @Override
     public void deductEnergyCost(AionAddress address, BigInteger energyCost) {
         if (!this.isLocalCall) {
+            if (getBalance(address).subtract(energyCost).signum() < 0) {
+                throw new IllegalArgumentException("This balance adjustment leads to a negative balance!");
+            }
             this.repository.addBalance(address, energyCost.negate());
         }
     }
