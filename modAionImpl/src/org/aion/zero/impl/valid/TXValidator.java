@@ -3,6 +3,7 @@ package org.aion.zero.impl.valid;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgContractCreate;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgContractCreateAfterUnity;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgTx;
+import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgTxAfterUnity;
 
 import java.util.Collections;
 import java.util.Map;
@@ -64,12 +65,12 @@ public class TXValidator {
     private static boolean isValidAfterUnity(AionTransaction tx) {
         long nrg = tx.getEnergyLimit();
         if (tx.isContractCreationTransaction()) {
-            if (!isValidNrgContractCreateAfterUnity(nrg)) {
+            if (!isValidNrgContractCreateAfterUnity(nrg, tx.getData())) {
                 LOG.error("invalid contract create nrg!");
                 return false;
             }
         } else {
-            if (!isValidNrgTx(nrg)) {
+            if (!isValidNrgTxAfterUnity(nrg, tx.getData())) {
                 LOG.error("invalid tx nrg!");
                 return false;
             }

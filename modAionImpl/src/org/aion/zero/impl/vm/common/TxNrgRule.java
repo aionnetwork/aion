@@ -16,13 +16,18 @@ public class TxNrgRule {
         return (energyLimit >= CONTRACT_CREATE_TX_NRG_MIN) && (energyLimit <= CONTRACT_CREATE_TX_NRG_MAX);
     }
 
-    public static boolean isValidNrgContractCreateAfterUnity(long energyLimit) {
-        return (energyLimit >= (CONTRACT_CREATE_TX_NRG_MIN + TX_NRG_MIN))
+    public static boolean isValidNrgContractCreateAfterUnity(long energyLimit, byte[] data) {
+        return (energyLimit >= TransactionUtil.computeTransactionCost(true, data))
                 && (energyLimit <= CONTRACT_CREATE_TX_NRG_MAX);
     }
 
     public static boolean isValidNrgTx(long energyLimit) {
         return (energyLimit >= TX_NRG_MIN) && (energyLimit <= TX_NRG_MAX);
+    }
+
+    public static boolean isValidNrgTxAfterUnity(long energyLimit, byte[] data) {
+        return (energyLimit >= TransactionUtil.computeTransactionCost(false, data))
+                && (energyLimit <= TX_NRG_MAX);
     }
 
     public static boolean isValidTxNrgPrice(long energyPrice) {

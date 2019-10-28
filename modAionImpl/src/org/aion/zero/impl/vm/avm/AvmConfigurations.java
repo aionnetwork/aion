@@ -13,11 +13,12 @@ public final class AvmConfigurations {
     private static AvmVersionSchedule multiVersionSchedule = null;
     private static String projectRootDir = null;
     private static IEnergyRules energyRules = (t, l) -> (t == IEnergyRules.TransactionType.CREATE) ? TxNrgRule.isValidNrgContractCreate(l) : TxNrgRule.isValidNrgTx(l);
+    // The AVM does check the energy requirement regarding the transaction data context. Therefor We only check the basic rule in here.
     private static IEnergyRules energyRulesAfterUnityFork =
             (t, l) ->
                     (t == IEnergyRules.TransactionType.CREATE)
-                            ? TxNrgRule.isValidNrgContractCreateAfterUnity(l)
-                            : TxNrgRule.isValidNrgTx(l);
+                            ? TxNrgRule.isValidNrgContractCreateAfterUnity(l, null)
+                            : TxNrgRule.isValidNrgTxAfterUnity(l, null);
 
     private AvmConfigurations() {}
 

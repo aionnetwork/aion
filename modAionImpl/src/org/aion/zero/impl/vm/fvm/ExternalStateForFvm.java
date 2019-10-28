@@ -312,9 +312,9 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      * @return whether the energy limit is valid.
      */
     @Override
-    public boolean isValidEnergyLimitForCreate(long energyLimit) {
+    public boolean isValidEnergyLimitForCreate(long energyLimit, byte[] data) {
         return (this.isLocalCall) || ((this.isUnityForkEnabled)
-            ? TxNrgRule.isValidNrgContractCreateAfterUnity(energyLimit)
+            ? TxNrgRule.isValidNrgContractCreateAfterUnity(energyLimit, data)
             : TxNrgRule.isValidNrgContractCreate(energyLimit));
     }
 
@@ -329,8 +329,16 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      * @return whether the energy limit is valid.
      */
     @Override
-    public boolean isValidEnergyLimitForNonCreate(long energyLimit) {
-        return (this.isLocalCall) ? true : TxNrgRule.isValidNrgTx(energyLimit);
+    public boolean isValidEnergyLimitForNonCreate(long energyLimit, byte[] data) {
+        if (this.isLocalCall) {
+            return true;
+        } else {
+            if (this.isUnityForkEnabled) {
+                return TxNrgRule.isValidNrgTxAfterUnity(energyLimit, data);
+            } else {
+                return TxNrgRule.isValidNrgTx(energyLimit);
+            }
+        }
     }
 
     /**
