@@ -22,7 +22,11 @@ public final class Stores {
      * index values. The elements of the array are indexed from 0 to highest stored index value.
      */
     public static <V> ArrayStore<V> newArrayStore(ByteArrayKeyValueDatabase database, Serializer<V> serializer) {
-        return new DataSourceArray<>(database, serializer);
+        return new DataSourceArray<>(database, serializer, 0);
+    }
+
+    public static <V> ArrayStore<V> newArrayStoreWithCache(ByteArrayKeyValueDatabase database, Serializer<V> serializer, int size) {
+        return new DataSourceArray<>(database, serializer, size);
     }
 
     public static <V> ObjectStore<V> newObjectStore(ByteArrayKeyValueDatabase database, Serializer<V> serializer) {

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -31,6 +32,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 
 /**
@@ -507,19 +509,26 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO, LogEnum.SYNC, LogLevel.INFO));
         final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         LOG.info("Importing stored blocks INITIATED...");
+
+        final long STEP_SIZE = 10_000L;
+        final int RANGE_SIZE = 500;
+        final int THOUSAND_MS = 1_000;
 
         AionBlockchainImpl chain = new AionBlockchainImpl(cfg, false);
         AionRepositoryImpl repo = chain.getRepository();
         AionBlockStore store = repo.getBlockStore();
 
+        // setup repo with caching
+        repo.setupBlockStoreWithCache(2 * RANGE_SIZE, RANGE_SIZE);
+
         // determine the parameters of the rebuild
         Block block = store.getBestBlock();
         Block startBlock;
-        long currentBlock;
+        long currentBlockNumber;
         if (block != null && startHeight <= block.getNumber()) {
             LOG.info("Importing the main chain from block #"
                             + startHeight
@@ -536,15 +545,15 @@ public class DBUtils {
 
                 // recover genesis
                 AionGenesis genesis = cfg.getGenesis();
-                store.redoIndexWithoutSideChains(genesis); // clear the index entry
+                store.redoIndexWithoutSideChains(List.of(genesis), true); // clear the index entry
                 AionHubUtils.buildGenesis(genesis, repo);
                 LOG.info("Finished rebuilding genesis block.");
                 startBlock = genesis;
-                currentBlock = 1L;
+                currentBlockNumber = 1L;
                 chain.setTotalDifficulty(genesis.getDifficultyBI());
             } else {
                 startBlock = store.getChainBlockByNumber(startHeight - 1);
-                currentBlock = startHeight;
+                currentBlockNumber = startHeight;
                 // initial TD = diff of parent of first block to import
                 Block blockWithDifficulties = store.getBlockByHashWithInfo(startBlock.getHash());
                 chain.setTotalDifficulty(blockWithDifficulties.getTotalDifficulty());
@@ -553,75 +562,59 @@ public class DBUtils {
             boolean fail = false;
 
             if (startBlock == null) {
-                LOG.info("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
+                LOG.info("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlockNumber);
                 fail = true;
             } else {
                 chain.setBestBlock(startBlock);
 
-                long topBlockNumber = block.getNumber();
-                long stepSize = 10_000L;
+                long topBlockNumber = block.getNumber(), lastBlockNumber;
 
-                Pair<ImportResult, AionBlockSummary> result;
-                final int THOUSAND_MS = 1000;
+                Triple<Long, Set<ByteArrayWrapper>, ImportResult> result;
 
                 long start = System.currentTimeMillis();
 
                 // import in increments of 10k blocks
-                while (currentBlock <= topBlockNumber) {
-                    block = store.getChainBlockByNumber(currentBlock);
-                    if (block == null) {
-                        LOG.error("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
+                while (currentBlockNumber <= topBlockNumber) {
+                    // computing the last block in the range to be retrieved
+                    lastBlockNumber = currentBlockNumber + RANGE_SIZE;
+                    if (lastBlockNumber > topBlockNumber) {
+                        lastBlockNumber = topBlockNumber;
+                    }
+
+                    // retrieve range of blocks
+                    System.out.println("Range " + currentBlockNumber + " to " + lastBlockNumber);
+                    List<Block> blocksToImport = store.getBlocksByRange(currentBlockNumber, lastBlockNumber);
+                    if (blocksToImport == null) {
+                        LOG.error("The main chain blocks between #{} and #{} could not be retrieved from the database. Cannot continue importing stored blocks.", currentBlockNumber, lastBlockNumber);
                         fail = true;
                         break;
                     }
 
                     try {
                         // clear the index entry and prune side-chain blocks
-                        store.redoIndexWithoutSideChains(block);
-                        long t1 = System.currentTimeMillis();
-                        result =
-                                chain.tryToConnectAndFetchSummary(
-                                        block, System.currentTimeMillis() / THOUSAND_MS, false);
-                        long t2 = System.currentTimeMillis();
-                        LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
-                                               + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()
-                                               + ", time elapsed = " + (t2 - t1) + " ms, td = " + chain.getTotalDifficulty() + ">");
+                        store.redoIndexWithoutSideChains(blocksToImport, true);
+                        result = chain.tryToConnect(blocksToImport, "SELF", false);
                     } catch (Throwable t) {
                         // we want to see the exception and the block where it occurred
                         t.printStackTrace();
-                        if (t.getMessage() != null
-                                && t.getMessage().contains("Invalid Trie state, missing node ")) {
-                            LOG.info(
-                                    "The exception above is likely due to a pruned database and NOT a consensus problem.\n"
-                                            + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
+                        if (t.getMessage() != null && t.getMessage().contains("Invalid Trie state, missing node ")) {
+                            LOG.info("The exception above is likely due to a pruned database and NOT a consensus problem.\n"
+                                    + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
                         }
-                        result =
-                                new Pair<>() {
-                                    @Override
-                                    public AionBlockSummary setValue(AionBlockSummary value) {
-                                        return null;
-                                    }
-
-                                    @Override
-                                    public ImportResult getLeft() {
-                                        return ImportResult.INVALID_BLOCK;
-                                    }
-
-                                    @Override
-                                    public AionBlockSummary getRight() {
-                                        return null;
-                                    }
-                                };
-
                         fail = true;
+                        break;
                     }
 
-                    if (!result.getLeft().isSuccessful()) {
+                    if (!result.getRight().isSuccessful()) {
+                        // using the size of the list of imported block to determine which one failed
+                        block = blocksToImport.get(result.getMiddle().size());
+                        Pair<ImportResult, AionBlockSummary> resultWithSummary = chain.tryToConnectAndFetchSummary(block, System.currentTimeMillis() / THOUSAND_MS, false);
+
                         LOG.error("Consensus break at block:\n" + block);
                         LOG.info("Import attempt returned result "
-                                        + result.getLeft()
+                                        + resultWithSummary.getLeft()
                                         + " with summary\n"
-                                        + result.getRight());
+                                        + resultWithSummary.getRight());
 
                         if (repo.isValidRoot(store.getBestBlock().getStateRoot())) {
                             LOG.info("The repository state trie was:\n");
@@ -632,15 +625,15 @@ public class DBUtils {
                         break;
                     }
 
-                    if (currentBlock % stepSize == 0) {
+                    if (currentBlockNumber % STEP_SIZE == 0) {
                         double time = System.currentTimeMillis() - start;
 
-                        double timePerBlock = time / (currentBlock - startHeight + 1);
-                        long remainingBlocks = topBlockNumber - currentBlock;
+                        double timePerBlock = time / (currentBlockNumber - startHeight + 1);
+                        long remainingBlocks = topBlockNumber - currentBlockNumber;
                         double estimate =
                                 (timePerBlock * remainingBlocks) / 60_000 + 1; // in minutes
                         LOG.info("Finished with blocks up to "
-                                        + currentBlock
+                                        + currentBlockNumber
                                         + " in "
                                         + String.format("%.0f", time)
                                         + " ms (under "
@@ -654,9 +647,9 @@ public class DBUtils {
                                         + " min.");
                     }
 
-                    currentBlock++;
+                    currentBlockNumber = lastBlockNumber + 1;
                 }
-                LOG.info("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
+                LOG.info("Import from " + startHeight + " to " + chain.getBestBlock().getNumber() + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
             }
 
             if (fail) {

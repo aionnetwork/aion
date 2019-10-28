@@ -96,7 +96,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                             transactionDatabase, AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
-            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
+            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize, 0);
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10);
@@ -110,6 +110,10 @@ public class AionRepositoryImpl extends AbstractRepository {
             e.printStackTrace();
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
+    }
+
+    public void setupBlockStoreWithCache(int blockCacheSize, int indexCacheSize) {
+        this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize, indexCacheSize);
     }
 
     public PendingBlockStore getPendingBlockStore() {
@@ -910,7 +914,7 @@ public class AionRepositoryImpl extends AbstractRepository {
     public void dropDatabasesExcept(List<String> names) {
         for (ByteArrayKeyValueDatabase db : databaseGroup) {
             if (!names.contains(db.getName().get())) {
-                LOG.warn("Dropping database " + db.toString() + " ...");
+                LOG.warn("Dropping database " + db.toString() + " from path " + db.getPath().get() + " ...");
                 db.drop();
                 LOG.warn(db.toString() + " successfully dropped and reopened.");
             }

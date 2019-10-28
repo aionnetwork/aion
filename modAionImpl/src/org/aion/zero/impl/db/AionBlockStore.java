@@ -51,10 +51,10 @@ public class AionBlockStore {
 
     @VisibleForTesting
     public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity) {
-        this(index, blocks, checkIntegrity, 0);
+        this(index, blocks, checkIntegrity, 0, 0);
     }
 
-    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize) {
+    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks, boolean checkIntegrity, int blockCacheSize, int indexCacheSize) {
         if (index == null) {
             throw new NullPointerException("index db is null");
         }
@@ -63,7 +63,7 @@ public class AionBlockStore {
             throw new NullPointerException("block db is null");
         }
 
-        this.index = Stores.newArrayStore(index, BLOCK_INFO_SERIALIZER);
+        this.index = Stores.newArrayStoreWithCache(index, BLOCK_INFO_SERIALIZER, indexCacheSize);
 
         // Note: because of cache use the blocks db should write lock on get as well
         this.blocks = Stores.newObjectStoreWithCache(blocks, BLOCK_SERIALIZER, blockCacheSize);
@@ -1353,26 +1353,33 @@ public class AionBlockStore {
     /**
      * Performed before --redo-import to clear side chain blocks and reset the index.
      *
-     * @param block the block that will be re-imported and should not be removed from the database
+     * @param keepers the blocks that will be re-imported and should not be removed from the database
+     * @param pruneSideChainBlocks flag indicating whether side chain blocks should be pruned
      */
-     void redoIndexWithoutSideChains(Block block) {
+     void redoIndexWithoutSideChains(List<Block> keepers, boolean pruneSideChainBlocks) {
         lock.lock();
 
         try {
+            for (Block block : keepers) {
+                if (block != null) {
+                    byte[] currentHash = block.getHash();
 
-            if (block != null) {
-                byte[] currentHash = block.getHash();
-                List<BlockInfo> level = getBlockInfoForLevel(block.getNumber());
-
-                // delete all the side-chain blocks
-                for (BlockInfo blockInfo : level) {
-                    if (!Arrays.equals(currentHash, blockInfo.getHash())) {
-                        blocks.delete(blockInfo.getHash());
+                    if (pruneSideChainBlocks) {
+                        List<BlockInfo> level = getBlockInfoForLevel(block.getNumber());
+                        // delete all the side-chain blocks
+                        for (BlockInfo blockInfo : level) {
+                            if (!Arrays.equals(currentHash, blockInfo.getHash())) {
+                                blocks.deleteInBatch(blockInfo.getHash());
+                            }
+                        }
                     }
-                }
 
-                // replace all the block info with empty list
-                index.set(block.getNumber(), Collections.emptyList());
+                    // replace all the block info with empty list
+                    index.set(block.getNumber(), Collections.emptyList());
+                }
+            }
+            if (pruneSideChainBlocks) {
+                blocks.flushBatch();
             }
         } finally {
             lock.unlock();

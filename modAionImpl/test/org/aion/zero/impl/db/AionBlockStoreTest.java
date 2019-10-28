@@ -337,7 +337,7 @@ public class AionBlockStoreTest {
         System.out.println("Note: If this test fails there may be a thread synchronization issue inside the AionBlockStore.");
 
         // set up block store with cache to replicate normal execution
-        AionBlockStore store = new AionBlockStore(index, blocks, false, 10);
+        AionBlockStore store = new AionBlockStore(index, blocks, false, 10, 0);
 
         List<Block> testBlocks = TestResources.consecutiveBlocks(20);
         List<Runnable> threads = new ArrayList<>();

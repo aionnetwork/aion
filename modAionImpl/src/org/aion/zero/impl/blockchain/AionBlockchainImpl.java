@@ -894,6 +894,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param blockRange the block range to be imported
      * @param peerDisplayId the display identifier for the peer who provided the batch
+     * @param doStorageCheck flag to enable/disable the check for blocks already stored
      * @return a {@link Triple} containing:
      * <ol>
      *     <li>the best block height after the imports,</li>
@@ -901,7 +902,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *     <li>the import result for the last imported block</li>
      * </ol>
      */
-    public synchronized Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId) {
+    public synchronized Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId, boolean doStorageCheck) {
         ImportResult importResult = null;
         Set<ByteArrayWrapper> imported = new HashSet<>();
         for (Block block : blockRange) {
@@ -919,7 +920,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             long t1 = System.currentTimeMillis();
-            importResult = tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+            importResult = tryToConnectAndFetchSummary(block, System.currentTimeMillis() / THOUSAND_MS, doStorageCheck).getLeft();
             long t2 = System.currentTimeMillis();
             if (SYNC_LOG.isDebugEnabled()) {
                 // printing additional information when debug is enabled
