@@ -11,6 +11,10 @@ public final class AionChainHolder implements ChainHolder {
     private final IAionChain chain;//An implementation of AionChain
 
     public AionChainHolder(IAionChain chain) {
+        if (chain == null) {
+            throw new NullPointerException("AionChain is null.");// This class should not
+            // be instantiated without an instance of IAionChain
+        }
         this.chain = chain;
     }
 

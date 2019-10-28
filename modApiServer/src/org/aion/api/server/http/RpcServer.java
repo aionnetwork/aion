@@ -8,8 +8,13 @@ import java.util.Optional;
 import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc2.Rpc2Shim;
+import org.aion.api.server.rpc3.AionChainHolder;
+import org.aion.api.server.rpc3.ChainHolder;
+import org.aion.api.server.rpc3.OpsRPCImpl;
 import org.aion.api.server.rpc3.PersonalRPCImpl;
 import org.aion.api.server.rpc3.Web3EntryPoint;
+import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.blockchain.IAionChain;
 
 public abstract class RpcServer {
 
@@ -58,6 +63,7 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
 
         accountManager = builder.accountManager;
+        ChainHolder chainHolder = new AionChainHolder(AionImpl.inst());
 
         rpcProcessor =
                 new RpcProcessor(enabledEndpoints,
@@ -65,7 +71,7 @@ public abstract class RpcServer {
                     disabledMethods,
                     new Rpc2Shim(),
                     accountManager,
-                    new Web3EntryPoint(new PersonalRPCImpl(), enabledEndpoints, enabledMethods, disabledMethods));
+                    new Web3EntryPoint(new PersonalRPCImpl(), new OpsRPCImpl(chainHolder), enabledEndpoints, enabledMethods, disabledMethods));
 
 
         sslEnabled = builder.sslEnabled;

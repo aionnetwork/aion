@@ -14,9 +14,11 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rpc.errors.RPCExceptions;
+import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.server.OpsRPC;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
+import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.TransactionDetails;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
@@ -42,24 +44,13 @@ public class OpsRPCImpl implements OpsRPC {
         return methods.contains(s);
     }
 
-    @Override
-    public BlockDetails ops_getBlockDetailsByNumber(Long block) {
-        return serializeBlockDetails(chainHolder.getBlockByNumber(block));
-    }
-
-    @Override
-    public BlockDetails ops_getBlockDetailsByNumber(BlockEnum block) {
+    public BlockDetails blockDetailsByEnum(BlockEnum block) {
         switch (block) {
             case LATEST:
                 return serializeBlockDetails(chainHolder.getBestBlock());
             default:
                 throw RPCExceptions.InvalidParamsRPCException.INSTANCE;
         }
-    }
-
-    @Override
-    public BlockDetails ops_getBlockDetailsByHash(ByteArray hash) {
-        return serializeBlockDetails(chainHolder.getBlockByHash(hash.toBytes()));
     }
 
     private BlockDetails serializeBlockDetails(Block block) {
@@ -150,8 +141,7 @@ public class OpsRPCImpl implements OpsRPC {
         }
     }
 
-    private List<TransactionDetails> serializeTxDetails(
-            List<AionTxInfo> txInfos, Block block) {
+    private List<TransactionDetails> serializeTxDetails(List<AionTxInfo> txInfos, Block block) {
         if (txInfos == null) {
             return Collections.emptyList();
         } else {
@@ -182,7 +172,8 @@ public class OpsRPCImpl implements OpsRPC {
                                 info.getReceipt().getEnergyUsed(),
                                 info.getReceipt().getEnergyUsed(),
                                 info.hasInternalTransactions(),
-                                serializeTxLogs(info.getReceipt(), i, block.getHeader().getNumber())));
+                                serializeTxLogs(
+                                        info.getReceipt(), i, block.getHeader().getNumber())));
             }
             return Collections.unmodifiableList(transactionDetails);
         }
@@ -202,5 +193,19 @@ public class OpsRPCImpl implements OpsRPC {
             }
             return Collections.unmodifiableList(logDetails);
         }
+    }
+
+    @Override
+    public BlockDetails ops_getBlockDetails(BlockSpecifierUnion blockSpecifierUnion) {
+        logger.debug("Executing ops_getBlockDetails({})", blockSpecifierUnion.encode());
+        if (blockSpecifierUnion.blockNumber != null)
+            return serializeBlockDetails(
+                    chainHolder.getBlockByNumber(blockSpecifierUnion.blockNumber));
+        else if (blockSpecifierUnion.blockEnum != null)
+            return blockDetailsByEnum(blockSpecifierUnion.blockEnum);
+        else if (blockSpecifierUnion.hash != null)
+            return serializeBlockDetails(
+                    chainHolder.getBlockByHash(blockSpecifierUnion.hash.toBytes()));
+        else throw InvalidParamsRPCException.INSTANCE;
     }
 }

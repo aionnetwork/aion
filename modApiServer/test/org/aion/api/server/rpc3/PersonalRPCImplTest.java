@@ -14,8 +14,10 @@ import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.EcRecoverParams;
+import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
 import org.aion.rpc.types.RPCTypes.VersionType;
+import org.aion.rpc.types.RPCTypes.VoidParams;
 import org.aion.rpc.types.RPCTypesConverter.AionAddressConverter;
 import org.aion.rpc.types.RPCTypesConverter.DataHexStringConverter;
 import org.aion.rpc.types.RPCTypesConverter.EcRecoverParamsConverter;
@@ -79,24 +81,21 @@ public class PersonalRPCImplTest {
         ByteArray signedMessage =
             ByteArray.wrap(ecKey.sign(helloByteMessage.toBytes()).toBytes());
 
-        // append 0x to make params valid
-        String pubKey = "0x" + ByteUtil.toHexString(ecKey.getAddress());
+        String pubKey = ByteUtil.toHexString(ecKey.getAddress());
         // well formed request
         Request request =
             new Request(
                 2,
                 "personal_ecRecover",
-                EcRecoverParamsConverter.encode(
-                    new EcRecoverParams(helloByteMessage, signedMessage)),
+                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, rpc.execute(request));
+        assertEquals(pubKey, rpc.execute(request).address.toString());
         // incorrect method name
         request =
             new Request(
                 2,
                 "personal_ecRecovery",
-                EcRecoverParamsConverter.encode(
-                    new EcRecoverParams(helloByteMessage, signedMessage)),
+                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
         try{
             rpc.execute(request);
@@ -104,7 +103,7 @@ public class PersonalRPCImplTest {
         }catch (MethodNotFoundRPCException e){}
 
         // incorrect params
-        request = new Request(2, "personal_ecRecover", "[]", VersionType.Version2);
+        request = new Request(2, "personal_ecRecover", ParamUnion.wrap(new VoidParams()), VersionType.Version2);
 
         try{
             rpc.execute(request);
@@ -117,8 +116,7 @@ public class PersonalRPCImplTest {
             new Request(
                 2,
                 "personal_ecRecover",
-                EcRecoverParamsConverter.encode(
-                    new EcRecoverParams(helloByteMessage, signedMessage)),
+                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
         try{
             rpc.execute(request);

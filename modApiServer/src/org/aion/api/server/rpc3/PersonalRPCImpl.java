@@ -29,7 +29,7 @@ public class PersonalRPCImpl implements PersonalRPC {
     @Override
     public AionAddress personal_ecRecover(ByteArray dataThatWasSigned,
         ByteArray signature) {
-        logger.debug("Running personal_ecRecover");
+        logger.debug("Executing personal_ecRecover({},{})", dataThatWasSigned, signature);
         ISignature signature1 = SignatureFac.fromBytes(signature.toBytes());
         if (signature1 == null) {
             throw InvalidParamsRPCException.INSTANCE;
