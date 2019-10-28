@@ -210,7 +210,8 @@ public class Aion {
                         + ".'           `. |  `._____.'  |          ``|\n\n";
 
         // always print the version string in the center of the Aion logo
-        String versionStr = "v" + KERNEL_VERSION;
+        String peakName = "Denali";
+        String versionStr = "v" + KERNEL_VERSION + " (" + peakName + ")";
         String networkStr = cfg.getNetwork();
         // if using old kernel configuration
         if (networkStr == null && cfg.getNet().getId() >= 0) {
