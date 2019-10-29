@@ -108,9 +108,9 @@ public class Aion {
 
             AvmVersionSchedule schedule;
             if (fork2 != null) {
-                schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+                schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 0);
             } else {
-                schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+                schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
             }
 
             AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
