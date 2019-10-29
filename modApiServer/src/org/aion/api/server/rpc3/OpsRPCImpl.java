@@ -55,12 +55,13 @@ public class OpsRPCImpl implements OpsRPC {
 
     private BlockDetails serializeBlockDetails(Block block) {
         if (block == null) {
-            return null; //
+            return null; //occurs if the requested block does not exist in the db
         } else {
             final BigInteger blkReward = chainHolder.calculateReward(block.getHeader().getNumber());// get the block reward
             final BigInteger totalDiff = chainHolder.getTotalDifficultyByHash(block.getHash());// get the total difficulty
 
             List<AionTxInfo> txInfoList = new ArrayList<>();
+            logger.debug("Retrieving transactions for block: {}",block.getHash());
             for (AionTransaction transaction : block.getTransactionsList()) {
                 AionTxInfo txInfo = chainHolder.getTransactionInfo(transaction.getTransactionHash());
                 txInfoList.add(txInfo);

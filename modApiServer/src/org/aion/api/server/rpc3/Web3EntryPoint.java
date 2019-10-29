@@ -1,5 +1,7 @@
 package org.aion.api.server.rpc3;
 
+import static org.aion.rpc.errors.RPCExceptions.*;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import org.aion.log.LogEnum;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidRequestRPCException;
+import org.aion.rpc.errors.RPCExceptions.RPCException;
 import org.aion.rpc.server.PersonalRPC;
 import org.aion.rpc.server.RPC;
 import org.aion.rpc.types.RPCTypes.RPCError;
@@ -67,12 +70,12 @@ public class Web3EntryPoint {
                 logger.debug(
                         "Request attempted to call a method on a disabled interface: {}",
                         request.method);
-                err= RPCExceptions.InvalidRequestRPCException.INSTANCE.getError();
+                err= InvalidRequestRPCException.INSTANCE.getError();
             }
         }catch (InvalidRequestRPCException e){
             err = e.getError();//Don't log this error since it may already be logged elsewhere
         }
-        catch (RPCExceptions.RPCException e){
+        catch (RPCException e){
             logger.debug("Request failed due to an RPC exception: ", e);
             err = e.getError();
         }
