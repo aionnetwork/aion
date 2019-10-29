@@ -80,8 +80,10 @@ public class Aion {
 
         CfgAion cfg = CfgAion.inst();
 
-        ReturnType ret = new Cli().call(args, cfg);
+        ReturnType ret = new Cli().callAndInitializeAvm(args, cfg);
         if (ret != ReturnType.RUN) {
+            // We have to shutdown the avm if we exit early
+            shutdownAvm();
             System.exit(ret.getValue());
         }
 
@@ -95,31 +97,6 @@ public class Aion {
                                     + v.toString());
                 });
 
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ initialize the avm ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        try {
-            // Grab the project root directory.
-            String projectRootDirectory = System.getProperty("user.dir") + File.separator;
-
-            // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
-            // because it handles balance transfers. The kernel is responsible for ensuring it is not called
-            // with anything else.
-            Properties forkProperties = CfgAion.inst().getFork().getProperties();
-            String fork2 = forkProperties.getProperty("fork0.5.0");
-
-            AvmVersionSchedule schedule;
-            if (fork2 != null) {
-                schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 0);
-            } else {
-                schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-            }
-
-            AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
-        } catch (Exception e) {
-            System.out.println("A fatal error occurred attempting to configure the AVM: " + e.getMessage());
-            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
-        }
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
         // Check ZMQ server secure connect settings, generate keypair when the settings enabled and
         // can't find the keypair.
         if (cfg.getApi().getZmq().getActive()
@@ -128,6 +105,8 @@ public class Aion {
                 checkZmqKeyPair();
             } catch (Exception e) {
                 System.out.println("Check zmq keypair fail! " + e.toString());
+                // We have to shutdown the avm if we exit early
+                shutdownAvm();
                 System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             }
         }
@@ -136,6 +115,8 @@ public class Aion {
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
+            // We have to shutdown the avm if we exit early
+            shutdownAvm();
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
@@ -404,23 +385,31 @@ public class Aion {
                                     ac.getAionHub().close();
 
                                     genLog.info("Shutting down the Aion Virtual Machine...");
-                                    try {
-                                        // We don't want to block too long, shutdown hooks should execute as fast as possible.
-                                        if (AvmProvider.tryAcquireLock(2, TimeUnit.SECONDS)) {
-                                            AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
-                                            AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
-                                        }
-                                    } catch (IOException e) {
-                                        // Nothing to handle here, we are shutting down...
-                                    } finally{
-                                        AvmProvider.releaseLock();
-                                    }
+                                    shutdownAvm();
 
                                     genLog.info("---------------------------------------------");
                                     genLog.info("| Aion kernel graceful shutdown successful! |");
                                     genLog.info("---------------------------------------------");
                                 },
                                 "shutdown"));
+    }
+
+    /**
+     * Shuts down the avm. This is a quick shutdown and is only called when the program is about
+     * to exit.
+     */
+    private static void shutdownAvm() {
+        try {
+            // We don't want to block too long, shutdown hooks should execute as fast as possible.
+            if (AvmProvider.tryAcquireLock(2, TimeUnit.SECONDS)) {
+                AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
+                AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
+            }
+        } catch (IOException e) {
+            // Nothing to handle here, we are shutting down...
+        } finally{
+            AvmProvider.releaseLock();
+        }
     }
 
     private static void checkZmqKeyPair() throws IOException {

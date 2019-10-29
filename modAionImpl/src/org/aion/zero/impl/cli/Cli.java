@@ -17,10 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import org.aion.avm.stub.AvmVersion;
 import org.aion.zero.impl.vm.avm.AvmConfigurations;
-import org.aion.zero.impl.vm.avm.AvmProvider;
 import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
@@ -96,8 +93,15 @@ public class Cli {
         REDO_IMPORT
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public ReturnType call(final String[] args, Cfg cfg) {
+    public ReturnType callAndInitializeAvm(String[] args, Cfg cfg) {
+        return call(args, cfg, true);
+    }
+
+    public ReturnType callAndDoNotInitializeAvm(String[] args, Cfg cfg) {
+        return call(args, cfg, false);
+    }
+
+    private ReturnType call(final String[] args, Cfg cfg, boolean initializeAvm) {
         final CommandLine.ParseResult parseResult;
         try {
             // the pre-process method handles arguments that are separated by space
@@ -184,9 +188,34 @@ public class Cli {
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ initialize the avm ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if (initializeAvm) {
+                try {
+                    // Grab the project root directory.
+                    String projectRootDirectory = System.getProperty("user.dir") + File.separator;
+
+                    // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
+                    // because it handles balance transfers. The kernel is responsible for ensuring it is not called
+                    // with anything else.
+                    Properties forkProperties = CfgAion.inst().getFork().getProperties();
+                    String fork2 = forkProperties.getProperty("fork0.5.0");
+
+                    AvmVersionSchedule schedule;
+                    if (fork2 != null) {
+                        schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+                    } else {
+                        schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+                    }
+
+                    AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
+                } catch (Exception e) {
+                    System.out.println("A fatal error occurred attempting to configure the AVM: " + e.getMessage());
+                    System.exit(SystemExitCodes.INITIALIZATION_ERROR);
+                }
+            }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
             // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
-
-
             if (parseResult.subcommand() != null &&
                     parseResult.subcommand().commandSpec().userObject().getClass() == EditCli.class &&
                     editCli.runCommand(cfg)){
@@ -430,13 +459,6 @@ public class Cli {
             }
 
             if (options.isRedoImport() != null) {
-                try {
-                    initializeMultiVersionAvmConfigurations();
-                } catch (Exception e) {
-                    System.out.println("Failed to configure the avm: " + e.getMessage());
-                    return ERROR;
-                }
-
                 long height = 0L;
                 String parameter = options.isRedoImport();
 
@@ -455,13 +477,6 @@ public class Cli {
                     }
 
                     DBUtils.redoMainChainImport(height);
-
-                    // Shutdown any avm versions that are still active.
-                    System.out.println("Shutting down the Aion Virtual Machine ...");
-                    if (AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES)) {
-                        AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
-                        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
-                    }
                     return EXIT;
                 }
             }
@@ -475,25 +490,6 @@ public class Cli {
             e.printStackTrace();
             return ERROR;
         }
-    }
-
-    private static void initializeMultiVersionAvmConfigurations() {
-        String projectRootDirectory = System.getProperty("user.dir") + File.separator;
-
-        // Create the multi-version schedule. Note that avm version 1 is always enabled, from block zero
-        // because it handles balance transfers. The kernel is responsible for ensuring it is not called
-        // with anything else.
-        Properties forkProperties = CfgAion.inst().getFork().getProperties();
-        String fork2 = forkProperties.getProperty("fork0.5.0");
-
-        AvmVersionSchedule schedule;
-        if (fork2 != null) {
-            schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 0);
-        } else {
-            schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
-        }
-
-        AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);
     }
 
     private DBUtils.Status getBlockDetails(String blockNumber) {

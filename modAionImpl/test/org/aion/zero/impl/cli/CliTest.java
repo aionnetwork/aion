@@ -42,9 +42,11 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.aion.zero.impl.cli.Cli.TaskPriority;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -142,7 +144,7 @@ public class CliTest {
 
         cfg.resetInternal();
         doReturn("password").when(mockpr).readPassword(any(), any());
-        doCallRealMethod().when(mockCli).call(any(), any());
+        doCallRealMethod().when(mockCli).callAndDoNotInitializeAvm(any(), any());
     }
 
     @After
@@ -164,8 +166,16 @@ public class CliTest {
         deleteRecursively(TEST_BASE_PATH);
     }
 
+    @BeforeClass
+    public static void setupClass() {
+        // Initialize the avm since some CLI calls actually require it to be initialized.
+        AvmTestConfig.supportOnlyAvmVersion1();
+    }
+
     @AfterClass
     public static void resetKeystorePath() {
+        // Shutdown the avm.
+        AvmTestConfig.clearConfigurations();
         Keystore.initKeystorePath(); // reset the keystore path we've changed in the tests
     }
 
@@ -175,7 +185,7 @@ public class CliTest {
     @Test
     @Parameters({"-h", "--help", "-v", "--version"})
     public void testHelpAndVersion(String option) {
-        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
     }
 
     /** Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String)}. */
@@ -306,7 +316,7 @@ public class CliTest {
     @Parameters(method = "parametersWithDirectoryAndNetwork")
     public void testDirectoryAndNetwork(
             String[] input, ReturnType expectedReturn, String expectedPath) {
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
@@ -367,7 +377,7 @@ public class CliTest {
         cfg.toXML(null, cfg.getInitialConfigFile());
         cfg.fromXML();
 
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
 
         assertThat(cfg.getDatabaseDir()).isNotEqualTo(new File(expectedPath, "database"));
@@ -489,7 +499,7 @@ public class CliTest {
             assertThat(cfg.fromXML(expectedFile)).isTrue();
         }
 
-        assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
@@ -550,7 +560,7 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-        assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(EXIT);
 
         // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
@@ -587,7 +597,7 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
 
         // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
         assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
@@ -894,7 +904,7 @@ public class CliTest {
 
         cfg.toXML(new String[] {"--p2p=" + "," + DEFAULT_PORT}, cfg.getInitialConfigFile());
 
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
@@ -1290,7 +1300,7 @@ public class CliTest {
             int expectedSlowImportTime,
             int expectedCompactFrequency) {
 
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
@@ -1448,7 +1458,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersWithInfo")
     public void testInfo(String[] input, ReturnType expectedReturn, String expectedPath) {
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
     }
 
@@ -1468,7 +1478,7 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
 
         // database, keystore & log are absolute and at old location
@@ -1488,12 +1498,12 @@ public class CliTest {
     @Parameters({"-i", "--info"})
     public void testInfo_execLocation(String option) {
         // generates the config at the required destination
-        cli.call(new String[] {"-c", "-d", dataDirectory}, cfg);
+        cli.callAndDoNotInitializeAvm(new String[] {"-c", "-d", dataDirectory}, cfg);
 
         // ensure config exists on disk at expected location for old kernel
         assertThat(cfg.getExecConfigFile().exists()).isTrue();
 
-        assertThat(cli.call(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
     }
 
     private List<Object> parametersWithAccount(String[] options) {
@@ -1581,7 +1591,7 @@ public class CliTest {
     public void testCreateAccount(String[] input, ReturnType expectedReturn) {
         // number of accounts before create call
         int count = Keystore.list().length;
-        assertThat(mockCli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(mockCli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         if (expectedReturn == EXIT) {
             // ensure number of accounts was incremented
             assertThat(Keystore.list().length).isEqualTo(count + 1);
@@ -1604,7 +1614,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersWithListAccount")
     public void testListAccounts(String[] input, ReturnType expectedReturn) {
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
     }
 
     /** Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work. */
@@ -1612,10 +1622,10 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export", "account|e"})
     public void testExportPrivateKey(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[] {command, option, account}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, account}, cfg));
     }
 
     /**
@@ -1626,11 +1636,11 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export","account|export"})
     public void testExportPrivateKey_withDataDir(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "a","c"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {"-d", dataDirectory, "a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, "-d", dataDirectory}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, command, option, account}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, "-d", dataDirectory}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {"-d", dataDirectory, command, option, account}, cfg));
     }
 
     /**
@@ -1641,11 +1651,11 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export","account|e"})
     public void testExportPrivateKey_withNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"-n", currentTestNetName,"a","c"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName,"a","c"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, account, "-n", currentTestNetName}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", currentTestNetName, command, option, account}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, account, "-n", currentTestNetName}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, command, option, account}, cfg));
     }
 
     /**
@@ -1656,19 +1666,19 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export", "account|e"})
     public void testExportPrivateKey_withDataDirAndNetwork(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"-d", dataDirectory, "-n", currentTestNetName ,"a","c" }, cfg))
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {"-d", dataDirectory, "-n", currentTestNetName ,"a","c" }, cfg))
                 .isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
         assertEquals(
                 ERROR,
-                mockCli.call(new String[] {"-n", currentTestNetName, command, option, account, "-d", dataDirectory}, cfg));
+                mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, command, option, account, "-d", dataDirectory}, cfg));
         assertEquals(
                 EXIT,
-                mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, account}, cfg));
+                mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, account}, cfg));
         assertEquals(
                 ERROR,
-                mockCli.call(new String[] {command, option, account, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
+                mockCli.callAndDoNotInitializeAvm(new String[] {command, option, account, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
     }
 
     /**
@@ -1679,11 +1689,11 @@ public class CliTest {
     @Parameters({"a|export", "a|e", "account|export","account|e"})
     public void testExportPrivateKey_wSubstringOfAccount(String command, String option) {
         // create account
-        assertThat(mockCli.call(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {"a","c"}, cfg)).isEqualTo(EXIT);
 
         String subStrAcc = Keystore.list()[0].substring(1);
 
-        assertEquals(ERROR, cli.call(new String[] {command, option, subStrAcc}, cfg));
+        assertEquals(ERROR, cli.callAndDoNotInitializeAvm(new String[] {command, option, subStrAcc}, cfg));
     }
 
     /** Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work. */
@@ -1694,11 +1704,11 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {command, option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: error -> known key
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1713,18 +1723,18 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-d", dataDirectory}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(0);
 
         // test 2: -d first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: known key
-        assertEquals(ERROR, mockCli.call(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {"-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1739,17 +1749,17 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(ERROR, mockCli.call(new String[] {command, option, pKey, "-n", currentTestNetName}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] {command, option, pKey, "-n", currentTestNetName}, cfg));
         assertThat(Keystore.list().length).isEqualTo(0);
 
         // test 2: -n first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[] {"-n", currentTestNetName, command, option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
         // test 3: known key
-        assertEquals(ERROR, mockCli.call(new String[] { "-n", currentTestNetName, command, option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.callAndDoNotInitializeAvm(new String[] { "-n", currentTestNetName, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1766,7 +1776,7 @@ public class CliTest {
 
         assertEquals(
                 ERROR,
-                mockCli.call(new String[] {command, option, pKey, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
+                mockCli.callAndDoNotInitializeAvm(new String[] {command, option, pKey, "-d", dataDirectory, "-n", currentTestNetName}, cfg));
         assertThat(Keystore.list().length).isEqualTo(0);
 
 
@@ -1776,13 +1786,13 @@ public class CliTest {
 
         assertEquals(
             EXIT,
-            mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
+            mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: duplicate key
         assertEquals(
             ERROR,
-            mockCli.call(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
+            mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, "-d", dataDirectory, command, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 4: ai middle
@@ -1791,7 +1801,7 @@ public class CliTest {
 
         assertEquals(
                 ERROR,
-                mockCli.call(new String[] {"-n", currentTestNetName, command, option, pKey, "-d", dataDirectory}, cfg));
+                mockCli.callAndDoNotInitializeAvm(new String[] {"-n", currentTestNetName, command, option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1804,9 +1814,9 @@ public class CliTest {
     public void testImportNonPrivateKey(String command, String option) {
         String fakePKey = Hex.toHexString("random".getBytes());
 
-        assertThat(mockCli.call(new String[] {command, option, fakePKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {command, option, fakePKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[] {command, option, "hello"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {command, option, "hello"}, cfg)).isEqualTo(ERROR);
     }
 
     /** Parameters for testing {@link #testCheckArguments(String[], TaskPriority, Set<String>)}. */
@@ -1946,7 +1956,7 @@ public class CliTest {
     @Parameters({"dev qt", "dev query-tx"})
     public void testQueryTransaction(String option) {
         String[] options = option.split("\\s");
-        assertThat(mockCli.call(new String[] {options[0], options[1], "0xa0"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {options[0], options[1], "0xa0"}, cfg)).isEqualTo(ERROR);
     }
 
     /**
@@ -1957,7 +1967,7 @@ public class CliTest {
     @Parameters({"dev qb", "dev query-block"})
     public void testQueryBlock(String option) {
         String[] options = option.split("\\s");
-        assertThat(mockCli.call(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
     }
 
     /**
@@ -1968,7 +1978,7 @@ public class CliTest {
     @Parameters({"dev query-account", "dev query-account"})
     public void testQueryAccount(String option) {
         String[] options = option.split("\\s");
-        assertThat(mockCli.call(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.callAndDoNotInitializeAvm(new String[] {options[0], options[1], ""}, cfg)).isEqualTo(ERROR);
     }
 
 
@@ -1985,7 +1995,7 @@ public class CliTest {
         assertThat(parseResult).isNotNull();
         assertThat(parseResult.commandSpec().userObject().getClass()).isEqualTo(EditCli.class);
 
-        assertThat(mockCli.call(options, cfg)).isEqualTo(RUN);
+        assertThat(mockCli.callAndDoNotInitializeAvm(options, cfg)).isEqualTo(RUN);
     }
 
     @Test(expected = RuntimeException.class)
