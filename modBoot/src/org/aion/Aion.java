@@ -408,7 +408,9 @@ public class Aion {
         } catch (IOException e) {
             // Nothing to handle here, we are shutting down...
         } finally{
-            AvmProvider.releaseLock();
+            if (AvmProvider.holdsLock()) {
+                AvmProvider.releaseLock();
+            }
         }
     }
 
