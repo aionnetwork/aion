@@ -1950,12 +1950,7 @@ public class ApiWeb3Aion extends ApiAion {
                         nrgLimitAccumulator.add(new BigInteger(Long.toString(b.getNrgLimit())));
                 txnCount += b.getTransactionsList().size();
             }
-
-            BigInteger lastBlkReward =
-                    ((AionBlockchainImpl) ac.getBlockchain())
-                            .getChainConfiguration()
-                            .getRewardsCalculator()
-                            .calculateReward(b.getHeader().getNumber());
+            BigInteger lastBlkReward = (b == null ? null : ac.getBlockchain().calculateBlockRewards(b.getNumber()));
 
             double blkTime = 0;
             double hashRate = 0;
@@ -1995,7 +1990,7 @@ public class ApiWeb3Aion extends ApiAion {
             metrics.put("averageBlockTime", blkTime);
             metrics.put("hashRate", hashRate);
             metrics.put("transactionPerSecond", txnPerSec);
-            metrics.put("lastBlockReward", lastBlkReward);
+            metrics.put("lastBlockReward", (lastBlkReward == null ? "null" : lastBlkReward));
             metrics.put("targetBlockTime", 10);
             metrics.put("blockWindow", OPS_RECENT_ENTITY_COUNT);
 
@@ -2265,10 +2260,12 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = this.parseBnOrId(_bnOrHash);
 
+        AionBlockchainImpl blockchainImpl = (AionBlockchainImpl) this.ac.getBlockchain();
+
         // user passed a Long block number
         if (bn != null) {
             if (bn >= 0) {
-                block = this.ac.getBlockchain().getBlockByNumber(bn);
+                block = blockchainImpl.getBlockByNumber(bn);
                 if (block == null) {
                     return new RpcMsg(JSONObject.NULL);
                 }
@@ -2279,13 +2276,13 @@ public class ApiWeb3Aion extends ApiAion {
 
         // see if the user passed in a hash
         if (block == null) {
-            block = this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
+            block = blockchainImpl.getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
             if (block == null) {
                 return new RpcMsg(JSONObject.NULL);
             }
         }
 
-        Block mainBlock = this.ac.getBlockchain().getBlockByNumber(block.getNumber());
+        Block mainBlock = blockchainImpl.getBlockByNumber(block.getNumber());
         if (mainBlock == null) {
             return new RpcMsg(JSONObject.NULL);
         }
@@ -2295,12 +2292,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         // ok so now we have a mainchain block
-
-        BigInteger blkReward =
-                ((AionBlockchainImpl) ac.getBlockchain())
-                        .getChainConfiguration()
-                        .getRewardsCalculator()
-                        .calculateReward(block.getHeader().getNumber());
+        BigInteger blkReward = blockchainImpl.calculateBlockRewards(block.getHeader().getNumber());
         BigInteger totalDiff =
                 this.ac.getAionHub().getTotalDifficultyForHash(block.getHash());
 
@@ -2991,12 +2983,7 @@ public class ApiWeb3Aion extends ApiAion {
 
 
     private RpcMsg rpcBlockDetailsFromBlock(Block block){
-
-        BigInteger blkReward =
-            ((AionBlockchainImpl) ac.getBlockchain())
-                .getChainConfiguration()
-                .getRewardsCalculator()
-                .calculateReward(block.getHeader().getNumber());
+        BigInteger blkReward = ac.getBlockchain().calculateBlockRewards(block.getHeader().getNumber());
         BigInteger totalDiff =
             this.ac.getAionHub().getTotalDifficultyForHash(block.getHash());
 

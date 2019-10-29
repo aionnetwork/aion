@@ -353,7 +353,7 @@ public class BlockchainIntegrationTest {
         // check that the correct amount was calculated
         assertThat(
                         configuration
-                                .getRewardsCalculator()
+                                .getRewardsCalculator(false)
                                 .calculateReward(context.block.getHeader().getNumber()))
                 .isEqualTo(context.baseBlockReward);
     }

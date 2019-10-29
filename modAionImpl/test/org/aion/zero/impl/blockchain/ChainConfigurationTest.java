@@ -10,12 +10,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ChainConfigurationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(ChainConfigurationTest.class);
 
     @Mock A0BlockHeader header;
 
@@ -95,11 +91,11 @@ public class ChainConfigurationTest {
         // UPPER BOUND
         when(header.getNumber()).thenReturn(upperBound);
         BigInteger blockReward259200 =
-                config.getRewardsCalculator().calculateReward(header.getNumber());
+                config.getRewardsCalculator(false).calculateReward(header.getNumber());
 
         when(header.getNumber()).thenReturn(upperBound + 1);
         BigInteger blockReward259201 =
-                config.getRewardsCalculator().calculateReward(header.getNumber());
+                config.getRewardsCalculator(false).calculateReward(header.getNumber());
 
         // check that at the upper bound of our range (which is not included) blockReward is capped
         assertThat(blockReward259200).isEqualTo(new BigInteger("1497989283243258292"));
@@ -109,17 +105,49 @@ public class ChainConfigurationTest {
 
         // check that for an arbitrarily large block, the block reward is still the same
         when(header.getNumber()).thenReturn(upperBound + 100000);
-        BigInteger blockUpper = config.getRewardsCalculator().calculateReward(header.getNumber());
+        BigInteger blockUpper = config.getRewardsCalculator(false).calculateReward(header.getNumber());
         assertThat(blockUpper).isEqualTo(config.getConstants().getBlockReward());
 
         // LOWER BOUNDS
         when(header.getNumber()).thenReturn(0l);
-        BigInteger blockReward0 = config.getRewardsCalculator().calculateReward(header.getNumber());
+        BigInteger blockReward0 = config.getRewardsCalculator(false).calculateReward(header.getNumber());
         assertThat(blockReward0).isEqualTo(new BigInteger("748994641621655092"));
 
         // first block (should have gas value of increment)
         when(header.getNumber()).thenReturn(1l);
-        BigInteger blockReward1 = config.getRewardsCalculator().calculateReward(header.getNumber());
+        BigInteger blockReward1 = config.getRewardsCalculator(false).calculateReward(header.getNumber());
         assertThat(blockReward1).isEqualTo(increment);
+    }
+
+    @Test
+    public void testCalculatorReturnsByFork() {
+
+        long upperBound = 259200L;
+        ChainConfiguration config = new ChainConfiguration();
+        BigInteger increment =
+            config.getConstants()
+                .getBlockReward()
+                .subtract(config.getConstants().getRampUpStartValue())
+                .divide(BigInteger.valueOf(upperBound))
+                .add(config.getConstants().getRampUpStartValue());
+
+        // UPPER BOUND
+        when(header.getNumber()).thenReturn(upperBound);
+        BigInteger blockReward259200 =
+            config.getRewardsCalculator(false).calculateReward(header.getNumber());
+
+        // check that at the upper bound of our range (which is not included) blockReward is capped
+        assertThat(blockReward259200).isEqualTo(new BigInteger("1497989283243258292"));
+
+        BigInteger blockRewardAfterUnityFork =
+            config.getRewardsCalculator(true).calculateReward(header.getNumber());
+
+        assertThat(blockRewardAfterUnityFork).isEqualTo(new BigInteger("4500000000000000000"));
+
+        BigInteger blockRewardAfterUnityForkPlusOne =
+            config.getRewardsCalculator(true).calculateReward(header.getNumber() + 1);
+
+        assertThat(blockRewardAfterUnityForkPlusOne).isEqualTo(new BigInteger("4500000000000000000"));
+
     }
 }

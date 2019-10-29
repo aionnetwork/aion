@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.zero.impl.core.RewardsCalculatorAfterUnity;
 import org.aion.zero.impl.core.UnityBlockDiffCalculator;
 import org.aion.zero.impl.types.IBlockConstants;
 import org.aion.zero.impl.core.IDifficultyCalculator;
@@ -52,6 +53,7 @@ public class ChainConfiguration {
     protected IDifficultyCalculator preUnityDifficultyCalculator;
     protected IDifficultyCalculator unityDifficultyCalculator;
     protected IRewardsCalculator rewardsCalculatorAdapter;
+    protected IRewardsCalculator rewardsCalculatorAfterUnity;
     protected OptimizedEquiValidator equiValidator;
 
     public ChainConfiguration(final Long monetaryUpdateBlkNum, final BigInteger initialSupply) {
@@ -85,6 +87,8 @@ public class ChainConfiguration {
                 };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
 
+        this.rewardsCalculatorAfterUnity = RewardsCalculatorAfterUnity::calculateReward;
+
         unityDifficultyCalculator = unityCalc::calcDifficulty;
     }
 
@@ -95,8 +99,8 @@ public class ChainConfiguration {
         return preUnityDifficultyCalculator;
     }
 
-    public IRewardsCalculator getRewardsCalculator() {
-        return rewardsCalculatorAdapter;
+    public IRewardsCalculator getRewardsCalculator(boolean isAfterUnityFork) {
+        return isAfterUnityFork ? rewardsCalculatorAfterUnity : rewardsCalculatorAdapter;
     }
 
     private OptimizedEquiValidator getEquihashValidator() {

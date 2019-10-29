@@ -1160,7 +1160,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // derive base block reward
         BigInteger baseBlockReward =
                 this.chainConfiguration
-                        .getRewardsCalculator()
+                        .getRewardsCalculator(forkUtility.isUnityForkActive(block.getHeader().getNumber()))
                         .calculateReward(block.getHeader().getNumber());
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
@@ -1783,7 +1783,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Map<AionAddress, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
                 this.chainConfiguration
-                        .getRewardsCalculator()
+                        .getRewardsCalculator(forkUtility.isUnityForkActive(block.getHeader().getNumber()))
                         .calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
@@ -2478,6 +2478,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public boolean isUnityForkEnabledAtNextBlock() {
         return forkUtility.isUnityForkActive(bestBlockNumber.get() + 1);
+    }
+
+    @Override
+    public BigInteger calculateBlockRewards(long block_number) {
+        return chainConfiguration
+                .getRewardsCalculator(forkUtility.isUnityForkActive(block_number))
+                .calculateReward(block_number);
     }
 
     /**

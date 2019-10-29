@@ -1002,12 +1002,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     BigInteger reward;
                     try {
                         req = Message.req_getBlockReward.parseFrom(data);
-                        long num = req.getBlockNumber();
-                        reward =
-                                ((AionBlockchainImpl) ac.getBlockchain())
-                                        .getChainConfiguration()
-                                        .getRewardsCalculator()
-                                        .calculateReward(num);
+                        reward = ac.getBlockchain().calculateBlockRewards(req.getBlockNumber());
                     } catch (Exception e) {
                         LOG.error("ApiAion0.process.getBlockReward exception: [{}]", e);
                         return ApiUtil.toReturnHeader(

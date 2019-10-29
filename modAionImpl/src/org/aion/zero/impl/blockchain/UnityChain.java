@@ -55,4 +55,6 @@ public interface UnityChain {
     void loadBestMiningBlock();
     
     boolean isUnityForkEnabledAtNextBlock();
+
+    BigInteger calculateBlockRewards(long block_number);
 }
