@@ -205,6 +205,8 @@ public class AionHub {
         this.pow.init(blockchain, mempool, eventMgr);
 
         blockTemplateLock = new ReentrantLock();
+
+        blockchain.setNodeStatusCallback(new SelfNodeStatusCallback(p2pMgr));
     }
 
     public static AionHub createForTesting(
@@ -641,5 +643,20 @@ public class AionHub {
     @VisibleForTesting
     public void disableUnityFork() {
         this.blockchain.forkUtility.disableUnityFork();
+    }
+
+    class SelfNodeStatusCallback {
+        final IP2pMgr p2pMgr;
+
+        SelfNodeStatusCallback(IP2pMgr p2pMgr) {
+            if (p2pMgr == null) {
+                throw new IllegalStateException("Null p2pMgr instance!");
+            }
+            this.p2pMgr = p2pMgr;
+        }
+
+        void updateBlockStatus(long number, byte[] hash, BigInteger td) {
+            p2pMgr.updateChainInfo(number, hash, td);
+        }
     }
 }

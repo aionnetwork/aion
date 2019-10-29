@@ -6,6 +6,8 @@ import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
+
+import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import static org.aion.zero.impl.core.ImportResult.EXIST;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
@@ -183,6 +185,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //TODO : [unity] find the proper number for chaching the template.
     private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
         .synchronizedMap(new LRUMap<>(64));
+
+    private SelfNodeStatusCallback callback;
 
     public AionBlockchainImpl(CfgAion cfgAion, boolean forTest) {
         this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(), new ChainConfiguration(), forTest);
@@ -985,6 +989,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
+
+            if (callback != null) {
+                callback.updateBlockStatus(block.getNumber(), block.getHash().clone(), block.getTotalDifficulty());
+            }
         }
 
         // fire block events
@@ -2555,5 +2563,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public Block getBestBlockWithInfo() {
         return getBlockStore().getBestBlockWithInfo();
+    }
+
+    void setNodeStatusCallback(SelfNodeStatusCallback callback) {
+        this.callback = callback;
     }
 }
