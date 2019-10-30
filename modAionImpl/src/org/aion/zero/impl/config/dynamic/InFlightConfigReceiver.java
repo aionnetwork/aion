@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.zero.impl.config.Cfg;
+import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
 /**
@@ -34,12 +34,12 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     /** Default JMX object name */
     public static final String DEFAULT_JMX_OBJECT_NAME = "org.aion.mcf.config.receiver:id=1";
 
-    private final Cfg activeCfg;
+    private final CfgAion activeCfg;
     private final DynamicConfigKeyRegistry configKeyRegistry;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-    public InFlightConfigReceiver(Cfg activeCfg, DynamicConfigKeyRegistry configKeyRegistry) {
+    public InFlightConfigReceiver(CfgAion activeCfg, DynamicConfigKeyRegistry configKeyRegistry) {
         this.activeCfg = activeCfg;
         this.configKeyRegistry = configKeyRegistry;
     }
@@ -83,12 +83,12 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     }
 
     @VisibleForTesting
-    ConfigProposalResult applyNewConfig(Cfg newCfg) throws RollbackException {
+    ConfigProposalResult applyNewConfig(CfgAion newCfg) throws RollbackException {
         // build up an undo stack as we apply each config change so we can rollback if error
         final Deque<InFlightConfigChangeResult> undoSteps = new ArrayDeque<>();
 
         for (String key : configKeyRegistry.getBoundKeys()) {
-            Function<Cfg, ?> getter = configKeyRegistry.getGetter(key);
+            Function<CfgAion, ?> getter = configKeyRegistry.getGetter(key);
             if (getter == null) {
                 throw new IllegalStateException(
                         String.format(
@@ -143,7 +143,7 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
         return new ConfigProposalResult(true);
     }
 
-    private void rollback(Deque<InFlightConfigChangeResult> steps, Cfg newCfg)
+    private void rollback(Deque<InFlightConfigChangeResult> steps, CfgAion newCfg)
             throws RollbackException {
         LOG.info("Trying to rollback.  Undo steps are: {}", steps.toString());
 

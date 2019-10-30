@@ -25,7 +25,7 @@ import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisBlockLoader;
 
 /** @author chris */
-public final class CfgAion extends Cfg {
+public final class CfgAion {
 
     protected AionGenesis genesis;
 
@@ -115,6 +115,10 @@ public final class CfgAion extends Cfg {
 
     public static CfgAion inst() {
         return CfgAionHolder.inst;
+    }
+
+    public static void setInst(CfgAion cfgAion) {
+        CfgAionHolder.inst = cfgAion;
     }
 
     public void setGenesis() {
@@ -310,12 +314,10 @@ public final class CfgAion extends Cfg {
         return shouldWriteBackToFile;
     }
 
-    @Override
     public boolean fromXML() {
         return fromXML(getInitialConfigFile());
     }
 
-    @Override
     public boolean fromXML(File cfgFile) {
         boolean shouldWriteBackToFile = false;
         if (!cfgFile.exists()) {
@@ -355,12 +357,10 @@ public final class CfgAion extends Cfg {
         return shouldWriteBackToFile;
     }
 
-    @Override
     public void toXML(final String[] args) {
         toXML(args, getExecConfigFile());
     }
 
-    @Override
     public void toXML(final String[] args, File file) {
         if (args != null) {
             boolean override = false;
@@ -495,8 +495,6 @@ public final class CfgAion extends Cfg {
     public int hashCode() {
         return Objects.hashCode(genesis);
     }
-
-
 
     public void setId(final String _id) {
         this.id = _id;

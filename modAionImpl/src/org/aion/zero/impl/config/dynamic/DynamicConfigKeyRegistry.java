@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import org.aion.zero.impl.config.Cfg;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,11 +13,11 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * Representation of a 3-tuple (config_key, getter, applier), where: - config_key is a String that
  * uniquely identifies a configuration key within config.xml - getter is a function that reads that
- * config_key out of a given {@link Cfg} - applier is a {@link IDynamicConfigApplier}, which knows
+ * config_key out of a given {@link CfgAion} - applier is a {@link IDynamicConfigApplier}, which knows
  * how to apply changes to Aion kernel when given an old cfg and new cfg.
  *
- * <p>This class essentially gives names (config_key) to configuration keys of {@link Cfg} and ties
- * each to a getter (to retrieve the value from any Cfg object) and an applier (to perform config
+ * <p>This class essentially gives names (config_key) to configuration keys of {@link CfgAion} and ties
+ * each to a getter (to retrieve the value from any CfgAion object) and an applier (to perform config
  * modifications on the kernel).
  *
  * <p>There is no restriction around how config_key is named, but the recommendation is to use a
@@ -32,7 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * return "atomic" types (i.e. primitives or their object equivalents).
  */
 public class DynamicConfigKeyRegistry {
-    private final Map<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>>
+    private final Map<String, Pair<Function<CfgAion, ?>, Optional<IDynamicConfigApplier>>>
             key2GetterApplier; // config_key -> (getter,applier)
 
     public DynamicConfigKeyRegistry() {
@@ -41,12 +40,12 @@ public class DynamicConfigKeyRegistry {
 
     @VisibleForTesting
     DynamicConfigKeyRegistry(
-            Map<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>>
+            Map<String, Pair<Function<CfgAion, ?>, Optional<IDynamicConfigApplier>>>
                     key2GetterApplier) {
         this.key2GetterApplier = key2GetterApplier; // note: not a deep copy
     }
 
-    public void bind(String key, Function<Cfg, ?> getter, IDynamicConfigApplier applier) {
+    public void bind(String key, Function<CfgAion, ?> getter, IDynamicConfigApplier applier) {
         key2GetterApplier.put(key, new ImmutablePair<>(getter, Optional.of(applier)));
     }
 
@@ -54,7 +53,7 @@ public class DynamicConfigKeyRegistry {
         return key2GetterApplier.keySet();
     }
 
-    public Function<Cfg, ?> getGetter(String key) {
+    public Function<CfgAion, ?> getGetter(String key) {
         return key2GetterApplier.get(key).getLeft();
     }
 
@@ -62,7 +61,7 @@ public class DynamicConfigKeyRegistry {
         return key2GetterApplier.get(key).getRight();
     }
 
-    private static Map<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>>
+    private static Map<String, Pair<Function<CfgAion, ?>, Optional<IDynamicConfigApplier>>>
             DEFAULT_GETTERS_APPLIERS =
                     new HashMap<>() {
                         {

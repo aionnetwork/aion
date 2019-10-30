@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.function.Function;
 import javax.xml.stream.XMLStreamException;
-import org.aion.zero.impl.config.Cfg;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -19,14 +19,14 @@ import org.junit.Test;
 
 @Ignore
 public class InFlightConfigReceiverTest {
-    private LinkedHashMap<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>>
+    private LinkedHashMap<String, Pair<Function<CfgAion, ?>, Optional<IDynamicConfigApplier>>>
             registryMap;
     private DynamicConfigKeyRegistry registry;
     private TestApplier successfulApplier;
     private TestApplier failingApplier;
     private TestApplier throwingApplier;
-    private Cfg oldCfg;
-    private Cfg newCfg;
+    private CfgAion oldCfg;
+    private CfgAion newCfg;
 
     @Before
     public void before() {
@@ -35,8 +35,8 @@ public class InFlightConfigReceiverTest {
         throwingApplier = new TestApplier(TestApplier.Behaviour.THROW);
         registryMap = new LinkedHashMap<>();
         registry = new DynamicConfigKeyRegistry(registryMap);
-        oldCfg = mock(Cfg.class);
-        newCfg = mock(Cfg.class);
+        oldCfg = mock(CfgAion.class);
+        newCfg = mock(CfgAion.class);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class InFlightConfigReceiverTest {
         }
 
         @Override
-        public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg)
+        public InFlightConfigChangeResult apply(CfgAion oldCfg, CfgAion newCfg)
                 throws InFlightConfigChangeException {
             switch (behaviour) {
                 case SUCCEED:
@@ -159,7 +159,7 @@ public class InFlightConfigReceiverTest {
         }
 
         @Override
-        public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg)
+        public InFlightConfigChangeResult undo(CfgAion oldCfg, CfgAion newCfg)
                 throws InFlightConfigChangeException {
             switch (behaviour) {
                 case SUCCEED:

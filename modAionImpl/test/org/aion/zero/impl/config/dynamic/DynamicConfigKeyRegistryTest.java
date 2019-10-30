@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import org.aion.zero.impl.config.Cfg;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
@@ -18,23 +18,21 @@ public class DynamicConfigKeyRegistryTest {
     private static class TestApplier implements IDynamicConfigApplier {
 
         @Override
-        public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg)
-                throws InFlightConfigChangeException {
+        public InFlightConfigChangeResult apply(CfgAion oldCfg, CfgAion newCfg) {
             return null;
         }
 
         @Override
-        public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg)
-                throws InFlightConfigChangeException {
+        public InFlightConfigChangeResult undo(CfgAion oldCfg, CfgAion newCfg) {
             return null;
         }
     }
 
     @Test
     public void testCtorAndGetters() {
-        Function<Cfg, ?> func1 = cfg -> cfg.getApi();
-        Function<Cfg, ?> func2 = cfg -> cfg.getGui().getCfgGuiLauncher();
-        Map<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>> gettersAppliers =
+        Function<CfgAion, ?> func1 = cfg -> cfg.getApi();
+        Function<CfgAion, ?> func2 = cfg -> cfg.getGui().getCfgGuiLauncher();
+        Map<String, Pair<Function<CfgAion, ?>, Optional<IDynamicConfigApplier>>> gettersAppliers =
                 new HashMap<>() {
                     {
                         put("myKey1", ImmutablePair.of(func1, Optional.of(new TestApplier())));
@@ -53,14 +51,14 @@ public class DynamicConfigKeyRegistryTest {
     }
 
     @Test
-    public void testKeyNotDynamic() throws InFlightConfigChangeException {
+    public void testKeyNotDynamic() {
         DynamicConfigKeyRegistry unit = new DynamicConfigKeyRegistry();
         assertThat(unit.getApplier("aion.sync").isPresent(), is(false));
     }
 
     @Test
     public void testBind() {
-        Function<Cfg, ?> func1 = cfg -> cfg.getApi();
+        Function<CfgAion, ?> func1 = cfg -> cfg.getApi();
         DynamicConfigKeyRegistry unit = new DynamicConfigKeyRegistry(new HashMap<>());
         unit.bind("myKey", func1, new TestApplier());
         assertThat(unit.getBoundKeys().size(), is(1));

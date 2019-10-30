@@ -3,7 +3,7 @@ package org.aion.zero.impl.cli;
 import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.zero.impl.config.Cfg;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgApiRpc;
 import org.aion.zero.impl.config.CfgApiZmq;
 import org.aion.zero.impl.config.CfgConsensusUnity;
@@ -234,7 +234,7 @@ public class EditCli {
      * @param cfg the config associated with the current runtime instance.
      * @return indicates whether any configs were changed
      */
-    public boolean runCommand(Cfg cfg) {
+    public boolean runCommand(CfgAion cfg) {
         checkOptions();
         //update all the configurations
         final boolean updateCompression = updateCompression(cfg.getDb());

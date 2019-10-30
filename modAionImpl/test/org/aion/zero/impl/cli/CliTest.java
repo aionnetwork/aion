@@ -36,7 +36,6 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.zero.impl.keystore.Keystore;
-import org.aion.zero.impl.config.Cfg;
 import org.aion.zero.impl.config.CfgDb;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.cli.Cli.ReturnType;
@@ -333,7 +332,7 @@ public class CliTest {
         }
     }
 
-    private void printPaths(Cfg cfg) {
+    private void printPaths(CfgAion cfg) {
         System.out.println(
                 "\n-------------------------------- USED PATHS --------------------------------"
                         + "\n> Logger path:   "

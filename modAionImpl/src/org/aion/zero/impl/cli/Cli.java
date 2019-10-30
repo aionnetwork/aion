@@ -21,7 +21,6 @@ import org.aion.zero.impl.vm.avm.AvmConfigurations;
 import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
-import org.aion.zero.impl.config.Cfg;
 import org.aion.zero.impl.config.CfgSsl;
 import org.aion.zero.impl.config.CfgSync;
 import org.aion.types.AionAddress;
@@ -93,15 +92,15 @@ public class Cli {
         REDO_IMPORT
     }
 
-    public ReturnType callAndInitializeAvm(String[] args, Cfg cfg) {
+    public ReturnType callAndInitializeAvm(String[] args, CfgAion cfg) {
         return call(args, cfg, true);
     }
 
-    public ReturnType callAndDoNotInitializeAvm(String[] args, Cfg cfg) {
+    public ReturnType callAndDoNotInitializeAvm(String[] args, CfgAion cfg) {
         return call(args, cfg, false);
     }
 
-    private ReturnType call(final String[] args, Cfg cfg, boolean initializeAvm) {
+    private ReturnType call(final String[] args, CfgAion cfg, boolean initializeAvm) {
         final CommandLine.ParseResult parseResult;
         try {
             // the pre-process method handles arguments that are separated by space
@@ -564,7 +563,7 @@ public class Cli {
         System.out.println("Note that options prefixed with --xx are used only for testing purposes.");
     }
 
-    private void printInfo(Cfg cfg) {
+    private void printInfo(CfgAion cfg) {
         System.out.println("\nInformation");
         System.out.println(
                 "----------------------------------------------------------------------------");
@@ -595,7 +594,7 @@ public class Cli {
      * @param cfg the configuration file containing the information
      * @return {@code true} when the given directory is valid, {@code false} otherwise.
      */
-    private boolean setDirectory(String directory, Cfg cfg) {
+    private boolean setDirectory(String directory, CfgAion cfg) {
         // use the path ignoring the current base path
         File file = new File(directory);
         if (!file.isAbsolute()) {
@@ -617,7 +616,7 @@ public class Cli {
         }
     }
 
-    private void setNetwork(String network, Cfg cfg) {
+    private void setNetwork(String network, CfgAion cfg) {
         Network net = determineNetwork(network.toLowerCase());
         if (net == null) {
             // print error message and set default value
@@ -642,7 +641,7 @@ public class Cli {
      * @param cfg the configuration for the runtime kernel environment
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void makeDirs(File startConfigFile, File forkFile, Cfg cfg) {
+    private void makeDirs(File startConfigFile, File forkFile, CfgAion cfg) {
         File file = cfg.getExecDir();
         if (!file.exists()) {
             file.mkdirs();
