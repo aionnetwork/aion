@@ -10,9 +10,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.BlockUtil;
 import org.slf4j.Logger;
 
@@ -430,15 +433,15 @@ public class AionBlockStore {
 
         try {
             long top, bottom;
-            boolean mustReverse;
+            boolean ascending;
             if (first > last) { // first is highest
                 top = first;
                 bottom = last;
-                mustReverse = false;
+                ascending = false;
             } else { // last is highest
                 top = last;
                 bottom = first;
-                mustReverse = true;
+                ascending = true;
             }
 
             if (top == bottom) {
@@ -450,8 +453,9 @@ public class AionBlockStore {
                     return null;
                 }
 
-                LinkedList<byte[]> blockHashes = new LinkedList<>();
-                blockHashes.add(firstBlockHash);
+                // ordered by key to improve db retrieval time
+                TreeSet<ByteArrayWrapper> blockHashes = new TreeSet<>();
+                blockHashes.add(ByteArrayWrapper.wrap(firstBlockHash));
 
                 for (long i = top - 1; i >= (bottom > 0 ? bottom : 1); i--) {
                     firstBlockHash = getChainBlockHashByNumber(i);
@@ -461,21 +465,32 @@ public class AionBlockStore {
                                 + " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}", i, i - 1);
                         return null; // stops at any invalid data
                     } else {
-                        if (mustReverse) {
-                            blockHashes.addFirst(firstBlockHash);
-                        } else {
-                            blockHashes.addLast(firstBlockHash);
-                        }
+                        blockHashes.add(ByteArrayWrapper.wrap(firstBlockHash));
                     }
                 }
-                List<Block> result = blockHashes.stream().map(b -> blocks.get(b)).collect(Collectors.toList());
-                if (result.contains(null)) {
+
+                // set up ordering for the result
+                Comparator<Block> comparator;
+                if (ascending) {
+                    comparator = Comparator.comparingLong(Block::getNumber);
+                } else {
+                    comparator = Comparator.comparingLong(Block::getNumber).reversed();
+                }
+                try {
+                    List<Block> result = blockHashes.stream().map(b -> blocks.get(b.toBytes())).sorted(comparator).collect(Collectors.toList());
+                    if (result.contains(null)) {
+                        // the block should have been stored but null was returned above
+                        LOG.error("Encountered a kernel database corruption: null block in data store encountered in range {} to {}."
+                                + " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}", bottom, top, bottom - 1);
+                        return null;
+                    } else {
+                        return result;
+                    }
+                } catch (NullPointerException e) {
                     // the block should have been stored but null was returned above
                     LOG.error("Encountered a kernel database corruption: null block in data store encountered in range {} to {}."
                             + " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}", bottom, top, bottom - 1);
                     return null;
-                } else {
-                    return result;
                 }
             }
         } finally {
