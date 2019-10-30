@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
 import org.aion.base.PooledTransaction;
 import org.aion.base.TransactionTypes;
@@ -279,32 +280,28 @@ public class TxnPoolTest {
     }
 
     @Test
-    public void timeout1() throws Exception {
+    public void timeout1() {
         Properties config = new Properties();
         config.put("tx-timeout", "10"); // 10 sec
 
-        ITxPool tp = new TxPoolA0(config);
+        TxPoolA0 tp = new TxPoolA0(config);
         List<PooledTransaction> txnl = getMockTransaction(30000L);
         tp.add(txnl);
 
-        Thread.sleep(10999);
-
-        tp.snapshot();
+        tp.snapshot( TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) + 10);
         Assert.assertEquals(0, tp.size());
     }
 
     @Test
-    public void timeout2() throws Exception {
+    public void timeout2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "1"); // 10 sec
+        config.put("tx-timeout", "1"); // still 10 sec
 
-        ITxPool tp = new TxPoolA0(config);
+        TxPoolA0 tp = new TxPoolA0(config);
         List<PooledTransaction> txnl = getMockTransaction(30000L);
         tp.add(txnl);
 
-        Thread.sleep(8999);
-
-        tp.snapshot();
+        tp.snapshot(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) + 9);
         Assert.assertEquals(1, tp.size());
     }
 
@@ -988,7 +985,8 @@ public class TxnPoolTest {
     }
 
     @Test
-    // @Ignore
+    @Ignore
+    // TODO: AKI-480 move it to the benchmark test
     /* 100K new transactions in pool around 1200ms (cold-call)
      */ public void benchmarkSnapshot() {
         Properties config = new Properties();
@@ -1033,6 +1031,8 @@ public class TxnPoolTest {
     }
 
     @Test
+    @Ignore
+    // TODO: AKI-480 move it to the benchmark test
     /* 100K new transactions in pool around 650ms (cold-call)
 
       1K new transactions insert to the pool later around 150ms to snap (including sort)
@@ -1107,6 +1107,7 @@ public class TxnPoolTest {
 
     @Test
     @Ignore
+    // TODO: AKI-480 move it to the benchmark test
     /* 1M new transactions with 10000 accounts (100 txs per account)in pool snapshot around 10s (cold-call)
       gen new txns 55s (spent a lot of time to sign tx)
       put txns into pool 2.5s
@@ -1162,6 +1163,8 @@ public class TxnPoolTest {
     }
 
     @Test
+    @Ignore
+    // TODO: AKI-480 move it to the benchmark test
     /* 100K new transactions in pool around 350ms (cold-call)
      */ public void benchmarkSnapshot4() {
         Properties config = new Properties();
@@ -1227,6 +1230,8 @@ public class TxnPoolTest {
     }
 
     @Test
+    @Ignore
+    // TODO: AKI-480 move it to the benchmark test
     /* 100K new transactions in pool around 350ms (cold-call)
 
       the second time snapshot is around 35ms

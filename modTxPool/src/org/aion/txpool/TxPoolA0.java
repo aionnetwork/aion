@@ -1,5 +1,6 @@
 package org.aion.txpool;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
@@ -463,6 +464,7 @@ public class TxPoolA0 implements ITxPool {
         return rtn;
     }
 
+    @Override
     public List<AionTransaction> snapshot() {
 
         sortTxn();
@@ -618,6 +620,163 @@ public class TxPoolA0 implements ITxPool {
         return rtn;
     }
 
+    @VisibleForTesting
+    // This is a duplicated method from snapshot() for testing
+    public List<AionTransaction> snapshot(long time) {
+
+        sortTxn();
+        removeTimeoutTxn(time);
+
+        int cnt_txSz = 0;
+        long cnt_nrg = 0;
+        List<AionTransaction> rtn = new ArrayList<>();
+        Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
+        Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList>> nonPickedTx =
+            new HashMap<>();
+        for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList>> e :
+            this.getFeeView().entrySet()) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("snapshot  fee[{}]", e.getKey().toString());
+            }
+
+            SortedMap<BigInteger, Entry<ByteArrayWrapper, TxDependList>>
+                timeTxDep = Collections.synchronizedSortedMap(new TreeMap<>());
+            for (Entry<ByteArrayWrapper, TxDependList> pair :
+                e.getValue().entrySet()) {
+                BigInteger ts = pair.getValue().getTimeStamp();
+                // If timestamp has collision, increase 1 for getting a new slot to put the
+                // transaction pair.
+                while (timeTxDep.get(ts) != null) {
+                    ts = ts.add(BigInteger.ONE);
+                }
+                timeTxDep.put(ts, pair);
+            }
+
+            for (Entry<ByteArrayWrapper, TxDependList> pair :
+                timeTxDep.values()) {
+                // Check the small nonce tx must been picked before put the high nonce tx
+                ByteArrayWrapper dependTx = pair.getValue().getDependTx();
+                if (dependTx == null || snapshotSet.contains(dependTx)) {
+                    boolean firstTx = true;
+                    for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
+                        PooledTransaction pendingTx = this.getMainMap().get(bw).getTx();
+
+                        byte[] encodedItx = pendingTx.tx.getEncoded();
+                        cnt_txSz += encodedItx.length;
+                        // Set the lowerbound energy consume for the energy refund case.
+                        // In the solidity, the refund energy might exceed the transaction energy consume like 21K.
+                        // But the AVM does not. We use half of the Minimum energy consume as the transaction picking rule
+                        cnt_nrg += pendingTx.energyConsumed < (MIN_ENERGY_CONSUME / 2 ) ? (MIN_ENERGY_CONSUME / 2) : pendingTx.energyConsumed;
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace(
+                                "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                pendingTx.tx.getSenderAddress().toString(),
+                                pendingTx.tx.getNonceBI().toString(),
+                                encodedItx.length,
+                                pendingTx.energyConsumed);
+                        }
+
+                        if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
+                            try {
+                                rtn.add(pendingTx.tx);
+                                if (firstTx) {
+                                    snapshotSet.add(bw);
+                                    firstTx = false;
+                                }
+                            } catch (Exception ex) {
+                                if (LOG.isErrorEnabled()) {
+                                    LOG.error(
+                                        "TxPoolA0.snapshot  exception[{}], return [{}] TX",
+                                        ex.toString(),
+                                        rtn.size());
+                                }
+                                return rtn;
+                            }
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(
+                                    "Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]",
+                                    cnt_txSz,
+                                    cnt_nrg,
+                                    rtn.size());
+                            }
+
+                            return rtn;
+                        }
+                    }
+
+                    ByteArrayWrapper ancestor = pair.getKey();
+                    while (nonPickedTx.get(ancestor) != null) {
+                        firstTx = true;
+                        for (ByteArrayWrapper bw :
+                            nonPickedTx.get(ancestor).getValue().getTxList()) {
+                            PooledTransaction pendingTx = this.getMainMap().get(bw).getTx();
+
+                            byte[] encodedItx = pendingTx.tx.getEncoded();
+                            cnt_txSz += encodedItx.length;
+                            // Set the lowerbound energy consume for the energy refund case.
+                            // In the solidity, the refund energy might exceed the transaction energy consume like 21K.
+                            // But the AVM does not. We use half of the Minimum energy consume as the transaction picking rule
+                            cnt_nrg += pendingTx.energyConsumed < (MIN_ENERGY_CONSUME / 2 ) ? (MIN_ENERGY_CONSUME / 2) : pendingTx.energyConsumed;
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace(
+                                    "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                    pendingTx.tx.getSenderAddress().toString(),
+                                    pendingTx.tx.getNonceBI().toString(),
+                                    encodedItx.length,
+                                    pendingTx.energyConsumed);
+                            }
+
+                            if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
+                                try {
+                                    rtn.add(pendingTx.tx);
+                                    if (firstTx) {
+                                        snapshotSet.add(bw);
+                                        firstTx = false;
+                                    }
+                                } catch (Exception ex) {
+                                    if (LOG.isErrorEnabled()) {
+                                        LOG.error(
+                                            "TxPoolA0.snapshot  exception[{}], return [{}] TX",
+                                            ex.toString(),
+                                            rtn.size());
+                                    }
+                                    return rtn;
+                                }
+                            } else {
+                                if (LOG.isInfoEnabled()) {
+                                    LOG.info(
+                                        "TxPoolA0.snapshot return Tx[{}] TxSize[{}] Nrg[{}] Pool[{}]",
+                                        rtn.size(),
+                                        cnt_txSz,
+                                        cnt_nrg,
+                                        getMainMap().size());
+                                }
+
+                                return rtn;
+                            }
+                        }
+
+                        ancestor = nonPickedTx.get(ancestor).getKey();
+                    }
+                } else {
+                    // one low fee small nonce tx has been picked,and then search from this map.
+                    nonPickedTx.put(pair.getValue().getDependTx(), pair);
+                }
+            }
+        }
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info(
+                "TxPoolA0.snapshot return [{}] TX, poolSize[{}]",
+                rtn.size(),
+                getMainMap().size());
+        }
+
+        return rtn;
+    }
+
     @Override
     public String getVersion() {
         return "0.1.0";
@@ -656,6 +815,40 @@ public class TxPoolA0 implements ITxPool {
                     "TxPoolA0.remove return [{}] TX, poolSize[{}]",
                     txl.size(),
                     getMainMap().size());
+        }
+    }
+
+    @VisibleForTesting
+    // This is a duplicated method from removeTimeoutTxn() for testing
+    private void removeTimeoutTxn(long time) {
+
+        long ts = time - txn_timeout;
+        List<PooledTransaction> txl = Collections.synchronizedList(new ArrayList<>());
+
+        this.getTimeView()
+            .entrySet()
+            .parallelStream()
+            .forEach(
+                e -> {
+                    if (e.getKey() < ts) {
+                        for (ByteArrayWrapper bw : e.getValue()) {
+                            txl.add(this.getMainMap().get(bw).getTx());
+                        }
+                    }
+                });
+
+        if (txl.isEmpty()) {
+            return;
+        }
+
+        this.addOutDatedList(txl);
+        this.remove(txl);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(
+                "TxPoolA0.remove return [{}] TX, poolSize[{}]",
+                txl.size(),
+                getMainMap().size());
         }
     }
 

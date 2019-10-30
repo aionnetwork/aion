@@ -385,6 +385,6 @@ public class EquihashSolutionsGenerationTest210_9 {
     }
 
     public static Object blocks() {
-        return TestResources.blocks(10);
+        return TestResources.blocks(3);
     }
 }
