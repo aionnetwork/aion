@@ -6,6 +6,7 @@ clean.dependsOn deleteNativeLibs
 dependencies {
     compile project(':modBase')
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
+    compile 'com.google.guava:guava:25.1-jre'
     
     testCompile 'junit:junit:4.12'
 }
