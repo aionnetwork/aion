@@ -4,9 +4,11 @@ import java.math.BigInteger;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.StakingBlock;
 
-public final class AionChainHolder implements ChainHolder {
+public class AionChainHolder implements ChainHolder {
 
     private final IAionChain chain;//An implementation of AionChain
 
@@ -44,7 +46,6 @@ public final class AionChainHolder implements ChainHolder {
     }
 
     /**
-     *
      * @param number
      * @return the block reward at the specified block number
      */
@@ -59,5 +60,39 @@ public final class AionChainHolder implements ChainHolder {
     @Override
     public boolean isUnityForkEnabled() {
         return this.chain.getAionHub().getBlockchain().isUnityForkEnabledAtNextBlock();
+    }
+
+    @Override
+    public boolean submitSignature(byte[] signature, byte[] sealHash) {
+        if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
+        else {
+            StakingBlock stakingBlock =
+                    (StakingBlock) chain.getBlockchain().getCachingStakingBlockTemplate(sealHash);
+            stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
+            ImportResult result = chain.getBlockchain().tryToConnect(stakingBlock);
+            return result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+        }
+    }
+
+    @Override
+    public byte[] submitSeed(byte[] newSeed, byte[] signingPublicKey, byte[] coinBase) {
+        if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
+        else {
+            StakingBlock blockTemplate =
+                    this.chain
+                            .getAionHub()
+                            .getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
+            if (blockTemplate == null) {
+                return null;
+            } else {
+                return blockTemplate.getHeader().getMineHash();
+            }
+        }
+    }
+
+    @Override
+    public byte[] getSeed() {
+        if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
+        else return this.chain.getBlockchain().getSeed();
     }
 }

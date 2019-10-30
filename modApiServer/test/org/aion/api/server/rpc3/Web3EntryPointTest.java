@@ -1,10 +1,14 @@
 package org.aion.api.server.rpc3;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
+import org.aion.rpc.server.OpsRPC;
+import org.aion.rpc.server.StratumRPC;
+import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.RPCError;
 import org.aion.rpc.types.RPCTypesConverter.RPCErrorConverter;
 import org.aion.rpc.types.RPCTypesConverter.ResponseConverter;
@@ -15,11 +19,15 @@ public class Web3EntryPointTest {
 
     private Web3EntryPoint web3EntryPoint;
     private ChainHolder holder = mock(ChainHolder.class);
-    private OpsRPCImpl opsRPC = new OpsRPCImpl(holder);
+    private ByteArray byteArray = new ByteArray("0x000111");
     @Before
     public void setup(){
-        web3EntryPoint = new Web3EntryPoint(new PersonalRPCImpl(), opsRPC, List.of("personal","ops"),
-            List.of("personal_ecRecover"), List.of("notAnRPC"));
+        doReturn(byteArray.toBytes()).when(holder).getSeed();
+        OpsRPC opsRPC = new OpsRPCImpl(holder);
+        StratumRPC stratumRPC = new StratumRPCImpl(holder);
+        web3EntryPoint = new Web3EntryPoint(new PersonalRPCImpl(), opsRPC, stratumRPC,
+            List.of("personal","ops", "stratum"),
+            List.of("personal_ecRecover"), List.of("notAnRPC") );
     }
 
     @Test
@@ -39,7 +47,15 @@ public class Web3EntryPointTest {
     }
 
     @Test
+    public void testCallWithSubstitution(){
+        assertEquals(byteArray, ResponseConverter.decode(web3EntryPoint.call("{\"jsonRPC\":\"2.0\",\"method\":\"getseed\"}")).result.byteArray);
+    }
+
+    @Test
     public void isExecutable() {
+        assertTrue(web3EntryPoint.isExecutable("getseed"));
+        assertTrue(web3EntryPoint.isExecutable("submitsignature"));
+        assertTrue(web3EntryPoint.isExecutable("submitseed"));
         assertTrue(web3EntryPoint.isExecutable("personal_ecRecover"));
         assertTrue(web3EntryPoint.isExecutable("ops_getBlockDetails"));
         assertFalse(web3EntryPoint.isExecutable("notAnRPC"));

@@ -174,7 +174,8 @@ public class OpsRPCImpl implements OpsRPC {
                                 info.getReceipt().getEnergyUsed(),
                                 info.hasInternalTransactions(),
                                 serializeTxLogs(
-                                        info.getReceipt(), i, block.getHeader().getNumber())));
+                                        info.getReceipt(), i, block.getHeader().getNumber()),
+                                transaction.getBeaconHash() == null? null : ByteArray.wrap(transaction.getBeaconHash())));
             }
             return Collections.unmodifiableList(transactionDetails);
         }

@@ -19,4 +19,10 @@ public interface ChainHolder {
     BigInteger calculateReward(Long number);
 
     boolean isUnityForkEnabled();
+
+    boolean submitSignature(byte[] signature, byte[] sealHash);
+
+    byte[] submitSeed(byte[] newSeed, byte[] signingPublicKey, byte[] coinBase);
+
+    byte[] getSeed();
 }
