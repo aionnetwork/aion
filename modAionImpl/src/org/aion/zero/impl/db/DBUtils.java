@@ -499,6 +499,9 @@ public class DBUtils {
      *     them differently.
      */
     public static void redoMainChainImport(long startHeight) {
+        // for runtime survey information
+        long duration, startTime = System.nanoTime();
+
         if (startHeight < 0) {
             System.out.println("Negative values are not valid as starting height. Nothing to do.");
             return;
@@ -509,8 +512,9 @@ public class DBUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO, LogEnum.SYNC, LogLevel.INFO));
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO, LogEnum.SYNC, LogLevel.INFO, LogEnum.SURVEY, LogLevel.WARN));
         final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+        final Logger survey = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
 
         LOG.info("Importing stored blocks INITIATED...");
 
@@ -558,7 +562,8 @@ public class DBUtils {
                 Block blockWithDifficulties = store.getBlockByHashWithInfo(startBlock.getHash());
                 chain.setTotalDifficulty(blockWithDifficulties.getTotalDifficulty());
             }
-
+            duration = System.nanoTime() - startTime;
+            survey.warn("Setup: duration = {} ns.", duration);
             boolean fail = false;
 
             if (startBlock == null) {
@@ -583,7 +588,11 @@ public class DBUtils {
 
                     // retrieve range of blocks
                     System.out.println("Range " + currentBlockNumber + " to " + lastBlockNumber);
+                    startTime = System.nanoTime();
                     List<Block> blocksToImport = store.getBlocksByRange(currentBlockNumber, lastBlockNumber);
+                    duration = System.nanoTime() - startTime;
+                    survey.warn("Get blocks: duration = {} ns.", duration);
+
                     if (blocksToImport == null) {
                         LOG.error("The main chain blocks between #{} and #{} could not be retrieved from the database. Cannot continue importing stored blocks.", currentBlockNumber, lastBlockNumber);
                         fail = true;
@@ -592,8 +601,14 @@ public class DBUtils {
 
                     try {
                         // clear the index entry and prune side-chain blocks
+                        startTime = System.nanoTime();
                         store.redoIndexWithoutSideChains(blocksToImport, true);
+                        duration = System.nanoTime() - startTime;
+                        survey.warn("Redo index: duration = {} ns.", duration);
+                        startTime = System.nanoTime();
                         result = chain.tryToConnect(blocksToImport, "SELF", false);
+                        duration = System.nanoTime() - startTime;
+                        survey.warn("Import: duration = {} ns.", duration);
                     } catch (Throwable t) {
                         // we want to see the exception and the block where it occurred
                         t.printStackTrace();
