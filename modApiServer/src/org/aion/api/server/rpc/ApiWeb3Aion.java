@@ -2647,7 +2647,7 @@ public class ApiWeb3Aion extends ApiAion {
 
                     // Directly submit to chain for new due to delays using event, explore event
                     // submission again
-                    ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
+                    ImportResult importResult = AionImpl.inst().addNewBlock(bestBlock);
                     if (importResult.isSuccessful()) {
                         templateMap.remove(key);
                         LOG.info(

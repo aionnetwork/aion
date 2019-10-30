@@ -215,7 +215,7 @@ public class AionPoW {
             }
 
             // This can be improved
-            ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
+            ImportResult importResult = AionImpl.inst().addNewBlock(block);
 
             // Check that the new block was successfully added
             if (importResult.isSuccessful()) {

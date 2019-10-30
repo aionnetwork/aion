@@ -5,16 +5,16 @@ import org.aion.api.server.rpc2.autogen.Rpc;
 import org.aion.api.server.rpc2.autogen.errors.NullReturnRpcException;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
 public class RpcImpl implements Rpc {
 
-    private IAionChain ac;
+    private AionImpl ac;
 
-    RpcImpl(final IAionChain aionChain) {
+    RpcImpl(final AionImpl aionChain) {
         if (aionChain == null) {
             throw new NullPointerException("RpcImpl construct aionChain is null");
         }
@@ -104,7 +104,7 @@ public class RpcImpl implements Rpc {
         }
 
         block.seal(signature, block.getHeader().getSigningPublicKey());
-        ImportResult result = ac.getBlockchain().tryToConnect(block);
+        ImportResult result = ac.addNewBlock(block);
 
         boolean sealed = (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST);
         if (sealed) {
