@@ -519,7 +519,7 @@ public class DBUtils {
         LOG.info("Importing stored blocks INITIATED...");
 
         final long STEP_SIZE = 10_000L;
-        final int RANGE_SIZE = 500;
+        final int RANGE_SIZE = 99_999;
         final int THOUSAND_MS = 1_000;
 
         AionBlockchainImpl chain = new AionBlockchainImpl(cfg, false);
