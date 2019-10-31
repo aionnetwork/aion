@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import org.aion.base.AccountState;
+import org.aion.log.LogLevel;
+import org.aion.util.TransactionUtil;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -77,6 +81,7 @@ public class ContractIntegTest {
     private AionAddress deployer, sender;
     private BigInteger deployerBalance, deployerNonce, senderBalance, senderNonce;
     private byte txType;
+    private List<ECKey> accounts;
 
     @Parameters
     public static Object[] data() {
@@ -89,11 +94,15 @@ public class ContractIntegTest {
 
     @Before
     public void setup() throws Exception {
+        // reduce default logging levels
+        AionLoggerFactory.initAll();
+
         StandaloneBlockchain.Bundle bundle =
                 (new Builder()).withValidatorConfiguration("simple").withDefaultAccounts().build();
         TransactionTypeRule.allowAVMContractTransaction();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
+        accounts = bundle.privateKeys;
         deployer = new AionAddress(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
         deployerNonce = BigInteger.ZERO;
@@ -2044,9 +2053,20 @@ public class ContractIntegTest {
 
     @Test (expected = InvalidParameterException.class)
     public void testFvmEmptyContractWith200KEnergyAfterUnity() throws IOException {
-        blockchain.forkUtility.enableUnityFork(2);
+        long unityForkBlock = 2;
+        blockchain.forkUtility.enableUnityFork(unityForkBlock);
+        ECKey stakingRegistryOwner = accounts.get(1);
+        List<ECKey> stakers = new ArrayList<>(accounts);
+        stakers.remove(deployerKey);
+        stakers.remove(stakingRegistryOwner);
+        assertThat(stakers.size()).isEqualTo(8);
+
+        // the default configuration does not apply to this test case
+        AvmTestConfig.clearConfigurations();
+        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock, 0);
+
         // populating the chain to be above the Unity for point
-        BlockchainTestUtils.generateRandomChainWithoutTransactions(blockchain, 2, 1);
+        BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);
 
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
@@ -2072,15 +2092,29 @@ public class ContractIntegTest {
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
         // The transaction has invalid energylimit settings
-        AionBlock block = makeBlock(tx);
+        makeBlock(tx);
     }
 
-    @Test // TODO: determine why this test passes without the correct blockchain height
-    public void testFvmEmptyContractWith221KEnergyAfterUnity() throws IOException, VmFatalException {
-        blockchain.forkUtility.enableUnityFork(2);
+    @Test
+    public void testFvmEmptyContractWith226160EnergyAfterUnity() throws IOException, VmFatalException {
+        long unityForkBlock = 2;
+        blockchain.forkUtility.enableUnityFork(unityForkBlock);
+        ECKey stakingRegistryOwner = accounts.get(1);
+        List<ECKey> stakers = new ArrayList<>(accounts);
+        stakers.remove(deployerKey);
+        stakers.remove(stakingRegistryOwner);
+        assertThat(stakers.size()).isEqualTo(8);
+
+        // the default configuration does not apply to this test case
+        AvmTestConfig.clearConfigurations();
+        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock, 0);
+
+        // populating the chain to be above the Unity for point
+        BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);
+
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
-        long nrg = 221_000;
+        long nrg = 226160;
         long nrgPrice = 1;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
@@ -2127,7 +2161,6 @@ public class ContractIntegTest {
             assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce.add(BigInteger.ONE));
             assertEquals(nrg, summary.getReceipt().getEnergyUsed());
-            assertEquals(nrg, repo.getBalance(block.getCoinbase()).intValue());
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
