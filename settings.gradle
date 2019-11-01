@@ -17,14 +17,7 @@ include 'modAionImpl',
     'modAvmVersion1',
     'modAvmStub'
 
-// only build and distribute modGui only if explicitly specified
-if (hasProperty('modGuiPath') && !modGuiPath.empty) {
-    include modGuiPath
-    project(':' + modGuiPath).name = "modGui"
-    gradle.ext.useGui = true;
-} else {
-    gradle.ext.useGui = false;
-}
+gradle.ext.useGui = false;
 
 include '3rdParty/libnzmq'
 project(":3rdParty/libnzmq").name = "3rdParty.libnzmq"

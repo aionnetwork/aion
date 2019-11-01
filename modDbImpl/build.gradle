@@ -11,6 +11,17 @@ sourceSets {
             srcDirs = ['test_resources']
         }
     }
+
+    unitTest {
+        resources {
+            srcDirs = ['test_resources']
+        }
+        java {
+            srcDirs = ['test']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
 }
 
 dependencies {
@@ -42,6 +53,12 @@ dependencies {
     // that behaviour.
     testClassesOut sourceSets.test.output
 }
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+}
+
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 
 // long-running integration tests in this module,so doing this to avoid 

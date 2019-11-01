@@ -9,6 +9,8 @@ apply plugin: 'signing'
 group = "network.aion"
 archivesBaseName = "crypto4j"
 
+unitTest.dependsOn copyNativeLibsForModuleTests
+
 def getCommitHash = { ->
     def hashStdOut = new ByteArrayOutputStream()
     exec {
@@ -53,6 +55,22 @@ sourceSets {
     test {
         java.srcDirs = ['src/test/java']
     }
+
+    unitTest {
+        resources {
+            srcDirs = ['src/test/java']
+        }
+        java {
+            srcDirs = ['src/test/java']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
 }
 
 

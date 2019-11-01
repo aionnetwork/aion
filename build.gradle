@@ -105,6 +105,20 @@ subprojects {
                 runtimeClasspath += main.output + test.output
             }
         }
+        unitTest {
+            java {
+                srcDirs = ['test']
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+            }
+        }
+        benchmarkTest {
+            java {
+                srcDirs = ['test']
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+            }
+        }
     }
 
     task integTest(type: Test) { 
@@ -112,11 +126,22 @@ subprojects {
         classpath = sourceSets.integTest.runtimeClasspath
     }
 
+    task unitTest(type: Test) {
+        maxHeapSize = "6g"
+        testClassesDirs = sourceSets.unitTest.output.classesDirs
+        classpath += sourceSets.unitTest.runtimeClasspath
+    }
+
+    task benchmarkTest(type: Test) {
+	testClassesDirs = sourceSets.benchmarkTest.output.classesDirs
+        classpath = sourceSets.benchmarkTest.runtimeClasspath
+    }
+
     configurations { 
         integTestCompile.extendsFrom testCompile
         integTestRuntime.extendsFrom testRuntime
     }
- 
+
     task copyNativeLibsForModuleTests(type: Copy) { 
         dependsOn rootProject.compileNative
         from rootProject.file('native') into file('native')
@@ -424,7 +449,6 @@ task ciBuild {
             'modDbImpl',
             'modEvtMgr',
             'modEvtMgrImpl',
-            'modGui',
             'modLogger',
             'modMcf',
             'modP2p',
@@ -442,6 +466,51 @@ task ciBuild {
         dependsOn it.test
     } 
 }
+
+task unitTest {
+    dependsOn build
+    def ciModules = [
+            'modBase',
+            'modAionImpl',
+            'modApiServer',
+            'modBoot',
+            'modCrypto',
+            'modDbImpl',
+            'modEvtMgr',
+            'modEvtMgrImpl',
+            'modLogger',
+            'modMcf',
+            'modP2p',
+            'modP2pImpl',
+            'modPrecompiled',
+            'modRlp',
+            'modTxPool',
+            'modAvmVersion1',
+            'modAvmVersion2',
+            'modAvmStub'
+    ]
+
+    configure(subprojects.findAll { it.name in ciModules }) {
+        it.unitTest { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
+        dependsOn it.unitTest
+    }
+}
+
+task benchmarkTest {
+    dependsOn build
+    def ciModules = [
+            'modAionImpl',
+            'modApiServer',
+            'modTxPool'
+    ]
+
+    configure(subprojects.findAll { it.name in ciModules }) {
+        it.benchmarkTest { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
+        dependsOn it.benchmarkTest
+    }
+}
+
+
 
 idea { 
     project {

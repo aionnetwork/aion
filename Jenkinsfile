@@ -27,10 +27,33 @@ pipeline {
             }
         }
        
-        stage('Unit test') {
+        stage('Full test') {
+            when {
+                // only run if:
+                // - this branch is master
+                expression {GIT_BRANCH == 'master'}
+            }
+
             steps {
                 timeout(60) {
-                    sh "./gradlew ciBuild" 
+                    sh "./gradlew ciBuild"
+                }
+            }
+        }
+
+        stage('Unit test') {
+            when {
+                // only run if:
+                // - this branch is in a PR (env.CHANGE_ID not null), or
+                // - this branch is not master
+                not {
+                    expression {GIT_BRANCH == 'master'}
+                }
+            }
+
+            steps {
+                timeout(60) {
+                    sh "./gradlew unitTest"
                 }
             }
         }
@@ -40,7 +63,7 @@ pipeline {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_BRANCH == 'unity-master'}
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master'}
             }
             steps { 
                     dir('FunctionalTests') {

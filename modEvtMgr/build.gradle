@@ -9,3 +9,22 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     testCompile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 }
+
+sourceSets {
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+}
+

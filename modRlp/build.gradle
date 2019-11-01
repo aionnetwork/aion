@@ -48,6 +48,22 @@ sourceSets {
     test {
         java.srcDirs = ['src/test/java']
     }
+
+    unitTest {
+        resources {
+            srcDirs = ['src/test/java']
+        }
+        java {
+            srcDirs = ['src/test/java']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
 }
 
 signing {

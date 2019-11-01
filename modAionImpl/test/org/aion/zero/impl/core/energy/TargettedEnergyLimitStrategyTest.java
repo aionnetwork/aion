@@ -12,7 +12,6 @@ import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.valid.RuleError;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -148,8 +147,6 @@ public class TargettedEnergyLimitStrategyTest {
     // given the targetted energy limit strategy, should always converge to our
     // desired limit
     @Test
-    // TODO: AKI-480 Ignore the test because time consuming, should move to benchmark test
-    @Ignore
     public void testConvergence() {
         AbstractEnergyStrategyLimit strategy =
                 new TargetStrategy(

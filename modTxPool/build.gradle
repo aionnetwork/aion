@@ -1,7 +1,36 @@
 ext.moduleName = 'aion.txpool'
 
 test.dependsOn copyNativeLibsForModuleTests
+unitTest.dependsOn copyNativeLibsForModuleTests
+benchmarkTest.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
+
+sourceSets {
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            exclude '**/TxnPoolBenchmarkTest.java'
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+
+    benchmarkTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            include '**/TxnPoolBenchmarkTest.java'
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
 
 dependencies {
     compile project(':modBase')
@@ -9,6 +38,14 @@ dependencies {
     compile 'com.google.guava:guava:25.1-jre'
     
     testCompile 'junit:junit:4.12'
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+
+    benchmarkTestCompile.extendsFrom testCompile
+    benchmarkTestRuntime.extendsFrom testRuntime
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with

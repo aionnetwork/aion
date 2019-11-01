@@ -37,8 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-@Ignore
-// TODO: AKI-480 Ignore the test because time consuming, should move to benchmark test
+
 public class BlockchainAccountStateBenchmark {
 
     private Random random = new SecureRandom();

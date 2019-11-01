@@ -4,3 +4,22 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-core:1.3'
 }
+
+sourceSets {
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+}
+

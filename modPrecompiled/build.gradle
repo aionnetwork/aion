@@ -1,5 +1,7 @@
 ext.moduleName = 'aion.precompiled'
 test.dependsOn copyNativeLibsForModuleTests
+unitTest.dependsOn copyNativeLibsForModuleTests
+
 clean.dependsOn deleteNativeLibs
 
 dependencies {
@@ -12,6 +14,24 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile group: 'com.googlecode.java-diff-utils', name: 'diffutils', version: '1.2'
     testCompile 'com.google.truth:truth:0.42'
+}
+
+sourceSets {
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 

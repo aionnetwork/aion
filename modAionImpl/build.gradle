@@ -1,11 +1,41 @@
 ext.moduleName = 'aion.zero.impl'
 test.dependsOn copyNativeLibsForModuleTests
+unitTest.dependsOn copyNativeLibsForModuleTests
+benchmarkTest.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 sourceSets {
     test {
         resources {
             srcDirs = ['test']
+        }
+    }
+
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            exclude '**/EquihashSolutionsGenerationTest210_9.java'
+            exclude '**/BlockchainAccountStateBenchmark.java'
+            exclude '**/TargettedEnergyLimitStrategyTest.java'
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+
+    benchmarkTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            include '**/EquihashSolutionsGenerationTest210_9.java'
+            include '**/BlockchainAccountStateBenchmark.java'
+	    include '**/TargettedEnergyLimitStrategyTest.java'
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
         }
     }
 }
@@ -52,6 +82,15 @@ task preBuild(type: Exec) {
 task postBuild(type: Exec) { 
     commandLine 'sh', "${rootProject.projectDir}/script/postbuild.sh"
 }
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+
+    benchmarkTestCompile.extendsFrom testCompile
+    benchmarkTestRuntime.extendsFrom testRuntime
+}
+
 
 compileJava {
     dependsOn preBuild

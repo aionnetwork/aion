@@ -23,11 +23,8 @@ import org.aion.util.types.AddressUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
-// TODO: AKI-480 Ignore the test because time consuming, also it is pretty concrete class. Will move to the other test task
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
     private AionAddress notRegistered =

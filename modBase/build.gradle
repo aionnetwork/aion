@@ -1,6 +1,7 @@
 ext.moduleName = 'aion.base'
 
 test.dependsOn copyNativeLibsForModuleTests
+unitTest.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
@@ -15,6 +16,25 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
 }
+
+sourceSets {
+    unitTest {
+        resources {
+            srcDirs = ['test']
+        }
+        java {
+            srcDirs = ['test']
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+configurations {
+    unitTestCompile.extendsFrom testCompile
+    unitTestRuntime.extendsFrom testRuntime
+}
+
 
 // Skip unit tests when doing build task; unit tests are all mixed up with
 // long-running integration tests in this module,so doing this to avoid
