@@ -183,14 +183,16 @@ public class Aion {
                         + filePath[8]
                         + "\n----------------------------------------------------------------------------\n\n";
 
-        String logo =
-                "\n                     _____                  \n"
-                        + "      .'.       |  .~     ~.  |..          |\n"
-                        + "    .'   `.     | |         | |  ``..      |\n"
-                        + "  .''''''''`.   | |         | |      ``..  |\n"
-                        + ".'           `. |  `._____.'  |          ``|\n\n";
+        String logo = "\n\n"
+            + " _|_|_|_| _|                     _|_|_|      _|     _|_|_|_|  \n"
+            + "    _|    _|_|_|     _|_|      _|      _|   _|_|    _|     _| \n"
+            + "    _|    _|    _| _|_|_|_|    _|      _|  _|  _|   _|      _|\n"
+            + "    _|    _|    _| _|          _|      _| _|    _|  _|      _|\n"
+            + "    _|    _|    _|   _|_|_|      _|_|_|  _|_|_|_|_| _|_|_|_|_|\n"
+            + "\n";
 
-        // always print the version string in the center of the Aion logo
+
+        // always print the version string in the center of The OAN logo
         String peakName = "Denali";
         String versionStr = "v" + KERNEL_VERSION + " (" + peakName + ")";
         String networkStr = cfg.getNetwork();
@@ -481,7 +483,7 @@ public class Aion {
     }
 
     private static String appendLogo(String value, String input) {
-        int leftPad = Math.round((44 - input.length()) / 2.0f) + 1;
+        int leftPad = Math.round((62 - input.length()) / 2.0f) + 1;
         StringBuilder padInput = new StringBuilder();
         for (int i = 0; i < leftPad; i++) {
             padInput.append(" ");
