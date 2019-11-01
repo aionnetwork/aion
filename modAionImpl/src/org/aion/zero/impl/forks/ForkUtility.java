@@ -16,7 +16,7 @@ public class ForkUtility {
      * @param unityForkBlockHeight the height of the block after which Unity behaviour is applied
      */
     public void enableUnityFork(long unityForkBlockHeight) {
-        Preconditions.checkArgument(unityForkBlockHeight >= 2, "Invalid fork0.5.0 (Unity) block number: must be >= 2");
+        Preconditions.checkArgument(unityForkBlockHeight >= 2, "Invalid fork1.0 (Unity) block number: must be >= 2");
         this.unityForkBlockHeight = unityForkBlockHeight;
         this.unityForkEnabled = true;
     }

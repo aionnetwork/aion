@@ -238,14 +238,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // initialize fork utility
         this.forkUtility = new ForkUtility(); // forks are disabled by default
-        Optional<Long> maybeFork050 = load050ForkNumberFromConfig(CfgAion.inst());
-        if (maybeFork050.isPresent()) {
-            if (maybeFork050.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
+        Optional<Long> maybeUnityFork = loadUnityForkNumberFromConfig(CfgAion.inst());
+        if (maybeUnityFork.isPresent()) {
+            if (maybeUnityFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
                 LOG.warn("The unity fork number cannot be less than 2, set the fork number to 2");
-                maybeFork050 = Optional.of(2L);
+                maybeUnityFork = Optional.of(2L);
             }
 
-            this.forkUtility.enableUnityFork(maybeFork050.get());
+            this.forkUtility.enableUnityFork(maybeUnityFork.get());
         }
 
         // initialize beacon hash validator
@@ -257,14 +257,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param cfgAion configuration
      * @return 0.5.0 fork number, if configured; {@link Optional#empty()} otherwise.
-     * @throws NumberFormatException if "fork0.5.0" present in the config, but not parseable
+     * @throws NumberFormatException if "fork1.0" present in the config, but not parseable
      */
-    private static Optional<Long> load050ForkNumberFromConfig(CfgAion cfgAion) {
-        String fork050Cfg = cfgAion.getFork().getProperties().getProperty("fork0.5.0");
-        if(fork050Cfg == null) {
+    private static Optional<Long> loadUnityForkNumberFromConfig(CfgAion cfgAion) {
+        String unityforkSetting = cfgAion.getFork().getProperties().getProperty("fork1.0");
+        if(unityforkSetting == null) {
             return Optional.empty();
         } else {
-            return Optional.of(Long.valueOf(fork050Cfg));
+            return Optional.of(Long.valueOf(unityforkSetting));
         }
     }
 

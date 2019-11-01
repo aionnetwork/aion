@@ -18,7 +18,7 @@ public class AionBlockchainImplTest {
 
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
-        p.put("fork0.5.0", String.valueOf(Long.MAX_VALUE));
+        p.put("fork1.0", String.valueOf(Long.MAX_VALUE));
         cfg.getFork().setProperties(p);
         this.blockchain = null;
     }
@@ -27,7 +27,7 @@ public class AionBlockchainImplTest {
     public void testUnityMininmumNumber() {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
-        p.put("fork0.5.0", "1");
+        p.put("fork1.0", "1");
         cfg.getFork().setProperties(p);
 
         StandaloneBlockchain.Bundle bundle =
@@ -47,7 +47,7 @@ public class AionBlockchainImplTest {
     public void testUnityMininmumNumber2() {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
-        p.put("fork0.5.0", "2");
+        p.put("fork1.0", "2");
         cfg.getFork().setProperties(p);
 
         StandaloneBlockchain.Bundle bundle =

@@ -198,7 +198,7 @@ public class Cli {
                     // because it handles balance transfers. The kernel is responsible for ensuring it is not called
                     // with anything else.
                     Properties forkProperties = CfgAion.inst().getFork().getProperties();
-                    String fork2 = forkProperties.getProperty("fork0.5.0");
+                    String fork2 = forkProperties.getProperty("fork1.0");
 
                     AvmVersionSchedule schedule;
                     if (fork2 != null) {
