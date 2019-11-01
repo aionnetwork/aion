@@ -1,6 +1,7 @@
 package org.aion.avm.version1;
 
 import avm.Address;
+import java.math.BigInteger;
 import org.aion.avm.stub.IStreamingEncoder;
 import org.aion.avm.userlib.abi.ABIStreamingEncoder;
 import org.aion.types.AionAddress;
@@ -15,6 +16,12 @@ public final class StreamingEncoder implements IStreamingEncoder {
     @Override
     public IStreamingEncoder encodeOneLong(long longToEncode) {
         this.encoder.encodeOneLong(longToEncode);
+        return this;
+    }
+
+    @Override
+    public IStreamingEncoder encodeOneBigInteger(BigInteger bigIntegerToEncode) {
+        this.encoder.encodeOneBigInteger(bigIntegerToEncode);
         return this;
     }
 

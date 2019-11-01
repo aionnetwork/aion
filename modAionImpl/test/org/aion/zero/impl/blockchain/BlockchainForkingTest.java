@@ -1,9 +1,11 @@
 package org.aion.zero.impl.blockchain;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.blockchain.BlockchainTestUtils.MIN_SELF_STAKE;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateTransactions;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,9 +14,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
+import org.aion.base.TransactionTypeRule;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
@@ -22,24 +27,23 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.core.ImportResult;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.vm.common.BlockCachingContext;
-import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
-import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +57,8 @@ public class BlockchainForkingTest {
         Map<LogEnum, LogLevel> cfg = new HashMap<>();
         cfg.put(LogEnum.TX, LogLevel.DEBUG);
         cfg.put(LogEnum.VM, LogLevel.DEBUG);
+        // enable CONS->DEBUG to see messages from staking contract helper
+        // cfg.put(LogEnum.CONS, LogLevel.DEBUG);
         AionLoggerFactory.initAll(cfg);
 
         AvmTestConfig.supportOnlyAvmVersion1();
@@ -1053,5 +1059,237 @@ public class BlockchainForkingTest {
         txs.add(transaction);
 
         return txs;
+    }
+
+    /**
+     * The test builds two blockchains causing several re-branching on top of the unity block, the first staking block and the next mining block.
+     */
+    @Test
+    public void testReBranchOnUnityBlockchain() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+
+        // setup accounts
+        List<ECKey> accounts = generateAccounts(10);
+        ECKey stakingRegistryOwner = accounts.get(0);
+        List<ECKey> stakersOnChain1 = List.of(accounts.get(1), accounts.get(2), accounts.get(3));
+        List<ECKey> stakersOnChain2 = List.of(accounts.get(4), accounts.get(5), accounts.get(6));
+        List<ECKey> stakersOnBothChains = List.of(accounts.get(7), accounts.get(8), accounts.get(9));
+
+        // setup Unity fork and AVM
+        long unityForkBlock = 2;
+        AvmTestConfig.clearConfigurations(); // clear setting from @Before
+        TransactionTypeRule.allowAVMContractTransaction();
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
+        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock, 0); // enable both AVMs without overlap
+
+        // setup two identical blockchains
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain firstChain = builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).withAvmEnabled().build().bc;
+        StandaloneBlockchain secondChain = builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).withAvmEnabled().build().bc;
+        firstChain.forkUtility.enableUnityFork(unityForkBlock);
+        secondChain.forkUtility.enableUnityFork(unityForkBlock);
+
+        assertThat(secondChain).isNotEqualTo(firstChain);
+        assertThat(secondChain.genesis).isEqualTo(firstChain.genesis);
+
+        /* Setup the first block in the chain with the staker registry deployment.
+         * After this both chains will have:
+         *     (gen)->(staker-registry)
+         */
+        // create block with staker registry
+        Block blockWithRegistry = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(firstChain, firstChain.getGenesis(), resourceProvider, stakingRegistryOwner);
+        // import block on firstChain
+        Pair<ImportResult, AionBlockSummary> result = firstChain.tryToConnectAndFetchSummary(blockWithRegistry);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+        // import block on secondChain
+        result = secondChain.tryToConnectAndFetchSummary(blockWithRegistry);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+        // ensure both chains have the same root
+        assertThat(secondChain.getRepository().getRoot()).isEqualTo(firstChain.getRepository().getRoot());
+
+        // set the staking contract address in the staking genesis
+        AionTransaction deploy = blockWithRegistry.getTransactionsList().get(0);
+        AionAddress contract = TxUtil.calculateContractAddress(deploy.getSenderAddress().toByteArray(), deploy.getNonceBI());
+        firstChain.getGenesis().setStakingContractAddress(contract);
+        secondChain.getGenesis().setStakingContractAddress(contract);
+
+        /* Import blocks such that a re-branching occurs on the Unity fork block.
+         * The firstChain imports blocks 2 and 3 without re-org for state comparison:
+         *     (gen)->(staker-registry)->(block2Unity)->(block3Staking)
+         * The secondChain imports blocks 1, 2 and 3, in the order of their indices, causing a re-org:
+         *     (gen)->(staker-registry)->(block1Unity)
+         *                             ->(block2Unity)->(block3Staking)
+         */
+        // setup firstChain
+        // create Unity block with stakersOnChain1
+        Block block2Unity = BlockchainTestUtils.generateNextMiningBlockWithStakers(firstChain, firstChain.getBestBlock(), resourceProvider, stakersOnChain1, MIN_SELF_STAKE);
+        // import block2Unity on firstChain (main chain)
+        result = firstChain.tryToConnectAndFetchSummary(block2Unity);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+        // create staking block with stakersOnBothChains
+        Block block3Staking = BlockchainTestUtils.generateNextStakingBlockWithStakers(firstChain, block2Unity, resourceProvider, stakersOnBothChains, MIN_SELF_STAKE, stakersOnChain1.get(0));
+        assertThat(block3Staking).isNotNull();
+        // import block3Staking on firstChain (main chain)
+        result = firstChain.tryToConnectAndFetchSummary(block3Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+
+        // setup secondChain
+        // create Unity block with stakersOnChain2
+        Block block1Unity = BlockchainTestUtils.generateNextMiningBlockWithStakers(secondChain, secondChain.getBestBlock(), resourceProvider, stakersOnChain2, MIN_SELF_STAKE);
+        // import block1Unity on secondChain (main chain)
+        result = secondChain.tryToConnectAndFetchSummary(block1Unity);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+        // create staking block with stakersOnBothChains as setup block for next section -- not connecting
+        // NOTE: this block can be created only on top of the main chain and therefore must be built here
+        Block block4Staking = BlockchainTestUtils.generateNextStakingBlockWithStakers(secondChain, block1Unity, resourceProvider, stakersOnBothChains, MIN_SELF_STAKE, stakersOnChain2.get(0));
+        assertThat(block4Staking).isNotNull();
+        // verify stakers from stakersOnChain2 exist and stakersOnChain1 and stakersOnBothChains are not present
+        verifyEffectiveSelfStake(stakersOnChain1, secondChain, block1Unity, BigInteger.ZERO);
+        verifyEffectiveSelfStake(stakersOnChain2, secondChain, block1Unity, MIN_SELF_STAKE);
+        verifyEffectiveSelfStake(stakersOnBothChains, secondChain, block1Unity, BigInteger.ZERO);
+        // importing block2Unity on secondChain (side chain)
+        result = secondChain.tryToConnectAndFetchSummary(block2Unity);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+        // importing block3Staking on secondChain (main chain after re-branch)
+        result = secondChain.tryToConnectAndFetchSummary(block3Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+        // verify stakers from stakersOnChain1 and stakersOnBothChains exist and stakersOnChain2 are not present
+        verifyEffectiveSelfStake(stakersOnChain1, secondChain, block3Staking, MIN_SELF_STAKE);
+        verifyEffectiveSelfStake(stakersOnChain2, secondChain, block3Staking, BigInteger.ZERO);
+        verifyEffectiveSelfStake(stakersOnBothChains, secondChain, block3Staking, MIN_SELF_STAKE);
+
+        // ensuring the same state root for the two import paths
+        assertThat(secondChain.getRepository().getRoot()).isEqualTo(firstChain.getRepository().getRoot());
+
+        /* Import blocks 4 and 5 such that a re-branching occurs on secondChain:
+         *     (gen)->(staker-registry)->(block1Unity)->(block4Staking)->(block5Mining)
+         *                             ->(block2Unity)->(block3Staking)
+         */
+        // importing block4Staking on secondChain (side chain)
+        result = secondChain.tryToConnectAndFetchSummary(block4Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+        // create diverse set of transactions
+        List<AionTransaction> txs = generateMixedTransactions(secondChain, block4Staking, resourceProvider, stakersOnChain1, stakersOnBothChains, stakersOnChain2);
+        assertThat(txs.size()).isEqualTo(8);
+        // create mining block on top of block4Staking
+        Block block5Mining = BlockchainTestUtils.generateNextMiningBlock(secondChain, block4Staking, txs);
+        // importing block5Mining on secondChain (main chain after re-branch)
+        result = secondChain.tryToConnectAndFetchSummary(block5Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 8, false);
+
+        // verify stakers updates
+        verifyEffectiveSelfStake(stakersOnChain1, secondChain, block5Mining, MIN_SELF_STAKE);
+        verifyEffectiveSelfStake(stakersOnBothChains, secondChain, block5Mining, MIN_SELF_STAKE.multiply(BigInteger.TWO));
+        verifyEffectiveSelfStake(List.of(stakersOnChain2.get(0), stakersOnChain2.get(1)), secondChain, block5Mining, BigInteger.ZERO);
+        verifyEffectiveSelfStake(List.of(stakersOnChain2.get(2)), secondChain, block5Mining, MIN_SELF_STAKE);
+
+        /* Import blocks such that a re-branching occurs on the first mining block after Unity.
+         * The firstChain imports blocks without re-org for state comparison:
+         *     (gen)->(staker-registry)->(block2Unity)->(block3Staking)->(block6Mining)->(block7Staking)
+         * The secondChain imports blocks 6 and 7 in the order of their indices, causing a re-org:
+         *     (gen)->(staker-registry)->(block1Unity)->(block4Staking)->(block5Mining)
+         *                             ->(block2Unity)->(block3Staking)->(block6Mining)->(block7Staking)
+         */
+        // create diverse set of transactions
+        txs = generateMixedTransactions(firstChain, block3Staking, resourceProvider, stakersOnChain2, stakersOnChain1, stakersOnBothChains);
+        assertThat(txs.size()).isEqualTo(8);
+        // create alternative mining block on top of block3Staking
+        Block block6Mining = BlockchainTestUtils.generateNextMiningBlock(firstChain, block3Staking, txs);
+        // import block6Mining on firstChain (main chain)
+        result = firstChain.tryToConnectAndFetchSummary(block6Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 8, false);
+        // create staking block on top of block6Mining
+        Block block7Staking = BlockchainTestUtils.generateNextStakingBlock(firstChain, block6Mining, Collections.emptyList(), stakersOnChain1.get(2));
+        assertThat(block7Staking).isNotNull();
+        // import block7Staking on firstChain (main chain)
+        result = firstChain.tryToConnectAndFetchSummary(block7Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // import block6Mining on secondChain (side chain)
+        result = secondChain.tryToConnectAndFetchSummary(block6Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 8, false);
+        // import block7Staking on secondChain (main chain after re-branch)
+        result = secondChain.tryToConnectAndFetchSummary(block7Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // verify stakers updates
+        verifyEffectiveSelfStake(stakersOnChain2, secondChain, block7Staking, MIN_SELF_STAKE);
+        verifyEffectiveSelfStake(stakersOnChain1, secondChain, block7Staking, MIN_SELF_STAKE.multiply(BigInteger.TWO));
+        verifyEffectiveSelfStake(List.of(stakersOnBothChains.get(0), stakersOnBothChains.get(1)), secondChain, block7Staking, BigInteger.ZERO);
+        verifyEffectiveSelfStake(List.of(stakersOnBothChains.get(2)), secondChain, block7Staking, MIN_SELF_STAKE);
+
+        // ensuring the same state root for the two import paths
+        assertThat(secondChain.getRepository().getRoot()).isEqualTo(firstChain.getRepository().getRoot());
+
+        // fast forward 58 blocks to check that the stake was transferred
+        AionLoggerFactory.initAll(); // this resets logging to warnings to avoid spam
+        List<ECKey> stakers = new ArrayList<>();
+        stakers.addAll(stakersOnChain2);
+        stakers.addAll(stakersOnChain1);
+        stakers.add(stakersOnBothChains.get(2));
+        BlockchainTestUtils.generateRandomUnityChain(firstChain, resourceProvider, 58, 1, stakers, stakingRegistryOwner, 10);
+
+        // finalize transfer and verify
+        AionTransaction tx = BlockchainTestUtils.generateTransferFinalizeTransactions(firstChain, firstChain.getBestBlock(), resourceProvider, stakersOnBothChains.get(1), 0L);
+        assertThat(firstChain.getBestBlock().getHeader().getSealType()).isEqualTo(BlockSealType.SEAL_POS_BLOCK);
+        Block finalizeTransferBlock = BlockchainTestUtils.generateNextMiningBlock(firstChain, firstChain.getBestBlock(), List.of(tx));
+        result = firstChain.tryToConnectAndFetchSummary(finalizeTransferBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 1, false);
+        verifyEffectiveSelfStake(List.of(stakersOnBothChains.get(2)), firstChain, firstChain.getBestBlock(), MIN_SELF_STAKE.multiply(BigInteger.TWO));
+    }
+
+    public List<AionTransaction> generateMixedTransactions(StandaloneBlockchain chain, Block parent, TestResourceProvider resourceProvider, List<ECKey> newStakers, List<ECKey> bondStakers, List<ECKey> mixedStakers) {
+        if (mixedStakers.size() != 3) {
+            throw new IllegalStateException("Please provide the accounts required to build a Unity chain.");
+        }
+
+        // create diverse set of transactions
+        List<AionTransaction> txs = new ArrayList<>();
+        // adding more stakers
+        txs.addAll(BlockchainTestUtils.generateStakerRegistrationTransactions(chain, parent, resourceProvider, newStakers, MIN_SELF_STAKE));
+        // adding more stake to existing stakers
+        txs.addAll(BlockchainTestUtils.generateIncreaseStakeTransactions(chain, parent, resourceProvider, bondStakers, MIN_SELF_STAKE));
+        // unbound staker
+        txs.addAll(BlockchainTestUtils.generateDecreaseStakeTransactions(chain, parent, resourceProvider, List.of(mixedStakers.get(0)), MIN_SELF_STAKE, BigInteger.ZERO));
+        // transfer staker
+        txs.addAll(BlockchainTestUtils.generateTransferStakeTransactions(chain, parent, resourceProvider, List.of(mixedStakers.get(1), mixedStakers.get(2)), MIN_SELF_STAKE, BigInteger.ZERO));
+
+        // sorting the transactions by hash to randomize the order
+        return txs.stream().sorted((t1, t2) -> Arrays.compare(t1.getTransactionHash(), t2.getTransactionHash())).collect(Collectors.toList());
+    }
+
+    public void verifyReceipts(List<AionTxReceipt> stakerRegistrationReceipts, int expectedSize, boolean checkEnergy) {
+        assertThat(stakerRegistrationReceipts.size()).isEqualTo(expectedSize);
+
+        for (AionTxReceipt receipt : stakerRegistrationReceipts) {
+            assertThat(receipt.isSuccessful()).isTrue();
+            assertThat(receipt.getLogInfoList()).isNotEmpty();
+            if (checkEnergy) {
+                // the value below can differ slightly depending on the address of the caller
+                assertThat(receipt.getEnergyUsed()).isAtLeast(180_000L);
+            }
+        }
+    }
+
+    public void verifyEffectiveSelfStake(List<ECKey> stakers, AionBlockchainImpl chain, Block block, BigInteger expectedStake) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+        for (ECKey key : stakers) {
+            AionAddress address = new AionAddress(key.getAddress());
+            assertThat(chain.getStakingContractHelper().getEffectiveStake(address, address, block)).isEqualTo(expectedStake);
+        }
     }
 }

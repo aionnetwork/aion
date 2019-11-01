@@ -1,5 +1,6 @@
 package org.aion.avm.stub;
 
+import java.math.BigInteger;
 import org.aion.types.AionAddress;
 
 /**
@@ -19,6 +20,14 @@ public interface IStreamingEncoder {
      * @return this encoder.
      */
     public IStreamingEncoder encodeOneLong(long longToEncode);
+
+    /**
+     * Encodes the specified BigInteger and returns this encoder.
+     *
+     * @param bigIntegerToEncode The BigInteger to encode.
+     * @return this encoder.
+     */
+    IStreamingEncoder encodeOneBigInteger(BigInteger bigIntegerToEncode);
 
     /**
      * Encodes the specified string and returns this encoder.
