@@ -63,6 +63,7 @@ tmp/
 /mainnet/
 /amity/
 /custom/
+/tetryon/
 
 # openjdk artifacts
 openjdk*.tar.gz

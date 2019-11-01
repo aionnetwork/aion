@@ -86,7 +86,7 @@
         <CONS>INFO</CONS>
         <DB>WARN</DB>
         <API>INFO</API>
-        <P2P>INFO</P2P>
+        <P2P>WARN</P2P>
         <GUI>INFO</GUI>
     </log>
     <gui>

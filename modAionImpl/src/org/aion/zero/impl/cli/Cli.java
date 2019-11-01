@@ -200,9 +200,17 @@ public class Cli {
                     Properties forkProperties = CfgAion.inst().getFork().getProperties();
                     String fork2 = forkProperties.getProperty("fork1.0");
 
+                    boolean isTetryon = Network.determineNetwork(CfgAion.inst().getNetwork()) == Network.TETRYON;
+
+                    // TODO: hack; not the right place for this.
+                    if (fork2 != null && isTetryon)
+                        throw new IllegalArgumentException("Cannot set fork1.0 in fork.properties for tetryon network");
+
                     AvmVersionSchedule schedule;
                     if (fork2 != null) {
                         schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+                    } else if (isTetryon) {
+                        schedule = AvmVersionSchedule.newScheduleForBothVersions(0,    1, 0);
                     } else {
                         schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
                     }
