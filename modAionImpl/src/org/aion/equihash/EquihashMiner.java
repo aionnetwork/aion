@@ -297,7 +297,7 @@ public class EquihashMiner {
             Thread.currentThread().setName("miner_status");
             double hashrate = (double) miner.totalSolGenerated.getAndSet(0) / STATUS_INTERVAL;
             hashrateMAF.add(hashrate);
-            LOG.info("Aion internal miner generating {} solutions per second", hashrate);
+            LOG.debug("Aion internal miner generating {} solutions per second", hashrate);
         }
     }
 

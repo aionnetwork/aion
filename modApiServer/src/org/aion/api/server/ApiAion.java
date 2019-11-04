@@ -379,7 +379,7 @@ public abstract class ApiAion extends Api {
 
         AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
         if (txInfo == null) {
-            if (LOG.isErrorEnabled()) {
+            if (LOG.isWarnEnabled()) {
                 LOG.error("<get-transaction-receipt msg=tx-info-null>");
             }
             return null;

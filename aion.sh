@@ -37,7 +37,7 @@ ARG=$@
 #fi
 
 # add execute permission to rt
-chmod +x ./rt/bin/*
+[ -d "./rt/bin/" ] && chmod +x ./rt/bin/*
 
 # prepare jvm params
 # default to minimum 4gb heap if Xms not set.
