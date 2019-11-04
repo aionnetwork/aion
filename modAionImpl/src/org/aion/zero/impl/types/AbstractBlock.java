@@ -35,8 +35,6 @@ public abstract class AbstractBlock implements Block {
 
     public abstract String getShortDescr();
 
-    abstract void parseRLP();
-
     /**
      * check if param block is son of this block
      *
@@ -59,7 +57,6 @@ public abstract class AbstractBlock implements Block {
     }
 
     List<byte[]> getBodyElements() {
-        parseRLP();
         byte[] transactions = getTransactionsEncoded();
         List<byte[]> body = new ArrayList<>();
         body.add(transactions);

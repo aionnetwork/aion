@@ -21,8 +21,6 @@ import org.aion.util.conversions.Hex;
 public class AionBlock extends AbstractBlock {
 
     /* Private */
-    private byte[] rlpEncoded;
-    private volatile boolean parsed = false;
     private A0BlockHeader header;
 
     /* Constructors */
@@ -35,15 +33,13 @@ public class AionBlock extends AbstractBlock {
         }
         this.header = A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
         this.transactionsList.addAll(block.getTransactionsList());
-        this.parsed = true;
     }
 
     public AionBlock(byte[] rawData) {
         if (rawData == null) {
             throw new NullPointerException("RlpEncoded data is null");
         }
-
-        this.rlpEncoded = rawData;
+        parseRLP(rawData);
     }
 
     /**
@@ -86,7 +82,6 @@ public class AionBlock extends AbstractBlock {
         this.header = header;
         this.transactionsList.clear();
         this.transactionsList.addAll(transactionsList);
-        this.parsed = true;
     }
 
     @VisibleForTesting
@@ -131,7 +126,6 @@ public class AionBlock extends AbstractBlock {
         this.header = builder.build();
         this.transactionsList.clear();
         this.transactionsList.addAll(transactionsList);
-        this.parsed = true;
     }
 
     /**
@@ -191,30 +185,19 @@ public class AionBlock extends AbstractBlock {
                 .withDefaultSolution();
 
         this.header = builder.build();
-        this.parsed = true;
     }
 
-    void parseRLP() {
-        if (this.parsed) {
-            return;
-        }
+    private void parseRLP(byte[] rawData) {
+        RLPList params = RLP.decode2(rawData);
+        RLPList block = (RLPList) params.get(0);
 
-        synchronized (this) {
-            if (this.parsed) return;
+        // Parse Header
+        RLPList header = (RLPList) block.get(0);
+        this.header = A0BlockHeader.Builder.newInstance().withRlpList(header).build();
 
-            RLPList params = RLP.decode2(rlpEncoded);
-            RLPList block = (RLPList) params.get(0);
-
-            // Parse Header
-            RLPList header = (RLPList) block.get(0);
-            this.header = A0BlockHeader.Builder.newInstance().withRlpList(header).build();
-
-            // Parse Transactions
-            RLPList txTransactions = (RLPList) block.get(1);
-            this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
-
-            this.parsed = true;
-        }
+        // Parse Transactions
+        RLPList txTransactions = (RLPList) block.get(1);
+        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
     }
 
     @Override
@@ -223,61 +206,51 @@ public class AionBlock extends AbstractBlock {
     }
 
     public A0BlockHeader getHeader() {
-        parseRLP();
         return this.header;
     }
 
     @Override
     public byte[] getHash() {
-        parseRLP();
         return this.header.getHash();
     }
 
     @Override
     public byte[] getParentHash() {
-        parseRLP();
         return this.header.getParentHash();
     }
 
     @Override
     public AionAddress getCoinbase() {
-        parseRLP();
         return this.header.getCoinbase();
     }
 
     @Override
     public byte[] getStateRoot() {
-        parseRLP();
         return this.header.getStateRoot();
     }
 
     @Override
     public byte[] getTxTrieRoot() {
-        parseRLP();
         return this.header.getTxTrieRoot();
     }
 
     @Override
     public byte[] getReceiptsRoot() {
-        parseRLP();
         return this.header.getReceiptsRoot();
     }
 
     @Override
     public byte[] getLogBloom() {
-        parseRLP();
         return this.header.getLogsBloom();
     }
 
     @Override
     public byte[] getDifficulty() {
-        parseRLP();
         return this.header.getDifficulty();
     }
 
     @Override
     public BigInteger getDifficultyBI() {
-        parseRLP();
         return this.header.getDifficultyBI();
     }
 
@@ -289,46 +262,29 @@ public class AionBlock extends AbstractBlock {
         }
 
         header = (A0BlockHeader) _header;
-
-        if (rlpEncoded == null) {
-            getEncoded();
-        }
-
-        byte[] headerEncoded = header.getEncoded();
-
-        List<byte[]> block = getBodyElements();
-        block.add(0, headerEncoded);
-        byte[][] elements = block.toArray(new byte[block.size()][]);
-
-        rlpEncoded = RLP.encodeList(elements);
     }
 
     @Override
     public long getTimestamp() {
-        parseRLP();
         return this.header.getTimestamp();
     }
 
     @Override
     public long getNumber() {
-        parseRLP();
         return this.header.getNumber();
     }
 
     @Override
     public byte[] getExtraData() {
-        parseRLP();
         return this.header.getExtraData();
     }
 
     public byte[] getNonce() {
-        parseRLP();
         return this.header.getNonce();
     }
 
     @Override
     public List<AionTransaction> getTransactionsList() {
-        parseRLP();
         return transactionsList;
     }
 
@@ -398,8 +354,6 @@ public class AionBlock extends AbstractBlock {
     @Override
     public String toString() {
         StringBuilder toStringBuff = new StringBuilder();
-        parseRLP();
-
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [ ");
         toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash())).append("\n");
@@ -477,26 +431,22 @@ public class AionBlock extends AbstractBlock {
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(rlpEncoded);
+        return Arrays.hashCode(getEncoded());
     }
 
     @Override
     public byte[] getEncoded() {
-        if (rlpEncoded == null) {
-            byte[] header = this.header.getEncoded();
+        byte[] header = this.header.getEncoded();
 
-            List<byte[]> block = getBodyElements();
-            block.add(0, header);
-            byte[][] elements = block.toArray(new byte[block.size()][]);
+        List<byte[]> block = getBodyElements();
+        block.add(0, header);
+        byte[][] elements = block.toArray(new byte[block.size()][]);
 
-            this.rlpEncoded = RLP.encodeList(elements);
-        }
-        return rlpEncoded;
+        return RLP.encodeList(elements);
     }
 
     @Override
     public String getShortHash() {
-        parseRLP();
         return Hex.toHexString(getHash()).substring(0, 6);
     }
 
@@ -514,13 +464,11 @@ public class AionBlock extends AbstractBlock {
 
     @Override
     public long getNrgConsumed() {
-        parseRLP();
         return this.header.getEnergyConsumed();
     }
 
     @Override
     public long getNrgLimit() {
-        parseRLP();
         return this.header.getEnergyLimit();
     }
 
@@ -529,7 +477,6 @@ public class AionBlock extends AbstractBlock {
 
         AionBlock block = new AionBlock();
         block.header = header;
-        block.parsed = true;
 
         RLPList items = (RLPList) RLP.decode2(body).get(0);
         RLPList transactions = (RLPList) items.get(0);
@@ -568,7 +515,6 @@ public class AionBlock extends AbstractBlock {
 
                 AionBlock block = new AionBlock();
                 block.header = header;
-                block.parsed = true;
 
                 // Parse Transactions
                 RLPList transactions = (RLPList) blockRLP.get(1);
@@ -616,7 +562,6 @@ public class AionBlock extends AbstractBlock {
 
         AionBlock block = new AionBlock();
         block.header = header;
-        block.parsed = true;
 
         // Parse Transactions
         RLPList transactions = (RLPList) rlpEncoded.get(1);
