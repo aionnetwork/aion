@@ -23,7 +23,7 @@ pipeline {
             }
 
             steps {                
-                archiveArtifacts artifacts: 'pack/aion-v*.tar.bz2'
+                archiveArtifacts artifacts: 'pack/oan-v*.tar.bz2'
             }
         }
        
@@ -70,10 +70,11 @@ pipeline {
                         git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'master' 
                     }
 
-                    sh('cp pack/aion.tar.bz2 FunctionalTests/Tests')
+                    sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
 
                     dir('FunctionalTests') { 
-                        sh('tar -C Tests -xjf Tests/aion.tar.bz2')
+                        sh('tar -C Tests -xjf Tests/oan.tar.bz2')
+                        sh('mv Tests/oan Tests/aion')
                         sh('./gradlew :Tests:test -i -PtestNodes=java')
                     }
             }

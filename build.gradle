@@ -14,7 +14,7 @@ def dirModFile ="./mod"
 def javaHome = System.getProperty('java.home')
 def vmVersion = "0.4.0"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
-
+def brandName = "oan"
 
 allprojects { 
     apply plugin: 'java'
@@ -318,50 +318,50 @@ task pack(type: Tar) {
     dependsOn compileNative 
     finalizedBy(postPack)
 
-    archiveName = 'aion.tar.bz2'
+    archiveName = "${brandName}.tar.bz2"
     destinationDir = file(dirPack)
     compression = Compression.BZIP2
 
-    into('/aion/jars') { 
+    into("/${brandName}/jars") { 
         from dirRuntimeJars 
         include '*.jar', '*.so'
     }
-    into('/aion/lib') {
+    into("/${brandName}/lib") {
         from dirLibFile
         include 'org-aion-avm-core-v*.jar', 'org-aion-avm-api-v*.jar', 'org-aion-avm-rt-v*.jar', 'org-aion-avm-userlib-v*.jar',  'org-aion-avm-tooling-v*.jar', 'org-aion-avm-utilities-v*.jar', 'modAvmVersion*.jar'
     }
-    into('/aion/') { 
+    into("/${brandName}/") { 
         from dirWorkspace
         include 'aion.sh'
     }
-    into('/aion/native') {
+    into("/${brandName}/native") {
         from dirNative
         include '**'
     }
-    into('/aion/config') {
+    into("/${brandName}/config") {
         from "${dirPack}/config"
         include '**'
     }
-    into('/aion/rt') {
+    into("/${brandName}/rt") {
         from "${dirPack}/rt"
         include '**'
     }
-    into('/aion/web-console') {
+    into("/${brandName}/web-console") {
         from "${dirPack}/web3"
         include '**'
     }
 
-    into('/aion/script') {
+    into("/${brandName}/script") {
         from "${dirPack}/script"
         include 'generateSslCert.sh', 'nohup_wrapper.sh'
     }
 
-    into('/aion/tooling') {
+    into("/${brandName}/tooling") {
         from "${dirWorkspace}/tooling"
         include '**'
     }
 
-    into('/aion/') {
+    into("/${brandName}/") {
         from dirWorkspace
         include 'CUSTOM_NETWORK_SETUP.md'
     }
@@ -381,7 +381,7 @@ task copyPackForDocker(type: Copy) {
     dependsOn pack, overridePackConfigForDocker
     pack.mustRunAfter overridePackConfigForDocker
 
-    from "${dirPack}/aion.tar.bz2"
+    from "${dirPack}/${brandName}.tar.bz2"
     from "${rootDir}/DockerAutomation"
     into "${buildDir}/docker"
 }
