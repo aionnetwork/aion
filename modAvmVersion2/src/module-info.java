@@ -12,6 +12,8 @@ module aion.avm.v2 {
     requires org.aion.avm.userlib;
     requires org.aion.avm.utilities;
     requires org.aion.avm.tooling;
+    requires aion.log;
+    requires slf4j.api;
 
     exports org.aion.avm.version2;
 }

@@ -10,7 +10,10 @@ import org.aion.avm.stub.AvmExecutionType;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.version2.internal.AionCapabilities;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.types.Transaction;
+import org.slf4j.Logger;
 
 /**
  * The AVM.
@@ -23,6 +26,7 @@ import org.aion.types.Transaction;
  */
 public final class AionVirtualMachine implements IAionVirtualMachine {
     private final AvmImpl avm;
+    private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     private AionVirtualMachine(AvmImpl avm) {
         this.avm = avm;
@@ -34,8 +38,15 @@ public final class AionVirtualMachine implements IAionVirtualMachine {
      * @return A new AVM.
      */
     public static AionVirtualMachine createAndInitializeNewAvm() {
+        AvmConfiguration c = new AvmConfiguration();
+        if (LOG_VM.isDebugEnabled() || LOG_VM.isTraceEnabled()) {
+            c.enableBlockchainPrintln = true;
+        } else {
+            c.enableBlockchainPrintln = false;
+        }
+
         return new AionVirtualMachine(CommonAvmFactory
-            .buildAvmInstanceForConfiguration(new AionCapabilities(), new AvmConfiguration()));
+            .buildAvmInstanceForConfiguration(new AionCapabilities(), c));
     }
 
     /**
