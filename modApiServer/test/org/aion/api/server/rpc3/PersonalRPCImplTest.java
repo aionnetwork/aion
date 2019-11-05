@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -29,11 +31,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class PersonalRPCImplTest {
-    private PersonalRPCImpl rpc = new PersonalRPCImpl();
+    private ChainHolder chainHolder = mock(ChainHolder.class);
+    private RPCMethods rpc;
 
     @Before
     public void setup() {
-        rpc = Mockito.spy(new PersonalRPCImpl());
+        rpc = spy(new RPCMethods(chainHolder));
     }
 
     @Test
@@ -109,19 +112,6 @@ public class PersonalRPCImplTest {
             rpc.execute(request);
             fail();
         }catch (InvalidParamsRPCException e){}
-
-        Mockito.doThrow(NullPointerException.class).when(rpc).personal_ecRecover(any(), any());
-        // well formed request but fails internally
-        request =
-            new Request(
-                2,
-                "personal_ecRecover",
-                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
-                VersionType.Version2);
-        try{
-            rpc.execute(request);
-            fail();
-        }catch (InternalErrorRPCException e){}
     }
 
     @Test

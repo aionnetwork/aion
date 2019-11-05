@@ -13,7 +13,6 @@ import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
-import org.aion.rpc.server.StratumRPC;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
@@ -28,7 +27,7 @@ import org.junit.Test;
 
 public class StratumRPCImplTest {
     private ChainHolder chainHolder;
-    private StratumRPC stratumRPC;
+    private RPCMethods rpcMethods;
     private ByteArray validSignature;
     private ByteArray validSealHash;
     private ByteArray invalidSignature;
@@ -45,7 +44,7 @@ public class StratumRPCImplTest {
     public void setup(){
 
         chainHolder = mock(ChainHolder.class);
-        stratumRPC = new StratumRPCImpl(chainHolder);
+        rpcMethods = new RPCMethods(chainHolder);
         // creating valid input for submit signature
         valid64Bytes = new byte[64];
         Arrays.fill(valid64Bytes, (byte)0b0000_1000);
@@ -79,19 +78,19 @@ public class StratumRPCImplTest {
 
     @Test
     public void testSubmitSignature(){
-        assertTrue(stratumRPC.execute(new Request(1, "stratum_submitSignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
-        assertFalse(stratumRPC.execute(new Request(1, "stratum_submitSignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
+        assertTrue(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
+        assertFalse(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
     }
 
     @Test
     public void testSubmitSeed(){
-        assertEquals(ByteArray.wrap(valid64Bytes), stratumRPC.execute(new Request(1, "stratum_submitSeed", ParamUnion.wrap(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2)).byteArray);
-        assertNull( stratumRPC.execute(new Request(1, "stratum_submitSeed", ParamUnion.wrap(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2)));
+        assertEquals(ByteArray.wrap(valid64Bytes), rpcMethods.execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2)).byteArray);
+        assertNull( rpcMethods.execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2)));
     }
 
     @Test
     public void testGetSeed(){
-        assertNotNull(stratumRPC.execute(new Request(1, "stratum_getSeed", ParamUnion.wrap(
+        assertNotNull(rpcMethods.execute(new Request(1, "getseed", ParamUnion.wrap(
             new VoidParams()), VersionType.Version2)).byteArray);
     }
 
@@ -100,11 +99,11 @@ public class StratumRPCImplTest {
         chainHolder = spy(new AionChainHolder(AionImpl.instForTest()));
         doReturn(false).when(chainHolder).isUnityForkEnabled();
         doCallRealMethod().when(chainHolder).getSeed();
-        stratumRPC= new StratumRPCImpl(chainHolder);
+        rpcMethods= new RPCMethods(chainHolder);
         try{
             //This call will throw because a unity feature is requested before
             //The unity fork
-            stratumRPC.execute(new Request(1, "stratum_getSeed", ParamUnion.wrap(
+            rpcMethods.execute(new Request(1, "getseed", ParamUnion.wrap(
                 new VoidParams()), VersionType.Version2));
             fail();
         }catch (UnsupportedUnityFeatureRPCException e){

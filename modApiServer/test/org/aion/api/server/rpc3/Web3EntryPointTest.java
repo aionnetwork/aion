@@ -6,8 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
-import org.aion.rpc.server.OpsRPC;
-import org.aion.rpc.server.StratumRPC;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.RPCError;
 import org.aion.rpc.types.RPCTypesConverter.RPCErrorConverter;
@@ -23,9 +22,8 @@ public class Web3EntryPointTest {
     @Before
     public void setup(){
         doReturn(byteArray.toBytes()).when(holder).getSeed();
-        OpsRPC opsRPC = new OpsRPCImpl(holder);
-        StratumRPC stratumRPC = new StratumRPCImpl(holder);
-        web3EntryPoint = new Web3EntryPoint(new PersonalRPCImpl(), opsRPC, stratumRPC,
+        RPCServerMethods rpc = new RPCMethods(holder);
+        web3EntryPoint = new Web3EntryPoint(rpc,
             List.of("personal","ops", "stratum"),
             List.of("personal_ecRecover"), List.of("notAnRPC") );
     }
@@ -44,11 +42,6 @@ public class Web3EntryPointTest {
         assertNotNull(error);
         assertEquals(MethodNotFoundRPCException.INSTANCE.getMessage(),
             RPCErrorConverter.encodeStr(error));
-    }
-
-    @Test
-    public void testCallWithSubstitution(){
-        assertEquals(byteArray, ResponseConverter.decode(web3EntryPoint.call("{\"jsonRPC\":\"2.0\",\"method\":\"getseed\"}")).result.byteArray);
     }
 
     @Test

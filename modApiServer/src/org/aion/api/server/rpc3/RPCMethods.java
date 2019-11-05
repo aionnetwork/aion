@@ -9,13 +9,16 @@ import java.util.stream.Collectors;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.TxUtil;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
-import org.aion.rpc.server.OpsRPC;
+import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
@@ -30,18 +33,67 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
-public class OpsRPCImpl implements OpsRPC {
-    private final Logger logger = AionLoggerFactory.getLogger(LogEnum.API.name());
-    private final Set<String> methods = listMethods();
-    private final ChainHolder chainHolder;
+public class RPCMethods implements RPCServerMethods {
 
-    public OpsRPCImpl(ChainHolder chainHolder) {
+    private final ChainHolder chainHolder;
+    private final Logger logger = AionLoggerFactory.getLogger(LogEnum.API.name());
+    private final Set<String> methods = Set.copyOf(listMethods());
+
+    public RPCMethods(ChainHolder chainHolder) {
         this.chainHolder = chainHolder;
     }
 
     @Override
-    public boolean isExecutable(String s) {
-        return methods.contains(s);
+    public AionAddress personal_ecRecover(ByteArray dataThatWasSigned, ByteArray signature) {
+        logger.debug("Executing personal_ecRecover({},{})", dataThatWasSigned, signature);
+        ISignature signature1 = SignatureFac.fromBytes(signature.toBytes());
+        if (signature1 == null) {
+            throw InvalidParamsRPCException.INSTANCE;
+        }
+        byte[] pk = signature1.getAddress();
+        if (SignatureFac.verify(dataThatWasSigned.toBytes(), signature1)) {
+            return new AionAddress(pk);
+        } else return null;
+    }
+
+    @Override
+    public ByteArray getseed() {
+        try {
+            byte[] result = chainHolder.getSeed();
+            if (result == null) {
+                return null;
+            } else {
+                return ByteArray.wrap(result);
+            }
+        } catch (UnsupportedOperationException e) {
+            throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        }
+    }
+
+    @Override
+    public ByteArray submitseed(
+            ByteArray newSeed, ByteArray signingPublicKey, AionAddress coinBase) {
+        try {
+            byte[] result =
+                    chainHolder.submitSeed(
+                            newSeed.toBytes(), signingPublicKey.toBytes(), coinBase.toByteArray());
+            if (result == null) {
+                return null;
+            } else {
+                return ByteArray.wrap(result);
+            }
+        } catch (UnsupportedOperationException e) {
+            throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        }
+    }
+
+    @Override
+    public Boolean submitsignature(ByteArray signature, ByteArray sealHash) {
+        try {
+            return chainHolder.submitSignature(signature.toBytes(), sealHash.toBytes());
+        } catch (UnsupportedOperationException e) {
+            throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        }
     }
 
     public BlockDetails blockDetailsByEnum(BlockEnum block) {
@@ -55,26 +107,38 @@ public class OpsRPCImpl implements OpsRPC {
 
     private BlockDetails serializeBlockDetails(Block block) {
         if (block == null) {
-            return null; //occurs if the requested block does not exist in the db
+            return null; // occurs if the requested block does not exist in the db
         } else {
-            final BigInteger blkReward = chainHolder.calculateReward(block.getHeader().getNumber());// get the block reward
-            final BigInteger totalDiff = chainHolder.getTotalDifficultyByHash(block.getHash());// get the total difficulty
+            final BigInteger blkReward =
+                    chainHolder.calculateReward(
+                            block.getHeader().getNumber()); // get the block reward
+            final BigInteger totalDiff =
+                    chainHolder.getTotalDifficultyByHash(
+                            block.getHash()); // get the total difficulty
 
             List<AionTxInfo> txInfoList = new ArrayList<>();
-            logger.debug("Retrieving transactions for block: {}",block.getHash());
+            logger.debug("Retrieving transactions for block: {}",
+                "0x" + ByteUtil.toHexString(block.getHash()));
             for (AionTransaction transaction : block.getTransactionsList()) {
-                AionTxInfo txInfo = chainHolder.getTransactionInfo(transaction.getTransactionHash());
+                AionTxInfo txInfo =
+                        chainHolder.getTransactionInfo(transaction.getTransactionHash());
                 txInfoList.add(txInfo);
             }
-            Block previousBlock = chainHolder.getBlockByHash(block.getParentHash());// get the parent block
+            Block previousBlock =
+                    chainHolder.getBlockByHash(block.getParentHash()); // get the parent block
             final Long previousTimestamp;
             if (previousBlock == null) {
                 previousTimestamp = null;
             } else {
-                previousTimestamp = previousBlock.getTimestamp();// set the timestamp to be used to calculate the block time
+                previousTimestamp =
+                        previousBlock
+                                .getTimestamp(); // set the timestamp to be used to calculate the
+                                                 // block time
             }
-            if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK))// return a block based on the seal type
-                return new BlockDetails(
+            if (block.getHeader()
+                    .getSealType()
+                    .equals(BlockSealType.SEAL_POW_BLOCK)) // return a block based on the seal type
+            return new BlockDetails(
                         block.getNumber(),
                         ByteArray.wrap(block.getHash()),
                         ByteArray.wrap(block.getParentHash()),
@@ -189,9 +253,14 @@ public class OpsRPCImpl implements OpsRPC {
             for (int i = 0; i < logs.size(); i++) {
                 Log log = logs.get(i);
                 logDetails.add(
-                    new TxLogDetails(new AionAddress(log.copyOfAddress()), index, ByteArray.wrap(log.copyOfData()), log.copyOfTopics().stream().map(ByteArray::new).collect(
-                        Collectors.toUnmodifiableList()), blockNumber)
-                );
+                        new TxLogDetails(
+                                new AionAddress(log.copyOfAddress()),
+                                index,
+                                ByteArray.wrap(log.copyOfData()),
+                                log.copyOfTopics().stream()
+                                        .map(ByteArray::new)
+                                        .collect(Collectors.toUnmodifiableList()),
+                                blockNumber));
             }
             return Collections.unmodifiableList(logDetails);
         }
@@ -209,5 +278,10 @@ public class OpsRPCImpl implements OpsRPC {
             return serializeBlockDetails(
                     chainHolder.getBlockByHash(blockSpecifierUnion.hash.toBytes()));
         else throw InvalidParamsRPCException.INSTANCE;
+    }
+
+    @Override
+    public boolean isExecutable(String s) {
+        return methods.contains(s);
     }
 }

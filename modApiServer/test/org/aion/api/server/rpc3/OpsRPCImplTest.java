@@ -36,7 +36,7 @@ import org.junit.Test;
 
 public class OpsRPCImplTest {
     private ChainHolder holder = mock(ChainHolder.class);
-    private OpsRPCImpl opsRPC = new OpsRPCImpl(holder);
+    private RPCMethods opsRPC = new RPCMethods(holder);
     private Block emptyPowBlock;
     private Block emptyPosBlock;
     private AionTxInfo txInfo;
