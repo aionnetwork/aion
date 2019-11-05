@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -2722,7 +2723,7 @@ public class ApiWeb3Aion extends ApiAion {
     private class MinerStatsView {
 
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
-        Map<byte[], Block> blocks;
+        Map<byte[], AionBlock> blocks;
         private JSONObject response;
         private int qSize;
         private byte[] miner;
@@ -2756,7 +2757,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             int blkTimesAccumulated = 0;
             Long lastBlkTimestamp = null;
-            Block b = null;
+            AionBlock b = null;
 
             try {
                 // index 0 = latest block
@@ -2818,7 +2819,10 @@ public class ApiWeb3Aion extends ApiAion {
 
         MinerStatsView update() {
             // get the latest head
-            Block blk = getBestBlock();
+            // blk is a temporary variable that will be used to iterate through blocks on the chain
+            // therefore we use the abstract block type
+            Block blk = getBestMiningBlock(); // getBestMiningBlock so that we do not need to check
+                                              // check the block type
 
             if (blk == null) {
                 return this;
@@ -2829,8 +2833,8 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             // evict data as necessary
-            LinkedList<Map.Entry<byte[], Block>> tempStack = new LinkedList<>();
-            tempStack.push(Map.entry(blk.getHash(), blk));
+            LinkedList<Map.Entry<byte[], AionBlock>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
 
             /*
@@ -2850,8 +2854,12 @@ public class ApiWeb3Aion extends ApiAion {
                     && blk.getNumber() > 2) {
 
                 blk = getBlockByHash(blk.getParentHash());
-                tempStack.push(Map.entry(blk.getHash(), blk));
-                itr++;
+                // we need to check the seal type since the parent block could be a pos block
+                if (blk.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+                    //filter out POS blocks
+                    tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
+                    itr++;
+                }
                 /*
                 System.out.println("blkNum: " + blk.getNumber() +
                         " parentHash: " + StringUtils.toJsonHex(blk.getParentHash()) +
@@ -2870,9 +2878,9 @@ public class ApiWeb3Aion extends ApiAion {
             // empty out the stack into the queue
             while (!tempStack.isEmpty()) {
                 // add to the queue
-                Map.Entry<byte[], Block> element = tempStack.pop();
+                Entry<byte[], AionBlock> element = tempStack.pop();
                 byte[] hash = element.getKey();
-                Block blkObj = element.getValue();
+                AionBlock blkObj = element.getValue();
 
                 hashQueue.push(hash);
                 blocks.put(hash, blkObj);

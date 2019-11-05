@@ -179,7 +179,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
-    public Block getBestMiningBlock() {
+    public AionBlock getBestMiningBlock() {
         return this.ac.getBlockchain().getBestMiningBlock();
     }
 
