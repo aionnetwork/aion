@@ -27,37 +27,6 @@ pipeline {
             }
         }
        
-        stage('Full test') {
-            when {
-                // only run if:
-                // - this branch is master
-                expression {GIT_BRANCH == 'master'}
-            }
-
-            steps {
-                timeout(60) {
-                    sh "./gradlew ciBuild"
-                }
-            }
-        }
-
-        stage('Unit test') {
-            when {
-                // only run if:
-                // - this branch is in a PR (env.CHANGE_ID not null), or
-                // - this branch is not master
-                not {
-                    expression {GIT_BRANCH == 'master'}
-                }
-            }
-
-            steps {
-                timeout(60) {
-                    sh "./gradlew unitTest"
-                }
-            }
-        }
-
         stage('Functional tests') {
             when { 
                 // only run if:
@@ -65,9 +34,10 @@ pipeline {
                 // - this branch is master
                 expression { env.CHANGE_ID || GIT_BRANCH == 'master'}
             }
-            steps { 
+            steps {
+                timeout(15) {
                     dir('FunctionalTests') {
-                        git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'master' 
+                        git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'master'
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
@@ -76,6 +46,7 @@ pipeline {
                         sh('tar -C Tests -xjf Tests/oan.tar.bz2')
                         sh('./gradlew :Tests:test -i -PtestNodes=java')
                     }
+                }
             }
         }
     }
