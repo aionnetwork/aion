@@ -20,6 +20,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.CfgNetP2p;
@@ -590,47 +591,59 @@ public class AionHub {
 
     // Returns a new template if a better parent block to mine on is found, or if the system time
     // is ahead of the oldBlockTemplate
+    // Returns null if we're waiting on a Staking block, or if creating a new block template failed for some reason
     public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
+        if (blockchain.isUnityForkEnabledAtNextBlock() &&
+                blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
+            return null;
+        } else {
+            BlockContext context = null;
+            
+            blockTemplateLock.lock();
+            try {
+                Block bestBlock = mempool.getBestBlock();
+                byte[] bestBlockHash = bestBlock.getHash();
 
-        BlockContext context = null;
+                if (oldBlockTemplate == null
+                        || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())) {
 
-        blockTemplateLock.lock();
-        try {
-            Block bestBlock = mempool.getBestBlock();
-            byte[] bestBlockHash = bestBlock.getHash();
+                    // Generate new block template
+                    AionPendingStateImpl.TransactionSortedSet ret =
+                            new AionPendingStateImpl.TransactionSortedSet();
+                    ret.addAll(mempool.getPendingTransactions());
 
-            if (oldBlockTemplate == null
-                    || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())) {
-
-                // Generate new block template
-                AionPendingStateImpl.TransactionSortedSet ret =
-                        new AionPendingStateImpl.TransactionSortedSet();
-                ret.addAll(mempool.getPendingTransactions());
-
-                context =
-                        blockchain.createNewMiningBlockContext(
-                                bestBlock, new ArrayList<>(ret), false);
-            } else if (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock()) {
-                context = blockchain.updateMiningBlockContext(oldBlockTemplate, systemTime);
+                    context =
+                            blockchain.createNewMiningBlockContext(
+                                    bestBlock, new ArrayList<>(ret), false);
+                } else if (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock()) {
+                    context = blockchain.updateMiningBlockContext(oldBlockTemplate, systemTime);
+                } else {
+                    context = oldBlockTemplate;
+                }
+            } finally {
+                blockTemplateLock.unlock();
             }
-        } finally {
-            blockTemplateLock.unlock();
-        }
 
-        return null == context ? oldBlockTemplate : context;
+            return context;
+        }
     }
-
+    
+    // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
     public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
-        StakingBlock blockTemplate;
-        blockTemplateLock.lock();
-        try {
-            blockTemplate = (StakingBlock) blockchain.createStakingBlockTemplate(
-                    mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
-        } finally {
-            blockTemplateLock.unlock();
-        }
+        if (blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
+            return null;
+        } else {
+            StakingBlock blockTemplate;
+            blockTemplateLock.lock();
+            try {
+                blockTemplate = blockchain.createStakingBlockTemplate(
+                        mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
+            } finally {
+                blockTemplateLock.unlock();
+            }
 
-        return blockTemplate;
+            return blockTemplate;
+        }
     }
 
     public void enableUnityFork(long unityForkNumber) {

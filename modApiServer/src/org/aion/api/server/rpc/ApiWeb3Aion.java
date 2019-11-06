@@ -2511,8 +2511,16 @@ public class ApiWeb3Aion extends ApiAion {
         BlockContext bestBlock;
         try {
             bestBlock = getBlockTemplate();
+            if (bestBlock == null) {
+                LOG.debug("Couldn't create a mining block template");
+                
+                JSONObject obj = new JSONObject();
+                obj.put("message", "no mining block template ");
+                obj.put("code", -1);
+                return new RpcMsg(obj);
+            }
         } catch (Exception e) {
-            LOG.error("get block template failed!", e);
+            LOG.error("get mining block template failed!", e);
 
             JSONObject obj = new JSONObject();
             obj.put("message", "failed: " + e.toString());
