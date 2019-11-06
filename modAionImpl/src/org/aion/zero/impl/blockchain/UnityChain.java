@@ -34,7 +34,9 @@ public interface UnityChain {
         byte[] seed,
         byte[] coinbase);
 
-    Block getCachingStakingBlockTemplate(byte[] hash);
+    StakingBlock getCachingStakingBlockTemplate(byte[] hash);
+
+    AionBlock getCachingMiningBlockTemplate(byte[] hash);
 
     ImportResult tryToConnect(Block block);
 

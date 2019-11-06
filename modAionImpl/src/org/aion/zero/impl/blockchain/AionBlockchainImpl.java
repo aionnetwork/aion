@@ -183,7 +183,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private final boolean storeInternalTransactions;
     //TODO : [unity] find the proper number for chaching the template.
-    private Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
+    private final Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
+        .synchronizedMap(new LRUMap<>(64));
+    private final Map<ByteArrayWrapper, AionBlock> miningBlockTemplate = Collections
         .synchronizedMap(new LRUMap<>(64));
 
     private SelfNodeStatusCallback callback;
@@ -1087,8 +1089,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public synchronized BlockContext createNewMiningBlockContext(
         Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        return createNewMiningBlockInternal(
+        final BlockContext blockContext = createNewMiningBlockInternal(
             parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
+        if(blockContext != null) {
+            miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
+        }
+        return blockContext;
+    }
+
+    @Override
+    public BlockContext updateMiningBlockContext(BlockContext oldBlockTemplate, long systemTime) {
+        A0BlockHeader newHeader = oldBlockTemplate.block.getHeader().updateTimestamp(systemTime);
+        AionBlock newBlock = new AionBlock(newHeader, oldBlockTemplate.block.getTransactionsList());
+        final BlockContext blockContext = new BlockContext(newBlock,
+            oldBlockTemplate.baseBlockReward, oldBlockTemplate.transactionFee);
+        miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
+        return blockContext;
     }
 
     BlockContext createNewMiningBlockInternal(
@@ -2553,6 +2569,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return stakingBlockTemplate.get(ByteArrayWrapper.wrap(hash));
+    }
+
+    @Override
+    public AionBlock getCachingMiningBlockTemplate(byte[] hash) {
+        if (hash == null) {
+            throw new NullPointerException("The given hash is null");//
+        }
+        return miningBlockTemplate.get(ByteArrayWrapper.wrap(hash));
     }
 
     @Override

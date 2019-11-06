@@ -111,9 +111,6 @@ public class ApiWeb3Aion extends ApiAion {
     private final int STRATUM_RECENT_BLK_COUNT = 128;
     private final int STRATUM_BLKTIME_INCLUDED_COUNT = 32;
     private final int STRATUM_CACHE_TIME_SECONDS = 15;
-    // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
-    private HashMap<ByteArrayWrapper, AionBlock> templateMap;
-    private ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
     // doesn't need to be protected for concurrent access, since only one write in the constructor.
     private boolean isFilterEnabled;
@@ -190,8 +187,6 @@ public class ApiWeb3Aion extends ApiAion {
     public ApiWeb3Aion(final IAionChain _ac, final AccountManager am) {
         super(_ac, am);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
-        templateMap = new HashMap<>();
-        templateMapLock = new ReentrantReadWriteLock();
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
         isSeedMode = CfgAion.inst().getConsensus().isSeed();
 
@@ -2499,8 +2494,6 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public RpcMsg stratum_getwork() {
-        // TODO: Change this to a synchronized map implementation mapping
-
         if (isSeedMode) {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "SeedNodeIsOpened");
         }
@@ -2516,44 +2509,6 @@ public class ApiWeb3Aion extends ApiAion {
             obj.put("code", -1);
             return new RpcMsg(obj);
         }
-
-        ByteArrayWrapper key = ByteArrayWrapper.wrap(bestBlock.block.getHeader().getMineHash());
-
-        // Read template map; if block already contained chain has not moved forward, simply return
-        // the same block.
-        boolean isContained = false;
-        try {
-            templateMapLock.readLock().lock();
-            if (templateMap.containsKey(key)) {
-                isContained = true;
-            }
-        } finally {
-            templateMapLock.readLock().unlock();
-        }
-
-        // Template not present in map; add it before returning
-        if (!isContained) {
-            try {
-                templateMapLock.writeLock().lock();
-
-                // Deep copy best block to avoid modifying internal best blocks
-                bestBlock = new BlockContext(bestBlock);
-
-                if (!templateMap.keySet().isEmpty()) {
-                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber()
-                            < bestBlock.block.getNumber()) {
-                        // Found a higher block, clear any remaining cached entries and start on new
-                        // height
-                        templateMap.clear();
-                    }
-                }
-                templateMap.put(key, bestBlock.block);
-
-            } finally {
-                templateMapLock.writeLock().unlock();
-            }
-        }
-
         JSONObject obj = new JSONObject();
         obj.put("previousblockhash", toHexString(bestBlock.block.getParentHash()));
         obj.put("height", bestBlock.block.getNumber());
@@ -2629,45 +2584,36 @@ public class ApiWeb3Aion extends ApiAion {
         if (!JSONObject.NULL.equals(nce)
                 && !JSONObject.NULL.equals(soln)
                 && !JSONObject.NULL.equals(hdrHash)) {
-            try {
-                templateMapLock.writeLock().lock();
-
-                ByteArrayWrapper key = ByteArrayWrapper.wrap(hexStringToBytes((String) hdrHash));
-
-                // Grab copy of best block
-                AionBlock bestBlock = templateMap.get(key);
-                if (bestBlock != null) {
-                    try {
-                        bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
-                    } catch (Exception e) {
-                        LOG.error("Finalize block failed!", e);
-                        obj.put("message", "failed: " + e.toString());
-                        obj.put("code", -1);
-                        return new RpcMsg(obj);
-                    }
-
-                    // Directly submit to chain for new due to delays using event, explore event
-                    // submission again
-                    ImportResult importResult = AionImpl.inst().addNewBlock(bestBlock);
-                    if (importResult.isSuccessful()) {
-                        templateMap.remove(key);
-                        LOG.info(
-                                "block submitted via api <num={}, hash={}, diff={}, tx={}>",
-                                bestBlock.getNumber(),
-                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                                bestBlock.getHeader().getDifficultyBI().toString(),
-                                bestBlock.getTransactionsList().size());
-                    } else {
-                        LOG.info(
-                                "Unable to submit block via api <num={}, hash={}, diff={}, tx={}>",
-                                bestBlock.getNumber(),
-                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                                bestBlock.getHeader().getDifficultyBI().toString(),
-                                bestBlock.getTransactionsList().size());
-                    }
+            // Grab copy of best block
+            AionBlock bestBlock = (AionBlock) ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
+            if (bestBlock != null) {
+                try {
+                    bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
+                } catch (Exception e) {
+                    LOG.error("Finalize block failed!", e);
+                    obj.put("message", "failed: " + e.toString());
+                    obj.put("code", -1);
+                    return new RpcMsg(obj);
                 }
-            } finally {
-                templateMapLock.writeLock().unlock();
+
+                // Directly submit to chain for new due to delays using event, explore event
+                // submission again
+                ImportResult importResult = AionImpl.inst().addNewBlock(bestBlock);
+                if (importResult.isSuccessful()) {
+                    LOG.info(
+                            "block submitted via api <num={}, hash={}, diff={}, tx={}>",
+                            bestBlock.getNumber(),
+                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getHeader().getDifficultyBI().toString(),
+                            bestBlock.getTransactionsList().size());
+                } else {
+                    LOG.info(
+                            "Unable to submit block via api <num={}, hash={}, diff={}, tx={}>",
+                            bestBlock.getNumber(),
+                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getHeader().getDifficultyBI().toString(),
+                            bestBlock.getTransactionsList().size());
+                }
             }
 
             // TODO: Simplified response for now, need to provide better feedback to caller in next
