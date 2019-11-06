@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.aion.base.AionTransaction;
@@ -31,6 +32,7 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -49,7 +51,10 @@ public class AionPoW {
 
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    // This value is the time of the last "full update" of the block template, that is, the last time
+    // we created a fresh block from createNewBlockTemplate()
     protected AtomicLong lastUpdate = new AtomicLong(0);
+    private AionBlock latestBlockTemplate;
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
@@ -122,15 +127,11 @@ public class AionPoW {
                                         Thread.sleep(100);
 
                                         long now = System.currentTimeMillis();
-                                        if (now - lastUpdate.get() > 3000
-                                                        && newPendingTxReceived.compareAndSet(
-                                                                true, false)
-                                                || now - lastUpdate.get()
-                                                        > 10000) { // fallback, when
-                                            // we never
-                                            // received any
-                                            // events
+                                        if ((now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false))
+                                                || now - lastUpdate.get() > 10000) {
                                             createNewBlockTemplate();
+                                        } else {
+                                            updateTimestamp(TimeUnit.MILLISECONDS.toSeconds(now));
                                         }
                                     } catch (InterruptedException e) {
                                         break;
@@ -269,7 +270,7 @@ public class AionPoW {
 
                 List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-                Block newBlock;
+                AionBlock newBlock;
                 try {
                     newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
                 } catch (Exception e) {
@@ -285,9 +286,23 @@ public class AionPoW {
                 ev.setFuncArgs(Collections.singletonList(newBlock));
                 eventMgr.newEvent(ev);
 
-                // update last timestamp
                 lastUpdate.set(System.currentTimeMillis());
+                latestBlockTemplate = newBlock;
             }
+        }
+    }
+
+    /** Creates a new block template. */
+    protected synchronized void updateTimestamp(long systemTime) {
+        if (!shutDown.get() && systemTime > latestBlockTemplate.getTimestamp()) {
+            A0BlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
+            AionBlock newBlock = new AionBlock(newHeader, latestBlockTemplate.getTransactionsList());
+            
+            EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
+            ev.setFuncArgs(Collections.singletonList(newBlock));
+            eventMgr.newEvent(ev);
+
+            latestBlockTemplate = newBlock;
         }
     }
 

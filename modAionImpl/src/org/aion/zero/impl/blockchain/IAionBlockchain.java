@@ -20,8 +20,7 @@ public interface IAionBlockchain extends UnityChain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 
-    Block createNewMiningBlock(
-            Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+    AionBlock createNewMiningBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
