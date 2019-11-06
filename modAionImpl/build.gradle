@@ -59,11 +59,11 @@ dependencies {
     compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
 
-    runtimeOnly group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
-    runtimeOnly group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
-    runtimeOnly group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
-    runtimeOnly group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
-    runtimeOnly group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
     
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
     

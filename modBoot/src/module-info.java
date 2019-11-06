@@ -11,6 +11,12 @@ module aion.boot {
     requires aion.txpool;
     requires libnzmq;
 
+    requires org.objectweb.asm;
+    requires org.objectweb.asm.commons;
+    requires org.objectweb.asm.tree;
+    requires org.objectweb.asm.tree.analysis;
+    requires org.objectweb.asm.util;
+
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.log.AionLoggerFactory;
 
