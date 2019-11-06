@@ -875,6 +875,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public static long shutdownHook = Long.MAX_VALUE;
 
     public synchronized ImportResult tryToConnect(final Block block) {
+        long t0 = System.nanoTime();
         if (bestBlock.getNumber() == shutdownHook) {
             LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
 
@@ -887,7 +888,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // requested shutdown
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+        ImportResult r = tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+
+        long t1 = System.nanoTime();
+        double delayMs = (t1 - t0)/1000000.0;
+        String delay = delayMs + "ms";
+        if (delayMs > 1000) {
+            delay = (delayMs / 1000.0) + "s";
+        }
+        if (delayMs > 100) // > 100ms might start causing trouble in prod
+            LOG.warn("tryToConnectBlock() with " + block.getTransactionsList().size() + " txns took: " + delay);
+
+        return r;
     }
 
     public synchronized void compactState() {

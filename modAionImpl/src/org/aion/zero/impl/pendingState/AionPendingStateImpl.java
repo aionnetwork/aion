@@ -709,6 +709,7 @@ public class AionPendingStateImpl implements IPendingState {
                         replayTxBuffer.add(tx);
                         return TxResponse.REPAID;
                     } else {
+                        LOGGER_TX.error("Dropping tx due to replayTxBuffer.size() ({}) > MAX_REPLAY_TX_BUFFER_SIZE ({})", replayTxBuffer.size(), MAX_REPLAY_TX_BUFFER_SIZE);
                         return TxResponse.DROPPED;
                     }
                 } else {

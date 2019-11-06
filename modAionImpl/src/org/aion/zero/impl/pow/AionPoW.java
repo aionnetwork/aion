@@ -270,9 +270,19 @@ public class AionPoW {
 
                 List<AionTransaction> txs = pendingState.getPendingTransactions();
 
+
                 AionBlock newBlock;
                 try {
+                    long t0 = System.nanoTime();
                     newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
+                    long t1 = System.nanoTime();
+                    double delayMs = (t1 - t0)/1000000.0;
+                    String delay = delayMs + "ms";
+                    if (delayMs > 1000) {
+                        delay = (delayMs / 1000.0) + "s";
+                    }
+                    if (delayMs > 100) // > 100ms might start causing trouble in prod
+                        LOG.warn("createNewMiningBlock() with " + txs.size() + " txns took: " + delay);
                 } catch (Exception e) {
                     LOG.error("Create new block failed!", e);
                     return;
