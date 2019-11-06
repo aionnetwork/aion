@@ -612,7 +612,7 @@ public class AionHub {
                         blockchain.createNewMiningBlockContext(
                                 bestBlock, new ArrayList<>(ret), false);
             } else if (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock()) {
-                A0BlockHeader newHeader = oldBlockTemplate.block.getHeader().updateTimestamp(System.currentTimeMillis() / 1000);
+                A0BlockHeader newHeader = oldBlockTemplate.block.getHeader().updateTimestamp(systemTime);
                 AionBlock newBlock = new AionBlock(newHeader, oldBlockTemplate.block.getTransactionsList());
                 context = new BlockContext(newBlock, oldBlockTemplate.baseBlockReward, oldBlockTemplate.transactionFee);
             }
