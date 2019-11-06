@@ -25,9 +25,7 @@
         <id>29</id>
         <nodes>
             <node>p2p://a5010411-8c7e-496c-9c4e-c89318280274@52.234.132.113:30303</node>
-            <node>p2p://a5020411-729a-4584-86f1-e19ab97cf9ce@35.233.141.97:30303</node>
             <node>p2p://a5030411-729a-4584-86f1-e19ab97cf9cq@35.228.227.5:30303</node>
-            <node>p2p://a5040411-8c7e-496c-9c4e-c89318280275@51.140.188.52:30303</node>
         </nodes>
         <p2p>
             <ip>0.0.0.0</ip>
@@ -48,7 +46,7 @@
     </sync>
     <consensus>
         <mining>true</mining>
-        <miner-address>0xa0f682a5a9bd4442e5f896e605a24fbfcbbb05348fb3e31a05e27f61e31bdd94</miner-address>
+        <miner-address>0xa0b807bf346aed55afc4646736367d6b32a6f37e7b3dd01a7512f8332300047d</miner-address>
         <cpu-mine-threads>1</cpu-mine-threads>
         <extra-data>AION</extra-data>
         <nrg-strategy>
@@ -85,7 +83,7 @@
         <SYNC>INFO</SYNC>
         <CONS>INFO</CONS>
         <DB>WARN</DB>
-        <API>INFO</API>
+        <API>ERROR</API>
         <P2P>WARN</P2P>
         <GUI>INFO</GUI>
     </log>
