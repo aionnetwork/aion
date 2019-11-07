@@ -76,42 +76,33 @@ public class RPCMethods implements RPCServerMethods {
 
     @Override
     public ByteArray getseed() {
-        try {
-            byte[] result = chainHolder.getSeed();
-            if (result == null) {
-                return null;
-            } else {
-                return ByteArray.wrap(result);
-            }
-        } catch (UnsupportedOperationException e) {
-            throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        if (!chainHolder.isUnityForkEnabled()) throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        byte[] result = chainHolder.getSeed();
+        if (result == null) {
+            return null;
+        } else {
+            return ByteArray.wrap(result);
         }
     }
 
     @Override
     public ByteArray submitseed(
             ByteArray newSeed, ByteArray signingPublicKey, AionAddress coinBase) {
-        try {
-            byte[] result =
-                    chainHolder.submitSeed(
-                            newSeed.toBytes(), signingPublicKey.toBytes(), coinBase.toByteArray());
-            if (result == null) {
-                return null;
-            } else {
-                return ByteArray.wrap(result);
-            }
-        } catch (UnsupportedOperationException e) {
-            throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        if (!chainHolder.isUnityForkEnabled()) throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        byte[] result =
+                chainHolder.submitSeed(newSeed.toBytes(), signingPublicKey.toBytes(), coinBase.toByteArray());
+        if (result == null) {
+            return null;
+        } else {
+            return ByteArray.wrap(result);
         }
     }
 
     @Override
     public Boolean submitsignature(ByteArray signature, ByteArray sealHash) {
-        try {
-            return chainHolder.submitSignature(signature.toBytes(), sealHash.toBytes());
-        } catch (UnsupportedOperationException e) {
-            throw UnsupportedUnityFeatureRPCException.INSTANCE;
-        }
+        if (!chainHolder.isUnityForkEnabled()) throw UnsupportedUnityFeatureRPCException.INSTANCE;
+        if(!chainHolder.canSeal(sealHash.toBytes()))throw BlockTemplateNotFoundRPCException.INSTANCE;
+        return chainHolder.submitSignature(signature.toBytes(), sealHash.toBytes());
     }
 
     public BlockDetails blockDetailsByEnum(BlockEnum block) {

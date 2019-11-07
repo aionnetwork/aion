@@ -6,12 +6,14 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
+import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.ParamUnion;
@@ -39,6 +41,7 @@ public class StakingRPCImplTest {
     private ByteArray validSigningPublicKey;
     private AionAddress validCoinbase;
     private byte[] valid64Bytes;
+    private ByteArray missingSealHash;
 
     @Before
     public void setup(){
@@ -60,6 +63,10 @@ public class StakingRPCImplTest {
         byte[] invalid32Bytes = new byte[32];
         Arrays.fill(invalid32Bytes, (byte)0b0000_0000);
         invalidSealHash = ByteArray.wrap(invalid32Bytes);
+        byte[] missing32Bytes = new byte[32];
+        Arrays.fill(missing32Bytes, (byte)0b1100_0000);
+        missingSealHash = ByteArray.wrap(missing32Bytes);
+
         doReturn(false).when(chainHolder).submitSignature(invalid64Bytes, invalid32Bytes);
         //creating input for submit seed
         invalidSeed = ByteArray.wrap(invalid64Bytes);
@@ -74,12 +81,21 @@ public class StakingRPCImplTest {
         //stubbing getSeed
         doReturn(valid64Bytes).when(chainHolder).getSeed();
         doReturn(true).when(chainHolder).isUnityForkEnabled();
+        doReturn(true).when(chainHolder).canSeal(validSealHash.toBytes());
+        doReturn(true).when(chainHolder).canSeal(invalidSealHash.toBytes());
+        doReturn(false).when(chainHolder).canSeal(missingSealHash.toBytes());
     }
 
     @Test
     public void testSubmitSignature(){
         assertTrue(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
         assertFalse(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
+        try{
+            rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature,missingSealHash)), null));
+            fail();
+        } catch (BlockTemplateNotFoundRPCException e){
+            //We expect this exception
+        }
     }
 
     @Test
