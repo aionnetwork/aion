@@ -16,20 +16,27 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rpc.errors.RPCExceptions;
+import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
+import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
+import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
+import org.aion.rpc.types.RPCTypes.MinerStats;
+import org.aion.rpc.types.RPCTypes.SubmissionResult;
 import org.aion.rpc.types.RPCTypes.TransactionDetails;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
+import org.aion.rpc.types.RPCTypes.ValidateAddressResult;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
@@ -38,9 +45,20 @@ public class RPCMethods implements RPCServerMethods {
     private final ChainHolder chainHolder;
     private final Logger logger = AionLoggerFactory.getLogger(LogEnum.API.name());
     private final Set<String> methods = Set.copyOf(listMethods());
+    private final MinerStatisticsCalculator minerStats;// TODO Invalidate the contents of this class if it is not used
+    private static final int MINER_STATS_BLOCK_COUNT=32;// TODO determine if both variables are needed
+    private static final int MINER_NUM_BLOCKS_FOR_CALC_COUNT=32;
 
     public RPCMethods(ChainHolder chainHolder) {
         this.chainHolder = chainHolder;
+        this.minerStats= new MinerStatisticsCalculator(chainHolder, MINER_STATS_BLOCK_COUNT, MINER_NUM_BLOCKS_FOR_CALC_COUNT);
+    }
+
+    //For testing
+    RPCMethods(ChainHolder chainHolder,
+        MinerStatisticsCalculator minerStats){
+        this.chainHolder = chainHolder;
+        this.minerStats = minerStats;
     }
 
     @Override
@@ -278,6 +296,42 @@ public class RPCMethods implements RPCServerMethods {
             return serializeBlockDetails(
                     chainHolder.getBlockByHash(blockSpecifierUnion.hash.toBytes()));
         else throw InvalidParamsRPCException.INSTANCE;
+    }
+
+    @Override
+    public BlockTemplate getblocktemplate() {
+        BlockContext context = chainHolder.getBlockTemplate();
+        AionBlock block = context.block;
+        return new BlockTemplate(ByteArray.wrap(block.getParentHash()), block.getNumber(), block.getHeader().getPowBoundaryBI(), ByteArray.wrap(block.getHeader().getMineHash()), context.baseBlockReward, context.transactionFee);
+    }
+
+    @Override
+    public SubmissionResult submitblock(ByteArray nonce, ByteArray solution, ByteArray headerHash) {
+        if (!chainHolder.canSeal(headerHash.toBytes()))
+            throw BlockTemplateNotFoundRPCException.INSTANCE;
+        try {
+            return new SubmissionResult(chainHolder.submitBlock(nonce.toBytes(), solution.toBytes(), headerHash.toBytes()));
+        } catch (Exception e) {
+            throw FailedToSealBlockRPCException.INSTANCE;
+        }
+    }
+
+    @Override
+    public ValidateAddressResult validateaddress(AionAddress aionAddress) {
+        boolean addressIsMine = chainHolder.addressExists(aionAddress);
+        return new ValidateAddressResult(true,//This should always be true since we are using an instance of aionAddress
+            aionAddress,
+            addressIsMine);
+    }
+
+    @Override
+    public BigInteger getDifficulty() {
+        return chainHolder.getBestPOWBlock().getDifficultyBI();
+    }
+
+    @Override
+    public MinerStats getMinerStats(AionAddress aionAddress) {
+        return minerStats.getStats(aionAddress);
     }
 
     @Override

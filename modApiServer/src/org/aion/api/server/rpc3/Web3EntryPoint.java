@@ -33,7 +33,12 @@ public class Web3EntryPoint {
         methodInterfaceMap = Map
             .ofEntries(Map.entry("getseed", "stratum_getseed"),
                 Map.entry("submitseed", "stratum_submitseed"),
-                Map.entry("submitsignature", "stratum_submitsignature"));
+                Map.entry("submitsignature", "stratum_submitsignature"),
+                Map.entry("getblocktemplate", "stratum_getblocktemplate"),
+                Map.entry("submitblock", "stratum_submitblock"),
+                Map.entry("submitvalidateaddress", "stratum_validateaddress"),
+                Map.entry("getDifficulty", "stratum_getDifficulty"),
+                Map.entry("getMinerStats", "stratum_getMinerStats"));
     }
 
     public Web3EntryPoint(RPC rpc, List<String> enabledGroup, List<String> enabledMethods,
