@@ -54,10 +54,6 @@ public class AionChainHolder implements ChainHolder {
         return this.chain.getAionHub().getBlockchain().getTransactionInfo(transactionHash);
     }
 
-    /**
-     * @param number
-     * @return the block reward at the specified block number
-     */
     @Override
     public BigInteger calculateReward(Long number) {
         return ((AionBlockchainImpl) this.chain.getAionHub().getBlockchain())
@@ -104,9 +100,6 @@ public class AionChainHolder implements ChainHolder {
         else return this.chain.getBlockchain().getSeed();
     }
 
-    /**
-     * @return a block context that can be used by a miner
-     */
     @Override
     public synchronized BlockContext getBlockTemplate() {
         return currentTemplate.updateAndGet(bc -> this.chain
@@ -115,15 +108,6 @@ public class AionChainHolder implements ChainHolder {
                 TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
     }
 
-    /**
-     * This method expects that any caller would have already checked if the block solution is
-     * expected
-     *
-     * @param nonce
-     * @param solution
-     * @param headerHash
-     * @return a boolean indicating whether the block was successfully sealed.
-     */
     @Override
     public boolean submitBlock(byte[] nonce, byte[] solution, byte[] headerHash) {
         AionBlock bestPowBlock = this.chain.getBlockchain().getCachingMiningBlockTemplate(headerHash);
@@ -135,12 +119,7 @@ public class AionChainHolder implements ChainHolder {
             return result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
         }
     }
-
-    /**
-     *
-     * @param headerHash the header hash supplied with the solution
-     * @return a boolean indicating whether the blockchain contains a block that can be sealed
-     */
+    
     @Override
     public boolean canSeal(byte[] headerHash) {
         return this.chain.getBlockchain().getCachingMiningBlockTemplate(headerHash) != null ||
