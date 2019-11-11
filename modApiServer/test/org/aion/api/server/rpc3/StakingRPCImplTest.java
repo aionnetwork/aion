@@ -25,7 +25,7 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.Before;
 import org.junit.Test;
 
-public class StratumRPCImplTest {
+public class StakingRPCImplTest {
     private ChainHolder chainHolder;
     private RPCMethods rpcMethods;
     private ByteArray validSignature;
