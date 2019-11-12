@@ -161,7 +161,8 @@ public class NodeMgr implements INodeMgr {
         if (_n == null) return;
 
         int key = _n.getIdHash();
-        if (!tempNodesKeys.contains(key) && notActiveNode(key)) {
+        // The bootlist node will be added back into the tempNodes incase all the connections dropped.
+        if (!tempNodesKeys.contains(key) && (notActiveNode(key) || _n.getIfFromBootList())) {
             if (tempNodes.offerLast(_n)) {
                 tempNodesKeys.add(key);
             }
