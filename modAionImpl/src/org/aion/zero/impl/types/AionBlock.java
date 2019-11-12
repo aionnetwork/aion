@@ -393,8 +393,7 @@ public class AionBlock extends AbstractBlock {
         return toStringBuff.toString();
     }
 
-    private byte[] parseTxs(RLPList txTransactions) {
-
+    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
         Trie txsState = new TrieImpl(null);
         transactionsList.clear();
         for (int i = 0; i < txTransactions.size(); i++) {
@@ -402,11 +401,8 @@ public class AionBlock extends AbstractBlock {
             this.transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
             txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
-        return txsState.getRootHash().clone();
-    }
 
-    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
-        byte[] txStateRoot = parseTxs(txTransactions);
+        byte[] txStateRoot = txsState.getRootHash();
         return Arrays.equals(expectedRoot, txStateRoot);
     }
 
