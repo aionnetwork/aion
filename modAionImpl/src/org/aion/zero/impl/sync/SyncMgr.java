@@ -37,6 +37,11 @@ public final class SyncMgr {
 
     // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
+    /**
+     * NOTE: This value was selected based on heap dumps for normal execution where the queue was
+     * holding around 60 items.
+     */
+    private static final int QUEUE_CAPACITY = 100;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger survey_log = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
@@ -46,13 +51,12 @@ public final class SyncMgr {
     private SyncHeaderRequestManager syncHeaderRequestManager;
 
     // store the downloaded headers from network
-    private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>();
+    private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     // store the downloaded blocks that are ready to import
-    private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
+    private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     // store the hashes of blocks which have been successfully imported
     private final Map<ByteArrayWrapper, Object> importedBlockHashes =
             Collections.synchronizedMap(new LRUMap<>(4096));
-    private int blocksQueueMax; // block header wrappers
     private AionBlockchainImpl chain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
@@ -66,7 +70,6 @@ public final class SyncMgr {
 
     private BlockHeaderValidator blockHeaderValidator;
     private volatile long timeUpdated = 0;
-    private AtomicBoolean queueFull = new AtomicBoolean(false);
 
     public static SyncMgr inst() {
         return AionSyncMgrHolder.INSTANCE;
@@ -148,7 +151,6 @@ public final class SyncMgr {
             final AionBlockchainImpl _chain,
             final IP2pMgr _p2pMgr,
             final IEventMgr _evtMgr,
-            final int _blocksQueueMax,
             final boolean _showStatus,
             final Set<StatsType> showStatistics,
             final int _slowImportTime,
@@ -157,8 +159,6 @@ public final class SyncMgr {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
-
-        blocksQueueMax = _blocksQueueMax;
 
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
@@ -222,13 +222,10 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd) {
-        if (downloadedBlocks.size() > blocksQueueMax) {
-            if (queueFull.compareAndSet(false, true)) {
-                log.debug("Downloaded blocks queue is full. Stop requesting headers");
-            }
+        if (downloadedBlocks.size() >= QUEUE_CAPACITY || downloadedHeaders.size() >= QUEUE_CAPACITY) {
+            log.warn("Downloaded blocks queues are full. Stopped requesting headers.");
         } else {
             syncHeaderRequestManager.sendHeadersRequests(chain.getBestBlock().getNumber(), _selfTd, p2pMgr, stats);
-            queueFull.set(false);
         }
     }
 
@@ -237,8 +234,7 @@ public final class SyncMgr {
      * @param _displayId String
      * @param _headers List validate headers batch and add batch to imported headers
      */
-    public void validateAndAddHeaders(
-            int _nodeIdHashcode, String _displayId, List<BlockHeader> _headers) {
+    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, List<BlockHeader> _headers) {
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
@@ -292,7 +288,11 @@ public final class SyncMgr {
         // NOTE: the filtered headers is still continuous
 
         if (!filtered.isEmpty()) {
-            downloadedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
+            try {
+                downloadedHeaders.put(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
+            } catch (InterruptedException e) {
+                log.error("Interrupted while attempting to add the headers from the network to the processing queue:", e);
+            }
         }
     }
 
@@ -346,8 +346,12 @@ public final class SyncMgr {
                     _displayId);
         }
 
-        // add batch
-        downloadedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
+        try {
+            // add batch
+            downloadedBlocks.put(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
+        } catch (InterruptedException e) {
+            log.error("Interrupted while attempting to add the blocks from the network to the processing queue:", e);
+        }
     }
 
     public long getNetworkBestBlockNumber() {

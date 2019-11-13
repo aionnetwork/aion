@@ -118,15 +118,6 @@ public class InFlightConfigReceiverTest {
         assertThat(result.getErrorCause() instanceof XMLStreamException, is(true));
     }
 
-    @Test
-    public void testProposeXmlCausesNumberFormatError() throws Exception {
-        String xml =
-                "<aion><something/><sync><blocks-queue-max>ShouldBeAnInt</blocks-queue-max></sync></aion>";
-        InFlightConfigReceiver unit = new InFlightConfigReceiver(oldCfg, registry);
-        ConfigProposalResult result = unit.propose(xml);
-        assertThat(result.isSuccess(), is(false));
-    }
-
     /**
      * Applier used for testing. Its apply operation increments the counter {@link #timesApplied}
      */

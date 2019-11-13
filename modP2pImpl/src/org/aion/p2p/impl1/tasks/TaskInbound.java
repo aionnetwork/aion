@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -47,6 +48,8 @@ public class TaskInbound implements Runnable {
     // used to impose a low limit to this type of messages
     private static final int ACT_BROADCAST_BLOCK = 7;
     private static final int CTRL_SYNC = 1;
+
+    private static final int OFFER_TIMEOUT = 100; // in milliseconds
 
     public TaskInbound(
             final Logger p2pLOG,
@@ -436,12 +439,11 @@ public class TaskInbound implements Runnable {
                 if (rb.getNodeIdHash() != 0) {
                     INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
                     if (node != null) {
-                        this.sendMsgQue.offer(
-                                new MsgOut(
-                                        node.getIdHash(),
-                                        node.getIdShort(),
-                                        new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList()),
-                                        Dest.ACTIVE));
+                        ResActiveNodes resActiveNodes = new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList());
+                        boolean added = sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), resActiveNodes, Dest.ACTIVE));
+                        if (!added) {
+                            p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", resActiveNodes, node.getIdShort());
+                        }
                     }
                 }
                 break;
@@ -519,12 +521,10 @@ public class TaskInbound implements Runnable {
                     binaryVersion = new String(_revision, StandardCharsets.UTF_8);
                     node.setBinaryVersion(binaryVersion);
                     nodeMgr.movePeerToActive(_channelHash, "inbound");
-                    this.sendMsgQue.offer(
-                            new MsgOut(
-                                    node.getIdHash(),
-                                    node.getIdShort(),
-                                    this.cachedResHandshake1,
-                                    Dest.ACTIVE));
+                    boolean added = sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), cachedResHandshake1, Dest.ACTIVE));
+                    if (!added) {
+                        p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", cachedResHandshake1, node.getIdShort());
+                    }
                 }
 
             } else {
@@ -555,7 +555,14 @@ public class TaskInbound implements Runnable {
             int nodeIdHash = node.getIdHash();
             String nodeDisplayId = node.getIdShort();
             node.refreshTimestamp();
-            this.receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, _route, _msgBytes));
+            try {
+                boolean added = receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, _route, _msgBytes), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
+                if (!added) {
+                    p2pLOG.warn("Message not added to the receive queue due to exceeded capacity: msg={} from node={}", _msgBytes, node.getIdShort());
+                }
+            } catch (InterruptedException e) {
+                p2pLOG.error("Interrupted while attempting to add the received message to the processing queue:", e);
+            }
         } else {
             p2pLOG.debug("handleKernelMsg can't find hash{}", _nodeIdHash);
         }

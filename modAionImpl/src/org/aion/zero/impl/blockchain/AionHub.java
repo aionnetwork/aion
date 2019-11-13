@@ -172,7 +172,6 @@ public class AionHub {
                 blockchain,
                 p2pMgr,
                 eventMgr,
-                cfg.getSync().getBlocksQueueMax(),
                 cfg.getSync().getShowStatus(),
                 cfg.getSync().getShowStatistics(),
                 cfg.getSync().getCompactEnabled()

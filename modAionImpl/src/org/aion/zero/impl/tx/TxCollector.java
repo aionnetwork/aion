@@ -10,9 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.impl1.P2pMgr;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.slf4j.Logger;
 
@@ -47,8 +45,7 @@ public class TxCollector {
         this.p2p = p2p;
         this.LOG = logTx;
 
-        // Leave unbounded for now, may need to restrict queue size and drop tx until able to
-        // process tx
+        // TODO AKI-547: Leave unbounded for now, may need to restrict queue size and drop tx until able to process tx
         transactionQueue = new LinkedBlockingQueue<>();
 
         ScheduledExecutorService broadcastTxExec = Executors.newSingleThreadScheduledExecutor();

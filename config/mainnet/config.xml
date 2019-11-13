@@ -41,8 +41,6 @@
         </p2p>
     </net>
     <sync>
-        <!-- Downloaded blocks queue limit. This affects memory footprint -->
-        <blocks-queue-max>32</blocks-queue-max>
         <!-- Display syncing status -->
         <show-status>false</show-status>
         <!--requires show-status=true; comma separated list of options: [all, requests, seeds, leeches, responses, systemInfo, none]-->

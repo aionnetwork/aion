@@ -1741,7 +1741,6 @@ public class ApiWeb3Aion extends ApiAion {
         CfgSync config = CfgAion.inst().getSync();
         JSONObject obj = new JSONObject();
         obj.put("showStatus", config.getShowStatus());
-        obj.put("blocksQueueMax", config.getBlocksQueueMax());
         return obj;
     }
 

@@ -15,8 +15,6 @@ import javax.xml.stream.XMLStreamWriter;
 /** @author chris */
 public final class CfgSync {
 
-    private int blocksQueueMax;
-
     private boolean showStatus;
     private Set<StatsType> showStatistics;
 
@@ -24,13 +22,10 @@ public final class CfgSync {
     private int slowImportTime;
     private int compactFrequency;
 
-    private static final int BLOCKS_QUEUE_MAX = 32;
-
     private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
     private static final int COMPACT_FREQUENCY = 600_000; // 10 min
 
     public CfgSync() {
-        this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;
         this.showStatistics = new HashSet<>();
         this.showStatistics.add(StatsType.NONE);
@@ -47,9 +42,6 @@ public final class CfgSync {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
-                        case "blocks-queue-max":
-                            this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
-                            break;
                         case "show-status":
                             this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
@@ -145,12 +137,6 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
-            // sub-element blocks-queue-max
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("blocks-queue-max");
-            xmlWriter.writeCharacters(BLOCKS_QUEUE_MAX + "");
-            xmlWriter.writeEndElement();
-
             // sub-element show-status
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("show-status");
@@ -221,10 +207,6 @@ public final class CfgSync {
         }
     }
 
-    public int getBlocksQueueMax() {
-        return this.blocksQueueMax;
-    }
-
     public void setShowStatus(boolean showStatus) {
         this.showStatus = showStatus;
     }
@@ -266,11 +248,11 @@ public final class CfgSync {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgSync cfgSync = (CfgSync) o;
-        return blocksQueueMax == cfgSync.blocksQueueMax && showStatus == cfgSync.showStatus;
+        return showStatus == cfgSync.showStatus;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(blocksQueueMax, showStatus);
+        return Objects.hashCode(showStatus);
     }
 }

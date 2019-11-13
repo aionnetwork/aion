@@ -115,12 +115,10 @@ public class TaskConnectPeers implements Runnable {
                                     node.getIpStr());
                         }
 
-                        this.sendMsgQue.offer(
-                                new MsgOut(
-                                        node.getIdHash(),
-                                        node.getIdShort(),
-                                        this.cachedReqHS,
-                                        Dest.OUTBOUND));
+                        boolean added = this.sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), this.cachedReqHS, Dest.OUTBOUND));
+                        if (!added) {
+                            p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", cachedReqHS, node.getIdShort());
+                        }
                         // node.peerMetric.decFailedCount();
 
                     } else {

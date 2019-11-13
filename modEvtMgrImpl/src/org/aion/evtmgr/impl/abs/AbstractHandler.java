@@ -20,6 +20,7 @@ public abstract class AbstractHandler {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
 
     private Set<IEvent> events = new HashSet<>();
+    // TODO AKI-548: this queue should probably be bounded
     private BlockingQueue<IEvent> queue = new LinkedBlockingQueue<>();
     private List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
     private AtomicBoolean interrupt = new AtomicBoolean(false);

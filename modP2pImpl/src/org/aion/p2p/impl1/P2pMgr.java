@@ -55,6 +55,8 @@ public final class P2pMgr implements IP2pMgr {
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int TIMEOUT_MSG_READ = 10000;
 
+    private static final int OFFER_TIMEOUT = 100; // in milliseconds
+
     public final Logger p2pLOG, surveyLog;
 
     public static final int WORKER = 32;
@@ -76,8 +78,20 @@ public final class P2pMgr implements IP2pMgr {
     private Selector selector;
     private ScheduledExecutorService scheduledWorkers;
     private int errTolerance;
-    private BlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>();
-    private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>();
+    /*
+     * The value was chosen to be smaller than the limit for receiveMsgQue.
+     * The size should be increased if we notice many warning logs that
+     * the queue has reached capacity during execution.
+     */
+    private BlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>(10_000);
+    /*
+     * The size limit was chosen taking into account that:
+     * - in a 2G OOM heap dump the size of this queue reached close to 700_000;
+     * - in normal execution heap dumps the size is close to 0.
+     * The size should be increased if we notice many warning logs that
+     * the queue has reached capacity during execution.
+     */
+    private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>(50_000);
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
@@ -276,7 +290,14 @@ public final class P2pMgr implements IP2pMgr {
 
     @Override
     public void send(int _nodeIdHash, String _nodeIdShort, final Msg _msg) {
-        sendMsgQue.add(new MsgOut(_nodeIdHash, _nodeIdShort, _msg, Dest.ACTIVE));
+        try {
+            boolean added = sendMsgQue.offer(new MsgOut(_nodeIdHash, _nodeIdShort, _msg, Dest.ACTIVE), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
+            if (!added) {
+                p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", _msg, _nodeIdShort);
+            }
+        } catch (InterruptedException e) {
+            p2pLOG.error("Interrupted while attempting to add the message to send to the processing queue:", e);
+        }
     }
 
     @Override
