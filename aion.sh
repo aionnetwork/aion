@@ -43,7 +43,7 @@ chmod +x ./rt/bin/*
 # default to minimum 4gb heap if Xms not set.
 JAVA_OPTS="$JAVA_OPTS"
 if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
-  JAVA_OPTS+=" -Xms512m"
+  JAVA_OPTS+=" -Xms2g"
 fi
 
 if [[ ! ${JAVA_OPTS} = *"-Xmx"* ]]; then
@@ -53,7 +53,7 @@ fi
 
 # to suppress illegal reflective access warning out of xnio and protobuf
 # (we depend on xnio transitively via undertow-core)
-JAVA_OPTS+=" --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED"
+JAVA_OPTS+=" --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=heapdump.hprof"
 
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#
