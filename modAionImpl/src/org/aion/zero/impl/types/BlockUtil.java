@@ -63,6 +63,7 @@ public final class BlockUtil {
      * @param rlpList an RLPList instance encoding block data
      * @return a new instance of a block or {@code null} if the RLP encoding does not describe a
      *     valid block
+     * @implNote Assumes the data is from an unsafe source.
      */
     public static Block newBlockFromRlpList(RLPList rlpList) {
         // return null when given empty bytes

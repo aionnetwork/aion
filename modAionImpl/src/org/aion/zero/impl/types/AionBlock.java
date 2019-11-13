@@ -484,47 +484,6 @@ public class AionBlock extends AbstractBlock {
         return block;
     }
 
-    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
-        if (rlpEncoded == null) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-
-        RLPList params = RLP.decode2(rlpEncoded);
-
-        // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
-
-            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-
-                // Parse Header
-                RLPList headerRLP = (RLPList) blockRLP.get(0);
-                A0BlockHeader header;
-                try {
-                    header =
-                            A0BlockHeader.Builder.newInstance(isUnsafe)
-                                    .withRlpList(headerRLP)
-                                    .build();
-                } catch (Exception e) {
-                    return null;
-                }
-
-                AionBlock block = new AionBlock();
-                block.header = header;
-
-                // Parse Transactions
-                RLPList transactions = (RLPList) blockRLP.get(1);
-                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-                    return null;
-                }
-
-                return block;
-            }
-        }
-        // not an AionBlock encoding
-        return null;
-    }
-
     public void seal(byte[] nonce, byte[] solution) {
         if (nonce == null) {
             throw new NullPointerException("nonce is null");
@@ -542,8 +501,9 @@ public class AionBlock extends AbstractBlock {
                         .build();
     }
 
+    /** @implNote Assumes the data is from an unsafe source. */
     public static AionBlock fromRLPList(RLPList rlpEncoded) {
-        if (rlpEncoded == null) {
+        if (rlpEncoded == null || rlpEncoded.size() != 2) {
             throw new NullPointerException("RlpEncoded data is null");
         }
 

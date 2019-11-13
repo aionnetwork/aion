@@ -461,47 +461,6 @@ public class StakingBlock extends AbstractBlock {
         return block;
     }
 
-    public static StakingBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
-        if (rlpEncoded == null) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-
-        RLPList params = RLP.decode2(rlpEncoded);
-
-        // ensuring the expected types list before type casting
-        if (params.get(0) instanceof RLPList) {
-            RLPList blockRLP = (RLPList) params.get(0);
-
-            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
-
-                // Parse Header
-                RLPList headerRLP = (RLPList) blockRLP.get(0);
-                StakingBlockHeader header;
-                try {
-                    header =
-                            StakingBlockHeader.Builder.newInstance(isUnsafe)
-                                    .withRlpList(headerRLP)
-                                    .build();
-                } catch (Exception e) {
-                    return null;
-                }
-
-                StakingBlock block = new StakingBlock();
-                block.header = header;
-
-                // Parse Transactions
-                RLPList transactions = (RLPList) blockRLP.get(1);
-                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-                    return null;
-                }
-
-                return block;
-            }
-        }
-        // not an StakingBlock encoding
-        return null;
-    }
-
     public void seal(byte[] sig, byte[] pubKey) {
         if (sig == null) {
             throw new NullPointerException("signature is null");
@@ -529,8 +488,9 @@ public class StakingBlock extends AbstractBlock {
         header = (StakingBlockHeader) _header;
     }
 
+    /** @implNote Assumes the data is from an unsafe source. */
     public static StakingBlock fromRLPList(RLPList rlpEncoded) {
-        if (rlpEncoded == null) {
+        if (rlpEncoded == null || rlpEncoded.size() != 2) {
             throw new NullPointerException("RlpEncoded data is null");
         }
 
