@@ -6,11 +6,11 @@ import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.FastSyncManager;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.slf4j.Logger;
 
 /**
+ * NOTE: The implementation for this feature (AKI-217) was put on hold until the functionality is actually required.
  * Handler for block range responses from the network.
  *
  * @author Alexandra Roatis
@@ -19,22 +19,17 @@ public final class ResponseBlocksHandler extends Handler {
 
     private final Logger log;
 
-    private final FastSyncManager fastSyncMgr;
-
     private final IP2pMgr p2pMgr;
 
     /**
      * Constructor.
      *
      * @param log logger for reporting execution information
-     * @param fastSyncMgr sync manager that can validate blocks and pass them further for importing
      * @param p2pMgr p2p manager that can check for errors with the peer identifiers
      */
-    public ResponseBlocksHandler(
-            final Logger log, final FastSyncManager fastSyncMgr, final IP2pMgr p2pMgr) {
+    public ResponseBlocksHandler(final Logger log, final IP2pMgr p2pMgr) {
         super(Ver.V1, Ctrl.SYNC, Act.RESPONSE_BLOCKS);
         this.log = log;
-        this.fastSyncMgr = fastSyncMgr;
         this.p2pMgr = p2pMgr;
     }
 
@@ -54,7 +49,8 @@ public final class ResponseBlocksHandler extends Handler {
             }
 
             // checks PoW and adds correct blocks to import list
-            fastSyncMgr.validateAndAddBlocks(peerId, displayId, response);
+            // TODO: reenable when used
+            // fastSyncMgr.validateAndAddBlocks(peerId, displayId, response);
         } else {
             p2pMgr.errCheck(peerId, displayId);
             log.error(
