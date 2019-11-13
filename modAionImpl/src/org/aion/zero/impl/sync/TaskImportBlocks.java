@@ -96,28 +96,28 @@ final class TaskImportBlocks implements Runnable {
             }
 
             startTime = System.nanoTime();
-            SyncMode syncMode = syncHeaderRequestManager.getSyncMode(bw.getNodeIdHash());
+            SyncMode syncMode = syncHeaderRequestManager.getSyncMode(bw.nodeId);
             duration = System.nanoTime() - startTime;
             surveyLog.info("Import Stage 2: wait for peer state, duration = {} ns.", duration);
 
             if (syncMode == null) {
                 // ignoring these blocks
-                log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
+                log.warn("Peer {} sent blocks that were not requested.", bw.displayId);
             } else { // the peerState is not null after this
                 startTime = System.nanoTime();
-                List<Block> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
+                List<Block> batch = filterBatch(bw.blocks, chain, importedBlockHashes);
                 duration = System.nanoTime() - startTime;
                 surveyLog.info("Import Stage 3: filter batch, duration = {} ns.", duration);
 
                 startTime = System.nanoTime();
                 // process batch and update the peer state
-                SyncMode newMode = processBatch(syncMode, batch, bw.getDisplayId());
+                SyncMode newMode = processBatch(syncMode, batch, bw.displayId);
                 duration = System.nanoTime() - startTime;
                 surveyLog.info("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
 
                 // transition to recommended sync mode
                 if (syncMode != newMode) {
-                    syncHeaderRequestManager.runInMode(bw.getNodeIdHash(), newMode);
+                    syncHeaderRequestManager.runInMode(bw.nodeId, newMode);
                 }
 
                 syncStats.update(getBestBlockNumber());

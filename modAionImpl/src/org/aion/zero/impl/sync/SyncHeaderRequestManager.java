@@ -519,7 +519,7 @@ public class SyncHeaderRequestManager {
         Objects.requireNonNull(headersWrapper);
 
         // store the received headers for later matching with bodies
-        int size = headersWrapper.getHeaders().size();
+        int size = headersWrapper.size;
         if (storedHeaders.containsKey(peerId)) {
             storedHeaders.get(peerId).put(size, headersWrapper);
         } else {
@@ -536,8 +536,8 @@ public class SyncHeaderRequestManager {
 
         syncLog.debug(
                 "<save-headers node={} size={} object={}>",
-                headersWrapper.getDisplayId(),
-                headersWrapper.getHeaders().size(),
+                headersWrapper.displayId,
+                headersWrapper.size,
                 headersWrapper);
     }
 
@@ -552,8 +552,8 @@ public class SyncHeaderRequestManager {
         if (headersWrapper != null) {
             syncLog.debug(
                     "<match-headers node={} size={} object={}>",
-                    headersWrapper.getDisplayId(),
-                    headersWrapper.getHeaders().size(),
+                    headersWrapper.displayId,
+                    headersWrapper.size,
                     headersWrapper);
         } else {
             syncLog.debug("<match-headers null for nodeId={} size={}", peerId, size);
@@ -577,8 +577,8 @@ public class SyncHeaderRequestManager {
                 storedHeaders.get(idHash).remove(size);
                 syncLog.debug(
                         "<remove-headers node={} size={} object={}>",
-                        headersWrapper.getDisplayId(),
-                        headersWrapper.getHeaders().size(),
+                        headersWrapper.displayId,
+                        headersWrapper.size,
                         headersWrapper);
                 return true;
             }

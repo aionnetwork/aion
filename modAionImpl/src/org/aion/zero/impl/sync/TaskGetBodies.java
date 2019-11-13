@@ -71,21 +71,16 @@ final class TaskGetBodies implements Runnable {
             surveyLog.info("TaskGetBodies: wait for headers, duration = {} ns.", duration);
 
             startTime = System.nanoTime();
-            int idHash = hw.getNodeIdHash();
-            String displayId = hw.getDisplayId();
-            List<BlockHeader> headers = hw.getHeaders();
-            if (headers.isEmpty()) {
-                duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
-                continue;
-            }
+            int idHash = hw.nodeId;
+            String displayId = hw.displayId;
+            List<BlockHeader> headers = hw.headers;
 
             if (log.isDebugEnabled()) {
                 log.debug(
                         "<get-bodies from-num={} to-num={} node={}>",
                         headers.get(0).getNumber(),
                         headers.get(headers.size() - 1).getNumber(),
-                        hw.getDisplayId());
+                        hw.displayId);
             }
 
             // save headers for matching with bodies

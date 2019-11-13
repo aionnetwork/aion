@@ -313,7 +313,7 @@ public final class SyncMgr {
         boolean assembleError = false;
 
         // assemble batch
-        List<BlockHeader> headers = hw.getHeaders();
+        List<BlockHeader> headers = hw.headers;
         List<Block> blocks = new ArrayList<>(_bodies.size());
         Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
