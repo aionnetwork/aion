@@ -88,6 +88,9 @@ final class TaskGetBodies implements Runnable {
                         hw.getDisplayId());
             }
 
+            // save headers for matching with bodies
+            syncHeaderRequestManager.storeHeaders(idHash, hw);
+
             p2p.send(
                     idHash,
                     displayId,
@@ -95,9 +98,6 @@ final class TaskGetBodies implements Runnable {
                             headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
             stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
-
-            // save headers for matching with bodies
-            syncHeaderRequestManager.storeHeaders(idHash, hw);
 
             duration = System.nanoTime() - startTime;
             surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
