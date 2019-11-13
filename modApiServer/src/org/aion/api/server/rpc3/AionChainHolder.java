@@ -3,7 +3,10 @@ package org.aion.api.server.rpc3;
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -74,7 +77,15 @@ public class AionChainHolder implements ChainHolder {
             StakingBlock stakingBlock = chain.getBlockchain().getCachingStakingBlockTemplate(sealHash);
             stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
             ImportResult result = chain.getBlockchain().tryToConnect(stakingBlock);
-            return result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+            final boolean sealed =
+                result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+
+            if (sealed) {
+                logSealedBlock(stakingBlock);
+            }else {
+                logFailedSealedBlock(stakingBlock);
+            }
+            return sealed;
         }
     }
 
@@ -116,7 +127,15 @@ public class AionChainHolder implements ChainHolder {
         } else {
             bestPowBlock.seal(nonce, solution);
             ImportResult result = ((AionImpl) chain).addNewBlock(bestPowBlock);
-            return result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+            final boolean sealedSuccessfully =
+                result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+
+            if (sealedSuccessfully) {
+                logSealedBlock(bestPowBlock);
+            } else {
+               logFailedSealedBlock(bestPowBlock);
+            }
+            return sealedSuccessfully;
         }
     }
     
@@ -139,5 +158,27 @@ public class AionChainHolder implements ChainHolder {
     @Override
     public boolean addressExists(AionAddress address) {
         return Keystore.exist(address.toString());
+    }
+
+    private void logSealedBlock(Block block){
+        //log that the block was sealed
+        AionLoggerFactory.getLogger(LogEnum.CONS.toString()).info(
+            "{} block submitted via api <num={}, hash={}, diff={}, tx={}>",
+            block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "Mining": "Staking",
+            block.getNumber(),
+            block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+            block.getHeader().getDifficultyBI().toString(),
+            block.getTransactionsList().size());
+    }
+
+    private void logFailedSealedBlock(Block block){
+        //log that the block could not be sealed
+        AionLoggerFactory.getLogger(LogEnum.CONS.toString()).info(
+            "Unable to submit {} block via api <num={}, hash={}, diff={}, tx={}>",
+            block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "mining": "staking",
+            block.getNumber(),
+            block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+            block.getHeader().getDifficultyBI().toString(),
+            block.getTransactionsList().size());
     }
 }
