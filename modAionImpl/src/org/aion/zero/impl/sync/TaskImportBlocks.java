@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.aion.mcf.blockchain.Block;
@@ -35,7 +36,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final AtomicBoolean start;
 
-    private final BlockingQueue<BlocksWrapper> downloadedBlocks;
+    private final PriorityBlockingQueue<BlocksWrapper> sortedBlocks;
 
     private final SyncStats syncStats;
 
@@ -57,7 +58,7 @@ final class TaskImportBlocks implements Runnable {
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final SyncStats _syncStats,
-            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
+            final PriorityBlockingQueue<BlocksWrapper> sortedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
             final SyncHeaderRequestManager syncHeaderRequestManager,
             final int _slowImportTime,
@@ -67,7 +68,7 @@ final class TaskImportBlocks implements Runnable {
         this.chain = _chain;
         this.start = _start;
         this.syncStats = _syncStats;
-        this.downloadedBlocks = _downloadedBlocks;
+        this.sortedBlocks = sortedBlocks;
         this.importedBlockHashes = _importedBlockHashes;
         this.syncHeaderRequestManager = syncHeaderRequestManager;
         this.slowImportTime = _slowImportTime;
@@ -85,9 +86,9 @@ final class TaskImportBlocks implements Runnable {
             BlocksWrapper bw;
             try {
                 startTime = System.nanoTime();
-                bw = downloadedBlocks.take();
+                bw = sortedBlocks.take();
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 1: wait for blocks, duration = {} ns.", duration);
+                surveyLog.info("Import Stage 1.B: wait for sorted blocks, duration = {} ns.", duration);
             } catch (InterruptedException ex) {
                 if (start.get()) {
                     log.error("Import blocks thread interrupted without shutdown request.", ex);

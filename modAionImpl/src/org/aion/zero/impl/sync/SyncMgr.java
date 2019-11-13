@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -54,6 +55,11 @@ public final class SyncMgr {
     private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     // store the downloaded blocks that are ready to import
     private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    /**
+     * This queue receives data from {@link #downloadedBlocks}. Its capacity is bounded inside the
+     * implementation that writes to it.
+     */
+    private final PriorityBlockingQueue<BlocksWrapper> sortedBlocks = new PriorityBlockingQueue<>();
     // store the hashes of blocks which have been successfully imported
     private final Map<ByteArrayWrapper, Object> importedBlockHashes =
             Collections.synchronizedMap(new LRUMap<>(4096));
@@ -65,6 +71,7 @@ public final class SyncMgr {
 
     private Thread syncGb = null;
     private Thread syncIb = null;
+    private Thread syncFilter = null;
     private Thread syncGs = null;
     private Thread syncSs = null;
 
@@ -178,6 +185,18 @@ public final class SyncMgr {
                                 log, survey_log),
                         "sync-gb");
         syncGb.start();
+        syncFilter =
+                new Thread(
+                        new TaskFilterBlocksBeforeImport(
+                                log,
+                                survey_log,
+                                chain,
+                                start,
+                                stats,
+                                downloadedBlocks,
+                                sortedBlocks),
+                        "sync-filter");
+        syncFilter.start();
         syncIb =
                 new Thread(
                         new TaskImportBlocks(
@@ -186,7 +205,7 @@ public final class SyncMgr {
                                 chain,
                                 start,
                                 stats,
-                                downloadedBlocks,
+                                sortedBlocks,
                                 importedBlockHashes,
                                 syncHeaderRequestManager,
                                 _slowImportTime,
@@ -364,6 +383,7 @@ public final class SyncMgr {
         start.set(false);
 
         interruptAndWait(syncGb, 10000);
+        interruptAndWait(syncFilter, 10000);
         interruptAndWait(syncIb, 10000);
         interruptAndWait(syncGs, 10000);
         interruptAndWait(syncSs, 10000);

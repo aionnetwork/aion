@@ -8,7 +8,7 @@ import org.aion.mcf.blockchain.Block;
  * A container used to package together the blocks received from a peer with the peer's
  * identification information.
  */
-final class BlocksWrapper {
+final class BlocksWrapper implements Comparable<BlocksWrapper> {
     public final int nodeId;
     public final String displayId;
     public final List<Block> blocks;
@@ -29,5 +29,10 @@ final class BlocksWrapper {
         this.displayId = displayId;
         this.blocks = Collections.unmodifiableList(blocks);
         this.firstBlockNumber = blocks.get(0).getNumber();
+    }
+
+    @Override
+    public int compareTo(BlocksWrapper o) {
+        return Long.compare(firstBlockNumber, o.firstBlockNumber);
     }
 }
