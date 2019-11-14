@@ -335,7 +335,7 @@ public final class SyncMgr {
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             Block block = BlockUtil.newBlockWithHeader(headerIt.next(), bodyIt.next());
             if (block == null) {
-                log.error("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
+                log.warn("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
                 assembleError = true;
                 break;
             } else {
