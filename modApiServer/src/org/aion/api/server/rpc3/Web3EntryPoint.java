@@ -81,7 +81,7 @@ public class Web3EntryPoint {
         }
         final String resultString = ResponseConverter
             .encodeStr(new Response(id, resultUnion, err, VersionType.Version2));
-        logger.debug("Produced response: {}", requestString);
+        logger.debug("Produced response: {}", resultString);
         return resultString;
     }
 
