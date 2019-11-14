@@ -14,10 +14,12 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.EcRecoverParams;
 import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
+import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypes.VoidParams;
 import org.aion.rpc.types.RPCTypesConverter.AionAddressConverter;
@@ -92,7 +94,7 @@ public class PersonalRPCImplTest {
                 "personal_ecRecover",
                 ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, rpc.execute(request).address.toString());
+        assertEquals(pubKey, execute(request).address.toString());
         // incorrect method name
         request =
             new Request(
@@ -101,7 +103,7 @@ public class PersonalRPCImplTest {
                 ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
         try{
-            rpc.execute(request);
+            execute(request);
             fail();
         }catch (MethodNotFoundRPCException e){}
 
@@ -109,9 +111,14 @@ public class PersonalRPCImplTest {
         request = new Request(2, "personal_ecRecover", ParamUnion.wrap(new VoidParams()), VersionType.Version2);
 
         try{
-            rpc.execute(request);
+            execute(request);
             fail();
         }catch (InvalidParamsRPCException e){}
+    }
+
+    private ResultUnion execute(Request request) {
+        final ResultUnion resultUnion = RPCServerMethods.execute(request, rpc);
+        return ResultUnion.decode(resultUnion.encode());
     }
 
     @Test

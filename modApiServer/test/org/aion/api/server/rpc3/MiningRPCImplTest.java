@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import java.math.BigInteger;
 import org.aion.crypto.HashUtil;
 import org.aion.rpc.errors.RPCExceptions;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.AddressParams;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
@@ -86,8 +87,8 @@ public class MiningRPCImplTest {
     @Test
     public void testGetMinerStatsMock() {
         ResultUnion resultUnion =
-                rpcMethods.execute(buildRequest("getMinerStats",
-                                ParamUnion.wrap(new AddressParams(AionAddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))));
+            execute(buildRequest("getMinerStats",
+                            ParamUnion.wrap(new AddressParams(AionAddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))));
         assertNotNull(resultUnion.minerStats);
         assertEquals("1", resultUnion.minerStats.minerHashrate);
         assertEquals("1", resultUnion.minerStats.minerHashrateShare);
@@ -102,7 +103,7 @@ public class MiningRPCImplTest {
             Request request =
                     buildRequest(method,
                             ParamUnion.wrap(new SubmitBlockParams(nonce, equihashSolution, blockThatDoesNotExistInCache)));
-            rpcMethods.execute(request);
+            execute(request);
             fail();
         } catch (RPCExceptions.BlockTemplateNotFoundRPCException e) {
             /*We expect this error*/
@@ -112,7 +113,7 @@ public class MiningRPCImplTest {
                 buildRequest(method,
                         ParamUnion.wrap(new SubmitBlockParams(nonce, equihashSolution, blockThatCanBeSealed)));
 
-        ResultUnion resultUnion = rpcMethods.execute(request1);
+        ResultUnion resultUnion = execute(request1);
         assertNotNull(resultUnion.submissionResult);
         assertTrue(resultUnion.submissionResult.result);
         resultUnion.encode(); // check that the result can be encoded for return
@@ -120,7 +121,7 @@ public class MiningRPCImplTest {
         request1 =
                 buildRequest(method,
                         ParamUnion.wrap(new SubmitBlockParams(nonce, equihashSolution, blockThatCannotBeSealed)));
-        resultUnion = rpcMethods.execute(request1);
+        resultUnion = execute(request1);
         assertNotNull(resultUnion.submissionResult);
         assertFalse(resultUnion.submissionResult.result);
         resultUnion.encode(); // check that the result can be encoded for return
@@ -130,7 +131,7 @@ public class MiningRPCImplTest {
                     buildRequest(method,
                             ParamUnion.wrap(
                                     new SubmitBlockParams(nonce, equihashSolution, blockThatWillThrow)));
-            rpcMethods.execute(request1);
+            execute(request1);
             fail();
         } catch (RPCExceptions.FailedToSealBlockRPCException e) {
             /*We expect this error*/
@@ -154,7 +155,7 @@ public class MiningRPCImplTest {
         BlockTemplateConverter.encode(blockTemplate);
 
         final Request request = buildRequest("getblocktemplate", ParamUnion.wrap(new VoidParams()));
-        rpcMethods.execute(request).encode();
+        execute(request).encode();
     }
 
     @Test
@@ -164,6 +165,11 @@ public class MiningRPCImplTest {
         final BigInteger difficulty = rpcMethods.getDifficulty();
         assertNotNull(difficulty);
         final Request request = buildRequest("getDifficulty", ParamUnion.wrap(new VoidParams()));
-        rpcMethods.execute(request).encode();
+        execute(request).encode();
+    }
+
+    private ResultUnion execute(Request request) {
+        final ResultUnion resultUnion = RPCServerMethods.execute(request, rpcMethods);
+        return ResultUnion.decode(resultUnion.encode());
     }
 }

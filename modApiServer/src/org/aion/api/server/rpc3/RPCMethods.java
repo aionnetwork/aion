@@ -27,6 +27,8 @@ import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.MinerStats;
+import org.aion.rpc.types.RPCTypes.Request;
+import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.SubmissionResult;
 import org.aion.rpc.types.RPCTypes.TransactionDetails;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
@@ -44,7 +46,7 @@ public class RPCMethods implements RPCServerMethods {
 
     private final ChainHolder chainHolder;
     private final Logger logger = AionLoggerFactory.getLogger(LogEnum.API.name());
-    private final Set<String> methods = Set.copyOf(listMethods());
+    private final Set<String> methods = Set.copyOf(RPCServerMethods.listMethods());
     private final MinerStatisticsCalculator minerStats;// TODO Invalidate the contents of this class if it is not used
     private static final int MINER_STATS_BLOCK_COUNT=32;// TODO determine if both variables are needed
     private static final int MINER_NUM_BLOCKS_FOR_CALC_COUNT=32;

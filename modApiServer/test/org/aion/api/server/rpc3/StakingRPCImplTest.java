@@ -15,9 +15,11 @@ import static org.mockito.Mockito.spy;
 import java.util.Arrays;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
+import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.SubmitSeedParams;
 import org.aion.rpc.types.RPCTypes.SubmitSignatureParams;
 import org.aion.rpc.types.RPCTypes.VersionType;
@@ -88,10 +90,10 @@ public class StakingRPCImplTest {
 
     @Test
     public void testSubmitSignature(){
-        assertTrue(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
-        assertFalse(rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
+        assertTrue(execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
+        assertFalse(execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
         try{
-            rpcMethods.execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature,missingSealHash)), null));
+            execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature,missingSealHash)), null));
             fail();
         } catch (BlockTemplateNotFoundRPCException e){
             //We expect this exception
@@ -100,13 +102,13 @@ public class StakingRPCImplTest {
 
     @Test
     public void testSubmitSeed(){
-        assertEquals(ByteArray.wrap(valid64Bytes), rpcMethods.execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2)).byteArray);
-        assertNull( rpcMethods.execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2)));
+        assertEquals(ByteArray.wrap(valid64Bytes), execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2)).byteArray);
+        assertNull( execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2)));
     }
 
     @Test
     public void testGetSeed(){
-        assertNotNull(rpcMethods.execute(new Request(1, "getseed", ParamUnion.wrap(
+        assertNotNull(execute(new Request(1, "getseed", ParamUnion.wrap(
             new VoidParams()), VersionType.Version2)).byteArray);
     }
 
@@ -119,11 +121,21 @@ public class StakingRPCImplTest {
         try{
             //This call will throw because a unity feature is requested before
             //The unity fork
-            rpcMethods.execute(new Request(1, "getseed", ParamUnion.wrap(
+            execute(new Request(1, "getseed", ParamUnion.wrap(
                 new VoidParams()), VersionType.Version2));
             fail();
         }catch (UnsupportedUnityFeatureRPCException e){
             //pass
+        }
+    }
+
+    private ResultUnion execute(Request request) {
+        final ResultUnion resultUnion = RPCServerMethods
+            .execute(request, rpcMethods);
+        if (resultUnion == null) {
+            return null;
+        }else {
+            return ResultUnion.decode(resultUnion.encode());
         }
     }
 }

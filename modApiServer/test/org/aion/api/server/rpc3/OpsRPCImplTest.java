@@ -14,6 +14,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.Block;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
 import org.aion.rpc.types.RPCTypes.BlockSpecifier;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
@@ -112,21 +113,21 @@ public class OpsRPCImplTest {
 
     @Test
     public void executeRequest() {
-        final ResultUnion resultUnion0 = opsRPC.execute(
+        final ResultUnion resultUnion0 = execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
                 ParamUnion.wrap(new BlockSpecifier(new BlockSpecifierUnion(1L))),
                 VersionType.Version2));
 
-        final ResultUnion resultUnion1 = opsRPC.execute(
+        final ResultUnion resultUnion1 = execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
                 ParamUnion.wrap(BlockSpecifierConverter.decode("[latest]")),
                 VersionType.Version2));
 
-        final ResultUnion resultUnion2 = opsRPC.execute(
+        final ResultUnion resultUnion2 = execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
@@ -136,9 +137,14 @@ public class OpsRPCImplTest {
                             + ByteArray.wrap(emptyPowBlock.getHash())
                             + "\"}")),
                 VersionType.Version2));
+    }
 
-        resultUnion0.encode();
-        resultUnion1.encode();
-        resultUnion2.encode();
+    private ResultUnion execute(Request request){
+        final ResultUnion resultUnion = RPCServerMethods.execute(request, opsRPC);
+        if (resultUnion == null) {
+            return null;
+        }else {
+            return ResultUnion.decode(resultUnion.encode());
+        }
     }
 }

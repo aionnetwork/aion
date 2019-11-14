@@ -10,6 +10,7 @@ import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidRequestRPCException;
 import org.aion.rpc.errors.RPCExceptions.RPCException;
 import org.aion.rpc.server.RPC;
+import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.RPCError;
 import org.aion.rpc.types.RPCTypes.Request;
 import org.aion.rpc.types.RPCTypes.Response;
@@ -21,7 +22,7 @@ import org.slf4j.Logger;
 
 public class Web3EntryPoint {
 
-    private final RPC rpc;
+    private final RPCServerMethods rpc;
     private final Set<String> enabledGroup;
     private final Set<String> enabledMethods;
     private final Set<String> disabledMethods;
@@ -41,7 +42,7 @@ public class Web3EntryPoint {
                 Map.entry("getMinerStats", "stratum_getMinerStats"));
     }
 
-    public Web3EntryPoint(RPC rpc, List<String> enabledGroup, List<String> enabledMethods,
+    public Web3EntryPoint(RPCServerMethods rpc, List<String> enabledGroup, List<String> enabledMethods,
         List<String> disabledMethods){
         this.rpc = rpc;
         this.enabledGroup = Set.copyOf(enabledGroup);
@@ -60,7 +61,7 @@ public class Web3EntryPoint {
 
             id = request.id;
             if (checkMethod(request.method)){
-                resultUnion = rpc.execute(request);
+                resultUnion = RPCServerMethods.execute(request, rpc);
             }else {
                 logger.debug(
                         "Request attempted to call a method on a disabled interface: {}",
