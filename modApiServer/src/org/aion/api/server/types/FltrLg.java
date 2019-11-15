@@ -51,8 +51,9 @@ public final class FltrLg extends Fltr {
             int txIndex = 0;
             for (AionTxReceipt receipt : receipts) {
                 AionTransaction tx = receipt.getTransaction();
-                if (tx.getDestinationAddress() != null
-                        && matchesContractAddress(tx.getDestinationAddress().toByteArray())) {
+                // The if condition checks the contract create and call transactions
+                if ((tx.getDestinationAddress() != null && matchesContractAddress(tx.getDestinationAddress().toByteArray()))
+                        || tx.isContractCreationTransaction()) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
@@ -86,8 +87,9 @@ public final class FltrLg extends Fltr {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
             for (AionTransaction txn : blk.getTransactionsList()) {
-                if (txn.getDestinationAddress() != null
-                        && matchesContractAddress(txn.getDestinationAddress().toByteArray())) {
+                // The if condition checks the contract create and call transactions
+                if ((txn.getDestinationAddress() != null && matchesContractAddress(txn.getDestinationAddress().toByteArray()))
+                    || txn.isContractCreationTransaction()) {
                     // now that we know that our filter might match with some logs in this
                     // transaction, go ahead
                     // and retrieve the txReceipt from the chain
