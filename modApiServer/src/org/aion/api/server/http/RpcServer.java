@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc2.Rpc2Shim;
 
@@ -23,6 +24,8 @@ public abstract class RpcServer {
     protected char[] sslCertPass;
 
     protected boolean stuckThreadDetectorEnabled;
+
+    private AccountManager accountManager;
 
     /**
      * to explicitly force any subclasses to check for null values, access to the following
@@ -52,8 +55,15 @@ public abstract class RpcServer {
         List<String> disabledMethods =
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
 
+        accountManager = builder.accountManager;
+
         rpcProcessor =
-                new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods, new Rpc2Shim());
+                new RpcProcessor(
+                        enabledEndpoints,
+                        enabledMethods,
+                        disabledMethods,
+                        new Rpc2Shim(),
+                        accountManager);
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {

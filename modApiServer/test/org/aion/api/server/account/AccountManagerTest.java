@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AccountManagerTest {
-    private static AccountManager accountManager = AccountManager.inst();
+    private static AccountManager accountManager = new AccountManager(null);
     private AionAddress notRegistered =
             AddressUtils.wrapAddress(
                     "a011111111111111111111111111111101010101010101010101010101010101");

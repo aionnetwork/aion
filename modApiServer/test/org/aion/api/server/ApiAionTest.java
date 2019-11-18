@@ -69,7 +69,7 @@ public class ApiAionTest {
         }
 
         private ApiAionImpl(AionImpl impl) {
-            super(impl);
+            super(impl, new AccountManager(null));
             onBlockFlag = false;
             pendingRcvdFlag = false;
             pendingUpdateFlag = false;
@@ -118,8 +118,6 @@ public class ApiAionTest {
     private static  String KEYSTORE_PATH;
     private static final String DATABASE_PATH = "ApiServerTestPath";
     private long testStartTime;
-    private AccountManager accountManager;
-
     private ApiAionImpl api;
     private AionImpl impl;
     private AionRepositoryImpl repo;
@@ -133,7 +131,6 @@ public class ApiAionTest {
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
         KEYSTORE_PATH = Keystore.getKeystorePath();
-        accountManager = AccountManager.inst();
 
         AvmTestConfig.supportOnlyAvmVersion1();
     }
@@ -141,7 +138,6 @@ public class ApiAionTest {
     @After
     public void tearDown() {
         AvmTestConfig.clearConfigurations();
-        accountManager.removeAllAccounts();
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
@@ -316,7 +312,7 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
 
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
-        accountManager.unlockAccount(addr, "testPwd", 50000);
+        api.unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall =
                 new ArgTxCall(
@@ -337,8 +333,7 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
 
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
-
-        accountManager.unlockAccount(addr, "testPwd", 50000);
+        api.unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx =
                 AionTransaction.create(

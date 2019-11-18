@@ -3,6 +3,7 @@ package org.aion.api.server.rpc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.api.server.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -28,9 +29,10 @@ public class RpcMethods {
     public RpcMethods(
             final List<String> enabledGroups,
             final List<String> enabledMethods,
-            final List<String> disabledMethods) {
+            final List<String> disabledMethods,
+            final AccountManager am) {
 
-        api = new ApiWeb3Aion(AionImpl.inst());
+        api = new ApiWeb3Aion(AionImpl.inst(), am);
 
         // find a way to autogen options in config using this enum, without generating circular
         // module dependency (right now it's manual)

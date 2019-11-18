@@ -62,12 +62,12 @@ public class ApiTest {
 
     private ApiImpl api;
     private long testStartTime;
-    private AccountManager accountManager = AccountManager.inst();
 
     @Before
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiImpl();
+        api.accountManager = new AccountManager(null);
         testStartTime = System.currentTimeMillis();
     }
 
@@ -85,11 +85,9 @@ public class ApiTest {
 
     @After
     public void tearDown() {
-        accountManager.removeAllAccounts();
+        api = null;
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
-
-        if (folder == null) return;
 
         File[] AllFilesInDirectory = folder.listFiles();
 
@@ -100,8 +98,6 @@ public class ApiTest {
             if (file.lastModified() >= testStartTime) file.delete();
         }
         folder = new File(DATABASE_PATH);
-
-        if (folder == null) return;
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -127,7 +123,7 @@ public class ApiTest {
 
         addr = Keystore.create("testPwd");
         assertEquals(
-                accountManager.getKey(AddressUtils.wrapAddress(addr)),
+                api.accountManager.getKey(AddressUtils.wrapAddress(addr)),
                 api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));

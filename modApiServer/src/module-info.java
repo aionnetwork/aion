@@ -31,4 +31,5 @@ module aion.apiserver {
     exports org.aion.api.server.http;
     exports org.aion.api.server.http.nano;
     exports org.aion.api.server.http.undertow;
+    exports org.aion.api.server.account;
 }

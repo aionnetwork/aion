@@ -22,30 +22,24 @@ public class ApiWeb3AionTest {
 
     private ApiWeb3Aion web3Api;
     private AionImpl impl;
-    private AccountManager accountManager;
 
     @Before
     public void setup() {
         AionLoggerFactory.initAll();
         impl = AionImpl.instForTest();
-        web3Api = new ApiWeb3Aion(impl);
-        accountManager = AccountManager.inst();
-
+        web3Api = new ApiWeb3Aion(impl, new AccountManager(null));
         AvmTestConfig.supportOnlyAvmVersion1();
     }
 
     @After
     public void tearDown() {
-        AvmTestConfig.clearConfigurations();
-        accountManager.removeAllAccounts();
-    }
+        AvmTestConfig.clearConfigurations(); }
 
     @Test
     public void testEthSignTransaction() {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        accountManager.unlockAccount(addr, "testPwd", 50000);
-
+        web3Api.unlockAccount(addr, "testPwd", 50000);
         AionAddress toAddr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
@@ -93,8 +87,7 @@ public class ApiWeb3AionTest {
     public void testEthSignTransactionAddressParamIsNull() {
         AionAddress addr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
-        accountManager.unlockAccount(addr, "testPwd", 50000);
-
+        web3Api.unlockAccount(addr, "testPwd", 50000);
         AionAddress toAddr = AddressUtils.wrapAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();

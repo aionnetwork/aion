@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
@@ -81,12 +82,14 @@ public abstract class ApiAion extends Api {
     /**
      * @param ac AionChain instance.
      */
-    public ApiAion(final IAionChain ac) {
+    public ApiAion(final IAionChain ac, final AccountManager am) {
         if (ac == null) {
             throw new NullPointerException("ApiAion construct IAionChain argument is null");
         }
 
         this.ac = ac;
+        this.accountManager = am;
+
         installedFilters = new ConcurrentHashMap<>();
         fltrIndex = new AtomicLong(0);
         pendingState = ac.getAionHub().getPendingState();

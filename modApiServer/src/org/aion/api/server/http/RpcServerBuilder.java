@@ -3,6 +3,7 @@ package org.aion.api.server.http;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.aion.api.server.account.AccountManager;
 
 /**
  * This builder is opinionated; 1. It assumes that false is a reasonable default for sslEnabled and
@@ -32,6 +33,8 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     Integer ioPoolSize = null;
     Integer requestQueueSize = null;
     boolean stuckThreadDetectorEnabled = false;
+
+    AccountManager accountManager = null;
 
     public T setUrl(String hostName, int port) {
         this.hostName = Objects.requireNonNull(hostName);
@@ -98,6 +101,11 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
     public T setStuckThreadDetectorEnabled(boolean x) {
         this.stuckThreadDetectorEnabled = x;
+        return self();
+    }
+
+    public T setAccountManager(AccountManager am) {
+        this.accountManager = am;
         return self();
     }
 

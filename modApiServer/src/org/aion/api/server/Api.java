@@ -30,7 +30,7 @@ public abstract class Api {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
+    protected AccountManager accountManager;
     private final Compiler solc = Compiler.getInstance();
     protected AionPendingStateImpl pendingState;
 
@@ -58,17 +58,17 @@ public abstract class Api {
 
     protected boolean unlockAccount(
             final String _address, final String _password, final int _duration) {
-        return this.ACCOUNT_MANAGER.unlockAccount(
+        return this.accountManager.unlockAccount(
                 AddressUtils.wrapAddress(_address), _password, _duration);
     }
 
     public boolean unlockAccount(
             final AionAddress _address, final String _password, final int _duration) {
-        return this.ACCOUNT_MANAGER.unlockAccount(_address, _password, _duration);
+        return this.accountManager.unlockAccount(_address, _password, _duration);
     }
 
     protected boolean lockAccount(final AionAddress _addr, final String _password) {
-        return this.ACCOUNT_MANAGER.lockAccount(_addr, _password);
+        return this.accountManager.lockAccount(_addr, _password);
     }
 
     public List<String> getAccounts() {
@@ -76,7 +76,7 @@ public abstract class Api {
     }
 
     protected ECKey getAccountKey(final String _address) {
-        return ACCOUNT_MANAGER.getKey(AddressUtils.wrapAddress(_address));
+        return accountManager.getKey(AddressUtils.wrapAddress(_address));
     }
 
     @SuppressWarnings("rawtypes")

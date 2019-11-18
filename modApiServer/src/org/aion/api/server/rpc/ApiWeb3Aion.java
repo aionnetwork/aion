@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.types.ArgFltr;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Blk;
@@ -185,8 +186,8 @@ public class ApiWeb3Aion extends ApiAion {
     private final LoadingCache<ByteArrayWrapper, Block> blockCache;
     private static final int BLOCK_CACHE_SIZE = 1000;
 
-    public ApiWeb3Aion(final IAionChain _ac) {
-        super(_ac);
+    public ApiWeb3Aion(final IAionChain _ac, final AccountManager am) {
+        super(_ac, am);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();

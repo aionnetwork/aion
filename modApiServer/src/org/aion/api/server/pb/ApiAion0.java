@@ -26,6 +26,7 @@ import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
@@ -279,8 +280,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     @SuppressWarnings("rawtypes")
-    public ApiAion0(IAionChain ac) {
-        super(ac);
+    public ApiAion0(IAionChain ac, AccountManager am) {
+        super(ac, am);
         this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(10000, 100));
 
         int MAP_SIZE = 50_000;
@@ -288,7 +289,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         this.txWait = new LinkedBlockingQueue(MAP_SIZE);
         this.msgIdMapping = Collections.synchronizedMap(new LRUMap<>(MAP_SIZE, 100));
 
-        initNrgOracle(ac);
+        this.initNrgOracle(ac);
 
         isFilterEnabled = CfgAion.inst().getApi().getZmq().isFiltersEnabled();
 

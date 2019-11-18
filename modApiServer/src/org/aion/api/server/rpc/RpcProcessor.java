@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc2.Rpc2Shim;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -32,7 +33,8 @@ public class RpcProcessor {
         final List<String> enabledGroups,
         final List<String> enabledMethods,
         final List<String> disabledMethods,
-        final Rpc2Shim rpc2Shim) {
+        final Rpc2Shim rpc2Shim,
+        final AccountManager am) {
 
         if (enabledGroups == null) {
             throw new NullPointerException("RpcProcessor enabledGroups is null");
@@ -50,7 +52,11 @@ public class RpcProcessor {
             throw new NullPointerException("RpcProcessor rpc2Shim is null");
         }
 
-        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
+        if (am == null) {
+            throw new NullPointerException("RpcProcessor accountManager is null");
+        }
+
+        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods, am);
         executor =
                 Executors.newFixedThreadPool(
                         Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));

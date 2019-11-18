@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.api.server.http.RpcServerVendor;
@@ -250,8 +251,10 @@ public class Aion {
          */
         Thread zmqThread = null;
         ProtocolProcessor processor = null;
+        AccountManager am = null;
         if (cfg.getApi().getZmq().getActive()) {
-            IHdlr handler = new HdlrZmq(new ApiAion0(ac));
+            am = new AccountManager(AionLoggerFactory.getLogger(LogEnum.API.name()));
+            IHdlr handler = new HdlrZmq(new ApiAion0(ac, am));
             processor = new ProtocolProcessor(handler, cfg.getApi().getZmq());
             zmqThread = new Thread(processor, "zmq-api");
             zmqThread.start();
@@ -259,8 +262,12 @@ public class Aion {
 
         RpcServer rpcServer = null;
         if (cfg.getApi().getRpc().isActive()) {
+            if (am == null) {
+                am = new AccountManager(AionLoggerFactory.getLogger(LogEnum.API.name()));
+            }
             CfgApiRpc rpcCfg = cfg.getApi().getRpc();
 
+            AccountManager finalAm = am;
             Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig =
                     (rpcBuilder) -> {
                         rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
@@ -273,6 +280,7 @@ public class Aion {
                         rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
                         rpcBuilder.setStuckThreadDetectorEnabled(
                                 rpcCfg.isStuckThreadDetectorEnabled());
+                        rpcBuilder.setAccountManager(finalAm);
 
                         if (rpcCfg.isCorsEnabled()) {
                             rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
