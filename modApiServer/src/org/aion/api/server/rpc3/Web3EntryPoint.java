@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc3;
 
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,15 +32,8 @@ public class Web3EntryPoint {
     //TODO this is currently used only to allow support of existing tooling
     private static final Map<String,String> methodInterfaceMap;
     static {
-        methodInterfaceMap = Map
-            .ofEntries(Map.entry("getseed", "stratum_getseed"),
-                Map.entry("submitseed", "stratum_submitseed"),
-                Map.entry("submitsignature", "stratum_submitsignature"),
-                Map.entry("getblocktemplate", "stratum_getblocktemplate"),
-                Map.entry("submitblock", "stratum_submitblock"),
-                Map.entry("submitvalidateaddress", "stratum_validateaddress"),
-                Map.entry("getDifficulty", "stratum_getDifficulty"),
-                Map.entry("getMinerStats", "stratum_getMinerStats"));
+        //An immutable map that maps a method to an interface name
+        methodInterfaceMap = Collections.unmodifiableMap(RPCServerMethods.methodInterfaceMap());
     }
 
     public Web3EntryPoint(RPCServerMethods rpc, List<String> enabledGroup, List<String> enabledMethods,
@@ -100,9 +94,10 @@ public class Web3EntryPoint {
 
     public boolean isExecutable(String method){
         // A small hack to enforce an interface name for the block validation API
-        String interfaceName = methodInterfaceMap.containsKey(method) ?
-            methodInterfaceMap.get(method).split("_")[0] : method.split("_")[0];
-        return enabledGroup.contains(interfaceName) && rpc.isExecutable(method);
+        String interfaceName = methodInterfaceMap.getOrDefault(method,"");
+        return (enabledGroup.contains(interfaceName) || // check that method is enabled
+            interfaceName.replaceAll("\\W","").isEmpty()) // allow methods that do not belong to an interface
+            && rpc.isExecutable(method);
     }
 
     public boolean checkMethod(String method){
