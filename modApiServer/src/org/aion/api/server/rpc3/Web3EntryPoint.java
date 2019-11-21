@@ -55,7 +55,7 @@ public class Web3EntryPoint {
         Request request = null;
         RPCError err = null;
         Integer id = null;
-        ResultUnion resultUnion = null;
+        Object resultUnion = null;
         try{
             request = readRequest(requestString);
 

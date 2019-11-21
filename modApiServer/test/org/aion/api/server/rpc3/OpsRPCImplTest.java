@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.crypto.ECKey;
@@ -113,38 +114,36 @@ public class OpsRPCImplTest {
 
     @Test
     public void executeRequest() {
-        final ResultUnion resultUnion0 = execute(
+        execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
-                ParamUnion.wrap(new BlockSpecifier(new BlockSpecifierUnion(1L))),
-                VersionType.Version2));
+                BlockSpecifierConverter.encode(new BlockSpecifier(new BlockSpecifierUnion(1L))),
+                VersionType.Version2),
+                BlockDetailsConverter::decode);
 
-        final ResultUnion resultUnion1 = execute(
+        execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
-                ParamUnion.wrap(BlockSpecifierConverter.decode("[latest]")),
-                VersionType.Version2));
+                BlockSpecifierConverter.encode(BlockSpecifierConverter.decode("[latest]")),
+                VersionType.Version2),
+            BlockDetailsConverter::decode);
 
-        final ResultUnion resultUnion2 = execute(
+        execute(
             new Request(
                 1,
                 "ops_getBlockDetails",
-                ParamUnion.wrap(
+                BlockSpecifierConverter.encode(
                     BlockSpecifierConverter.decode(
                         "{\"block\": \""
                             + ByteArray.wrap(emptyPowBlock.getHash())
                             + "\"}")),
-                VersionType.Version2));
+                VersionType.Version2),
+            BlockDetailsConverter::decode);
     }
 
-    private ResultUnion execute(Request request){
-        final ResultUnion resultUnion = RPCServerMethods.execute(request, opsRPC);
-        if (resultUnion == null) {
-            return null;
-        }else {
-            return ResultUnion.decode(resultUnion.encode());
-        }
+    private <T> T execute(Request request, Function<Object, T> extractor){
+        return  extractor.apply(RPCServerMethods.execute(request, opsRPC));
     }
 }

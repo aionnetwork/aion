@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
@@ -24,7 +25,13 @@ import org.aion.rpc.types.RPCTypes.SubmitSeedParams;
 import org.aion.rpc.types.RPCTypes.SubmitSignatureParams;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypes.VoidParams;
+import org.aion.rpc.types.RPCTypesConverter;
+import org.aion.rpc.types.RPCTypesConverter.BooleanConverter;
+import org.aion.rpc.types.RPCTypesConverter.SubmitSeedParamsConverter;
+import org.aion.rpc.types.RPCTypesConverter.SubmitSignatureParamsConverter;
+import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
 import org.aion.types.AionAddress;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,12 +79,12 @@ public class StakingRPCImplTest {
         doReturn(false).when(chainHolder).submitSignature(invalid64Bytes, invalid32Bytes);
         //creating input for submit seed
         invalidSeed = ByteArray.wrap(invalid64Bytes);
-        invalidCoinbase = new AionAddress(invalid32Bytes);
+        invalidCoinbase = new AionAddress(Hex.decode("a0"+Hex.toHexString(invalid32Bytes).substring(2)));
         invalidSigningPublicKey = ByteArray.wrap(invalid32Bytes);
         doReturn(null).when(chainHolder).submitSeed(invalidSeed.toBytes(), invalidSigningPublicKey.toBytes(),invalidCoinbase.toByteArray());
 
         validSeed = ByteArray.wrap(valid64Bytes);
-        validCoinbase = new AionAddress(valid32Bytes);
+        validCoinbase = new AionAddress(Hex.decode("a0"+Hex.toHexString(valid32Bytes).substring(2)));
         validSigningPublicKey = ByteArray.wrap(valid32Bytes);
         doReturn(valid64Bytes).when(chainHolder).submitSeed(validSeed.toBytes(), validSigningPublicKey.toBytes(),validCoinbase.toByteArray());
         //stubbing getSeed
@@ -90,10 +97,13 @@ public class StakingRPCImplTest {
 
     @Test
     public void testSubmitSignature(){
-        assertTrue(execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2)).bool);
-        assertFalse(execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2)).bool);
+        assertTrue(execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2),
+            BooleanConverter::decode));
+        assertFalse(execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2),
+            BooleanConverter::decode));
         try{
-            execute(new Request(1, "submitsignature", ParamUnion.wrap(new SubmitSignatureParams(invalidSignature,missingSealHash)), null));
+            execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(invalidSignature,missingSealHash)), null),
+                BooleanConverter::decode);
             fail();
         } catch (BlockTemplateNotFoundRPCException e){
             //We expect this exception
@@ -102,14 +112,16 @@ public class StakingRPCImplTest {
 
     @Test
     public void testSubmitSeed(){
-        assertEquals(ByteArray.wrap(valid64Bytes), execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2)).byteArray);
-        assertNull( execute(new Request(1, "submitseed", ParamUnion.wrap(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2)));
+        assertEquals(ByteArray.wrap(valid64Bytes), execute(new Request(1, "submitseed", SubmitSeedParamsConverter
+            .encode(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2), RPCTypesConverter.ByteArrayConverter::decode));
+        assertNull( execute(new Request(1, "submitseed", SubmitSeedParamsConverter
+            .encode(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2), RPCTypesConverter.ByteArrayConverter::decode));
     }
 
     @Test
     public void testGetSeed(){
-        assertNotNull(execute(new Request(1, "getseed", ParamUnion.wrap(
-            new VoidParams()), VersionType.Version2)).byteArray);
+        assertNotNull(execute(new Request(1, "getseed", VoidParamsConverter.encode(
+            new VoidParams()), VersionType.Version2), RPCTypesConverter.ByteArrayConverter::decode));
     }
 
     @Test
@@ -121,21 +133,16 @@ public class StakingRPCImplTest {
         try{
             //This call will throw because a unity feature is requested before
             //The unity fork
-            execute(new Request(1, "getseed", ParamUnion.wrap(
-                new VoidParams()), VersionType.Version2));
+            execute(new Request(1, "getseed", VoidParamsConverter.encode(
+                new VoidParams()), VersionType.Version2), RPCTypesConverter.ByteArrayConverter::decode);
             fail();
         }catch (UnsupportedUnityFeatureRPCException e){
             //pass
         }
     }
 
-    private ResultUnion execute(Request request) {
-        final ResultUnion resultUnion = RPCServerMethods
-            .execute(request, rpcMethods);
-        if (resultUnion == null) {
-            return null;
-        }else {
-            return ResultUnion.decode(resultUnion.encode());
-        }
+    private <T> T execute(Request request, Function<Object, T> extractor) {
+        return extractor.apply(RPCServerMethods
+            .execute(request, rpcMethods));
     }
 }

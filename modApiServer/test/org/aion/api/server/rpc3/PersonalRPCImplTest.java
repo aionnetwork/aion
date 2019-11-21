@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import java.util.function.Function;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
@@ -92,18 +93,18 @@ public class PersonalRPCImplTest {
             new Request(
                 2,
                 "personal_ecRecover",
-                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
+                EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, execute(request).address.toString());
+        assertEquals(pubKey, execute(request, AionAddressConverter::decode).toString());
         // incorrect method name
         request =
             new Request(
                 2,
                 "personal_ecRecovery",
-                ParamUnion.wrap(new EcRecoverParams(helloByteMessage, signedMessage)),
+                EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
         try{
-            execute(request);
+            execute(request, AionAddressConverter::decode);
             fail();
         }catch (MethodNotFoundRPCException e){}
 
@@ -111,14 +112,14 @@ public class PersonalRPCImplTest {
         request = new Request(2, "personal_ecRecover", ParamUnion.wrap(new VoidParams()), VersionType.Version2);
 
         try{
-            execute(request);
+            execute(request, AionAddressConverter::decode);
             fail();
         }catch (InvalidParamsRPCException e){}
     }
 
-    private ResultUnion execute(Request request) {
-        final ResultUnion resultUnion = RPCServerMethods.execute(request, rpc);
-        return ResultUnion.decode(resultUnion.encode());
+    private <T> T execute(Request request, Function<Object, T> extractor) {
+        return extractor.apply(RPCServerMethods.execute(request, rpc));
+
     }
 
     @Test
