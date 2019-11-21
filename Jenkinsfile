@@ -67,7 +67,7 @@ pipeline {
             }
             steps { 
                     dir('FunctionalTests') {
-                        git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'master' 
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: 'refs/tags/final_jdk10']]], poll: false
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
