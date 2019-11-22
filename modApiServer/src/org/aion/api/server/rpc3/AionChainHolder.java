@@ -76,9 +76,7 @@ public class AionChainHolder implements ChainHolder {
         else {
             StakingBlock stakingBlock = chain.getBlockchain().getCachingStakingBlockTemplate(sealHash);
             stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
-            ImportResult result = chain.getBlockchain().tryToConnect(stakingBlock);
-            final boolean sealed =
-                result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+            final boolean sealed = addNewBlock(stakingBlock);
 
             if (sealed) {
                 logSealedBlock(stakingBlock);
@@ -126,9 +124,7 @@ public class AionChainHolder implements ChainHolder {
             return false; // cannot seal a block that does not exist
         } else {
             bestPowBlock.seal(nonce, solution);
-            ImportResult result = ((AionImpl) chain).addNewBlock(bestPowBlock);
-            final boolean sealedSuccessfully =
-                result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST;
+            final boolean sealedSuccessfully = addNewBlock(bestPowBlock);
 
             if (sealedSuccessfully) {
                 logSealedBlock(bestPowBlock);
@@ -143,6 +139,11 @@ public class AionChainHolder implements ChainHolder {
     public boolean canSeal(byte[] headerHash) {
         return this.chain.getBlockchain().getCachingMiningBlockTemplate(headerHash) != null ||
             this.chain.getBlockchain().getCachingStakingBlockTemplate(headerHash) != null;
+    }
+
+    @Override
+    public boolean addNewBlock(Block block) {
+        return ((AionImpl) chain).addNewBlock(block).isSuccessful();
     }
 
     @Override

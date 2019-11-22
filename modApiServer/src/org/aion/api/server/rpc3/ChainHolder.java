@@ -119,4 +119,11 @@ public interface ChainHolder {
      * @return true if the blockchain is currently caching this block template
      */
     boolean canSeal(byte[] headerHash);
+
+    /**
+     * Attempts to import and propagate the new block on the network
+     * @param block the proposed block
+     * @return true if the block was imported best or not best
+     */
+    boolean addNewBlock(Block block);
 }
