@@ -5,6 +5,13 @@ properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
 pipeline {
     agent any
 
+    environment {
+        LD_LIBRARY_PATH = '/usr/lib/jvm/java-11-openjdk-amd64/lib/server:/usr/local/lib'
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
+        PATH = '/home/aion/.cargo/bin:/home/aion/bin:/home/aion/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/usr/lib/jvm/java-11-openjdk-amd64/bin'
+        LIBRARY_PATH = '/usr/lib/jvm/java-11-openjdk-amd64/lib/server'
+    }
+
     stages {
         stage('Build') {
             steps {
@@ -65,9 +72,10 @@ pipeline {
                 // - this branch is master
                 expression { env.CHANGE_ID || GIT_BRANCH == 'master'}
             }
-            steps { 
+            steps {
+                timeout(20) {
                     dir('FunctionalTests') {
-                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: 'refs/tags/final_jdk10']]], poll: false
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '9cb9c1b']]], poll: false
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
@@ -76,6 +84,7 @@ pipeline {
                         sh('tar -C Tests -xjf Tests/oan.tar.bz2')
                         sh('./gradlew :Tests:test -i -PtestNodes=java')
                     }
+                }
             }
         }
     }
@@ -102,12 +111,4 @@ pipeline {
         }
 
     }
-}
-
-environment {
-    JAVA_HOME = "${env.JDK_9_HOME}"
-    ANT_HOME = "${env.ANT_HOME}"
-    SYSTEM_TESTS_HOME = "test"
-    GIT_BRANCH = "${env.BRANCH_NAME}"
-    DOCKER_HOST = "unix:///var/run/docker.sock"
 }
