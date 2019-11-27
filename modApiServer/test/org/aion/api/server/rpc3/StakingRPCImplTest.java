@@ -13,6 +13,8 @@ import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
 import java.util.function.Function;
+import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.account.AccountManagerInterface;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
@@ -32,6 +34,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class StakingRPCImplTest {
     private ChainHolder chainHolder;
@@ -48,6 +51,7 @@ public class StakingRPCImplTest {
     private AionAddress validCoinbase;
     private byte[] valid64Bytes;
     private ByteArray missingSealHash;
+    private AccountManagerInterface accountManager = Mockito.mock(AccountManagerInterface.class);
 
     @Before
     public void setup(){
@@ -123,7 +127,7 @@ public class StakingRPCImplTest {
 
     @Test
     public void  testCallUnityFeatureBeforeFork(){
-        chainHolder = spy(new AionChainHolder(AionImpl.instForTest()));
+        chainHolder = spy(new AionChainHolder(AionImpl.instForTest(), accountManager));
         doReturn(false).when(chainHolder).isUnityForkEnabled();
         doCallRealMethod().when(chainHolder).getSeed();
         rpcMethods= new RPCMethods(chainHolder);

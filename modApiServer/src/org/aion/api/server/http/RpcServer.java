@@ -61,7 +61,7 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
 
         accountManager = builder.accountManager;
-        ChainHolder chainHolder = new AionChainHolder(AionImpl.inst());
+        ChainHolder chainHolder = new AionChainHolder(AionImpl.inst(), accountManager);
 
         rpcProcessor =
                 new RpcProcessor(enabledEndpoints,

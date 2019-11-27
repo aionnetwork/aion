@@ -15,6 +15,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.db.Repository;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;
@@ -32,6 +33,7 @@ import org.aion.rpc.types.RPCTypes.OpsTransaction;
 import org.aion.rpc.types.RPCTypes.PongEnum;
 import org.aion.rpc.types.RPCTypes.SubmissionResult;
 import org.aion.rpc.types.RPCTypes.TxDetails;
+import org.aion.rpc.types.RPCTypes.TxLog;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
 import org.aion.rpc.types.RPCTypes.ValidateAddressResult;
 import org.aion.types.AionAddress;
@@ -249,7 +251,7 @@ public class RPCMethods implements RPCServerMethods {
                                 info.getReceipt().getEnergyUsed(),
                                 info.getReceipt().getEnergyUsed(),
                                 info.hasInternalTransactions(),
-                                serializeTxLogs(
+                                serializeTxLogsDetails(
                                         info.getReceipt(), i, block.getHeader().getNumber()),
                                 transaction.getBeaconHash() == null? null : ByteArray.wrap(transaction.getBeaconHash())));
             }
@@ -257,7 +259,7 @@ public class RPCMethods implements RPCServerMethods {
         }
     }
 
-    private List<TxLogDetails> serializeTxLogs(AionTxReceipt receipt, int index, long blockNumber) {
+    private List<TxLogDetails> serializeTxLogsDetails(AionTxReceipt receipt, int index, long blockNumber) {
         List<Log> logs = receipt.getLogInfoList();
         if (logs == null) return Collections.emptyList();
         else {
@@ -278,6 +280,39 @@ public class RPCMethods implements RPCServerMethods {
         }
     }
 
+
+    private OpsTransaction serializeOpsTransaction(AionTxInfo transactionInfo, Block block,
+        AionTransaction aionTransaction, AionTxReceipt txReceipt) {
+        return new OpsTransaction(
+            block.getTimestamp(),
+            ByteArray.wrap(aionTransaction.getTransactionHash()),
+            block.getNumber(),
+            ByteArray.wrap(block.getHash()),
+            aionTransaction.getNonceBI(),
+            aionTransaction.getSenderAddress(),
+            aionTransaction.getDestinationAddress(),
+            aionTransaction.getValueBI(),
+            aionTransaction.getEnergyPrice(),
+            txReceipt.getEnergyUsed(),
+            ByteArray.wrap(aionTransaction.getData()),
+            transactionInfo.getIndex(),
+            ByteArray.wrap(aionTransaction.getBeaconHash()),
+            serializeTxLog(transactionInfo.getIndex(), txReceipt)
+        );
+    }
+
+    private List<TxLog> serializeTxLog(int transactionIndex, AionTxReceipt txReceipt){
+        List<TxLog> txLogs = new ArrayList<>();
+        for (Log log: txReceipt.getLogInfoList()){
+            txLogs.add(
+                new TxLog(new AionAddress(log.copyOfAddress()),
+                    transactionIndex,
+                    ByteArray.wrap(log.copyOfData()),
+                    log.copyOfTopics().stream().map(ByteArray::new)
+                        .collect(Collectors.toUnmodifiableList())));
+        }
+        return Collections.unmodifiableList(txLogs);
+    }
     @Override
     public BlockDetails ops_getBlockDetails(BlockSpecifierUnion blockSpecifierUnion) {
         logger.debug("Executing ops_getBlockDetails({})", blockSpecifierUnion.encode());
@@ -335,42 +370,61 @@ public class RPCMethods implements RPCServerMethods {
 
     @Override
     public AccountState ops_getAccountState(AionAddress aionAddress) {
-        throw new UnsupportedOperationException();
+        org.aion.base.AccountState accountState = chainHolder.getAccountState(aionAddress);
+        return new AccountState(aionAddress,
+            chainHolder.blockNumber(),
+            accountState.getBalance(),
+            accountState.getNonce());
     }
 
     @Override
-    public OpsTransaction ops_getTransaction(ByteArray byteArray) {
-        throw new UnsupportedOperationException();
+    public OpsTransaction ops_getTransaction(ByteArray hash) {
+        final AionTxInfo transactionInfo = chainHolder.getTransactionInfo(hash.toBytes());
+        if (transactionInfo == null) {
+            return null;
+        }else {
+            final Block block = chainHolder.getBlockByHash(transactionInfo.blockHash.toBytes());
+            if (block == null) {
+                return null; // We cannot create the response if the block is null
+                            // Consider creating a new error class for this
+            }
+            AionTxReceipt txReceipt = transactionInfo.getReceipt();
+            if (txReceipt == null) {
+                return null; // We cannot create a response if there is not transaction receipt
+            }
+            AionTransaction aionTransaction = transactionInfo.getReceipt().getTransaction();
+            return serializeOpsTransaction(transactionInfo, block, aionTransaction, txReceipt);
+        }
     }
 
     @Override
-    public BlockDetails ops_getBlockDetailsByNumber(Long aLong) {
-        throw new UnsupportedOperationException();
+    public BlockDetails ops_getBlockDetailsByNumber(Long blockNumber) {
+        return serializeBlockDetails(chainHolder.getBlockByNumber(blockNumber));
     }
 
     @Override
-    public BlockDetails ops_getBlockDetailsByHash(ByteArray byteArray) {
-        throw new UnsupportedOperationException();
+    public BlockDetails ops_getBlockDetailsByHash(ByteArray blockHash) {
+        return serializeBlockDetails(chainHolder.getBlockByHash(blockHash.toBytes()));
     }
 
     @Override
-    public Boolean personal_unlockAccount(AionAddress aionAddress, String s, Integer integer) {
-        throw new UnsupportedOperationException();
+    public Boolean personal_unlockAccount(AionAddress aionAddress, String password, Integer timeout) {
+        return chainHolder.unlockAccount(aionAddress, password, timeout);
     }
 
     @Override
-    public Boolean personal_lockAccount(AionAddress aionAddress, String s) {
-        throw new UnsupportedOperationException();
+    public Boolean personal_lockAccount(AionAddress aionAddress, String password) {
+        return chainHolder.lockAccount(aionAddress, password);
     }
 
     @Override
-    public AionAddress personal_newAccount(String s) {
-        throw new UnsupportedOperationException();
+    public AionAddress personal_newAccount(String password) {
+        return chainHolder.newAccount(password);
     }
 
     @Override
     public List<AionAddress> personal_listAccounts() {
-        throw new UnsupportedOperationException();
+        return chainHolder.listAccounts();
     }
 
     @Override

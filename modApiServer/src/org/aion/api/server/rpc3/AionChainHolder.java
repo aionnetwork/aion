@@ -1,35 +1,55 @@
 package org.aion.api.server.rpc3;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import org.aion.api.server.account.Account;
+import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.account.AccountManagerInterface;
+import org.aion.base.AccountState;
+import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.db.AbstractRepository;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
+import org.slf4j.Logger;
 
 public class AionChainHolder implements ChainHolder {
 
     private final IAionChain chain;//An implementation of AionChain
     private final AtomicReference<BlockContext> currentTemplate;
+    private final AccountManagerInterface accountManager;
 
-    public AionChainHolder(IAionChain chain) {
+    public AionChainHolder(IAionChain chain,
+        AccountManagerInterface accountManager) {
         if (chain == null) {
             throw new NullPointerException("AionChain is null.");// This class should not
             // be instantiated without an instance of IAionChain
         }
+        if (accountManager == null) {
+            throw new NullPointerException("AccountManager is null.");// This class should not
+            // be instantiated without an instance of AccountManager
+        }
         this.chain = chain;
         currentTemplate = new AtomicReference<>(null);
+        this.accountManager = accountManager;
     }
 
     @Override
@@ -147,6 +167,63 @@ public class AionChainHolder implements ChainHolder {
     }
 
     @Override
+    public BigInteger getAccountBalance(AionAddress aionAddress, long blockNumber) {
+        return getRepoByBlockNumber(blockNumber).getBalance(aionAddress);
+    }
+
+    @Override
+    public BigInteger getAccountNonce(AionAddress aionAddress, long blockNumber) {
+        return getRepoByBlockNumber(blockNumber).getNonce(aionAddress);
+    }
+
+    @Override
+    public BigInteger getAccountBalance(AionAddress aionAddress) {
+        return this.chain.getRepository().getBalance(aionAddress);
+    }
+
+    @Override
+    public BigInteger getAccountNonce(AionAddress aionAddress) {
+        return this.chain.getRepository().getNonce(aionAddress);
+    }
+
+    @Override
+    public AccountState getAccountState(AionAddress aionAddress) {
+        final AccountState accountState = ((AionRepositoryImpl) this.chain.getRepository())
+            .getAccountState(aionAddress);
+        if (accountState == null) {
+            return new AccountState();//
+        }else {
+            return accountState;
+        }
+    }
+
+    @Override
+    public long blockNumber() {
+        return this.getBestBlock().getNumber();
+    }
+
+    @Override
+    public boolean unlockAccount(AionAddress aionAddress, String password, int timeout) {
+        return accountManager.unlockAccount(aionAddress, password, timeout);
+    }
+
+    @Override
+    public boolean lockAccount(AionAddress aionAddress, String password) {
+        return accountManager.lockAccount(aionAddress, password);
+    }
+
+    @Override
+    public AionAddress newAccount(String password) {
+        return accountManager.createAccount(password);
+    }
+
+    @Override
+    public List<AionAddress> listAccounts() {
+        return accountManager.getAccounts().stream().map(Account::getKey).map(ECKey::getAddress)
+            .map(AionAddress::new).collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
     public AionBlock getBestPOWBlock() {
         return this.chain.getBlockchain().getBestMiningBlock();
     }
@@ -181,5 +258,13 @@ public class AionChainHolder implements ChainHolder {
             block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
             block.getHeader().getDifficultyBI().toString(),
             block.getTransactionsList().size());
+    }
+
+    /*
+    Returns the blockchain state at the specified block number
+    */
+    private Repository getRepoByBlockNumber(long blockNumber){
+        return this.chain.getRepository()
+            .getSnapshotTo(getBlockByNumber(blockNumber).getStateRoot());
     }
 }

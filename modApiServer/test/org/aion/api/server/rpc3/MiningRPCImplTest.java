@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 
 import java.math.BigInteger;
 import java.util.function.Function;
+import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.account.AccountManagerInterface;
 import org.aion.crypto.HashUtil;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.server.RPCServerMethods;
@@ -37,6 +39,7 @@ import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class MiningRPCImplTest {
 
@@ -54,6 +57,7 @@ public class MiningRPCImplTest {
     private final ByteArray nonce =
             ByteArray.wrap("c5110000000000000000000000000000000000000000000072acb5c410b6ca2e");
     private RPCMethods rpcMethods;
+    private AccountManagerInterface accountManager = Mockito.mock(AccountManagerInterface.class);
 
     @Before
     public void setup() {
@@ -152,7 +156,7 @@ public class MiningRPCImplTest {
 
     @Test
     public void getWorkTest(){
-        ChainHolder chainHolder = new AionChainHolder(AionImpl.instForTest());
+        ChainHolder chainHolder = new AionChainHolder(AionImpl.instForTest(), accountManager);
         rpcMethods=new RPCMethods(chainHolder);
         final BlockTemplate blockTemplate = rpcMethods.getblocktemplate();
         assertNotNull(blockTemplate);
@@ -165,7 +169,7 @@ public class MiningRPCImplTest {
 
     @Test
     public void getDifficulty(){
-        ChainHolder chainHolder = new AionChainHolder(AionImpl.instForTest());
+        ChainHolder chainHolder = new AionChainHolder(AionImpl.instForTest(), accountManager);
         rpcMethods=new RPCMethods(chainHolder);
         final BigInteger difficulty = rpcMethods.getDifficulty();
         assertNotNull(difficulty);

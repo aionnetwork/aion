@@ -1,6 +1,8 @@
 package org.aion.api.server.rpc3;
 
 import java.math.BigInteger;
+import java.util.List;
+import org.aion.base.AccountState;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
@@ -126,4 +128,67 @@ public interface ChainHolder {
      * @return true if the block was imported best or not best
      */
     boolean addNewBlock(Block block);
+
+    /**
+     * @param aionAddress a blockchain account address
+     * @param blockNumber the blocknumber to be used when checking the nonce
+     * @return the balance of the account
+     */
+    BigInteger getAccountBalance(AionAddress aionAddress, long blockNumber);
+
+    /**
+     * @param aionAddress a blockchain account address
+     * @param blockNumber the blocknumber to be used when checking the nonce
+     * @return the transaction count of the address
+     */
+    BigInteger getAccountNonce(AionAddress aionAddress, long blockNumber);
+
+
+    /**
+     * @param aionAddress a blockchain account address
+     * @return the balance of the account
+     */
+    BigInteger getAccountBalance(AionAddress aionAddress);
+
+    /**
+     * @param aionAddress a blockchain account address
+     * @return the transaction count of the address
+     */
+    BigInteger getAccountNonce(AionAddress aionAddress);
+
+    AccountState getAccountState(AionAddress aionAddress);
+
+    /**
+     *
+     * @return the block number of the best block
+     */
+    long blockNumber();
+
+    /**
+     * Unlocks an aion account
+     * @param aionAddress the address to unlock
+     * @param password the account password
+     * @param timeout the length of time that the account should remain unlocked
+     * @return true if the account was unlocked
+     */
+    boolean unlockAccount(AionAddress aionAddress, String password, int timeout);
+
+    /**
+     * @param aionAddress the address to lock
+     * @param password the account password
+     * @return true if the account was unlocked
+     */
+    boolean lockAccount(AionAddress aionAddress, String password);
+
+    /**
+     * Creates a new public private key pair with the given password
+     * @param password the password for the new address
+     * @return the account address
+     */
+    AionAddress newAccount(String password);
+
+    /**
+     * @return the list of accounts in the kernel's keystore
+     */
+    List<AionAddress> listAccounts();
 }
