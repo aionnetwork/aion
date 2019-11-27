@@ -14,7 +14,7 @@ import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 
 /** Account Manager Class */
-public final class AccountManager {
+public final class AccountManager implements AccountManagerInterface{
 
     private final Logger logger;
     static final int UNLOCK_MAX = 86400, // sec
@@ -37,6 +37,7 @@ public final class AccountManager {
     }
 
     @VisibleForTesting
+    @Override
     public void removeAllAccounts() {
         accounts.cleanUp();
     }
@@ -44,6 +45,7 @@ public final class AccountManager {
     // Retrieve ECKey from active accounts list from manager perspective
     // !important method. use in careful
     // Can use this method as check if unlocked
+    @Override
     public ECKey getKey(final AionAddress _address) {
 
         Account acc = this.accounts.getIfPresent(_address);
@@ -59,10 +61,12 @@ public final class AccountManager {
         return null;
     }
 
+    @Override
     public List<Account> getAccounts() {
         return new ArrayList<>(this.accounts.asMap().values());
     }
 
+    @Override
     public synchronized boolean unlockAccount(AionAddress _address, String _password, int _timeout) {
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
@@ -95,6 +99,16 @@ public final class AccountManager {
             }
             return false;
         }
+    }
+
+    @Override
+    public AionAddress createAccount(String password) {
+        String address = Keystore.create(password);
+        ECKey key = Keystore.getKey(address, password);
+        logger.debug("<create-success addr={}>",address);
+        AionAddress aionAddress = new AionAddress(key.getAddress());
+        this.accounts.put(aionAddress, new Account(key, 0));
+        return aionAddress;
     }
 
     public synchronized boolean lockAccount(AionAddress _address, String _password) {
