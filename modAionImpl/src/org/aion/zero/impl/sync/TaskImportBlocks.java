@@ -250,6 +250,9 @@ final class TaskImportBlocks implements Runnable {
                         surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
                         return BACKWARD;
                     }
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+                    return returnMode;
                 } else if (importResult.isStored()) {
                     if (syncMode == BACKWARD) {
                         returnMode = FORWARD;
