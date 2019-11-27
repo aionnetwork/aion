@@ -174,7 +174,10 @@ public class NodeMgr implements INodeMgr {
         if (p2pLOG.isTraceEnabled()) {
             p2pLOG.trace("<addInboundNode {}>", _n.toString());
         }
-        inboundNodes.put(_n.getChannel().hashCode(), _n);
+        INode node = inboundNodes.put(_n.getChannel().hashCode(), _n);
+        if (node != null) {
+            p2pLOG.error("The inbound node={} was overwritten by node={}.", node, _n);
+        }
     }
 
     @Override
