@@ -21,16 +21,17 @@ import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
+import org.aion.rpc.types.RPCTypes.AccountState;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.MinerStats;
-import org.aion.rpc.types.RPCTypes.Request;
-import org.aion.rpc.types.RPCTypes.ResultUnion;
+import org.aion.rpc.types.RPCTypes.OpsTransaction;
+import org.aion.rpc.types.RPCTypes.PongEnum;
 import org.aion.rpc.types.RPCTypes.SubmissionResult;
-import org.aion.rpc.types.RPCTypes.TransactionDetails;
+import org.aion.rpc.types.RPCTypes.TxDetails;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
 import org.aion.rpc.types.RPCTypes.ValidateAddressResult;
 import org.aion.types.AionAddress;
@@ -217,17 +218,17 @@ public class RPCMethods implements RPCServerMethods {
         }
     }
 
-    private List<TransactionDetails> serializeTxDetails(List<AionTxInfo> txInfos, Block block) {
+    private List<TxDetails> serializeTxDetails(List<AionTxInfo> txInfos, Block block) {
         if (txInfos == null) {
             return Collections.emptyList();
         } else {
-            List<TransactionDetails> transactionDetails = new ArrayList<>();
+            List<TxDetails> transactionDetails = new ArrayList<>();
             for (int i = 0, txInfosSize = txInfos.size(); i < txInfosSize; i++) {
                 AionTxInfo info = txInfos.get(i);
                 AionTransaction transaction = info.getReceipt().getTransaction();
                 AionAddress contractAddress = TxUtil.calculateContractAddress(transaction);
                 transactionDetails.add(
-                        new TransactionDetails(
+                        new TxDetails(
                                 contractAddress,
                                 ByteArray.wrap(transaction.getTransactionHash()),
                                 i,
@@ -325,6 +326,51 @@ public class RPCMethods implements RPCServerMethods {
     @Override
     public MinerStats getMinerStats(AionAddress aionAddress) {
         return minerStats.getStats(aionAddress);
+    }
+
+    @Override
+    public PongEnum ping() {
+        return PongEnum.PONG;
+    }
+
+    @Override
+    public AccountState ops_getAccountState(AionAddress aionAddress) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OpsTransaction ops_getTransaction(ByteArray byteArray) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BlockDetails ops_getBlockDetailsByNumber(Long aLong) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BlockDetails ops_getBlockDetailsByHash(ByteArray byteArray) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Boolean personal_unlockAccount(AionAddress aionAddress, String s, Integer integer) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Boolean personal_lockAccount(AionAddress aionAddress, String s) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AionAddress personal_newAccount(String s) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AionAddress> personal_listAccounts() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

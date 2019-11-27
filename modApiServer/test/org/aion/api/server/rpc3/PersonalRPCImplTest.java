@@ -5,14 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.util.function.Function;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.rpc.errors.RPCExceptions.InternalErrorRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
 import org.aion.rpc.server.RPCServerMethods;
@@ -20,18 +18,15 @@ import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.EcRecoverParams;
 import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
-import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypes.VoidParams;
-import org.aion.rpc.types.RPCTypesConverter.AionAddressConverter;
+import org.aion.rpc.types.RPCTypesConverter.AddressConverter;
 import org.aion.rpc.types.RPCTypesConverter.DataHexStringConverter;
 import org.aion.rpc.types.RPCTypesConverter.EcRecoverParamsConverter;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class PersonalRPCImplTest {
     private ChainHolder chainHolder = mock(ChainHolder.class);
@@ -61,12 +56,12 @@ public class PersonalRPCImplTest {
         //recover public key and validate that the message was signed
         AionAddress recoveredKey = rpc.personal_ecRecover(helloByteMessage, DataHexStringConverter.decode(hexString));
         System.out.printf("Public Key: %s %nRecovered Key: %s%n ", DataHexStringConverter.decode(pubKey), recoveredKey);
-        assertEquals(AionAddressConverter.decode(pubKey), recoveredKey);
+        assertEquals(AddressConverter.decode(pubKey), recoveredKey);
 
         //attempt to recover the public key and fail since the incorrect message was used
         recoveredKey = rpc.personal_ecRecover(byeByteMessage, DataHexStringConverter.decode(hexString));
         System.out.printf("Public Key: %s %nRecovered Key: %s%n ", DataHexStringConverter.decode(pubKey), recoveredKey);
-        assertNotEquals(AionAddressConverter.decode(pubKey), recoveredKey);
+        assertNotEquals(AddressConverter.decode(pubKey), recoveredKey);
 
         try{
             //attempt to recover a pk with an incorrect signature
@@ -95,7 +90,7 @@ public class PersonalRPCImplTest {
                 "personal_ecRecover",
                 EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, execute(request, AionAddressConverter::decode).toString());
+        assertEquals(pubKey, execute(request, AddressConverter::decode).toString());
         // incorrect method name
         request =
             new Request(
@@ -104,7 +99,7 @@ public class PersonalRPCImplTest {
                 EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
         try{
-            execute(request, AionAddressConverter::decode);
+            execute(request, AddressConverter::decode);
             fail();
         }catch (MethodNotFoundRPCException e){}
 
@@ -112,7 +107,7 @@ public class PersonalRPCImplTest {
         request = new Request(2, "personal_ecRecover", ParamUnion.wrap(new VoidParams()), VersionType.Version2);
 
         try{
-            execute(request, AionAddressConverter::decode);
+            execute(request, AddressConverter::decode);
             fail();
         }catch (InvalidParamsRPCException e){}
     }

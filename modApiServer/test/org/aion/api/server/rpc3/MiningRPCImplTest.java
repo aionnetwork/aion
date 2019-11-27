@@ -19,17 +19,15 @@ import org.aion.rpc.types.RPCTypes.AddressParams;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.MinerStats;
-import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
-import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.SubmissionResult;
 import org.aion.rpc.types.RPCTypes.SubmitBlockParams;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypes.VoidParams;
 import org.aion.rpc.types.RPCTypesConverter;
+import org.aion.rpc.types.RPCTypesConverter.AddressConverter;
 import org.aion.rpc.types.RPCTypesConverter.AddressParamsConverter;
-import org.aion.rpc.types.RPCTypesConverter.AionAddressConverter;
-import org.aion.rpc.types.RPCTypesConverter.BigIntegerConverter;
+import org.aion.rpc.types.RPCTypesConverter.BigIntConverter;
 import org.aion.rpc.types.RPCTypesConverter.BlockTemplateConverter;
 import org.aion.rpc.types.RPCTypesConverter.MinerStatsConverter;
 import org.aion.rpc.types.RPCTypesConverter.RequestConverter;
@@ -97,7 +95,7 @@ public class MiningRPCImplTest {
     public void testGetMinerStatsMock() {
         MinerStats minerStats =
             execute(buildRequest("getMinerStats",
-                            AddressParamsConverter.encode(new AddressParams(AionAddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))),
+                            AddressParamsConverter.encode(new AddressParams(AddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))),
                 MinerStatsConverter::decode);
         assertNotNull(minerStats);
         assertEquals("1", minerStats.minerHashrate);
@@ -172,7 +170,7 @@ public class MiningRPCImplTest {
         final BigInteger difficulty = rpcMethods.getDifficulty();
         assertNotNull(difficulty);
         final Request request = buildRequest("getDifficulty", VoidParamsConverter.encode(new VoidParams()));
-        BigIntegerConverter.encode(execute(request, RPCTypesConverter.BigIntegerConverter::decode));
+        BigIntConverter.encode(execute(request, RPCTypesConverter.BigIntConverter::decode));
     }
 
     private <T> T execute(Request request, Function<Object, T> decoder) {

@@ -6,7 +6,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -18,15 +17,13 @@ import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;
-import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
-import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.SubmitSeedParams;
 import org.aion.rpc.types.RPCTypes.SubmitSignatureParams;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypes.VoidParams;
 import org.aion.rpc.types.RPCTypesConverter;
-import org.aion.rpc.types.RPCTypesConverter.BooleanConverter;
+import org.aion.rpc.types.RPCTypesConverter.BoolConverter;
 import org.aion.rpc.types.RPCTypesConverter.SubmitSeedParamsConverter;
 import org.aion.rpc.types.RPCTypesConverter.SubmitSignatureParamsConverter;
 import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
@@ -98,12 +95,12 @@ public class StakingRPCImplTest {
     @Test
     public void testSubmitSignature(){
         assertTrue(execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)), VersionType.Version2),
-            BooleanConverter::decode));
+            BoolConverter::decode));
         assertFalse(execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(invalidSignature, invalidSealHash)), VersionType.Version2),
-            BooleanConverter::decode));
+            BoolConverter::decode));
         try{
             execute(new Request(1, "submitsignature", SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(invalidSignature,missingSealHash)), null),
-                BooleanConverter::decode);
+                BoolConverter::decode);
             fail();
         } catch (BlockTemplateNotFoundRPCException e){
             //We expect this exception

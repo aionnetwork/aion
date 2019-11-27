@@ -12,10 +12,10 @@ import org.aion.rpc.errors.RPCExceptions.InvalidRequestRPCException;
 import org.aion.rpc.errors.RPCExceptions.RPCException;
 import org.aion.rpc.server.RPC;
 import org.aion.rpc.server.RPCServerMethods;
-import org.aion.rpc.types.RPCTypes.RPCError;
 import org.aion.rpc.types.RPCTypes.Request;
 import org.aion.rpc.types.RPCTypes.Response;
 import org.aion.rpc.types.RPCTypes.ResultUnion;
+import org.aion.rpc.types.RPCTypes.RpcError;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypesConverter.RequestConverter;
 import org.aion.rpc.types.RPCTypesConverter.ResponseConverter;
@@ -47,7 +47,7 @@ public class Web3EntryPoint {
     public String call(String requestString){
         logger.debug("Received request: {}",requestString);
         Request request = null;
-        RPCError err = null;
+        RpcError err = null;
         Integer id = null;
         Object resultUnion = null;
         try{

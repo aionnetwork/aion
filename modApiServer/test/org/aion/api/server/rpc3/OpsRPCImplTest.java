@@ -17,15 +17,13 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
-import org.aion.rpc.types.RPCTypes.BlockSpecifier;
+import org.aion.rpc.types.RPCTypes.BlockSpecifierParams;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.ByteArray;
-import org.aion.rpc.types.RPCTypes.ParamUnion;
 import org.aion.rpc.types.RPCTypes.Request;
-import org.aion.rpc.types.RPCTypes.ResultUnion;
 import org.aion.rpc.types.RPCTypes.VersionType;
 import org.aion.rpc.types.RPCTypesConverter.BlockDetailsConverter;
-import org.aion.rpc.types.RPCTypesConverter.BlockSpecifierConverter;
+import org.aion.rpc.types.RPCTypesConverter.BlockSpecifierParamsConverter;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.types.ByteArrayWrapper;
@@ -118,7 +116,7 @@ public class OpsRPCImplTest {
             new Request(
                 1,
                 "ops_getBlockDetails",
-                BlockSpecifierConverter.encode(new BlockSpecifier(new BlockSpecifierUnion(1L))),
+                BlockSpecifierParamsConverter.encode(new BlockSpecifierParams(new BlockSpecifierUnion(1L))),
                 VersionType.Version2),
                 BlockDetailsConverter::decode);
 
@@ -126,7 +124,7 @@ public class OpsRPCImplTest {
             new Request(
                 1,
                 "ops_getBlockDetails",
-                BlockSpecifierConverter.encode(BlockSpecifierConverter.decode("[latest]")),
+                BlockSpecifierParamsConverter.encode(BlockSpecifierParamsConverter.decode("[latest]")),
                 VersionType.Version2),
             BlockDetailsConverter::decode);
 
@@ -134,8 +132,8 @@ public class OpsRPCImplTest {
             new Request(
                 1,
                 "ops_getBlockDetails",
-                BlockSpecifierConverter.encode(
-                    BlockSpecifierConverter.decode(
+                BlockSpecifierParamsConverter.encode(
+                    BlockSpecifierParamsConverter.decode(
                         "{\"block\": \""
                             + ByteArray.wrap(emptyPowBlock.getHash())
                             + "\"}")),
