@@ -75,16 +75,11 @@ final class TaskGetBodies implements Runnable {
             String displayId = hw.displayId;
             List<BlockHeader> headers = hw.headers;
 
-            if (log.isDebugEnabled()) {
-                log.debug(
-                        "<get-bodies from-num={} to-num={} node={}>",
-                        headers.get(0).getNumber(),
-                        headers.get(headers.size() - 1).getNumber(),
-                        hw.displayId);
-            }
-
             // save headers for matching with bodies
             syncHeaderRequestManager.storeHeaders(idHash, hw);
+
+            // log bodies request before sending the request
+            log.debug("<get-bodies from-num={} to-num={} node={}>", headers.get(0).getNumber(), headers.get(headers.size() - 1).getNumber(), hw.displayId);
 
             p2p.send(
                     idHash,

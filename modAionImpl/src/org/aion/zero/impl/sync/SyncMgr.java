@@ -320,12 +320,11 @@ public final class SyncMgr {
     public void validateAndAddBlocks(
             int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
         if (_bodies == null) return;
+        log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
         // the requests are made such that the size varies to better map headers to bodies
         HeadersWrapper hw = syncHeaderRequestManager.matchHeaders(_nodeIdHashcode, _bodies.size());
         if (hw == null) return;
-
-        boolean assembleError = false;
 
         // assemble batch
         List<BlockHeader> headers = hw.headers;
@@ -336,16 +335,10 @@ public final class SyncMgr {
             Block block = BlockUtil.newBlockWithHeader(headerIt.next(), bodyIt.next());
             if (block == null) {
                 log.warn("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
-                assembleError = true;
                 break;
             } else {
                 blocks.add(block);
             }
-        }
-
-        if (!assembleError) {
-            // if correctly assembled, remove headers
-            syncHeaderRequestManager.dropHeaders(_nodeIdHashcode, _bodies.size(), hw);
         }
 
         int m = blocks.size();
@@ -353,13 +346,7 @@ public final class SyncMgr {
             return;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug(
-                    "<incoming-bodies from={} size={} node={}>",
-                    blocks.get(0).getNumber(),
-                    blocks.size(),
-                    _displayId);
-        }
+        log.debug("<assembled-blocks from={} size={} node={}>", blocks.get(0).getNumber(), blocks.size(), _displayId);
 
         try {
             // add batch

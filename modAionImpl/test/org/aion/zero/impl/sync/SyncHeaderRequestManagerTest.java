@@ -186,9 +186,8 @@ public class SyncHeaderRequestManagerTest {
         srm.storeHeaders(1, hw1);
         assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw1);
 
-        HeadersWrapper hw2 = new HeadersWrapper(1, "peer1", list);
-        assertThat(srm.dropHeaders(1, 10, hw2)).isFalse();
-        assertThat(srm.dropHeaders(1, 10, hw1)).isTrue();
+        // ensure the headers were dropped
+        assertThat(srm.matchHeaders(1, 10)).isNull();
     }
 
     @Test
@@ -205,8 +204,8 @@ public class SyncHeaderRequestManagerTest {
         srm.storeHeaders(1, hw2);
         assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw2);
 
-        assertThat(srm.dropHeaders(1, 10, hw1)).isFalse();
-        assertThat(srm.dropHeaders(1, 10, hw2)).isTrue();
+        // ensure the headers were dropped
+        assertThat(srm.matchHeaders(1, 10)).isNull();
     }
 
     @Test

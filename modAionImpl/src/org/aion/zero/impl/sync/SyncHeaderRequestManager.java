@@ -548,7 +548,7 @@ public class SyncHeaderRequestManager {
             return null;
         }
 
-        HeadersWrapper headersWrapper = storedHeaders.get(peerId).get(size);
+        HeadersWrapper headersWrapper = storedHeaders.get(peerId).remove(size);
         if (headersWrapper != null) {
             syncLog.debug(
                     "<match-headers node={} size={} object={}>",
@@ -562,28 +562,6 @@ public class SyncHeaderRequestManager {
         // these get dropped by a different method call only if correctly matched to bodies
         // they get overwritten if not used by the next same size response
         return headersWrapper;
-    }
-
-    /**
-     * Drops a set of headers that has been successfully matched to bodies.
-     *
-     * @return {@code true} is the object was stored and dropped, {@code false} otherwise
-     */
-    public synchronized boolean dropHeaders(int idHash, int size, HeadersWrapper headersWrapper) {
-        if (storedHeaders.containsKey(idHash)) {
-            // the stored object can be overwritten by a new response with the same size, therefore
-            // must perform the delete only if it is the exact object that is stored in the map
-            if (storedHeaders.get(idHash).get(size) == headersWrapper) {
-                storedHeaders.get(idHash).remove(size);
-                syncLog.debug(
-                        "<remove-headers node={} size={} object={}>",
-                        headersWrapper.displayId,
-                        headersWrapper.size,
-                        headersWrapper);
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
