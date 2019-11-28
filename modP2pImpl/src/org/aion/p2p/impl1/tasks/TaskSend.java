@@ -7,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,12 +66,18 @@ public class TaskSend implements Runnable {
         while (start.get()) {
             try {
                 // process pending requests
-                for (Entry<Integer, Deque<MsgOut>> entry : pendingRequests.entrySet()) {
-                    Deque<MsgOut> messages = entry.getValue();
-                    if (!messages.isEmpty()) {
-                        process(messages.pollFirst());
+                int countPendingPeers = 0;
+                do {
+                    for (Entry<Integer, Deque<MsgOut>> entry : pendingRequests.entrySet()) {
+                        Deque<MsgOut> messages = entry.getValue();
+                        if (!messages.isEmpty()) {
+                            process(messages.pollFirst(), false);
+                            if (!messages.isEmpty()) {
+                                countPendingPeers++;
+                            }
+                        }
                     }
-                }
+                } while (countPendingPeers > 1);
 
                 boolean wasProcessed = false;
                 // wait for a messages from the queue to be processed before going to the pending
@@ -83,7 +88,7 @@ public class TaskSend implements Runnable {
                     MsgOut mo = sendMsgQue.take();
                     duration = System.nanoTime() - startTime;
                     surveyLog.info("TaskSend: wait for message, duration = {} ns.", duration);
-                    wasProcessed = process(mo);
+                    wasProcessed = process(mo, true);
                 }
             } catch (InterruptedException e) {
                 p2pLOG.error("task-send-interrupted", e);
@@ -101,7 +106,7 @@ public class TaskSend implements Runnable {
      *
      * @return {@code true} if the message was processed, {@code false} otherwise
      */
-    private boolean process(MsgOut mo) {
+    private boolean process(MsgOut mo, boolean prioritizeQueue) {
         // shouldn't happen; but just in case
         if (mo == null) return false;
 
@@ -137,7 +142,13 @@ public class TaskSend implements Runnable {
             // during the next iteration
             if (mgr.getActiveNodes().size() > 1 && node.getIdHash() == lastNode.getIdHash()) {
                 if (pendingRequests.containsKey(node.getIdHash())) {
-                    pendingRequests.get(node.getIdHash()).addLast(mo);
+                    if (prioritizeQueue) {
+                        // the message comes from the sendMsgQue, i.e. it was created after the ones in the current queue
+                        pendingRequests.get(node.getIdHash()).addLast(mo);
+                    } else {
+                        // the message comes from the pendingRequests, i.e. it was removed from the beginning of the queue
+                        pendingRequests.get(node.getIdHash()).addFirst(mo);
+                    }
                 } else {
                     Deque<MsgOut> dq = new ArrayDeque<>();
                     dq.addLast(mo);
@@ -146,6 +157,16 @@ public class TaskSend implements Runnable {
                 duration = System.nanoTime() - startTime;
                 surveyLog.info("TaskSend: put back, duration = {} ns.", duration);
                 return false;
+            }
+
+            if (prioritizeQueue && pendingRequests.containsKey(node.getIdHash())) {
+                Deque<MsgOut> dq = pendingRequests.get(node.getIdHash());
+                if (dq != null && !dq.isEmpty()) {
+                    dq.addLast(mo);
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.info("TaskSend: put back, duration = {} ns.", duration);
+                    return false;
+                }
             }
 
             SelectionKey sk = node.getChannel().keyFor(selector);
