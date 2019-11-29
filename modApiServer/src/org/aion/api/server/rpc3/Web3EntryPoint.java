@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc3;
 
 
+import com.google.common.base.Stopwatch;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,11 @@ public class Web3EntryPoint {
         RpcError err = null;
         Integer id = null;
         Object resultUnion = null;
+        Stopwatch stopwatch = null;
+        if (logger.isDebugEnabled()){
+            stopwatch = Stopwatch.createStarted();
+        }
+
         try{
             request = readRequest(requestString);
 
@@ -66,17 +72,24 @@ public class Web3EntryPoint {
             err = e.getError();//Don't log this error since it may already be logged elsewhere
         }
         catch (RPCException e){
-            logger.debug("Request failed due to an RPC exception: ", e);
+            logger.debug("Request failed due to an RPC exception: {}", e.getMessage());
             err = e.getError();
         }
         catch (Exception e){
-            logger.debug("Call to {} failed.", request==null? "null":request.method);
-            logger.debug("Request failed due to an internal error: ", e);
-            err= InternalErrorRPCException.INSTANCE.getError();
+            logger.error("Call to {} failed.", request==null? "null":request.method);
+            logger.error("Request failed due to an internal error: ", e);
+            err= new InternalErrorRPCException(
+                e.getClass().getSimpleName()+":"+e.getMessage()).getError(); // Prefer this over
+                                                                // creating an instance of RpcError
         }
         final String resultString = ResponseConverter
             .encodeStr(new Response(id, resultUnion, err, VersionType.Version2));
-        logger.debug("Produced response: {}", resultString);
+
+        if (stopwatch != null) {
+            logger.debug("Produced response: {}bytes in <{}>ms",
+                resultString.getBytes().length,
+                stopwatch.elapsed().toMillis());
+        }
         return resultString;
     }
 
