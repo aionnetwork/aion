@@ -239,7 +239,7 @@ public class RPCMethods implements RPCServerMethods {
                                 transaction.getEnergyPrice(),
                                 transaction.getEnergyLimit(),
                                 transaction.getEnergyPrice(),
-                                ByteArray.wrap(transaction.getNonce()),
+                                transaction.getNonceBI().longValue(),
                                 transaction.getSenderAddress(),
                                 transaction.getDestinationAddress(),
                                 block.getTimestamp(),
