@@ -52,7 +52,7 @@ dependencies {
     compile project(':3rdParty.libnzmq')
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile files("${rootProject.projectDir}/lib/AionRpc.jar")
-    compile files("${rootProject.projectDir}/lib/rpc-lib4j-1.0-36270d0.jar")
+    compile files("${rootProject.projectDir}/lib/rpc-lib4j-1.0-6959f60.jar")
     compile 'org.json:json:20180813'
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'

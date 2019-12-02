@@ -25,6 +25,7 @@ import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.AccountState;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
+import org.aion.rpc.types.RPCTypes.BlockNumberEnumUnion;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
@@ -406,6 +407,27 @@ public class RPCMethods implements RPCServerMethods {
     public BlockDetails ops_getBlockDetailsByHash(ByteArray blockHash) {
         return serializeBlockDetails(chainHolder.getBlockByHash(blockHash.toBytes()));
     }
+
+    @Override
+    public BigInteger eth_getBalance(AionAddress aionAddress,
+        BlockNumberEnumUnion blockNumberEnumUnion) {
+        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST){
+            return chainHolder.getAccountBalance(aionAddress);
+        } else {
+            return chainHolder.getAccountBalance(aionAddress, blockNumberEnumUnion.blockNumber);
+        }
+    }
+
+    @Override
+    public BigInteger eth_getTransactionCount(AionAddress aionAddress,
+        BlockNumberEnumUnion blockNumberEnumUnion) {
+        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST){
+            return chainHolder.getAccountNonce(aionAddress);
+        } else {
+            return chainHolder.getAccountNonce(aionAddress, blockNumberEnumUnion.blockNumber);
+        }
+    }
+
 
     @Override
     public Boolean personal_unlockAccount(AionAddress aionAddress, String password, Integer timeout) {
