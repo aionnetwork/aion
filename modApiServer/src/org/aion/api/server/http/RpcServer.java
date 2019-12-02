@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc2.Rpc2Shim;
@@ -69,7 +70,7 @@ public abstract class RpcServer {
                     disabledMethods,
                     new Rpc2Shim(),
                     accountManager,
-                    new Web3EntryPoint(new RPCMethods(chainHolder), enabledEndpoints, enabledMethods, disabledMethods));
+                    new Web3EntryPoint(new RPCMethods(chainHolder), enabledEndpoints, enabledMethods, disabledMethods, Executors.newSingleThreadExecutor()));
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {

@@ -212,7 +212,7 @@ public class RpcProcessor {
             String method = obj.optString("method");
 
             if (method != null && web3EntryPoint.isExecutable(method)){
-                return web3EntryPoint.call(_reqBody);
+                return web3EntryPoint.executeSingle(_reqBody);
             } else if(method != null  && Rpc2Shim.supportsMethod(method)) {
                 return rpc2Shim.process(_reqBody);
             }
