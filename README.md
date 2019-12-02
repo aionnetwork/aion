@@ -44,7 +44,6 @@ To keep up to date and stay connected with current progress and development, rea
 [Aion on Twitter](https://twitter.com/Aion_OAN)  
 [Aion Blog](https://blog.aion.network/)
 
-For more information about Aion Community please refer to [Aion Community](https://aion.network/community/)
 
 ## Join the Team
 
