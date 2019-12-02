@@ -29,26 +29,26 @@ If you're interested in application development on Aion or making improvements t
 Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
 
 ### Miners
-If you're interested in mining on the Aion networks, refer to our [Aion Mining Docs](https://docs.aion.network/docs/aion-mining-overview)
+If you're interested in mining on the Aion networks, refer to our [Aion Mining Docs](https://validators.theoan.com/docs)
 
 ### Users
-If you're interested in interacting with dApps and _using_ Aion, refer to our [Aion Desktop Wallet Docs](https://docs.aion.network/docs/aion-desktop-wallet)
+If you're interested in interacting with dApps and _using_ Aion, refer to our [Aion Desktop Wallet Docs](https://docs-aion.theoan.com/docs/wallets)
 
 
 ## Contact
 
 To keep up to date and stay connected with current progress and development, reach out to us on the following channels:
 
-[Aion Forum](https://forum.aion.network/)  
-[Aion Gitter](https://gitter.im/aionnetwork)  
-[Aion Reddit](https://www.reddit.com/r/AionNetwork/)  
-[Aion Medium](https://blog.aion.network/)
+[Aion Telegram](https://t.me/aion_blockchain)  
+[Dispatch](https://getdispatch.co)  
+[Aion on Twitter](https://twitter.com/Aion_OAN)  
+[Aion Blog](https://blog.aion.network/)
 
 For more information about Aion Community please refer to [Aion Community](https://aion.network/community/)
 
 ## Join the Team
 
-If you are interested in being part of the Aion project, check out our available positions and apply [here](https://aion.network/careers/)! 
+If you are interested in being part of the Aion project, check out our available positions and apply [here](https://theoan.humi.ca/job-board)! 
 
 ## License
 
