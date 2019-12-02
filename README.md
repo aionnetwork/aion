@@ -1,7 +1,6 @@
 # Aion
 
 [![version](https://img.shields.io/github/tag/aionnetwork/aion.svg)](https://github.com/aionnetwork/aion/releases/latest)
-[![Join the chat at https://gitter.im/aionnetwork](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/aionnetwork)
 [![license](https://img.shields.io/github/license/aionnetwork/aion.svg)](https://github.com/aionnetwork/aion/blob/master/LICENSE)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/aionnetwork/aion/issues)  
 
