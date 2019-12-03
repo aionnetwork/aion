@@ -15,7 +15,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
-import org.aion.mcf.db.Repository;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;

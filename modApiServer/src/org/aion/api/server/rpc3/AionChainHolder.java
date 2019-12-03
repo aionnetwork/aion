@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.aion.api.server.account.Account;
-import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.account.AccountManagerInterface;
 import org.aion.base.AccountState;
 import org.aion.crypto.ECKey;
@@ -16,20 +15,15 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
-import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.db.AbstractRepository;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
-import org.slf4j.Logger;
 
 public class AionChainHolder implements ChainHolder {
 
