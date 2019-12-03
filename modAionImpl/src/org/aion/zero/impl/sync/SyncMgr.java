@@ -332,7 +332,7 @@ public final class SyncMgr {
         Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
         while (headerIt.hasNext() && bodyIt.hasNext()) {
-            Block block = BlockUtil.newBlockWithHeader(headerIt.next(), bodyIt.next());
+            Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(headerIt.next(), bodyIt.next());
             if (block == null) {
                 log.warn("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
                 break;

@@ -30,7 +30,7 @@ public final class ResBlocksHeaders extends Msg {
                 RLPList list = (RLPList) RLP.decode2(_msgBytes).get(0);
                 List<BlockHeader> blockHeaders = new ArrayList<>();
                 for (RLPElement aList : list) {
-                    blockHeaders.add(BlockUtil.newHeaderFromRlpList((RLPList) aList));
+                    blockHeaders.add(BlockUtil.newHeaderFromUnsafeSource((RLPList) aList));
                 }
                 return new ResBlocksHeaders(blockHeaders);
             } catch (Exception ex) {

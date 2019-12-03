@@ -61,7 +61,7 @@ public final class BroadcastNewBlockHandler extends Handler {
             RLPList blockRLP = (RLPList) params.get(0);
 
             // returns null when decoding failed
-            Block block = BlockUtil.newBlockFromRlpList(blockRLP);
+            Block block = BlockUtil.newBlockFromUnsafeSource(blockRLP);
             if (block != null) {
                 BlockPropagationHandler.PropStatus result =
                         this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);

@@ -76,7 +76,7 @@ public final class BlockUtil {
      *     valid block
      * @implNote Assumes the data is from an unsafe source.
      */
-    public static Block newBlockFromRlpList(RLPList rlpList) {
+    public static Block newBlockFromUnsafeSource(RLPList rlpList) {
         // return null when given empty bytes
         if (rlpList == null || rlpList.size() != 2) {
             return null;
@@ -116,8 +116,9 @@ public final class BlockUtil {
      * @param bodyBytes the body of the block; can be an empty byte array when there are no
      *     transactions in the block
      * @return a new instance of a block or {@code null} when given invalid data
+     * @implNote Assumes the body data is from an unsafe source.
      */
-    public static Block newBlockWithHeader(BlockHeader header, byte[] bodyBytes) {
+    public static Block newBlockWithHeaderFromUnsafeSource(BlockHeader header, byte[] bodyBytes) {
         // return null when given empty bytes
         if (header == null || bodyBytes == null) {
             return null;
@@ -149,8 +150,9 @@ public final class BlockUtil {
      * @param rlpList an RLPList instance encoding block header data
      * @return a new instance of a block header or {@code null} if the RLP encoding does not
      *     describe a valid block header
+     * @implNote Assumes the data is from an unsafe source.
      */
-    public static BlockHeader newHeaderFromRlpList(RLPList rlpList) {
+    public static BlockHeader newHeaderFromUnsafeSource(RLPList rlpList) {
         // return null when given empty bytes
         if (rlpList == null) {
             return null;
