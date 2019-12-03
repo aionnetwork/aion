@@ -99,8 +99,9 @@ public class MiningRPCImplTest {
     @Test
     public void testGetMinerStatsMock() {
         MinerStats minerStats =
-            execute(buildRequest("getMinerStatistics",
+            RPCTestUtils.executeRequest(buildRequest("getMinerStatistics",
                             AddressParamsConverter.encode(new AddressParams(AddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))),
+                rpcMethods,
                 MinerStatsConverter::decode);
         assertNotNull(minerStats);
         assertEquals("1", minerStats.minerHashrate);
@@ -115,7 +116,7 @@ public class MiningRPCImplTest {
             Request request =
                     buildRequest(method,
                             SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatDoesNotExistInCache)));
-            execute(request, SubmissionResultConverter::decode);
+            RPCTestUtils.executeRequest(request, rpcMethods,SubmissionResultConverter::decode);
             fail();
         } catch (RPCExceptions.BlockTemplateNotFoundRPCException e) {
             /*We expect this error*/
@@ -125,14 +126,14 @@ public class MiningRPCImplTest {
                 buildRequest(method,
                         SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatCanBeSealed)));
 
-        SubmissionResult submissionResult = execute(request1, SubmissionResultConverter::decode);
+        SubmissionResult submissionResult = RPCTestUtils.executeRequest(request1, rpcMethods,SubmissionResultConverter::decode);
         assertNotNull(submissionResult);
         assertTrue(submissionResult.result);
 
         request1 =
                 buildRequest(method,
                     SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatCannotBeSealed)));
-        submissionResult = execute(request1, SubmissionResultConverter::decode);
+        submissionResult = RPCTestUtils.executeRequest(request1, rpcMethods,SubmissionResultConverter::decode);
         assertNotNull(submissionResult);
         assertFalse(submissionResult.result); // check that the result can be encoded for return
 
@@ -141,7 +142,7 @@ public class MiningRPCImplTest {
                     buildRequest(method,
                             SubmitBlockParamsConverter.encode(
                                     new SubmitBlockParams(nonce, equihashSolution, blockThatWillThrow)));
-            execute(request1, SubmissionResultConverter::decode);
+            RPCTestUtils.executeRequest(request1, rpcMethods,SubmissionResultConverter::decode);
             fail();
         } catch (RPCExceptions.FailedToSealBlockRPCException e) {
             /*We expect this error*/
@@ -165,7 +166,7 @@ public class MiningRPCImplTest {
         BlockTemplateConverter.encode(blockTemplate);
 
         final Request request = buildRequest("getBlockTemplate", VoidParamsConverter.encode(new VoidParams()));
-        BlockTemplateConverter.encode(execute(request, BlockTemplateConverter::decode));
+        BlockTemplateConverter.encode(RPCTestUtils.executeRequest(request, rpcMethods,BlockTemplateConverter::decode));
     }
 
     @Test
@@ -175,11 +176,6 @@ public class MiningRPCImplTest {
         final BigInteger difficulty = rpcMethods.getDifficulty();
         assertNotNull(difficulty);
         final Request request = buildRequest("getDifficulty", VoidParamsConverter.encode(new VoidParams()));
-        BigIntConverter.encode(execute(request, RPCTypesConverter.BigIntConverter::decode));
-    }
-
-    private <T> T execute(Request request, Function<Object, T> decoder) {
-        final Object object = RPCServerMethods.execute(request, rpcMethods);
-        return decoder.apply(object);
+        BigIntConverter.encode(RPCTestUtils.executeRequest(request, rpcMethods,RPCTypesConverter.BigIntConverter::decode));
     }
 }

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -20,10 +19,9 @@ import static org.mockito.Mockito.verify;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.external.AionChainHolder;
 import org.aion.api.server.external.ChainHolder;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
@@ -31,7 +29,6 @@ import org.aion.log.LogEnum;
 import org.aion.rpc.client.SimpleIDGenerator;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
-import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.EcRecoverParams;
 import org.aion.rpc.types.RPCTypes.LockAccountParams;
@@ -125,31 +122,22 @@ public class PersonalRPCImplTest {
                 ecRecoverMethod,
                 EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        assertEquals(pubKey, execute(request, AddressConverter::decode).toString());
+        assertEquals(pubKey, RPCTestUtils.executeRequest(request, rpc,AddressConverter::decode).toString());
+
         // incorrect method name
-        request =
+        Request request1 =
             new Request(
                 idGenerator.generateID(),
                 ecRecoverMethod+"y",
                 EcRecoverParamsConverter.encode(new EcRecoverParams(helloByteMessage, signedMessage)),
                 VersionType.Version2);
-        try{
-            execute(request, AddressConverter::decode);
-            fail();
-        }catch (MethodNotFoundRPCException e){}
+
+        RPCTestUtils.assertFails(() -> RPCTestUtils.executeRequest(request1, rpc, AddressConverter::decode), MethodNotFoundRPCException.class);
 
         // incorrect params
-        request = new Request(idGenerator.generateID(), ecRecoverMethod, ParamUnion.wrap(new VoidParams()).encode(), VersionType.Version2);
+        Request request2 = new Request(idGenerator.generateID(), ecRecoverMethod, ParamUnion.wrap(new VoidParams()).encode(), VersionType.Version2);
 
-        try{
-            execute(request, AddressConverter::decode);
-            fail();
-        }catch (InvalidParamsRPCException e){}
-    }
-
-    private <T> T execute(Request request, Function<Object, T> extractor) {
-        return extractor.apply(RPCServerMethods.execute(request, rpc));
-
+        RPCTestUtils.assertFails(() -> RPCTestUtils.executeRequest(request2, rpc, AddressConverter::decode), InvalidParamsRPCException.class);
     }
 
     @Test
@@ -167,7 +155,7 @@ public class PersonalRPCImplTest {
         Request request = new Request(idGenerator.generateID(), newAccountMethod,
             PasswordParamsConverter.encode(new PasswordParams(password)), VersionType.Version2);
 
-        AionAddress responseAddress = execute(request, AddressConverter::decode);
+        AionAddress responseAddress = RPCTestUtils.executeRequest(request, rpc,AddressConverter::decode);
         assertEquals(expectedAddress, responseAddress);
     }
 
@@ -186,10 +174,10 @@ public class PersonalRPCImplTest {
         doReturn(false).when(chainHolder).unlockAccount(eq(address), eq(password0), anyInt());
         doReturn(true).when(chainHolder).unlockAccount(eq(address), eq(password1), anyInt());
 
-        assertFalse(execute(new Request(idGenerator.generateID(), unlockAccountMethod,
-            UnlockAccountParamsConverter.encode(params0), VersionType.Version2), BoolConverter::decode));
-        assertTrue(execute(new Request(idGenerator.generateID(), unlockAccountMethod,
-            UnlockAccountParamsConverter.encode(params1), VersionType.Version2), BoolConverter::decode));
+        assertFalse(RPCTestUtils.executeRequest(new Request(idGenerator.generateID(), unlockAccountMethod,
+            UnlockAccountParamsConverter.encode(params0), VersionType.Version2), rpc,BoolConverter::decode));
+        assertTrue(RPCTestUtils.executeRequest(new Request(idGenerator.generateID(), unlockAccountMethod,
+            UnlockAccountParamsConverter.encode(params1), VersionType.Version2), rpc, BoolConverter::decode));
     }
 
     @Test
@@ -204,10 +192,10 @@ public class PersonalRPCImplTest {
         doReturn(false).when(chainHolder).lockAccount(eq(address), eq(password0));
         doReturn(true).when(chainHolder).lockAccount(eq(address), eq(password1));
 
-        assertFalse(execute(new Request(idGenerator.generateID(), lockAccountMethod,
-            LockAccountParamsConverter.encode(params0), VersionType.Version2), BoolConverter::decode));
-        assertTrue(execute(new Request(idGenerator.generateID(), lockAccountMethod,
-            LockAccountParamsConverter.encode(params1), VersionType.Version2), BoolConverter::decode));
+        assertFalse(RPCTestUtils.executeRequest(new Request(idGenerator.generateID(), lockAccountMethod,
+            LockAccountParamsConverter.encode(params0), VersionType.Version2), rpc,BoolConverter::decode));
+        assertTrue(RPCTestUtils.executeRequest(new Request(idGenerator.generateID(), lockAccountMethod,
+            LockAccountParamsConverter.encode(params1), VersionType.Version2), rpc,BoolConverter::decode));
     }
 
     @Test
@@ -223,7 +211,7 @@ public class PersonalRPCImplTest {
         rpc = spy(new RPCMethods(chainHolder));
         doCallRealMethod().when(rpc).personal_listAccounts();
         Request request = new Request(idGenerator.generateID(), listAccountMethod, null, VersionType.Version2);
-        List<AionAddress> aionAddressList = execute(request, AddressListConverter::decode);
+        List<AionAddress> aionAddressList = RPCTestUtils.executeRequest(request, rpc,AddressListConverter::decode);
 
         verify(chainHolder, atLeastOnce()).listAccounts();
         assertEquals(addressCount, aionAddressList.size());

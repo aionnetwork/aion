@@ -140,23 +140,25 @@ public class OpsRPCImplTest {
 
     @Test
     public void testOps_getBlockDetails() {
-        assertNotNull(execute(
+        assertNotNull(RPCTestUtils.executeRequest(
             new Request(
                 idGenerator.generateID(),
                 "ops_getBlockDetails",
                 BlockSpecifierParamsConverter.encode(new BlockSpecifierParams(new BlockSpecifierUnion(1L))),
                 VersionType.Version2),
+                opsRPC,
                 BlockDetailsConverter::decode));
 
-        assertNotNull(execute(
+        assertNotNull(RPCTestUtils.executeRequest(
             new Request(
                 idGenerator.generateID(),
                 "ops_getBlockDetails",
                 BlockSpecifierParamsConverter.encode(BlockSpecifierParamsConverter.decode("[latest]")),
                 VersionType.Version2),
+            opsRPC,
             BlockDetailsConverter::decode));
 
-        assertNotNull(execute(
+        assertNotNull(RPCTestUtils.executeRequest(
             new Request(
                 idGenerator.generateID(),
                 "ops_getBlockDetails",
@@ -166,28 +168,31 @@ public class OpsRPCImplTest {
                             + ByteArray.wrap(emptyPowBlock.getHash())
                             + "\"}")),
                 VersionType.Version2),
+            opsRPC,
             BlockDetailsConverter::decode));
     }
 
     @Test
     public void testOps_getBlockDetailsByHash() {
-        assertNotNull(execute(
+        assertNotNull(RPCTestUtils.executeRequest(
             new Request(
                 idGenerator.generateID(),
                 getBlockDetailsByHashMethod,
                 BlockHashParamsConverter.encode(new BlockHashParams(ByteArray.wrap(emptyPowBlock.getHash()))),
                 VersionType.Version2),
+            opsRPC,
             BlockDetailsConverter::decode));
     }
 
     @Test
     public void testOps_getBlockDetailsByNumber() {
-        assertNotNull(execute(
+        assertNotNull(RPCTestUtils.executeRequest(
             new Request(
                 idGenerator.generateID(),
                 getBlockDetailsByNumberMethod,
                 BlockNumberParamsConverter.encode(new BlockNumberParams(1L)),
                 VersionType.Version2),
+            opsRPC,
             BlockDetailsConverter::decode));
     }
 
@@ -195,7 +200,7 @@ public class OpsRPCImplTest {
     public void testOps_getTransaction(){
         Request request = new Request(idGenerator.generateID(), getTransactionMethod,
             TransactionHashParamsConverter.encode(new TransactionHashParams(transactionHash)), VersionType.Version2);
-        assertNotNull(execute(request, OpsTransactionConverter::decode));
+        assertNotNull(RPCTestUtils.executeRequest(request, opsRPC,OpsTransactionConverter::decode));
     }
 
     @Test
@@ -203,14 +208,10 @@ public class OpsRPCImplTest {
         AionAddress aionAddress = new AionAddress(ByteUtil.hexStringToBytes("a07913c03686c9659c1b614d098fd1db380a52b71fd58526b53d8107f7b355d5"));
         Request request = new Request(idGenerator.generateID(), getAccountStateMethod,
             AddressParamsConverter.encode(new AddressParams(aionAddress)), VersionType.Version2);
-        final RPCTypes.AccountState result = execute(request, AccountStateConverter::decode);
+        final RPCTypes.AccountState result = RPCTestUtils.executeRequest(request, opsRPC, AccountStateConverter::decode);
         assertNotNull(result);
         assertEquals(aionAddress, result.address);
         assertEquals(BigInteger.TEN, result.balance);
         assertEquals(BigInteger.TEN, result.nonce);
-    }
-
-    private <T> T execute(Request request, Function<Object, T> extractor){
-        return  extractor.apply(RPCServerMethods.execute(request, opsRPC));
     }
 }
