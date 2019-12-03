@@ -37,7 +37,6 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.txpool.TxPoolA0;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.zero.impl.config.CfgFork;
 import org.aion.base.AccountState;
@@ -134,7 +133,7 @@ public class AionPendingStateImpl implements IPendingState {
 
     private boolean loadPendingTx;
 
-    private boolean poolBackUp;
+    private boolean poolBackUpEnable;
 
     private Map<byte[], byte[]> backupPendingPoolAdd;
     private Map<byte[], byte[]> backupPendingCacheAdd;
@@ -241,15 +240,6 @@ public class AionPendingStateImpl implements IPendingState {
                         long t2 = System.currentTimeMillis();
                         LOGGER_TX.debug("Pending state update took {} ms", t2 - t1);
                     }
-                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()
-                        && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
-                    long t1 = System.currentTimeMillis();
-                    backupPendingTx();
-
-                    if (LOGGER_TX.isDebugEnabled()) {
-                        long t2 = System.currentTimeMillis();
-                        LOGGER_TX.debug("Pending state backupPending took {} ms", t2 - t1);
-                    }
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
@@ -332,10 +322,10 @@ public class AionPendingStateImpl implements IPendingState {
             this.transactionStore = blockchain.getTransactionStore();
 
             this.evtMgr = blockchain.getEventMgr();
-            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
+            this.poolBackUpEnable = CfgAion.inst().getTx().getPoolBackup();
             this.replayTxBuffer = new ArrayList<>();
             this.pendingTxCache =
-                    new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUp);
+                    new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUpEnable);
             this.pendingState = repository.startTracking();
 
             this.dumpPool = test || CfgAion.inst().getTx().getPoolDump();
@@ -350,16 +340,10 @@ public class AionPendingStateImpl implements IPendingState {
                 blkHandler.eventCallback(new EventCallback(ees, LOGGER_TX));
             }
 
-            if (poolBackUp) {
+            if (poolBackUpEnable) {
                 this.backupPendingPoolAdd = new HashMap<>();
                 this.backupPendingCacheAdd = new HashMap<>();
                 this.backupPendingPoolRemove = new HashSet<>();
-
-                regTxEvents();
-                IHandler txHandler = this.evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
-                if (txHandler != null) {
-                    txHandler.eventCallback(new EventCallback(ees, LOGGER_TX));
-                }
             }
 
             this.bufferEnable = !test && CfgAion.inst().getTx().getBuffer();
@@ -383,7 +367,7 @@ public class AionPendingStateImpl implements IPendingState {
         int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
         eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
 
-        if (poolBackUp) {
+        if (poolBackUpEnable) {
             sn = IHandler.TYPE.TX0.getValue() << 8;
             eventSN.add(sn + EventTx.CALLBACK.TXBACKUP0.getValue());
         }
@@ -395,13 +379,6 @@ public class AionPendingStateImpl implements IPendingState {
         List<IEvent> evts = new ArrayList<>();
         evts.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
         evts.add(new EventBlock(EventBlock.CALLBACK.ONBEST0));
-
-        this.evtMgr.registerEvent(evts);
-    }
-
-    private void regTxEvents() {
-        List<IEvent> evts = new ArrayList<>();
-        evts.add(new EventTx(EventTx.CALLBACK.TXBACKUP0));
 
         this.evtMgr.registerEvent(evts);
     }
@@ -473,7 +450,7 @@ public class AionPendingStateImpl implements IPendingState {
                     newLargeNonceTx.add(tx);
                     addToTxCache(tx);
 
-                    if (poolBackUp) {
+                    if (poolBackUpEnable) {
                         backupPendingCacheAdd.put(tx.getTransactionHash(), tx.getEncoded());
                     }
 
@@ -498,7 +475,7 @@ public class AionPendingStateImpl implements IPendingState {
                         newLargeNonceTx.add(tx);
                         addToTxCache(tx);
 
-                        if (poolBackUp) {
+                        if (poolBackUpEnable) {
                             backupPendingCacheAdd.put(tx.getTransactionHash(), tx.getEncoded());
                         }
 
@@ -544,7 +521,7 @@ public class AionPendingStateImpl implements IPendingState {
                         if (implResponse.equals(TxResponse.SUCCESS)) {
                             newPending.add(tx);
 
-                            if (poolBackUp) {
+                            if (poolBackUpEnable) {
                                 backupPendingPoolAdd.put(tx.getTransactionHash(), tx.getEncoded());
                             }
                         } else {
@@ -572,7 +549,7 @@ public class AionPendingStateImpl implements IPendingState {
                     newPending.add(tx);
                     txResponses.add(TxResponse.REPAID);
 
-                    if (poolBackUp) {
+                    if (poolBackUpEnable) {
                         backupPendingPoolAdd.put(tx.getTransactionHash(), tx.getEncoded());
                     }
                 } else {
@@ -745,7 +722,7 @@ public class AionPendingStateImpl implements IPendingState {
                     AionTxReceipt rp = new AionTxReceipt();
                     rp.setTransaction(rtn.tx);
 
-                    if (poolBackUp) {
+                    if (poolBackUpEnable) {
                         backupPendingPoolRemove.add(tx.getTransactionHash().clone());
                     }
                     fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
@@ -878,8 +855,11 @@ public class AionPendingStateImpl implements IPendingState {
         List<IEvent> events = new ArrayList<>();
         events.add(new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0));
 
-        if (poolBackUp) {
-            events.add(new EventTx(EventTx.CALLBACK.TXBACKUP0));
+        if (poolBackUpEnable) {
+            long t1 = System.currentTimeMillis();
+            backupPendingTx();
+            long t2 = System.currentTimeMillis();
+            LOGGER_TX.debug("Pending state backupPending took {} ms", t2 - t1);
         }
 
         this.evtMgr.newEvents(events);
@@ -935,7 +915,7 @@ public class AionPendingStateImpl implements IPendingState {
         for (PooledTransaction pooledTx : this.txPool.getOutdatedList()) {
             outdated.add(pooledTx);
 
-            if (poolBackUp) {
+            if (poolBackUpEnable) {
                 backupPendingPoolRemove.add(pooledTx.tx.getTransactionHash().clone());
             }
             // @Jay
@@ -993,7 +973,7 @@ public class AionPendingStateImpl implements IPendingState {
                 receipt = info.getReceipt();
             }
 
-            if (poolBackUp) {
+            if (poolBackUpEnable) {
                 backupPendingPoolRemove.add(tx.getTransactionHash().clone());
             }
             fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
@@ -1049,7 +1029,7 @@ public class AionPendingStateImpl implements IPendingState {
                 }
                 txPool.remove(new PooledTransaction(tx, receipt.getEnergyUsed()));
 
-                if (poolBackUp) {
+                if (poolBackUpEnable) {
                     backupPendingPoolRemove.add(tx.getTransactionHash().clone());
                 }
                 fireTxUpdate(receipt, PendingTransactionState.DROPPED, block);
