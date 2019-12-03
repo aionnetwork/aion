@@ -2,13 +2,19 @@ package org.aion.api.server.external;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.api.server.external.types.SyncInfo;
 import org.aion.base.AccountState;
+import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.TxResponse;
+import org.apache.commons.lang3.tuple.Pair;
 
 /*
  * All access to the Aion Blockchain should be handled by this class.
@@ -191,4 +197,38 @@ public interface ChainHolder {
      * @return the list of accounts in the kernel's keystore
      */
     List<AionAddress> listAccounts();
+
+    /**
+     *
+     * @return the recommended Nrg amount
+     */
+    long getRecommendedNrg();
+
+    /**
+     * Executes the transaction without creating a transaction on the blockchain
+     * @param transaction the transaction to be executed
+     * @param block
+     * @return the transaction receipt from
+     */
+    AionTxReceipt call(AionTransaction transaction, Block block);
+
+    /**
+     *
+     * @return the current sync state of the kernel
+     */
+    SyncInfo getSyncInfo();
+
+    /**
+     *
+     * @param tx the transaction to be sealed
+     * @return a tuple with the transaction hash as left and the tx response as right.
+     */
+    Pair<byte[], TxResponse> sendTransaction(AionTransaction tx);
+
+    /**
+     *
+     * @param aionAddress used to retrieve the key
+     * @return the key if the account is unlocked
+     */
+    ECKey getKey(AionAddress aionAddress);
 }

@@ -2,12 +2,17 @@ package org.aion.api.server.external;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.aion.api.server.external.account.Account;
 import org.aion.api.server.external.account.AccountManagerInterface;
+import org.aion.api.server.external.types.SyncInfo;
+import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.base.AccountState;
+import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -18,21 +23,35 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.UnityChain;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.TxResponse;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class AionChainHolder implements ChainHolder {
 
+    private NrgOracle nrgOracle;
     private final IAionChain chain;//An implementation of AionChain
     private final AtomicReference<BlockContext> currentTemplate;
     private final AccountManagerInterface accountManager;
+    private final long recommendedNrg;
+    private final long syncTolerance;
 
     public AionChainHolder(IAionChain chain,
         AccountManagerInterface accountManager) {
+        this(chain, accountManager, CfgAion.inst().getApi().getNrg().getNrgPriceDefault(), 1);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public AionChainHolder(IAionChain chain,
+        AccountManagerInterface accountManager, long recommendedNrg, long syncTolerance) {
         if (chain == null) {
             throw new NullPointerException("AionChain is null.");// This class should not
             // be instantiated without an instance of IAionChain
@@ -44,6 +63,24 @@ public class AionChainHolder implements ChainHolder {
         this.chain = chain;
         currentTemplate = new AtomicReference<>(null);
         this.accountManager = accountManager;
+        initNrgOracle(chain);
+        this.syncTolerance = syncTolerance;
+        this.recommendedNrg = recommendedNrg;
+    }
+
+    private void initNrgOracle(IAionChain ac) {
+        if (nrgOracle != null) return;
+
+        UnityChain bc = ac.getBlockchain();
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+
+        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled()) {
+            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+        }
+
+        nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
     }
 
     @Override
@@ -215,6 +252,51 @@ public class AionChainHolder implements ChainHolder {
     public List<AionAddress> listAccounts() {
         return accountManager.getAccounts().stream().map(Account::getKey).map(ECKey::getAddress)
             .map(AionAddress::new).collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
+    public long getRecommendedNrg() {
+        if (nrgOracle != null) {
+            return nrgOracle.getNrgPrice();
+        } else {
+            return recommendedNrg;
+        }
+    }
+
+    @Override
+    public AionTxReceipt call(AionTransaction transaction, Block block) {
+        return this.chain.callConstant(transaction, block);
+    }
+
+    @Override
+    public SyncInfo getSyncInfo() {
+        Optional<Long> bestLocalBlock = this.chain.getLocalBestBlockNumber();
+        Optional<Long> networkBestBlock = this.chain.getNetworkBestBlockNumber();
+        if (bestLocalBlock.isPresent() && networkBestBlock.isPresent()){
+            boolean done = bestLocalBlock.get() + syncTolerance >= networkBestBlock.get();
+            long chainStartingBlock = this.chain.getInitialStartingBlockNumber().orElse(0L);
+            return new SyncInfo(done, chainStartingBlock, bestLocalBlock.get(), networkBestBlock.get());
+        }else {
+            return null;
+        }
+    }
+
+    @Override
+    public Pair<byte[], TxResponse> sendTransaction(AionTransaction tx) {
+        final TxResponse response;
+        if (tx==null) response = TxResponse.INVALID_TX;
+        else response = this.chain.getAionHub().getPendingState().addPendingTransaction(tx);
+        if (response.isFail()){
+            AionLoggerFactory.getLogger(LogEnum.API.name()).debug("<send-transaction failed response={}>", response.name());
+        } else {
+            AionLoggerFactory.getLogger(LogEnum.API.name()).debug("<send-transaction succeeded response={}>", response.name());
+        }
+        return new ImmutablePair<>(tx.getTransactionHash(), response);
+    }
+
+    @Override
+    public ECKey getKey(AionAddress aionAddress) {
+        return accountManager.getKey(aionAddress);
     }
 
     @Override

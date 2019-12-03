@@ -211,11 +211,11 @@ public class PersonalRPCImplTest {
         rpc = spy(new RPCMethods(chainHolder));
         doCallRealMethod().when(rpc).personal_listAccounts();
         Request request = new Request(idGenerator.generateID(), listAccountMethod, null, VersionType.Version2);
-        List<AionAddress> aionAddressList = RPCTestUtils.executeRequest(request, rpc,AddressListConverter::decode);
+        AionAddress[] aionAddressList = RPCTestUtils.executeRequest(request, rpc,AddressListConverter::decode);
 
         verify(chainHolder, atLeastOnce()).listAccounts();
-        assertEquals(addressCount, aionAddressList.size());
-        assertEquals(Set.copyOf(address), Set.copyOf(aionAddressList)); // check that we get all
+        assertEquals(addressCount, aionAddressList.length);
+        assertEquals(Set.copyOf(address), Set.of(aionAddressList)); // check that we get all
                                                                         // the expected addresses
     }
 }

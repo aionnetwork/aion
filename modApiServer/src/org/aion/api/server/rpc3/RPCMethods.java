@@ -1,15 +1,20 @@
 package org.aion.api.server.rpc3;
 
+import static org.aion.base.Constants.NRG_CREATE_CONTRACT_DEFAULT;
+import static org.aion.base.Constants.NRG_TRANSACTION_DEFAULT;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.aion.api.server.external.ChainHolder;
+import org.aion.api.server.external.types.SyncInfo;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
+import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
@@ -20,8 +25,11 @@ import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;
 import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
+import org.aion.rpc.errors.RPCExceptions.NullReturnRPCException;
+import org.aion.rpc.errors.RPCExceptions.TxFailedRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;
+import org.aion.rpc.types.RPCTypes;
 import org.aion.rpc.types.RPCTypes.AccountState;
 import org.aion.rpc.types.RPCTypes.BlockDetails;
 import org.aion.rpc.types.RPCTypes.BlockEnum;
@@ -29,10 +37,18 @@ import org.aion.rpc.types.RPCTypes.BlockNumberEnumUnion;
 import org.aion.rpc.types.RPCTypes.BlockSpecifierUnion;
 import org.aion.rpc.types.RPCTypes.BlockTemplate;
 import org.aion.rpc.types.RPCTypes.ByteArray;
+import org.aion.rpc.types.RPCTypes.EthBlock;
+import org.aion.rpc.types.RPCTypes.EthTransaction;
+import org.aion.rpc.types.RPCTypes.EthTransactionForBlock;
+import org.aion.rpc.types.RPCTypes.EthTransactionReceipt;
+import org.aion.rpc.types.RPCTypes.EthTxReceiptLogs;
 import org.aion.rpc.types.RPCTypes.MinerStats;
 import org.aion.rpc.types.RPCTypes.OpsTransaction;
 import org.aion.rpc.types.RPCTypes.PongEnum;
 import org.aion.rpc.types.RPCTypes.SubmissionResult;
+import org.aion.rpc.types.RPCTypes.SyncInfoUnion;
+import org.aion.rpc.types.RPCTypes.TransactionUnion;
+import org.aion.rpc.types.RPCTypes.TxCall;
 import org.aion.rpc.types.RPCTypes.TxDetails;
 import org.aion.rpc.types.RPCTypes.TxLog;
 import org.aion.rpc.types.RPCTypes.TxLogDetails;
@@ -44,6 +60,8 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.TxResponse;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 public class RPCMethods implements RPCServerMethods {
@@ -134,14 +152,7 @@ public class RPCMethods implements RPCServerMethods {
                     chainHolder.getTotalDifficultyByHash(
                             block.getHash()); // get the total difficulty
 
-            List<AionTxInfo> txInfoList = new ArrayList<>();
-            logger.debug("Retrieving transactions for block: {}",
-                "0x" + ByteUtil.toHexString(block.getHash()));
-            for (AionTransaction transaction : block.getTransactionsList()) {
-                AionTxInfo txInfo =
-                        chainHolder.getTransactionInfo(transaction.getTransactionHash());
-                txInfoList.add(txInfo);
-            }
+            List<AionTxInfo> txInfoList = getTransactionsFromBlock(block);
             Block previousBlock =
                     chainHolder.getBlockByHash(block.getParentHash()); // get the parent block
             final Long previousTimestamp;
@@ -224,9 +235,21 @@ public class RPCMethods implements RPCServerMethods {
         }
     }
 
-    private List<TxDetails> serializeTxDetails(List<AionTxInfo> txInfos, Block block) {
+    private List<AionTxInfo> getTransactionsFromBlock(Block block) {
+        List<AionTxInfo> txInfoList = new ArrayList<>();
+        logger.debug("Retrieving transactions for block: {}",
+            "0x" + ByteUtil.toHexString(block.getHash()));
+        for (AionTransaction transaction : block.getTransactionsList()) {
+            AionTxInfo txInfo =
+                    chainHolder.getTransactionInfo(transaction.getTransactionHash());
+            txInfoList.add(txInfo);
+        }
+        return txInfoList;
+    }
+
+    private TxDetails[] serializeTxDetails(List<AionTxInfo> txInfos, Block block) {
         if (txInfos == null) {
-            return Collections.emptyList();
+            return new TxDetails[0];
         } else {
             List<TxDetails> transactionDetails = new ArrayList<>();
             for (int i = 0, txInfosSize = txInfos.size(); i < txInfosSize; i++) {
@@ -259,13 +282,13 @@ public class RPCMethods implements RPCServerMethods {
                                         info.getReceipt(), i, block.getHeader().getNumber()),
                                 transaction.getBeaconHash() == null? null : ByteArray.wrap(transaction.getBeaconHash())));
             }
-            return Collections.unmodifiableList(transactionDetails);
+            return transactionDetails.toArray(new TxDetails[0]);
         }
     }
 
-    private List<TxLogDetails> serializeTxLogsDetails(AionTxReceipt receipt, int index, long blockNumber) {
+    private TxLogDetails[] serializeTxLogsDetails(AionTxReceipt receipt, int index, long blockNumber) {
         List<Log> logs = receipt.getLogInfoList();
-        if (logs == null) return Collections.emptyList();
+        if (logs == null) return new TxLogDetails[0];
         else {
             List<TxLogDetails> logDetails = new ArrayList<>();
             for (int i = 0; i < logs.size(); i++) {
@@ -277,10 +300,10 @@ public class RPCMethods implements RPCServerMethods {
                                 ByteArray.wrap(log.copyOfData()),
                                 log.copyOfTopics().stream()
                                         .map(ByteArray::new)
-                                        .collect(Collectors.toUnmodifiableList()),
+                                        .toArray(ByteArray[]::new),
                                 blockNumber));
             }
-            return Collections.unmodifiableList(logDetails);
+            return logDetails.toArray(new TxLogDetails[]{});
         }
     }
 
@@ -305,7 +328,7 @@ public class RPCMethods implements RPCServerMethods {
         );
     }
 
-    private List<TxLog> serializeTxLog(int transactionIndex, AionTxReceipt txReceipt){
+    private TxLog[] serializeTxLog(int transactionIndex, AionTxReceipt txReceipt){
         List<TxLog> txLogs = new ArrayList<>();
         for (Log log: txReceipt.getLogInfoList()){
             txLogs.add(
@@ -313,9 +336,9 @@ public class RPCMethods implements RPCServerMethods {
                     transactionIndex,
                     ByteArray.wrap(log.copyOfData()),
                     log.copyOfTopics().stream().map(ByteArray::new)
-                        .collect(Collectors.toUnmodifiableList())));
+                        .toArray(ByteArray[]::new)));
         }
-        return Collections.unmodifiableList(txLogs);
+        return txLogs.toArray(new TxLog[0]);
     }
     @Override
     public BlockDetails ops_getBlockDetails(BlockSpecifierUnion blockSpecifierUnion) {
@@ -460,8 +483,325 @@ public class RPCMethods implements RPCServerMethods {
     }
 
     @Override
-    public List<AionAddress> personal_listAccounts() {
-        return chainHolder.listAccounts();
+    public AionAddress[] personal_listAccounts() {
+        return chainHolder.listAccounts().toArray(new AionAddress[]{});
+    }
+
+    @Override
+    public Long eth_blockNumber() {
+        return chainHolder.blockNumber();
+    }
+
+    @Override
+    public ByteArray eth_call(TxCall txCall, BlockNumberEnumUnion block) {
+        AionTransaction transaction = transactionForTxCall(txCall);
+        AionTxReceipt receipt = chainHolder.call(transaction,
+            blockFromBlockNumEnumUnion(block));
+
+        if (receipt == null) {
+            // signal to the client that an issue occurred
+            throw new NullReturnRPCException("VM returned null for the transaction call.");
+        }else {
+            return ByteArray.wrap(receipt.getTransactionOutput());
+        }
+    }
+
+    @Override
+    public SyncInfoUnion eth_syncing() {
+        SyncInfo info = chainHolder.getSyncInfo();
+        if (info==null){
+            throw new NullReturnRPCException("Unable to determine the kernel's current sync state.");
+        } else if (info.isDone()){
+            return SyncInfoUnion.wrap(false);
+        } else {
+            return SyncInfoUnion.wrap(new RPCTypes.SyncInfo(info.getChainStartingBlkNumber(), info.getChainBestBlkNumber(), info.getNetworkBestBlkNumber()));
+        }
+    }
+
+    @Override
+    public ByteArray eth_sendRawTransaction(ByteArray transaction) {
+        return doSend(TxUtil.decode(transaction.toBytes()));
+    }
+
+    @Override
+    public ByteArray eth_sendTransaction(TxCall transaction) {
+        return doSend(transactionForTxSend(transaction));
+    }
+
+    public EthTransaction eth_getTransactionByHash(ByteArray hash) {
+        AionTxInfo txInfo = chainHolder.getTransactionInfo(hash.toBytes());
+        if (txInfo == null) return null;
+        else {
+            Block block = chainHolder.getBlockByHash(txInfo.getBlockHash());
+            return serializeEthTransaction(
+                    txInfo.getReceipt().getTransaction(), block, txInfo.getIndex());
+        }
+    }
+
+    @Override
+    public EthTransactionReceipt eth_getTransactionReceipt(ByteArray hash) {
+        AionTxInfo txInfo = chainHolder.getTransactionInfo(hash.toBytes());
+        if (txInfo == null) return null;
+        else {
+            Block block = chainHolder.getBlockByHash(txInfo.getBlockHash());
+            return serializeEthTxReceipt(txInfo, block, txInfo.getIndex());
+        }
+    }
+
+    @Override
+    public EthBlock eth_getBlockByNumber(Long block, Boolean fullTransactions) {
+        Block dbBlock = chainHolder.getBlockByNumber(block);
+        // Safe to use a boxed boolean here since the converter defaults to false
+        // if the boolean value is null
+        return serializeEthBlock(dbBlock, txUnionFromBlock(dbBlock, fullTransactions));
+    }
+
+    @Override
+    public EthBlock eth_getBlockByHash(ByteArray block, Boolean fullTransactions) {
+        Block dbBlock = chainHolder.getBlockByHash(block.toBytes());
+        // Safe to use a boxed boolean here since the converter defaults to false
+        // if the boolean value is null
+        return serializeEthBlock(dbBlock, txUnionFromBlock(dbBlock, fullTransactions));
+    }
+
+    private TransactionUnion txUnionFromBlock(final Block block, boolean fullTransactions){
+        if (fullTransactions){
+            List<AionTransaction> transactionsList = block.getTransactionsList();
+            return TransactionUnion.wrap(IntStream.range(0, transactionsList.size())
+                .mapToObj(i ->
+                    serializeEthTransactionForBlock(transactionsList.get(i), block, i))
+                .toArray(EthTransactionForBlock[]::new));
+        }
+        else {
+            return TransactionUnion.wrap(block.getTransactionsList().stream()
+                .map(transaction -> ByteArray.wrap(transaction.getTransactionHash()))
+                .toArray(ByteArray[]::new));
+        }
+    }
+    private EthBlock serializeEthBlock(Block block, TransactionUnion txUnion){
+        if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)){
+            AionBlock powBlock = ((AionBlock)block);
+            return new EthBlock(
+                block.getNumber(),
+                ByteArray.wrap(block.getHash()),
+                ByteArray.wrap(block.getParentHash()),
+                ByteArray.wrap(block.getLogBloom()),
+                ByteArray.wrap(block.getTxTrieRoot()),
+                ByteArray.wrap(block.getStateRoot()),
+                ByteArray.wrap(block.getReceiptsRoot()),
+                block.getDifficultyBI(),
+                block.getTotalDifficulty(),
+                block.getTimestamp(),
+                block.getCoinbase(),
+                block.getNrgConsumed(),
+                block.getNrgLimit(),
+                block.getNrgConsumed(),
+                block.getNrgLimit(),
+                BlockSealType.SEAL_POW_BLOCK.getSealId(),
+                block.isMainChain(),
+                block.size(),
+                txUnion,
+                ByteArray.wrap(powBlock.getNonce()),
+                ByteArray.wrap(powBlock.getHeader().getSolution()),
+                null,
+                null,
+                null
+            );
+        } else {
+            StakingBlock posBlock = ((StakingBlock)block);
+            return new EthBlock(
+                block.getNumber(),
+                ByteArray.wrap(block.getHash()),
+                ByteArray.wrap(block.getParentHash()),
+                ByteArray.wrap(block.getLogBloom()),
+                ByteArray.wrap(block.getTxTrieRoot()),
+                ByteArray.wrap(block.getStateRoot()),
+                ByteArray.wrap(block.getReceiptsRoot()),
+                block.getDifficultyBI(),
+                block.getTotalDifficulty(),
+                block.getTimestamp(),
+                block.getCoinbase(),
+                block.getNrgConsumed(),
+                block.getNrgLimit(),
+                block.getNrgConsumed(),
+                block.getNrgLimit(),
+                BlockSealType.SEAL_POW_BLOCK.getSealId(),
+                block.isMainChain(),
+                block.size(),
+                txUnion,
+                null,
+                null,
+                ByteArray.wrap(posBlock.getHeader().getSeed()),
+                ByteArray.wrap(posBlock.getHeader().getSignature()),
+                ByteArray.wrap(posBlock.getHeader().getSigningPublicKey())
+            );
+        }
+    }
+
+    private EthTransactionForBlock serializeEthTransactionForBlock(AionTransaction transaction, Block block,
+        int transactionIndex){
+        AionAddress contractAddress = transaction.getDestinationAddress() == null? TxUtil.calculateContractAddress(transaction): null;
+        return new EthTransactionForBlock(
+            ByteArray.wrap(transaction.getTransactionHash()),
+            transactionIndex,
+            transaction.getEnergyLimit(),
+            transaction.getEnergyPrice(),
+            transaction.getEnergyLimit(),
+            transaction.getEnergyPrice(),
+            contractAddress,
+            transaction.getSenderAddress(),
+            transaction.getDestinationAddress(),
+            block.getTimestamp(),
+            ByteArray.wrap(transaction.getData()),
+            block.getNumber()
+        );
+    }
+
+    private EthTransaction serializeEthTransaction(AionTransaction transaction, Block block,
+        int transactionIndex){
+        AionAddress contractAddress = transaction.getDestinationAddress() == null? TxUtil.calculateContractAddress(transaction): null;
+        return new EthTransaction(
+            ByteArray.wrap(transaction.getTransactionHash()),
+            transactionIndex,
+            transaction.getEnergyLimit(),
+            transaction.getEnergyPrice(),
+            transaction.getEnergyLimit(),
+            transaction.getEnergyPrice(),
+            contractAddress,
+            transaction.getSenderAddress(),
+            transaction.getDestinationAddress(),
+            block.getTimestamp(),
+            ByteArray.wrap(transaction.getData()),
+            block.getNumber(),
+            ByteArray.wrap(block.getHash())
+        );
+    }
+
+    private EthTransactionReceipt serializeEthTxReceipt(AionTxInfo txInfo, Block block,
+        int transactionIndex){
+        AionTransaction transaction = txInfo.getReceipt().getTransaction();
+        AionTxReceipt txReceipt = txInfo.getReceipt();
+        AionAddress contractAddress = transaction.getDestinationAddress() == null? TxUtil.calculateContractAddress(transaction): null;
+        return new EthTransactionReceipt(
+            ByteArray.wrap(transaction.getTransactionHash()),
+            transactionIndex,
+            block.getNumber(),
+            ByteArray.wrap(block.getHash()),
+            txReceipt.getEnergyUsed(),
+            transaction.getEnergyPrice(),
+            txReceipt.getEnergyUsed(),
+            transaction.getEnergyPrice(),
+            transaction.getEnergyLimit(),
+            block.getNrgConsumed(),
+            block.getNrgConsumed(),
+            contractAddress,
+            transaction.getSenderAddress(),
+            transaction.getDestinationAddress(),
+            ByteArray.wrap(txReceipt.getBloomFilter().data),
+            ByteArray.wrap(block.getReceiptsRoot()),
+            txReceipt.isSuccessful() ? (byte)1 : (byte)0,
+            serializeReceipt(txInfo, block, transactionIndex)
+        );
+    }
+
+    private EthTxReceiptLogs[] serializeReceipt(AionTxInfo transaction, Block block, int transactionIndex){
+        return IntStream.range(0,transaction.getReceipt().getLogInfoList().size())
+            .mapToObj(index->{
+                Log log = transaction.getReceipt().getLogInfoList().get(index);
+                return new EthTxReceiptLogs(
+                    new AionAddress(log.copyOfAddress()),
+                    ByteArray.wrap(log.copyOfData()),
+                    block.getNumber(),
+                    transactionIndex,
+                    index,
+                    log.copyOfTopics().stream().map(ByteArray::new).toArray(ByteArray[]::new)
+                );
+            }).toArray(EthTxReceiptLogs[]::new);
+    }
+
+    private ByteArray doSend(AionTransaction transaction){
+        Pair<byte[], TxResponse> hashResponseTuple = chainHolder.sendTransaction(transaction);
+        if (!hashResponseTuple.getRight().isFail()){
+            return ByteArray.wrap(hashResponseTuple.getLeft());
+        }
+        else {
+            throw new TxFailedRPCException(getError(hashResponseTuple.getRight()));
+        }
+    }
+
+    /**
+     *
+     * @param rsp the tx response
+     * @return a message containing the error message. This will be empty if the transaction succeeded.
+     */
+    private String getError(TxResponse rsp) {
+        switch (rsp) {
+            case REPAYTX_POOL_EXCEPTION:
+                return "Repaid transaction wasn't found in the pool";
+            case INVALID_TX:
+                return "Invalid transaction object";
+            case INVALID_TX_NRG_PRICE:
+                return "Invalid transaction energy price";
+            case INVALID_FROM:
+                return "Invalid from address provided";
+            case INVALID_ACCOUNT:
+                return "Account not found, or not unlocked";
+            case REPAYTX_LOWPRICE:
+                return "Repaid transaction needs to have a higher energy price";
+            case DROPPED:
+                return "Transaction dropped";
+            case EXCEPTION:
+            default:
+                return "Transaction status unknown";
+        }
+    }
+
+    AionTransaction transactionForTxCall(TxCall txCall) {
+        return AionTransaction.createWithoutKey(
+            txCall.nonce.toByteArray(),
+            txCall.from,
+            txCall.to,
+            txCall.value.toByteArray(),
+            txCall.data.toBytes(),
+            txCall.gas == null? Long.MAX_VALUE: txCall.gas,
+            txCall.gasPrice == null? chainHolder.getRecommendedNrg(): txCall.gasPrice,
+            txCall.type,
+            txCall.beaconHash == null? null: txCall.beaconHash.toBytes()
+        );
+    }
+
+    AionTransaction transactionForTxSend(TxCall txCall) {
+        final long gas;
+        if (txCall.gas == null){
+            gas = txCall.to== null ? NRG_CREATE_CONTRACT_DEFAULT: NRG_TRANSACTION_DEFAULT;
+        }
+        else {
+            gas = txCall.gas;
+        }
+
+        ECKey key = chainHolder.getKey(txCall.from);
+        if (key == null) { // the account is not unlocked
+            throw new TxFailedRPCException(getError(TxResponse.INVALID_ACCOUNT));
+        }
+        return AionTransaction.create(
+            key,
+            txCall.nonce.toByteArray(),
+            txCall.to,
+            txCall.value.toByteArray(),
+            txCall.data.toBytes(),
+            gas,
+            txCall.gasPrice == null? chainHolder.getRecommendedNrg(): txCall.gasPrice,
+            txCall.type,
+            txCall.beaconHash == null? null: txCall.beaconHash.toBytes()
+        );
+    }
+
+    private Block blockFromBlockNumEnumUnion( BlockNumberEnumUnion blockNumberEnumUnion){
+        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST){
+            return chainHolder.getBestBlock();
+        }else {
+            return chainHolder.getBlockByNumber(blockNumberEnumUnion.blockNumber);
+        }
     }
 
     @Override
