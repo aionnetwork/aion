@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.api.server.BlockchainCallbackForApiServer;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;

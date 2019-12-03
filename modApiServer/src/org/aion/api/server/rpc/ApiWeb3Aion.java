@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.types.ArgFltr;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Blk;

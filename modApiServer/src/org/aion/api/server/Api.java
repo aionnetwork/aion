@@ -13,7 +13,7 @@ import org.aion.api.server.types.CompiledContr;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.solidity.Abi;

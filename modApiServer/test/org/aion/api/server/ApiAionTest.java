@@ -21,7 +21,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.TxResponse;

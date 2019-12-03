@@ -3,7 +3,7 @@ package org.aion.api.server.http;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 
 /**
  * This builder is opinionated; 1. It assumes that false is a reasonable default for sslEnabled and

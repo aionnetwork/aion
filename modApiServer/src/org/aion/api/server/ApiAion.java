@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;

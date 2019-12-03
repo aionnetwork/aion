@@ -3,7 +3,7 @@ package org.aion.api.server.rpc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.junit.After;

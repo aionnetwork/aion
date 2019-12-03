@@ -25,7 +25,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.aion.api.server.BlockchainCallbackForApiServer;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.api.server.http.RpcServerVendor;

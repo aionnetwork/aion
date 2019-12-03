@@ -13,8 +13,9 @@ import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
 import java.util.function.Function;
-import org.aion.api.server.account.AccountManager;
-import org.aion.api.server.account.AccountManagerInterface;
+import org.aion.api.server.external.account.AccountManagerInterface;
+import org.aion.api.server.external.AionChainHolder;
+import org.aion.api.server.external.ChainHolder;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.server.RPCServerMethods;

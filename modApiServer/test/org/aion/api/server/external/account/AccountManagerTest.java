@@ -1,4 +1,4 @@
-package org.aion.api.server.account;
+package org.aion.api.server.external.account;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

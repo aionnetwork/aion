@@ -1,4 +1,4 @@
-package org.aion.api.server.account;
+package org.aion.api.server.external.account;
 
 import org.aion.crypto.ECKey;
 

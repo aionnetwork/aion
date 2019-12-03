@@ -7,7 +7,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.aion.api.server.AvmTestConfig;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 import java.math.BigInteger;
+import org.aion.api.server.external.ChainHolder;
 import org.aion.rpc.client.IDGeneratorStrategy;
 import org.aion.rpc.client.SimpleIDGenerator;
 import org.aion.rpc.server.RPCServerMethods;

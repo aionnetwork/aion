@@ -1,4 +1,4 @@
-package org.aion.api.server.account;
+package org.aion.api.server.external.account;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.SignatureFac;
+import org.aion.rpc.errors.RPCExceptions.InvalidParamsRPCException;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.types.AionAddress;
 import org.slf4j.Logger;

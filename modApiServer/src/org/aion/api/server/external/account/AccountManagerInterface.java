@@ -1,4 +1,4 @@
-package org.aion.api.server.account;
+package org.aion.api.server.external.account;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;

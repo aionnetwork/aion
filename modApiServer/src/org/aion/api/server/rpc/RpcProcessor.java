@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.rpc2.Rpc2Shim;
 import org.aion.api.server.rpc3.Web3EntryPoint;
 import org.aion.log.AionLoggerFactory;

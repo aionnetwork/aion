@@ -26,7 +26,7 @@ import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
-import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.external.account.AccountManager;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;

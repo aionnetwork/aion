@@ -1,12 +1,12 @@
-package org.aion.api.server.rpc3;
+package org.aion.api.server.external;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import org.aion.api.server.account.Account;
-import org.aion.api.server.account.AccountManagerInterface;
+import org.aion.api.server.external.account.Account;
+import org.aion.api.server.external.account.AccountManagerInterface;
 import org.aion.base.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;

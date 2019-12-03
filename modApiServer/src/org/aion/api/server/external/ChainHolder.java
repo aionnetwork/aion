@@ -1,4 +1,4 @@
-package org.aion.api.server.rpc3;
+package org.aion.api.server.external;
 
 import java.math.BigInteger;
 import java.util.List;

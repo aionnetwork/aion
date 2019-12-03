@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
+import org.aion.api.server.external.ChainHolder;
 import org.aion.rpc.errors.RPCExceptions.MethodNotFoundRPCException;
 import org.aion.rpc.server.RPCServerMethods;
 import org.aion.rpc.types.RPCTypes.ByteArray;

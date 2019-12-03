@@ -12,8 +12,9 @@ import static org.mockito.Mockito.mock;
 
 import java.math.BigInteger;
 import java.util.function.Function;
-import org.aion.api.server.account.AccountManager;
-import org.aion.api.server.account.AccountManagerInterface;
+import org.aion.api.server.external.account.AccountManagerInterface;
+import org.aion.api.server.external.AionChainHolder;
+import org.aion.api.server.external.ChainHolder;
 import org.aion.crypto.HashUtil;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.server.RPCServerMethods;
