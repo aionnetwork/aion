@@ -7,6 +7,7 @@ import static java.util.Collections.emptyList;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
+import java.util.EnumMap;
 import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import static org.aion.zero.impl.core.ImportResult.EXIST;
@@ -35,6 +36,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
+
+import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.BlockHeaderRule;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
+import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.vm.common.PostExecutionLogic;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.zero.impl.vm.common.VmFatalException;
@@ -128,6 +135,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
     private static boolean fork040Enable;
+    private final BlockHeaderValidator headerValidator;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
@@ -191,7 +199,48 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private SelfNodeStatusCallback callback;
 
     public AionBlockchainImpl(CfgAion cfgAion, boolean forTest) {
-        this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(), new ChainConfiguration(), forTest);
+        this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(),
+            forTest ? new ChainConfiguration() {
+                    /*
+                     * Remove the equiHash solution for the simplified
+                     * validator this gives us the ability to connect new
+                     * blocks without validating the solution and POW.
+                     *
+                     * This is good for transaction testing, but another set
+                     * of tests need to ensure that the equihash and POW
+                     * generated are valid.
+                     */
+                    @Override
+                    public BlockHeaderValidator createBlockHeaderValidator() {
+
+                        List<BlockHeaderRule> powRules =
+                                Arrays.asList(
+                                        new HeaderSealTypeRule(),
+                                        new AionExtraDataRule(
+                                                this.getConstants().getMaximumExtraDataSize()),
+                                        new EnergyConsumedRule());
+
+                        List<BlockHeaderRule> posRules =
+                                Arrays.asList(
+                                        new HeaderSealTypeRule(),
+                                        new AionExtraDataRule(
+                                                this.getConstants().getMaximumExtraDataSize()),
+                                        new EnergyConsumedRule());
+
+                        Map<BlockSealType, List<BlockHeaderRule>> unityRules =
+                                new EnumMap<>(BlockSealType.class);
+                        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+                        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+                        return new BlockHeaderValidator(unityRules);
+                    }
+
+                    @Override
+                    public BlockHeaderValidator createBlockHeaderValidatorForImport() {
+                        return createBlockHeaderValidator();
+                    }
+                } : new ChainConfiguration(),
+            forTest);
     }
 
     protected AionBlockchainImpl(
@@ -210,6 +259,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
+        headerValidator = chainConfiguration.createBlockHeaderValidatorForImport();
         preUnityParentBlockHeaderValidator = chainConfig.createPreUnityParentBlockHeaderValidator();
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
@@ -1511,13 +1561,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public boolean isValid(BlockHeader header) {
         /*
-         * Header should already be validated at this point, no need to check again
-         * 1. Block came in from network; validated by P2P before processing further
-         * 2. Block was submitted locally - adding invalid data to your own chain
+         * The block header should already be validated at this point by P2P or mining,
+         * but we are including the validation in case future import paths forget to add it.
          */
-        //        if (!this.blockHeaderValidator.validate(header, LOG)) {
-        //            return false;
-        //        }
+        if (!this.headerValidator.validate(header, LOG)) {
+            return false;
+        }
 
         Block parent = getParent(header);
         if (parent == null) {

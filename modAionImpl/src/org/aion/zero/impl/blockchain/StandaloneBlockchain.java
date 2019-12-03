@@ -359,6 +359,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                                     return new BlockHeaderValidator(unityRules);
                                 }
+
+                                @Override
+                                public BlockHeaderValidator createBlockHeaderValidatorForImport() {
+                                    return createBlockHeaderValidator();
+                                }
                             };
                 } else {
                     throw new IllegalArgumentException("validatorType != (full|simple)");

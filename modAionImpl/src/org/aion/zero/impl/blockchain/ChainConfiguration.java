@@ -135,6 +135,29 @@ public class ChainConfiguration {
         return new BlockHeaderValidator(unityRules);
     }
 
+    public BlockHeaderValidator createBlockHeaderValidatorForImport() {
+        List<BlockHeaderRule> powRules =
+                Arrays.asList(
+                        new HeaderSealTypeRule(),
+                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                        new EnergyConsumedRule(),
+                        new AionPOWRule(),
+                        new EquihashSolutionRule(this.getEquihashValidator()));
+
+        List<BlockHeaderRule> posRules =
+                Arrays.asList(
+                        new HeaderSealTypeRule(),
+                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                        new EnergyConsumedRule(),
+                        new SignatureRule());
+
+        Map<BlockSealType, List<BlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new BlockHeaderValidator(unityRules);
+    }
+
     public GrandParentBlockHeaderValidator createPreUnityGrandParentHeaderValidator() {
 
         List<GrandParentDependantBlockHeaderRule> powRules =
