@@ -712,6 +712,7 @@ public class StakingBlockHeader  implements BlockHeader {
         return stateRoot.clone();
     }
 
+    @Override
     public byte[] getTxTrieRoot() {
         return txTrieRoot.clone();
     }

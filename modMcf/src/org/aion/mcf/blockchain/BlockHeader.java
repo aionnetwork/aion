@@ -65,4 +65,6 @@ public interface BlockHeader {
     byte[] getMineHash();
 
     BlockSealType getSealType();
+
+    byte[] getTxTrieRoot();
 }

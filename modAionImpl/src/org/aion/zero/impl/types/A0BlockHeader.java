@@ -661,6 +661,7 @@ public final class A0BlockHeader implements BlockHeader {
         return stateRoot.clone();
     }
 
+    @Override
     public byte[] getTxTrieRoot() {
         return txTrieRoot.clone();
     }
