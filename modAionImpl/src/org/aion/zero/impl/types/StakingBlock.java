@@ -5,17 +5,11 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.trie.Trie;
-import org.aion.zero.impl.trie.TrieImpl;
 
 public class StakingBlock extends AbstractBlock {
 
@@ -33,13 +27,6 @@ public class StakingBlock extends AbstractBlock {
 
         this.header = StakingBlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
         this.transactionsList.addAll(block.getTransactionsList());
-    }
-
-    public StakingBlock(byte[] rawData) {
-        if (rawData == null) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-        parseRLP(rawData);
     }
 
     /**
@@ -180,19 +167,6 @@ public class StakingBlock extends AbstractBlock {
                 .withDefaultTxTrieRoot();
 
         this.header = builder.build();
-    }
-
-    private void parseRLP(byte[] rawData) {
-        RLPList params = RLP.decode2(rawData);
-        RLPList block = (RLPList) params.get(0);
-
-        // Parse Header
-        RLPList header = (RLPList) block.get(0);
-        this.header = StakingBlockHeader.Builder.newInstance().withRlpList(header).build();
-
-        // Parse Transactions
-        RLPList txTransactions = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
     }
 
     @Override
@@ -370,19 +344,6 @@ public class StakingBlock extends AbstractBlock {
         return toStringBuff.toString();
     }
 
-    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
-        Trie txsState = new TrieImpl(null);
-        this.transactionsList.clear();
-        for (int i = 0; i < txTransactions.size(); i++) {
-            RLPElement transactionRaw = txTransactions.get(i);
-            this.transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
-            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
-        }
-
-        byte[] txStateRoot = txsState.getRootHash();
-        return Arrays.equals(expectedRoot, txStateRoot);
-    }
-
     @Override
     public boolean isGenesis() {
         // we never expect a Staking Block to be genesis
@@ -445,22 +406,6 @@ public class StakingBlock extends AbstractBlock {
         return this.header.getEnergyLimit();
     }
 
-    public static StakingBlock createBlockFromNetwork(StakingBlockHeader header, byte[] body) {
-        if (header == null || body == null) return null;
-
-        StakingBlock block = new StakingBlock();
-        block.header = header;
-
-        RLPList items = (RLPList) RLP.decode2(body).get(0);
-        RLPList transactions = (RLPList) items.get(0);
-
-        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-            return null;
-        }
-
-        return block;
-    }
-
     public void seal(byte[] sig, byte[] pubKey) {
         if (sig == null) {
             throw new NullPointerException("signature is null");
@@ -486,33 +431,6 @@ public class StakingBlock extends AbstractBlock {
         }
 
         header = (StakingBlockHeader) _header;
-    }
-
-    /** @implNote Assumes the data is from an unsafe source. */
-    public static StakingBlock fromRLPList(RLPList rlpEncoded) {
-        if (rlpEncoded == null || rlpEncoded.size() != 2) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-
-        // Parse Header
-        RLPList headerRLP = (RLPList) rlpEncoded.get(0);
-        StakingBlockHeader header;
-        try {
-            header = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-        } catch (Exception e) {
-            return null;
-        }
-
-        StakingBlock block = new StakingBlock();
-        block.header = header;
-
-        // Parse Transactions
-        RLPList transactions = (RLPList) rlpEncoded.get(1);
-        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-            return null;
-        }
-
-        return block;
     }
 
     @Override

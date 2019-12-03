@@ -6,13 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.base.TxUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.trie.Trie;
-import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -33,13 +28,6 @@ public class AionBlock extends AbstractBlock {
         }
         this.header = A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
         this.transactionsList.addAll(block.getTransactionsList());
-    }
-
-    public AionBlock(byte[] rawData) {
-        if (rawData == null) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-        parseRLP(rawData);
     }
 
     /**
@@ -185,19 +173,6 @@ public class AionBlock extends AbstractBlock {
                 .withDefaultSolution();
 
         this.header = builder.build();
-    }
-
-    private void parseRLP(byte[] rawData) {
-        RLPList params = RLP.decode2(rawData);
-        RLPList block = (RLPList) params.get(0);
-
-        // Parse Header
-        RLPList header = (RLPList) block.get(0);
-        this.header = A0BlockHeader.Builder.newInstance().withRlpList(header).build();
-
-        // Parse Transactions
-        RLPList txTransactions = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
     }
 
     @Override
@@ -393,19 +368,6 @@ public class AionBlock extends AbstractBlock {
         return toStringBuff.toString();
     }
 
-    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
-        Trie txsState = new TrieImpl(null);
-        transactionsList.clear();
-        for (int i = 0; i < txTransactions.size(); i++) {
-            RLPElement transactionRaw = txTransactions.get(i);
-            this.transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
-            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
-        }
-
-        byte[] txStateRoot = txsState.getRootHash();
-        return Arrays.equals(expectedRoot, txStateRoot);
-    }
-
     @Override
     public boolean isGenesis() {
         return this.header.isGenesis();
@@ -468,22 +430,6 @@ public class AionBlock extends AbstractBlock {
         return this.header.getEnergyLimit();
     }
 
-    public static AionBlock createBlockFromNetwork(A0BlockHeader header, byte[] body) {
-        if (header == null || body == null) return null;
-
-        AionBlock block = new AionBlock();
-        block.header = header;
-
-        RLPList items = (RLPList) RLP.decode2(body).get(0);
-        RLPList transactions = (RLPList) items.get(0);
-
-        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-            return null;
-        }
-
-        return block;
-    }
-
     public void seal(byte[] nonce, byte[] solution) {
         if (nonce == null) {
             throw new NullPointerException("nonce is null");
@@ -499,33 +445,6 @@ public class AionBlock extends AbstractBlock {
                         .withNonce(nonce)
                         .withSolution(solution)
                         .build();
-    }
-
-    /** @implNote Assumes the data is from an unsafe source. */
-    public static AionBlock fromRLPList(RLPList rlpEncoded) {
-        if (rlpEncoded == null || rlpEncoded.size() != 2) {
-            throw new NullPointerException("RlpEncoded data is null");
-        }
-
-        // Parse Header
-        RLPList headerRLP = (RLPList) rlpEncoded.get(0);
-        A0BlockHeader header;
-        try {
-            header = A0BlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-        } catch (Exception e) {
-            return null;
-        }
-
-        AionBlock block = new AionBlock();
-        block.header = header;
-
-        // Parse Transactions
-        RLPList transactions = (RLPList) rlpEncoded.get(1);
-        if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
-            return null;
-        }
-
-        return block;
     }
 
     @Override

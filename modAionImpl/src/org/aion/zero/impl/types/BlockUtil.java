@@ -1,13 +1,20 @@
 package org.aion.zero.impl.types;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import org.aion.base.AionTransaction;
+import org.aion.base.TxUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.zero.impl.trie.Trie;
+import org.aion.zero.impl.trie.TrieImpl;
 import org.slf4j.Logger;
 
 /**
@@ -30,6 +37,7 @@ public final class BlockUtil {
      * @param rlp RLP encoded block data
      * @return a new instance of a block or {@code null} if the RLP encoding does not describe a
      *     valid block
+     * @implNote Assumes the data is from a safe (internal) source.
      */
     public static Block newBlockFromRlp(byte[] rlp) {
         // return null when given empty bytes
@@ -42,11 +50,14 @@ public final class BlockUtil {
             RLPList params = RLP.decode2(rlp);
             RLPList block = (RLPList) params.get(0);
             RLPList header = (RLPList) block.get(0);
+            List<AionTransaction> txs = parseTransactions((RLPList) block.get(1));
             byte[] sealType = header.get(0).getRLPData();
             if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                return new AionBlock(rlp);
+                A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance().withRlpList(header).build();
+                return new AionBlock(miningHeader, txs);
             } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
-                return new StakingBlock(rlp);
+                StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance().withRlpList(header).build();
+                return new StakingBlock(stakingHeader, txs);
             } else {
                 return null;
             }
@@ -74,11 +85,20 @@ public final class BlockUtil {
             // parse header
             RLPList headerRLP = (RLPList) rlpList.get(0);
             byte[] type = headerRLP.get(0).getRLPData();
+            RLPList transactionsRLP = (RLPList) rlpList.get(1);
+            List<AionTransaction> txs = parseTransactions(transactionsRLP);
             if (type[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                return AionBlock.fromRLPList(rlpList);
-
+                A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+                if (!isValidRoot(miningHeader.getTxTrieRoot(), transactionsRLP)) {
+                    return null;
+                }
+                return new AionBlock(miningHeader, txs);
             } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
-                return StakingBlock.fromRLPList(rlpList);
+                StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+                if (!isValidRoot(stakingHeader.getTxTrieRoot(), transactionsRLP)) {
+                    return null;
+                }
+                return new StakingBlock(stakingHeader, txs);
             } else {
                 return null;
             }
@@ -103,10 +123,16 @@ public final class BlockUtil {
             return null;
         }
         try {
+            RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
+            RLPList transactions = (RLPList) items.get(0);
+            List<AionTransaction> txs = parseTransactions(transactions);
+            if (!isValidRoot(header.getTxTrieRoot(), transactions)) {
+                return null;
+            }
             if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                return AionBlock.createBlockFromNetwork((A0BlockHeader) header, bodyBytes);
+                return new AionBlock((A0BlockHeader) header, txs);
             } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-                return StakingBlock.createBlockFromNetwork((StakingBlockHeader) header, bodyBytes);
+                return new StakingBlock((StakingBlockHeader) header, txs);
             } else {
                 return null;
             }
@@ -144,5 +170,26 @@ public final class BlockUtil {
             genLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
             return null;
         }
+    }
+
+    /** Decodes the give transactions. */
+    public static List<AionTransaction> parseTransactions(RLPList txTransactions) {
+        List<AionTransaction> transactionsList = new ArrayList<>();
+        for (int i = 0; i < txTransactions.size(); i++) {
+            RLPElement transactionRaw = txTransactions.get(i);
+            transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
+        }
+        return transactionsList;
+    }
+
+    /** Builds the transaction trie and checks for root equality. */
+    public static boolean isValidRoot(byte[] expectedRoot, RLPList txTransactions) {
+        Trie txsState = new TrieImpl(null);
+        for (int i = 0; i < txTransactions.size(); i++) {
+            RLPElement transactionRaw = txTransactions.get(i);
+            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
+        }
+        byte[] txStateRoot = txsState.getRootHash();
+        return Arrays.equals(expectedRoot, txStateRoot);
     }
 }
