@@ -556,9 +556,6 @@ public class AionPendingStateImpl implements IPendingState {
             IEvent evtRecv = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             evtRecv.setFuncArgs(Collections.singletonList(newPending));
             this.evtMgr.newEvent(evtRecv);
-
-            IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
-            this.evtMgr.newEvent(evtChange);
         }
 
         if (!loadPendingTx) {
@@ -841,17 +838,12 @@ public class AionPendingStateImpl implements IPendingState {
 
         flushCachePendingTx();
 
-        List<IEvent> events = new ArrayList<>();
-        events.add(new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0));
-
         if (poolBackUpEnable) {
             long t1 = System.currentTimeMillis();
             backupPendingTx();
             long t2 = System.currentTimeMillis();
             LOGGER_TX.debug("Pending state backupPending took {} ms", t2 - t1);
         }
-
-        this.evtMgr.newEvents(events);
 
         // This is for debug purpose, do not use in the regular kernel running.
         if (this.dumpPool) {

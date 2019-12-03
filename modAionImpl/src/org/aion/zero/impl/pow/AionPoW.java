@@ -148,7 +148,6 @@ public class AionPoW {
         List<IEvent> txEvts = new ArrayList<>();
         txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0));
         txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0));
-        txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0));
         eventMgr.registerEvent(txEvts);
 
         List<IEvent> events = new ArrayList<>();
