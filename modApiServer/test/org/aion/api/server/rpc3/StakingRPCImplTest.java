@@ -15,6 +15,7 @@ import org.aion.api.server.external.AionChainHolder;
 import org.aion.api.server.external.ChainHolder;
 import org.aion.api.server.external.account.AccountManagerInterface;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
+import org.aion.rpc.errors.RPCExceptions.NullReturnRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
 import org.aion.rpc.types.RPCTypes.ByteArray;
 import org.aion.rpc.types.RPCTypes.Request;
@@ -114,8 +115,9 @@ public class StakingRPCImplTest {
     public void testSubmitSeed(){
         assertEquals(ByteArray.wrap(valid64Bytes), RPCTestUtils.executeRequest(new Request(1, "submitseed", SubmitSeedParamsConverter
             .encode(new SubmitSeedParams(validSeed, validSigningPublicKey, validCoinbase)), VersionType.Version2), rpcMethods,RPCTypesConverter.ByteArrayConverter::decode));
-        assertNull( RPCTestUtils.executeRequest(new Request(1, "submitseed", SubmitSeedParamsConverter
-            .encode(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2), rpcMethods, RPCTypesConverter.ByteArrayConverter::decode));
+        RPCTestUtils.assertFails(()-> RPCTestUtils.executeRequest(new Request(1, "submitseed", SubmitSeedParamsConverter
+            .encode(new SubmitSeedParams(invalidSeed, invalidSigningPublicKey, invalidCoinbase)), VersionType.Version2), rpcMethods, RPCTypesConverter.ByteArrayConverter::decode),
+            NullReturnRPCException.class);
     }
 
     @Test
