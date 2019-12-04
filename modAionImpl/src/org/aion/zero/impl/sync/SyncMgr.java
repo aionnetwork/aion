@@ -83,8 +83,6 @@ public final class SyncMgr {
         final IEventMgr _evtMgr,
         final boolean _showStatus,
         final Set<StatsType> showStatistics,
-        final int _slowImportTime,
-        final int _compactFrequency,
         final int maxActivePeers) {
 
         p2pMgr = _p2pMgr;
@@ -131,9 +129,7 @@ public final class SyncMgr {
                     stats,
                     sortedBlocks,
                     importedBlockHashes,
-                    syncHeaderRequestManager,
-                    _slowImportTime,
-                    _compactFrequency),
+                    syncHeaderRequestManager),
                 "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");

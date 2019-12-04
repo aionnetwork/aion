@@ -47,9 +47,6 @@ final class TaskImportBlocks implements Runnable {
     private final Logger log;
     private final Logger surveyLog;
 
-    private final int slowImportTime;
-    private final int compactFrequency;
-
     private long lastCompactTime;
 
     TaskImportBlocks(
@@ -60,9 +57,7 @@ final class TaskImportBlocks implements Runnable {
             final SyncStats _syncStats,
             final PriorityBlockingQueue<BlocksWrapper> sortedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
-            final SyncHeaderRequestManager syncHeaderRequestManager,
-            final int _slowImportTime,
-            final int _compactFrequency) {
+            final SyncHeaderRequestManager syncHeaderRequestManager) {
         this.log = syncLog;
         this.surveyLog = surveyLog;
         this.chain = _chain;
@@ -71,8 +66,6 @@ final class TaskImportBlocks implements Runnable {
         this.sortedBlocks = sortedBlocks;
         this.importedBlockHashes = _importedBlockHashes;
         this.syncHeaderRequestManager = syncHeaderRequestManager;
-        this.slowImportTime = _slowImportTime;
-        this.compactFrequency = _compactFrequency;
         this.lastCompactTime = System.currentTimeMillis();
     }
 
@@ -321,21 +314,6 @@ final class TaskImportBlocks implements Runnable {
                         importResult,
                         t2 - t1);
             }
-        }
-        // trigger compact when IO is slow
-        if (slowImportTime > 0 // disabled when set to <= 0
-                && t2 - t1 > this.slowImportTime
-                && t2 - lastCompactTime > this.compactFrequency) {
-            if (log.isInfoEnabled()) {
-                log.info("Compacting state database due to slow IO time.");
-            }
-            t1 = System.currentTimeMillis();
-            this.chain.compactState();
-            t2 = System.currentTimeMillis();
-            if (log.isInfoEnabled()) {
-                log.info("Compacting state completed in {} ms.", t2 - t1);
-            }
-            lastCompactTime = t2;
         }
         return importResult;
     }

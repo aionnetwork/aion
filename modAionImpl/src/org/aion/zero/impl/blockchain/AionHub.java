@@ -174,10 +174,6 @@ public class AionHub {
                 eventMgr,
                 cfg.getSync().getShowStatus(),
                 cfg.getSync().getShowStatistics(),
-                cfg.getSync().getCompactEnabled()
-                        ? cfg.getSync().getSlowImportTime()
-                        : 0, // set to 0 when disabled
-                cfg.getSync().getCompactFrequency(),
                 cfg.getNet().getP2p().getMaxActiveNodes());
 
         ChainConfiguration chainConfig = new ChainConfiguration();

@@ -254,66 +254,6 @@ public class Cli {
                 // no return, allow for other parameters combined with -p
             }
 
-            // determine the sync compact configuration, can be combined with the -n, -d, -c, -p, -i
-            // arguments
-
-            if (options.getForceCompact() != null) {
-
-                CfgSync cfgSync = cfg.getSync();
-                String[] parameters = options.getForceCompact();
-
-                if (parameters.length == 1) {
-
-                    if (!parameters[0].equalsIgnoreCase("true")
-                            && !parameters[0].equalsIgnoreCase("false")) {
-                        System.out.println("enabled value must be true or false");
-                    }
-                    boolean compactEnabled = Boolean.parseBoolean(parameters[0]);
-                    if (compactEnabled != cfgSync.getCompactEnabled()) {
-                        cfgSync.setCompactEnabled(compactEnabled);
-                        overwrite = true;
-                    }
-                    System.out.println("Compact enabled is set to: " + compactEnabled);
-
-                } else if (options.getForceCompact().length == 2) {
-
-                    int slowImportTime = cfgSync.getSlowImportTime();
-                    int compactFrequency = cfgSync.getCompactFrequency();
-                    boolean validCompact = true;
-
-                    try {
-                        slowImportTime = Integer.parseInt(parameters[0]);
-                        compactFrequency = Integer.parseInt(parameters[1]);
-                    } catch (NumberFormatException e) {
-                        validCompact = false;
-                    }
-
-                    if (slowImportTime <= 0 || compactFrequency <= 0) {
-                        validCompact = false;
-                    }
-
-                    if (!validCompact) {
-                        System.out.println(
-                                "slow_import and frequency values must be positive integers, compact disabled");
-                        if (cfgSync.getCompactEnabled()) {
-                            cfgSync.setCompactEnabled(false);
-                            overwrite = true;
-                        }
-                    } else {
-                        cfgSync.setCompactEnabled(true);
-                        cfgSync.setSlowImportTime(slowImportTime);
-                        cfgSync.setCompactFrequency(compactFrequency);
-                        overwrite = true;
-                        System.out.println(
-                                "Compact enabled using the provided configuration: slow_import="
-                                        + slowImportTime
-                                        + " frequency="
-                                        + compactFrequency);
-                    }
-                }
-                // no return, allow for other parameters combined with --compact
-            }
-
             // 4. can be influenced by the -n, -d, -p, --compact arguments above
 
             if (options.getConfig() != null) {
@@ -778,9 +718,6 @@ public class Cli {
             }
             if (options.getPort() != null) {
                 skippedTasks.add("--port");
-            }
-            if (options.getForceCompact() != null) {
-                skippedTasks.add("--force-compact");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");
