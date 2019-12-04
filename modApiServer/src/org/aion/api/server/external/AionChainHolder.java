@@ -20,6 +20,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -34,9 +35,11 @@ import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.TxResponse;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
 public class AionChainHolder implements ChainHolder {
 
+    private static final Logger API_LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     private NrgOracle nrgOracle;
     private final IAionChain chain;//An implementation of AionChain
     private final AtomicReference<BlockContext> currentTemplate;
@@ -235,12 +238,24 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public boolean unlockAccount(AionAddress aionAddress, String password, int timeout) {
-        return accountManager.unlockAccount(aionAddress, password, timeout);
+        final boolean isUnlocked = accountManager.unlockAccount(aionAddress, password, timeout);
+        if (isUnlocked){
+            API_LOGGER.info("Unlocked account {} for {}s", aionAddress.toString(), timeout);
+        } else {
+            API_LOGGER.info("Failed to unlock account {}", aionAddress.toString());
+        }
+        return isUnlocked;
     }
 
     @Override
     public boolean lockAccount(AionAddress aionAddress, String password) {
-        return accountManager.lockAccount(aionAddress, password);
+        final boolean isLocked = accountManager.lockAccount(aionAddress, password);
+        if (isLocked){
+            API_LOGGER.info("Locked account account {}", aionAddress.toString());
+        } else {
+            API_LOGGER.info("Failed to lock account {}", aionAddress.toString());
+        }
+        return isLocked;
     }
 
     @Override
@@ -265,6 +280,7 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public AionTxReceipt call(AionTransaction transaction, Block block) {
+        API_LOGGER.info("Calling transaction {} at block {}", ByteUtil.toHexString(transaction.getTransactionHash()), block.getNumber());
         return this.chain.callConstant(transaction, block);
     }
 
@@ -287,9 +303,11 @@ public class AionChainHolder implements ChainHolder {
         if (tx==null) response = TxResponse.INVALID_TX;
         else response = this.chain.getAionHub().getPendingState().addPendingTransaction(tx);
         if (response.isFail()){
-            AionLoggerFactory.getLogger(LogEnum.API.name()).debug("<send-transaction failed response={}>", response.name());
+            API_LOGGER
+                .info("<send-transaction failed response={}>", response.name());
         } else {
-            AionLoggerFactory.getLogger(LogEnum.API.name()).debug("<send-transaction succeeded response={}>", response.name());
+            API_LOGGER
+                .info("<send-transaction succeeded response={}>", response.name());
         }
         return new ImmutablePair<>(tx.getTransactionHash(), response);
     }
