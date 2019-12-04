@@ -40,6 +40,7 @@ import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.BlockUtil;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
@@ -90,7 +91,7 @@ public class BlockchainForkingTest {
 
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
-        AionBlock sameBlock = new AionBlock(block.getEncoded());
+        AionBlock sameBlock = (AionBlock) BlockUtil.newBlockFromRlp(block.getEncoded());
 
         ImportResult firstRes = bc.tryToConnect(block);
 

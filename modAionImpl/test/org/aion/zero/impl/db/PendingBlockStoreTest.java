@@ -19,6 +19,7 @@ import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.BlockUtil;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -236,7 +237,7 @@ public class PendingBlockStoreTest {
         // 3. test with multiple queues
 
         // create side chain
-        AionBlock altBlock = new AionBlock(first.getEncoded());
+        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         A0BlockHeader newHeader = A0BlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         assertThat(altBlock.equals(first)).isFalse();
@@ -294,7 +295,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = new AionBlock(first.getEncoded());
+        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         A0BlockHeader newHeader = A0BlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();
@@ -335,7 +336,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = new AionBlock(first.getEncoded());
+        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         A0BlockHeader newHeader = A0BlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();
@@ -374,7 +375,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = new AionBlock(first.getEncoded());
+        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         A0BlockHeader newHeader = A0BlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();

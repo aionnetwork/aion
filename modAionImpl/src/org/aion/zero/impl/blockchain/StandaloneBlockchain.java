@@ -197,7 +197,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        private AionBlock best = null, parentBest = null;
+        private Block best = null, parentBest = null;
         private byte[] trieData = null;
         private BigInteger totalDiff = null, totalDiffParent = null;
 
@@ -206,9 +206,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
          *     AionRepositoryImpl#dumpImportableState(byte[], int, DatabaseType)}
          */
         public Builder withState(
-                AionBlock parentBestBlock,
+                Block parentBestBlock,
                 BigInteger totalDiffParent,
-                AionBlock bestBlock,
+                Block bestBlock,
                 BigInteger totalDiffBest,
                 byte[] serializedTrieBestBlock) {
             this.parentBest = parentBestBlock;

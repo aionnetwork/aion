@@ -11,6 +11,7 @@ import java.util.List;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.BlockUtil;
 
 /** @author Alexandra Roatis */
 public class TestResources {
@@ -116,7 +117,7 @@ public class TestResources {
         List<AionBlock> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(rawDataFileWithRandomBlocks)) {
-            parameters.add(new AionBlock(rawData));
+            parameters.add((AionBlock) BlockUtil.newBlockFromRlp(rawData));
         }
 
         return parameters;
@@ -127,7 +128,7 @@ public class TestResources {
         List<Block> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(limit, rawDataFileWithRandomBlocks)) {
-            parameters.add(new AionBlock(rawData));
+            parameters.add(BlockUtil.newBlockFromRlp(rawData));
         }
 
         return parameters;
@@ -141,7 +142,7 @@ public class TestResources {
         List<Block> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(limit, rawDataFileWithConsecutiveBlocks)) {
-            parameters.add(new AionBlock(rawData));
+            parameters.add(BlockUtil.newBlockFromRlp(rawData));
         }
 
         return parameters;
