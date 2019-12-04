@@ -27,13 +27,6 @@ import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.PooledTransaction;
 import org.aion.base.TxUtil;
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.IEventMgr;
-import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.evtmgr.impl.es.EventExecuteService;
-import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -108,15 +101,11 @@ public class AionPendingStateImpl implements IPendingState {
 
     private final ITxPool txPool;
 
-    private IEventMgr evtMgr = null;
-
     private RepositoryCache<AccountState> pendingState;
 
     private AtomicReference<Block> best;
 
     private PendingTxCache pendingTxCache;
-
-    private EventExecuteService ees;
 
     private List<AionTxExecSummary> txBuffer;
 
@@ -218,31 +207,6 @@ public class AionPendingStateImpl implements IPendingState {
         }
     }
 
-    private final class EpPS implements Runnable {
-
-        boolean go = true;
-
-        /**
-         * When an object implementing interface <code>Runnable</code> is used to create a thread,
-         * starting the thread causes the object's <code>run</code> method to be called in that
-         * separately executing thread.
-         *
-         * <p>The general contract of the method <code>run</code> is that it may take any action
-         * whatsoever.
-         *
-         * @see Thread#run()
-         */
-        @Override
-        public void run() {
-            while (go) {
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                    go = false;
-                }
-            }
-        }
-    }
-
     private synchronized void backupPendingTx() {
 
         if (!backupPendingPoolAdd.isEmpty()) {
@@ -320,7 +284,6 @@ public class AionPendingStateImpl implements IPendingState {
         if (!this.isSeed) {
             this.transactionStore = blockchain.getTransactionStore();
 
-            this.evtMgr = blockchain.getEventMgr();
             this.poolBackUpEnable = CfgAion.inst().getTx().getPoolBackup();
             this.replayTxBuffer = new ArrayList<>();
             this.pendingTxCache =
@@ -328,14 +291,6 @@ public class AionPendingStateImpl implements IPendingState {
             this.pendingState = repository.startTracking();
 
             this.dumpPool = test || CfgAion.inst().getTx().getPoolDump();
-
-            ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOGGER_TX);
-            ees.setFilter(setEvtFilter());
-
-            IHandler blkHandler = this.evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
-            if (blkHandler != null) {
-                blkHandler.eventCallback(new EventCallback(ees, LOGGER_TX));
-            }
 
             if (poolBackUpEnable) {
                 this.backupPendingPoolAdd = new HashMap<>();
@@ -351,25 +306,7 @@ public class AionPendingStateImpl implements IPendingState {
 
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
             }
-
-            if (!test) {
-                ees.start(new EpPS());
-            }
         }
-    }
-
-    private Set<Integer> setEvtFilter() {
-        Set<Integer> eventSN = new HashSet<>();
-
-        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
-        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
-
-        if (poolBackUpEnable) {
-            sn = IHandler.TYPE.TX0.getValue() << 8;
-            eventSN.add(sn + EventTx.CALLBACK.TXBACKUP0.getValue());
-        }
-
-        return eventSN;
     }
 
     public synchronized RepositoryCache<?> getRepository() {
@@ -1104,10 +1041,6 @@ public class AionPendingStateImpl implements IPendingState {
     public void shutDown() {
         if (this.bufferEnable) {
             ex.shutdown();
-        }
-
-        if (ees != null) {
-            ees.shutdown();
         }
     }
 
