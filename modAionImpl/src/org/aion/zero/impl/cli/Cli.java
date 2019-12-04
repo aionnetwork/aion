@@ -166,21 +166,11 @@ public class Cli {
             if (!configFile.exists()) {
                 configFile = cfg.getInitialConfigFile();
             } else {
-                // marks that the files were read from the execution path
-                File forkFile = cfg.getExecForkFile();
-                if (forkFile.exists()) {
-                    cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile(), forkFile);
-                } else {
-                    cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
-                }
+                cfg.setReadConfigFile(configFile);
             }
 
             // reading from correct fork file
-            File forkFile = cfg.getExecForkFile();
-            if (forkFile == null || !forkFile.exists()) {
-                forkFile = cfg.getInitialForkFile();
-            }
-
+            File forkFile = cfg.getForkFile();
             if (forkFile != null && forkFile.exists()) {
                 cfg.setForkProperties(cfg.getNetwork(), forkFile);
             }
@@ -599,20 +589,6 @@ public class Cli {
         // copy config file
         File initial = startConfigFile;
         File target = cfg.getExecConfigFile();
-        if (!initial.equals(target)) {
-            copyRecursively(initial, target);
-
-            // copy genesis file
-            initial = cfg.getInitialGenesisFile();
-            target = cfg.getExecGenesisFile();
-            if (!initial.equals(target)) {
-                copyRecursively(initial, target);
-            }
-        }
-
-        // copy fork file
-        initial = forkFile;
-        target = cfg.getExecForkFile();
         if (!initial.equals(target)) {
             copyRecursively(initial, target);
         }

@@ -90,13 +90,11 @@ public class CliTest {
     private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
 
     private static final File config = new File(TEST_RESOURCE_DIR, configFileName);
-    private static final File oldConfig = new File(CONFIG_PATH, configFileName);
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
 
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
-    private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
@@ -185,26 +183,27 @@ public class CliTest {
         assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
     }
 
-    /** Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String)}. */
+    /** Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithDirectoryAndNetwork() {
         List<Object> parameters = new ArrayList<>();
 
         String[] dir_options = new String[] {"-d", "--datadir"};
         String[] net_options = new String[] {"-n", "--network"};
-        String expected = new File(path, "mainnet").getAbsolutePath();
+        String expectedExec = new File(path, "mainnet").getAbsolutePath();
+        String expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
         String expOnError = MAIN_BASE_PATH.getAbsolutePath();
 
         // data directory alone
         for (String op : dir_options) {
             // with relative path
-            parameters.add(new Object[] {new String[] {op, dataDirectory}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, dataDirectory}, RUN, expectedExec, expectedRead});
             // with absolute path
-            parameters.add(new Object[] {new String[] {op, path.getAbsolutePath()}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, path.getAbsolutePath()}, RUN, expectedExec, expectedRead});
             // without value
-            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError, expectedRead});
             // with invalid characters (Linux & Win)
-            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, expOnError, expectedRead});
         }
 
         // network and directory
@@ -215,78 +214,79 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opNet, valNet}, RUN, expected
+                                new String[] {opDir, dataDirectory, opNet, valNet}, RUN, expectedExec, expectedRead
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opNet, valNet, opDir, dataDirectory}, RUN, expected
+                                new String[] {opNet, valNet, opDir, dataDirectory}, RUN, expectedExec, expectedRead
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opNet, valNet},
                                 RUN,
-                                expected
+                                expectedExec, expectedRead
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opNet, valNet, opDir, path.getAbsolutePath()},
                                 RUN,
-                                expected
+                                expectedExec, expectedRead
                             });
                 }
             }
         }
 
         // network alone
-        expected = MAIN_BASE_PATH.getAbsolutePath();
+        expectedExec = MAIN_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError, expectedRead});
             // with two parameters
-            parameters.add(new Object[] {new String[] {op, "testnet", currentTestNetName}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "testnet", currentTestNetName}, ERROR, expOnError, expectedRead});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expectedExec, expectedRead});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, RUN, expectedExec, expectedRead});
         }
 
         // network alone with testnet
         net_values = new String[] {currentTestNetName, "testnet"};
-        expected = TEST_BASE_PATH.getAbsolutePath();
+        expectedExec = TEST_BASE_PATH.getAbsolutePath();
+        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
         for (String op : net_options) {
             for (String netVal : net_values) {
                 // testnet name as parameter
-                parameters.add(new Object[] {new String[] {op, netVal}, RUN, expected});
+                parameters.add(new Object[] {new String[] {op, netVal}, RUN, expectedExec, expectedRead});
             }
         }
 
         // network and directory with testnet
-        expected = new File(path, currentTestNetName).getAbsolutePath();
+        expectedExec = new File(path, currentTestNetName).getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opNet : net_options) {
                 for (String netVal : net_values) {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opNet, netVal}, RUN, expected
+                                new String[] {opDir, dataDirectory, opNet, netVal}, RUN, expectedExec, expectedRead
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opNet, netVal, opDir, dataDirectory}, RUN, expected
+                                new String[] {opNet, netVal, opDir, dataDirectory}, RUN, expectedExec, expectedRead
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opNet, netVal},
                                 RUN,
-                                expected
+                                expectedExec, expectedRead
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opNet, netVal, opDir, path.getAbsolutePath()},
                                 RUN,
-                                expected
+                                expectedExec, expectedRead
                             });
                 }
             }
@@ -295,12 +295,13 @@ public class CliTest {
         // with subdirectories
         String dir = dataDirectory + File.separator + "subfolder";
         File path = new File(BASE_PATH, dir);
-        expected = new File(path, "mainnet").getAbsolutePath();
+        expectedExec = new File(path, "mainnet").getAbsolutePath();
+        expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
         for (String op : dir_options) {
             // with relative path with subdirectories
-            parameters.add(new Object[] {new String[] {op, dir}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, dir}, RUN, expectedExec, expectedRead});
             // with multiple values
-            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, expOnError, expectedRead});
         }
 
         return parameters.toArray();
@@ -311,19 +312,15 @@ public class CliTest {
      */
     @Test
     @Parameters(method = "parametersWithDirectoryAndNetwork")
-    public void testDirectoryAndNetwork(
-            String[] input, ReturnType expectedReturn, String expectedPath) {
+    public void testDirectoryAndNetwork(String[] input, ReturnType expectedReturn, String expectedExecPath, String expectedReadPath) {
         assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
-        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-        assertThat(cfg.getExecConfigFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
-        assertThat(cfg.getExecGenesisFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
-        assertThat(cfg.getExecForkFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
-        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
-        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
-        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+        assertThat(cfg.getBasePath()).isEqualTo(expectedExecPath);
+        assertThat(cfg.getExecConfigFile()).isEqualTo(new File(expectedExecPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getGenesisFile()).isEqualTo(new File(expectedReadPath, genesisFileName));
+        assertThat(cfg.getForkFile()).isEqualTo(new File(expectedReadPath, forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedExecPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedExecPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedExecPath, "keystore"));
 
         if (verbose) {
             printPaths(cfg);
@@ -341,17 +338,13 @@ public class CliTest {
                         + cfg.getKeystoreDir().getAbsolutePath()
                         + "\n> Config write:  "
                         + cfg.getExecConfigFile().getAbsolutePath()
-                        + "\n> Genesis write: "
-                        + cfg.getExecGenesisFile().getAbsolutePath()
-                        + "\n> Fork write: "
-                        + cfg.getExecForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
                         + cfg.getInitialConfigFile().getAbsolutePath()
                         + "\n> Genesis read:  "
-                        + cfg.getInitialGenesisFile().getAbsolutePath()
+                        + cfg.getGenesisFile().getAbsolutePath()
                         + "\n> Fork read:  "
-                        + cfg.getInitialForkFile().getAbsolutePath()
+                        + cfg.getForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------\n\n");
     }
 
@@ -362,8 +355,7 @@ public class CliTest {
      */
     @Test
     @Parameters(method = "parametersWithDirectoryAndNetwork")
-    public void testDirectoryAndNetwork_wAbsoluteDbAndLogPath(
-            String[] input, ReturnType expectedReturn, String expectedPath) {
+    public void testDirectoryAndNetwork_wAbsoluteDbAndLogPath(String[] input, ReturnType expectedReturn, String expectedExecPath, String expectedReadPath) {
 
         File db = new File(alternativePath, "database");
         cfg.getDb().setPath(db.getAbsolutePath());
@@ -375,12 +367,15 @@ public class CliTest {
         cfg.fromXML();
 
         assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
-        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedExecPath);
+        assertThat(cfg.getExecConfigFile()).isEqualTo(new File(expectedExecPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getGenesisFile()).isEqualTo(new File(expectedReadPath, genesisFileName));
+        assertThat(cfg.getForkFile()).isEqualTo(new File(expectedReadPath, forkFileName));
 
-        assertThat(cfg.getDatabaseDir()).isNotEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getDatabaseDir()).isNotEqualTo(new File(expectedExecPath, "database"));
         assertThat(cfg.getDatabaseDir()).isEqualTo(db);
 
-        assertThat(cfg.getLogDir()).isNotEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getLogDir()).isNotEqualTo(new File(expectedExecPath, "log"));
         assertThat(cfg.getLogDir()).isEqualTo(log);
 
         if (verbose) {
@@ -388,30 +383,32 @@ public class CliTest {
         }
     }
 
-    /** Parameters for testing {@link #testConfig(String[], File, String)}. */
+    /** Parameters for testing {@link #testConfig(String[], File, String, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfig() {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
+        String expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op}, mainnetConfig, expected, expectedRead});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, mainnetConfig, expected, expectedRead});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, mainnetConfig, expected, expectedRead});
         }
 
         expected = TEST_BASE_PATH.getAbsolutePath();
+        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
 
         for (String op : options) {
             // testnet name as parameter
-            parameters.add(new Object[] {new String[] {op, currentTestNetName}, testnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, currentTestNetName}, testnetConfig, expected, expectedRead});
             // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected, expectedRead});
         }
 
         // config and directory
@@ -421,6 +418,7 @@ public class CliTest {
                         path,
                         "mainnet" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mainnet").getAbsolutePath();
+        expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
 
         String[] net_values = new String[] {"mainnet", "invalid"};
         for (String opDir : dir_options) {
@@ -429,24 +427,24 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, valNet}, config, expected
+                                new String[] {opDir, dataDirectory, opCfg, valNet}, config, expected, expectedRead
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, valNet, opDir, dataDirectory}, config, expected
+                                new String[] {opCfg, valNet, opDir, dataDirectory}, config, expected, expectedRead
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, valNet},
                                 config,
-                                expected
+                                expected, expectedRead
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, valNet, opDir, path.getAbsolutePath()},
                                 config,
-                                expected
+                                expected, expectedRead
                             });
                 }
             }
@@ -456,30 +454,31 @@ public class CliTest {
         net_values = new String[] {currentTestNetName, "testnet"};
         config = new File(path, currentTestNetName + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, currentTestNetName).getAbsolutePath();
+        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
                 for (String netVal : net_values) {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, netVal}, config, expected
+                                new String[] {opDir, dataDirectory, opCfg, netVal}, config, expected, expectedRead
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, netVal, opDir, dataDirectory}, config, expected
+                                new String[] {opCfg, netVal, opDir, dataDirectory}, config, expected, expectedRead
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, netVal},
                                 config,
-                                expected
+                                expected, expectedRead
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, netVal, opDir, path.getAbsolutePath()},
                                 config,
-                                expected
+                                expected, expectedRead
                             });
                 }
             }
@@ -491,19 +490,17 @@ public class CliTest {
     /** Ensures that the { <i>-c</i>, <i>--config</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithConfig")
-    public void testConfig(String[] input, File expectedFile, String expectedPath) {
+    public void testConfig(String[] input, File expectedFile, String expectedExecPath, String expectedReadPath) {
         if (expectedFile.exists()) {
             assertThat(cfg.fromXML(expectedFile)).isTrue();
         }
 
         assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(EXIT);
-        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedExecPath);
         assertThat(cfg.getExecConfigFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
-        assertThat(cfg.getExecGenesisFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
-        assertThat(cfg.getExecForkFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
+                .isEqualTo(new File(expectedExecPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getGenesisFile()).isEqualTo(new File(expectedReadPath, genesisFileName));
+        assertThat(cfg.getForkFile()).isEqualTo(new File(expectedReadPath, forkFileName));
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -513,114 +510,7 @@ public class CliTest {
         }
     }
 
-    /** Parameters for testing {@link #testConfig_oldLocation(String[], String)}. */
-    @SuppressWarnings("unused")
-    private Object parametersWithoutMigration() {
-        List<Object> parameters = new ArrayList<>();
-
-        String[] options = new String[] {"-c", "--config"};
-        String expected = MAIN_BASE_PATH.getAbsolutePath();
-
-        for (String op : options) {
-            // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
-            // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
-        }
-
-        expected = TEST_BASE_PATH.getAbsolutePath();
-
-        for (String op : options) {
-            // testnet name as parameter
-            parameters.add(new Object[] {new String[] {op, currentTestNetName}, expected});
-            // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
-        }
-
-        return parameters.toArray();
-    }
-
-    /**
-     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work when using old config
-     * location.
-     */
-    @Test
-    @Parameters(method = "parametersWithoutMigration")
-    public void testConfig_oldLocation(String[] input, String expectedPath) {
-        // ensure config exists on disk at expected location for old kernel
-        if (!oldConfig.exists()) {
-            File configPath = CONFIG_PATH;
-            if (!configPath.exists()) {
-                assertThat(configPath.mkdirs()).isTrue();
-            }
-            cfg.toXML(null, oldConfig);
-            Cli.copyRecursively(genesis, oldGenesis);
-        }
-
-        assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(EXIT);
-
-        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
-        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-
-        assertThat(cfg.getExecConfigFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
-        assertThat(cfg.getExecGenesisFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
-
-        // database, keystore & log are absolute and at old location
-        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
-        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
-        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
-
-        if (verbose) {
-            printPaths(cfg);
-        }
-    }
-
-    /**
-     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work when using old config
-     * location.
-     */
-    @Test
-    @Parameters({"-c", "--config"})
-    public void testConfig_withMigration(String option) {
-        // ensure config exists on disk at expected location for old kernel
-        if (!oldConfig.exists()) {
-            File configPath = CONFIG_PATH;
-            if (!configPath.exists()) {
-                assertThat(configPath.mkdirs()).isTrue();
-            }
-            cfg.toXML(null, oldConfig);
-            Cli.copyRecursively(genesis, oldGenesis);
-        }
-
-        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
-
-        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
-        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
-
-        assertThat(cfg.getInitialConfigFile()).isEqualTo(mainnetConfig);
-        assertThat(cfg.getInitialGenesisFile()).isEqualTo(mainnetGenesis);
-
-        assertThat(cfg.getExecConfigFile())
-                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + configFileName));
-        assertThat(cfg.getExecGenesisFile())
-                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + genesisFileName));
-
-        // database, keystore & log are absolute and at old location
-        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
-        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
-        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
-
-        if (verbose) {
-            printPaths(cfg);
-        }
-
-        // cleanup: resetting the mainnet config to original
-        Cli.copyRecursively(config, mainnetConfig);
-    }
-
-    /** Parameters for testing {@link #testPort(String[], ReturnType, String, String)}. */
+    /** Parameters for testing {@link #testPort(String[], ReturnType, String, String, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithPort() {
         List<Object> parameters = new ArrayList<>();
@@ -628,7 +518,8 @@ public class CliTest {
         String[] portOptions = new String[] {"-p", "--port"};
         String[] netOptions = new String[] {"-n", "--network"};
         String[] dirOptions = new String[] {"-d", "--datadir"};
-        String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expectedExecPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
         String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
         String expPortOnError = Integer.toString(cfg.getNet().getP2p().getPort());
 
@@ -636,42 +527,42 @@ public class CliTest {
         for (String opPort : portOptions) {
             // without parameter
             parameters.add(
-                    new Object[] {new String[] {opPort}, ERROR, expPathOnError, expPortOnError});
+                    new Object[] {new String[] {opPort}, ERROR, expPathOnError, expectedReadPath, expPortOnError});
             // with two parameters
             parameters.add(
                     new Object[] {
                         new String[] {opPort, TEST_PORT, TEST_PORT},
                         ERROR,
-                        expPathOnError,
+                        expPathOnError, expectedReadPath,
                         expPortOnError
                     });
             // with invalid parameter
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, INVALID_PORT}, RUN, expPathOnError, expPortOnError
+                        new String[] {opPort, INVALID_PORT}, RUN, expPathOnError, expectedReadPath, expPortOnError
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, "-12345"}, RUN, expPathOnError, expPortOnError
+                        new String[] {opPort, "-12345"}, RUN, expPathOnError, expectedReadPath, expPortOnError
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, "invalid"}, RUN, expPathOnError, expPortOnError
+                        new String[] {opPort, "invalid"}, RUN, expPathOnError, expectedReadPath, expPortOnError
                     });
             // with testing port number
             parameters.add(
-                    new Object[] {new String[] {opPort, TEST_PORT}, RUN, expectedPath, TEST_PORT});
+                    new Object[] {new String[] {opPort, TEST_PORT}, RUN, expectedExecPath, expectedReadPath, TEST_PORT});
         }
 
         // port with help and version
         for (String opPort : portOptions) {
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, TEST_PORT, "-h"}, EXIT, expectedPath, expPortOnError
+                        new String[] {opPort, TEST_PORT, "-h"}, EXIT, expectedExecPath, expectedReadPath, expPortOnError
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, TEST_PORT, "-v"}, EXIT, expectedPath, expPortOnError
+                        new String[] {opPort, TEST_PORT, "-v"}, EXIT, expectedExecPath, expectedReadPath, expPortOnError
                     });
         }
 
@@ -685,14 +576,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opNet, valNet, opPort},
                                 ERROR,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, opNet, valNet},
                                 ERROR,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     // with invalid port parameter
@@ -700,14 +591,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opNet, valNet, opPort, INVALID_PORT},
                                 RUN,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, INVALID_PORT, opNet, valNet},
                                 RUN,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     // with testing port number
@@ -715,14 +606,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opNet, valNet, opPort, TEST_PORT},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, TEST_PORT, opNet, valNet},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                 }
@@ -731,7 +622,8 @@ public class CliTest {
 
         // network and port with testnet
         netValues = new String[] {currentTestNetName, "testnet"};
-        expectedPath = TEST_BASE_PATH.getAbsolutePath();
+        expectedExecPath = TEST_BASE_PATH.getAbsolutePath();
+        expectedReadPath = TEST_CONFIG_PATH.getAbsolutePath();
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
                 for (String opPort : portOptions) {
@@ -739,14 +631,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opNet, valNet, opPort, TEST_PORT},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, TEST_PORT, opNet, valNet},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                 }
@@ -755,7 +647,8 @@ public class CliTest {
 
         // directory and port
         String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
-        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        expectedExecPath = new File(path, "mainnet").getAbsolutePath();
+        expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
         for (String opDir : dirOptions) {
             for (String valDir : dirValues) {
                 for (String opPort : portOptions) {
@@ -764,14 +657,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opDir, valDir, opPort},
                                 ERROR,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, opDir, valDir},
                                 ERROR,
-                                expPathOnError,
+                                expPathOnError, expectedReadPath,
                                 expPortOnError
                             });
                     // with invalid port parameter
@@ -779,14 +672,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opDir, valDir, opPort, INVALID_PORT},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, INVALID_PORT, opDir, valDir},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 expPortOnError
                             });
                     // with testing port number
@@ -794,14 +687,14 @@ public class CliTest {
                             new Object[] {
                                 new String[] {opDir, valDir, opPort, TEST_PORT},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opPort, TEST_PORT, opDir, valDir},
                                 RUN,
-                                expectedPath,
+                                expectedExecPath, expectedReadPath,
                                 TEST_PORT
                             });
                 }
@@ -812,17 +705,22 @@ public class CliTest {
         netValues = new String[] {"mainnet", currentTestNetName};
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
+                if (valNet == currentTestNetName) {
+                    expectedReadPath = TEST_CONFIG_PATH.getAbsolutePath();
+                } else {
+                    expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
+                }
                 for (String opDir : dirOptions) {
                     for (String valDir : dirValues) {
                         for (String opPort : portOptions) {
-                            expectedPath = new File(path, valNet).getAbsolutePath();
+                            expectedExecPath = new File(path, valNet).getAbsolutePath();
                             parameters.add(
                                     new Object[] {
                                         new String[] {
                                             opNet, valNet, opDir, valDir, opPort, TEST_PORT
                                         },
                                         RUN,
-                                        expectedPath,
+                                        expectedExecPath, expectedReadPath,
                                         TEST_PORT
                                     });
                         }
@@ -834,7 +732,8 @@ public class CliTest {
         // directory with subdirectories and port
         String dir = dataDirectory + File.separator + "subfolder";
         File testPath = new File(BASE_PATH, dir);
-        expectedPath = new File(testPath, "mainnet").getAbsolutePath();
+        expectedExecPath = new File(testPath, "mainnet").getAbsolutePath();
+        expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
         for (String opDir : dirOptions) {
             for (String opPort : portOptions) {
                 // with relative path with subdirectories
@@ -842,14 +741,14 @@ public class CliTest {
                         new Object[] {
                             new String[] {opDir, dir, opPort, TEST_PORT},
                             RUN,
-                            expectedPath,
+                            expectedExecPath, expectedReadPath,
                             TEST_PORT
                         });
             }
         }
 
         // port with config and directory
-        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        expectedExecPath = new File(path, "mainnet").getAbsolutePath();
         for (String opPort : portOptions) {
             // with relative path
             parameters.add(
@@ -858,7 +757,7 @@ public class CliTest {
                             "--datadir", dataDirectory, "--config", "mainnet", opPort, TEST_PORT
                         },
                         EXIT,
-                        expectedPath,
+                        expectedExecPath, expectedReadPath,
                         TEST_PORT
                     });
             parameters.add(
@@ -867,7 +766,7 @@ public class CliTest {
                             "-c", "mainnet", opPort, TEST_PORT, "--datadir", dataDirectory
                         },
                         EXIT,
-                        expectedPath,
+                        expectedExecPath, expectedReadPath,
                         TEST_PORT
                     });
             // with absolute path
@@ -877,7 +776,7 @@ public class CliTest {
                             opPort, TEST_PORT, "-d", path.getAbsolutePath(), "--config", "mainnet"
                         },
                         EXIT,
-                        expectedPath,
+                        expectedExecPath, expectedReadPath,
                         TEST_PORT
                     });
             parameters.add(
@@ -886,7 +785,7 @@ public class CliTest {
                             "-c", "mainnet", "-d", path.getAbsolutePath(), opPort, TEST_PORT
                         },
                         EXIT,
-                        expectedPath,
+                        expectedExecPath, expectedReadPath,
                         TEST_PORT
                     });
         }
@@ -896,22 +795,18 @@ public class CliTest {
 
     @Test
     @Parameters(method = "parametersWithPort")
-    public void testPort(
-            String[] input, ReturnType expectedReturn, String expectedPath, String expectedPort) {
+    public void testPort(String[] input, ReturnType expectedReturn, String expectedExecPath, String expectedReadPath, String expectedPort) {
 
         cfg.toXML(new String[] {"--p2p=" + "," + DEFAULT_PORT}, cfg.getInitialConfigFile());
 
         assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
-        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-        assertThat(cfg.getExecConfigFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
-        assertThat(cfg.getExecGenesisFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
-        assertThat(cfg.getExecForkFile())
-                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
-        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
-        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
-        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+        assertThat(cfg.getBasePath()).isEqualTo(expectedExecPath);
+        assertThat(cfg.getExecConfigFile()).isEqualTo(new File(expectedExecPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getGenesisFile()).isEqualTo(new File(expectedReadPath, genesisFileName));
+        assertThat(cfg.getForkFile()).isEqualTo(new File(expectedReadPath, forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedExecPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedExecPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedExecPath, "keystore"));
         // test port is updated
         assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(expectedPort);
         // test port in initial config is unchanged
@@ -1048,34 +943,6 @@ public class CliTest {
     public void testInfo(String[] input, ReturnType expectedReturn, String expectedPath) {
         assertThat(cli.callAndDoNotInitializeAvm(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-    }
-
-    /**
-     * Ensures that the { <i>-i</i>, <i>--info</i> } arguments work when using old config location.
-     */
-    @Test
-    @Parameters({"-i", "--info"})
-    public void testInfoWithMigration(String option) {
-        // ensure config exists on disk at expected location for old kernel
-        if (!oldConfig.exists()) {
-            File configPath = CONFIG_PATH;
-            if (!configPath.exists()) {
-                assertThat(configPath.mkdirs()).isTrue();
-            }
-            cfg.toXML(null, oldConfig);
-            Cli.copyRecursively(genesis, oldGenesis);
-        }
-
-        assertThat(cli.callAndDoNotInitializeAvm(new String[] {option}, cfg)).isEqualTo(EXIT);
-        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
-
-        // database, keystore & log are absolute and at old location
-        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
-        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
-        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
-
-        // cleanup: resetting the mainnet config to original
-        Cli.copyRecursively(config, mainnetConfig);
     }
 
     /**

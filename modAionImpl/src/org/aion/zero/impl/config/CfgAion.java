@@ -88,8 +88,6 @@ public final class CfgAion {
     private File execDir = null;
     private File execConfigDir = null;
     private File execConfigFile = null;
-    private File execGenesisFile = null;
-    private File execForkFile = null;
 
     public CfgAion() {
         this.mode = "aion";
@@ -131,7 +129,7 @@ public final class CfgAion {
 
     private void setGenesisInner(boolean forTest) {
         try {
-            this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisFile().getAbsolutePath());
+            this.genesis = GenesisBlockLoader.loadJSON(getGenesisFile().getAbsolutePath());
         } catch (IOException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
@@ -591,113 +589,16 @@ public final class CfgAion {
         execDir = null;
         execConfigDir = null;
         execConfigFile = null;
-        execGenesisFile = null;
-        execForkFile = null;
     }
 
     /**
-     * Determines the location of the initial configuration files ensuring compatibility with old
-     * kernels.
+     * Initializes the base configuration and execution paths using the selected network:
+     * <ul>
+     *     <li>the config file is copied to the execution path</li>
+     *     <li>the genesis and fork files are read from the initial configuration</li>
+     * </ul>
      */
     protected void initializeConfiguration() {
-        // use old config location for compatibility with old kernels
-        baseConfigFile = new File(CONFIG_DIR, configFileName);
-        baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
-
-        if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
-            updateNetworkExecPaths();
-        } else {
-            System.out.println("Migrating to the new configuration style for Aion kernels.");
-
-            // reading the old config to get setup
-            this.fromXML(baseConfigFile);
-
-            // determine the network from the read config
-            switch (this.net.getId()) {
-                case 256:
-                    network = "mainnet";
-                    break;
-                case 28:
-                    network = "amity";
-                    break;
-                default:
-                    network = "custom";
-                    break;
-            }
-
-            // delete old config
-            try {
-                if (!baseConfigFile.delete()) {
-                    System.out.println(
-                        "Unable to delete old configuration file: "
-                            + baseConfigFile.getAbsolutePath()
-                            + ". Please do it manually!");
-                }
-            } catch (Exception e) {
-                System.out.println(
-                    "Unable to delete old configuration file: "
-                        + baseConfigFile.getAbsolutePath()
-                        + ". Please do it manually!");
-            }
-
-            File oldGenesis = baseGenesisFile;
-
-            // using absolute path for database
-            absoluteDatabaseDir = true;
-            databaseDir = new File(INITIAL_PATH, getDb().getPath());
-            getDb().setPath(databaseDir.getAbsolutePath());
-
-            // using absolute path for log
-            absoluteLogDir = true;
-            logDir = new File(INITIAL_PATH, getLog().getLogPath());
-            getLog().setLogPath(logDir.getAbsolutePath());
-
-            // using absolute path for keystore
-            absoluteKeystoreDir = true;
-            keystoreDir = new File(INITIAL_PATH, keystoreDirName);
-            keystorePath = keystoreDir.getAbsolutePath();
-
-            updateNetworkExecPaths();
-
-            this.toXML(new String[] {}, baseConfigFile);
-
-            if (network.equals("custom")) {
-                try {
-                    // for custom networks move genesis file
-                    Files.move(oldGenesis.toPath(), baseGenesisFile.toPath(), REPLACE_EXISTING);
-                } catch (IOException e) {
-                    System.out.println(
-                        "Unable to move old genesis file "
-                            + oldGenesis.getAbsolutePath()
-                            + " to new location "
-                            + baseGenesisFile.getAbsolutePath()
-                            + ". Please do it manually!");
-                }
-            } else {
-                try {
-                    // otherwise delete old genesis
-                    // because nothing can change in the predefined network genesis
-                    if (!oldGenesis.delete()) {
-                        System.out.println(
-                            "Unable to delete old genesis file: "
-                                + oldGenesis.getAbsolutePath()
-                                + ". Please do it manually!");
-                    }
-                } catch (Exception e) {
-                    System.out.println(
-                        "Unable to delete old genesis file: "
-                            + oldGenesis.getAbsolutePath()
-                            + ". Please do it manually!");
-                }
-            }
-        }
-    }
-
-    /**
-     * Updates the base configuration and execution paths as is defined by <b>new kernels</b> where
-     * the configuration is placed in folders for each network type.
-     */
-    private void updateNetworkExecPaths() {
         if (network == null) {
             network = "mainnet";
         }
@@ -712,13 +613,9 @@ public final class CfgAion {
         execDir = new File(dataDir, network);
         execConfigDir = new File(execDir, configDirName);
         execConfigFile = new File(execConfigDir, configFileName);
-        execGenesisFile = new File(execConfigDir, genesisFileName);
-        execForkFile = new File(execConfigDir, forkFileName);
 
         updateStoragePaths();
-        if (execForkFile.exists()) {
-            setForkProperties(network, execForkFile);
-        } else if (baseForkFile.exists()) {
+        if (baseForkFile.exists()) {
             setForkProperties(network, baseForkFile);
         }
     }
@@ -758,7 +655,7 @@ public final class CfgAion {
      */
     public void setDataDirectory(File _dataDir) {
         this.dataDir = _dataDir;
-        updateNetworkExecPaths();
+        initializeConfiguration();
     }
 
     /**
@@ -769,7 +666,7 @@ public final class CfgAion {
      */
     public void setNetwork(String _network) {
         this.network = _network;
-        updateNetworkExecPaths();
+        initializeConfiguration();
     }
 
     /** @return the base dir where all configuration + persistence is managed */
@@ -868,22 +765,6 @@ public final class CfgAion {
         return execConfigFile;
     }
 
-    /** Returns the location where the genesis file is saved for kernel execution. */
-    public File getExecGenesisFile() {
-        if (execGenesisFile == null) {
-            initializeConfiguration();
-        }
-        return execGenesisFile;
-    }
-
-    /** Returns the location where the fork file is saved for kernel execution. */
-    public File getExecForkFile() {
-        if (execForkFile == null) {
-            initializeConfiguration();
-        }
-        return execForkFile;
-    }
-
     /** @implNote Maintains the old setup if the config file is present in the old location. */
     public File getInitialConfigFile() {
         if (baseConfigFile == null) {
@@ -896,29 +777,19 @@ public final class CfgAion {
      * Used to updated the initial configuration to using the execution configuration files when
      * reading the initial configuration from those files.
      */
-    public void setReadConfigFiles(File configFile, File genesisFile) {
+    public void setReadConfigFile(File configFile) {
         this.baseConfigFile = configFile;
-        this.baseGenesisFile = genesisFile;
-    }
-
-    /**
-     * Used to updated the initial configuration to using the execution configuration files when
-     * reading the initial configuration from those files.
-     */
-    public void setReadConfigFiles(File configFile, File genesisFile, File forkFile) {
-        setReadConfigFiles(configFile, genesisFile);
-        this.baseForkFile = forkFile;
     }
 
     /** @implNote Maintains the old setup if the genesis file is present in the old location. */
-    public File getInitialGenesisFile() {
+    public File getGenesisFile() {
         if (baseGenesisFile == null) {
             initializeConfiguration();
         }
         return baseGenesisFile;
     }
 
-    public File getInitialForkFile() {
+    public File getForkFile() {
         if (baseForkFile == null) {
             initializeConfiguration();
         }

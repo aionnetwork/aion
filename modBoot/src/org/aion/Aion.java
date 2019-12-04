@@ -35,8 +35,6 @@ import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.zero.impl.vm.avm.AvmProvider;
-import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
-import org.aion.zero.impl.vm.avm.AvmConfigurations;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -137,7 +135,7 @@ public class Aion {
 
         // from now on, all logging to console and file happens asynchronously
 
-        String[] filePath = new String[9];
+        String[] filePath = new String[7];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out.println(
@@ -155,11 +153,9 @@ public class Aion {
         filePath[1] = cfg.getDatabasePath();
         filePath[2] = Keystore.getKeystorePath();
         filePath[3] = cfg.getExecConfigFile().getAbsolutePath();
-        filePath[4] = cfg.getExecGenesisFile().getAbsolutePath();
-        filePath[5] = cfg.getExecForkFile().getAbsolutePath();
-        filePath[6] = cfg.getInitialConfigFile().getAbsolutePath();
-        filePath[7] = cfg.getInitialGenesisFile().getAbsolutePath();
-        filePath[8] = cfg.getInitialForkFile().getAbsolutePath();
+        filePath[4] = cfg.getInitialConfigFile().getAbsolutePath();
+        filePath[5] = cfg.getGenesisFile().getAbsolutePath();
+        filePath[6] = cfg.getForkFile().getAbsolutePath();
 
         String path =
                 "\n-------------------------------- USED PATHS --------------------------------"
@@ -171,17 +167,13 @@ public class Aion {
                         + filePath[2]
                         + "\n> Config write:  "
                         + filePath[3]
-                        + "\n> Genesis write: "
-                        + filePath[4]
-                        + "\n> Fork write:    "
-                        + filePath[5]
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
-                        + filePath[6]
+                        + filePath[4]
                         + "\n> Genesis read:  "
-                        + filePath[7]
+                        + filePath[5]
                         + "\n> Fork read:     "
-                        + filePath[8]
+                        + filePath[6]
                         + "\n----------------------------------------------------------------------------\n\n";
 
         String logo = "\n\n"

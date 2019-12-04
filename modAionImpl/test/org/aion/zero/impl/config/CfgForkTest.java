@@ -21,11 +21,11 @@ public class CfgForkTest {
 
     @Before
     public void setup() throws IOException {
-        new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
+        new File(System.getProperty("user.dir") + "/config/random").mkdirs();
         forkFile =
                 new File(
                         System.getProperty("user.dir")
-                                + "/mainnet/config"
+                                + "/config/random"
                                 + CfgFork.FORK_PROPERTIES_PATH);
         forkFile.createNewFile();
 
@@ -38,6 +38,7 @@ public class CfgForkTest {
         out.close();
 
         cfg = new CfgAion();
+        cfg.setNetwork("random");
     }
 
     @After
@@ -49,7 +50,6 @@ public class CfgForkTest {
 
     @Test
     public void getForkPropertyTest() {
-
         String forkProperty = cfg.getFork().getProperties().getProperty("fork0.3.2");
         assertEquals("2000000", forkProperty);
     }
