@@ -338,8 +338,8 @@ task pack(type: Tar) {
         from dirNative
         include '**'
     }
-    into("/${brandName}/config") {
-        from "${dirPack}/config"
+    into("/${brandName}/networks") {
+        from "${dirPack}/networks"
         include '**'
     }
     into("/${brandName}/rt") {
@@ -368,13 +368,13 @@ task pack(type: Tar) {
 }
 
 task createPackConfigOverride(type: Copy) { 
-    from "${rootDir}/config"
-    into "${dirPack}/config"
+    from "${rootDir}/networks"
+    into "${dirPack}/networks"
 }
 
 task overridePackConfigForDocker(type: Exec) { 
     dependsOn createPackConfigOverride
-    commandLine 'python', 'DockerAutomation/bin/enable-api-servers.py', "${dirPack}/config"
+    commandLine 'python', 'DockerAutomation/bin/enable-api-servers.py', "${dirPack}/networks"
 }
 
 task copyPackForDocker(type: Copy) { 

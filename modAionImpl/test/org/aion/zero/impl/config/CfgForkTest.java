@@ -21,11 +21,11 @@ public class CfgForkTest {
 
     @Before
     public void setup() throws IOException {
-        new File(System.getProperty("user.dir") + "/config/random").mkdirs();
+        new File(System.getProperty("user.dir") + "/networks/random").mkdirs();
         forkFile =
                 new File(
                         System.getProperty("user.dir")
-                                + "/config/random"
+                                + "/networks/random"
                                 + CfgFork.FORK_PROPERTIES_PATH);
         forkFile.createNewFile();
 

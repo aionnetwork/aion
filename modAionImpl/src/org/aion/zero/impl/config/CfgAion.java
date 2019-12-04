@@ -55,6 +55,7 @@ public final class CfgAion {
 
     // names
     private final String configDirName = "config";
+    private final String allNetworksDirName = "networks";
     private final String configFileName = "config.xml";
     private final String genesisFileName = "genesis.json";
     private final String keystoreDirName = "keystore";
@@ -64,7 +65,7 @@ public final class CfgAion {
     private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
 
     // directories containing the configuration files
-    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
+    private final File CONFIG_DIR = new File(INITIAL_PATH, allNetworksDirName);
     private File networkConfigDir = null;
 
     // base configuration: old kernel OR using network config

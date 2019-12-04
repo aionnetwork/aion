@@ -72,9 +72,9 @@ public class CliTest {
 
 
     // config paths
-    private static final File CONFIG_PATH = new File(BASE_PATH, "config");
-    private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
-    private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, currentTestNetName);
+    private static final File NETWORKS_PATH = new File(BASE_PATH, "networks");
+    private static final File MAIN_NETWORKS_PATH = new File(NETWORKS_PATH, "mainnet");
+    private static final File TEST_NETWORKS_PATH = new File(NETWORKS_PATH, currentTestNetName);
 
 
     private static final String module = "modAionImpl";
@@ -90,19 +90,19 @@ public class CliTest {
     private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
 
     private static final File config = new File(TEST_RESOURCE_DIR, configFileName);
-    private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
-    private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
+    private static final File mainnetConfig = new File(MAIN_NETWORKS_PATH, configFileName);
+    private static final File testnetConfig = new File(TEST_NETWORKS_PATH, configFileName);
 
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
-    private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
-    private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
+    private static final File mainnetGenesis = new File(MAIN_NETWORKS_PATH, genesisFileName);
+    private static final File testnetGenesis = new File(TEST_NETWORKS_PATH, genesisFileName);
 
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
-    private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
-    private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
+    private static final File mainnetFork = new File(MAIN_NETWORKS_PATH, forkFileName);
+    private static final File testnetFork = new File(TEST_NETWORKS_PATH, forkFileName);
 
 
     private static final String DEFAULT_PORT = "30303";
@@ -119,8 +119,8 @@ public class CliTest {
 
         if (BASE_PATH.contains(module) && !mainnetConfig.exists()) {
             // save config to disk at expected location for new kernel
-            if (!MAIN_CONFIG_PATH.exists()) {
-                assertThat(MAIN_CONFIG_PATH.mkdirs()).isTrue();
+            if (!MAIN_NETWORKS_PATH.exists()) {
+                assertThat(MAIN_NETWORKS_PATH.mkdirs()).isTrue();
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, mainnetGenesis);
@@ -129,8 +129,8 @@ public class CliTest {
 
         if (BASE_PATH.contains(module) && !testnetConfig.exists()) {
             // save config to disk at expected location for new kernel
-            if (!TEST_CONFIG_PATH.exists()) {
-                assertThat(TEST_CONFIG_PATH.mkdirs()).isTrue();
+            if (!TEST_NETWORKS_PATH.exists()) {
+                assertThat(TEST_NETWORKS_PATH.mkdirs()).isTrue();
             }
             Cli.copyRecursively(config, testnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
@@ -154,7 +154,7 @@ public class CliTest {
 
         // to avoid deleting config for all tests
         if (BASE_PATH.contains(module)) {
-            deleteRecursively(CONFIG_PATH);
+            deleteRecursively(NETWORKS_PATH);
         }
 
         deleteRecursively(MAIN_BASE_PATH);
@@ -191,7 +191,7 @@ public class CliTest {
         String[] dir_options = new String[] {"-d", "--datadir"};
         String[] net_options = new String[] {"-n", "--network"};
         String expectedExec = new File(path, "mainnet").getAbsolutePath();
-        String expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
+        String expectedRead = MAIN_NETWORKS_PATH.getAbsolutePath();
         String expOnError = MAIN_BASE_PATH.getAbsolutePath();
 
         // data directory alone
@@ -253,7 +253,7 @@ public class CliTest {
         // network alone with testnet
         net_values = new String[] {currentTestNetName, "testnet"};
         expectedExec = TEST_BASE_PATH.getAbsolutePath();
-        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
+        expectedRead = TEST_NETWORKS_PATH.getAbsolutePath();
         for (String op : net_options) {
             for (String netVal : net_values) {
                 // testnet name as parameter
@@ -296,7 +296,7 @@ public class CliTest {
         String dir = dataDirectory + File.separator + "subfolder";
         File path = new File(BASE_PATH, dir);
         expectedExec = new File(path, "mainnet").getAbsolutePath();
-        expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
+        expectedRead = MAIN_NETWORKS_PATH.getAbsolutePath();
         for (String op : dir_options) {
             // with relative path with subdirectories
             parameters.add(new Object[] {new String[] {op, dir}, RUN, expectedExec, expectedRead});
@@ -390,7 +390,7 @@ public class CliTest {
 
         String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
-        String expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
+        String expectedRead = MAIN_NETWORKS_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
@@ -402,7 +402,7 @@ public class CliTest {
         }
 
         expected = TEST_BASE_PATH.getAbsolutePath();
-        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
+        expectedRead = TEST_NETWORKS_PATH.getAbsolutePath();
 
         for (String op : options) {
             // testnet name as parameter
@@ -418,7 +418,7 @@ public class CliTest {
                         path,
                         "mainnet" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mainnet").getAbsolutePath();
-        expectedRead = MAIN_CONFIG_PATH.getAbsolutePath();
+        expectedRead = MAIN_NETWORKS_PATH.getAbsolutePath();
 
         String[] net_values = new String[] {"mainnet", "invalid"};
         for (String opDir : dir_options) {
@@ -454,7 +454,7 @@ public class CliTest {
         net_values = new String[] {currentTestNetName, "testnet"};
         config = new File(path, currentTestNetName + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, currentTestNetName).getAbsolutePath();
-        expectedRead = TEST_CONFIG_PATH.getAbsolutePath();
+        expectedRead = TEST_NETWORKS_PATH.getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
                 for (String netVal : net_values) {
@@ -519,7 +519,7 @@ public class CliTest {
         String[] netOptions = new String[] {"-n", "--network"};
         String[] dirOptions = new String[] {"-d", "--datadir"};
         String expectedExecPath = MAIN_BASE_PATH.getAbsolutePath();
-        String expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
+        String expectedReadPath = MAIN_NETWORKS_PATH.getAbsolutePath();
         String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
         String expPortOnError = Integer.toString(cfg.getNet().getP2p().getPort());
 
@@ -623,7 +623,7 @@ public class CliTest {
         // network and port with testnet
         netValues = new String[] {currentTestNetName, "testnet"};
         expectedExecPath = TEST_BASE_PATH.getAbsolutePath();
-        expectedReadPath = TEST_CONFIG_PATH.getAbsolutePath();
+        expectedReadPath = TEST_NETWORKS_PATH.getAbsolutePath();
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
                 for (String opPort : portOptions) {
@@ -648,7 +648,7 @@ public class CliTest {
         // directory and port
         String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
         expectedExecPath = new File(path, "mainnet").getAbsolutePath();
-        expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
+        expectedReadPath = MAIN_NETWORKS_PATH.getAbsolutePath();
         for (String opDir : dirOptions) {
             for (String valDir : dirValues) {
                 for (String opPort : portOptions) {
@@ -706,9 +706,9 @@ public class CliTest {
         for (String opNet : netOptions) {
             for (String valNet : netValues) {
                 if (valNet == currentTestNetName) {
-                    expectedReadPath = TEST_CONFIG_PATH.getAbsolutePath();
+                    expectedReadPath = TEST_NETWORKS_PATH.getAbsolutePath();
                 } else {
-                    expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
+                    expectedReadPath = MAIN_NETWORKS_PATH.getAbsolutePath();
                 }
                 for (String opDir : dirOptions) {
                     for (String valDir : dirValues) {
@@ -733,7 +733,7 @@ public class CliTest {
         String dir = dataDirectory + File.separator + "subfolder";
         File testPath = new File(BASE_PATH, dir);
         expectedExecPath = new File(testPath, "mainnet").getAbsolutePath();
-        expectedReadPath = MAIN_CONFIG_PATH.getAbsolutePath();
+        expectedReadPath = MAIN_NETWORKS_PATH.getAbsolutePath();
         for (String opDir : dirOptions) {
             for (String opPort : portOptions) {
                 // with relative path with subdirectories

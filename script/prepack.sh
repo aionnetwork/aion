@@ -4,7 +4,7 @@ PACK_PATH="pack"
 JDK_PATH="${PACK_PATH}/jdk"
 JDK_RT="${PACK_PATH}/rt"
 WEB3JS_PATH="${PACK_PATH}/web3"
-CONFIG_PATH="${PACK_PATH}/config"
+CONFIG_PATH="${PACK_PATH}/networks"
 DOCS_PATH="${PACK_PATH}/docs"
 API_PATH="${PACK_PATH}/clientAPI"
 SCRIPT_PATH="${PACK_PATH}/script"
@@ -50,7 +50,7 @@ fi
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
   mkdir -p "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
-  cp -r ./config/** $CONFIG_PATH
+  cp -r ./networks/** $CONFIG_PATH
   cp  ${CONFIG_PATH}/${DEFAULT_NETWORK}/** "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
 fi
 
