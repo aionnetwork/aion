@@ -20,9 +20,12 @@ import org.aion.base.AionTxReceipt;
 // NOTE: only used by web3 api
 public final class FltrLg extends Fltr {
 
+    public static int BLOCKS_QUERY_MAX = 1000;
+
     private List<byte[][]> topics = new ArrayList<>(); //  [[addr1, addr2], null, [A, B], [C]]
     private byte[][] contractAddresses = new byte[0][];
     private Bloom[][] filterBlooms;
+    private String error = null;
 
     public FltrLg() {
         super(Type.LOG);
@@ -181,5 +184,13 @@ public final class FltrLg extends Fltr {
             }
         }
         return true;
+    }
+
+    public void setFilterError(String err) {
+        error = err;
+    }
+
+    public String getFilterError() {
+        return error;
     }
 }

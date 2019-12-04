@@ -4,6 +4,7 @@ import static org.aion.util.string.StringUtils.StringHexToBigInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.aion.api.server.AvmTestConfig;
 import org.aion.api.server.account.AccountManager;
@@ -232,5 +233,40 @@ public class ApiWeb3AionTest {
         RpcMsg rsp = web3Api.eth_call(jsonArray);
 
         assertEquals(JSONObject.wrap("0x"), rsp.getResult());
+    }
+
+    @Test
+    public void testEthGetLogsLE1000Blocks() {
+        JSONObject req = new JSONObject();
+        req.put("fromBlock", "0");
+        req.put("toBlock", "999");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(req);
+
+        RpcMsg rsp = web3Api.eth_getLogs(jsonArray);
+
+        System.out.println("result: " + rsp.toString());
+
+        JSONArray expectedResult = new JSONArray();
+
+        // The JSONArray/JSONObject compare against each other should use toString method.
+        assertEquals(expectedResult.toString(), rsp.getResult().toString());
+    }
+
+    @Test
+    public void testEthGetLogsGreater1000Blocks() {
+        JSONObject req = new JSONObject();
+        req.put("fromBlock", "0");
+        req.put("toBlock", "1000");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(req);
+
+        RpcMsg rsp = web3Api.eth_getLogs(jsonArray);
+
+        assertEquals(JSONObject.NULL, rsp.getResult());
+        assertEquals(RpcError.INVALID_PARAMS, rsp.getError());
+        assertTrue(((String)((JSONObject)rsp.toJson().get("error")).get("data")).contains("jsonrpc - eth_newFilter(): can't query more than 1000 blocks"));
     }
 }

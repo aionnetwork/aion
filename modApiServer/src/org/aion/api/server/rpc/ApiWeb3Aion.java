@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc;
 
 import static java.util.stream.Collectors.toList;
+import static org.aion.api.server.types.FltrLg.BLOCKS_QUERY_MAX;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
 import static org.aion.util.types.HexConvert.hexStringToBytes;
@@ -25,8 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
@@ -1162,14 +1161,25 @@ public class ApiWeb3Aion extends ApiAion {
         Long bnFrom = parseBnOrId(rf.fromBlock);
         Long bnTo = parseBnOrId(rf.toBlock);
 
+        // we return an filter with the error message instead of return null.
+        // The rpcServer can return the detailed error message to the client.
         if (bnFrom == null || bnTo == null) {
             LOG.debug("jsonrpc - eth_newFilter(): from, to block parse failed");
-            return null;
+            filter.setFilterError("jsonrpc - eth_newFilter(): from, to block parse failed");
+            return filter;
         }
 
         if (bnTo != BEST_PENDING_BLOCK && bnFrom > bnTo) {
             LOG.debug("jsonrpc - eth_newFilter(): from block is after to block");
-            return null;
+            filter.setFilterError("jsonrpc - eth_newFilter(): from block is after to block");
+            return filter;
+        }
+
+        if (bnTo >= (bnFrom + BLOCKS_QUERY_MAX)) {
+            String errLog = "jsonrpc - eth_newFilter(): can't query more than " + BLOCKS_QUERY_MAX + " blocks";
+            LOG.debug(errLog);
+            filter.setFilterError(errLog);
+            return filter;
         }
 
         Block fromBlock = this.getBlockByBN(bnFrom);
@@ -1220,8 +1230,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         FltrLg filter = createFilter(rf);
-        if (filter == null) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided.");
+        if (filter.getFilterError() != null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided. " + filter.getFilterError());
         }
 
         // "install" the filter after populating historical data;
@@ -1324,8 +1334,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         FltrLg filter = createFilter(rf);
-        if (filter == null) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+        if (filter.getFilterError() != null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided. " + filter.getFilterError());
         }
 
         return new RpcMsg(buildFilterResponse(filter));
