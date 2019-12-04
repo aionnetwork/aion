@@ -1212,7 +1212,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // so we use a strict greater than here
         if (forkUtility.isUnityForkActive(block.getNumber())) {
             if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                LOG.error("Tried to create 2 PoW block in a row");
+                LOG.warn("Tried to create 2 PoW blocks in a row");
                 return null;
             } else {
                 parentMiningBlock = getParent(parentHdr).getHeader();
@@ -1262,7 +1262,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BigInteger newDiff;
 
         if (parentHdr.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            LOG.error("Tried to create 2 PoS block in a row");
+            LOG.warn("Tried to create 2 PoS blocks in a row");
             return null;
         } else if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
 
