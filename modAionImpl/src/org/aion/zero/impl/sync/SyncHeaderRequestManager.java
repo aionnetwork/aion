@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
@@ -108,6 +109,9 @@ public class SyncHeaderRequestManager {
 
     Lock lock = new ReentrantLock();
 
+    /** Used to randomly select peers to request headers from. */
+    Random random;
+
     public SyncHeaderRequestManager(Logger syncLog, Logger surveyLog) {
         Objects.requireNonNull(syncLog);
         Objects.requireNonNull(surveyLog);
@@ -128,6 +132,11 @@ public class SyncHeaderRequestManager {
         this.localHeight = 0;
         this.networkHeight = 0;
         this.requestHeight = 0;
+
+        this.random = new Random();
+        long seed = random.nextLong();
+        this.random.setSeed(seed);
+        this.syncLog.debug("SyncHeaderRequestManager random seed = {}.", seed);
     }
 
     /**
@@ -169,7 +178,13 @@ public class SyncHeaderRequestManager {
         updateActiveNodes(currentNodes);
 
         // creates consecutive requests for the available peers
-        List<RequestState> statesForRequest = updateStatesForRequests(currentBestBlock);
+        List<RequestState> statesForRequest;
+        if (requestHeight > localHeight + MAX_BLOCK_DIFF) {
+            syncLog.debug("<get-headers near top of chain>");
+            statesForRequest = updateStatesForRequests(false, currentBestBlock);
+        } else {
+            statesForRequest = updateStatesForRequests(true, currentBestBlock);
+        }
 
         for (RequestState requestState : statesForRequest) {
             String peerAlias = requestState.alias;
@@ -179,9 +194,12 @@ public class SyncHeaderRequestManager {
             if (from <= requestState.lastBestBlock || requestState.lastBestBlock == 0) {
                 // send request
                 p2pManager.send(requestState.id, peerAlias, new ReqBlocksHeaders(from, take));
+                // update the requestHeight based on the current request
+                requestHeight = Math.max(requestHeight, from + take);
 
                 // record that another request has been made for availability tracking
                 requestState.saveRequestTime(System.nanoTime());
+                availablePeerStates.remove(requestState.id);
                 bookedPeerStates.put(requestState.id, requestState);
 
                 syncLog.debug(
@@ -200,7 +218,6 @@ public class SyncHeaderRequestManager {
                 // skipping this request since it will not return anything
                 // and making it available for future attempts
                 requestState.from = 0;
-                availablePeerStates.put(requestState.id, requestState);
             }
         }
 
@@ -381,7 +398,7 @@ public class SyncHeaderRequestManager {
      *       which will be odd numbers.
      * </ol>
      */
-    private List<RequestState> updateStatesForRequests(long currentBestBlock) {
+    private List<RequestState> updateStatesForRequests(boolean distantFuture, long currentBestBlock) {
         // update the known localHeight
         localHeight = Math.max(localHeight, currentBestBlock);
 
@@ -396,8 +413,16 @@ public class SyncHeaderRequestManager {
         }
         nextMode = SyncMode.NORMAL;
 
+        List<RequestState> availableSet = new ArrayList<>(availablePeerStates.values());
+        if (!distantFuture) {
+            // make a single request when !distantFuture
+            RequestState singleRequest = availableSet.get(random.nextInt(availableSet.size()));
+            availableSet.clear();
+            availableSet.add(singleRequest);
+        }
+
         List<RequestState> requestStates = new ArrayList<>();
-        for (RequestState state : availablePeerStates.values()) {
+        for (RequestState state : availableSet) {
             // set up the size to decrease the chance of overlap for consecutive headers requests
             // the range is from MIN to MAX_LARGE_REQUEST_SIZE
             // avoids overlap with FAR_OVERLAPPING_BLOCKS and CLOSE_OVERLAPPING_BLOCKS because they
@@ -424,27 +449,20 @@ public class SyncHeaderRequestManager {
                 state.mode = nextMode;
                 state.size = nextSize;
 
-                // update the maximum request height
-                requestHeight = Math.max(requestHeight, nextFrom + nextSize);
-                // set up for next peer
-                nextFrom =
-                        requestHeight > currentBestBlock + MAX_BLOCK_DIFF
-                                ? nextFrom + nextSize
-                                : requestHeight;
+                // Set up for next peer.
+                // This is used only in the distantFuture==true case, because otherwise we send only one request.
+                nextFrom = Math.max(requestHeight, nextFrom + nextSize);
             }
 
             requestStates.add(state);
         }
-
-        // the available peers have all been processed
-        availablePeerStates.clear();
 
         return requestStates;
     }
 
     /**
      * Used in <b>unit tests</b> for validating correctness of the {@link
-     * #updateStatesForRequests(long)} method.
+     * #updateStatesForRequests(boolean, long)} method.
      *
      * <p>This method takes the input to the tested functionality and the expected outcomes. When
      * one of the outcomes is a {@code null} object the code path is not checked.
@@ -459,17 +477,8 @@ public class SyncHeaderRequestManager {
             Map<Integer, Long> expectedFrom,
             Map<Integer, Integer> expectedSize) {
         Map<Integer, RequestState> states =
-                updateStatesForRequests(currentBestBlock).stream()
+                updateStatesForRequests(true, currentBestBlock).stream()
                         .collect(Collectors.toMap(n -> n.id, n -> n));
-
-        // ensure that all available states were processed
-        if (!availablePeerStates.isEmpty()) {
-            return Pair.of(
-                    false,
-                    "Some available peers states were not processed:\n\texpected=[]"
-                            + "\n\tactual="
-                            + Arrays.toString(availablePeerStates.keySet().toArray()));
-        }
 
         if (expectedFrom != null) { // ignored when set to null
             if (states.size() != expectedFrom.size()
