@@ -202,7 +202,10 @@ public class AionHub {
 
         blockTemplateLock = new ReentrantLock();
 
-        blockchain.setNodeStatusCallback(new SelfNodeStatusCallback(p2pMgr));
+        SelfNodeStatusCallback callback = new SelfNodeStatusCallback(p2pMgr);
+        callback.updateBlockStatus(blockchain.getBestBlock().getNumber(), blockchain.getBestBlock().getHash(), blockchain.getTotalDifficulty());
+
+        blockchain.setNodeStatusCallback(callback);
     }
 
     public static AionHub createForTesting(
