@@ -32,14 +32,6 @@ public class TaskSend implements Runnable {
     private final INodeMgr nodeMgr;
     private final Selector selector;
 
-    /**
-     * Map used for temporarily storing requests to ensure that messages transmissions to peers are
-     * spread across peers, avoiding sending consecutive messages to the same peer if possible.
-     */
-    private final Map<Integer, Deque<MsgOut>> pendingRequests = new HashMap<>();
-
-    private INode lastNode = new Node(false, new byte[36], new byte[8], 1); // fake node
-
     public TaskSend(
             final Logger p2pLOG,
             final Logger surveyLog,
@@ -65,31 +57,15 @@ public class TaskSend implements Runnable {
 
         while (start.get()) {
             try {
-                // process pending requests
-                int countPendingPeers = 0;
-                do {
-                    for (Entry<Integer, Deque<MsgOut>> entry : pendingRequests.entrySet()) {
-                        Deque<MsgOut> messages = entry.getValue();
-                        if (!messages.isEmpty()) {
-                            process(messages.pollFirst(), false);
-                            if (!messages.isEmpty()) {
-                                countPendingPeers++;
-                            }
-                        }
-                    }
-                } while (countPendingPeers > 1);
+                startTime = System.nanoTime();
+                MsgOut mo = sendMsgQue.take();
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskSend: wait for message, duration = {} ns.", duration);
 
-                boolean wasProcessed = false;
-                // wait for a messages from the queue to be processed before going to the pending
-                // requests to increases the odds of spreading out peer requests
-                // otherwise the pending requests check will only process the same request again
-                while (!wasProcessed && start.get()) {
-                    startTime = System.nanoTime();
-                    MsgOut mo = sendMsgQue.take();
-                    duration = System.nanoTime() - startTime;
-                    surveyLog.info("TaskSend: wait for message, duration = {} ns.", duration);
-                    wasProcessed = process(mo, true);
-                }
+                startTime = System.nanoTime();
+                process(mo);
+                duration = System.nanoTime() - startTime;
+                surveyLog.info("TaskSend: process message, duration = {} ns.", duration);
             } catch (InterruptedException e) {
                 p2pLOG.error("task-send-interrupted", e);
                 return;
@@ -106,7 +82,7 @@ public class TaskSend implements Runnable {
      *
      * @return {@code true} if the message was processed, {@code false} otherwise
      */
-    private boolean process(MsgOut mo, boolean prioritizeQueue) {
+    private boolean process(MsgOut mo) {
         // shouldn't happen; but just in case
         if (mo == null) return false;
 
@@ -137,43 +113,10 @@ public class TaskSend implements Runnable {
         }
 
         if (node != null) {
-            // delay sending the request if we have multiple peers and the last sent message was to
-            // the current peer by placing the request in the pendingRequests that will be processed
-            // during the next iteration
-            if (mgr.getActiveNodes().size() > 1 && node.getIdHash() == lastNode.getIdHash()) {
-                if (pendingRequests.containsKey(node.getIdHash())) {
-                    if (prioritizeQueue) {
-                        // the message comes from the sendMsgQue, i.e. it was created after the ones in the current queue
-                        pendingRequests.get(node.getIdHash()).addLast(mo);
-                    } else {
-                        // the message comes from the pendingRequests, i.e. it was removed from the beginning of the queue
-                        pendingRequests.get(node.getIdHash()).addFirst(mo);
-                    }
-                } else {
-                    Deque<MsgOut> dq = new ArrayDeque<>();
-                    dq.addLast(mo);
-                    pendingRequests.put(node.getIdHash(), dq);
-                }
-                duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskSend: put back, duration = {} ns.", duration);
-                return false;
-            }
-
-            if (prioritizeQueue && pendingRequests.containsKey(node.getIdHash())) {
-                Deque<MsgOut> dq = pendingRequests.get(node.getIdHash());
-                if (dq != null && !dq.isEmpty()) {
-                    dq.addLast(mo);
-                    duration = System.nanoTime() - startTime;
-                    surveyLog.info("TaskSend: put back, duration = {} ns.", duration);
-                    return false;
-                }
-            }
-
             SelectionKey sk = node.getChannel().keyFor(selector);
             if (sk != null && sk.attachment() != null) {
                 ChannelBuffer attachment = (ChannelBuffer) sk.attachment();
                 write(node.getIdShort(), node.getChannel(), mo.getMsg(), attachment);
-                lastNode = node;
             }
         } else {
             p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
