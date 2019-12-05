@@ -14,7 +14,7 @@ public class LevelDBConstants {
     /**
      * The maximum block size
      */
-    public static int BLOCK_SIZE = 16 * 1024 * 1024;;
+    public static int BLOCK_SIZE = 4 * 1024;
 
     /**
      * The size of the write buffer that will be applied per database, for more information, see <a
@@ -29,12 +29,12 @@ public class LevelDBConstants {
      * memory usage. Also, a larger write buffer will result in a longer recovery time the next time
      * the database is opened.
      */
-    public static int WRITE_BUFFER_SIZE = 64 * 1024 * 1024;
+    public static int WRITE_BUFFER_SIZE = 4 * 1024 * 1024;
 
     /**
      * Specify the size of the cache used by LevelDB
      */
-    public static int CACHE_SIZE = 128 * 1024 * 1024;
+    public static int CACHE_SIZE = 16 * 1024 * 1024;
 
     private LevelDBConstants() {}
 
