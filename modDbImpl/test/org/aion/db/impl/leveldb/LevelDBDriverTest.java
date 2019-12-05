@@ -30,11 +30,6 @@ public class LevelDBDriverTest {
         props.setProperty(Props.DB_TYPE, dbVendor);
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
-        props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
-        props.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
-        props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props, log);
         assertNotNull(db);

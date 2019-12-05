@@ -87,6 +87,9 @@ public class LevelDB extends AbstractDB {
         options.verifyChecksums(true);
         options.maxOpenFiles(this.maxOpenFiles);
 
+        LOG.info("LevelDb Options: EnableCompression:{} MaxOpenFiles:{} BlockSize:{} WriteBuffer:{} EnableCache:{} CacheSize:{}"
+            , enableDbCompression, maxOpenFiles, blockSize, writeBufferSize, enableDbCache, cacheSize);
+
         return options;
     }
 

@@ -10,11 +10,9 @@ import org.aion.db.generic.LockedDatabase;
 import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
-import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.MockDBDriver;
 import org.aion.db.impl.mockdb.PersistentMockDB;
-import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,11 +47,6 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
-        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
-        props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
-        props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
@@ -61,10 +54,6 @@ public class DatabaseFactoryTest {
 
         // ROCKSDB
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
-        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
-        props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
 
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
@@ -99,11 +88,7 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
-        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
-        props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
-        props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
+
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName())
@@ -112,10 +97,7 @@ public class DatabaseFactoryTest {
 
         // ROCKSDB
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
-        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
-        props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName())

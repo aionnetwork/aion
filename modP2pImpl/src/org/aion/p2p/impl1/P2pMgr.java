@@ -59,7 +59,8 @@ public final class P2pMgr implements IP2pMgr {
 
     public final Logger p2pLOG, surveyLog;
 
-    public static final int WORKER = 32;
+    // IO-bounded threads get max-gain from the double of the availableProcessor number
+    private static final int WORKER = Math.max(Runtime.getRuntime().availableProcessors() * 2, 32);
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
     private final int SOCKET_BACKLOG = 1024;
 

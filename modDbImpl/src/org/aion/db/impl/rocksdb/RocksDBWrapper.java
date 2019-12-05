@@ -1,5 +1,16 @@
 package org.aion.db.impl.rocksdb;
 
+import static java.lang.Math.max;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.BLOCK_SIZE;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.BLOOMFILTER_BITS_PER_KEY;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.BYTES_PER_SYNC;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.LEVEL0_SLOWDOWN_WRITES_TRIGGER;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.LEVEL0_STOP_WRITES_TRIGGER;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.MAX_BACKGROUND_COMPACTIONS;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.MAX_BACKGROUND_FLUSHES;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.MIN_WRITE_BUFFER_NUMBER_TOMERGE;
+import static org.aion.db.impl.rocksdb.RocksDBConstants.OPTIMIZE_LEVEL_STYLE_COMPACTION;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +20,8 @@ import java.util.Map;
 import org.aion.db.impl.AbstractDB;
 import org.aion.util.types.ByteArrayWrapper;
 import org.rocksdb.BlockBasedTableConfig;
+import org.rocksdb.BloomFilter;
+import org.rocksdb.CompactionPriority;
 import org.rocksdb.CompressionType;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
@@ -47,6 +60,9 @@ public class RocksDBWrapper extends AbstractDB {
         this.readBufferSize = readBufferSize;
         this.cacheSize = cacheSize;
 
+        LOG.info("RocksDb Options: EnableCompression:{} XaxOpenFiles:{} BlockSize:{} WriteBuffer:{} ReadBuffer:{} EnableCache:{} CacheSize:{}"
+            , enableDbCompression, maxOpenFiles, blockSize, writeBufferSize, readBufferSize, enableDbCache, cacheSize);
+
         RocksDB.loadLibrary();
     }
 
@@ -59,25 +75,41 @@ public class RocksDBWrapper extends AbstractDB {
         Options options = new Options();
 
         options.setCreateIfMissing(true);
+        options.setUseFsync(false);
         options.setCompressionType(
                 enableDbCompression
-                        ? CompressionType.SNAPPY_COMPRESSION
+                        ? CompressionType.LZ4_COMPRESSION
                         : CompressionType.NO_COMPRESSION);
+
+        options.setBottommostCompressionType(CompressionType.LZ4_COMPRESSION);
+        options.setMinWriteBufferNumberToMerge(MIN_WRITE_BUFFER_NUMBER_TOMERGE);
+        options.setLevel0StopWritesTrigger(LEVEL0_STOP_WRITES_TRIGGER);
+        options.setLevel0SlowdownWritesTrigger(LEVEL0_SLOWDOWN_WRITES_TRIGGER);
 
         options.setWriteBufferSize(this.writeBufferSize);
         options.setRandomAccessMaxBufferSize(this.readBufferSize);
         options.setParanoidChecks(true);
         options.setMaxOpenFiles(this.maxOpenFiles);
         options.setTableFormatConfig(setupBlockBasedTableConfig());
+        options.setDisableAutoCompactions(false);
+        options.setIncreaseParallelism(max(1, Runtime.getRuntime().availableProcessors() / 2));
+
+        options.setLevelCompactionDynamicLevelBytes(true);
+        options.setMaxBackgroundCompactions(MAX_BACKGROUND_COMPACTIONS);
+        options.setMaxBackgroundFlushes(MAX_BACKGROUND_FLUSHES);
+        options.setBytesPerSync(BYTES_PER_SYNC);
+        options.setCompactionPriority(CompactionPriority.MinOverlappingRatio);
+        options.optimizeLevelStyleCompaction(OPTIMIZE_LEVEL_STYLE_COMPACTION);
 
         return options;
     }
 
     private BlockBasedTableConfig setupBlockBasedTableConfig() {
         BlockBasedTableConfig bbtc = new BlockBasedTableConfig();
-        bbtc.setBlockSize(this.blockSize);
-        bbtc.setBlockCacheSize(this.cacheSize);
-
+        bbtc.setBlockSize(BLOCK_SIZE);
+        bbtc.setCacheIndexAndFilterBlocks(true);
+        bbtc.setPinL0FilterAndIndexBlocksInCache(true);
+        bbtc.setFilterPolicy(new BloomFilter(BLOOMFILTER_BITS_PER_KEY, false));
         return bbtc;
     }
 
