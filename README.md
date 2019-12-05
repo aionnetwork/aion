@@ -27,8 +27,8 @@ If you're interested in application development on Aion or making improvements t
 
 Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
 
-### Miners
-If you're interested in mining on the Aion networks, refer to our [Aion Mining Docs](https://validators.theoan.com/docs)
+### Miners/Validators
+If you're interested in being a validator on the Aion networks, refer to our [Validator Docs](https://validators.theoan.com/docs)
 
 ### Users
 If you're interested in interacting with dApps and _using_ Aion, refer to our [Aion Desktop Wallet Docs](https://docs-aion.theoan.com/docs/wallets)
