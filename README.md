@@ -25,7 +25,7 @@ If you're interested in application development on Aion or making improvements t
 * Refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
 * The [Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) wiki will include further instructions and details on working with the kernel.
 
-Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
+Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining/validating, using the Web3 API, command line options, etc.
 
 ### Miners/Validators
 If you're interested in being a validator on the Aion networks, refer to our [Validator Docs](https://validators.theoan.com/docs)
