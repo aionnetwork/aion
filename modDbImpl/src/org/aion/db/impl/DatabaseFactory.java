@@ -31,18 +31,12 @@ public abstract class DatabaseFactory {
         public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
         public static final String ENABLE_DB_CACHE = "enable_db_cache";
         public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
-        public static final String DB_CACHE_SIZE = "cache_size";
 
         public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
         public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
 
         public static final String ENABLE_LOCKING = "enable_locking";
 
-        public static final String MAX_FD_ALLOC = "max_fd_alloc_size";
-        public static final String BLOCK_SIZE = "block_size";
-
-        public static final String WRITE_BUFFER_SIZE = "write_buffer_size";
-        public static final String READ_BUFFER_SIZE = "read_buffer_size";
     }
 
     public static ByteArrayKeyValueDatabase connect(Properties info, Logger log) {
@@ -140,13 +134,10 @@ public abstract class DatabaseFactory {
                             log,
                             enableDbCache,
                             enableDbCompression,
-                            getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
-                            getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
-                            getInt(
-                                    info,
-                                    Props.WRITE_BUFFER_SIZE,
-                                    LevelDBConstants.WRITE_BUFFER_SIZE),
-                            getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
+                            LevelDBConstants.MAX_OPEN_FILES,
+                            LevelDBConstants.BLOCK_SIZE,
+                            LevelDBConstants.WRITE_BUFFER_SIZE,
+                            LevelDBConstants.CACHE_SIZE);
                 }
             case ROCKSDB:
                 {
@@ -156,14 +147,11 @@ public abstract class DatabaseFactory {
                             log,
                             enableDbCache,
                             enableDbCompression,
-                            getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
-                            getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
-                            getInt(
-                                    info,
-                                    Props.WRITE_BUFFER_SIZE,
-                                    RocksDBConstants.WRITE_BUFFER_SIZE),
-                            getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
-                            getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+                            RocksDBConstants.MAX_OPEN_FILES,
+                            RocksDBConstants.BLOCK_SIZE,
+                            RocksDBConstants.WRITE_BUFFER_SIZE,
+                            RocksDBConstants.READ_BUFFER_SIZE,
+                            RocksDBConstants.CACHE_SIZE);
                 }
             case H2:
                 {

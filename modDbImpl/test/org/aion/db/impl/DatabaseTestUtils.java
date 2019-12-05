@@ -55,12 +55,6 @@ public class DatabaseTestUtils {
         sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, enabled);
         sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, "0");
         sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, disabled);
-        sharedProps.setProperty(
-                Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
-        sharedProps.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        sharedProps.setProperty(
-                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
-        sharedProps.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
         for (DBVendor vendor : vendors) {
