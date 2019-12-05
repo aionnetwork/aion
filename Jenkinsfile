@@ -82,6 +82,7 @@ pipeline {
 
     post {
         always {
+            archiveArtifacts artifacts:'FunctionalTests/Tests/oan/custom/log/**', allowEmptyArchive: true
             sh('([ -d FunctionalTests ] && cp -r FunctionalTests/report/FunctionalTests report/) || true')
             junit "report/**/*.xml"
             sh 'bash script/jenkins-dump-heapfiles.sh'
