@@ -98,7 +98,7 @@ public class MiningRPCImplTest {
     @Test
     public void testGetMinerStatsMock() {
         MinerStats minerStats =
-            execute(buildRequest("getMinerStats",
+            execute(buildRequest("getMinerStatistics",
                             AddressParamsConverter.encode(new AddressParams(AddressConverter.decode("0xa0c5bf6c4779bf8c2e0a3ff71353d09b066db2b5876ee2345efb836510b3126b")))),
                 MinerStatsConverter::decode);
         assertNotNull(minerStats);
@@ -109,7 +109,7 @@ public class MiningRPCImplTest {
 
     @Test
     public void testSubmitSolution() {
-        String method = "submitblock";
+        String method = "submitBlock";
         try {
             Request request =
                     buildRequest(method,
@@ -158,12 +158,12 @@ public class MiningRPCImplTest {
     public void getWorkTest(){
         ChainHolder chainHolder = new AionChainHolder(AionImpl.instForTest(), accountManager);
         rpcMethods=new RPCMethods(chainHolder);
-        final BlockTemplate blockTemplate = rpcMethods.getblocktemplate();
+        final BlockTemplate blockTemplate = rpcMethods.getBlockTemplate();
         assertNotNull(blockTemplate);
         assertTrue(chainHolder.canSeal(blockTemplate.headerHash.toBytes()));
         BlockTemplateConverter.encode(blockTemplate);
 
-        final Request request = buildRequest("getblocktemplate", VoidParamsConverter.encode(new VoidParams()));
+        final Request request = buildRequest("getBlockTemplate", VoidParamsConverter.encode(new VoidParams()));
         BlockTemplateConverter.encode(execute(request, BlockTemplateConverter::decode));
     }
 
