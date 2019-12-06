@@ -328,14 +328,14 @@ public class RPCMethods implements RPCServerMethods {
     }
 
     @Override
-    public BlockTemplate getblocktemplate() {
+    public BlockTemplate getBlockTemplate() {
         BlockContext context = chainHolder.getBlockTemplate();
         AionBlock block = context.block;
         return new BlockTemplate(ByteArray.wrap(block.getParentHash()), block.getNumber(), block.getHeader().getPowBoundaryBI(), ByteArray.wrap(block.getHeader().getMineHash()), context.baseBlockReward, context.transactionFee);
     }
 
     @Override
-    public SubmissionResult submitblock(ByteArray nonce, ByteArray solution, ByteArray headerHash) {
+    public SubmissionResult submitBlock(ByteArray nonce, ByteArray solution, ByteArray headerHash) {
         if (!chainHolder.canSeal(headerHash.toBytes()))
             throw BlockTemplateNotFoundRPCException.INSTANCE;
         try {
@@ -359,7 +359,7 @@ public class RPCMethods implements RPCServerMethods {
     }
 
     @Override
-    public MinerStats getMinerStats(AionAddress aionAddress) {
+    public MinerStats getMinerStatistics(AionAddress aionAddress) {
         return minerStats.getStats(aionAddress);
     }
 
