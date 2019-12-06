@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -104,6 +106,8 @@ public class SyncHeaderRequestManager {
     private long localHeight, networkHeight, requestHeight;
     private final Logger syncLog, surveyLog;
 
+    Lock lock = new ReentrantLock();
+
     public SyncHeaderRequestManager(Logger syncLog, Logger surveyLog) {
         Objects.requireNonNull(syncLog);
         Objects.requireNonNull(surveyLog);
@@ -135,11 +139,21 @@ public class SyncHeaderRequestManager {
      * @param p2pManager provides access to the current peer list and their status
      * @param syncStatistics records sync statistics
      */
-    public synchronized void sendHeadersRequests(
+    public void sendHeadersRequests(
             long currentBestBlock,
             BigInteger currentTotalDifficulty,
             IP2pMgr p2pManager,
             SyncStats syncStatistics) {
+        lock.lock();
+
+        try {
+            sendHeadersRequestsInternal(currentBestBlock, currentTotalDifficulty, p2pManager, syncStatistics);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void sendHeadersRequestsInternal(long currentBestBlock, BigInteger currentTotalDifficulty, IP2pMgr p2pManager, SyncStats syncStatistics) {
         // for runtime survey information
         long startTime = System.nanoTime();
 
@@ -515,7 +529,17 @@ public class SyncHeaderRequestManager {
     }
 
     /** Keeps track of received headers. */
-    public synchronized void storeHeaders(int peerId, HeadersWrapper headersWrapper) {
+    public void storeHeaders(int peerId, HeadersWrapper headersWrapper) {
+        lock.lock();
+
+        try {
+            storeHeadersInternal(peerId, headersWrapper);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void storeHeadersInternal(int peerId, HeadersWrapper headersWrapper) {
         Objects.requireNonNull(headersWrapper);
 
         // store the received headers for later matching with bodies
@@ -542,7 +566,17 @@ public class SyncHeaderRequestManager {
     }
 
     /** Returns the headers received for the given size. */
-    public synchronized HeadersWrapper matchHeaders(int peerId, int size) {
+    public HeadersWrapper matchHeaders(int peerId, int size) {
+        lock.lock();
+
+        try {
+            return matchHeadersInternal(peerId, size);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private HeadersWrapper matchHeadersInternal(int peerId, int size) {
         if (!storedHeaders.containsKey(peerId)) {
             syncLog.debug("<match-headers null for nodeId={}", peerId, size);
             return null;
@@ -569,7 +603,17 @@ public class SyncHeaderRequestManager {
      * SyncMode#BACKWARD} and {@link SyncMode#FORWARD} since the other modes are automatically
      * managed.
      */
-    public synchronized void runInMode(int peerId, SyncMode mode) {
+    public void runInMode(int peerId, SyncMode mode) {
+        lock.lock();
+
+        try {
+            runInModeInternal(peerId, mode);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void runInModeInternal(int peerId, SyncMode mode) {
         // checks both lists for the peer
         RequestState state = bookedPeerStates.get(peerId);
         if (state == null) {
@@ -594,7 +638,17 @@ public class SyncHeaderRequestManager {
      * @param peerId the identifier of the peer of interest
      * @return the last used {@link SyncMode} for the peer given by id.
      */
-    public synchronized SyncMode getSyncMode(int peerId) {
+    public SyncMode getSyncMode(int peerId) {
+        lock.lock();
+
+        try {
+            return getSyncModeInternal(peerId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private SyncMode getSyncModeInternal(int peerId) {
         RequestState state = bookedPeerStates.get(peerId);
         if (state == null) {
             state = availablePeerStates.get(peerId);
