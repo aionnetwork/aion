@@ -56,7 +56,7 @@ public class Web3EntryPoint {
 
         try{
             request = readRequest(requestString);
-
+            logger.info("Executing: {}", request.method);
             id = request.id;
             if (checkMethod(request.method)){
                 resultUnion = RPCServerMethods.execute(request, rpc);
@@ -70,7 +70,7 @@ public class Web3EntryPoint {
             err = e.getError();//Don't log this error since it may already be logged elsewhere
         }
         catch (RPCException e){
-            logger.debug("Request failed due to an RPC exception: {}", e.getMessage());
+            logger.error("Request failed due to an RPC exception: {}", e.getMessage());
             err = e.getError();
         }
         catch (Exception e){
