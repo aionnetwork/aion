@@ -1,5 +1,6 @@
 package org.aion.zero.impl.cli;
 
+import java.io.PrintStream;
 import org.aion.db.impl.DBVendor;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
@@ -15,30 +16,25 @@ import org.aion.zero.impl.config.CfgSync;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import picocli.CommandLine;
 
 import static picocli.CommandLine.*;
 
 @Command(name = "edit",
         aliases = {"e"},
         subcommands = {DevCLI.class},
-        description = "Changes the kernel configuration at runtime. This subcommand needs to be issued after " +
-                "all options to \"aion.sh\" has been added." +
-                "\nOptions\n" +
-                "port=<setting> Executes the kernel with the specified port number.\n" +
-                "state-storage=<setting> Changes the state pruning strategy. Settings: full, spread, and top.\n" +
-                "vendor=<setting> Changes the database implementation. Settings: h2, rocksdb, and leveldb.\n" +
-                "java=setting Enables/disables the java api. Settings on and off.\n" +
-                "rpc=<setting> Enables/disables the json rpc. Settings on and off.\n" +
-                "mining=<setting> Enables/disables the cpu miner. Settings on and off.\n" +
-                "compression=<setting> Changes the database compression setting. Settings: on and off\n" +
-                "log <logger>=<loglevel> Set the log level of the specified logger. Loggers: GEN, CONS, SYNC, API," +
-                " VM, NET, DB, and P2P. Loglevels: INFO, DEBUG, ERROR, WARN, and TRACE."
+        description = "Changes the kernel configuration at runtime. This sub-command needs to be issued after all options to \"aion.sh\" have been added.\nUse -h to view available options."
 )
 public class EditCli {
 
+    @Option(
+            names = {"--help", "-h"},
+            arity = "0",
+            description = "Print the help for the edit sub-command.")
+    public Boolean help = false;
 
     @Option(names = {"port"},
-            description = "Executes the kernel with the specified port number.",
+            description = "Deploys the kernel with the specified port number.",
             paramLabel = "<setting>",
             arity = "1",
             converter = PortNumberConverter.class
@@ -46,63 +42,63 @@ public class EditCli {
     private Integer port = null;
     @Option(names = {"state-storage"},
             paramLabel = "<setting>",
-            description = "Changes the state pruning strategy. Settings: full, spread, and top.",
+            description = "Changes the state pruning strategy.\nSettings: full, spread, and top.",
             converter = DBPruneOptionConverter.class,
             arity = "1"
     )
     private CfgDb.PruneOption pruneOption = null;
-    @Option(names = {"itx", "internal-tx-storage"},
+    @Option(names = {"internal-tx-storage", "itx"},
         paramLabel = "<setting>",
-        description = "Enables/disables the storage of internal transactions api. Settings on and off.",
+        description = "Enables/disables the storage of internal transactions.\nSettings: on / off.",
         converter = EnabledConverter.class,
         arity = "1"
     )
     private Boolean internalTxStorage = null;
     @Option(names = {"vendor"},
             paramLabel = "<setting>",
-            description = "Changes the database implementation. Settings: h2, rocksdb, leveldb.",
+            description = "Changes the database implementation.\nSettings: h2, rocksdb, leveldb.\nNote that running different databases in the same directory will trigger erros.",
             converter = DBVendorConverter.class,
             arity = "1"
     )
     private DBVendor vendor = null;
     @Option(names = {"java"},
             paramLabel = "<setting>",
-            description = "Enables/disables the java api. Settings on and off.",
+            description = "Enables/disables the Java API.\nSettings: on / off.",
             converter = EnabledConverter.class,
             arity = "1"
     )
     private Boolean javaApi = null;
     @Option(names = {"rpc"},
             paramLabel = "<setting>",
-            description = "Enables/disables the json rpc. Settings on and off.",
+            description = "Enables/disables the JSON RPC. Settings: on / off.",
             converter = EnabledConverter.class,
             arity = "1"
     )
     private Boolean jsonRPC = null;
     @Option(names = {"mining"},
             paramLabel = "<setting>",
-            description = "Enables/disables the cpu miner. Settings on and off.",
+            description = "Enables/disables the internal CPU miner.\nSettings: on / off.",
             converter = EnabledConverter.class,
             arity = "1"
     )
     private Boolean mining = null;
     @Option(names = "show-status",
             paramLabel = "<setting>",
-            description = "Changes show/hides the sync status. Settings on and off.",
+            description = "Enables/disables the sync status log messages.\nSettings: on / off.",
             converter = EnabledConverter.class,
             arity = "1"
     )
     private Boolean showStatus = null;
     @Option(names = {"compression"},
             paramLabel = "<setting>",
-            description = "Changes the database compression setting. Settings: on and off",
+            description = "Enables/disables the database compression setting.\nSettings: on / off",
             converter = EnabledConverter.class,
             arity = "1"
     )
     private Boolean compression = null;
     @Option(names = {"log"},
             paramLabel = "<logger>=<loglevel>",
-            description = "Set the log level of the specified logger. Loggers: GEN, CONS, SYNC, API, VM, NET, DB, and P2P",
+            description = "Set the log level of the specified logger.\nLoggers: API, CACHE, CONS, DB, EVTMGR, GEN, NET, P2P, ROOT, SURVEY, SYNC, TX, TXPOOL, VM.\nLoglevels: ERROR, WARN, INFO, DEBUG, TRACE.",
             converter = LogConverter.class,
             arity = "1..*"
     )
@@ -152,7 +148,7 @@ public class EditCli {
     private boolean updateJavaApi(CfgApiZmq cfgApiZmq) {
         if (javaApi !=null && javaApi != cfgApiZmq.getActive()) {
             cfgApiZmq.setActive(javaApi);
-            System.out.println(boolToMessage(javaApi) + " java api.");
+            System.out.println(boolToMessage(javaApi) + " Java API.");
             return true;
         } else {
             return false;
@@ -162,7 +158,7 @@ public class EditCli {
     private boolean updateJsonRPC(CfgApiRpc cfgApiRpc) {
         if (jsonRPC != null && jsonRPC != cfgApiRpc.isActive()) {
             cfgApiRpc.setActive(jsonRPC);
-            System.out.println(boolToMessage(jsonRPC) + " jsonRPC.");
+            System.out.println(boolToMessage(jsonRPC) + " JsonRPC.");
             return true;
         } else {
             return false;
@@ -213,6 +209,15 @@ public class EditCli {
         return res;
     }
 
+    /** Prints the usage message for this command */
+    public static void printUsage(PrintStream out, EditCli instance) {
+        CommandLine parser = new CommandLine(instance);
+        String usage = parser.getUsageMessage();
+        // the additional dots are added for the styling extra characters
+        usage = usage.replaceAll("=....<logger", " <logger");
+        out.println(usage);
+    }
+
     void checkOptions() {
         if (port == null &&
                 pruneOption == null &&
@@ -223,7 +228,8 @@ public class EditCli {
                 mining == null &&
                 showStatus == null &&
                 compression == null &&
-                log == null
+                log == null &&
+                help == false
         ) {
             throw new IllegalArgumentException("Expected an argument to the edit command");
         }
@@ -236,6 +242,10 @@ public class EditCli {
      */
     public boolean runCommand(CfgAion cfg) {
         checkOptions();
+        if (help) {
+            printUsage(System.out, this);
+            return false;
+        }
         //update all the configurations
         final boolean updateCompression = updateCompression(cfg.getDb());
         final boolean updateJavaApi = updateJavaApi(cfg.getApi().getZmq());

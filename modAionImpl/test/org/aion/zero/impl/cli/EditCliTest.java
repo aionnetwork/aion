@@ -44,6 +44,12 @@ public class EditCliTest {
         new EditCli().runCommand(cfg);
     }
 
+    @Test
+    public void testHelp() {
+        EditCli cli = new EditCli();
+        cli.help = true;
+        assertThat(cli.runCommand(cfg)).isFalse();
+    }
 
     @Parameters(method = "updateCommandParams")
     @Test

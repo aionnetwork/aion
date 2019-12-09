@@ -221,6 +221,10 @@ public class Cli {
                 overwrite = true;
             }
 
+            if (editCli.help) {
+                return ReturnType.EXIT;
+            }
+
             if (options.getPort() != null) {
 
                 int currentPort = cfg.getNet().getP2p().getPort();
@@ -560,7 +564,6 @@ public class Cli {
                 usage.replaceFirst(
                         "<slow_import>([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
         System.out.println(usage);
-        System.out.println("Note that options prefixed with --xx are used only for testing purposes.");
     }
 
     private void printInfo(CfgAion cfg) {
