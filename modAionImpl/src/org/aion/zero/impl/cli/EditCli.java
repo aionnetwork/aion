@@ -138,7 +138,7 @@ public class EditCli {
 
     private boolean updateVendor(CfgDb cfgDb) {
         if (vendor != null && !vendor.equals(DBVendor.fromString(cfgDb.getVendor()))) {
-            cfgDb.setVendor(vendor.name());
+            cfgDb.setVendor(vendor.name().toLowerCase());
             System.out.println("Updated database vendor to: " + vendor.toString().toLowerCase());
             return true;
         } else {

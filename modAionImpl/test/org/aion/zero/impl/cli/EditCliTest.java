@@ -89,7 +89,8 @@ public class EditCliTest {
         assertThat(cfg.getConsensus().getMining()).isEqualTo(mining);
         assertThat(cfg.getApi().getRpc().isActive()).isEqualTo(jsonRPC);
         assertThat(cfg.getApi().getZmq().getActive()).isEqualTo(javaAPI);
-        assertThat(cfg.getDb().getVendor()).ignoringCase().isEqualTo(vendor.name());
+        assertThat(cfg.getDb().getVendor()).isEqualTo(vendor.name().toLowerCase());
+        assertThat(cfg.getDb().getVendor().toUpperCase()).isEqualTo(vendor.name());
         assertThat(cfg.getDb().getPrune_option()).isEqualTo(prune);
         assertThat(cfg.getDb().isInternalTxStorageEnabled()).isEqualTo(internalTxStorage);
         assertThat(cfg.getDb().getPrune()).isEqualTo(pruneFromEnum(prune));
