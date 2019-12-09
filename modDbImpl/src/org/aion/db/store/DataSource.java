@@ -18,6 +18,7 @@ final class DataSource<V> {
     private int cacheSize;
     private Type cacheType;
     private boolean isDebug;
+    private boolean isLocked = false;
     private Logger log;
 
     public enum Type {
@@ -35,6 +36,17 @@ final class DataSource<V> {
         this.src = src;
         this.serializer = serializer;
         this.cacheSize = 0;
+    }
+
+    /**
+     * Adds locks to the used data source to make it thread safe.
+     *
+     * @return a builder that will return a data source with locks when the given size is greater
+     *     than zero
+     */
+    DataSource<V> withLocks(boolean isLocked) {
+        this.isLocked = isLocked;
+        return this;
     }
 
     /**
@@ -70,26 +82,40 @@ final class DataSource<V> {
         return this;
     }
 
-    ObjectDataSource<V> buildObjectSource() {
+    ObjectStore<V> buildObjectSource() {
+        ObjectStore<V> instance = null;
+
         if (cacheSize != 0) {
             if (isDebug) {
                 switch (cacheType) {
                     case LRU:
-                        return new DebugLruDataSource<>(src, serializer, cacheSize, log);
+                        instance = new DebugLruDataSource<>(src, serializer, cacheSize, log);
+                        break;
                     case Window_TinyLfu:
-                        return new DebugCaffeineDataSource<>(src, serializer, cacheSize, log);
+                        instance = new DebugCaffeineDataSource<>(src, serializer, cacheSize, log);
+                        break;
                 }
             } else {
                 switch (cacheType) {
                     case LRU:
-                        return new LruDataSource<>(src, serializer, cacheSize);
+                        instance = new LruDataSource<>(src, serializer, cacheSize);
+                        break;
                     case Window_TinyLfu:
-                        return new CaffeineDataSource<>(src, serializer, cacheSize);
+                        instance = new CaffeineDataSource<>(src, serializer, cacheSize);
+                        break;
                 }
             }
         }
 
-        // in case the given cache size is equal to zero
-        return new ObjectDataSource<>(src, serializer);
+        if (instance == null) {
+            // in case the given cache size is equal to zero
+            instance = new ObjectDataSource<>(src, serializer);
+        }
+
+        if (isLocked) {
+            instance = new LockedObjectStore<>(instance);
+        }
+
+        return instance;
     }
 }

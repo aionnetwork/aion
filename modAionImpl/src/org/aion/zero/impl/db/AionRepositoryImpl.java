@@ -99,7 +99,7 @@ public class AionRepositoryImpl extends AbstractRepository {
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
-            this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10);
+            this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10, true);
             this.transformedCodeSource = Stores.newObjectStore(contractPerformCodeDatabase, TransformedCodeSerializer.RLP_SERIALIZER);
 
             // Setup world trie.

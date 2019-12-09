@@ -65,7 +65,7 @@ public class AionBlockStore {
         this.index = Stores.newArrayStore(index, BLOCK_INFO_SERIALIZER);
 
         // Note: because of cache use the blocks db should write lock on get as well
-        this.blocks = Stores.newObjectStoreWithCache(blocks, BLOCK_SERIALIZER, blockCacheSize);
+        this.blocks = Stores.newObjectStoreWithCache(blocks, BLOCK_SERIALIZER, blockCacheSize, false);
         this.checkIntegrity = checkIntegrity;
     }
 

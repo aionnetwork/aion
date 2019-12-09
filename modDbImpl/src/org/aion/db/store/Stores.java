@@ -29,26 +29,26 @@ public final class Stores {
         return new DataSource<>(database, serializer).buildObjectSource();
     }
 
-    public static <V> ObjectStore<V> newObjectStoreWithCache(ByteArrayKeyValueDatabase database, Serializer<V> serializer, int size) {
+    public static <V> ObjectStore<V> newObjectStoreWithCache(ByteArrayKeyValueDatabase database, Serializer<V> serializer, int size, boolean isLocked) {
         DataSource<V> ds;
         if (size >= 200) {
             // Caffeine should perform better for this size
-            ds = new DataSource<>(database, serializer).withCache(size, Type.Window_TinyLfu);
+            ds = new DataSource<>(database, serializer).withCache(size, Type.Window_TinyLfu).withLocks(isLocked);
         } else {
             // small caches default to LRU
-            ds = new DataSource<>(database, serializer).withCache(size, Type.LRU);
+            ds = new DataSource<>(database, serializer).withCache(size, Type.LRU).withLocks(isLocked);
         }
         return ds.buildObjectSource();
     }
 
-    public static <V> ObjectStore<V> newObjectStoreWithDebugCache(ByteArrayKeyValueDatabase database,Serializer<V> serializer, int size, Logger log) {
+    public static <V> ObjectStore<V> newObjectStoreWithDebugCache(ByteArrayKeyValueDatabase database,Serializer<V> serializer, int size, Logger log, boolean isLocked) {
         DataSource<V> ds;
         if (size >= 200) {
             // Caffeine should perform better for this size
-            ds = new DataSource<>(database, serializer).withCache(size, Type.Window_TinyLfu);
+            ds = new DataSource<>(database, serializer).withCache(size, Type.Window_TinyLfu).withLocks(isLocked);
         } else {
             // small caches default to LRU
-            ds = new DataSource<>(database, serializer).withCache(size, Type.LRU);
+            ds = new DataSource<>(database, serializer).withCache(size, Type.LRU).withLocks(isLocked);
         }
         // enable debug logging
         ds.withStatistics(log);

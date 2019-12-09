@@ -1,6 +1,7 @@
 package org.aion.db.store;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.IOException;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.util.bytes.ByteUtil;
@@ -13,7 +14,7 @@ import org.aion.util.conversions.Hex;
  */
 class DataSourceArray<V> implements ArrayStore<V> {
 
-    private final ObjectDataSource<V> src;
+    private final ObjectStore<V> src;
     private final ByteArrayKeyValueDatabase db;
     @VisibleForTesting
     static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
@@ -125,7 +126,7 @@ class DataSourceArray<V> implements ArrayStore<V> {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         // ensures that the size is written to disk if it was previously missing
         if (!db.get(sizeKey).isPresent()) {
             setSize(size);
