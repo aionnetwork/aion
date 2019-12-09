@@ -301,7 +301,7 @@ public class BlockchainIntegrationTest {
         A0BlockHeader newBlockHeader =
             A0BlockHeader.Builder.newInstance()
                 .withHeader(block.getHeader())
-                .withEnergyConsumed(42L)
+                .withExtraData("other block".getBytes())
                 .build();
         block.updateHeader(newBlockHeader);
 
