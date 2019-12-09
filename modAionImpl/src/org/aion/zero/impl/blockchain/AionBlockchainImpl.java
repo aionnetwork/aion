@@ -1451,6 +1451,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxReceipt> receipts = summary.getReceipts();
 
         // Sanity checks
+        long energyUsed = 0L;
+        if (!receipts.isEmpty()) {
+            for (AionTxReceipt receipt : receipts) {
+                energyUsed += receipt.getEnergyUsed();
+            }
+        }
+        if (block.getHeader().getEnergyConsumed() != energyUsed) {
+            LOG.warn("Block's energy consumed doesn't match: calculated={} header={}", energyUsed, block.getHeader().getEnergyConsumed());
+            track.rollback();
+            return Pair.of(null, null);
+        }
+
         byte[] receiptHash = block.getReceiptsRoot();
         byte[] receiptListHash = calcReceiptsTrie(receipts);
 
