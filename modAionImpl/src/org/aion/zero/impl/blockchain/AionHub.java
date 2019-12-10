@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.ConstantUtil;
+import org.aion.base.TransactionTypeRule;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -136,12 +137,12 @@ public class AionHub {
             System.exit(SystemExitCodes.DATABASE_CORRUPTION);
         }
 
-        this.mempool.checkAvmFlag();
+        if (blockchain.forkUtility.is040ForkActive(blockchain.getBestBlock().getNumber())) {
+            TransactionTypeRule.allowAVMContractTransaction();
+        }
 
         this.startingBlock = this.blockchain.getBestBlock();
         if (!cfg.getConsensus().isSeed()) {
-            this.mempool.updateBest();
-
             if (cfg.getTx().getPoolBackup()) {
                 this.mempool.loadPendingTx();
             }
@@ -603,11 +604,11 @@ public class AionHub {
                 blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
             return null;
         } else {
-            BlockContext context = null;
+            BlockContext context;
             
             blockTemplateLock.lock();
             try {
-                Block bestBlock = mempool.getBestBlock();
+                Block bestBlock = blockchain.getBestBlock();
                 byte[] bestBlockHash = bestBlock.getHash();
 
                 if (oldBlockTemplate == null

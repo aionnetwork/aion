@@ -302,15 +302,25 @@ public class AionBlockchainImpl implements IAionBlockchain {
             this.forkUtility.enableUnityFork(maybeUnityFork.get());
         }
 
+        Optional<Long> maybe040Fork = load040ForkNumberFromConfig(CfgAion.inst());
+        if (maybe040Fork.isPresent()) {
+            if (maybe040Fork.get() < 0) {
+                LOG.warn("The 040 fork number cannot be less than 0, set the fork number to 0");
+                maybe040Fork = Optional.of(0L);
+            }
+
+            this.forkUtility.enable040Fork(maybe040Fork.get());
+        }
+
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
     }
 
     /**
-     * Determine fork 0.5.0 fork number from Aion Config.
+     * Determine fork 1.0 fork number from Aion Config.
      *
      * @param cfgAion configuration
-     * @return 0.5.0 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @return 1.0 fork number, if configured; {@link Optional#empty()} otherwise.
      * @throws NumberFormatException if "fork1.0" present in the config, but not parseable
      */
     private static Optional<Long> loadUnityForkNumberFromConfig(CfgAion cfgAion) {
@@ -319,6 +329,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Optional.empty();
         } else {
             return Optional.of(Long.valueOf(unityforkSetting));
+        }
+    }
+
+    /**
+     * Determine fork 0.4.0 fork number from Aion Config.
+     *
+     * @param cfgAion configuration
+     * @return 0.4.0 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork0.4.0" present in the config, but not parseable
+     */
+    private static Optional<Long> load040ForkNumberFromConfig(CfgAion cfgAion) {
+        String fork040Setting = cfgAion.getFork().getProperties().getProperty("fork0.4.0");
+        if(fork040Setting == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(fork040Setting));
         }
     }
 
