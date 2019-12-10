@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.types.PendingTxDetails;
 import org.aion.zero.impl.vm.common.VmFatalException;
@@ -41,8 +41,6 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.db.TransactionStore;
 import org.aion.base.TransactionTypeRule;
 import org.aion.zero.impl.vm.common.TxNrgRule;
-import org.aion.p2p.INode;
-import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.Constant;
 import org.aion.txpool.ITxPool;
 import org.aion.types.AionAddress;
@@ -65,8 +63,6 @@ public class AionPendingStateImpl implements IPendingState {
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-
-    private IP2pMgr p2pMgr;
 
     public static class TransactionSortedSet extends TreeSet<AionTransaction> {
 
@@ -142,6 +138,9 @@ public class AionPendingStateImpl implements IPendingState {
 
     private AtomicBoolean pendingTxReceivedforMining;
     private PendingTxCallback pendingTxCallback;
+    private NetworkBestBlockCallback networkBestBlockCallback;
+
+    private final int networkSyncingGap = 128;
 
     class TxBuffTask implements Runnable {
 
@@ -230,13 +229,13 @@ public class AionPendingStateImpl implements IPendingState {
         pendingTxCache.clearCacheTxHash();
     }
 
-    public static AionPendingStateImpl create(CfgAion cfgAion, AionBlockchainImpl blockchain, AionRepositoryImpl repository, PendingTxCallback pendingTxCallback, boolean forTest) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, repository, pendingTxCallback);
+    public static AionPendingStateImpl create(CfgAion cfgAion, AionBlockchainImpl blockchain, AionRepositoryImpl repository, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, boolean forTest) {
+        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, repository, pendingTxCallback, networkBestBlockCallback);
         ps.init(blockchain, forTest);
         return ps;
     }
 
-    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository, PendingTxCallback pendingTxCallback) {
+    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
 
         this.repository = _repository;
 
@@ -270,6 +269,7 @@ public class AionPendingStateImpl implements IPendingState {
         }
 
         this.pendingTxCallback = pendingTxCallback;
+        this.networkBestBlockCallback = networkBestBlockCallback;
         this.pendingTxReceivedforMining = new AtomicBoolean();
     }
 
@@ -760,12 +760,8 @@ public class AionPendingStateImpl implements IPendingState {
 
         best.set(newBlock);
 
-        closeToNetworkBest = best.get().getNumber() + 128 >= getPeersBestBlk13();
-
-        if (LOGGER_TX.isDebugEnabled()) {
-            LOGGER_TX.debug(
-                    "PendingStateImpl.processBest: closeToNetworkBest[{}]", closeToNetworkBest);
-        }
+        closeToNetworkBest = isCloseToNetworkBest();
+        LOGGER_TX.debug("PendingStateImpl.processBest: close to the network best: {}", closeToNetworkBest ? "true" : "false");
 
         rerunTxsInPool(best.get());
 
@@ -1111,49 +1107,6 @@ public class AionPendingStateImpl implements IPendingState {
         }
     }
 
-    public void setP2pMgr(final IP2pMgr p2pMgr) {
-        if (!this.isSeed) {
-            this.p2pMgr = p2pMgr;
-        }
-    }
-
-    private long getPeersBestBlk13() {
-        if (this.p2pMgr == null) {
-            return 0;
-        }
-
-        List<Long> peersBest = new ArrayList<>();
-        for (INode node : p2pMgr.getActiveNodes().values()) {
-            peersBest.add(node.getBestBlockNumber());
-        }
-
-        if (peersBest.isEmpty()) {
-            return 0;
-        }
-
-        peersBest.sort(Comparator.reverseOrder());
-
-        int position = peersBest.size() / 3;
-        if (position > 3) {
-            position -= 1;
-        }
-
-        if (LOGGER_TX.isDebugEnabled()) {
-            StringBuilder blk = new StringBuilder();
-            for (Long l : peersBest) {
-                blk.append(l.toString()).append(" ");
-            }
-
-            LOGGER_TX.debug(
-                    "getPeersBestBlk13 peers[{}] 1/3[{}] PeersBest[{}]",
-                    peersBest.size(),
-                    peersBest.get(position),
-                    blk.toString());
-        }
-
-        return peersBest.get(position);
-    }
-
     private void recoverCache() {
 
         LOGGER_TX.info("pendingCacheTx loading from DB");
@@ -1244,5 +1197,9 @@ public class AionPendingStateImpl implements IPendingState {
 
     public void updateBest() {
         getBestBlock();
+    }
+
+    private boolean isCloseToNetworkBest() {
+        return best.get().getNumber() >= (networkBestBlockCallback.getNetworkBestBlockNumber() - networkSyncingGap);
     }
 }

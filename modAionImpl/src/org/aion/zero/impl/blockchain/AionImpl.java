@@ -49,9 +49,9 @@ public class AionImpl implements IAionChain {
         this.cfg = CfgAion.inst();
         if (forTest) {
             cfg.setGenesisForTest();
-            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), AionRepositoryImpl.inst(), new PendingTxCallback(blockchainCallbackInterfaces));
+            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), AionRepositoryImpl.inst(), new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
         } else {
-            aionHub = new AionHub(new PendingTxCallback(blockchainCallbackInterfaces));
+            aionHub = new AionHub(new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
         }
 
         LOG_GEN.info(
@@ -372,6 +372,22 @@ public class AionImpl implements IAionChain {
                     callbackInterface.pendingTxUpdated(txDetails);
                 }
             }
+        }
+    }
+
+    public static class NetworkBestBlockCallback {
+        IAionChain chainInterface;
+
+        public NetworkBestBlockCallback(IAionChain chainInterface) {
+            if (chainInterface == null) {
+                throw new NullPointerException();
+            }
+            this.chainInterface = chainInterface;
+        }
+
+        public long getNetworkBestBlockNumber() {
+            Optional<Long> networkBest = chainInterface.getNetworkBestBlockNumber();
+            return networkBest.isPresent() ? networkBest.get() : 0;
         }
     }
 }

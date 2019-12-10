@@ -24,6 +24,8 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.IPeerMetric;
 import org.aion.p2p.Msg;
+import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
@@ -343,7 +345,8 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), true));
+                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(
+                            AionImpl.inst()), true));
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
@@ -410,7 +413,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), true));
+                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), true));
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -473,7 +476,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), true));
+                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), true));
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -531,7 +534,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), true));
+                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst(), new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), true));
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented
