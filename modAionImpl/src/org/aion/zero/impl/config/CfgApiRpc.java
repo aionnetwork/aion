@@ -289,6 +289,10 @@ public final class CfgApiRpc {
         return this.ip;
     }
 
+    public void setPort(int port) {
+        this.port = port;
+    }
+
     public int getPort() {
         return this.port;
     }

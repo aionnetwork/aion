@@ -75,6 +75,14 @@ public class EditCli {
             arity = "1"
     )
     private Boolean jsonRPC = null;
+
+    @Option(names = {"rpc-port"},
+            description = "Sets the Json RPC to the specified port number.",
+            paramLabel = "<setting>",
+            arity = "1",
+            converter = PortNumberConverter.class)
+    private Integer rpcPort = null;
+
     @Option(names = {"mining"},
             paramLabel = "<setting>",
             description = "Enables/disables the internal CPU miner.\nSettings: on / off.",
@@ -165,6 +173,16 @@ public class EditCli {
         }
     }
 
+    private boolean updateRpcPort(CfgApiRpc cfgApiRpc) {
+        if (rpcPort != null && cfgApiRpc.getPort() != rpcPort) {
+            cfgApiRpc.setPort(rpcPort);
+            System.out.println("Updated Json RPC port to: " + rpcPort);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private boolean updateMining(CfgConsensusUnity cfgConsensus) {
         if (mining != null && mining != cfgConsensus.getMining()) {
             System.out.println(boolToMessage(mining) + " mining.");
@@ -225,6 +243,7 @@ public class EditCli {
                 vendor == null &&
                 javaApi == null &&
                 jsonRPC == null &&
+                rpcPort == null &&
                 mining == null &&
                 showStatus == null &&
                 compression == null &&
@@ -250,6 +269,7 @@ public class EditCli {
         final boolean updateCompression = updateCompression(cfg.getDb());
         final boolean updateJavaApi = updateJavaApi(cfg.getApi().getZmq());
         final boolean updateJsonRPC = updateJsonRPC(cfg.getApi().getRpc());
+        final boolean updateRpcPort = updateRpcPort(cfg.getApi().getRpc());
         final boolean updateLog = updateLog(cfg.getLog());
         final boolean updateMining = updateMining(cfg.getConsensus());
         final boolean updatePort = updatePort(cfg.getNet().getP2p());
@@ -259,7 +279,7 @@ public class EditCli {
         final boolean updateVendor = updateVendor(cfg.getDb());
 
         //Indicate whether any of the configs were updated
-        return updateCompression || updateJavaApi || updateJsonRPC || updateLog || updateMining || updatePort || updatePrune || updateInternalTx || updateStatus || updateVendor;
+        return updateCompression || updateJavaApi || updateJsonRPC || updateRpcPort || updateLog || updateMining || updatePort || updatePrune || updateInternalTx || updateStatus || updateVendor;
     }
 
     public void setPort(Integer port) {
@@ -284,6 +304,10 @@ public class EditCli {
 
     public void setJsonRPC(Boolean jsonRPC) {
         this.jsonRPC = jsonRPC;
+    }
+
+    public void setRpcPort(Integer rpcPort) {
+        this.rpcPort = rpcPort;
     }
 
     public void setMining(Boolean mining) {
