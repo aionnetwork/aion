@@ -24,6 +24,7 @@ import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Stores;
 import org.aion.db.store.XorDataSource;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
@@ -1196,5 +1197,20 @@ public class AionRepositoryImpl extends AbstractRepository {
      */
     public boolean isBlockStored(byte[] hash, long number) {
         return blockStore.isBlockStored(hash, number);
+    }
+
+    /**
+     * Removes blocks on side chains and recreates the block information inside the index database.
+     */
+    public void pruneAndCorrectBlockStore() {
+        Block bestBlock = blockStore.getBestBlock();
+        if (bestBlock == null) {
+            LOGGEN.error("Empty database. Nothing to do.");
+            return;
+        } else {
+            // revert to block number and flush changes
+            blockStore.pruneAndCorrect();
+            blockStore.flush();
+        }
     }
 }
