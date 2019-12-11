@@ -1605,10 +1605,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         } else  if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             if (!forkUtility.isUnityForkActive(header.getNumber())) {
+                LOG.warn("Trying to import a Staking block when the Unity fork is not active.");
                 return false;
             }
 
             if (grandParent == null) {
+                LOG.warn("Staking block {} cannot find its grandparent", header.getNumber());
                 return false;
             }
 
@@ -1655,6 +1657,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (!block.isGenesis()) {
             if (!isValid(block.getHeader())) {
+                LOG.warn("Block {} has an invalid block header", block.getNumber());
                 return false;
             }
 
