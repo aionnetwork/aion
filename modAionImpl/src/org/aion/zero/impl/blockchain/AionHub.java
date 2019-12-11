@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.ConstantUtil;
 import org.aion.base.TransactionTypeRule;
@@ -602,14 +604,12 @@ public class AionHub {
                         || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())
                         || (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock())) {
 
-                    // Generate new block template
-                    AionPendingStateImpl.TransactionSortedSet ret =
-                            new AionPendingStateImpl.TransactionSortedSet();
-                    ret.addAll(mempool.getPendingTransactions());
+                    TransactionSortedSet txSortSet = new TransactionSortedSet();
+                    txSortSet.addAll(mempool.getPendingTransactions());
 
                     context =
                             blockchain.createNewMiningBlockContext(
-                                    bestBlock, new ArrayList<>(ret), false);
+                                    bestBlock, new ArrayList<>(txSortSet), false);
                 } else {
                     context = oldBlockTemplate;
                 }
@@ -678,5 +678,22 @@ public class AionHub {
             mempool.applyBlockUpdate(block, receipts);
         }
 
+    }
+
+    private class TransactionSortedSet extends TreeSet<AionTransaction> {
+
+        TransactionSortedSet() {
+            super(
+                (tx1, tx2) -> {
+                    long nonceDiff =
+                        ByteUtil.byteArrayToLong(tx1.getNonce())
+                            - ByteUtil.byteArrayToLong(tx2.getNonce());
+
+                    if (nonceDiff != 0) {
+                        return nonceDiff > 0 ? 1 : -1;
+                    }
+                    return Arrays.compare(tx1.getTransactionHash(), tx2.getTransactionHash());
+                });
+        }
     }
 }

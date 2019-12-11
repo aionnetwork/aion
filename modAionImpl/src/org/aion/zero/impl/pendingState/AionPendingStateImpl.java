@@ -2,7 +2,6 @@ package org.aion.zero.impl.pendingState;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,7 +11,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,25 +55,6 @@ public class AionPendingStateImpl implements IPendingState {
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-
-    public static class TransactionSortedSet extends TreeSet<AionTransaction> {
-
-        private static final long serialVersionUID = 4941385879122799663L;
-
-        public TransactionSortedSet() {
-            super(
-                    (tx1, tx2) -> {
-                        long nonceDiff =
-                                ByteUtil.byteArrayToLong(tx1.getNonce())
-                                        - ByteUtil.byteArrayToLong(tx2.getNonce());
-
-                        if (nonceDiff != 0) {
-                            return nonceDiff > 0 ? 1 : -1;
-                        }
-                        return Arrays.compare(tx1.getTransactionHash(), tx2.getTransactionHash());
-                    });
-        }
-    }
 
     private static final int MAX_VALIDATED_PENDING_TXS = 8192;
 
