@@ -7,7 +7,6 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateNextBloc
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateRandomChain;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.aion.zero.impl.sync.TaskImportBlocks.filterBatch;
-import static org.aion.zero.impl.sync.TaskImportBlocks.isAlreadyStored;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,23 +59,23 @@ public class TaskImportBlocksTest {
         Block current = chain.getBestBlock();
         while (current.getNumber() > 0) {
             // will pass both checks
-            assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+            assertThat(chain.isBlockStored(current.getHash(), current.getNumber())).isTrue();
             current = chain.getBlockByHash(current.getParentHash());
         }
 
         // will fail the max number check
         current = generateNextBlock(chain, accounts, 10);
-        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isFalse();
+        assertThat(chain.isBlockStored(current.getHash(), current.getNumber())).isFalse();
 
         assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+        assertThat(chain.isBlockStored(current.getHash(), current.getNumber())).isTrue();
 
         // will fail the existence check
         current = generateNewBlock(chain, chain.getGenesis(), accounts, 10);
-        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isFalse();
+        assertThat(chain.isBlockStored(current.getHash(), current.getNumber())).isFalse();
 
         assertThat(chain.tryToConnect(current)).isEqualTo(IMPORTED_NOT_BEST);
-        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+        assertThat(chain.isBlockStored(current.getHash(), current.getNumber())).isTrue();
     }
 
     @Test

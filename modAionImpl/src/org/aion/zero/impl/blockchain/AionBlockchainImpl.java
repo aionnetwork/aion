@@ -1105,7 +1105,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // Check block exists before processing more rules
         if (doExistCheck // skipped when redoing imports
                 && getBlockStore().getMaxNumber() >= block.getNumber()
-                && getBlockStore().isBlockStored(block.getHash(), block.getNumber())) {
+                && isBlockStored(block.getHash(), block.getNumber())) {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1162,7 +1162,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 forkLevel = NO_FORK_LEVEL;
             }
         } else {
-            if (getBlockStore().isBlockStored(block.getParentHash(), block.getNumber()-1)) {
+            if (isBlockStored(block.getParentHash(), block.getNumber()-1)) {
                 BigInteger oldTotalDiff = getInternalTD();
 
                 // determine if the block parent is main chain or side chain
@@ -2249,7 +2249,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public boolean isBlockStored(byte[] hash, long number) {
-        return getBlockStore().isBlockStored(hash, number);
+        return getRepository().isBlockStored(hash, number);
     }
 
     /**

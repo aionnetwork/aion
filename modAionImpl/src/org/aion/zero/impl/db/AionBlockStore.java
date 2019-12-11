@@ -533,15 +533,12 @@ public class AionBlockStore {
     }
 
     /**
-     *  Get block data with extra info relate with the forking rule by given block hash, usually use
-     *  this method when the kernel need to know the block data and the forking information. this
-     *  method will try to load 2 databases when doing the query. If the kernel does not need the
-     *  forking information. Just use #getBlockByHash(byte[]) method.
-     * @param hash the block hash
-     * @return block with forking information stored at the block and index database
-     * @see #getBlockByHash(byte[])
+     * Determines if the given block (referenced by hash and number) is already stored in the database.
+     *
+     * @return {@code true} if the given block exists in the block store, {@code false} otherwise.
+     * @implNote The number is used to optimize the search by comparing it to the largest known block height.
      */
-    public boolean isBlockStored(byte[] hash, long number) {
+    boolean isBlockStored(byte[] hash, long number) {
         if (hash == null) {
             return false;
         }

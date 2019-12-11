@@ -19,6 +19,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.apache.commons.lang3.tuple.Triple;
@@ -189,7 +190,7 @@ final class TaskImportBlocks implements Runnable {
 
             // last block already exists
             // implies the full batch was already imported (but not filtered by the queue)
-            if (isAlreadyStored(chain.getBlockStore(), b)) {
+            if (chain.isBlockStored(b.getHash(), b.getNumber())) {
                 // keeping track of the last block check
                 importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
 
@@ -269,20 +270,6 @@ final class TaskImportBlocks implements Runnable {
         surveyLog.debug("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
 
         return returnMode;
-    }
-
-    /**
-     * Utility method that determines if the given block is already stored in the given block store
-     * without going through the process of trying to import the block.
-     *
-     * @param store the block store that may contain the given block
-     * @param block the block for which we need to determine if it is already stored or not
-     * @return {@code true} if the given block exists in the block store, {@code false} otherwise.
-     * @apiNote Should be used when we aim to bypass any recovery methods set in place for importing
-     *     old blocks, for example when blocks are imported in {@link SyncMode#FORWARD} mode.
-     */
-    static boolean isAlreadyStored(AionBlockStore store, Block block) {
-        return store.getMaxNumber() >= block.getNumber() && store.isBlockStored(block.getHash(), block.getNumber());
     }
 
     /**
