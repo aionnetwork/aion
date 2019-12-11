@@ -23,7 +23,6 @@ import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.base.AionTxReceipt;
 import org.slf4j.Logger;
@@ -49,7 +48,7 @@ public class AionImpl implements IAionChain {
         this.cfg = CfgAion.inst();
         if (forTest) {
             cfg.setGenesisForTest();
-            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), AionRepositoryImpl.inst(), new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
+            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
         } else {
             aionHub = new AionHub(new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
         }

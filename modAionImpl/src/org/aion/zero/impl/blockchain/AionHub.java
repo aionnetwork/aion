@@ -40,7 +40,6 @@ import org.aion.zero.impl.pendingState.IPendingState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.NodeWrapper;
@@ -77,9 +76,6 @@ public class AionHub {
 
     private AionBlockchainImpl blockchain;
 
-    // TODO: Refactor to interface later
-    private AionRepositoryImpl repository;
-
     private IEventMgr eventMgr;
 
     private AionPoW pow;
@@ -101,13 +97,12 @@ public class AionHub {
     private ReentrantLock blockTemplateLock;
 
     public AionHub(PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
-        initializeHub(CfgAion.inst(), null, AionRepositoryImpl.inst(), pendingTxCallback, networkBestBlockCallback, false);
+        initializeHub(CfgAion.inst(), null, pendingTxCallback, networkBestBlockCallback, false);
     }
 
     private void initializeHub(
             CfgAion _cfgAion,
             AionBlockchainImpl _blockchain,
-            AionRepositoryImpl _repository,
             PendingTxCallback pendingTxCallback,
             NetworkBestBlockCallback networkBestBlockCallback,
             boolean forTest) {
@@ -124,9 +119,7 @@ public class AionHub {
         this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, forTest) : _blockchain;
         blockchain.setEventManager(this.eventMgr);
 
-        this.repository = _repository;
-
-        this.mempool = AionPendingStateImpl.create(cfg, blockchain, repository, pendingTxCallback, networkBestBlockCallback, forTest);
+        this.mempool = AionPendingStateImpl.create(cfg, blockchain, pendingTxCallback, networkBestBlockCallback, forTest);
 
         try {
             loadBlockchain();
@@ -214,19 +207,18 @@ public class AionHub {
     }
 
     public static AionHub createForTesting(
-        CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository,
+        CfgAion _cfgAion, AionBlockchainImpl _blockchain,
         PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
-        return new AionHub(_cfgAion, _blockchain, _repository, pendingTxCallback, networkBestBlockCallback, true);
+        return new AionHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback, true);
     }
 
     private AionHub(
             CfgAion _cfgAion,
             AionBlockchainImpl _blockchain,
-            AionRepositoryImpl _repository,
             PendingTxCallback pendingTxCallback,
             NetworkBestBlockCallback networkBestBlockCallback,
             boolean forTest) {
-        initializeHub(_cfgAion, _blockchain, _repository, pendingTxCallback, networkBestBlockCallback, forTest);
+        initializeHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback, forTest);
     }
 
     private void registerCallback() {
@@ -278,7 +270,7 @@ public class AionHub {
     }
 
     public Repository getRepository() {
-        return repository;
+        return blockchain.getRepository();
     }
 
     public IAionBlockchain getBlockchain() {
@@ -287,7 +279,7 @@ public class AionHub {
 
     @VisibleForTesting
     AionBlockStore getBlockStore() {
-        return this.repository.getBlockStore();
+        return this.blockchain.getBlockStore();
     }
 
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
@@ -310,14 +302,14 @@ public class AionHub {
 
         // function repurposed for integrity checks since previously not implemented
         try {
-            this.repository.getBlockStore().load();
+            this.blockchain.getBlockStore().load();
         } catch (RuntimeException re) {
             genLOG.error("Fatal: can't load blockstore; exiting.", re);
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
         // Note: if block DB corruption, the bestBlock may not match with the indexDB.
-        Block bestBlock = this.repository.getBlockStore().getBestBlock();
+        Block bestBlock = this.blockchain.getBlockStore().getBestBlock();
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -330,7 +322,7 @@ public class AionHub {
                 && // allow 5 recovery attempts
                 bestBlock != null
                 && // recover only for non-null blocks
-                !this.repository.isValidRoot(bestBlock.getStateRoot())) {
+                !this.blockchain.getRepository().isValidRoot(bestBlock.getStateRoot())) {
 
             genLOG.info(
                     "Recovery initiated due to corrupt world state at block "
@@ -342,7 +334,7 @@ public class AionHub {
 
             // ensure that the genesis state exists before attempting recovery
             AionGenesis genesis = cfg.getGenesis();
-            if (!this.repository.isValidRoot(genesis.getStateRoot())) {
+            if (!this.blockchain.getRepository().isValidRoot(genesis.getStateRoot())) {
                 genLOG.info(
                         "Corrupt world state for genesis block hash: "
                                 + genesis.getShortHash()
@@ -350,24 +342,24 @@ public class AionHub {
                                 + genesis.getNumber()
                                 + ".");
 
-                AionHubUtils.buildGenesis(genesis, repository);
+                AionHubUtils.buildGenesis(genesis, blockchain.getRepository());
 
-                if (repository.isValidRoot(genesis.getStateRoot())) {
+                if (blockchain.getRepository().isValidRoot(genesis.getStateRoot())) {
                     genLOG.info("Rebuilding genesis block SUCCEEDED.");
                 } else {
                     genLOG.info("Rebuilding genesis block FAILED.");
                 }
             }
 
-            recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
+            recovered = this.blockchain.recoverWorldState(this.blockchain.getRepository(), bestBlock);
 
-            if (recovered && !repository.isIndexed(bestBlock.getHash(), bestBlock.getNumber())) {
+            if (recovered && !blockchain.getRepository().isIndexed(bestBlock.getHash(), bestBlock.getNumber())) {
                 // correct the index for this block
-                recovered = blockchain.recoverIndexEntry(this.repository, bestBlock);
+                recovered = blockchain.recoverIndexEntry(this.blockchain.getRepository(), bestBlock);
             }
 
             long blockNumber = bestBlock.getNumber();
-            if (!this.repository.isValidRoot(bestBlock.getStateRoot())) {
+            if (!this.blockchain.getRepository().isValidRoot(bestBlock.getStateRoot())) {
                 // reverting back one block
                 genLOG.info("Rebuild state FAILED. Reverting to previous block.");
 
@@ -376,8 +368,8 @@ public class AionHub {
 
                 recovered =
                         (status == DBUtils.Status.SUCCESS)
-                                && this.repository.isValidRoot(
-                                        this.repository
+                                && this.blockchain.getRepository().isValidRoot(
+                                        this.blockchain.getRepository()
                                                 .getBlockStore()
                                                 .getChainBlockByNumber(blockNumber)
                                                 .getStateRoot());
@@ -388,10 +380,10 @@ public class AionHub {
                 blockchain.getBlockStore().rollback(blockNumber);
 
                 // new best block after recovery
-                bestBlock = this.repository.getBlockStore().getBestBlock();
+                bestBlock = this.blockchain.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
 
-                    bestBlock.setTotalDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
+                    bestBlock.setTotalDifficulty(blockchain.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
 
                     startingBlock = bestBlock;
                     // TODO : [unity] The publicbestblock is a weird settings, should consider to remove it.
@@ -435,7 +427,7 @@ public class AionHub {
 
             AionGenesis genesis = cfg.getGenesis();
 
-            AionHubUtils.buildGenesis(genesis, repository);
+            AionHubUtils.buildGenesis(genesis, blockchain.getRepository());
 
             blockchain.setBestBlock(genesis);
             blockchain.setTotalDifficulty(genesis.getDifficultyBI());
@@ -499,7 +491,7 @@ public class AionHub {
         }
 
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), ConstantUtil.EMPTY_TRIE_HASH)) {
-            this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
+            this.blockchain.getRepository().syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
     }
 
@@ -524,18 +516,13 @@ public class AionHub {
             }
         }
 
-        if (getPendingState() != null) {
-            getPendingState().shutDown();
-            genLOG.info("<shutdown-pendingState>");
-        }
-
         genLOG.info("shutting down consensus...");
         pow.shutdown();
         genLOG.info("shutdown consensus... Done!");
 
-        if (repository != null) {
+        if (blockchain.getRepository() != null) {
             genLOG.info("shutting down DB...");
-            repository.close();
+            blockchain.getRepository().close();
             genLOG.info("shutdown DB... Done!");
         }
 

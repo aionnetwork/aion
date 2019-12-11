@@ -35,9 +35,7 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.zero.impl.db.TransactionStore;
 import org.aion.zero.impl.vm.common.TxNrgRule;
 import org.aion.txpool.Constant;
 import org.aion.txpool.ITxPool;
@@ -48,9 +46,7 @@ import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.impl.valid.BeaconHashValidator;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.base.AionTxExecSummary;
@@ -89,10 +85,6 @@ public class AionPendingStateImpl implements IPendingState {
 
     private AionBlockchainImpl blockchain;
 
-    private TransactionStore transactionStore;
-
-    private Repository repository;
-
     private final ITxPool txPool;
 
     private RepositoryCache<AccountState> pendingState;
@@ -128,8 +120,6 @@ public class AionPendingStateImpl implements IPendingState {
     private ScheduledExecutorService ex;
 
     private boolean closeToNetworkBest = true;
-
-    private BeaconHashValidator beaconHashValidator;
 
     private AtomicBoolean pendingTxReceivedforMining;
     private PendingTxCallback pendingTxCallback;
@@ -204,19 +194,19 @@ public class AionPendingStateImpl implements IPendingState {
     private synchronized void backupPendingTx() {
 
         if (!backupPendingPoolAdd.isEmpty()) {
-            repository.addTxBatch(backupPendingPoolAdd, true);
+            blockchain.getRepository().addTxBatch(backupPendingPoolAdd, true);
         }
 
         if (!backupPendingCacheAdd.isEmpty()) {
-            repository.addTxBatch(backupPendingCacheAdd, false);
+            blockchain.getRepository().addTxBatch(backupPendingCacheAdd, false);
         }
 
         if (!backupPendingPoolRemove.isEmpty()) {
-            repository.removeTxBatch(backupPendingPoolRemove, true);
+            blockchain.getRepository().removeTxBatch(backupPendingPoolRemove, true);
         }
 
-        repository.removeTxBatch(pendingTxCache.getClearTxHash(), false);
-        repository.flush();
+        blockchain.getRepository().removeTxBatch(pendingTxCache.getClearTxHash(), false);
+        blockchain.getRepository().flush();
 
         backupPendingPoolAdd.clear();
         backupPendingCacheAdd.clear();
@@ -224,16 +214,13 @@ public class AionPendingStateImpl implements IPendingState {
         pendingTxCache.clearCacheTxHash();
     }
 
-    public static AionPendingStateImpl create(CfgAion cfgAion, AionBlockchainImpl blockchain, AionRepositoryImpl repository, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, boolean forTest) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, repository, pendingTxCallback, networkBestBlockCallback);
+    public static AionPendingStateImpl create(CfgAion cfgAion, AionBlockchainImpl blockchain , PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, boolean forTest) {
+        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, pendingTxCallback, networkBestBlockCallback);
         ps.init(blockchain, forTest);
         return ps;
     }
 
-    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
-
-        this.repository = _repository;
-
+    private AionPendingStateImpl(CfgAion _cfgAion, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
         this.isSeed = _cfgAion.getConsensus().isSeed();
 
         if (!isSeed) {
@@ -265,19 +252,16 @@ public class AionPendingStateImpl implements IPendingState {
     public void init(final AionBlockchainImpl blockchain, boolean test) {
 
         this.blockchain = blockchain;
-        this.beaconHashValidator = blockchain.beaconHashValidator;
-
         this.currentBestBlock = new AtomicReference<>(blockchain.getBestBlock());
         this.test = test;
 
         if (!this.isSeed) {
-            this.transactionStore = blockchain.getTransactionStore();
 
             this.poolBackUpEnable = CfgAion.inst().getTx().getPoolBackup();
             this.replayTxBuffer = new ArrayList<>();
             this.pendingTxCache =
                     new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUpEnable);
-            this.pendingState = repository.startTracking();
+            this.pendingState = blockchain.getRepository().startTracking();
 
             this.dumpPool = test || CfgAion.inst().getTx().getPoolDump();
 
@@ -323,7 +307,7 @@ public class AionPendingStateImpl implements IPendingState {
     public boolean isValid(AionTransaction tx) {
         return (TXValidator.isValid(tx, blockchain.isUnityForkEnabledAtNextBlock()))
                 && TransactionTypeValidator.isValid(tx)
-                && beaconHashValidator.validateTxForPendingState(tx);
+                && blockchain.beaconHashValidator.validateTxForPendingState(tx);
     }
 
     /**
@@ -716,7 +700,7 @@ public class AionPendingStateImpl implements IPendingState {
             }
 
             // rollback the state snapshot to the ancestor
-            pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
+            pendingState = blockchain.getRepository().getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
 
             // next process blocks from new fork
             Block main = newBlock;
@@ -857,7 +841,7 @@ public class AionPendingStateImpl implements IPendingState {
         for (AionTransaction tx : block.getTransactionsList()) {
             accountNonce.computeIfAbsent(
                     tx.getSenderAddress(),
-                    k -> this.repository.getNonce(tx.getSenderAddress()));
+                    k -> this.blockchain.getRepository().getNonce(tx.getSenderAddress()));
 
             if (LOGGER_TX.isTraceEnabled()) {
                 LOGGER_TX.trace(
@@ -888,7 +872,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     private AionTxInfo getTransactionInfo(byte[] txHash, byte[] blockHash) {
-        AionTxInfo info = transactionStore.getTxInfo(txHash, blockHash);
+        AionTxInfo info = blockchain.getTransactionStore().getTxInfo(txHash, blockHash);
         AionTransaction tx =
                 blockchain
                         .getBlockByHash(info.getBlockHash())
@@ -901,7 +885,7 @@ public class AionPendingStateImpl implements IPendingState {
     @SuppressWarnings("UnusedReturnValue")
     private List<AionTransaction> rerunTxsInPool(Block block) {
 
-        pendingState = repository.startTracking();
+        pendingState = blockchain.getRepository().startTracking();
 
         for (AionTransaction tx : replayTxBuffer) {
             // Add a junk energyConsumed value because it will get rerun soon after it is added
@@ -1003,7 +987,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     private BigInteger bestRepoNonce(AionAddress addr) {
-        return this.repository.getNonce(addr);
+        return this.blockchain.getRepository().getNonce(addr);
     }
 
     private void addToTxCache(AionTransaction tx) {
@@ -1083,7 +1067,7 @@ public class AionPendingStateImpl implements IPendingState {
         LOGGER_TX.info("pendingCacheTx loading from DB");
         long t1 = System.currentTimeMillis();
         //noinspection unchecked
-        List<byte[]> pendingCacheTxBytes = repository.getCacheTx();
+        List<byte[]> pendingCacheTxBytes = blockchain.getRepository().getCacheTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingCacheTxBytes) {
@@ -1124,7 +1108,7 @@ public class AionPendingStateImpl implements IPendingState {
         LOGGER_TX.info("pendingPoolTx loading from DB");
         long t1 = System.currentTimeMillis();
         //noinspection unchecked
-        List<byte[]> pendingPoolTxBytes = repository.getPoolTx();
+        List<byte[]> pendingPoolTxBytes = blockchain.getRepository().getPoolTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingPoolTxBytes) {

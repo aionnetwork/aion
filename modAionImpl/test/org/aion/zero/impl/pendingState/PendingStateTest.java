@@ -71,7 +71,7 @@ public class PendingStateTest {
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
 
-        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository(),
+        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain,
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst())).getPendingState();
     }
 
@@ -731,7 +731,7 @@ public class PendingStateTest {
         CfgAion.inst().getConsensus().setSeed(true);
 
         // NullPointerException should not happens
-        AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository(),
+        AionHub.createForTesting(CfgAion.inst(), blockchain,
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
 
         CfgAion.inst().getConsensus().setSeed(false);
