@@ -19,7 +19,10 @@ This repository contains the main (Java) kernel implementation and releases for 
 ## Getting Started
 
 ### Developers
-If you're interested in application development on Aion or making improvements to the Java Implementation of Aion:
+If you're interested in building Open Applications, powered by Aion:
+* Visit the Developer site of The Open Application Network : [developer.theoan.com](https://developer.theoan.com)
+
+If you're interested in making improvements to the Java Implementation of Aion:
 
 * Refer to the [Build Aion kernel from source](https://github.com/aionnetwork/aion/wiki/Build-Aion-kernel-from-source) wiki for information on building this source code to a native binary or Docker image
 * Refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
@@ -39,7 +42,7 @@ If you're interested in interacting with dApps and _using_ Aion, refer to our [A
 To keep up to date and stay connected with current progress and development, reach out to us on the following channels:
 
 [Aion Telegram](https://t.me/aion_blockchain)  
-[Dispatch](https://getdispatch.co)  
+[Dispatch Alerts](https://getdispatch.co)  
 [Aion on Twitter](https://twitter.com/Aion_OAN)  
 [Aion Blog](https://blog.aion.network/)
 
