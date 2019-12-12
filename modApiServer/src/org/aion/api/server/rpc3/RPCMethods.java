@@ -114,6 +114,9 @@ public class RPCMethods implements RPCServerMethods {
         switch (block) {
             case LATEST:
                 return serializeBlockDetails(chainHolder.getBestBlock());
+            case EARLIEST:
+                return serializeBlockDetails(chainHolder.getBlockByNumber(0L));
+            case PENDING:
             default:
                 throw RPCExceptions.InvalidParamsRPCException.INSTANCE;
         }
@@ -408,23 +411,35 @@ public class RPCMethods implements RPCServerMethods {
     }
 
     @Override
-    public BigInteger eth_getBalance(AionAddress aionAddress,
-        BlockNumberEnumUnion blockNumberEnumUnion) {
-        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST){
-            return chainHolder.getAccountBalance(aionAddress);
+    public BigInteger eth_getBalance(
+            AionAddress aionAddress, BlockNumberEnumUnion blockNumberEnumUnion) {
+        final BigInteger res;
+        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST) { // best block
+            res = chainHolder.getAccountBalance(aionAddress, chainHolder.blockNumber());
+        } else if (blockNumberEnumUnion.blockEnum == BlockEnum.PENDING) { // pending block
+            res = chainHolder.getAccountBalance(aionAddress);
+        } else if (blockNumberEnumUnion.blockEnum == BlockEnum.EARLIEST) { // genesis block
+            res = chainHolder.getAccountBalance(aionAddress, 0L);
         } else {
-            return chainHolder.getAccountBalance(aionAddress, blockNumberEnumUnion.blockNumber);
+            res = chainHolder.getAccountBalance(aionAddress, blockNumberEnumUnion.blockNumber);
         }
+        return res;
     }
 
     @Override
-    public BigInteger eth_getTransactionCount(AionAddress aionAddress,
-        BlockNumberEnumUnion blockNumberEnumUnion) {
-        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST){
-            return chainHolder.getAccountNonce(aionAddress);
+    public BigInteger eth_getTransactionCount(
+            AionAddress aionAddress, BlockNumberEnumUnion blockNumberEnumUnion) {
+        final BigInteger res;
+        if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST) { // best block
+            res = chainHolder.getAccountNonce(aionAddress, chainHolder.blockNumber());
+        } else if (blockNumberEnumUnion.blockEnum == BlockEnum.PENDING) { // pending block
+            res = chainHolder.getAccountNonce(aionAddress);
+        } else if (blockNumberEnumUnion.blockEnum == BlockEnum.EARLIEST) { // genesis block
+            res = chainHolder.getAccountNonce(aionAddress, 0L);
         } else {
-            return chainHolder.getAccountNonce(aionAddress, blockNumberEnumUnion.blockNumber);
+            res = chainHolder.getAccountNonce(aionAddress, blockNumberEnumUnion.blockNumber);
         }
+        return res;
     }
 
 
