@@ -593,6 +593,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    public List<Block> getBlocksByNumber(long blockNr) {
+        return getBlockStore().getBlocksByNumber(blockNr);
+    }
+
+    @Override
     public List<Block> getBlocksByRange(long first, long last) {
         return getBlockStore().getBlocksByRange(first, last);
     }

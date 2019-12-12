@@ -28,6 +28,8 @@ public interface IAionBlockchain extends UnityChain {
 
     Block getBlockByNumber(long num);
 
+    List<Block> getBlocksByNumber(long num);
+
     /**
      * Returns a range of main chain blocks.
      *

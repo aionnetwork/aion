@@ -82,7 +82,6 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusUnity;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.types.AionBlock;
@@ -1435,9 +1434,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
-        List<Block> blocks =
-                ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore())
-                        .getBlocksByNumber(bn);
+        List<Block> blocks = this.ac.getAionHub().getBlockchain().getBlocksByNumber(bn);
         if (blocks == null) {
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Blocks requested not found.");
         }
