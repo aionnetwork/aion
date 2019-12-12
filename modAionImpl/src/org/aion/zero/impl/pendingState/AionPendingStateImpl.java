@@ -80,8 +80,6 @@ public class AionPendingStateImpl implements IPendingState {
 
     private boolean isSeedMode;
 
-    private boolean loadPendingTx;
-
     private boolean poolBackUpEnable;
 
     private Map<byte[], byte[]> backupPendingPoolAdd;
@@ -139,6 +137,7 @@ public class AionPendingStateImpl implements IPendingState {
         this.currentBestBlock = new AtomicReference<>(blockchain.getBestBlock());
 
         if (isSeedMode) {
+            // seedMode has no txpool setup.
             txPool = null;
             LOGGER_TX.info("Seed mode is enabled");
         } else {
@@ -155,18 +154,20 @@ public class AionPendingStateImpl implements IPendingState {
         this.transactionBroadcastCallback = transactionBroadcastCallback;
         this.pendingTxReceivedforMining = new AtomicBoolean();
 
-        this.poolBackUpEnable = poolBackup;
-        this.replayTxBuffer = new ArrayList<>();
-        this.pendingTxCache = new PendingTxCache(maxTxCacheSize, poolBackUpEnable);
-        this.pendingState = blockchain.getRepository().startTracking();
-
         // seedMode has no pool.
         this.poolDumpEnable = poolDump && !seedMode;
+        this.poolBackUpEnable = poolBackup && !seedMode;
+        this.replayTxBuffer = new ArrayList<>();
+        this.pendingState = blockchain.getRepository().startTracking();
+        this.pendingTxCache = new PendingTxCache(maxTxCacheSize, poolBackUpEnable);
 
         if (poolBackUpEnable) {
             this.backupPendingPoolAdd = new HashMap<>();
             this.backupPendingCacheAdd = new HashMap<>();
             this.backupPendingPoolRemove = new HashSet<>();
+
+            // Trying to recover the pool backup first.
+            recoverPoolnCache();
         }
     }
 
@@ -208,7 +209,7 @@ public class AionPendingStateImpl implements IPendingState {
     public synchronized List<TxResponse> addPendingTransactions(
             List<AionTransaction> transactions) {
 
-        if ((isSeedMode || !closeToNetworkBest) && !loadPendingTx) {
+        if (isSeedMode || !closeToNetworkBest) {
             return seedProcess(transactions);
         }
 
@@ -357,12 +358,10 @@ public class AionPendingStateImpl implements IPendingState {
             pendingTxReceivedforMining.set(true);
         }
 
-        if (!loadPendingTx) {
-            if (!testingMode && (!newPending.isEmpty() || !newLargeNonceTx.isEmpty())) {
-                transactionBroadcastCallback.broadcastTransactions(
-                        Stream.concat(newPending.stream(), newLargeNonceTx.stream())
-                                .collect(Collectors.toList()));
-            }
+        if (!testingMode && (!newPending.isEmpty() || !newLargeNonceTx.isEmpty())) {
+            transactionBroadcastCallback.broadcastTransactions(
+                    Stream.concat(newPending.stream(), newLargeNonceTx.stream())
+                            .collect(Collectors.toList()));
         }
 
         return txResponses;
@@ -927,12 +926,9 @@ public class AionPendingStateImpl implements IPendingState {
         }
     }
 
-    public void loadPendingTx() {
-
-        loadPendingTx = true;
+    private void recoverPoolnCache() {
         recoverPool();
         recoverCache();
-        loadPendingTx = false;
     }
 
     private void recoverCache() {
