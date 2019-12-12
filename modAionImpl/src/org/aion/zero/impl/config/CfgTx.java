@@ -14,15 +14,12 @@ public class CfgTx {
 
     public CfgTx() {
         this.cacheMax = 256; // by 0.1M;
-        this.buffer = true;
         this.poolDump = false;
         this.poolBackup = false;
         this.pendingTransactionTimeout = 3600;
     }
 
     private int cacheMax;
-
-    private boolean buffer;
 
     private boolean poolDump;
 
@@ -45,9 +42,6 @@ public class CfgTx {
                             } else if (this.cacheMax > 16384) { // 16GB
                                 this.cacheMax = 16384;
                             }
-                            break;
-                        case "buffer":
-                            this.buffer = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         case "pooldump":
                             this.poolDump = Boolean.parseBoolean(ConfigUtil.readValue(sr));
@@ -125,10 +119,6 @@ public class CfgTx {
         return this.cacheMax;
     }
 
-    public boolean getBuffer() {
-        return this.buffer;
-    }
-
     public boolean getPoolDump() {
         return poolDump;
     }
@@ -143,7 +133,6 @@ public class CfgTx {
         if (o == null || getClass() != o.getClass()) return false;
         CfgTx cfgTx = (CfgTx) o;
         return cacheMax == cfgTx.cacheMax
-                && buffer == cfgTx.buffer
                 && poolDump == cfgTx.poolDump
                 && poolBackup == cfgTx.poolBackup
                 && pendingTransactionTimeout == cfgTx.pendingTransactionTimeout;
@@ -151,6 +140,6 @@ public class CfgTx {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(cacheMax, buffer, poolDump, poolBackup, pendingTransactionTimeout);
+        return Objects.hashCode(cacheMax, poolDump, poolBackup, pendingTransactionTimeout);
     }
 }

@@ -1805,7 +1805,6 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
         obj.put("cacheMax", config.getCacheMax());
         obj.put("poolBackup", config.getPoolBackup());
-        obj.put("buffer", config.getBuffer());
         obj.put("poolDump", config.getPoolDump());
         return obj;
     }
