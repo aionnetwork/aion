@@ -48,10 +48,6 @@ public interface UnityChain {
 
     AionBlock getBestMiningBlock();
 
-    void setBestStakingBlock(StakingBlock block);
-
-    void setBestMiningBlock(AionBlock block);
-    
     void loadBestStakingBlock();
     
     void loadBestMiningBlock();

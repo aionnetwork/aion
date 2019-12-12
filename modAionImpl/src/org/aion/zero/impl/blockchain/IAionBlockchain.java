@@ -13,7 +13,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.impl.types.StakingBlock;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain extends UnityChain {
@@ -130,8 +129,6 @@ public interface IAionBlockchain extends UnityChain {
 
     void setBestBlock(Block block);
 
-    boolean hasParentOnTheChain(Block block);
-
     void close();
 
     void setTotalDifficulty(BigInteger totalDifficulty);
@@ -149,14 +146,6 @@ public interface IAionBlockchain extends UnityChain {
     boolean isBlockStored(byte[] hash, long number);
 
     List<BlockHeader> getListOfHeadersStartFrom(long number, int limit);
-
-    // /** Returns the list of headers for the main chain.
-    //  *  Returns emptyList() for side chain blocks.
-    //  */
-    // List<BH> getListOfHeadersStartFrom(
-    //         BlockIdentifierImpl identifier, int skip, int limit, boolean reverse);
-
-    List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 
     /**
      * Checks whether a hash is indexed as main chain or side chain.
@@ -176,5 +165,5 @@ public interface IAionBlockchain extends UnityChain {
      * @return {@code true} if the block is indexed as a main chain block, {@code false} if the
      *     block is not indexed or is a side chain block
      */
-    public boolean isMainChain(byte[] hash);
+    boolean isMainChain(byte[] hash);
 }
