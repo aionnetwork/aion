@@ -124,8 +124,19 @@ public class AionHub {
         this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, forTest) : _blockchain;
         blockchain.setEventManager(this.eventMgr);
 
-        this.mempool = AionPendingStateImpl.create(cfg, blockchain, pendingTxCallback, networkBestBlockCallback,
-            transactionBroadcastCallback, forTest);
+        this.mempool =
+                new AionPendingStateImpl(
+                        blockchain,
+                        cfg.getConsensus().getEnergyStrategy().getUpperBound(),
+                        cfg.getTx().getTxPendingTimeout(),
+                        cfg.getTx().getCacheMax(),
+                        cfg.getTx().getPoolBackup(),
+                        cfg.getTx().isSeedMode(),
+                        cfg.getTx().getPoolDump(),
+                        pendingTxCallback,
+                        networkBestBlockCallback,
+                        transactionBroadcastCallback,
+                        forTest);
 
         try {
             loadBlockchain();

@@ -40,7 +40,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.SystemExitCodes;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
@@ -75,11 +74,11 @@ public class AionPendingStateImpl implements IPendingState {
      */
     private List<AionTransaction> replayTxBuffer;
 
-    private boolean test;
+    private boolean testingMode;
 
-    private boolean dumpPool;
+    private boolean poolDumpEnable;
 
-    private boolean isSeed;
+    private boolean isSeedMode;
 
     private boolean loadPendingTx;
 
@@ -121,70 +120,53 @@ public class AionPendingStateImpl implements IPendingState {
         pendingTxCache.clearCacheTxHash();
     }
 
-    public static AionPendingStateImpl create(
-            CfgAion cfgAion,
+    public AionPendingStateImpl(
             AionBlockchainImpl blockchain,
+            long energyUpperBound,
+            int txPendingTimeout,
+            int maxTxCacheSize,
+            boolean seedMode,
+            boolean poolBackup,
+            boolean poolDump,
             PendingTxCallback pendingTxCallback,
             NetworkBestBlockCallback networkBestBlockCallback,
             TransactionBroadcastCallback transactionBroadcastCallback,
             boolean forTest) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(cfgAion, pendingTxCallback, networkBestBlockCallback,
-            transactionBroadcastCallback);
-        ps.init(blockchain, forTest);
-        return ps;
-    }
 
-    private AionPendingStateImpl(CfgAion _cfgAion, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, TransactionBroadcastCallback transactionBroadcastCallback) {
-        this.isSeed = _cfgAion.getTx().isSeedMode();
+        this.testingMode = forTest;
+        this.isSeedMode = seedMode;
+        this.blockchain = blockchain;
+        this.currentBestBlock = new AtomicReference<>(blockchain.getBestBlock());
 
-        if (!isSeed) {
-
-            Properties prop = new Properties();
-
-            // The BlockEnergyLimit will be updated when the best block found.
-            prop.put(
-                    ITxPool.PROP_BLOCK_NRG_LIMIT,
-                    String.valueOf(
-                            CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
-            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
-            prop.put(
-                    ITxPool.PROP_TX_TIMEOUT,
-                    String.valueOf(CfgAion.inst().getTx().getTxPendingTimeout()));
-
-            this.txPool = new TxPoolA0(prop);
-
-        } else {
+        if (isSeedMode) {
             txPool = null;
-            LOGGER_TX.info("Seed mode is enable");
+            LOGGER_TX.info("Seed mode is enabled");
+        } else {
+            Properties prop = new Properties();
+            // The BlockEnergyLimit will be updated when the best block found.
+            prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, String.valueOf(energyUpperBound));
+            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
+            prop.put(ITxPool.PROP_TX_TIMEOUT, String.valueOf(txPendingTimeout));
+            this.txPool = new TxPoolA0(prop);
         }
 
         this.pendingTxCallback = pendingTxCallback;
         this.networkBestBlockCallback = networkBestBlockCallback;
         this.transactionBroadcastCallback = transactionBroadcastCallback;
         this.pendingTxReceivedforMining = new AtomicBoolean();
-    }
 
-    public void init(final AionBlockchainImpl blockchain, boolean test) {
+        this.poolBackUpEnable = poolBackup;
+        this.replayTxBuffer = new ArrayList<>();
+        this.pendingTxCache = new PendingTxCache(maxTxCacheSize, poolBackUpEnable);
+        this.pendingState = blockchain.getRepository().startTracking();
 
-        this.blockchain = blockchain;
-        this.currentBestBlock = new AtomicReference<>(blockchain.getBestBlock());
-        this.test = test;
+        // seedMode has no pool.
+        this.poolDumpEnable = poolDump && !seedMode;
 
-        if (!this.isSeed) {
-
-            this.poolBackUpEnable = CfgAion.inst().getTx().getPoolBackup();
-            this.replayTxBuffer = new ArrayList<>();
-            this.pendingTxCache =
-                    new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUpEnable);
-            this.pendingState = blockchain.getRepository().startTracking();
-
-            this.dumpPool = test || CfgAion.inst().getTx().getPoolDump();
-
-            if (poolBackUpEnable) {
-                this.backupPendingPoolAdd = new HashMap<>();
-                this.backupPendingCacheAdd = new HashMap<>();
-                this.backupPendingPoolRemove = new HashSet<>();
-            }
+        if (poolBackUpEnable) {
+            this.backupPendingPoolAdd = new HashMap<>();
+            this.backupPendingCacheAdd = new HashMap<>();
+            this.backupPendingPoolRemove = new HashSet<>();
         }
     }
 
@@ -194,12 +176,12 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public int getPendingTxSize() {
-        return isSeed ? 0 : this.txPool.size();
+        return isSeedMode ? 0 : this.txPool.size();
     }
 
     @Override
     public synchronized List<AionTransaction> getPendingTransactions() {
-        return isSeed ? new ArrayList<>() : this.txPool.snapshot();
+        return isSeedMode ? new ArrayList<>() : this.txPool.snapshot();
     }
 
     /**
@@ -226,7 +208,7 @@ public class AionPendingStateImpl implements IPendingState {
     public synchronized List<TxResponse> addPendingTransactions(
             List<AionTransaction> transactions) {
 
-        if ((isSeed || !closeToNetworkBest) && !loadPendingTx) {
+        if ((isSeedMode || !closeToNetworkBest) && !loadPendingTx) {
             return seedProcess(transactions);
         }
 
@@ -376,7 +358,7 @@ public class AionPendingStateImpl implements IPendingState {
         }
 
         if (!loadPendingTx) {
-            if (!test && (!newPending.isEmpty() || !newLargeNonceTx.isEmpty())) {
+            if (!testingMode && (!newPending.isEmpty() || !newLargeNonceTx.isEmpty())) {
                 transactionBroadcastCallback.broadcastTransactions(
                         Stream.concat(newPending.stream(), newLargeNonceTx.stream())
                                 .collect(Collectors.toList()));
@@ -559,7 +541,7 @@ public class AionPendingStateImpl implements IPendingState {
     @Override
     public synchronized void applyBlockUpdate(Block newBlock, List<AionTxReceipt> receipts) {
 
-        if (isSeed) {
+        if (isSeedMode) {
             // seed mode doesn't need to update the pendingState
             return;
         }
@@ -641,7 +623,7 @@ public class AionPendingStateImpl implements IPendingState {
         }
 
         // This is for debug purpose, do not use in the regular kernel running.
-        if (this.dumpPool) {
+        if (this.poolDumpEnable) {
             DumpPool();
         }
     }
@@ -878,7 +860,9 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public synchronized BigInteger bestPendingStateNonce(AionAddress addr) {
-        return isSeed ? BigInteger.ZERO : this.pendingState.getNonce(addr);
+        // Because the seedmode has no pendingPool concept, it only pass the transaction to the network directly.
+        // So we will return the chainRepo nonce instead of pendingState nonce.
+        return isSeedMode ? blockchain.getRepository().getNonce(addr) : this.pendingState.getNonce(addr);
     }
 
     private BigInteger bestRepoNonce(AionAddress addr) {
@@ -1036,7 +1020,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     public String getVersion() {
-        return isSeed ? "0" : this.txPool.getVersion();
+        return isSeedMode ? "0" : this.txPool.getVersion();
     }
 
     private boolean isCloseToNetworkBest() {

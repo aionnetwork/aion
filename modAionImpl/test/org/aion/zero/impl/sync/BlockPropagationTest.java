@@ -30,13 +30,19 @@ import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
 /** Unit tests for block propagation */
 public class BlockPropagationTest {
+
+    private long blockEnergyUpperBound = 20_000_000L;
+    private int pendingTransactionTimeout = 3600;
+    private int transactionCacheSizeMax = 256;
+    private boolean enablePoolBackup = false;
+    private boolean enableSeedMode = false;
+    private boolean enablePoolDump = false;
 
     private static class NodeMock implements INode {
 
@@ -345,8 +351,18 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(CfgAion.inst(), anotherBundle.bc, new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(
-                            AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()), true));
+                        new AionPendingStateImpl(
+                                anotherBundle.bc,
+                                blockEnergyUpperBound,
+                                pendingTransactionTimeout,
+                                transactionCacheSizeMax,
+                                enablePoolBackup,
+                                enableSeedMode,
+                                enablePoolDump,
+                                new PendingTxCallback(new ArrayList<>()),
+                                new NetworkBestBlockCallback(AionImpl.inst()),
+                                new TransactionBroadcastCallback(AionImpl.inst()),
+                                true));
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
@@ -413,14 +429,18 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(
-                                CfgAion.inst(),
+                        new AionPendingStateImpl(
                                 anotherBundle.bc,
+                                blockEnergyUpperBound,
+                                pendingTransactionTimeout,
+                                transactionCacheSizeMax,
+                                enablePoolBackup,
+                                enableSeedMode,
+                                enablePoolDump,
                                 new PendingTxCallback(new ArrayList<>()),
                                 new NetworkBestBlockCallback(AionImpl.inst()),
                                 new TransactionBroadcastCallback(AionImpl.inst()),
                                 true));
-
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
@@ -482,14 +502,18 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(
-                                CfgAion.inst(),
+                        new AionPendingStateImpl(
                                 anotherBundle.bc,
+                                blockEnergyUpperBound,
+                                pendingTransactionTimeout,
+                                transactionCacheSizeMax,
+                                enablePoolBackup,
+                                enableSeedMode,
+                                enablePoolDump,
                                 new PendingTxCallback(new ArrayList<>()),
                                 new NetworkBestBlockCallback(AionImpl.inst()),
                                 new TransactionBroadcastCallback(AionImpl.inst()),
                                 true));
-
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
@@ -546,14 +570,18 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        AionPendingStateImpl.create(
-                                CfgAion.inst(),
+                        new AionPendingStateImpl(
                                 anotherBundle.bc,
+                                blockEnergyUpperBound,
+                                pendingTransactionTimeout,
+                                transactionCacheSizeMax,
+                                enablePoolBackup,
+                                enableSeedMode,
+                                enablePoolDump,
                                 new PendingTxCallback(new ArrayList<>()),
                                 new NetworkBestBlockCallback(AionImpl.inst()),
                                 new TransactionBroadcastCallback(AionImpl.inst()),
                                 true));
-
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented
 
