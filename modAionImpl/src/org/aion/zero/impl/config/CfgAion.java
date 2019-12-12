@@ -1,14 +1,11 @@
 package org.aion.zero.impl.config;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -328,6 +325,13 @@ public final class CfgAion {
             fis = new FileInputStream(cfgFile);
             XMLStreamReader sr = input.createXMLStreamReader(fis);
             shouldWriteBackToFile = fromXML(sr);
+
+            // seedMode migration compatibility
+            Boolean seedMode = consensus.getSeedMode();
+            if (seedMode != null) {
+                tx.setSeedMode(seedMode);
+            }
+
             closeFileInputStream(fis);
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");

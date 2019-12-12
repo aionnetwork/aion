@@ -1,5 +1,6 @@
 package org.aion.zero.impl.config;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -17,6 +18,7 @@ public class CfgTx {
         this.poolDump = false;
         this.poolBackup = false;
         this.pendingTransactionTimeout = 3600;
+        this.seedMode = false;
     }
 
     private int cacheMax;
@@ -26,6 +28,8 @@ public class CfgTx {
     private boolean poolBackup;
 
     private int pendingTransactionTimeout;
+
+    private boolean seedMode;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -54,6 +58,9 @@ public class CfgTx {
                             if (this.pendingTransactionTimeout < 60) { // 1 min
                                 this.pendingTransactionTimeout = 60;
                             }
+                            break;
+                        case "seedmode":
+                            this.seedMode = Boolean.parseBoolean(ConfigUtil.readValue(sr));
                             break;
                         default:
                             ConfigUtil.skipElement(sr);
@@ -141,5 +148,14 @@ public class CfgTx {
     @Override
     public int hashCode() {
         return Objects.hashCode(cacheMax, poolDump, poolBackup, pendingTransactionTimeout);
+    }
+
+    public boolean isSeedMode() {
+        return seedMode;
+    }
+
+    @VisibleForTesting
+    public void setSeedMode(final boolean value) {
+        seedMode = value;
     }
 }

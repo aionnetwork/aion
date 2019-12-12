@@ -135,7 +135,7 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, TransactionBroadcastCallback transactionBroadcastCallback) {
-        this.isSeed = _cfgAion.getConsensus().isSeed();
+        this.isSeed = _cfgAion.getTx().isSeedMode();
 
         if (!isSeed) {
 

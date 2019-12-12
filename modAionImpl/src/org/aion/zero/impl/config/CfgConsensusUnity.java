@@ -1,6 +1,5 @@
 package org.aion.zero.impl.config;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -14,18 +13,24 @@ public final class CfgConsensusUnity {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
+    /**
+     * @ImplNote Default ConsensusUnity configuration. The seed field has been moved to the CfgTx configuration.
+     * @see CfgTx
+     */
     CfgConsensusUnity() {
         this.mining = false;
         this.minerAddress = AddressUtils.ZERO_ADDRESS.toString();
         this.cpuMineThreads = 1;
         this.extraData = "AION";
         this.cfgEnergyStrategy = new CfgEnergyStrategy();
-        this.seed = false;
+
+        // seedMode has been moved into the CfgTx, we leave this hidden options for the config compatibilities.
+        this.seed = null;
     }
 
     private boolean mining;
 
-    private boolean seed;
+    private Boolean seed;
 
     private String minerAddress;
 
@@ -156,12 +161,7 @@ public final class CfgConsensusUnity {
         return this.cfgEnergyStrategy;
     }
 
-    public boolean isSeed() {
+    Boolean getSeedMode() {
         return seed;
-    }
-
-    @VisibleForTesting
-    public void setSeed(final boolean value) {
-        seed = value;
     }
 }

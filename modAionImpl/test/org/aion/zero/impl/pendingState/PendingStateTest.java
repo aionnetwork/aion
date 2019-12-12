@@ -729,12 +729,12 @@ public class PendingStateTest {
 
     @Test
     public void testAionPendingStateInit() {
-        CfgAion.inst().getConsensus().setSeed(true);
+        CfgAion.inst().getTx().setSeedMode(true);
 
         // NullPointerException should not happens
         AionHub.createForTesting(CfgAion.inst(), blockchain,
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
 
-        CfgAion.inst().getConsensus().setSeed(false);
+        CfgAion.inst().getTx().setSeedMode(false);
     }
 }

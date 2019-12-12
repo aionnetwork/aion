@@ -187,7 +187,7 @@ public class ApiWeb3Aion extends ApiAion {
         super(_ac, am);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
-        isSeedMode = CfgAion.inst().getConsensus().isSeed();
+        isSeedMode = CfgAion.inst().getTx().isSeedMode();
 
         initNrgOracle(_ac);
 
@@ -1729,7 +1729,6 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("minerAddress", config.getMinerAddress());
         obj.put("threads", config.getCpuMineThreads());
         obj.put("extraData", config.getExtraData());
-        obj.put("isSeed", config.isSeed());
 
         // base.consensus.energyStrategy
         CfgEnergyStrategy nrg = config.getEnergyStrategy();
@@ -1806,6 +1805,7 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("cacheMax", config.getCacheMax());
         obj.put("poolBackup", config.getPoolBackup());
         obj.put("poolDump", config.getPoolDump());
+        obj.put("seedmode", config.isSeedMode());
         return obj;
     }
 
