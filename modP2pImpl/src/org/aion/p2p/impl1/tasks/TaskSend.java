@@ -6,11 +6,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,7 +15,6 @@ import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 import org.aion.p2p.P2pConstant;
-import org.aion.p2p.impl.comm.Node;
 import org.slf4j.Logger;
 
 public class TaskSend implements Runnable {
@@ -31,6 +25,17 @@ public class TaskSend implements Runnable {
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final INodeMgr nodeMgr;
     private final Selector selector;
+
+    // used when survey logging
+    private static final long MIN_DURATION = 60_000_000_000L; // 60 seconds
+    private long waitTime = 0,
+            fullProcessTime = 0,
+            internalProcessTime = 0,
+            timeoutTime = 0,
+            closedCheckTime = 0,
+            setupWriteTime = 0,
+            writeTime = 0,
+            tryTime = 0;
 
     public TaskSend(
             final Logger p2pLOG,
@@ -60,12 +65,20 @@ public class TaskSend implements Runnable {
                 startTime = System.nanoTime();
                 MsgOut mo = sendMsgQue.take();
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskSend: wait for message, duration = {} ns.", duration);
+                waitTime += duration;
+                if (waitTime > MIN_DURATION) { // print and reset total time so far
+                    surveyLog.info("TaskSend: wait for message, duration = {} ns.", waitTime);
+                    waitTime = 0;
+                }
 
                 startTime = System.nanoTime();
                 process(mo);
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskSend: process message, duration = {} ns.", duration);
+                fullProcessTime += duration;
+                if (fullProcessTime > MIN_DURATION) { // print and reset total time so far
+                    surveyLog.info("TaskSend: full process message, duration = {} ns.", fullProcessTime);
+                    fullProcessTime = 0;
+                }
             } catch (InterruptedException e) {
                 p2pLOG.error("task-send-interrupted", e);
                 return;
@@ -75,6 +88,16 @@ public class TaskSend implements Runnable {
                 p2pLOG.debug("TaskSend exception.", e);
             }
         }
+
+        // print remaining total times
+        surveyLog.info("TaskSend: wait for message, duration = {} ns.", waitTime);
+        surveyLog.info("TaskSend: full process message, duration = {} ns.", fullProcessTime);
+        surveyLog.info("TaskSend: timeout, duration = {} ns.", timeoutTime);
+        surveyLog.info("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
+        surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
+        surveyLog.info("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
+        surveyLog.info("TaskSend: write message, duration = {} ns.", writeTime);
+        surveyLog.info("TaskSend: start to end of write try, duration = {} ns.", tryTime);
     }
 
     /**
@@ -95,7 +118,11 @@ public class TaskSend implements Runnable {
         if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
             p2pLOG.debug("timeout-msg to-node={} timestamp={}", mo.getDisplayId(), now);
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskSend: timeout, duration = {} ns.", duration);
+            timeoutTime += duration;
+            if (timeoutTime > MIN_DURATION) { // print and reset total time so far
+                surveyLog.info("TaskSend: timeout, duration = {} ns.", timeoutTime);
+                timeoutTime = 0;
+            }
             return false;
         }
 
@@ -122,7 +149,11 @@ public class TaskSend implements Runnable {
             p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("TaskSend: process message, duration = {} ns.", duration);
+        internalProcessTime += duration;
+        if (internalProcessTime > MIN_DURATION) { // print and reset total time so far
+            surveyLog.info("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
+            internalProcessTime = 0;
+        }
         return true;
     }
 
@@ -144,11 +175,15 @@ public class TaskSend implements Runnable {
             channelBuffer.refreshBody();
             mgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", duration);
+            closedCheckTime += duration;
             return;
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", duration);
+        closedCheckTime += duration;
+        if (closedCheckTime > MIN_DURATION) { // print and reset total time so far
+            surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
+            closedCheckTime = 0;
+        }
 
         long startTime2 = System.nanoTime();
         try {
@@ -173,7 +208,11 @@ public class TaskSend implements Runnable {
             }
             buf.flip();
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskSend: setup for write, duration = {} ns.", duration);
+            setupWriteTime += duration;
+            if (setupWriteTime > MIN_DURATION) { // print and reset total time so far
+                surveyLog.info("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
+                setupWriteTime = 0;
+            }
 
             long t1 = System.nanoTime(), t2;
             int wrote = 0;
@@ -192,7 +231,11 @@ public class TaskSend implements Runnable {
                     t2 = System.nanoTime() - t1;
                 } while (buf.hasRemaining() && (t2 < MAX_BUFFER_WRITE_TIME));
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskSend: write message {} node={}, duration = {} ns.", msg, nodeShortId, duration);
+                writeTime += duration;
+                if (writeTime > MIN_DURATION) { // print and reset total time so far
+                    surveyLog.info("TaskSend: write message, duration = {} ns.", writeTime);
+                    writeTime = 0;
+                }
 
                 if (t2 > MIN_TRACE_BUFFER_WRITE_TIME) {
                     p2pLOG.trace(
@@ -227,7 +270,11 @@ public class TaskSend implements Runnable {
             p2pLOG.error("TaskSend exception.", e);
         } finally {
             duration = System.nanoTime() - startTime2;
-            surveyLog.info("TaskSend: start to end of write try, duration = {} ns.", duration);
+            tryTime += duration;
+            if (tryTime > MIN_DURATION) { // print and reset total time so far
+                surveyLog.info("TaskSend: start to end of write try, duration = {} ns.", tryTime);
+                tryTime = 0;
+            }
             channelBuffer.lock.unlock();
         }
     }
