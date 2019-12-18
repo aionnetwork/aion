@@ -437,7 +437,7 @@ public class PendingStateTest {
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
 
-        (pendingState).processBest(block, connectResult.getRight().getReceipts());
+        (pendingState).applyBlockUpdate(block, connectResult.getRight().getReceipts());
         assertEquals(pendingState.getPendingTransactions().get(0), tx2);
     }
 
@@ -477,7 +477,7 @@ public class PendingStateTest {
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
 
-        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        pendingState.applyBlockUpdate(block, connectResult.getRight().getReceipts());
         assertEquals(0, pendingState.getPendingTxSize());
     }
 
@@ -545,7 +545,7 @@ public class PendingStateTest {
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
 
-        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        pendingState.applyBlockUpdate(block, connectResult.getRight().getReceipts());
         // tx3 should replace tx2, and tx4 will now have insufficient funds so it will get dropped
         assertEquals(2, pendingState.getPendingTxSize());
         assertEquals(pendingState.getPendingTransactions().get(1), tx3);
@@ -627,7 +627,7 @@ public class PendingStateTest {
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
 
-        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        pendingState.applyBlockUpdate(block, connectResult.getRight().getReceipts());
         // tx3 should replace tx2, and tx4 will now have insufficient funds so it will get dropped
         assertEquals(2, pendingState.getPendingTxSize());
         assertEquals(pendingState.getPendingTransactions().get(1), tx3);
@@ -695,7 +695,7 @@ public class PendingStateTest {
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
 
-        pendingState.processBest(block, connectResult.getRight().getReceipts());
+        pendingState.applyBlockUpdate(block, connectResult.getRight().getReceipts());
         assertEquals(1, pendingState.getPendingTxSize());
     }
 

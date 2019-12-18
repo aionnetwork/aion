@@ -231,16 +231,7 @@ public class AionPendingStateImpl implements IPendingState {
             while (go) {
                 IEvent e = ees.take();
 
-                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
-                        && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                    long t1 = System.currentTimeMillis();
-                    processBest((Block) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
-
-                    if (LOGGER_TX.isDebugEnabled()) {
-                        long t2 = System.currentTimeMillis();
-                        LOGGER_TX.debug("Pending state update took {} ms", t2 - t1);
-                    }
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
             }
@@ -333,8 +324,6 @@ public class AionPendingStateImpl implements IPendingState {
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOGGER_TX);
             ees.setFilter(setEvtFilter());
 
-            regBlockEvents();
-
             IHandler blkHandler = this.evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
             if (blkHandler != null) {
                 blkHandler.eventCallback(new EventCallback(ees, LOGGER_TX));
@@ -373,14 +362,6 @@ public class AionPendingStateImpl implements IPendingState {
         }
 
         return eventSN;
-    }
-
-    private void regBlockEvents() {
-        List<IEvent> evts = new ArrayList<>();
-        evts.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
-        evts.add(new EventBlock(EventBlock.CALLBACK.ONBEST0));
-
-        this.evtMgr.registerEvent(evts);
     }
 
     public synchronized RepositoryCache<?> getRepository() {
@@ -772,7 +753,15 @@ public class AionPendingStateImpl implements IPendingState {
         return b1;
     }
 
-    public synchronized void processBest(Block newBlock, List receipts) {
+    /**
+     * AKI-608
+     * The method called by the AionblockchainImpl through callback, currently it will block the block import.
+     * TODO :  Sync or Async from the callback.
+     * @param newBlock
+     * @param receipts
+     */
+    @Override
+    public synchronized void applyBlockUpdate(Block newBlock, List<AionTxReceipt> receipts) {
 
         if (isSeed) {
             // seed mode doesn't need to update the pendingState

@@ -8,6 +8,7 @@ import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.EnumMap;
+import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
 import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import static org.aion.zero.impl.core.ImportResult.EXIST;
@@ -197,6 +198,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         .synchronizedMap(new LRUMap<>(64));
 
     private SelfNodeStatusCallback callback;
+    private BestBlockImportCallback bestBlockCallback;
 
     public AionBlockchainImpl(CfgAion cfgAion, boolean forTest) {
         this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(),
@@ -1045,26 +1047,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (callback != null) {
                 callback.updateBlockStatus(block.getNumber(), block.getHash().clone(), block.getTotalDifficulty());
             }
+
+            if (bestBlockCallback != null) {
+                long t1 = System.currentTimeMillis();
+
+                bestBlockCallback.applyBlockUpdate(block, summary.getReceipts());
+
+                AionLoggerFactory.getLogger(LogEnum.TX.toString())
+                    .debug("Pending state update took {} ms", System.currentTimeMillis() - t1);
+            }
         }
 
         // fire block events
         if (ret.isSuccessful()) {
             if (this.evtMgr != null) {
-
                 List<IEvent> evts = new ArrayList<>();
                 IEvent evtOnBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
                 evtOnBlock.setFuncArgs(Collections.singletonList(summary));
                 evts.add(evtOnBlock);
 
-                IEvent evtTrace = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
-                String str = String.format("Block chain size: [ %d ]", this.getSizeInternal());
-                evtTrace.setFuncArgs(Collections.singletonList(str));
-                evts.add(evtTrace);
-
                 if (ret == IMPORTED_BEST) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("IMPORTED_BEST");
-                    }
                     IEvent evtOnBest = new EventBlock(EventBlock.CALLBACK.ONBEST0);
                     evtOnBest.setFuncArgs(Arrays.asList(block, summary.getReceipts()));
                     evts.add(evtOnBest);
@@ -2645,5 +2647,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     void setNodeStatusCallback(SelfNodeStatusCallback callback) {
         this.callback = callback;
+    }
+
+    void setBestBlockImportCallback(BestBlockImportCallback callback) {
+        bestBlockCallback = callback;
     }
 }
