@@ -51,6 +51,10 @@ public class TaskInbound implements Runnable {
 
     private static final int OFFER_TIMEOUT = 100; // in milliseconds
 
+    // used when survey logging
+    private static final long MIN_DURATION = 60_000_000_000L; // 60 seconds
+    private long waitTime = 0, processTime = 0;
+
     public TaskInbound(
             final Logger p2pLOG,
             final Logger surveyLog,
@@ -90,7 +94,7 @@ public class TaskInbound implements Runnable {
                 // timeout set to 0.1 second
                 if (this.selector.select(100) == 0) {
                     duration = System.nanoTime() - startTime;
-                    surveyLog.info("TaskInbound: find selectors, duration = {} ns.", duration);
+                    waitTime += duration;
                     continue;
                 }
             } catch (IOException | ClosedSelectorException e) {
@@ -98,7 +102,11 @@ public class TaskInbound implements Runnable {
                 continue;
             }
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskInbound: find selectors, duration = {} ns.", duration);
+            waitTime += duration;
+            if (waitTime > MIN_DURATION) { // print and reset total time so far
+                surveyLog.info("TaskInbound: find selectors, duration = {} ns.", waitTime);
+                waitTime = 0;
+            }
 
             startTime = System.nanoTime();
             try {
@@ -140,8 +148,16 @@ public class TaskInbound implements Runnable {
                 p2pLOG.error("inbound ClosedSelectorException.", ex);
             }
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskInbound: process incoming msg, duration = {} ns.", duration);
+            processTime += duration;
+            if (processTime > MIN_DURATION) { // print and reset total time so far
+                surveyLog.info("TaskInbound: process incoming msg, duration = {} ns.", processTime);
+                processTime = 0;
+            }
         }
+
+        // print remaining total times
+        surveyLog.info("TaskInbound: find selectors, duration = {} ns.", waitTime);
+        surveyLog.info("TaskInbound: process incoming msg, duration = {} ns.", processTime);
 
         p2pLOG.info("p2p-pi shutdown");
     }
