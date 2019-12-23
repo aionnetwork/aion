@@ -24,9 +24,7 @@ public interface IAionBlockchain extends UnityChain {
 
     BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
-
-    BlockContext updateMiningBlockContext(BlockContext oldBlockTemplate, long systemTime);
-
+    
     Block getBestBlock();
 
     Block getBlockByNumber(long num);

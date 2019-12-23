@@ -604,7 +604,8 @@ public class AionHub {
                 byte[] bestBlockHash = bestBlock.getHash();
 
                 if (oldBlockTemplate == null
-                        || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())) {
+                        || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())
+                        || (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock())) {
 
                     // Generate new block template
                     AionPendingStateImpl.TransactionSortedSet ret =
@@ -614,8 +615,6 @@ public class AionHub {
                     context =
                             blockchain.createNewMiningBlockContext(
                                     bestBlock, new ArrayList<>(ret), false);
-                } else if (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock()) {
-                    context = blockchain.updateMiningBlockContext(oldBlockTemplate, systemTime);
                 } else {
                     context = oldBlockTemplate;
                 }

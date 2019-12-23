@@ -1147,16 +1147,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return blockContext;
     }
 
-    @Override
-    public BlockContext updateMiningBlockContext(BlockContext oldBlockTemplate, long systemTime) {
-        A0BlockHeader newHeader = oldBlockTemplate.block.getHeader().updateTimestamp(systemTime);
-        AionBlock newBlock = new AionBlock(newHeader, oldBlockTemplate.block.getTransactionsList());
-        final BlockContext blockContext = new BlockContext(newBlock,
-            oldBlockTemplate.baseBlockReward, oldBlockTemplate.transactionFee);
-        miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
-        return blockContext;
-    }
-
     BlockContext createNewMiningBlockInternal(
         Block parent,
         List<AionTransaction> txs,
