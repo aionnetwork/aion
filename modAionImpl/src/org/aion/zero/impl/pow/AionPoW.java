@@ -21,7 +21,6 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventConsensus;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
@@ -47,13 +46,13 @@ public class AionPoW {
 
     protected IAionBlockchain blockchain;
     protected IPendingState pendingState;
-    protected IEventMgr eventMgr;
+    private IEventMgr eventMgr;
 
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
     // This value is the time of the last "full update" of the block template, that is, the last time
     // we created a fresh block from createNewBlockTemplate()
-    protected AtomicLong lastUpdate = new AtomicLong(0);
+    private AtomicLong lastUpdate = new AtomicLong(0);
     private AionBlock latestBlockTemplate;
 
     private AtomicBoolean shutDown = new AtomicBoolean();
@@ -68,12 +67,8 @@ public class AionPoW {
         public void run() {
             while (go) {
                 IEvent e = ees.take();
-
-                if (e.getEventType() == IHandler.TYPE.TX0.getValue()
-                        && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                    newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
-                        && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
+                    && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     // create a new block template every time the best block
                     // updates.
                     createNewBlockTemplate();
@@ -106,6 +101,8 @@ public class AionPoW {
         if (initialized.compareAndSet(false, true)) {
             this.blockchain = blockchain;
             this.pendingState = pendingState;
+            this.pendingState.setNewPendingReceiveForMining(newPendingTxReceived.get());
+
             this.eventMgr = eventMgr;
             this.syncMgr = syncMgr;
 
@@ -145,11 +142,6 @@ public class AionPoW {
 
     /** Sets up the consensus event handler. */
     private void setupHandler() {
-        List<IEvent> txEvts = new ArrayList<>();
-        txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0));
-        txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0));
-        eventMgr.registerEvent(txEvts);
-
         List<IEvent> events = new ArrayList<>();
         events.add(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
         events.add(new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION));
@@ -158,10 +150,7 @@ public class AionPoW {
 
     private Set<Integer> setEvtFilter() {
         Set<Integer> eventSN = new HashSet<>();
-        int sn = IHandler.TYPE.TX0.getValue() << 8;
-        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
-
-        sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
+        int sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
         eventSN.add(sn + EventConsensus.CALLBACK.ON_SOLUTION.getValue());
 
         sn = IHandler.TYPE.BLOCK0.getValue() << 8;
@@ -174,15 +163,12 @@ public class AionPoW {
      * Registers callback for the {@link
      * org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK#ON_SOLUTION} event.
      */
-    public void registerCallback() {
+    private void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
         consensusHandler.eventCallback(new EventCallback(ees, LOG));
 
         IHandler blockHandler = eventMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         blockHandler.eventCallback(new EventCallback(ees, LOG));
-
-        IHandler transactionHandler = eventMgr.getHandler(IHandler.TYPE.TX0.getValue());
-        transactionHandler.eventCallback(new EventCallback(ees, LOG));
     }
 
     /**
@@ -190,7 +176,7 @@ public class AionPoW {
      *
      * @param solution The generated equihash solution
      */
-    protected synchronized void processSolution(AionPowSolution solution) {
+    private synchronized void processSolution(AionPowSolution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
@@ -249,7 +235,7 @@ public class AionPoW {
     }
 
     /** Creates a new block template. */
-    protected synchronized void createNewBlockTemplate() {
+    private synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
@@ -292,7 +278,7 @@ public class AionPoW {
     }
 
     /** Creates a new block template. */
-    protected synchronized void updateTimestamp(long systemTime) {
+    private synchronized void updateTimestamp(long systemTime) {
         if (!shutDown.get() && systemTime > latestBlockTemplate.getTimestamp()) {
             A0BlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
             AionBlock newBlock = new AionBlock(newHeader, latestBlockTemplate.getTransactionsList());

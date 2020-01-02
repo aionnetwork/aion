@@ -24,6 +24,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.config.CfgNetP2p;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
@@ -97,14 +98,15 @@ public class AionHub {
 
     private ReentrantLock blockTemplateLock;
 
-    public AionHub() {
-        initializeHub(CfgAion.inst(), null, AionRepositoryImpl.inst(), false);
+    public AionHub(PendingTxCallback pendingTxCallback) {
+        initializeHub(CfgAion.inst(), null, AionRepositoryImpl.inst(), pendingTxCallback, false);
     }
 
     private void initializeHub(
             CfgAion _cfgAion,
             AionBlockchainImpl _blockchain,
             AionRepositoryImpl _repository,
+            PendingTxCallback pendingTxCallback,
             boolean forTest) {
 
         this.cfg = _cfgAion;
@@ -121,7 +123,7 @@ public class AionHub {
 
         this.repository = _repository;
 
-        this.mempool = AionPendingStateImpl.create(cfg, blockchain, repository, forTest);
+        this.mempool = AionPendingStateImpl.create(cfg, blockchain, repository, pendingTxCallback, forTest);
 
         try {
             loadBlockchain();
@@ -211,16 +213,18 @@ public class AionHub {
     }
 
     public static AionHub createForTesting(
-            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return new AionHub(_cfgAion, _blockchain, _repository, true);
+        CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository,
+        PendingTxCallback pendingTxCallback) {
+        return new AionHub(_cfgAion, _blockchain, _repository, pendingTxCallback, true);
     }
 
     private AionHub(
             CfgAion _cfgAion,
             AionBlockchainImpl _blockchain,
             AionRepositoryImpl _repository,
+            PendingTxCallback pendingTxCallback,
             boolean forTest) {
-        initializeHub(_cfgAion, _blockchain, _repository, forTest);
+        initializeHub(_cfgAion, _blockchain, _repository, pendingTxCallback, forTest);
     }
 
     private void registerCallback() {

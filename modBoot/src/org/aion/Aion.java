@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.aion.api.server.BlockchainCallbackForApiServer;
 import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
@@ -246,7 +247,11 @@ public class Aion {
         AccountManager am = null;
         if (cfg.getApi().getZmq().getActive()) {
             am = new AccountManager(AionLoggerFactory.getLogger(LogEnum.API.name()));
-            IHdlr handler = new HdlrZmq(new ApiAion0(ac, am));
+            ApiAion0 javaAPI = new ApiAion0(ac, am);
+            ac.setApiServiceCallback(new BlockchainCallbackForApiServer(javaAPI));
+
+            IHdlr handler = new HdlrZmq(javaAPI);
+
             processor = new ProtocolProcessor(handler, cfg.getApi().getZmq());
             zmqThread = new Thread(processor, "zmq-api");
             zmqThread.start();

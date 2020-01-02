@@ -50,7 +50,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
@@ -165,7 +164,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
+    @Override
+    protected void pendingTxUpdate(AionTxReceipt _txRcpt, int _state) {
         // commenting this out because of lack support for old web3 client that we are using
         // TODO: re-enable this when we upgrade our web3 client
         /*

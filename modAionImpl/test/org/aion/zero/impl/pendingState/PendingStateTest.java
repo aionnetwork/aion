@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -14,6 +15,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.zero.impl.blockchain.AionHub;
+import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.types.TxResponse;
@@ -67,7 +69,8 @@ public class PendingStateTest {
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
 
-        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository()).getPendingState();
+        pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository(),
+            new PendingTxCallback(new ArrayList<>())).getPendingState();
     }
 
     @Test
@@ -726,7 +729,8 @@ public class PendingStateTest {
         CfgAion.inst().getConsensus().setSeed(true);
 
         // NullPointerException should not happens
-        AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository());
+        AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository(),
+            new PendingTxCallback(new ArrayList<>()));
 
         CfgAion.inst().getConsensus().setSeed(false);
     }

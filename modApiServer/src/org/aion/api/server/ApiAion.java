@@ -1,7 +1,5 @@
 package org.aion.api.server;
 
-import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
-
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +26,6 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.UnityChain;
 import org.aion.zero.impl.types.TxResponse;
@@ -95,8 +92,6 @@ public abstract class ApiAion extends Api {
         pendingState = ac.getAionHub().getPendingState();
         IEventMgr evtMgr = ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(
-                Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
-        evtMgr.registerEvent(
                 Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
     }
 
@@ -109,20 +104,8 @@ public abstract class ApiAion extends Api {
                 try {
                     IEvent e = ees.take();
                     if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
-                            && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                        && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                         onBlock((AionBlockSummary) e.getFuncArgs().get(0));
-                    } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
-                        if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
-                            pendingTxUpdate(
-                                    (AionTxReceipt) e.getFuncArgs().get(0),
-                                    GETSTATE((int) e.getFuncArgs().get(1)));
-                        } else if (e.getCallbackType()
-                                == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                            for (AionTransaction tx :
-                                    (List<AionTransaction>) e.getFuncArgs().get(0)) {
-                                pendingTxReceived(tx);
-                            }
-                        }
                     } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                         go = false;
                     }
@@ -137,7 +120,7 @@ public abstract class ApiAion extends Api {
 
     protected abstract void pendingTxReceived(AionTransaction _tx);
 
-    protected abstract void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state);
+    protected abstract void pendingTxUpdate(AionTxReceipt _txRcpt, int _state);
 
     // General Level
     public byte getApiVersion() {
@@ -775,11 +758,7 @@ public abstract class ApiAion extends Api {
 
     private Set<Integer> setEvtfilter() {
         Set<Integer> eventSN = new HashSet<>();
-        int sn = IHandler.TYPE.TX0.getValue() << 8;
-        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
-        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXUPDATE0.getValue());
-
-        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
         eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
 
         return eventSN;

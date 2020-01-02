@@ -9,4 +9,6 @@ public interface IPendingState {
     List<AionTransaction> getPendingTransactions();
 
     void applyBlockUpdate(Block newBlock, List<AionTxReceipt> receipts);
+
+    void setNewPendingReceiveForMining(boolean newPendingTxReceived);
 }

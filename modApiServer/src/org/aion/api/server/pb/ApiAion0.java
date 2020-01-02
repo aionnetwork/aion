@@ -48,7 +48,6 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
@@ -65,6 +64,7 @@ import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.pendingState.PendingTransactionState;
 import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -187,16 +187,15 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         });
     }
 
-    protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
+    @Override
+    protected void pendingTxUpdate(AionTxReceipt _txRcpt, int _state) {
         ByteArrayWrapper txHashW =
                 ByteArrayWrapper.wrap(_txRcpt.getTransaction().getTransactionHash());
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(
-                    "ApiAion0.onPendingTransactionUpdate - txHash: [{}], state: [{}]",
-                    txHashW.toString(),
-                    _state.getValue());
-        }
+        LOG.trace(
+                "ApiAion0.onPendingTransactionUpdate - txHash: [{}], state: [{}]",
+                txHashW.toString(),
+                _state);
 
         if (getMsgIdMapping().get(txHashW) != null) {
             if (pendingStatus.remainingCapacity() == 0) {
@@ -204,24 +203,22 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 LOG.warn("ApiAion0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
             }
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(
-                        "ApiAion0.onPendingTransactionUpdate - the pending Tx state : [{}]",
-                        _state.getValue());
-            }
+            LOG.trace(
+                    "ApiAion0.onPendingTransactionUpdate - the pending Tx state : [{}]",
+                    _state);
 
             pendingStatus.add(
                     new TxPendingStatus(
                             txHashW,
                             getMsgIdMapping().get(txHashW).getValue(),
                             getMsgIdMapping().get(txHashW).getKey(),
-                            _state.getValue(),
+                            _state,
                             ByteArrayWrapper.wrap(_txRcpt.getTransactionOutput() == null
                                             ? EMPTY_BYTE_ARRAY
                                             : _txRcpt.getTransactionOutput()),
                             _txRcpt.getError()));
 
-            if (_state.isPending()) {
+            if (_state == PendingTransactionState.NEW_PENDING.getValue() || _state == PendingTransactionState.PENDING.getValue()) {
                 pendingReceipts.put(txHashW, _txRcpt);
             } else {
                 pendingReceipts.remove(txHashW);
@@ -230,14 +227,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         } else {
             if (txWait.remainingCapacity() == 0) {
                 txWait.poll();
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("ApiAion0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
-                }
+                LOG.trace("ApiAion0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
             }
 
             // waiting origin Api call status been callback
             try {
-                txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(), _txRcpt));
+                txWait.put(new TxWaitingMappingUpdate(txHashW, _state, _txRcpt));
             } catch (InterruptedException e) {
                 LOG.error("ApiAion0.onPendingTransactionUpdate txWait.put exception", e);
             }
@@ -273,7 +268,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         go = false;
                     }
                 } catch (Exception e) {
-                    LOG.debug("EpBlkCache - excepted out", e);
+                    LOG.debug("EpBlkCache - exception", e);
                 }
             }
         }
@@ -288,7 +283,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         this.pendingStatus = new LinkedBlockingQueue(MAP_SIZE);
         this.txWait = new LinkedBlockingQueue(MAP_SIZE);
         this.msgIdMapping = Collections.synchronizedMap(new LRUMap<>(MAP_SIZE, 100));
-
         this.initNrgOracle(ac);
 
         isFilterEnabled = CfgAion.inst().getApi().getZmq().isFiltersEnabled();

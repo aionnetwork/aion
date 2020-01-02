@@ -3,10 +3,12 @@ package org.aion.api.server.rpc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.api.server.BlockchainCallbackForApiServer;
 import org.aion.api.server.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.blockchain.IAionChain;
 import org.slf4j.Logger;
 
 public class RpcMethods {
@@ -32,7 +34,10 @@ public class RpcMethods {
             final List<String> disabledMethods,
             final AccountManager am) {
 
-        api = new ApiWeb3Aion(AionImpl.inst(), am);
+
+        IAionChain ac = AionImpl.inst();
+        api = new ApiWeb3Aion(ac, am);
+        ac.setApiServiceCallback(new BlockchainCallbackForApiServer(api));
 
         // find a way to autogen options in config using this enum, without generating circular
         // module dependency (right now it's manual)

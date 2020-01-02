@@ -11,9 +11,7 @@ import io.undertow.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
@@ -23,7 +21,6 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.api.server.account.AccountManager;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
@@ -60,7 +57,7 @@ public class ApiAionTest {
         }
 
         @Override
-        protected void pendingTxUpdate(AionTxReceipt _txRcpt, EventTx.STATE _state) {
+        protected void pendingTxUpdate(AionTxReceipt _txRcpt, int _state) {
             pendingUpdateFlag = true;
         }
 
@@ -76,33 +73,6 @@ public class ApiAionTest {
         }
 
         private void addEvents() {
-            EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
-            AionTransaction tx =
-                    AionTransaction.create(
-                            key,
-                            new byte[0],
-                            new AionAddress(new byte[32]),
-                            new byte[0],
-                            new byte[0],
-                            0L,
-                            1L,
-                            TransactionTypes.DEFAULT, null);
-            List<AionTransaction> l1 = new ArrayList<>();
-            l1.add(tx);
-            l1.add(tx);
-            l1.add(tx);
-            pendingRcvd.setFuncArgs(Collections.singletonList(l1));
-
-            ees.add(pendingRcvd);
-
-            EventTx pendingUpdate = new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0);
-            List l2 = new ArrayList<>();
-            l2.add(new AionTxReceipt());
-            l2.add(-1);
-            pendingUpdate.setFuncArgs(l2);
-
-            ees.add(pendingUpdate);
-
             EventBlock evBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
             AionBlockSummary abs = new AionBlockSummary(null, null, null, null);
             evBlock.setFuncArgs(Collections.singletonList(abs));
@@ -171,7 +141,7 @@ public class ApiAionTest {
         api.addEvents();
         Thread.sleep(2000);
         api.shutDownES();
-        assertTrue(api.allFlagsSet());
+        assertTrue(api.onBlockFlag);
     }
 
     @Test
