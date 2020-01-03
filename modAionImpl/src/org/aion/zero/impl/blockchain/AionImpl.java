@@ -48,9 +48,15 @@ public class AionImpl implements IAionChain {
         this.cfg = CfgAion.inst();
         if (forTest) {
             cfg.setGenesisForTest();
-            aionHub = AionHub.createForTesting(cfg, new AionBlockchainImpl(cfg, true), new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
+            aionHub =
+                    AionHub.createForTesting(
+                            cfg,
+                            new AionBlockchainImpl(cfg, true),
+                            new PendingTxCallback(blockchainCallbackInterfaces),
+                            new NetworkBestBlockCallback(this),
+                            new TransactionBroadcastCallback(this));
         } else {
-            aionHub = new AionHub(new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this));
+            aionHub = new AionHub(new PendingTxCallback(blockchainCallbackInterfaces), new NetworkBestBlockCallback(this), new TransactionBroadcastCallback(this));
         }
 
         LOG_GEN.info(
@@ -106,18 +112,9 @@ public class AionImpl implements IAionChain {
         aionHub.close();
     }
 
-    /**
-     * Lock removed, both functions submit to executors, which will enforce their own parallelism,
-     * therefore function is thread safe
-     */
-    @SuppressWarnings("unchecked")
     @Override
-    public void broadcastTransaction(AionTransaction transaction) {
-        collector.submitTx(transaction);
-    }
-
-    public void broadcastTransactions(List<AionTransaction> transaction) {
-        collector.submitTx(transaction);
+    public void broadcastTransactions(List<AionTransaction> transactions) {
+        collector.submitTx(transactions);
     }
 
     public long estimateTxNrg(AionTransaction tx, Block block) {
@@ -371,6 +368,21 @@ public class AionImpl implements IAionChain {
                     callbackInterface.pendingTxUpdated(txDetails);
                 }
             }
+        }
+    }
+
+    public static class TransactionBroadcastCallback {
+        IAionChain chainInterface;
+
+        public TransactionBroadcastCallback(IAionChain chainInterface) {
+            if (chainInterface == null) {
+                throw new NullPointerException();
+            }
+            this.chainInterface = chainInterface;
+        }
+
+        public void broadcastTransactions(List<AionTransaction> transactions) {
+            chainInterface.broadcastTransactions(transactions);
         }
     }
 

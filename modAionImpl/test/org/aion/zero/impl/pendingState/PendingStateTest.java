@@ -18,6 +18,7 @@ import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
+import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.types.TxResponse;
@@ -72,7 +73,7 @@ public class PendingStateTest {
         CfgAion.inst().setGenesis(blockchain.getGenesis());
 
         pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst())).getPendingState();
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst())).getPendingState();
     }
 
     @Test
@@ -732,7 +733,7 @@ public class PendingStateTest {
 
         // NullPointerException should not happens
         AionHub.createForTesting(CfgAion.inst(), blockchain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
 
         CfgAion.inst().getConsensus().setSeed(false);
     }

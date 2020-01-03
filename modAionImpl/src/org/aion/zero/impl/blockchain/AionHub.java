@@ -29,6 +29,7 @@ import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
+import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;
 import org.aion.zero.impl.config.CfgNetP2p;
 import org.aion.mcf.db.Repository;
 import org.aion.p2p.Handler;
@@ -98,8 +99,9 @@ public class AionHub {
 
     private ReentrantLock blockTemplateLock;
 
-    public AionHub(PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
-        initializeHub(CfgAion.inst(), null, pendingTxCallback, networkBestBlockCallback, false);
+    public AionHub(PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, TransactionBroadcastCallback transactionBroadcastCallback) {
+        initializeHub(CfgAion.inst(), null, pendingTxCallback, networkBestBlockCallback,
+            transactionBroadcastCallback, false);
     }
 
     private void initializeHub(
@@ -107,6 +109,7 @@ public class AionHub {
             AionBlockchainImpl _blockchain,
             PendingTxCallback pendingTxCallback,
             NetworkBestBlockCallback networkBestBlockCallback,
+            TransactionBroadcastCallback transactionBroadcastCallback,
             boolean forTest) {
 
         this.cfg = _cfgAion;
@@ -121,7 +124,8 @@ public class AionHub {
         this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, forTest) : _blockchain;
         blockchain.setEventManager(this.eventMgr);
 
-        this.mempool = AionPendingStateImpl.create(cfg, blockchain, pendingTxCallback, networkBestBlockCallback, forTest);
+        this.mempool = AionPendingStateImpl.create(cfg, blockchain, pendingTxCallback, networkBestBlockCallback,
+            transactionBroadcastCallback, forTest);
 
         try {
             loadBlockchain();
@@ -210,8 +214,9 @@ public class AionHub {
 
     public static AionHub createForTesting(
         CfgAion _cfgAion, AionBlockchainImpl _blockchain,
-        PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback) {
-        return new AionHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback, true);
+        PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, TransactionBroadcastCallback transactionBroadcastCallback) {
+        return new AionHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback,
+            transactionBroadcastCallback, true);
     }
 
     private AionHub(
@@ -219,8 +224,10 @@ public class AionHub {
             AionBlockchainImpl _blockchain,
             PendingTxCallback pendingTxCallback,
             NetworkBestBlockCallback networkBestBlockCallback,
+            TransactionBroadcastCallback transactionBroadcastCallback,
             boolean forTest) {
-        initializeHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback, forTest);
+        initializeHub(_cfgAion, _blockchain, pendingTxCallback, networkBestBlockCallback,
+            transactionBroadcastCallback, forTest);
     }
 
     private void registerCallback() {

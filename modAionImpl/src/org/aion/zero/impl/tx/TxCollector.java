@@ -116,7 +116,7 @@ public class TxCollector {
 
         if (!transactions.isEmpty()) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("TxCollector.broadcastTx Tx#{}", transactions.size());
+                LOG.trace("TxCollector.broadcastTransactions Tx#{}", transactions.size());
             }
 
             txBroadcaster.submitTransaction(

@@ -20,6 +20,7 @@ import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
+import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.types.BlockContext;
@@ -96,7 +97,7 @@ public class AionHubTest {
         chain.setBestBlock(chain.getGenesis());
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
         checkHubNullity(hub);
 
         Block blk = hub.getStartingBlock();
@@ -117,7 +118,7 @@ public class AionHubTest {
         generateRandomChainWithoutTransactions(chain, expectedStartBlock, 1);
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
         checkHubNullity(hub);
 
         Block blk = hub.getStartingBlock();
@@ -185,7 +186,7 @@ public class AionHubTest {
 
         // recovery should be called by loadBlockchain()
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
         checkHubNullity(hub);
 
         Block blk = hub.getStartingBlock();
@@ -274,7 +275,7 @@ public class AionHubTest {
 
         // recovery should be called by loadBlockchain()
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), chain,
-            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()));
+            new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
         checkHubNullity(hub);
 
         assertEquals(td6, chain.getTotalDifficulty());
