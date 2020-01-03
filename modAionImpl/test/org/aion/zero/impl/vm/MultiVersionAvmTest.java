@@ -35,7 +35,7 @@ public class MultiVersionAvmTest {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
-        AvmTestConfig.supportBothAvmVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED, 0);
+        AvmTestConfig.supportBothAvmVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED);
     }
 
     @AfterClass

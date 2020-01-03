@@ -2063,7 +2063,7 @@ public class ContractIntegTest {
 
         // the default configuration does not apply to this test case
         AvmTestConfig.clearConfigurations();
-        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock, 0);
+        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock);
 
         // populating the chain to be above the Unity for point
         BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);
@@ -2107,7 +2107,7 @@ public class ContractIntegTest {
 
         // the default configuration does not apply to this test case
         AvmTestConfig.clearConfigurations();
-        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock, 0);
+        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock);
 
         // populating the chain to be above the Unity for point
         BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);

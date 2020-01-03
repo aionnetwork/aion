@@ -234,15 +234,15 @@ public final class AvmTransactionExecutor {
     }
 
     /**
-     * If the specified version is enabled but it is prohibited to be enabled at the current block
-     * number, then that version will be shutdown and disabled. Otherwise this method does nothing.
+     * If the specified version is enabled but it is not the avm version that should be used to run transactions at the
+     * current block number, then that version will be shutdown and disabled. Otherwise this method does nothing.
      *
      * @param schedule The version schedule.
      * @param version The version to check.
      * @param currentBlockNumber The current block number.
      */
     private static void disableVersionIfEnabledAndProhibited(AvmVersionSchedule schedule, AvmVersion version, long currentBlockNumber) throws IOException {
-        if ((AvmProvider.isVersionEnabled(version)) && (schedule.isVersionProhibitedAtBlockNumber(version, currentBlockNumber))) {
+        if ((AvmProvider.isVersionEnabled(version)) && (version != schedule.whichVersionToRunWith(currentBlockNumber))) {
             AvmProvider.shutdownAvm(version);
             AvmProvider.disableAvmVersion(version);
         }

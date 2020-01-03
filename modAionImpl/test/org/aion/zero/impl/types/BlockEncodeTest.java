@@ -38,7 +38,7 @@ public class BlockEncodeTest {
     @BeforeClass
     public static void setupAvm() throws Exception {
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-        AvmTestConfig.supportBothAvmVersions(0, 2, 0);
+        AvmTestConfig.supportBothAvmVersions(0, 2);
     }
 
     @AfterClass

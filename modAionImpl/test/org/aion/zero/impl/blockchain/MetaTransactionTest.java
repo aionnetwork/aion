@@ -47,7 +47,7 @@ public class MetaTransactionTest {
     public static void setupAvm() throws Exception {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-        AvmTestConfig.supportBothAvmVersions(0,1,0);
+        AvmTestConfig.supportBothAvmVersions(0,1);
         contractFactory = resourceProvider.factoryForVersion2.newContractFactory();
     }
 

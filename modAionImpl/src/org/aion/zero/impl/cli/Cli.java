@@ -191,9 +191,9 @@ public class Cli {
 
                     AvmVersionSchedule schedule;
                     if (fork2 != null) {
-                        schedule = AvmVersionSchedule.newScheduleForBothVersions(0, Long.valueOf(fork2), 100);
+                        schedule = new AvmVersionSchedule(new long[]{ 0, Long.valueOf(fork2) });
                     } else {
-                        schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 100);
+                        schedule = new AvmVersionSchedule(new long[]{ 0 });
                     }
 
                     AvmConfigurations.initializeConfigurationsAsReadOnly(schedule, projectRootDirectory);

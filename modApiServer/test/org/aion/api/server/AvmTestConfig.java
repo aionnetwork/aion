@@ -10,7 +10,7 @@ public final class AvmTestConfig {
      * Version 1 is active from block zero onwards.
      */
     public static void supportOnlyAvmVersion1() {
-        AvmVersionSchedule schedule = AvmVersionSchedule.newScheduleForOnlySingleVersionSupport(0, 0);
+        AvmVersionSchedule schedule = new AvmVersionSchedule(new long[]{ 0 });
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
         AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
     }
