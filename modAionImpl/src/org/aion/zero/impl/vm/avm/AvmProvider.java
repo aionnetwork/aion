@@ -9,6 +9,7 @@ import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IAvmExternalStateBuilder;
+import org.aion.zero.impl.vm.avm.internal.AvmResourcesVersion3;
 
 /**
  * A class that provides access to multi-versioned AVM-related resources.
@@ -38,6 +39,7 @@ public final class AvmProvider {
     // If a particular avm resources version is non-null then it is enabled. If null it is disabled.
     private static AvmResourcesVersion1 avmResourcesVersion1 = null;
     private static AvmResourcesVersion2 avmResourcesVersion2 = null;
+    private static AvmResourcesVersion3 avmResourcesVersion3 = null;
 
     /**
      * Returns {@code true} only if the specified avm version is enabled, otherwise {@code false}.
@@ -50,12 +52,11 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-            return avmResourcesVersion1 != null;
-        } else if (version == AvmVersion.VERSION_2) {
-            return avmResourcesVersion2 != null;
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1: return avmResourcesVersion1 != null;
+            case VERSION_2: return avmResourcesVersion2 != null;
+            case VERSION_3: return avmResourcesVersion3 != null;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -71,12 +72,11 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-            return avmResourcesVersion1 != null  && avmResourcesVersion1.isAvmRunning();
-        } else if (version == AvmVersion.VERSION_2) {
-            return avmResourcesVersion2 != null && avmResourcesVersion2.isAvmRunning();
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1: return avmResourcesVersion1 != null && avmResourcesVersion1.isAvmRunning();
+            case VERSION_2: return avmResourcesVersion2 != null && avmResourcesVersion2.isAvmRunning();
+            case VERSION_3: return avmResourcesVersion3 != null && avmResourcesVersion3.isAvmRunning();
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -101,12 +101,23 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-            return avmResourcesVersion1.resourceFactory;
-        } else if (version == AvmVersion.VERSION_2) {
-            return avmResourcesVersion2.resourceFactory;
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    throw new IllegalStateException("Cannot get avm version 1 resource factory - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion1.resourceFactory;
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    throw new IllegalStateException("Cannot get avm version 2 resource factory  - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion2.resourceFactory;
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    throw new IllegalStateException("Cannot get avm version 3 resource factory  - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion3.resourceFactory;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -122,16 +133,23 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-            if (avmResourcesVersion1 == null) {
-                avmResourcesVersion1 = AvmResourcesVersion1.loadResources(projectRootDir);
-            }
-        } else if (version == AvmVersion.VERSION_2) {
-            if (avmResourcesVersion2 == null) {
-                avmResourcesVersion2 = AvmResourcesVersion2.loadResources(projectRootDir);
-            }
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    avmResourcesVersion1 = AvmResourcesVersion1.loadResources(projectRootDir);
+                }
+                break;
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    avmResourcesVersion2 = AvmResourcesVersion2.loadResources(projectRootDir);
+                }
+                break;
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    avmResourcesVersion3 = AvmResourcesVersion3.loadResources(projectRootDir);
+                }
+                break;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -147,20 +165,29 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-            if (avmResourcesVersion1 != null) {
-                avmResourcesVersion1.shutdownAvm();
-                avmResourcesVersion1.close();
-                avmResourcesVersion1 = null;
-            }
-        } else if (version == AvmVersion.VERSION_2) {
-            if (avmResourcesVersion2 != null) {
-                avmResourcesVersion2.shutdownAvm();
-                avmResourcesVersion2.close();
-                avmResourcesVersion2 = null;
-            }
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 != null) {
+                    avmResourcesVersion1.shutdownAvm();
+                    avmResourcesVersion1.close();
+                    avmResourcesVersion1 = null;
+                }
+                break;
+            case VERSION_2:
+                if (avmResourcesVersion2 != null) {
+                    avmResourcesVersion2.shutdownAvm();
+                    avmResourcesVersion2.close();
+                    avmResourcesVersion2 = null;
+                }
+                break;
+            case VERSION_3:
+                if (avmResourcesVersion3 != null) {
+                    avmResourcesVersion3.shutdownAvm();
+                    avmResourcesVersion3.close();
+                    avmResourcesVersion3 = null;
+                }
+                break;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -177,22 +204,23 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-
-            if (avmResourcesVersion1 == null) {
-                throw new IllegalStateException("Cannot get avm version 1 - verison has not been enabled yet!");
-            }
-            return avmResourcesVersion1.getAvm();
-
-        } else if (version == AvmVersion.VERSION_2) {
-
-            if (avmResourcesVersion2 == null) {
-                throw new IllegalStateException("Cannot get avm version 2 - verison has not been enabled yet!");
-            }
-            return avmResourcesVersion2.getAvm();
-
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    throw new IllegalStateException("Cannot get avm version 1 - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion1.getAvm();
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    throw new IllegalStateException("Cannot get avm version 2 - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion2.getAvm();
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    throw new IllegalStateException("Cannot get avm version 3 - verison has not been enabled yet!");
+                }
+                return avmResourcesVersion3.getAvm();
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -208,22 +236,26 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-
-            if (avmResourcesVersion1 == null) {
-                throw new IllegalStateException("Cannot start avm version 1 - verison has not been enabled yet!");
-            }
-            avmResourcesVersion1.initializeAndStartNewAvm();
-
-        } else if (version == AvmVersion.VERSION_2) {
-
-            if (avmResourcesVersion2 == null) {
-                throw new IllegalStateException("Cannot start avm version 2 - verison has not been enabled yet!");
-            }
-            avmResourcesVersion2.initializeAndStartNewAvm();
-
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    throw new IllegalStateException("Cannot start avm version 1 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion1.initializeAndStartNewAvm();
+                break;
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    throw new IllegalStateException("Cannot start avm version 2 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion2.initializeAndStartNewAvm();
+                break;
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    throw new IllegalStateException("Cannot start avm version 3 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion3.initializeAndStartNewAvm();
+                break;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -239,22 +271,26 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-
-            if (avmResourcesVersion1 == null) {
-                throw new IllegalStateException("Cannot shutdown avm version 1 - verison has not been enabled yet!");
-            }
-            avmResourcesVersion1.shutdownAvm();
-
-        } else if (version == AvmVersion.VERSION_2) {
-
-            if (avmResourcesVersion2 == null) {
-                throw new IllegalStateException("Cannot shutdown avm version 2 - verison has not been enabled yet!");
-            }
-            avmResourcesVersion2.shutdownAvm();
-
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    throw new IllegalStateException("Cannot shutdown avm version 1 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion1.shutdownAvm();
+                break;
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    throw new IllegalStateException("Cannot shutdown avm version 2 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion2.shutdownAvm();
+                break;
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    throw new IllegalStateException("Cannot shutdown avm version 3 - verison has not been enabled yet!");
+                }
+                avmResourcesVersion3.shutdownAvm();
+                break;
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 
@@ -306,22 +342,23 @@ public final class AvmProvider {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
 
-        if (version == AvmVersion.VERSION_1) {
-
-            if (avmResourcesVersion1 == null) {
-                throw new IllegalStateException("Cannot get builder for version 1 - version has not been enabled yet!");
-            }
-            return avmResourcesVersion1.resourceFactory.newExternalStateBuilder();
-
-        } else if (version == AvmVersion.VERSION_2) {
-
-            if (avmResourcesVersion2 == null) {
-                throw new IllegalStateException("Cannot get builder for version 2 - version has not been enabled yet!");
-            }
-            return avmResourcesVersion2.resourceFactory.newExternalStateBuilder();
-
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + version);
+        switch (version) {
+            case VERSION_1:
+                if (avmResourcesVersion1 == null) {
+                    throw new IllegalStateException("Cannot get builder for version 1 - version has not been enabled yet!");
+                }
+                return avmResourcesVersion1.resourceFactory.newExternalStateBuilder();
+            case VERSION_2:
+                if (avmResourcesVersion2 == null) {
+                    throw new IllegalStateException("Cannot get builder for version 2 - version has not been enabled yet!");
+                }
+                return avmResourcesVersion2.resourceFactory.newExternalStateBuilder();
+            case VERSION_3:
+                if (avmResourcesVersion3 == null) {
+                    throw new IllegalStateException("Cannot get builder for version 3 - version has not been enabled yet!");
+                }
+                return avmResourcesVersion3.resourceFactory.newExternalStateBuilder();
+            default: throw new IllegalStateException("Unknown avm version: " + version);
         }
     }
 }

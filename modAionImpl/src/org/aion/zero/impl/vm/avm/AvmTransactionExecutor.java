@@ -120,11 +120,12 @@ public final class AvmTransactionExecutor {
     /**
      * Updates the state of the avm versions depending on the current block number.
      *
-     * This method will ensure that any avm versions that are enabled but which are prohibited to
-     * be enabled at this block number will be shutdown and disabled.
+     * This method will ensure that only a single avm version is enabled and started after it exits, and that this version
+     * is the one version that is allowed to be active at the specified block number.
      *
-     * It will also ensure that the avm version that is considered the canonical version at this
-     * block number is enabled and that its avm is started.
+     * If any other avm version is enabled or started it will stop it and disable it.
+     *
+     * Returns the avm version to use at the specified block number.
      *
      * @implNote The projectRootPath is the path to the root directory of the aion project. This is
      * required so that we can find the resources to load.
@@ -135,22 +136,15 @@ public final class AvmTransactionExecutor {
      */
     public static AvmVersion updateAvmsAndGetVersionToUse(String projectRootPath, long currentBlockNumber) throws IOException, IllegalAccessException, ClassNotFoundException, InstantiationException {
         AvmVersionSchedule schedule = AvmConfigurations.getAvmVersionSchedule();
-        AvmVersion versionToUse = schedule.whichVersionToRunWith(currentBlockNumber);
-        if (versionToUse == null) {
+        AvmVersion versionToRunWith = schedule.whichVersionToRunWith(currentBlockNumber);
+        if (versionToRunWith == null) {
             throw new IllegalStateException("Attempted to invoke the avm at a block that has no avm support!");
         }
 
-        if (versionToUse == AvmVersion.VERSION_1) {
-            disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_2, currentBlockNumber);
-            ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_1, projectRootPath);
-        } else if (versionToUse == AvmVersion.VERSION_2) {
-            disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_1, currentBlockNumber);
-            ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_2, projectRootPath);
-        } else {
-            throw new IllegalStateException("Unknown avm version: " + versionToUse);
-        }
+        disableAllAvmVersionsExcept(versionToRunWith);
+        ensureVersionIsEnabledAndStarted(versionToRunWith, projectRootPath);
 
-        return versionToUse;
+        return versionToRunWith;
     }
 
     /**
@@ -234,17 +228,16 @@ public final class AvmTransactionExecutor {
     }
 
     /**
-     * If the specified version is enabled but it is not the avm version that should be used to run transactions at the
-     * current block number, then that version will be shutdown and disabled. Otherwise this method does nothing.
+     * Disables all versions of the avm, if any of them are in fact enabled, except for the specified version.
      *
-     * @param schedule The version schedule.
-     * @param version The version to check.
-     * @param currentBlockNumber The current block number.
+     * @param versionToRunWith The only version allowed to be active.
      */
-    private static void disableVersionIfEnabledAndProhibited(AvmVersionSchedule schedule, AvmVersion version, long currentBlockNumber) throws IOException {
-        if ((AvmProvider.isVersionEnabled(version)) && (version != schedule.whichVersionToRunWith(currentBlockNumber))) {
-            AvmProvider.shutdownAvm(version);
-            AvmProvider.disableAvmVersion(version);
+    private static void disableAllAvmVersionsExcept(AvmVersion versionToRunWith) throws IOException {
+        for (AvmVersion version : AvmVersion.values()) {
+            if ((version != versionToRunWith) && (AvmProvider.isVersionEnabled(version))) {
+                AvmProvider.shutdownAvm(version);
+                AvmProvider.disableAvmVersion(version);
+            }
         }
     }
 

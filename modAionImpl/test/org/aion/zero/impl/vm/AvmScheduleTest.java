@@ -9,7 +9,7 @@ public class AvmScheduleTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testCreateScheduleForTooManyVersions() {
-        new AvmVersionSchedule(new long[]{ 1, 2, 3 });
+        new AvmVersionSchedule(new long[]{ 1, 2, 3, 4 });
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -52,5 +52,18 @@ public class AvmScheduleTest {
         Assert.assertEquals(AvmVersion.VERSION_1, schedule.whichVersionToRunWith(Integer.MAX_VALUE - 1));
         Assert.assertEquals(AvmVersion.VERSION_2, schedule.whichVersionToRunWith(Integer.MAX_VALUE));
         Assert.assertEquals(AvmVersion.VERSION_2, schedule.whichVersionToRunWith(Long.MAX_VALUE));
+    }
+
+    @Test
+    public void testTripleVersionSchedule() {
+        AvmVersionSchedule schedule = new AvmVersionSchedule(new long[]{ 50_000, 100_000, 4_000_000 });
+        Assert.assertNull(schedule.whichVersionToRunWith(0));
+        Assert.assertNull(schedule.whichVersionToRunWith(49_999));
+        Assert.assertEquals(AvmVersion.VERSION_1, schedule.whichVersionToRunWith(50_000));
+        Assert.assertEquals(AvmVersion.VERSION_1, schedule.whichVersionToRunWith(99_999));
+        Assert.assertEquals(AvmVersion.VERSION_2, schedule.whichVersionToRunWith(100_000));
+        Assert.assertEquals(AvmVersion.VERSION_2, schedule.whichVersionToRunWith(3_999_999));
+        Assert.assertEquals(AvmVersion.VERSION_3, schedule.whichVersionToRunWith(4_000_000));
+        Assert.assertEquals(AvmVersion.VERSION_3, schedule.whichVersionToRunWith(Long.MAX_VALUE));
     }
 }

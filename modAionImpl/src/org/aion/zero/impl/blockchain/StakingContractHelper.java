@@ -36,7 +36,7 @@ public class StakingContractHelper {
     private AionBlockchainImpl chain;
     private final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
-    private static final AvmVersion LATEST_AVM_VERSION = AvmVersion.VERSION_2;
+    private static final AvmVersion LATEST_AVM_VERSION = AvmVersion.fromNumber(AvmVersion.highestSupportedVersion());
 
     /**
      * cached byte array for skipping the abi encode the contract method during the contract call.
@@ -117,6 +117,13 @@ public class StakingContractHelper {
         if (!AvmProvider.tryAcquireLock(10, TimeUnit.MINUTES)) {
             throw new IllegalStateException("Failed to acquire the avm lock!");
         }
+
+        if (!AvmProvider.isVersionEnabled(LATEST_AVM_VERSION)) {
+            AvmProvider.enableAvmVersion(LATEST_AVM_VERSION, AvmConfigurations.getProjectRootDirectory());
+        }
+
+        // Re-acquire the resource factory incase this version has been disabled between when we first enabled it and now.
+        resourceFactory = AvmProvider.getResourceFactory(LATEST_AVM_VERSION);
 
         BigInteger output = resourceFactory.newDecoder(receipt.getTransactionOutput()).decodeOneBigInteger();
         AvmProvider.releaseLock();
