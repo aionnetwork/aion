@@ -13,6 +13,7 @@ include 'modAionImpl',
     'modPrecompiled',
     'modApiServer',
     'modBoot',
+    'modAvmVersion3',
     'modAvmVersion2',
     'modAvmVersion1',
     'modAvmStub'

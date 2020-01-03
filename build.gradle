@@ -458,6 +458,7 @@ task ciBuild {
             'modTxPool',
             'modAvmVersion1',
             'modAvmVersion2',
+            'modAvmVersion3',
             'modAvmStub'
     ] 
 
@@ -487,6 +488,7 @@ task unitTest {
             'modTxPool',
             'modAvmVersion1',
             'modAvmVersion2',
+            'modAvmVersion3',
             'modAvmStub'
     ]
 
