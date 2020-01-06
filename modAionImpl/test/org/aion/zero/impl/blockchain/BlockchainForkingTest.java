@@ -1080,7 +1080,7 @@ public class BlockchainForkingTest {
         AvmTestConfig.clearConfigurations(); // clear setting from @Before
         TransactionTypeRule.allowAVMContractTransaction();
         TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock); // enable both AVMs without overlap
+        AvmTestConfig.supportTwoAvmVersions(0, unityForkBlock); // enable both AVMs without overlap
 
         // setup two identical blockchains
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();

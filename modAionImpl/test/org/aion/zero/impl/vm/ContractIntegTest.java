@@ -18,10 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import org.aion.base.AccountState;
-import org.aion.log.LogLevel;
-import org.aion.util.TransactionUtil;
+
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -2063,7 +2060,7 @@ public class ContractIntegTest {
 
         // the default configuration does not apply to this test case
         AvmTestConfig.clearConfigurations();
-        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock);
+        AvmTestConfig.supportTwoAvmVersions(0, unityForkBlock);
 
         // populating the chain to be above the Unity for point
         BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);
@@ -2107,7 +2104,7 @@ public class ContractIntegTest {
 
         // the default configuration does not apply to this test case
         AvmTestConfig.clearConfigurations();
-        AvmTestConfig.supportBothAvmVersions(0, unityForkBlock);
+        AvmTestConfig.supportTwoAvmVersions(0, unityForkBlock);
 
         // populating the chain to be above the Unity for point
         BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkBlock + 1, 1, stakers, stakingRegistryOwner, 10);

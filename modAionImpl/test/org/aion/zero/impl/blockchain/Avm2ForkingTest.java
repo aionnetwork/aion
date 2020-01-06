@@ -39,7 +39,7 @@ public class Avm2ForkingTest {
     public static void setupAvm() throws Exception {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-        AvmTestConfig.supportBothAvmVersions(0, 2);
+        AvmTestConfig.supportTwoAvmVersions(0, 2);
         contractFactory = resourceProvider.factoryForVersion2.newContractFactory();
     }
 

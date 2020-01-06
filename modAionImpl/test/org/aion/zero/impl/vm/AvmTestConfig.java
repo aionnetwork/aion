@@ -22,8 +22,22 @@ public final class AvmTestConfig {
      * @param blockNumberToUseVersion1 The block number at which version 1 starts being used.
      * @param blockNumberToUseVersion2 The block number at which version 2 starts being used.
      */
-    public static void supportBothAvmVersions(long blockNumberToUseVersion1, long blockNumberToUseVersion2) {
+    public static void supportTwoAvmVersions(long blockNumberToUseVersion1, long blockNumberToUseVersion2) {
         AvmVersionSchedule schedule = new AvmVersionSchedule(new long[]{ blockNumberToUseVersion1, blockNumberToUseVersion2 });
+        String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
+        AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
+    }
+
+    /**
+     * Uses an avm version schedule that supports both version 1 and 2 at the specified block
+     * numbers.
+     *
+     * @param forkPointVersion1 The block number at which version 1 starts being used.
+     * @param forkPointVersion2 The block number at which version 2 starts being used.
+     * @param forkPointVersion3 The block number at which version 3 starts being used.
+     */
+    public static void supportAllAvmVersions(long forkPointVersion1, long forkPointVersion2, long forkPointVersion3) {
+        AvmVersionSchedule schedule = new AvmVersionSchedule(new long[]{ forkPointVersion1, forkPointVersion2, forkPointVersion3 });
         String projectRoot = AvmPathManager.getPathOfProjectRootDirectory();
         AvmConfigurations.initializeConfigurationsAsReadAndWriteable(schedule, projectRoot);
     }

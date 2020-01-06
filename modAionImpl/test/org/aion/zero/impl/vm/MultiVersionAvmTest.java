@@ -26,6 +26,7 @@ import org.junit.Test;
 public class MultiVersionAvmTest {
     private static long BLOCK_VERSION1_ENABLED = 10;
     private static long BLOCK_VERSION2_ENABLED = 20;
+    private static long BLOCK_VERSION3_ENABLED = 30;
     private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
@@ -35,7 +36,7 @@ public class MultiVersionAvmTest {
         TransactionTypeRule.allowAVMContractTransaction();
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
 
-        AvmTestConfig.supportBothAvmVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED);
+        AvmTestConfig.supportAllAvmVersions(BLOCK_VERSION1_ENABLED, BLOCK_VERSION2_ENABLED, BLOCK_VERSION3_ENABLED);
     }
 
     @AfterClass
@@ -57,10 +58,10 @@ public class MultiVersionAvmTest {
     }
 
     /**
-     * We test deploying the same contract in version 1 and 2. We expect the same result each time.
+     * We test deploying the same contract in all of the supported avm versions. We expect the same result each time.
      */
     @Test
-    public void testDeployInBothAvmVersions() {
+    public void testDeployInAllAvmVersions() {
         Assert.assertEquals(0, this.blockchain.getBestBlock().getNumber());
 
         // Ensure we are at a block height where avm version 1 is enabled, then deploy.
@@ -88,14 +89,27 @@ public class MultiVersionAvmTest {
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         Assert.assertEquals(1, connectResult.getRight().getReceipts().size());
         Assert.assertTrue(connectResult.getRight().getReceipts().get(0).isSuccessful());
+
+        // Now, climb to a block height where avm version 3 is enabled and deploy.
+        buildBlockchainToHeight(BLOCK_VERSION3_ENABLED);
+
+        AionTransaction transactionForVersion3 = makeHelloWorldDeployTransaction(AvmVersion.VERSION_3, BigInteger.TWO);
+
+        parentBlock = this.blockchain.getBestBlock();
+        block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion3), false, parentBlock.getTimestamp());
+        connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+
+        Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+        Assert.assertEquals(1, connectResult.getRight().getReceipts().size());
+        Assert.assertTrue(connectResult.getRight().getReceipts().get(0).isSuccessful());
     }
 
     /**
-     * We test deploying & calling the same contract in version 1 and 2. We expect the same result
+     * We test deploying & calling the same contract in all supported avm versions. We expect the same result
      * each time.
      */
     @Test
-    public void testCallInBothAvmVersions() {
+    public void testCallInAllAvmVersions() {
         Assert.assertEquals(0, this.blockchain.getBestBlock().getNumber());
 
         // Ensure we are at a block height where avm version 1 is enabled, then deploy.
@@ -122,6 +136,21 @@ public class MultiVersionAvmTest {
 
         parentBlock = this.blockchain.getBestBlock();
         block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion2), false, parentBlock.getTimestamp());
+        connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+
+        Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+        Assert.assertEquals(1, connectResult.getRight().getReceipts().size());
+        Assert.assertTrue(connectResult.getRight().getReceipts().get(0).isSuccessful());
+
+        // Now, climb to a block height where avm version 3 is enabled and deploy.
+        buildBlockchainToHeight(BLOCK_VERSION3_ENABLED);
+
+        AionAddress contractForVersion3 = deployHelloWorldContract(AvmVersion.VERSION_2, BigInteger.valueOf(4));
+
+        AionTransaction transactionForVersion3 = makeHelloWorldCallTransaction(AvmVersion.VERSION_3, BigInteger.valueOf(5), contractForVersion3);
+
+        parentBlock = this.blockchain.getBestBlock();
+        block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion3), false, parentBlock.getTimestamp());
         connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
 
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
@@ -168,6 +197,22 @@ public class MultiVersionAvmTest {
         buildBlockchainToHeight(BLOCK_VERSION2_ENABLED);
 
         transaction = makeTransactionHashCallTransaction(BigInteger.TWO, contract);
+
+        parentBlock = this.blockchain.getBestBlock();
+        block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());
+        connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+
+        Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
+        Assert.assertEquals(1, connectResult.getRight().getReceipts().size());
+        Assert.assertTrue(connectResult.getRight().getReceipts().get(0).isSuccessful());
+
+        // Verify that the contract does indeed return the transaction hash.
+        Assert.assertArrayEquals(transaction.getTransactionHash(), connectResult.getRight().getReceipts().get(0).getTransactionOutput());
+
+        // Now we wait until avm version 3 is enabled before calling it again, to prove that it can be called in any later version.
+        buildBlockchainToHeight(BLOCK_VERSION3_ENABLED);
+
+        transaction = makeTransactionHashCallTransaction(BigInteger.valueOf(3), contract);
 
         parentBlock = this.blockchain.getBestBlock();
         block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());

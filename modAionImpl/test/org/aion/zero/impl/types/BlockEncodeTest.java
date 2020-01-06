@@ -5,12 +5,10 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts
 import static org.aion.zero.impl.types.A0BlockHeader.NONCE_LENGTH;
 import static org.aion.zero.impl.types.A0BlockHeader.SOLUTIONSIZE;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
@@ -38,7 +36,7 @@ public class BlockEncodeTest {
     @BeforeClass
     public static void setupAvm() throws Exception {
         resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(AvmPathManager.getPathOfProjectRootDirectory());
-        AvmTestConfig.supportBothAvmVersions(0, 2);
+        AvmTestConfig.supportTwoAvmVersions(0, 2);
     }
 
     @AfterClass
