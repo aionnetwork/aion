@@ -30,7 +30,7 @@ import org.junit.Test;
 public class FvmBulkTransactionTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private long energyPrice = 1;
+    private long energyPrice = 10_000_000_000L;
 
     @Before
     public void setup() {
@@ -103,7 +103,7 @@ public class FvmBulkTransactionTest {
             BigInteger energyUsed =
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed);
+            expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice)));
 
             // The first batch are creates, so grab the new contract addresses.
             if (i < numFvmCreateTransactions) {

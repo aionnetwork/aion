@@ -169,6 +169,7 @@ public class BlockchainFvm040Fork {
                             + "000000000000000000000000000000000000000000000000000000000000000c"
                             + "000000000000000000000000000000000000000000000000000000000000000d"
                             + "000000000000000000000000000000000000000000000000000000000000000e");
+    private long energyPrice = 10_000_000_000L;
 
     @Test
     public void testFVM040hardFork() {
@@ -193,7 +194,7 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(deepContractCode),
                         1000000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block1 =
@@ -214,7 +215,7 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block2 = bc.createNewMiningBlock(block1, Collections.singletonList(txCall), true);
@@ -233,7 +234,7 @@ public class BlockchainFvm040Fork {
                         BigInteger.ZERO.toByteArray(),
                         callData,
                         1000000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block3 = bc.createNewMiningBlock(block2, Collections.singletonList(txCall), true);

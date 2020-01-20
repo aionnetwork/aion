@@ -13,11 +13,8 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
-import org.aion.zero.impl.valid.TXValidator;
 import org.slf4j.Logger;
 
 /** @author chris handler for new transaction broadcasted from network */
@@ -61,15 +58,10 @@ public final class BroadcastTxHandler extends Handler {
                 List<AionTransaction> txs = new ArrayList<>();
                 try {
                     txQueue.drainTo(txs);
+                    log.trace("BufferTask add txs into pendingState:{}", txs.size());
+                    pendingState.addTransactionsFromNetwork(txs);
                 } catch (Exception e) {
                     log.error("BufferTask throw ", e);
-                }
-                if (!txs.isEmpty()) {
-                    if (log.isTraceEnabled()) {
-                        log.trace("BufferTask add txs into pendingState:{}", txs.size());
-                    }
-
-                    pendingState.addPendingTransactions(txs);
                 }
             }
         }
@@ -81,38 +73,23 @@ public final class BroadcastTxHandler extends Handler {
 
         if (_msgBytes == null || _msgBytes.length == 0) return;
 
-        List<byte[]> broadCastTx = BroadcastTx.decode(_msgBytes);
-
-        if (broadCastTx == null) {
-            log.error(
-                    "<BroadcastTxHandler decode-error unable to decode tx-list from {}, len: {]>",
-                    _displayId,
-                    _msgBytes.length);
-            if (log.isTraceEnabled()) {
-                log.trace("BroadcastTxHandler dump: {}", ByteUtil.toHexString(_msgBytes));
-            }
-            return;
-        } else if (broadCastTx.isEmpty()) {
-            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-
-            if (log.isTraceEnabled()) {
-                log.trace("<BroadcastTxHandler from: {} empty {}>", _displayId);
-            }
-            return;
-        }
-
         try {
+            List<byte[]> broadCastTx = BroadcastTx.decode(_msgBytes);
+            if (broadCastTx.isEmpty()) {
+                p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+                log.debug("<BroadcastTxHandler from: {} empty {}>", _displayId);
+            }
+
             for (AionTransaction tx : castRawTx(broadCastTx)) {
                 if (!txQueue.offer(tx)) {
-                    if (log.isTraceEnabled()) {
-                        log.trace("<BroadcastTxHandler txQueue full! {}>", _displayId);
-                    }
+                    log.debug("<BroadcastTxHandler txQueue full! {}>", _displayId);
                     break;
                 }
             }
 
         } catch (Exception e) {
-            log.error("BroadcastTxHandler throw ", e);
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            log.error("BroadcastTxHandler exception!", e);
         }
     }
 
@@ -121,28 +98,14 @@ public final class BroadcastTxHandler extends Handler {
 
         for (byte[] raw : broadCastTx) {
             try {
-                AionTransaction tx = TxUtil.decode(raw);
-                if (tx.getTransactionHash() != null) {
-                    if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getTransactionHash()))) {
-                        if (pendingState.isValid(tx)) {
-                            rtn.add(tx);
-                        }
-                    }
-                }
+                rtn.add(TxUtil.decode(raw));
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
-                if (log.isDebugEnabled()) {
-                    log.debug("castRawTx exception: " + e.toString());
-                }
+                log.debug("castRawTx exception!" + e);
             }
         }
 
-        if (log.isTraceEnabled()) {
-            log.trace(
-                    "BroadcastTxHandler.castRawTx Tx#{} validTx#{}",
-                    broadCastTx.size(),
-                    rtn.size());
-        }
+        log.trace("BroadcastTxHandler.castRawTx Tx#{} validTx#{}", broadCastTx.size(), rtn.size());
 
         return rtn;
     }

@@ -32,6 +32,7 @@ public class AvmHelloWorldTest {
     private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
+    private long energyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupAvm() throws Exception {
@@ -76,7 +77,7 @@ public class AvmHelloWorldTest {
                         new byte[0],
                         jar,
                         5_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
@@ -111,7 +112,7 @@ public class AvmHelloWorldTest {
                         new byte[0],
                         jar,
                         5_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
@@ -140,7 +141,7 @@ public class AvmHelloWorldTest {
                         new byte[0],
                         call,
                         2_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         block =
@@ -169,7 +170,7 @@ public class AvmHelloWorldTest {
                         new byte[0],
                         jar,
                         5_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         List<AionTransaction> ls = new ArrayList<>();
@@ -184,7 +185,7 @@ public class AvmHelloWorldTest {
                         new byte[0],
                         call,
                         2_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         ls.add(transaction2);

@@ -46,6 +46,24 @@ public class ApiTxResponse {
                 return "Invalid transaction object";
             case INVALID_TX_NRG_PRICE:
                 return "Invalid transaction energy price";
+            case INVALID_TX_NRG_LIMIT:
+                return "Invalid transaction energy limit";
+            case INVALID_TX_NONCE:
+                return "Invalid transaction nonce";
+            case INVALID_TX_TIMESTAMP:
+                return "Invalid transaction timestamp";
+            case INVALID_TX_VALUE:
+                return "Invalid transaction value";
+            case INVALID_TX_DATA:
+                return "Invalid transaction data";
+            case INVALID_TX_HASH:
+                return "Invalid transaction hash";
+            case INVALID_TX_SIGNATURE:
+                return "Invalid transaction signature";
+            case INVALID_TX_TYPE:
+                return "Invalid transaction type";
+            case INVALID_TX_BEACONHASH:
+                return "Invalid transaction beacon hash";
             case INVALID_FROM:
                 return "Invalid from address provided";
             case INVALID_ACCOUNT:

@@ -32,6 +32,7 @@ public class AlternatingVmBlockTest {
     private static StandaloneBlockchain blockchain;
     private static ECKey deployerKey;
     private static TestResourceProvider resourceProvider;
+    private long energyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupAvm() throws Exception {
@@ -174,7 +175,7 @@ public class AlternatingVmBlockTest {
                 new byte[0],
                 jar,
                 5_000_000,
-                1,
+                energyPrice,
                 TransactionTypes.AVM_CREATE_CODE, null);
     }
 
@@ -193,7 +194,7 @@ public class AlternatingVmBlockTest {
                 new byte[0],
                 contractBytes,
                 5_000_000,
-                1,
+                energyPrice,
                 TransactionTypes.DEFAULT, null);
     }
 

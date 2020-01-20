@@ -29,6 +29,7 @@ public class MultiVersionAvmTest {
     private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
+    private long energyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupClass() throws Exception {
@@ -211,22 +212,26 @@ public class MultiVersionAvmTest {
     private AionTransaction makeHelloWorldCallTransaction(AvmVersion version, BigInteger nonce, AionAddress contract) {
         IAvmResourceFactory factory = (version == AvmVersion.VERSION_1) ? resourceProvider.factoryForVersion1 : resourceProvider.factoryForVersion2;
         byte[] callData = factory.newStreamingEncoder().encodeOneString("sayHello").getEncoding();
-        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), contract, BigInteger.ZERO.toByteArray(), callData, 2_000_000, 1, TransactionTypes.DEFAULT, null);
+        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), contract, BigInteger.ZERO.toByteArray(), callData, 2_000_000,
+            energyPrice, TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction makeTransactionHashCallTransaction(BigInteger nonce, AionAddress contract) {
         IAvmResourceFactory factory = resourceProvider.factoryForVersion2;
-        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), contract, BigInteger.ZERO.toByteArray(), new byte[0], 2_000_000, 1, TransactionTypes.DEFAULT, null);
+        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), contract, BigInteger.ZERO.toByteArray(), new byte[0], 2_000_000,
+            energyPrice, TransactionTypes.DEFAULT, null);
     }
 
     private AionTransaction makeHelloWorldDeployTransaction(AvmVersion version, BigInteger nonce) {
         byte[] jar = getHelloWorldJarBytes(version);
-        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), jar, 5_000_000, 1, TransactionTypes.AVM_CREATE_CODE, null);
+        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), jar, 5_000_000,
+            energyPrice, TransactionTypes.AVM_CREATE_CODE, null);
     }
 
     private AionTransaction makeTransactionHashContract(BigInteger nonce) {
         byte[] jar = getTransactionHashJarBytes();
-        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), jar, 5_000_000, 1, TransactionTypes.AVM_CREATE_CODE, null);
+        return AionTransaction.create(this.deployerKey, nonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), jar, 5_000_000,
+            energyPrice, TransactionTypes.AVM_CREATE_CODE, null);
     }
 
     private static byte[] getHelloWorldJarBytes(AvmVersion version) {

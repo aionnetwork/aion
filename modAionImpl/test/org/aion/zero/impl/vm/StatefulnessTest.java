@@ -40,7 +40,7 @@ public class StatefulnessTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private AionAddress deployer;
-    private long energyPrice = 1;
+    private long energyPrice = 10_000_000_000L;
 
     private byte txType;
 

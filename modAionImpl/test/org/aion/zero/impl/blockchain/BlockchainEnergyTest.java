@@ -1,6 +1,7 @@
 package org.aion.zero.impl.blockchain;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.fastvm.FvmConstants.TRANSACTION_BASE_FEE;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -60,7 +61,6 @@ public class BlockchainEnergyTest {
                         .build();
         StandaloneBlockchain bc = bundle.bc;
 
-        // TODO: where is the 21000 defined? bad to define magic variables
         int amount = (int) (bc.getGenesis().getNrgLimit() / DEFAULT_TX_AMOUNT);
 
         List<AionTransaction> txs = new ArrayList<>();
@@ -74,8 +74,8 @@ public class BlockchainEnergyTest {
                             RECEIPT_ADDR,
                             BigInteger.ONE.toByteArray(),
                             ByteUtil.EMPTY_BYTE_ARRAY,
-                            21000L,
-                            BigInteger.valueOf(5).multiply(BigInteger.TEN.pow(9)).longValue(),
+                            TRANSACTION_BASE_FEE,
+                            BigInteger.valueOf(10).multiply(BigInteger.TEN.pow(9)).longValue(),
                             TransactionTypes.DEFAULT, null);
             txs.add(atx);
         }

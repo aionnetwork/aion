@@ -725,6 +725,15 @@ public class ApiWeb3Aion extends ApiAion {
             case INVALID_TX:
             case INVALID_TX_NRG_PRICE:
             case INVALID_FROM:
+            case INVALID_TX_NRG_LIMIT:
+            case INVALID_TX_NONCE:
+            case INVALID_TX_TIMESTAMP:
+            case INVALID_TX_VALUE:
+            case INVALID_TX_DATA:
+            case INVALID_TX_HASH:
+            case INVALID_TX_SIGNATURE:
+            case INVALID_TX_TYPE:
+            case INVALID_TX_BEACONHASH:
             case REPAYTX_LOWPRICE:
                 return new RpcMsg(null, RpcError.INVALID_PARAMS, rsp.getMessage());
             case INVALID_ACCOUNT:

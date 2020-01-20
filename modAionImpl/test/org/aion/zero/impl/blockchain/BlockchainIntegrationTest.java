@@ -40,6 +40,7 @@ public class BlockchainIntegrationTest {
             ByteUtil.hexStringToBytes(
                     "CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3");
     public static byte[] TEST_EXTRADATA = "One ring to rule them all".getBytes();
+    private long energyPrice = 10_000_000_000L;
 
     @Before
     public void setup() {
@@ -118,7 +119,7 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         1L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -156,7 +157,7 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
@@ -174,7 +175,7 @@ public class BlockchainIntegrationTest {
         assertThat(repo.getBalance(new AionAddress(sender.getAddress())))
                 .isEqualTo(
                         senderInitialBalance
-                                .subtract(BigInteger.valueOf(21000))
+                                .subtract(BigInteger.valueOf(21000).multiply(BigInteger.valueOf(energyPrice)))
                                 .subtract(BigInteger.valueOf(100)));
     }
 
@@ -207,7 +208,7 @@ public class BlockchainIntegrationTest {
                         BigInteger.valueOf(100).toByteArray(),
                         ByteUtil.EMPTY_BYTE_ARRAY,
                         21000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         // create a new block containing a single transaction (tx)
@@ -244,7 +245,7 @@ public class BlockchainIntegrationTest {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block =

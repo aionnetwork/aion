@@ -33,7 +33,7 @@ public class VMTxStateAlignTest {
     private List<ECKey> deployerKeys;
     private int deployerNum = 5;
     private List<AionAddress> deployers;
-    private long energyPrice = 1;
+    private long energyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupVM() {

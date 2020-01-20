@@ -18,10 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import org.aion.base.AccountState;
-import org.aion.log.LogLevel;
-import org.aion.util.TransactionUtil;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
@@ -82,6 +78,7 @@ public class ContractIntegTest {
     private BigInteger deployerBalance, deployerNonce, senderBalance, senderNonce;
     private byte txType;
     private List<ECKey> accounts;
+    private long energyPrice = 10_000_000_000L;
 
     @Parameters
     public static Object[] data() {
@@ -140,7 +137,7 @@ public class ContractIntegTest {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -206,7 +203,7 @@ public class ContractIntegTest {
     @Test
     public void testContractDeployCodeIsEmpty() throws Exception {
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -257,7 +254,7 @@ public class ContractIntegTest {
         byte[] deployCode = new byte[1];
         deployCode[0] = 0x1;
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -307,7 +304,7 @@ public class ContractIntegTest {
     public void testDeployWithOutCode() throws Exception {
 
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO; // attempt to transfer value to new contract.
         BigInteger nonce = BigInteger.ZERO;
 
@@ -356,7 +353,7 @@ public class ContractIntegTest {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE; // attempt to transfer value to new contract.
         BigInteger nonce = BigInteger.ZERO;
 
@@ -406,7 +403,7 @@ public class ContractIntegTest {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.TWO.pow(10); // attempt to transfer value to new contract.
         BigInteger nonce = BigInteger.ZERO;
 
@@ -457,7 +454,7 @@ public class ContractIntegTest {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = Builder.DEFAULT_BALANCE.add(BigInteger.ONE); // send too much value.
         BigInteger nonce = BigInteger.ZERO;
 
@@ -509,7 +506,7 @@ public class ContractIntegTest {
                 ContractUtils.getContractDeployer(
                         "MultiFeatureContract.sol", "MultiFeatureContract");
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -562,7 +559,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -643,7 +640,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -702,7 +699,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.TWO.pow(32);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -758,7 +755,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.TWO.pow(13);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -821,7 +818,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.TWO.pow(13);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -884,7 +881,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.TWO.pow(20);
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -994,7 +991,7 @@ public class ContractIntegTest {
         String contractName = "Recursive";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -1087,7 +1084,7 @@ public class ContractIntegTest {
     public void testCallPrecompiledContract() {
         //        String tagToSend = "Soo cool!";
         //        long nrg = Constants.NRG_TRANSACTION_MAX;
-        //        long nrgPrice = 1;
+        //        long nrgPrice = energyPrice;
         //        BigInteger value = BigInteger.ZERO;
         //        BigInteger nonce = BigInteger.ZERO;
         //        AionTransaction tx =
@@ -1134,7 +1131,7 @@ public class ContractIntegTest {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -1183,7 +1180,7 @@ public class ContractIntegTest {
         String contractName = "InternalCallContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -1282,7 +1279,7 @@ public class ContractIntegTest {
         String contractName = "InternalCallContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -1356,7 +1353,7 @@ public class ContractIntegTest {
         String contractName = "InternalCallContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
@@ -1414,7 +1411,7 @@ public class ContractIntegTest {
 
         blockchain.set040ForkNumber(1000);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
@@ -1497,7 +1494,7 @@ public class ContractIntegTest {
 
         blockchain.set040ForkNumber(0);
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
 
         AionAddress destinationAddr =
@@ -1589,7 +1586,7 @@ public class ContractIntegTest {
         }
 
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
 
         AionAddress avmAddress =
@@ -1669,7 +1666,7 @@ public class ContractIntegTest {
         //        String contractName = "MultiFeatureCaller";
         //        byte[] deployCode = getDeployCode(contractName);
         //        long nrg = 1_000_000;
-        //        long nrgPrice = 1;
+        //        long nrgPrice = energyPrice;
         //        BigInteger value = BigInteger.ZERO;
         //        BigInteger nonce = BigInteger.ZERO;
         //        AionTransaction tx =
@@ -1966,7 +1963,7 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         jar,
                         5_000_000L,
-                        1,
+                        energyPrice,
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =
@@ -1995,7 +1992,7 @@ public class ContractIntegTest {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 200_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -2041,8 +2038,6 @@ public class ContractIntegTest {
 
             checkStateOfDeployer(repo, summary, nrgPrice, value, nonce.add(BigInteger.ONE));
             assertEquals(nrg, summary.getReceipt().getEnergyUsed());
-            assertEquals(nrg, repo.getBalance(block.getCoinbase()).intValue());
-
         } else if (txType == TransactionTypes.AVM_CREATE_CODE) {
             assertEquals("Failed: invalid data", summary.getReceipt().getError());
             nonce = nonce.add(BigInteger.ONE);
@@ -2071,7 +2066,7 @@ public class ContractIntegTest {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 200_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -2115,7 +2110,7 @@ public class ContractIntegTest {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 226160;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 

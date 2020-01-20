@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;
@@ -31,7 +32,6 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.zero.impl.vm.common.TxNrgRule;
 import org.aion.txpool.Constant;
 import org.aion.txpool.ITxPool;
 import org.aion.types.AionAddress;
@@ -186,17 +186,83 @@ public class AionPendingStateImpl implements IPendingState {
     }
 
     /**
-     * TODO: when we removed libNc, timers were not introduced yet, we must rework the model that
-     * libAion uses to work with timers
+     * Transaction comes from the ApiServer. Validate it first then add into the pendingPool.
+     * Synchronized it because multiple Api interfaces call this method.
+     * @param tx transaction comes from the ApiServer.
+     * @return the TxResponse.
      */
-    public synchronized TxResponse addPendingTransaction(AionTransaction tx) {
+    public synchronized TxResponse addTransactionFromApiServer(AionTransaction tx) {
+
+        TxResponse response = validateTx(tx);
+        if (response.isFail()) {
+            LOGGER_TX.error("tx is not valid - code:[{}] tx[{}]", response.getVal(), tx.toString());
+            return response;
+        }
+
+        // SeedMode or the syncing status will just broadcast the transaction to the network.
+        if (isSeedMode || !closeToNetworkBest) {
+            transactionBroadcastCallback.broadcastTransactions(Collections.singletonList(tx));
+            return TxResponse.SUCCESS;
+        }
+
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
     }
 
-    public boolean isValid(AionTransaction tx) {
-        return (TXValidator.isValid(tx, blockchain.isUnityForkEnabledAtNextBlock()))
-                && TransactionTypeValidator.isValid(tx)
-                && blockchain.beaconHashValidator.validateTxForPendingState(tx);
+    /**
+     * The transactions come from the p2p network. We validate it first then add into the pendingPool.
+     * @param transactions transaction list come from the network.
+     */
+    public synchronized void addTransactionsFromNetwork(List<AionTransaction> transactions) {
+        List<AionTransaction> validTransactions = new ArrayList<>();
+
+        for (AionTransaction tx : transactions) {
+            if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getTransactionHash())) && !validateTx(tx).isFail()) {
+                validTransactions.add(tx);
+            }
+        }
+
+        // SeedMode or the syncing status will just broadcast the transaction to the network.
+        if (isSeedMode || !closeToNetworkBest) {
+            transactionBroadcastCallback.broadcastTransactions(validTransactions);
+        } else {
+            addPendingTransactions(validTransactions);
+        }
+    }
+
+    private TxResponse validateTx(AionTransaction tx) {
+        TxResponse response = TXValidator.validateTx(tx, blockchain.isUnityForkEnabledAtNextBlock());
+        if (response.isFail()) {
+            return response;
+        }
+
+        if (!TransactionTypeValidator.isValid(tx)) {
+            return TxResponse.INVALID_TX_TYPE;
+        }
+
+        if (!blockchain.beaconHashValidator.validateTxForPendingState(tx)) {
+            return TxResponse.INVALID_TX_BEACONHASH;
+        }
+
+        return TxResponse.SUCCESS;
+    }
+
+    /**
+     * For the transactions come from the cache or backup, we can just verify the beaconHash. And skip
+     * the transactions broadcast.
+     * @param transactions transaction list come from the cache or backup.
+     */
+    private void addTransactionsFromCacheOrBackup(List<AionTransaction> transactions) {
+        List<AionTransaction> validTransactions = new ArrayList<>();
+
+        for (AionTransaction tx : transactions) {
+            if (blockchain.beaconHashValidator.validateTxForPendingState(tx)) {
+                validTransactions.add(tx);
+            } else {
+                fireDroppedTx(tx, "INVALID_TX_BEACON_HASH");
+            }
+        }
+
+        addPendingTransactions(validTransactions);
     }
 
     /**
@@ -206,12 +272,8 @@ public class AionPendingStateImpl implements IPendingState {
      * @return a list of TxResponses of the same size as the input param transactions The entries in
      *     the returned list of responses correspond one-to-one with the input txs
      */
-    public synchronized List<TxResponse> addPendingTransactions(
+    private List<TxResponse> addPendingTransactions(
             List<AionTransaction> transactions) {
-
-        if (isSeedMode || !closeToNetworkBest) {
-            return seedProcess(transactions);
-        }
 
         List<AionTransaction> newPending = new ArrayList<>();
         List<AionTransaction> newLargeNonceTx = new ArrayList<>();
@@ -367,27 +429,6 @@ public class AionPendingStateImpl implements IPendingState {
         return txResponses;
     }
 
-    private List<TxResponse> seedProcess(List<AionTransaction> transactions) {
-        List<AionTransaction> newTx = new ArrayList<>();
-        List<TxResponse> txResponses = new ArrayList<>();
-        for (AionTransaction tx : transactions) {
-            if (isValid(tx)) {
-                newTx.add(tx);
-                txResponses.add(TxResponse.SUCCESS);
-            } else {
-                LOGGER_TX.error(
-                        "tx is not valid: tx[{}]", tx.toString());
-                txResponses.add(TxResponse.INVALID_TX);
-            }
-        }
-
-        if (!newTx.isEmpty()) {
-            transactionBroadcastCallback.broadcastTransactions(newTx);
-        }
-
-        return txResponses;
-    }
-
     private boolean inPool(BigInteger txNonce, AionAddress from) {
         return (this.txPool.bestPoolNonce(from).compareTo(txNonce) > -1);
     }
@@ -418,18 +459,6 @@ public class AionPendingStateImpl implements IPendingState {
      *     DROPPED, INVALID_TX, etc.
      */
     private TxResponse addPendingTransactionImpl(final AionTransaction tx) {
-
-        if (!isValid(tx)) {
-            LOGGER_TX.error("invalid Tx [{}]", tx.toString());
-            fireDroppedTx(tx, "INVALID_TX");
-            return TxResponse.INVALID_TX;
-        }
-
-        if (!TxNrgRule.isValidTxNrgPrice(tx.getEnergyPrice())) {
-            LOGGER_TX.error("invalid Tx Nrg price [{}]", tx.toString());
-            fireDroppedTx(tx, "INVALID_TX_NRG_PRICE");
-            return TxResponse.INVALID_TX_NRG_PRICE;
-        }
 
         AionTxExecSummary txSum;
         boolean ip = inPool(tx.getNonceBI(), tx.getSenderAddress());
@@ -658,7 +687,7 @@ public class AionPendingStateImpl implements IPendingState {
         }
 
         if (!newPendingTx.isEmpty()) {
-            addPendingTransactions(newPendingTx);
+            addTransactionsFromCacheOrBackup(newPendingTx);
         }
     }
 
@@ -1007,7 +1036,7 @@ public class AionPendingStateImpl implements IPendingState {
             pendingPoolTx.addAll(e.getValue().values());
         }
 
-        addPendingTransactions(pendingPoolTx);
+        addTransactionsFromCacheOrBackup(pendingPoolTx);
         long t2 = System.currentTimeMillis() - t1;
         LOGGER_TX.info(
                 "{} pendingPoolTx loaded from DB loaded into the txpool, {} ms",

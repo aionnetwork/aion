@@ -34,6 +34,7 @@ public class AvmLogAndInternalTransactionTest {
     private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
+    private long minEnergyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupAvm() throws Exception {
@@ -126,7 +127,7 @@ public class AvmLogAndInternalTransactionTest {
                         new byte[0],
                         data,
                         2_000_000,
-                        1,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block =
@@ -149,7 +150,7 @@ public class AvmLogAndInternalTransactionTest {
                         new byte[0],
                         jar,
                         5_000_000,
-                        1,
+                        minEnergyPrice,
                         TransactionTypes.AVM_CREATE_CODE, null);
 
         AionBlock block =

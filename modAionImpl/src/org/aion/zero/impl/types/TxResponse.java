@@ -14,7 +14,16 @@ public enum TxResponse {
     REPAYTX_POOL_EXCEPTION(10, true),
     REPAYTX_LOWPRICE(11, true),
     DROPPED(12, true),
-    EXCEPTION(13, true);
+    EXCEPTION(13, true),
+    INVALID_TX_NRG_LIMIT(14, true),
+    INVALID_TX_NONCE(15, true),
+    INVALID_TX_TIMESTAMP(16, true),
+    INVALID_TX_VALUE(17, true),
+    INVALID_TX_DATA(18, true),
+    INVALID_TX_HASH(19, true),
+    INVALID_TX_SIGNATURE(20, true),
+    INVALID_TX_TYPE(21, true),
+    INVALID_TX_BEACONHASH(22, true);
 
     private int val;
     private boolean fail;
@@ -30,5 +39,9 @@ public enum TxResponse {
 
     public boolean isFail() {
         return fail;
+    }
+
+    public boolean isSuccess() {
+        return !fail;
     }
 }

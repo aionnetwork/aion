@@ -67,6 +67,7 @@ public class TransactionExecutorTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
     private AionAddress deployer;
+    private long energyPrice = 10_000_000_000L;
 
     @Before
     public void setup() {
@@ -94,7 +95,7 @@ public class TransactionExecutorTest {
     public void testExecutor() throws Exception {
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -144,7 +145,7 @@ public class TransactionExecutorTest {
     public void testExecutorBlind() throws IOException {
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 
@@ -203,7 +204,7 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -233,7 +234,7 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -284,7 +285,7 @@ public class TransactionExecutorTest {
                         BigInteger.ZERO.toByteArray(),
                         callingCode,
                         1_000_000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -308,7 +309,7 @@ public class TransactionExecutorTest {
     private AionAddress deployByteArrayContract() throws IOException {
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
-        long nrgPrice = 1;
+        long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ZERO;
         BigInteger nonce = BigInteger.ZERO;
 

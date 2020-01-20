@@ -490,7 +490,7 @@ public abstract class ApiAion extends Api {
                                 _params.getNrgPrice(),
                                 _params.getType(), null);
 
-                TxResponse rsp = pendingState.addPendingTransaction(tx);
+                TxResponse rsp = pendingState.addTransactionFromApiServer(tx);
 
                 AionAddress address = TxUtil.calculateContractAddress(tx);
                 return new ApiTxResponse(rsp, tx.getTransactionHash(), address);
@@ -560,7 +560,7 @@ public abstract class ApiAion extends Api {
                                 _params.getBeaconHash());
 
                 return (new ApiTxResponse(
-                        pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
+                        pendingState.addTransactionFromApiServer(tx), tx.getTransactionHash()));
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
@@ -580,7 +580,7 @@ public abstract class ApiAion extends Api {
 
         try {
             return (new ApiTxResponse(
-                    pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
+                    pendingState.addTransactionFromApiServer(tx), tx.getTransactionHash()));
         } catch (Exception ex) {
             LOG.error("<send-transaction exception>", ex);
             return (new ApiTxResponse(TxResponse.EXCEPTION, ex));

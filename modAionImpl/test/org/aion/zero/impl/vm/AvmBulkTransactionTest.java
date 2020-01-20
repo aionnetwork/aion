@@ -39,7 +39,7 @@ public class AvmBulkTransactionTest {
     private static TestResourceProvider resourceProvider;
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private long energyPrice = 1;
+    private long energyPrice = 10_000_000_000L;
 
     @BeforeClass
     public static void setupAvm() throws Exception {
@@ -155,7 +155,7 @@ public class AvmBulkTransactionTest {
             BigInteger energyUsed =
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedBalance = expectedBalance.subtract(energyUsed);
+            expectedBalance = expectedBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice)));
         }
 
         assertEquals(expectedBalance, getBalance(deployerKey));
@@ -236,7 +236,7 @@ public class AvmBulkTransactionTest {
             BigInteger energyUsed =
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedBalance = expectedBalance.subtract(energyUsed);
+            expectedBalance = expectedBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice)));
         }
 
         assertEquals(expectedBalance, getBalance(deployerKey));
@@ -285,7 +285,7 @@ public class AvmBulkTransactionTest {
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
             expectedDeployerBalance =
-                    expectedDeployerBalance.subtract(energyUsed).subtract(transferAmounts.get(i));
+                    expectedDeployerBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice))).subtract(transferAmounts.get(i));
         }
 
         // Verify account states after the transactions have been processed.
@@ -351,7 +351,7 @@ public class AvmBulkTransactionTest {
             BigInteger energyUsed =
                     BigInteger.valueOf(
                             blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed);
+            expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice)));
 
             // The first batch are creates, so grab the new contract addresses.
             if (i < numAvmCreateTransactions) {

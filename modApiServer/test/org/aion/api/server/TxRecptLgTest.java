@@ -27,6 +27,8 @@ import org.junit.Test;
 
 public class TxRecptLgTest {
 
+    private long energyPrice = 10_000_000_000L;
+
     private static byte[] readContract(String fileName) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -72,7 +74,7 @@ public class TxRecptLgTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         nonce = nonce.add(BigInteger.ONE);
@@ -84,7 +86,7 @@ public class TxRecptLgTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         BlockContext context =
@@ -112,7 +114,7 @@ public class TxRecptLgTest {
                         new byte[0],
                         ByteUtil.merge(functionAA, addressB.toByteArray()),
                         1_000_000L,
-                        1L,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx3), false);

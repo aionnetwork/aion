@@ -62,6 +62,7 @@ import org.slf4j.Logger;
 public class InternalTransactionTest {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
+    private long minEnergyPrice = 10_000_000_000L;
     /*
     pragma solidity ^0.4.0;
 
@@ -127,7 +128,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         nonce = nonce.add(BigInteger.ONE);
@@ -139,7 +140,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         BlockContext context =
@@ -165,7 +166,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes("0x26121ff0"),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx3), false);
@@ -192,7 +193,7 @@ public class InternalTransactionTest {
                                 addressB.toByteArray(),
                                 new DataWord(80_000).getData()),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx4), false);
@@ -220,7 +221,7 @@ public class InternalTransactionTest {
                                 addressB.toByteArray(),
                                 new DataWord(20_000).getData()),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx6), false);
@@ -270,7 +271,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
@@ -295,7 +296,7 @@ public class InternalTransactionTest {
                                 ByteUtil.hexStringToBytes("0xec779964"),
                                 new DataWord(2).getData()),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx2), false);
@@ -343,7 +344,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         BlockContext context = bc.createNewMiningBlockContext(bc.getBestBlock(), List.of(tx1), false);
@@ -390,7 +391,7 @@ public class InternalTransactionTest {
                         BigInteger.ONE.toByteArray(),
                         new byte[0],
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         Block parentBlock = bc.getBestBlock();
@@ -418,7 +419,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         parentBlock = bc.getBestBlock();
@@ -445,7 +446,7 @@ public class InternalTransactionTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L,
+                        minEnergyPrice,
                         TransactionTypes.DEFAULT, null);
 
         System.out.println("contractaddr: " + TxUtil.calculateContractAddress(tx));
