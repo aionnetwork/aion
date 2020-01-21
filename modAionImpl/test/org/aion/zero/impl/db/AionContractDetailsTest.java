@@ -79,7 +79,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails =
                 new AionContractDetailsImpl(
-                        -1, // CfgAion.inst().getDb().getPrune(),
                         1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
                         );
         contractDetails.setCode(code);
@@ -269,7 +268,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(0, 1000000);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(1000000);
 
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
@@ -317,7 +316,7 @@ public class AionContractDetailsTest {
         Map<DataWord, DataWord> elements = new HashMap<>();
 
         int memstoragelimit = 512;
-        AionContractDetailsImpl original = new AionContractDetailsImpl(0, memstoragelimit);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(memstoragelimit);
 
         // getting storage specific properties
         Properties sharedProps;
@@ -357,7 +356,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(0, memstoragelimit);
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(memstoragelimit);
         deserialized.setDataSource(jpd);
         deserialized.decode(rlp);
 
@@ -387,7 +386,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(0, 1000000);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(1000000);
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
@@ -472,7 +471,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
+        AionContractDetailsImpl details = new AionContractDetailsImpl(1000000);
         details.setExternalStorageDataSource(externalStorage);
         details.setAddress(address);
         details.setCode(code);

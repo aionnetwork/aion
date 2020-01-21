@@ -34,8 +34,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    // a value > 0 indicates that prune should be for that many blocks.
-    private int prune = 0;
     // indicates the maximum storage size before shifting to the storage database
     // NOTE: updating this value can lead to incompatible data storage
     private int detailsInMemoryStorageLimit = 64 * 1024;
@@ -66,8 +64,7 @@ public class AionContractDetailsImpl implements ContractDetails {
     public AionContractDetailsImpl() {}
 
     @VisibleForTesting
-    AionContractDetailsImpl(int prune, int memStorageLimit) {
-        this.prune = prune;
+    AionContractDetailsImpl(int memStorageLimit) {
         // NOTE: updating this value can lead to incompatible data storage
         this.detailsInMemoryStorageLimit = memStorageLimit;
     }
@@ -427,7 +424,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         } else {
             storageTrie.deserialize(storage.getRLPData());
         }
-        storageTrie.withPruningEnabled(prune > 0);
 
         // switch from in-memory to external storage
         if (!externalStorage && !keepStorageInMem) {
@@ -718,7 +714,6 @@ public class AionContractDetailsImpl implements ContractDetails {
                         : Arrays.copyOf(
                                 this.concatenatedStorageHash, this.concatenatedStorageHash.length);
 
-        aionContractDetailsCopy.prune = this.prune;
         aionContractDetailsCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.dirty = this.dirty;
