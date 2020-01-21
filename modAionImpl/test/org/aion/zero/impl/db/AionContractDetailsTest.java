@@ -34,9 +34,6 @@ import org.slf4j.Logger;
 public class AionContractDetailsTest {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    private static final int IN_MEMORY_STORAGE_LIMIT =
-            1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
-
     protected RepositoryConfig repoConfig =
             new RepositoryConfig() {
                 @Override
@@ -77,10 +74,7 @@ public class AionContractDetailsTest {
         byte[] key_2 = ByteUtil.hexStringToBytes("222222");
         byte[] val_2 = ByteUtil.hexStringToBytes("bbbbbb");
 
-        AionContractDetailsImpl contractDetails =
-                new AionContractDetailsImpl(
-                        1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
-                        );
+        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
         contractDetails.setCode(code);
         contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
@@ -268,15 +262,14 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(1000000);
-
+        AionContractDetailsImpl original = new AionContractDetailsImpl();
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
         original.externalStorage = true;
 
-        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
+        for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
@@ -315,8 +308,8 @@ public class AionContractDetailsTest {
         byte[] code = RandomUtils.nextBytes(512);
         Map<DataWord, DataWord> elements = new HashMap<>();
 
-        int memstoragelimit = 512;
-        AionContractDetailsImpl original = new AionContractDetailsImpl(memstoragelimit);
+        AionContractDetailsImpl.detailsInMemoryStorageLimit = 512;
+        AionContractDetailsImpl original = new AionContractDetailsImpl();
 
         // getting storage specific properties
         Properties sharedProps;
@@ -356,7 +349,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(memstoragelimit);
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl();
         deserialized.setDataSource(jpd);
         deserialized.decode(rlp);
 
@@ -375,6 +368,9 @@ public class AionContractDetailsTest {
 
         deserialized.delete(deletedKey.toWrapper());
         deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
+
+        // reset static variable to original value
+        AionContractDetailsImpl.detailsInMemoryStorageLimit =  64 * 1024;
     }
 
     @Test
@@ -386,13 +382,13 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(1000000);
+        AionContractDetailsImpl original = new AionContractDetailsImpl();
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
 
-        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
+        for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
@@ -471,7 +467,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(1000000);
+        AionContractDetailsImpl details = new AionContractDetailsImpl();
         details.setExternalStorageDataSource(externalStorage);
         details.setAddress(address);
         details.setCode(code);

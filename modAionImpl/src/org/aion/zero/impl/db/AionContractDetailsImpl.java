@@ -34,9 +34,9 @@ public class AionContractDetailsImpl implements ContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    // indicates the maximum storage size before shifting to the storage database
-    // NOTE: updating this value can lead to incompatible data storage
-    private int detailsInMemoryStorageLimit = 64 * 1024;
+    /** Indicates the maximum storage size before shifting to the storage database. */
+    @VisibleForTesting
+    static int detailsInMemoryStorageLimit = 64 * 1024;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
     // classes extending this rely on this value starting off as null
@@ -62,12 +62,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
 
     public AionContractDetailsImpl() {}
-
-    @VisibleForTesting
-    AionContractDetailsImpl(int memStorageLimit) {
-        // NOTE: updating this value can lead to incompatible data storage
-        this.detailsInMemoryStorageLimit = memStorageLimit;
-    }
 
     /**
      * Creates a object with attached database access for the storage and object graph.
@@ -714,7 +708,6 @@ public class AionContractDetailsImpl implements ContractDetails {
                         : Arrays.copyOf(
                                 this.concatenatedStorageHash, this.concatenatedStorageHash.length);
 
-        aionContractDetailsCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
