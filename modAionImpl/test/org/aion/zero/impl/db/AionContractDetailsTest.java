@@ -309,7 +309,6 @@ public class AionContractDetailsTest {
         Map<DataWord, DataWord> elements = new HashMap<>();
 
         AionContractDetailsImpl.detailsInMemoryStorageLimit = 512;
-        AionContractDetailsImpl original = new AionContractDetailsImpl();
 
         // getting storage specific properties
         Properties sharedProps;
@@ -319,7 +318,7 @@ public class AionContractDetailsTest {
         sharedProps.setProperty(DatabaseFactory.Props.DB_NAME, "storage");
         ByteArrayKeyValueDatabase storagedb = connectAndOpen(sharedProps, LOG);
         JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb, LOG);
-        original.setDataSource(jpd);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(jpd, null);
         original.setAddress(address);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
@@ -349,8 +348,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = new AionContractDetailsImpl();
-        deserialized.setDataSource(jpd);
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(jpd, null);
         deserialized.decode(rlp);
 
         assertTrue(deserialized.externalStorage);

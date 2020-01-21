@@ -524,15 +524,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     }
 
     /**
-     * Sets the storage data source.
-     *
-     * @param dataSource The new dataSource.
-     */
-    public void setDataSource(ByteArrayKeyValueStore dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    /**
      * Sets the data source for storing the AVM object graph.
      *
      * @param objectGraphSource the new data source used for storing the object graph
