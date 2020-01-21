@@ -66,9 +66,9 @@
         <state-storage>FULL</state-storage>
         <!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
         <!--Caution: changing implementation requires re-syncing from genesis!-->
-        <vendor>leveldb</vendor>
+        <vendor>rocksdb</vendor>
         <!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
-        <enable_db_compression>false</enable_db_compression>
+        <enable_db_compression>true</enable_db_compression>
     </db>
     <log>
         <!--Enable/Disable logback service; if disabled, output will not be logged -->
