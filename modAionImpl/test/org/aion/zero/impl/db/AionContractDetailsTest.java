@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.store.JournalPruneDataSource;
@@ -53,15 +54,6 @@ public class AionContractDetailsTest {
                     return props;
                 }
             };
-
-    private static AionContractDetailsImpl deserialize(
-            byte[] rlp, ByteArrayKeyValueDatabase externalStorage) {
-        AionContractDetailsImpl result = new AionContractDetailsImpl();
-        result.setExternalStorageDataSource(externalStorage);
-        result.decode(rlp);
-
-        return result;
-    }
 
     @Test
     public void test_1() throws Exception {
@@ -260,14 +252,14 @@ public class AionContractDetailsTest {
         Map<DataWord, DataWord> elements = new HashMap<>();
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+        ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
+        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl();
-        original.setExternalStorageDataSource(externalStorage);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(externalStorage, graphDatabase);
         original.setAddress(address);
+        original.initializeExternalStorageTrieForTest();
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
-        original.externalStorage = true;
 
         for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
@@ -281,8 +273,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = new AionContractDetailsImpl();
-        deserialized.setExternalStorageDataSource(externalStorage);
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
         deserialized.decode(rlp);
 
         assertEquals(deserialized.externalStorage, true);
@@ -378,10 +369,10 @@ public class AionContractDetailsTest {
         Map<DataWord, DataWord> elements = new HashMap<>();
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+        ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
+        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl();
-        original.setExternalStorageDataSource(externalStorage);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(externalStorage, graphDatabase);
         original.setAddress(address);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
@@ -394,10 +385,14 @@ public class AionContractDetailsTest {
             original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
+        /* NOTE: This operation does not actually transition the storage to the external database.
+           The transition occurs only during decoding. */
         original.syncStorage();
-        assertTrue(!externalStorage.isEmpty());
+        assertTrue(externalStorage.isEmpty());
 
-        AionContractDetailsImpl deserialized = deserialize(original.getEncoded(), externalStorage);
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
+        deserialized.decode(original.getEncoded());
+        assertTrue(deserialized.externalStorage);
 
         // adds keys for in-memory storage limit overflow
         for (int i = 0; i < 10; i++) {
@@ -412,12 +407,13 @@ public class AionContractDetailsTest {
         deserialized.syncStorage();
         assertTrue(!externalStorage.isEmpty());
 
-        deserialized = deserialize(deserialized.getEncoded(), externalStorage);
+        AionContractDetailsImpl deserialized2 = new AionContractDetailsImpl(externalStorage, graphDatabase);
+        deserialized2.decode(deserialized.getEncoded());
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
                     elements.get(key).toWrapper(),
-                    wrapValueFromGet(deserialized.get(key.toWrapper())));
+                    wrapValueFromGet(deserialized2.get(key.toWrapper())));
         }
     }
 
@@ -463,10 +459,10 @@ public class AionContractDetailsTest {
         byte[] code = RandomUtils.nextBytes(512);
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+        ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
+        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl();
-        details.setExternalStorageDataSource(externalStorage);
+        AionContractDetailsImpl details = new AionContractDetailsImpl(externalStorage, graphDatabase);
         details.setAddress(address);
         details.setCode(code);
         details.setVmType(InternalVmType.FVM);

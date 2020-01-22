@@ -55,7 +55,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     private SecureTrie storageTrie = new SecureTrie(null);
 
     public boolean externalStorage;
-    private ByteArrayKeyValueStore externalStorageDataSource;
 
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
@@ -537,12 +536,7 @@ public class AionContractDetailsImpl implements ContractDetails {
      * @return the external storage data source.
      */
     private ByteArrayKeyValueStore getExternalStorageDataSource() {
-        if (externalStorageDataSource == null) {
-            externalStorageDataSource =
-                    new XorDataSource(
-                            dataSource, h256(("details-storage/" + address.toString()).getBytes()));
-        }
-        return externalStorageDataSource;
+        return new XorDataSource(dataSource, h256(("details-storage/" + address.toString()).getBytes()));
     }
 
     /**
@@ -560,15 +554,9 @@ public class AionContractDetailsImpl implements ContractDetails {
 
     /**
      * Sets the external storage data source to dataSource.
-     *
-     * @param dataSource The new data source.
-     * @implNote The tests are taking a shortcut here in bypassing the XorDataSource created by
-     *     {@link #getExternalStorageDataSource()}. Do not use this method in production.
      */
     @VisibleForTesting
-    void setExternalStorageDataSource(ByteArrayKeyValueStore dataSource) {
-        // TODO: regarding the node above: the tests should be updated and the method removed
-        this.externalStorageDataSource = dataSource;
+    void initializeExternalStorageTrieForTest() {
         this.externalStorage = true;
         this.storageTrie = new SecureTrie(getExternalStorageDataSource());
     }
@@ -640,7 +628,6 @@ public class AionContractDetailsImpl implements ContractDetails {
 
         // storage information
         details.externalStorage = this.externalStorage;
-        details.externalStorageDataSource = this.externalStorageDataSource;
         details.dataSource = dataSource;
 
         return details;
@@ -669,7 +656,6 @@ public class AionContractDetailsImpl implements ContractDetails {
 
         // storage information
         aionContractDetailsCopy.dataSource = this.dataSource;
-        aionContractDetailsCopy.externalStorageDataSource = this.externalStorageDataSource;
         aionContractDetailsCopy.externalStorage = this.externalStorage;
 
         // object graph information
