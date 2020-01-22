@@ -1,7 +1,7 @@
 properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
             [$class: 'LogRotator', numToKeepStr: '100', artifactNumToKeepStr: '20']
             ]])
-            
+
 pipeline {
     agent any
 
@@ -18,22 +18,22 @@ pipeline {
                 echo "Building branch: ${env.BRANCH_NAME}"
 		// comment it out due to temporary ignore the consensus tests.
                 // sh "git lfs install"
-                sh "./gradlew pack" 
+                sh "./gradlew pack"
             }
         }
-        
+
         stage('Archive build output') {
             when {
-                expression { 
+                expression {
                     GIT_BRANCH == 'master'
                 }
             }
 
-            steps {                
+            steps {
                 archiveArtifacts artifacts: 'pack/oan-v*.tar.bz2'
             }
         }
-       
+
         stage('Full test') {
             when {
                 // only run if:
@@ -66,7 +66,7 @@ pipeline {
         }
 
         stage('Functional tests') {
-            when { 
+            when {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master
@@ -75,12 +75,12 @@ pipeline {
             steps {
                 timeout(20) {
                     dir('FunctionalTests') {
-                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '2685075']]], poll: false
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '7e74d76b8677bcfde18a9b60b7bfbbe267c1774f']]], poll: false
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
 
-                    dir('FunctionalTests') { 
+                    dir('FunctionalTests') {
                         sh('tar -C Tests -xjf Tests/oan.tar.bz2')
                         sh('./gradlew :Tests:test -i -PtestNodes=java')
                     }
@@ -102,11 +102,11 @@ pipeline {
         slackSend channel: '#ci',
             color: 'good',
             message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
-    } 
+    }
 
         failure {
             slackSend channel: '#ci',
-                    color: 'danger', 
+                    color: 'danger',
                     message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
         }
 
