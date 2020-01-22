@@ -48,8 +48,6 @@ public class AionContractDetailsImpl implements ContractDetails {
     private ByteArrayKeyValueStore dataSource;
     private ByteArrayKeyValueStore objectGraphSource = null;
 
-    private byte[] rlpEncoded;
-
     private AionAddress address;
 
     private SecureTrie storageTrie = new SecureTrie(null);
@@ -184,7 +182,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         storageTrie.update(key.toBytes(), data);
 
         dirty = true;
-        rlpEncoded = null;
     }
 
     @Override
@@ -194,7 +191,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         storageTrie.delete(key.toBytes());
 
         dirty = true;
-        rlpEncoded = null;
     }
 
     /**
@@ -236,7 +232,6 @@ public class AionContractDetailsImpl implements ContractDetails {
             return;
         }
         dirty = true;
-        rlpEncoded = null;
     }
 
     @Override
@@ -263,7 +258,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         this.objectGraphHash = h256(objectGraph);
 
         dirty = true;
-        this.rlpEncoded = null;
     }
 
     /**
@@ -326,9 +320,6 @@ public class AionContractDetailsImpl implements ContractDetails {
             // force a save with new encoding
             throw new IllegalStateException(
                     "Incompatible data storage. Please shutdown the kernel and perform database migration to version 1.0 (Denali) of the kernel as instructed in the release.");
-        } else {
-            // keep encoding when compatible with new style
-            this.rlpEncoded = rlpCode;
         }
 
         if (!fastCheck || externalStorage || !keepStorageInMem) { // it was not a fast check
@@ -438,34 +429,24 @@ public class AionContractDetailsImpl implements ContractDetails {
      * @return an rlp encoding of this.
      */
     public byte[] getEncoded() {
-        if (rlpEncoded == null) {
-
-            byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-            byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-            byte[] rlpStorageRoot;
-            // encoding for AVM
-            if (vmType == InternalVmType.AVM) {
-                rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
-            } else {
-                rlpStorageRoot =
-                        RLP.encodeElement(
-                                externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-            }
-            byte[] rlpStorage =
-                    RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
-            byte[][] codes = new byte[getCodes().size()][];
-            int i = 0;
-            for (byte[] bytes : this.getCodes().values()) {
-                codes[i++] = RLP.encodeElement(bytes);
-            }
-            byte[] rlpCode = RLP.encodeList(codes);
-
-            this.rlpEncoded =
-                    RLP.encodeList(
-                            rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
+        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
+        byte[] rlpStorageRoot;
+        // encoding for AVM
+        if (vmType == InternalVmType.AVM) {
+            rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
+        } else {
+            rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
         }
+        byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
+        byte[][] codes = new byte[getCodes().size()][];
+        int i = 0;
+        for (byte[] bytes : this.getCodes().values()) {
+            codes[i++] = RLP.encodeElement(bytes);
+        }
+        byte[] rlpCode = RLP.encodeList(codes);
 
-        return rlpEncoded;
+        return RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
     }
 
     /**
@@ -492,7 +473,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         if (ContractInfo.isPrecompiledContract(address)) {
             setVmType(InternalVmType.FVM);
         }
-        this.rlpEncoded = null;
     }
 
     /** Syncs the storage trie. */
@@ -685,10 +665,6 @@ public class AionContractDetailsImpl implements ContractDetails {
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
         aionContractDetailsCopy.address = this.address;
-        aionContractDetailsCopy.rlpEncoded =
-                (this.rlpEncoded == null)
-                        ? null
-                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
         aionContractDetailsCopy.storageTrie =
                 (this.storageTrie == null) ? null : this.storageTrie.copy();
         return aionContractDetailsCopy;
