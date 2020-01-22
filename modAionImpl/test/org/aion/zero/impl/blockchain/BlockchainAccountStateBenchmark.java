@@ -338,7 +338,7 @@ public class BlockchainAccountStateBenchmark {
             AionContractDetailsImpl acdi =
                     new AionContractDetailsImpl(
                             bc.getRepository().getContractDetails(contractAddress).getEncoded());
-            assertFalse(acdi.externalStorage);
+            assertFalse(acdi.isExternalStorage());
 
             // around 350 tx to letting the contract storage from memory switch to the external
             // storage.
@@ -349,7 +349,7 @@ public class BlockchainAccountStateBenchmark {
             acdi =
                     new AionContractDetailsImpl(
                             bc.getRepository().getContractDetails(contractAddress).getEncoded());
-            assertTrue(acdi.externalStorage);
+            assertTrue(acdi.isExternalStorage());
 
         } catch (Exception e) {
             e.printStackTrace();

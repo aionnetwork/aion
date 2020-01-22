@@ -5,6 +5,7 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -276,7 +277,7 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
         deserialized.decode(rlp);
 
-        assertEquals(deserialized.externalStorage, true);
+        assertTrue(deserialized.isExternalStorage());
         assertTrue(address.equals(deserialized.getAddress()));
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
@@ -325,7 +326,7 @@ public class AionContractDetailsTest {
 
         original.decode(original.getEncoded());
         original.syncStorage();
-        assertTrue(!original.externalStorage);
+        assertFalse(original.isExternalStorage());
 
         // transfer to external storage since 3rd insert
         DataWord key3rd = new DataWord(RandomUtils.nextBytes(16));
@@ -335,14 +336,14 @@ public class AionContractDetailsTest {
 
         original.decode(original.getEncoded());
         original.syncStorage();
-        assertTrue(original.externalStorage);
+        assertTrue(original.isExternalStorage());
 
         byte[] rlp = original.getEncoded();
 
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(jpd, null);
         deserialized.decode(rlp);
 
-        assertTrue(deserialized.externalStorage);
+        assertTrue(deserialized.isExternalStorage());
         assertEquals(address, deserialized.getAddress());
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
@@ -392,7 +393,7 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
         deserialized.decode(original.getEncoded());
-        assertTrue(deserialized.externalStorage);
+        assertTrue(deserialized.isExternalStorage());
 
         // adds keys for in-memory storage limit overflow
         for (int i = 0; i < 10; i++) {
