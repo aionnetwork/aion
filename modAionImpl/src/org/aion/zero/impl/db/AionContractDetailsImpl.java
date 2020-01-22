@@ -56,7 +56,6 @@ public class AionContractDetailsImpl implements ContractDetails {
 
     public boolean externalStorage;
     private ByteArrayKeyValueStore externalStorageDataSource;
-    private ByteArrayKeyValueStore contractObjectGraphSource = null;
 
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
@@ -552,18 +551,11 @@ public class AionContractDetailsImpl implements ContractDetails {
      * @return the data source specific to the current contract.
      */
     private ByteArrayKeyValueStore getContractObjectGraphSource() {
-        if (contractObjectGraphSource == null) {
-            if (objectGraphSource == null) {
-                throw new NullPointerException(
-                        "The contract object graph source was not initialized.");
-            } else {
-                contractObjectGraphSource =
-                        new XorDataSource(
-                                objectGraphSource,
-                                h256(("details-graph/" + address.toString()).getBytes()));
-            }
+        if (objectGraphSource == null) {
+            throw new NullPointerException("The contract object graph source was not initialized.");
+        } else {
+            return new XorDataSource(objectGraphSource, h256(("details-graph/" + address.toString()).getBytes()));
         }
-        return contractObjectGraphSource;
     }
 
     /**
@@ -682,7 +674,6 @@ public class AionContractDetailsImpl implements ContractDetails {
 
         // object graph information
         aionContractDetailsCopy.objectGraphSource = this.objectGraphSource;
-        aionContractDetailsCopy.contractObjectGraphSource = this.contractObjectGraphSource;
         aionContractDetailsCopy.objectGraph =
                 objectGraph == null
                         ? null
