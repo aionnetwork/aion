@@ -9,7 +9,7 @@ package org.aion.avm.stub;
  * just that production code has no use for it (at the moment anyway).
  */
 public interface IContractFactory {
-    public enum AvmContract { HELLO_WORLD, GENERIC_CONTRACT, INTERNAL_TRANSACTION, LOG_TARGET, STATEFULNESS, TRANSACTION_HASH, META_TRANSACTION_PROXY, UNITY_STAKER_REGISTRY }
+    public enum AvmContract { HELLO_WORLD, GENERIC_CONTRACT, INTERNAL_TRANSACTION, LOG_TARGET, STATEFULNESS, TRANSACTION_HASH, META_TRANSACTION_PROXY, UNITY_STAKER_REGISTRY, LARGE_STORAGE }
 
     /**
      * Returns the bytes of the specified contract in the specific encoding that the avm expects.
