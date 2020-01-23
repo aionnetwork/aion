@@ -2,8 +2,11 @@ package org.aion.zero.impl.db;
 
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,6 +23,7 @@ import org.aion.db.store.ArchivedDataSource;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.zero.impl.config.CfgDb.Names;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.mcf.db.Repository;
@@ -112,7 +116,8 @@ public abstract class AbstractRepository implements Repository<AccountState> {
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
+    protected void initializeDatabasesAndCaches()
+        throws InvalidFilePathException, InvalidFileTypeException, IOException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety
@@ -132,13 +137,18 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         //        } else {
 
         DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.DB_TYPE));
+        LOGGEN.info("The DB vendor is: {}", vendor);
+
         boolean isPersistent = vendor.isFileBased();
         if (isPersistent) {
             // verify user-provided path
             File f = new File(this.cfg.getDbPath());
             verifyAndBuildPath(f);
-        }
 
+            if (vendor.equals(DBVendor.LEVELDB) || vendor.equals(DBVendor.ROCKSDB)) {
+                verifyDBfileType(f, vendor.toValue());
+            }
+        }
         //        }
         //
         //        if (!Arrays.asList(this.cfg.getVendorList()).contains(this.cfg.getActiveVendor()))

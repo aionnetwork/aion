@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.db.DatabaseUtils.deleteRecursively;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -39,7 +41,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -70,7 +72,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -97,7 +99,7 @@ public class PendingBlockStoreTest {
         // check persistence of storage
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -119,7 +121,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -193,7 +195,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -215,7 +217,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -265,7 +267,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -284,7 +286,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -325,7 +327,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -364,7 +366,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException e) {
+        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -397,5 +399,81 @@ public class PendingBlockStoreTest {
         assertThat(pb.getIndexSize()).isEqualTo(1);
         assertThat(pb.getLevelSize()).isEqualTo(1);
         assertThat(pb.getQueueSize()).isEqualTo(1);
+    }
+
+    @Test(expected = InvalidFileTypeException.class)
+    public void testSwitchDbVendorleveldbToRocksdbException()
+        throws InvalidFileTypeException, IOException, InvalidFilePathException {
+
+        File dir = new File(System.getProperty("user.dir"), "tmp-" + System.currentTimeMillis());
+        Properties levelDB = new Properties();
+        levelDB.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
+        levelDB.setProperty(Props.DB_PATH, dir.getAbsolutePath());
+        levelDB.setProperty(Props.DB_NAME, "pbTest");
+
+        PendingBlockStore pb;
+        pb = new PendingBlockStore(levelDB);
+        assertThat(pb.isOpen()).isTrue();
+
+        List<Block> blocks = TestResources.consecutiveBlocks(16);
+        assertThat(blocks.size()).isEqualTo(16);
+
+        assertThat(pb.addBlockRange(blocks)).isEqualTo(16);
+
+        pb.close();
+
+        Properties rocksDB = new Properties();
+        rocksDB.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
+        rocksDB.setProperty(Props.DB_PATH, dir.getAbsolutePath());
+        rocksDB.setProperty(Props.DB_NAME, "pbTest");
+
+        try {
+            pb = new PendingBlockStore(rocksDB);
+        } catch (Exception e) {
+            assertThat(deleteRecursively(dir)).isTrue();
+            throw e;
+        }
+
+        // This test should not reach to here!
+        assertThat(pb.isOpen()).isTrue();
+        pb.close();
+    }
+
+    @Test(expected = InvalidFileTypeException.class)
+    public void testSwitchDbVendorRocksdbToLeveldbException()
+        throws InvalidFileTypeException, IOException, InvalidFilePathException {
+
+        File dir = new File(System.getProperty("user.dir"), "tmp-" + System.currentTimeMillis());
+        Properties rocksDB = new Properties();
+        rocksDB.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
+        rocksDB.setProperty(Props.DB_PATH, dir.getAbsolutePath());
+        rocksDB.setProperty(Props.DB_NAME, "pbTest");
+
+        PendingBlockStore pb;
+        pb = new PendingBlockStore(rocksDB);
+        assertThat(pb.isOpen()).isTrue();
+
+        List<Block> blocks = TestResources.consecutiveBlocks(16);
+        assertThat(blocks.size()).isEqualTo(16);
+
+        assertThat(pb.addBlockRange(blocks)).isEqualTo(16);
+
+        pb.close();
+
+        Properties levelDB = new Properties();
+        levelDB.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
+        levelDB.setProperty(Props.DB_PATH, dir.getAbsolutePath());
+        levelDB.setProperty(Props.DB_NAME, "pbTest");
+
+        try {
+            pb = new PendingBlockStore(levelDB);
+        } catch (Exception e) {
+            assertThat(deleteRecursively(dir)).isTrue();
+            throw e;
+        }
+
+        // This test should not reach to here!
+        assertThat(pb.isOpen()).isTrue();
+        pb.close();
     }
 }

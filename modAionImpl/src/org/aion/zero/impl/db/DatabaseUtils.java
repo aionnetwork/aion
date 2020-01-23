@@ -8,12 +8,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Stream;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.slf4j.Logger;
 
 /** @author Alexandra Roatis */
@@ -86,6 +89,84 @@ public class DatabaseUtils {
 
         if (path == null || !Files.isWritable(path) || !Files.isDirectory(path)) {
             throw exception;
+        }
+    }
+
+    /**
+     * Ensures that the path defined by the dbFile and the fileType in the folders are correct.
+     * The sst file is part of the file structure of the rocksdb
+     * The ldb file is part of the file structure of the leveldb
+     * The OPTIONS file is specific for the rocksdb
+     * @author Jay Tseng
+     * @param dbFile the path to be verified.
+     * @param dbType the database type set by the config file
+     * @throws InvalidFileTypeException when:
+     *     <ol>
+     *       <li>the file type is ldb but found the prefix «OPTIONS» file or .sst file.
+     *       <li>the file type is sst but found the .ldb file or cannot find the «OPTIONS» file.
+     *     </ol>
+     * @throws IOException when:
+     *     <ol>
+     *       <li> I/O error for accessing the dbFile.
+     *     </ol>
+     */
+    static void verifyDBfileType(File dbFile, String dbType)
+        throws InvalidFileTypeException, IOException {
+
+        // Check if it is a new database folder
+        if (Objects.requireNonNull(dbFile.listFiles()).length == 0) {
+            return;
+        }
+
+        if (dbType.equals("leveldb")) {
+            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+                boolean shouldThrow =
+                    paths.filter(Files::isRegularFile)
+                        .anyMatch(
+                            filepath ->
+                                filepath.getFileName().toString().startsWith("OPTIONS")
+                                    || filepath.getFileName().toString().endsWith(".sst"));
+                if (shouldThrow) {
+                    throw new InvalidFileTypeException(
+                        "Found file type «sst» or the file name prefix «OPTIONS» in the database folder"
+                            + ", it is not matched the current DB settings «"
+                            + dbType
+                            + "» Please check DB settings in ./<network>/config/config.xml .");
+                }
+            }
+        } else if (dbType.equals("rocksdb")) {
+            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+                boolean shouldThrow =
+                    paths.filter(Files::isRegularFile)
+                        .anyMatch(filepath ->
+                            filepath.getFileName().toString().endsWith(".ldb"));
+
+                if (shouldThrow) {
+                    throw new InvalidFileTypeException(
+                        "Found file type «ldb» in the database folder"
+                            + ", it is not matched the current DB settings «"
+                            + dbType
+                            + "» Please check DB settings in ./<network>/config/config.xml .");
+                }
+            }
+
+            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+                boolean shouldThrow =
+                    paths.filter(Files::isRegularFile)
+                        .noneMatch(filepath ->
+                            filepath.getFileName().toString().startsWith("OPTIONS"));
+
+                if (shouldThrow) {
+                    throw new InvalidFileTypeException(
+                        "Cannot find the file «OPTIONS» in the database folder"
+                            + ", it is not matched with the current DB settings «"
+                            + dbType
+                            + "» Please check DB settings in ./<network>/config/config.xml .");
+                }
+            }
+        } else {
+            throw new InvalidFileTypeException(
+                    "The db type «" + dbType + "» has not been supported by the kernel.");
         }
     }
 

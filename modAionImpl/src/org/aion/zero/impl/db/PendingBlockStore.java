@@ -2,10 +2,12 @@ package org.aion.zero.impl.db;
 
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +31,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -92,7 +95,8 @@ public class PendingBlockStore implements Closeable {
      * @throws InvalidFilePathException when given a persistent database vendor for which the data
      *     store cannot be created or opened.
      */
-    public PendingBlockStore(final Properties _props) throws InvalidFilePathException {
+    public PendingBlockStore(final Properties _props)
+        throws InvalidFilePathException, IOException, InvalidFileTypeException {
         Properties local = new Properties(_props);
 
         // check for database persistence requirements
@@ -102,6 +106,11 @@ public class PendingBlockStore implements Closeable {
                     new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 
             verifyAndBuildPath(pbFolder);
+
+            if (vendor.equals(DBVendor.LEVELDB) || vendor.equals(DBVendor.ROCKSDB)) {
+                verifyDBfileType(pbFolder, vendor.toValue());
+            }
+
             local.setProperty(Props.DB_PATH, pbFolder.getAbsolutePath());
         }
 
