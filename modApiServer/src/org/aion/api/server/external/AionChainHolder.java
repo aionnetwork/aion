@@ -301,7 +301,7 @@ public class AionChainHolder implements ChainHolder {
     public Pair<byte[], TxResponse> sendTransaction(AionTransaction tx) {
         final TxResponse response;
         if (tx==null) response = TxResponse.INVALID_TX;
-        else response = this.chain.getAionHub().getPendingState().addPendingTransaction(tx);
+        else response = this.chain.getAionHub().getPendingState().addTransactionFromApiServer(tx);
         if (response.isFail()){
             API_LOGGER
                 .info("<send-transaction failed response={}>", response.name());
