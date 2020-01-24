@@ -76,59 +76,7 @@ public class DetailsDataStore {
     }
 
     public synchronized void remove(byte[] key) {
-        ByteArrayWrapper wrappedKey = wrap(key);
         detailsSrc.delete(key);
-    }
-
-    public synchronized void flush() {
-        flushInternal();
-    }
-
-    private long flushInternal() {
-        long totalSize = 0;
-
-        syncLargeStorage();
-
-        // Get everything from the cache and calculate the size.
-        Iterator<byte[]> keysFromSource = detailsSrc.keys();
-        while (keysFromSource.hasNext()) {
-            byte[] keyInSource = keysFromSource.next();
-            // Fetch the value given the keys.
-            Optional<byte[]> valFromKey = detailsSrc.get(keyInSource);
-
-            // Add to total size given size of the value
-            totalSize += valFromKey.map(rawDetails -> rawDetails.length).orElse(0);
-        }
-
-        // Flushes both details and storage.
-        detailsSrc.commit();
-        storageSrc.commit();
-
-        return totalSize;
-    }
-
-    public void syncLargeStorage() {
-
-        Iterator<byte[]> keysFromSource = detailsSrc.keys();
-        while (keysFromSource.hasNext()) {
-            byte[] keyInSource = keysFromSource.next();
-
-            // Fetch the value given the keys.
-            Optional<byte[]> rawDetails = detailsSrc.get(keyInSource);
-
-            // If it is null, just continue
-            if (!rawDetails.isPresent()) {
-                continue;
-            }
-
-            // Decode the details.
-            AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
-            detailsImpl.decode(rawDetails.get(), true);
-            // We can safely get as we checked if it is present.
-
-            // ContractDetails details = entry.getValue();
-            detailsImpl.syncStorage();
-        }
     }
 
     public JournalPruneDataSource getStorageDSPrune() {
