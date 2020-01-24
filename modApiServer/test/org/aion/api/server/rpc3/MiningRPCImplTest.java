@@ -6,13 +6,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.function.Function;
-import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.account.AccountManagerInterface;
 import org.aion.crypto.HashUtil;
 import org.aion.rpc.errors.RPCExceptions;
@@ -36,7 +38,11 @@ import org.aion.rpc.types.RPCTypesConverter.RequestConverter;
 import org.aion.rpc.types.RPCTypesConverter.SubmissionResultConverter;
 import org.aion.rpc.types.RPCTypesConverter.SubmitBlockParamsConverter;
 import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
+import org.aion.util.types.AddressUtils;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.AionBlock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -175,6 +181,104 @@ public class MiningRPCImplTest {
         assertNotNull(difficulty);
         final Request request = buildRequest("getDifficulty", VoidParamsConverter.encode(new VoidParams()));
         BigIntConverter.encode(execute(request, RPCTypesConverter.BigIntConverter::decode));
+    }
+
+    @Test
+    public void testTimestampInSubmitSolution(){
+
+        AionBlock blockWithRightTimestamp = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000)
+            , new byte[0]
+            , new byte[1]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , equihashSolution.toBytes()
+            , 0
+            , 0);
+
+        AionImpl aionImpl = mock(AionImpl.class);
+        AionBlockchainImpl chainImpl = mock(AionBlockchainImpl.class);
+
+        ChainHolder chainHolder = spy(new AionChainHolder(aionImpl, accountManager));
+        doReturn(true).when(chainHolder).isUnityForkEnabled();
+        doReturn(chainImpl).when(aionImpl).getBlockchain();
+        doReturn(blockWithRightTimestamp).when(chainImpl).getCachingMiningBlockTemplate(blockThatCanBeSealed.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp);
+
+        doCallRealMethod().when(chainHolder).submitBlock(nonce.toBytes(), equihashSolution.toBytes(), blockThatCanBeSealed.toBytes());
+        rpcMethods= new RPCMethods(chainHolder);
+
+        String method = "submitBlock";
+        Request request1 =
+            buildRequest(method,
+                SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatCanBeSealed)));
+
+        SubmissionResult submissionResult = execute(request1, SubmissionResultConverter::decode);
+        assertNotNull(submissionResult);
+        assertTrue(submissionResult.result);
+
+
+        // Now we test current timestamp + 1 (for testing the clock drift)
+        AionBlock blockWithRightTimestamp1 = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000) + 1
+            , new byte[0]
+            , new byte[1]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , equihashSolution.toBytes()
+            , 0
+            , 0);
+
+        doReturn(blockWithRightTimestamp1).when(chainImpl).getCachingMiningBlockTemplate(blockThatCanBeSealed.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp1);
+
+        request1 =
+            buildRequest(method,
+                SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatCanBeSealed)));
+
+        submissionResult = execute(request1, SubmissionResultConverter::decode);
+        assertNotNull(submissionResult);
+        assertTrue(submissionResult.result);
+
+        // Now we test the future block timestamp (timestamp + 2)
+        AionBlock blockWithFutureTimestamp = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000) + 2
+            , new byte[0]
+            , new byte[1]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , equihashSolution.toBytes()
+            , 0
+            , 0);
+
+        doReturn(blockWithFutureTimestamp).when(chainImpl).getCachingMiningBlockTemplate(blockThatCanBeSealed.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(blockWithFutureTimestamp);
+
+        request1 =
+            buildRequest(method,
+                SubmitBlockParamsConverter.encode(new SubmitBlockParams(nonce, equihashSolution, blockThatCanBeSealed)));
+
+        submissionResult = execute(request1, SubmissionResultConverter::decode);
+        assertNotNull(submissionResult);
+        assertFalse(submissionResult.result);
     }
 
     private <T> T execute(Request request, Function<Object, T> decoder) {
