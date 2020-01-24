@@ -309,7 +309,7 @@ public class BlockchainTestUtils {
                     txs.add(registerStaker(resourceProvider.factoryForVersion1, key, MIN_SELF_STAKE, repo.getNonce(new AionAddress(key.getAddress())), contract));
                 }
             } else {
-                txs = generateTransactions(txCount, accounts, repo);
+                txs = txCount > 0 ? generateTransactions(txCount, accounts, repo) : Collections.emptyList();
             }
             // get back to current root
             repo.syncToRoot(originalRoot);
