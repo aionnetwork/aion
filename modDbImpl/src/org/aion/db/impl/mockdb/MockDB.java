@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
@@ -70,7 +71,7 @@ public class MockDB extends AbstractDB {
     @Override
     public long approximateSize() {
         check();
-        return -1L;
+        return 32L * kv.size() + kv.values().stream().map(k -> (long) k.length).reduce(0L, Long::sum);
     }
 
     @Override

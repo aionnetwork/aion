@@ -297,23 +297,12 @@ public class AionContractDetailsImpl implements ContractDetails {
      */
     public void decode(byte[] rlpCode) {
         // TODO: remove vm type requirement when refactoring into separate AVM & FVM implementations
-        decode(rlpCode, false);
-    }
-
-    /**
-     * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode. The fast check flag
-     * indicates whether the contractDetails needs to sync with external storage.
-     *
-     * @param rlpCode The encoding to decode.
-     * @param fastCheck indicates whether the contractDetails needs to sync with external storage.
-     */
-    public void decode(byte[] rlpCode, boolean fastCheck) {
         RLPList data = RLP.decode2(rlpCode);
 
         RLPList rlpList = (RLPList) data.get(0);
 
         // partial decode either encoding
-        boolean keepStorageInMem = decodeEncodingWithoutVmType(rlpList, fastCheck);
+        boolean keepStorageInMem = decodeEncodingWithoutVmType(rlpList);
 
         if (rlpList.size() != 5) {
             // revert back from storing the VM type in details
@@ -322,11 +311,9 @@ public class AionContractDetailsImpl implements ContractDetails {
                     "Incompatible data storage. Please shutdown the kernel and perform database migration to version 1.0 (Denali) of the kernel as instructed in the release.");
         }
 
-        if (!fastCheck || externalStorage || !keepStorageInMem) { // it was not a fast check
-            // NOTE: under normal circumstances the VM type is set by the details data store
-            // Do not forget to set the vmType value externally during tests!!!
-            decodeStorage(rlpList.get(2), rlpList.get(3), keepStorageInMem);
-        }
+        // NOTE: under normal circumstances the VM type is set by the details data store
+        // Do not forget to set the vmType value externally during tests!!!
+        decodeStorage(rlpList.get(2), rlpList.get(3), keepStorageInMem);
     }
 
     /**
@@ -340,16 +327,11 @@ public class AionContractDetailsImpl implements ContractDetails {
      * @return {@code true} if the storage must continue to be kept in memory, {@code false}
      *     otherwise
      */
-    public boolean decodeEncodingWithoutVmType(RLPList rlpList, boolean fastCheck) {
+    public boolean decodeEncodingWithoutVmType(RLPList rlpList) {
         RLPItem isExternalStorage = (RLPItem) rlpList.get(1);
         RLPItem storage = (RLPItem) rlpList.get(3);
         this.externalStorage = isExternalStorage.getRLPData().length > 0;
         boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
-
-        // No externalStorage require.
-        if (fastCheck && !externalStorage && keepStorageInMem) {
-            return keepStorageInMem;
-        }
 
         RLPItem address = (RLPItem) rlpList.get(0);
         RLPElement code = rlpList.get(4);
