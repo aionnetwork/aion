@@ -212,6 +212,10 @@ public class BlockchainTestUtils {
         }
     }
 
+    public static Pair<Block, ImportResult> addMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs) {
+        return addMiningBlock(chain, parent, txs, System.currentTimeMillis(), new byte[0]);
+    }
+
     private static Pair<Block, ImportResult> addMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, long time, byte[] extraData) {
         AionBlock block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
 
@@ -720,6 +724,11 @@ public class BlockchainTestUtils {
                 NRG_PRICE,
                 TransactionTypes.DEFAULT,
                 null);
+    }
+
+    public static Pair<Block, ImportResult> addStakingBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, ECKey key) {
+        byte[] parentSeed = chain.forkUtility.isUnityForkBlock(parent.getNumber()) ? StakingBlockHeader.GENESIS_SEED : ((StakingBlock) chain.getBlockByHash(parent.getParentHash())).getSeed();
+        return addStakingBlock(chain, parentSeed, txs, System.currentTimeMillis(), key);
     }
 
     private static Pair<Block, ImportResult> addStakingBlock(
