@@ -820,4 +820,53 @@ public class BlockchainTestUtils {
         block.updateHeader(newBlockHeader);
         return block;
     }
+
+    public static AionTransaction deployLargeStorageContractTransaction(IAvmResourceFactory avmFactory, ECKey owner, BigInteger nonce) {
+        byte[] jar = avmFactory.newContractFactory().getDeploymentBytes(AvmContract.LARGE_STORAGE);
+        return AionTransaction.create(
+                owner,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                jar,
+                LIMIT_DEPLOY,
+                NRG_PRICE,
+                TransactionTypes.AVM_CREATE_CODE,
+                null);
+    }
+
+    public static AionTransaction putToLargeStorageTransaction(IAvmResourceFactory avmFactory, ECKey caller, byte[] key, byte[] value, BigInteger nonce, AionAddress contract) {
+        byte[] callBytes = avmFactory.newStreamingEncoder()
+                .encodeOneString("putStorage")
+                .encodeOneByteArray(key)
+                .encodeOneByteArray(value)
+                .getEncoding();
+        return AionTransaction.create(
+                caller,
+                nonce.toByteArray(),
+                contract,
+                BigInteger.ZERO.toByteArray(),
+                callBytes,
+                LIMIT_CALL,
+                NRG_PRICE,
+                TransactionTypes.DEFAULT,
+                null);
+    }
+
+    public static AionTransaction getFromLargeStorageTransaction(IAvmResourceFactory avmFactory, ECKey caller, byte[] key, BigInteger nonce, AionAddress contract) {
+        byte[] callBytes = avmFactory.newStreamingEncoder()
+                .encodeOneString("getStorage")
+                .encodeOneByteArray(key)
+                .getEncoding();
+        return AionTransaction.create(
+                caller,
+                nonce.toByteArray(),
+                contract,
+                BigInteger.ZERO.toByteArray(),
+                callBytes,
+                LIMIT_CALL,
+                NRG_PRICE,
+                TransactionTypes.DEFAULT,
+                null);
+    }
 }
