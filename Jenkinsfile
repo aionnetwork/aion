@@ -25,7 +25,7 @@ pipeline {
         stage('Archive build output') {
             when {
                 expression { 
-                    GIT_BRANCH == 'master'
+                    GIT_BRANCH == 'master' || buildingTag() 
                 }
             }
 
@@ -38,7 +38,7 @@ pipeline {
             when {
                 // only run if:
                 // - this branch is master
-                expression {GIT_BRANCH == 'master'}
+                expression {GIT_BRANCH == 'master' || buildingTag()}
             }
 
             steps {
@@ -70,7 +70,7 @@ pipeline {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master'}
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || buildingTag()}
             }
             steps {
                 timeout(20) {
