@@ -11,9 +11,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
-import org.aion.api.server.account.AccountManager;
 import org.aion.api.server.account.AccountManagerInterface;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.UnsupportedUnityFeatureRPCException;
@@ -31,7 +31,11 @@ import org.aion.rpc.types.RPCTypesConverter.SubmitSignatureParamsConverter;
 import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
+import org.aion.util.types.AddressUtils;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.StakingBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -140,6 +144,110 @@ public class StakingRPCImplTest {
         }catch (UnsupportedUnityFeatureRPCException e){
             //pass
         }
+    }
+
+    @Test
+    public void testTimeStampInSubmitSignature(){
+
+        StakingBlock blockWithRightTimestamp = new StakingBlock(new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[StakingBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[StakingBlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000)
+            , new byte[0]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , 0
+            , 0
+            , validSignature.toBytes()
+            , validSeed.toBytes()
+            , validSigningPublicKey.toBytes());
+
+        AionImpl aionImpl = mock(AionImpl.class);
+        AionBlockchainImpl chainImpl = mock(AionBlockchainImpl.class);
+
+        chainHolder = spy(new AionChainHolder(aionImpl, accountManager));
+        doReturn(true).when(chainHolder).isUnityForkEnabled();
+        doReturn(chainImpl).when(aionImpl).getBlockchain();
+        doReturn(blockWithRightTimestamp).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp);
+
+        doCallRealMethod().when(chainHolder).submitSignature(validSignature.toBytes(), validSealHash.toBytes());
+        rpcMethods= new RPCMethods(chainHolder);
+
+        String method = "submitsignature";
+        
+        assertTrue(
+            execute(
+                new Request(
+                    1,
+                    method,
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    VersionType.Version2),
+                BoolConverter::decode));
+
+        // Now we test current timestamp + 1 (for testing the clock drift)
+        StakingBlock blockWithRightTimestamp1 = new StakingBlock(new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[StakingBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[StakingBlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000 + 1)
+            , new byte[0]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , 0
+            , 0
+            , validSignature.toBytes()
+            , validSeed.toBytes()
+            , validSigningPublicKey.toBytes());
+
+        doReturn(blockWithRightTimestamp1).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp1);
+
+        assertTrue(
+            execute(
+                new Request(
+                    1,
+                    method,
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    VersionType.Version2),
+                BoolConverter::decode));
+
+        // Now we test the future block timestamp (timestamp + 2)
+        StakingBlock futureBlock = new StakingBlock(new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , AddressUtils.ZERO_ADDRESS
+            , new byte[StakingBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[StakingBlockHeader.MAX_DIFFICULTY_LENGTH]
+            , 0
+            , (System.currentTimeMillis() / 1000 + 2)
+            , new byte[0]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new byte[StakingBlockHeader.HASH_BYTE_SIZE]
+            , new ArrayList<>()
+            , 0
+            , 0
+            , validSignature.toBytes()
+            , validSeed.toBytes()
+            , validSigningPublicKey.toBytes());
+
+        doReturn(futureBlock).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        doReturn(true).when(chainHolder).addNewBlock(futureBlock);
+
+        assertFalse(
+            execute(
+                new Request(
+                    1,
+                    method,
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    VersionType.Version2),
+                BoolConverter::decode));
     }
 
     private <T> T execute(Request request, Function<Object, T> extractor) {

@@ -1,6 +1,7 @@
 package org.aion.api.server.rpc3;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,12 +25,14 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.valid.FutureBlockRule;
 
 public class AionChainHolder implements ChainHolder {
 
     private final IAionChain chain;//An implementation of AionChain
     private final AtomicReference<BlockContext> currentTemplate;
     private final AccountManagerInterface accountManager;
+    private final FutureBlockRule futureBlockRule;
 
     public AionChainHolder(IAionChain chain,
         AccountManagerInterface accountManager) {
@@ -44,6 +47,7 @@ public class AionChainHolder implements ChainHolder {
         this.chain = chain;
         currentTemplate = new AtomicReference<>(null);
         this.accountManager = accountManager;
+        this.futureBlockRule = new FutureBlockRule();
     }
 
     @Override
@@ -90,7 +94,11 @@ public class AionChainHolder implements ChainHolder {
         else {
             StakingBlock stakingBlock = chain.getBlockchain().getCachingStakingBlockTemplate(sealHash);
             stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
-            final boolean sealed = addNewBlock(stakingBlock);
+
+            //AKI-648 reject the block add into the kernel if the timestamp of the block is in the future.
+            boolean isValidTimestamp = futureBlockRule.validate(stakingBlock.getHeader(), new ArrayList<>());
+
+            final boolean sealed = isValidTimestamp && addNewBlock(stakingBlock);
 
             if (sealed) {
                 logSealedBlock(stakingBlock);
@@ -138,7 +146,11 @@ public class AionChainHolder implements ChainHolder {
             return false; // cannot seal a block that does not exist
         } else {
             bestPowBlock.seal(nonce, solution);
-            final boolean sealedSuccessfully = addNewBlock(bestPowBlock);
+
+            //AKI-648 reject the block add into the kernel if the timestamp of the block is in the future.
+            boolean isValidTimestamp = futureBlockRule.validate(bestPowBlock.getHeader(), new ArrayList<>());
+
+            final boolean sealedSuccessfully = isValidTimestamp && addNewBlock(bestPowBlock);
 
             if (sealedSuccessfully) {
                 logSealedBlock(bestPowBlock);

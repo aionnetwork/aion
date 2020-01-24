@@ -46,4 +46,5 @@ module aion.zero.impl {
     exports org.aion.zero.impl.pendingState;
     exports org.aion.zero.impl.vm.avm;
     exports org.aion.zero.impl.vm.avm.schedule;
+    exports org.aion.zero.impl.valid;
 }
