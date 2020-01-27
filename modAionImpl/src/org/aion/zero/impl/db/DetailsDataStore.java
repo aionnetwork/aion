@@ -33,28 +33,25 @@ public class DetailsDataStore {
     }
 
     /**
-     * Fetches the ContractDetails from the cache, and if it doesn't exist, add to the remove set.
+     * Fetches the ContractDetails with the given root.
      *
-     * @param key the contract address as bytes
      * @param vm the virtual machine used at contract deployment
-     * @return
+     * @param key the contract address as bytes
+     * @param storageRoot the requested storage root
+     * @return a snapshot of the contract details with the requested root
      */
-    public synchronized AionContractDetailsImpl get(InternalVmType vm, byte[] key) {
-
+    public synchronized AionContractDetailsImpl getSnapshot(InternalVmType vm, byte[] key, byte[] storageRoot) {
         Optional<byte[]> rawDetails = detailsSrc.get(key);
 
-        // If it doesn't exist in cache or database.
-        if (!rawDetails.isPresent()) {
+        if (rawDetails.isPresent()) {
+            // decode raw details and return snapshot
+            AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
+            detailsImpl.setVmType(vm);
+            detailsImpl.decode(rawDetails.get());
+            return detailsImpl.getSnapshotTo(storageRoot, vm);
+        } else {
             return null;
         }
-
-        // Found something from cache or database, return it by decoding it.
-        AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
-        detailsImpl.setVmType(vm);
-        detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
-        // if it is present.
-
-        return detailsImpl;
     }
 
     /** Determine if the contract exists in the database. */

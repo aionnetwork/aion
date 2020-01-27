@@ -473,18 +473,16 @@ public class AionRepositoryImpl extends AbstractRepository {
 
     /**
      * @inheritDoc
-     * @implNote Any other method calling this can rely on the fact that the contract details
-     *     returned is a newly created object by {@link AionContractDetailsImpl#getSnapshotTo(byte[],
-     *     InternalVmType)}. Since this querying method it locked, the methods calling it <b>may not
-     *     need to be locked or synchronized</b>, depending on the specific use case.
+     * @implNote Methods calling this can rely on the fact that the contract details returned is a
+     *     newly created snapshot object. Since this method it locked, the methods using the
+     *     returned object <b>do not need to be locked or synchronized</b>, depending on the
+     *     specific use case.
      */
     @Override
     public AionContractDetailsImpl getContractDetails(AionAddress address) {
         rwLock.readLock().lock();
 
         try {
-            AionContractDetailsImpl details;
-
             // That part is important cause if we have
             // to sync details storage according the trie root
             // saved in the account
@@ -497,13 +495,7 @@ public class AionRepositoryImpl extends AbstractRepository {
             }
 
             InternalVmType vm = getVMUsed(address, codeHash);
-            details = detailsDS.get(vm, address.toByteArray());
-
-            if (details != null) {
-                details = details.getSnapshotTo(storageRoot, vm);
-            }
-
-            return details;
+            return detailsDS.getSnapshot(vm, address.toByteArray(), storageRoot);
         } finally {
             rwLock.readLock().unlock();
         }
