@@ -78,7 +78,8 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
+        AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl();
+        contractDetails_.decode(DetailsDataStore.fromEncoding(data));
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -179,7 +180,8 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
+        AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl();
+        contractDetails_.decode(DetailsDataStore.fromEncoding(data));
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -275,7 +277,7 @@ public class AionContractDetailsTest {
         byte[] rlp = original.getEncoded();
 
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        deserialized.decode(rlp);
+        deserialized.decode(DetailsDataStore.fromEncoding(rlp));
 
         assertTrue(deserialized.isExternalStorage());
         assertTrue(address.equals(deserialized.getAddress()));
@@ -324,7 +326,7 @@ public class AionContractDetailsTest {
             original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
-        original.decode(original.getEncoded());
+        original.decode(DetailsDataStore.fromEncoding(original.getEncoded()));
         original.syncStorage();
         assertFalse(original.isExternalStorage());
 
@@ -334,14 +336,14 @@ public class AionContractDetailsTest {
         elements.put(key3rd, value);
         original.put(key3rd.toWrapper(), wrapValueForPut(value));
 
-        original.decode(original.getEncoded());
+        original.decode(DetailsDataStore.fromEncoding(original.getEncoded()));
         original.syncStorage();
         assertTrue(original.isExternalStorage());
 
         byte[] rlp = original.getEncoded();
 
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(jpd, null);
-        deserialized.decode(rlp);
+        deserialized.decode(DetailsDataStore.fromEncoding(rlp));
 
         assertTrue(deserialized.isExternalStorage());
         assertEquals(address, deserialized.getAddress());
@@ -392,7 +394,7 @@ public class AionContractDetailsTest {
         assertTrue(externalStorage.isEmpty());
 
         AionContractDetailsImpl deserialized = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        deserialized.decode(original.getEncoded());
+        deserialized.decode(DetailsDataStore.fromEncoding(original.getEncoded()));
         assertTrue(deserialized.isExternalStorage());
 
         // adds keys for in-memory storage limit overflow
@@ -409,7 +411,7 @@ public class AionContractDetailsTest {
         assertTrue(!externalStorage.isEmpty());
 
         AionContractDetailsImpl deserialized2 = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        deserialized2.decode(deserialized.getEncoded());
+        deserialized2.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()));
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
@@ -428,34 +430,8 @@ public class AionContractDetailsTest {
         return ByteArrayWrapper.wrap(new DataWord(value.toBytes()).getData());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testEncodingIncorrectSize() throws Exception {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-
-        // create old encoding
-        byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
-        byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
-        byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
-
-        byte[] oldEncoding =
-                RLP.encodeList(
-                        rlpAddress,
-                        rlpIsExternalStorage,
-                        rlpStorageRoot,
-                        rlpStorage,
-                        rlpCode,
-                        RLP.encodeByte(InternalVmType.AVM.getCode()));
-
-        // create object using encoding
-        // throws exception due to the illegal size of the encoding above
-        new AionContractDetailsImpl(oldEncoding);
-    }
-
     @Test
-    public void testEncodingCorrectSize() throws Exception {
+    public void testEncodingCorrectSize() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         byte[] code = RandomUtils.nextBytes(512);
 
@@ -476,7 +452,8 @@ public class AionContractDetailsTest {
         assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
 
         // check that the decoding has the default VM type
-        AionContractDetailsImpl decoded = new AionContractDetailsImpl(details.getEncoded());
+        AionContractDetailsImpl decoded = new AionContractDetailsImpl();
+        decoded.decode(DetailsDataStore.fromEncoding(details.getEncoded()));
         assertThat(decoded.getVmType()).isEqualTo(InternalVmType.EITHER);
     }
 }
