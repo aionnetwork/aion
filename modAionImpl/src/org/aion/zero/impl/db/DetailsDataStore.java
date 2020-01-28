@@ -7,6 +7,9 @@ import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.mcf.db.InternalVmType;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -119,6 +122,74 @@ public class DetailsDataStore {
         @Override
         public ByteArrayWrapper next() {
             return wrap(sourceIterator.next());
+        }
+    }
+
+    /**
+     * Container used to store a partial decoding of contract details.
+     *
+     * @author Alexandra Roatis
+     */
+    public static class RLPContractDetails {
+        public final AionAddress address;
+        public final boolean isExternalStorage;
+        public final RLPElement storageRoot;
+        public final RLPElement storageTrie;
+        public final RLPElement code;
+
+        public RLPContractDetails(
+                AionAddress address,
+                boolean isExternalStorage,
+                RLPElement storageRoot,
+                RLPElement storageTrie,
+                RLPElement code) {
+            this.address = address;
+            this.isExternalStorage = isExternalStorage;
+            this.storageRoot = storageRoot;
+            this.storageTrie = storageTrie;
+            this.code = code;
+        }
+    }
+
+    /**
+     * Extracts an RLPContractDetails object from the RLP encoding.
+     *
+     * Accepted encodings:
+     * <ul>
+     *   <li>{ 0:address, 1:isExternalStorage, 2:storageRoot, 3:storageTrie, 4:code }
+     *   <li>{ 0:address, 1:storageRoot, 2:code }
+     * </ul>
+     *
+     * @param encoding The encoded ContractDetails to decode.
+     */
+    public static RLPContractDetails fromEncoding(byte[] encoding) {
+        if (encoding == null) {
+            throw new NullPointerException("Cannot decode ContractDetails from null RLP encoding.");
+        }
+        if (encoding.length == 0) {
+            throw new IllegalArgumentException("Cannot decode ContractDetails from empty RLP encoding.");
+        }
+
+        RLPList decoded = (RLPList) (RLP.decode2(encoding)).get(0);
+        int elements = decoded.size();
+
+        if (elements == 3 || elements == 5) {
+            // extract 0:address from the encoding
+            AionAddress address;
+            RLPElement addressRLP = decoded.get(0);
+            if (addressRLP == null || addressRLP.getRLPData() == null || addressRLP.getRLPData().length != AionAddress.LENGTH) {
+                throw new IllegalArgumentException("Cannot decode ContractDetails with invalid contract address.");
+            } else {
+                address = new AionAddress(addressRLP.getRLPData());
+            }
+            if (elements == 3) {
+                return new RLPContractDetails(address, true, decoded.get(1), null, decoded.get(2));
+            } else {
+                boolean isExternalStorage = decoded.get(1).getRLPData().length > 0;
+                return new RLPContractDetails(address, isExternalStorage, decoded.get(2), decoded.get(3), decoded.get(4));
+            }
+        } else {
+            throw new IllegalStateException("Incompatible data storage. Please shutdown the kernel and perform database migration to version 1.0 (Denali) of the kernel as instructed in the release.");
         }
     }
 }

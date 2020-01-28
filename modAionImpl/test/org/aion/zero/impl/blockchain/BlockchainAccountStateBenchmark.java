@@ -26,8 +26,9 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.zero.impl.db.DetailsDataStore;
+import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.db.MockRepositoryConfig;
-import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -339,10 +340,8 @@ public class BlockchainAccountStateBenchmark {
             System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
             System.out.println("deployed at: " + contractAddress);
 
-            AionContractDetailsImpl acdi =
-                    new AionContractDetailsImpl(
-                            bc.getRepository().getContractDetails(contractAddress).getEncoded());
-            assertFalse(acdi.isExternalStorage());
+            RLPContractDetails acdi = DetailsDataStore.fromEncoding(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            assertFalse(acdi.isExternalStorage);
 
             // around 350 tx to letting the contract storage from memory switch to the external
             // storage.
@@ -350,11 +349,8 @@ public class BlockchainAccountStateBenchmark {
                 createContractBundle(bc, key, bc.getBestBlock(), contractAddress, 50);
             }
 
-            acdi =
-                    new AionContractDetailsImpl(
-                            bc.getRepository().getContractDetails(contractAddress).getEncoded());
-            assertTrue(acdi.isExternalStorage());
-
+            acdi = DetailsDataStore.fromEncoding(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            assertTrue(acdi.isExternalStorage);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
