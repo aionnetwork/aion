@@ -43,7 +43,7 @@ public class DetailsDataStore {
      * @param storageRoot the requested storage root
      * @return a snapshot of the contract details with the requested root
      */
-    public synchronized AionContractDetailsImpl getSnapshot(InternalVmType vm, byte[] key, byte[] storageRoot) {
+    public synchronized StoredContractDetails getSnapshot(InternalVmType vm, byte[] key, byte[] storageRoot) {
         Optional<byte[]> rawDetails = detailsSrc.get(key);
 
         if (rawDetails.isPresent()) {

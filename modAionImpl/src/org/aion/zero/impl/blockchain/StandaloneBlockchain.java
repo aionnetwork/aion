@@ -40,7 +40,6 @@ import org.aion.util.types.Hash256;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
-import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
@@ -222,7 +221,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         private Map<AionAddress, byte[]> contractDetails = new HashMap<>();
 
-        /** @param encodedDetails data obtained from {@link AionContractDetailsImpl#getEncoded()} */
+        /** @param encodedDetails data obtained from {@link org.aion.zero.impl.db.StoredContractDetails#getEncoded()} */
         public Builder withDetails(AionAddress contract, byte[] encodedDetails) {
             this.contractDetails.put(contract, encodedDetails);
             return this;

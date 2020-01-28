@@ -473,7 +473,7 @@ public class AionRepositoryImpl extends AbstractRepository {
      *     specific use case.
      */
     @Override
-    public AionContractDetailsImpl getContractDetails(AionAddress address) {
+    public StoredContractDetails getContractDetails(AionAddress address) {
         rwLock.readLock().lock();
 
         try {

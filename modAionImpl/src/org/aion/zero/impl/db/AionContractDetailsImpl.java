@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
@@ -30,7 +29,7 @@ import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
-public class AionContractDetailsImpl implements ContractDetails {
+public class AionContractDetailsImpl implements StoredContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
@@ -364,6 +363,7 @@ public class AionContractDetailsImpl implements ContractDetails {
      *
      * @return an rlp encoding of this.
      */
+    @Override
     public byte[] getEncoded() {
         byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));

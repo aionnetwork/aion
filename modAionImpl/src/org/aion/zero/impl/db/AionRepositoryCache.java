@@ -533,8 +533,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                 ContractDetailsCacheImpl contractDetailsCache =
                         (ContractDetailsCacheImpl) ctdEntry.getValue().copy();
                 if (contractDetailsCache.origContract != null
-                        && !(contractDetailsCache.origContract
-                                instanceof AionContractDetailsImpl)) {
+                        && !(contractDetailsCache.origContract instanceof StoredContractDetails)) {
                     // Copying the parent because contract details changes were pushed to the parent
                     // in previous method (flush)
                     cachedDetails.put(

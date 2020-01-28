@@ -229,9 +229,7 @@ public class DBUtils {
                         writer.append("Contract: " + AddressUtils.wrapAddress(otherParameters[i]));
                         writer.newLine();
 
-                        AionContractDetailsImpl details =
-                                repository.getContractDetails(
-                                        AddressUtils.wrapAddress(otherParameters[i]));
+                        StoredContractDetails details = repository.getContractDetails(AddressUtils.wrapAddress(otherParameters[i]));
 
                         if (details != null) {
                             writer.append("Details: " + Hex.toHexString(details.getEncoded()));
