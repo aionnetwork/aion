@@ -13,10 +13,12 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.putToLargeStorag
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.TxUtil;
@@ -36,6 +38,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -144,6 +147,7 @@ public class DetailsDataStoreIntegTest {
      * Creates a contract with large storage. Imports 20 blocks expanding the storage and prints
      * times and database size with and without storage transition.
      */
+    @Ignore
     @Test
     public void largeStorageTransitionBenchmark() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
         // setup account used to deploy and call the large storage contract
@@ -185,24 +189,56 @@ public class DetailsDataStoreIntegTest {
         System.out.println("Contract: " + contract);
 
         List<AionTransaction> txs = new ArrayList<>();
-        int txPerBlock = 8;
-        int numberOfStorageBlocks = 20; // 10 blocks with storage in details, 10 after transition
+        int insertTxPerBlock = 9, updateTxPerBlock = 5, deleteTxPerBlock = 4;
+        int numberOfStorageBlocks = 2*6; // results in 3*6 blocks with storage in details, 3*6 after transition
+        LinkedList<byte[]> keys = new LinkedList<>();
 
         // populate chain
         for (int i = 0; i < numberOfStorageBlocks; i++) {
             // call contract to increase storage
-            for (int j = 0; j < txPerBlock; j++) {
+            for (int j = 0; j < insertTxPerBlock; j++) {
+                byte[] key = RandomUtils.nextBytes(32 - i);
                 txs.add(
                         putToLargeStorageTransaction(
                                 resourceProvider.factoryForVersion2,
                                 account,
-                                RandomUtils.nextBytes(32),
-                                RandomUtils.nextBytes(32),
+                                key,
+                                RandomUtils.nextBytes(32 - i),
+                                nonce,
+                                contract));
+                nonce = nonce.add(BigInteger.ONE);
+                keys.addLast(key);
+            }
+            addMiningBlock(chain, chain.getBestBlock(), txs);
+
+            // call contract to update storage
+            for (int j = 0; j < updateTxPerBlock; j++) {
+                byte[] key = keys.removeFirst();
+                txs.add(
+                        putToLargeStorageTransaction(
+                                resourceProvider.factoryForVersion2,
+                                account,
+                                key,
+                                RandomUtils.nextBytes(32 - i - 1),
+                                nonce,
+                                contract));
+                nonce = nonce.add(BigInteger.ONE);
+                keys.addLast(key);
+            }
+            addMiningBlock(chain, chain.getBestBlock(), txs);
+
+            // call contract to delete storage
+            for (int j = 0; j < deleteTxPerBlock; j++) {
+                txs.add(
+                        putToLargeStorageTransaction(
+                                resourceProvider.factoryForVersion2,
+                                account,
+                                keys.removeFirst(),
+                                null,
                                 nonce,
                                 contract));
                 nonce = nonce.add(BigInteger.ONE);
             }
-
             addMiningBlock(chain, chain.getBestBlock(), txs);
         }
 
@@ -225,6 +261,7 @@ public class DetailsDataStoreIntegTest {
 
         int blocks = (int) chain.getBestBlock().getNumber();
         long results[][] = new long[blocks + 1][8];
+        boolean isEmptyStorage = true, isSaved = false;
 
         // generate data by importing each block to the chain with/without transition
         for (int i = 2; i <= blocks; i++) {
@@ -273,6 +310,22 @@ public class DetailsDataStoreIntegTest {
             totalDetailsSizeWithTransition += details;
             totalStorageSizeWithTransition += storage;
             totalSizeWithTransition += size;
+
+            if (storage != 0 && isEmptyStorage) {
+                isEmptyStorage = false;
+            }
+
+            if (!isEmptyStorage && !isSaved) {
+                results[1][0] = totalTimeWithTransition;
+                results[1][1] = totalDetailsSizeWithTransition;
+                results[1][2] = totalStorageSizeWithTransition;
+                results[1][3] = totalSizeWithTransition;
+                results[1][4] = totalTimeWithoutTransition;
+                results[1][5] = totalDetailsSizeWithoutTransition;
+                results[1][6] = totalStorageSizeWithoutTransition;
+                results[1][7] = totalSizeWithoutTransition;
+                isSaved = true;
+            }
         }
 
         // Save totals
@@ -289,13 +342,13 @@ public class DetailsDataStoreIntegTest {
     }
 
     private static void print(long results[][]) {
-        System.out.printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
         System.out.printf(
-                "| %8s | %53s | %53s | %25s |\n",
-                " ", "With Storage Transition", "Without Storage Transition", "Difference");
+                "| %8s | %10s | %53s | %53s | %25s |\n",
+                " ", " ", "With Storage Transition", "Without Storage Transition", "Difference");
         System.out.printf(
-                "| %8s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s |\n",
-                " ",
+                "| %8s | %10s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s | %11s |\n",
+                " ", "Type",
                 "Time (ns)",
                 "Detais (B)",
                 "Storage (B)",
@@ -306,9 +359,9 @@ public class DetailsDataStoreIntegTest {
                 "Size (B)",
                 "Time (ns)",
                 "Size (B)");
-        System.out.printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
         System.out.printf(
-                "| %8s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                "| %21s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
                 "Total",
                 results[0][0],
                 results[0][1],
@@ -320,11 +373,77 @@ public class DetailsDataStoreIntegTest {
                 results[0][7],
                 (results[0][0] - results[0][4]),
                 (results[0][3] - results[0][7]));
-        System.out.printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf(
+                "| %21s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                "Read In-line Total",
+                results[1][0],
+                results[1][1],
+                results[1][2],
+                results[1][3],
+                results[1][4],
+                results[1][5],
+                results[1][6],
+                results[1][7],
+                (results[1][0] - results[1][4]),
+                (results[1][3] - results[1][7]));
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        // aggregate data for each type of update
+        long[][] extra = new long[3][8];
+        for (int i = 2; (i < results.length) && (results[i][2] == 0); i++) {
+            int k = i % 3;
+            for (int j = 0; j < 8; j++) {
+                extra[k][j] += results[i][j];
+            }
+        }
+        // inserts are at block nb % 3 = 2
+        System.out.printf(
+                "| %21s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                "Insert In-line Total",
+                extra[2][0],
+                extra[2][1],
+                extra[2][2],
+                extra[2][3],
+                extra[2][4],
+                extra[2][5],
+                extra[2][6],
+                extra[2][7],
+                (extra[2][0] - extra[2][4]),
+                (extra[2][3] - extra[2][7]));
+        // updates are at block nb % 3 = 0
+        System.out.printf(
+                "| %21s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                "Update In-line Total",
+                extra[0][0],
+                extra[0][1],
+                extra[0][2],
+                extra[0][3],
+                extra[0][4],
+                extra[0][5],
+                extra[0][6],
+                extra[0][7],
+                (extra[0][0] - extra[0][4]),
+                (extra[0][3] - extra[0][7]));
+        // deletes are at block nb % 3 = 1
+        System.out.printf(
+                "| %21s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                "Delete In-line Total",
+                extra[1][0],
+                extra[1][1],
+                extra[1][2],
+                extra[1][3],
+                extra[1][4],
+                extra[1][5],
+                extra[1][6],
+                extra[1][7],
+                (extra[1][0] - extra[1][4]),
+                (extra[1][3] - extra[1][7]));
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
         for (int i = 2; i < results.length; i++) {
             System.out.printf(
-                    "| Block %2d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
+                    "| Block %2d | %10s | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d | %11d |\n",
                     i,
+                    (i % 3 == 0 ? "5 tx UPD" : (i % 3 == 1 ? "4 tx DEL" : "9 tx INS")),
                     results[i][0],
                     results[i][1],
                     results[i][2],
@@ -336,6 +455,6 @@ public class DetailsDataStoreIntegTest {
                     (results[i][0] - results[i][4]),
                     (results[i][3] - results[i][7]));
         }
-        System.out.printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+        System.out.printf("---------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     }
 }
