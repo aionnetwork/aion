@@ -10,12 +10,24 @@ pipeline {
         JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
         PATH = '/home/aion/.cargo/bin:/home/aion/bin:/home/aion/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/usr/lib/jvm/java-11-openjdk-amd64/bin'
         LIBRARY_PATH = '/usr/lib/jvm/java-11-openjdk-amd64/lib/server'
+	
+	GIT_TAG = sh(returnStdout: true, script:
+	'''\
+     	#!/bin/bash -e
+     	if git rev-parse --verify -q refs/tags/${GIT_BRANCH}^{} | grep -q ${GIT_COMMIT}
+       	    then echo tag
+       	    exit 0
+     	else echo unknown
+       	    exit 0
+     	fi
+	'''.stripIndent()).trim()
     }
 
     stages {
         stage('Build') {
             steps {
                 echo "Building branch: ${env.BRANCH_NAME}"
+                echo "git branch: ${GIT_BRANCH}"
 		// comment it out due to temporary ignore the consensus tests.
                 // sh "git lfs install"
                 sh "./gradlew pack" 
@@ -25,7 +37,7 @@ pipeline {
         stage('Archive build output') {
             when {
                 expression { 
-                    GIT_BRANCH == 'master'
+                    GIT_BRANCH == 'master' || GIT_TAG == 'tag'
                 }
             }
 
@@ -38,7 +50,7 @@ pipeline {
             when {
                 // only run if:
                 // - this branch is master
-                expression {GIT_BRANCH == 'master'}
+                expression {GIT_BRANCH == 'master' || GIT_TAG == 'tag'}
             }
 
             steps {
@@ -70,7 +82,7 @@ pipeline {
                 // only run if:
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is master
-                expression { env.CHANGE_ID || GIT_BRANCH == 'master'}
+                expression { env.CHANGE_ID || GIT_BRANCH == 'master' || GIT_TAG == 'tag'}
             }
             steps {
                 timeout(20) {
