@@ -27,6 +27,7 @@ import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionGenesis;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.valid.BlockHeaderRule;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.util.types.DataWord;
@@ -525,6 +526,32 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         return createNewMiningBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
+    }
+
+    /** create a testing mining block and the block template*/
+    public AionBlock createBlockAndBlockTemplate(
+        Block parent,
+        List<AionTransaction> txs,
+        boolean waitUntilBlockTime,
+        long currTimeSeconds) {
+
+        boolean unityForkEnabled = forkUtility.isUnityForkActive(parent.getNumber() + 1);
+        for (AionTransaction tx : txs) {
+            if (TXValidator.validateTx(tx, unityForkEnabled).isFail()) {
+                throw new InvalidParameterException("invalid transaction input! " + tx.toString());
+            }
+        }
+
+        BlockContext context = createNewMiningBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds);
+
+        if (context != null) {
+            AionBlock block = context.block;
+
+            boolean newblock = miningBlockTemplate.put(ByteArrayWrapper.wrap(block.getHash()), block) == null;
+            return newblock ? block : null;
+        }
+
+        return null;
     }
 
     /**

@@ -192,10 +192,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private final boolean storeInternalTransactions;
     //TODO : [unity] find the proper number for chaching the template.
-    private final Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections
-        .synchronizedMap(new LRUMap<>(64));
-    private final Map<ByteArrayWrapper, AionBlock> miningBlockTemplate = Collections
-        .synchronizedMap(new LRUMap<>(64));
+    final Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
+    final Map<ByteArrayWrapper, AionBlock> miningBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
 
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;
@@ -758,6 +756,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             flush();
 
             dropState();
+
+            clearBlockTemplate();
         } else {
             // Stay on previous branch
             popState();
@@ -2529,6 +2529,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 getBlockStore().reBranch(block);
                 repo.syncToRoot(block.getStateRoot());
                 repo.flush();
+
+                clearBlockTemplate();
             } else {
                 if (mainChain.getNumber() > block.getNumber()) {
                     // checking if the current recovered blocks are a subsection of the main chain
@@ -2545,6 +2547,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.info("Rebuild index FAILED.");
             return false;
         }
+    }
+
+    /**
+     * @implNote clear the block Template when the chain re-branched.
+     */
+    private void clearBlockTemplate() {
+        // AKI-652 the block template should be cleaned after chain re-branched
+        LOG.debug("Clean the block template, staking#{}, mining#{}.", stakingBlockTemplate.size(), miningBlockTemplate.size());
+
+        stakingBlockTemplate.clear();
+        miningBlockTemplate.clear();
     }
 
     @Override
