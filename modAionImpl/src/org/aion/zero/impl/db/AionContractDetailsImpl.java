@@ -279,23 +279,28 @@ public class AionContractDetailsImpl implements ContractDetails {
         return h256(concatenated);
     }
 
+    public static AionContractDetailsImpl decode(RLPContractDetails input, InternalVmType vm) {
+        return decode(input, vm, null, null);
+    }
+
     /**
      * Decodes an AionContractDetailsImpl object from the RLP encoding.
      *
      * @param input The encoding to decode.
      */
-    public void decode(RLPContractDetails input, InternalVmType vm) {
-        this.vmType = vm;
-        this.address = input.address;
-        this.externalStorage = input.isExternalStorage;
+    public static AionContractDetailsImpl decode(RLPContractDetails input, InternalVmType vm, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+        AionContractDetailsImpl details = new AionContractDetailsImpl(storageSource, objectGraphSource);
+        details.vmType = vm;
+        details.address = input.address;
+        details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
         if (code instanceof RLPList) {
             for (RLPElement e : ((RLPList) code)) {
-                setCode(e.getRLPData());
+                details.setCode(e.getRLPData());
             }
         } else {
-            setCode(code.getRLPData());
+            details.setCode(code.getRLPData());
         }
 
         // NOTE: under normal circumstances the VM type is set by the details data store
@@ -306,14 +311,14 @@ public class AionContractDetailsImpl implements ContractDetails {
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
-        if (vmType == InternalVmType.AVM) {
+        if (details.vmType == InternalVmType.AVM) {
             // points to the storage hash and the object graph hash
-            concatenatedStorageHash = root.getRLPData();
+            details.concatenatedStorageHash = root.getRLPData();
 
             Optional<byte[]> concatenatedData =
-                    objectGraphSource == null
+                    details.objectGraphSource == null
                             ? Optional.empty()
-                            : getContractObjectGraphSource().get(concatenatedStorageHash);
+                            : details.getContractObjectGraphSource().get(details.concatenatedStorageHash);
             if (concatenatedData.isPresent()) {
                 RLPList data = RLP.decode2(concatenatedData.get());
                 if (!(data.get(0) instanceof RLPList)) {
@@ -327,27 +332,28 @@ public class AionContractDetailsImpl implements ContractDetails {
                 }
 
                 storageRootHash = pair.get(0).getRLPData();
-                objectGraphHash = pair.get(1).getRLPData();
+                details.objectGraphHash = pair.get(1).getRLPData();
             } else {
                 storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-                objectGraphHash = EMPTY_DATA_HASH;
+                details.objectGraphHash = EMPTY_DATA_HASH;
             }
         } else {
             storageRootHash = root.getRLPData();
         }
 
         // load/deserialize storage trie
-        if (externalStorage) {
-            storageTrie = new SecureTrie(getExternalStorageDataSource(), storageRootHash);
+        if (details.externalStorage) {
+            details.storageTrie = new SecureTrie(details.getExternalStorageDataSource(), storageRootHash);
         } else {
-            storageTrie.deserialize(storage.getRLPData());
+            details.storageTrie.deserialize(storage.getRLPData());
         }
 
         // switch from in-memory to external storage
-        if (!externalStorage && !keepStorageInMem) {
-            externalStorage = true;
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
+        if (!details.externalStorage && !keepStorageInMem) {
+            details.externalStorage = true;
+            details.storageTrie.getCache().setDB(details.getExternalStorageDataSource());
         }
+        return details;
     }
 
     /**
