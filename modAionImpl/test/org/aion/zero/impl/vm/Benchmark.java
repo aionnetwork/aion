@@ -102,7 +102,7 @@ public class Benchmark {
         AionAddress to = null;
         byte[] value = BigInteger.ZERO.toByteArray();
         long nrg = 1_000_000L;
-        long nrgPrice = 1L;
+        long nrgPrice = 10_000_000_000L;
         AionTransaction tx = AionTransaction.create(
                 key,
                 nonce,
@@ -144,7 +144,7 @@ public class Benchmark {
                             recipient,
                             BigInteger.ONE.toByteArray());
             long nrg = 1_000_000L;
-            long nrgPrice = 1L;
+            long nrgPrice = 10_000_000_000L;
             AionTransaction tx = AionTransaction.create(
                     key,
                     nonce,
@@ -228,7 +228,7 @@ public class Benchmark {
                     ByteUtil.merge(
                             Hex.decode("70a08231" + "000000000000000000000000"), recipients.get(i));
             long nrg = 1_000_000L;
-            long nrgPrice = 1L;
+            long nrgPrice = 10_000_000_000L;
             AionTransaction tx = AionTransaction.create(
                     key,
                     nonce,

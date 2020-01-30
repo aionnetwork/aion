@@ -2,6 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -43,6 +44,8 @@ public class BlockchainAccountStateBenchmark {
     private Random random = new SecureRandom();
 
     private String name;
+
+    private static long energyPrice = 10_000_000_000L;
 
     private static String baseTestPath = "test_db";
 
@@ -183,7 +186,7 @@ public class BlockchainAccountStateBenchmark {
                             BigInteger.ONE.toByteArray(),
                             ZERO_BYTE,
                             21000,
-                            1,
+                            energyPrice,
                             TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
@@ -253,7 +256,7 @@ public class BlockchainAccountStateBenchmark {
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
                         1000000,
-                        1,
+                        energyPrice,
                         TransactionTypes.DEFAULT, null);
 
         AionBlock block =
@@ -290,7 +293,7 @@ public class BlockchainAccountStateBenchmark {
                             BigInteger.ZERO.toByteArray(),
                             callData,
                             200000,
-                            1,
+                            energyPrice,
                             TransactionTypes.DEFAULT, null);
             transactions.add(sendTransaction);
             accountNonce = accountNonce.add(BigInteger.ONE);
@@ -325,6 +328,7 @@ public class BlockchainAccountStateBenchmark {
             Pair<AionBlock, byte[]> res = createContract(bc, key, bc.getGenesis());
             bc.tryToConnect(res.getLeft());
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
+            assertNotNull(info);
             assertThat(info.getReceipt().isValid()).isTrue();
 
             AionTransaction tx = info.getReceipt().getTransaction();
