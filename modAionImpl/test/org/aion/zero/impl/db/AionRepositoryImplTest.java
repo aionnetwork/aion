@@ -158,7 +158,7 @@ public class AionRepositoryImplTest {
         assertThat(serializedDetails.isPresent()).isEqualTo(true);
 
         AionContractDetailsImpl details = new AionContractDetailsImpl();
-        details.decode(DetailsDataStore.fromEncoding(serializedDetails.get()));
+        details.decode(DetailsDataStore.fromEncoding(serializedDetails.get()), InternalVmType.FVM);
         assertThat(details.get(new DataWord(key).toWrapper()))
                 .isEqualTo(new DataWord(value).toWrapper());
     }

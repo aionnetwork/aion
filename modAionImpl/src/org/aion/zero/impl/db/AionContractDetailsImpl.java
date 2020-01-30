@@ -283,11 +283,9 @@ public class AionContractDetailsImpl implements ContractDetails {
      * Decodes an AionContractDetailsImpl object from the RLP encoding.
      *
      * @param input The encoding to decode.
-     * @implNote IMPORTANT: Requires the VM type to be set externally before decoding. The way the
-     *     data is interpreted during decoding differs for AVM contracts, therefore it will be
-     *     decoded incorrectly if the VM type is not set before making this method call.
      */
-    public void decode(RLPContractDetails input) {
+    public void decode(RLPContractDetails input, InternalVmType vm) {
+        this.vmType = vm;
         this.address = input.address;
         this.externalStorage = input.isExternalStorage;
 

@@ -49,8 +49,7 @@ public class DetailsDataStore {
         if (rawDetails.isPresent()) {
             // decode raw details and return snapshot
             AionContractDetailsImpl detailsImpl = new AionContractDetailsImpl(storageDSPrune, graphSrc);
-            detailsImpl.setVmType(vm);
-            detailsImpl.decode(fromEncoding(rawDetails.get()));
+            detailsImpl.decode(fromEncoding(rawDetails.get()), vm);
             return detailsImpl.getSnapshotTo(storageRoot, vm);
         } else {
             return null;
