@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
@@ -44,8 +43,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     // using the default transaction type to specify undefined VM
     private InternalVmType vmType = InternalVmType.EITHER;
 
-    private ByteArrayKeyValueStore dataSource;
-    private ByteArrayKeyValueStore objectGraphSource = null;
+    private final ByteArrayKeyValueStore externalStorageSource;
+    private final ByteArrayKeyValueStore objectGraphSource;
 
     private final AionAddress address;
 
@@ -61,12 +60,14 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Creates a object with attached database access for the storage and object graph.
+     * Creates a object with attached database access for the external storage and object graph.
      *
-     * @param storageSource
-     * @param objectGraphSource
+     * @param externalStorageSource the external storage data source associated with the given
+     *     contract address
+     * @param objectGraphSource the object graph data source associated with the given contract
+     *     address
      */
-    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
@@ -75,7 +76,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                 setVmType(InternalVmType.FVM);
             }
         }
-        this.dataSource = storageSource;
+        this.externalStorageSource = externalStorageSource;
         this.objectGraphSource = objectGraphSource;
     }
 
@@ -238,7 +239,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                 return EMPTY_BYTE_ARRAY;
             } else if (objectGraphSource != null) {
                 // note: the enforced use of optional is rather cumbersome here
-                Optional<byte[]> dbVal = getContractObjectGraphSource().get(objectGraphHash);
+                Optional<byte[]> dbVal = objectGraphSource.get(objectGraphHash);
                 objectGraph = dbVal.isPresent() ? dbVal.get() : null;
             }
         }
@@ -321,7 +322,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
             Optional<byte[]> concatenatedData =
                     details.objectGraphSource == null
                             ? Optional.empty()
-                            : details.getContractObjectGraphSource().get(details.concatenatedStorageHash);
+                            : details.objectGraphSource.get(details.concatenatedStorageHash);
             if (concatenatedData.isPresent()) {
                 RLPList data = RLP.decode2(concatenatedData.get());
                 if (!(data.get(0) instanceof RLPList)) {
@@ -346,7 +347,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
         // load/deserialize storage trie
         if (details.externalStorage) {
-            details.storageTrie = new SecureTrie(details.getExternalStorageDataSource(), storageRootHash);
+            details.storageTrie = new SecureTrie(details.externalStorageSource, storageRootHash);
         } else {
             details.storageTrie.deserialize(storage.getRLPData());
         }
@@ -354,7 +355,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         // switch from in-memory to external storage
         if (!details.externalStorage && !keepStorageInMem) {
             details.externalStorage = true;
-            details.storageTrie.getCache().setDB(details.getExternalStorageDataSource());
+            details.storageTrie.getCache().setDB(details.externalStorageSource);
         }
         return details;
     }
@@ -415,9 +416,9 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
             byte[] graph = getObjectGraph();
             if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
-                getContractObjectGraphSource().put(objectGraphHash, graph);
+                objectGraphSource.put(objectGraphHash, graph);
             }
-            getContractObjectGraphSource()
+            objectGraphSource
                     .put(
                             computeAvmStorageHash(),
                             RLP.encodeList(
@@ -431,43 +432,12 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Sets the data source for storing the AVM object graph.
-     *
-     * @param objectGraphSource the new data source used for storing the object graph
-     */
-    public void setObjectGraphSource(ByteArrayKeyValueStore objectGraphSource) {
-        this.objectGraphSource = objectGraphSource;
-    }
-
-    /**
-     * Returns the external storage data source.
-     *
-     * @return the external storage data source.
-     */
-    private ByteArrayKeyValueStore getExternalStorageDataSource() {
-        return new XorDataSource(dataSource, h256(("details-storage/" + address.toString()).getBytes()));
-    }
-
-    /**
-     * Returns the data source specific to the current contract.
-     *
-     * @return the data source specific to the current contract.
-     */
-    private ByteArrayKeyValueStore getContractObjectGraphSource() {
-        if (objectGraphSource == null) {
-            throw new NullPointerException("The contract object graph source was not initialized.");
-        } else {
-            return new XorDataSource(objectGraphSource, h256(("details-graph/" + address.toString()).getBytes()));
-        }
-    }
-
-    /**
      * Sets the external storage data source to dataSource.
      */
     @VisibleForTesting
     void initializeExternalStorageTrieForTest() {
         this.externalStorage = true;
-        this.storageTrie = new SecureTrie(getExternalStorageDataSource());
+        this.storageTrie = new SecureTrie(externalStorageSource);
     }
 
     /**
@@ -491,7 +461,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
             Optional<byte[]> concatenatedData =
                     objectGraphSource == null
                             ? Optional.empty()
-                            : getContractObjectGraphSource().get(hash);
+                            : objectGraphSource.get(hash);
             if (concatenatedData.isPresent()) {
                 RLPList data = RLP.decode2(concatenatedData.get());
                 if (!(data.get(0) instanceof RLPList)) {
@@ -517,7 +487,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             : new SecureTrie(storageTrie.getCache(), storageRootHash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.dataSource, this.objectGraphSource);
+            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
 
             // object graph information
             details.objectGraphHash = graphHash;
@@ -528,7 +498,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                             : new SecureTrie(storageTrie.getCache(), hash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.dataSource, this.objectGraphSource);
+            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
         }
 
         // vm information
@@ -556,7 +526,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     @Override
     public AionContractDetailsImpl copy() {
-        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.dataSource, this.objectGraphSource);
+        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource, this.objectGraphSource);
 
         // vm information
         aionContractDetailsCopy.vmType = this.vmType;

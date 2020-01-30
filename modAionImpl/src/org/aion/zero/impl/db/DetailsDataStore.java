@@ -1,11 +1,14 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import java.util.Iterator;
 import java.util.Optional;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.JournalPruneDataSource;
+import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -36,6 +39,29 @@ public class DetailsDataStore {
     }
 
     /**
+     * Creates and returns the external storage data source associated with the given contract
+     * address.
+     *
+     * @param address the address of the contract for which we are creating the external storage
+     *     data source
+     * @return the external storage data source associated with the given contract address
+     */
+    private ByteArrayKeyValueStore createStorageSource(AionAddress address) {
+        return new XorDataSource(storageDSPrune, h256(("details-storage/" + address.toString()).getBytes()));
+    }
+
+    /**
+     * Creates and returns the object graph data source associated with the given contract address.
+     *
+     * @param address the address of the contract for which we are creating the object graph data
+     *     source
+     * @return the object graph data source associated with the given contract address
+     */
+    private ByteArrayKeyValueStore createGraphSource(AionAddress address) {
+        return new XorDataSource(graphSrc, h256(("details-graph/" + address.toString()).getBytes()));
+    }
+
+    /**
      * Fetches the ContractDetails with the given root.
      *
      * @param vm the virtual machine used at contract deployment
@@ -48,7 +74,10 @@ public class DetailsDataStore {
 
         if (rawDetails.isPresent()) {
             // decode raw details and return snapshot
-            AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(fromEncoding(rawDetails.get()), vm, storageDSPrune, graphSrc);
+            RLPContractDetails rlpDetails = fromEncoding(rawDetails.get());
+            ByteArrayKeyValueStore storage = createStorageSource(rlpDetails.address);
+            ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
+            AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, vm, storage, graph);
             return detailsImpl.getSnapshotTo(storageRoot, vm);
         } else {
             return null;
@@ -61,9 +90,13 @@ public class DetailsDataStore {
         return rawDetails.isPresent();
     }
 
-    public synchronized void update(AionAddress key, AionContractDetailsImpl contractDetails) {
-        contractDetails.setObjectGraphSource(graphSrc);
+    public StoredContractDetails newContractDetails(AionAddress address) {
+        ByteArrayKeyValueStore storage = createStorageSource(address);
+        ByteArrayKeyValueStore graph = createGraphSource(address);
+        return new AionContractDetailsImpl(address, storage, graph);
+    }
 
+    public synchronized void update(AionAddress key, StoredContractDetails contractDetails) {
         // Put into cache.
         byte[] rawDetails = contractDetails.getEncoded();
         detailsSrc.put(key.toByteArray(), rawDetails);

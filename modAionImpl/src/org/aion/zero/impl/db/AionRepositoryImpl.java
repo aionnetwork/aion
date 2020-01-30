@@ -175,14 +175,14 @@ public class AionRepositoryImpl extends AbstractRepository {
                     ContractDetailsCacheImpl contractDetailsCache =
                             (ContractDetailsCacheImpl) contractDetails;
                     if (contractDetailsCache.origContract == null) {
-                        contractDetailsCache.origContract = new AionContractDetailsImpl(address);
+                        contractDetailsCache.origContract = detailsDS.newContractDetails(address);
                         contractDetailsCache.commit();
                     }
 
                     contractDetails = contractDetailsCache.origContract;
 
                     // this method requires the encoding functionality therefore can be applied only to AionContractDetailsImpl
-                    detailsDS.update(address, (AionContractDetailsImpl) contractDetails);
+                    detailsDS.update(address, (StoredContractDetails) contractDetails);
 
                     // TODO: incorrect check codeHash != trie hash
                     if (!Arrays.equals(accountState.getCodeHash(), ConstantUtil.EMPTY_TRIE_HASH)) {
