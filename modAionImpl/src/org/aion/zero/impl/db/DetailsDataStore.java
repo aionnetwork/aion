@@ -78,8 +78,8 @@ public class DetailsDataStore {
             ByteArrayKeyValueStore storage = createStorageSource(rlpDetails.address);
             ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
             if (vm == InternalVmType.AVM) {
-                AvmContractDetails detailsImpl = AvmContractDetails.decode(rlpDetails, vm, storage, graph);
-                return detailsImpl.getSnapshotTo(storageRoot, vm);
+                AvmContractDetails detailsImpl = AvmContractDetails.decode(rlpDetails, storage, graph);
+                return detailsImpl.getSnapshotTo(storageRoot);
             } else if (vm == InternalVmType.FVM) {
                 AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, vm, storage, graph);
                 return detailsImpl.getSnapshotTo(storageRoot, vm);

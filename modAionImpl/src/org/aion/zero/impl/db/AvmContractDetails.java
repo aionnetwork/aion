@@ -40,9 +40,6 @@ public class AvmContractDetails implements StoredContractDetails {
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
-    // using the default transaction type to specify undefined VM
-    private InternalVmType vmType = InternalVmType.EITHER;
-
     private final ByteArrayKeyValueStore externalStorageSource;
     private final ByteArrayKeyValueStore objectGraphSource;
 
@@ -206,15 +203,11 @@ public class AvmContractDetails implements StoredContractDetails {
     }
 
     public void setVmType(InternalVmType vmType) {
-        if (this.vmType != vmType
-                && vmType != InternalVmType.EITHER
-                && vmType != InternalVmType.UNKNOWN) {
-            this.vmType = vmType;
-        }
+        // nothing to do, always AVM
     }
 
     public InternalVmType getVmType() {
-        return vmType;
+        return InternalVmType.AVM;
     }
 
     @Override
@@ -264,11 +257,7 @@ public class AvmContractDetails implements StoredContractDetails {
      */
     @Override
     public byte[] getStorageHash() {
-        if (vmType == InternalVmType.AVM) {
-            return computeAvmStorageHash();
-        } else {
-            return storageTrie.getRootHash();
-        }
+        return computeAvmStorageHash();
     }
 
     /**
@@ -284,8 +273,8 @@ public class AvmContractDetails implements StoredContractDetails {
         return h256(concatenated);
     }
 
-    public static AvmContractDetails decode(RLPContractDetails input, InternalVmType vm) {
-        return decode(input, vm, null, null);
+    public static AvmContractDetails decode(RLPContractDetails input) {
+        return decode(input, null, null);
     }
 
     /**
@@ -293,9 +282,8 @@ public class AvmContractDetails implements StoredContractDetails {
      *
      * @param input The encoding to decode.
      */
-    public static AvmContractDetails decode(RLPContractDetails input, InternalVmType vm, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+    public static AvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
         AvmContractDetails details = new AvmContractDetails(input.address, storageSource, objectGraphSource);
-        details.vmType = vm;
         details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
@@ -307,42 +295,36 @@ public class AvmContractDetails implements StoredContractDetails {
             details.setCode(code.getRLPData());
         }
 
-        // NOTE: under normal circumstances the VM type is set by the details data store
-        // Do not forget to set the vmType value externally during tests!!!
         RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
         boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
-        if (details.vmType == InternalVmType.AVM) {
-            // points to the storage hash and the object graph hash
-            details.concatenatedStorageHash = root.getRLPData();
+        // points to the storage hash and the object graph hash
+        details.concatenatedStorageHash = root.getRLPData();
 
-            Optional<byte[]> concatenatedData =
-                    details.objectGraphSource == null
-                            ? Optional.empty()
-                            : details.objectGraphSource.get(details.concatenatedStorageHash);
-            if (concatenatedData.isPresent()) {
-                RLPList data = RLP.decode2(concatenatedData.get());
-                if (!(data.get(0) instanceof RLPList)) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-                RLPList pair = (RLPList) data.get(0);
-                if (pair.size() != 2) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-
-                storageRootHash = pair.get(0).getRLPData();
-                details.objectGraphHash = pair.get(1).getRLPData();
-            } else {
-                storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-                details.objectGraphHash = EMPTY_DATA_HASH;
+        Optional<byte[]> concatenatedData =
+                details.objectGraphSource == null
+                        ? Optional.empty()
+                        : details.objectGraphSource.get(details.concatenatedStorageHash);
+        if (concatenatedData.isPresent()) {
+            RLPList data = RLP.decode2(concatenatedData.get());
+            if (!(data.get(0) instanceof RLPList)) {
+                throw new IllegalArgumentException(
+                        "rlp decode error: invalid concatenated storage for AVM");
             }
+            RLPList pair = (RLPList) data.get(0);
+            if (pair.size() != 2) {
+                throw new IllegalArgumentException(
+                        "rlp decode error: invalid concatenated storage for AVM");
+            }
+
+            storageRootHash = pair.get(0).getRLPData();
+            details.objectGraphHash = pair.get(1).getRLPData();
         } else {
-            storageRootHash = root.getRLPData();
+            storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
+            details.objectGraphHash = EMPTY_DATA_HASH;
         }
 
         // load/deserialize storage trie
@@ -374,11 +356,7 @@ public class AvmContractDetails implements StoredContractDetails {
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
         byte[] rlpStorageRoot;
         // encoding for AVM
-        if (vmType == InternalVmType.AVM) {
-            rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
-        } else {
-            rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-        }
+        rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
         byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
         byte[][] codes = new byte[getCodes().size()][];
         int i = 0;
@@ -403,28 +381,15 @@ public class AvmContractDetails implements StoredContractDetails {
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
-        if (vmType == InternalVmType.AVM) {
-            // if (objectGraph == null || Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)) {
-            //     throw new IllegalStateException(
-            //             "The AVM object graph must be set before pushing data to disk.");
-            // }
-
-            if (objectGraphSource == null) {
-                throw new NullPointerException(
-                        "The contract object graph source was not initialized.");
-            }
-
-            byte[] graph = getObjectGraph();
-            if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
-                objectGraphSource.put(objectGraphHash, graph);
-            }
-            objectGraphSource
-                    .put(
-                            computeAvmStorageHash(),
-                            RLP.encodeList(
-                                    RLP.encodeElement(storageTrie.getRootHash()),
-                                    RLP.encodeElement(objectGraphHash)));
+        if (objectGraphSource == null) {
+            throw new NullPointerException("The contract object graph source was not initialized.");
         }
+
+        byte[] graph = getObjectGraph();
+        if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
+            objectGraphSource.put(objectGraphHash, graph);
+        }
+        objectGraphSource.put(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
 
         if (externalStorage) {
             storageTrie.sync();
@@ -445,64 +410,45 @@ public class AvmContractDetails implements StoredContractDetails {
      * storage root hash.
      *
      * @param hash the storage root hash to search for
-     * @param vm used to direct the interpretation of the storage root hash, since AVM contracts
-     *     also include the hash of the object graph.
      * @return the specified AvmContractDetails.
      */
-    public AvmContractDetails getSnapshotTo(byte[] hash, InternalVmType vm) {
-        // set the VM type using the code hash
-        vmType = vm;
-
+    public AvmContractDetails getSnapshotTo(byte[] hash) {
         SecureTrie snapStorage;
         AvmContractDetails details;
-        if (vmType == InternalVmType.AVM) {
-            byte[] storageRootHash, graphHash;
-            // get the concatenated storage hash from storage
-            Optional<byte[]> concatenatedData =
-                    objectGraphSource == null
-                            ? Optional.empty()
-                            : objectGraphSource.get(hash);
-            if (concatenatedData.isPresent()) {
-                RLPList data = RLP.decode2(concatenatedData.get());
-                if (!(data.get(0) instanceof RLPList)) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-                RLPList pair = (RLPList) data.get(0);
-                if (pair.size() != 2) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-
-                storageRootHash = pair.get(0).getRLPData();
-                graphHash = pair.get(1).getRLPData();
-            } else {
-                storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-                graphHash = EMPTY_DATA_HASH;
+        byte[] storageRootHash, graphHash;
+        // get the concatenated storage hash from storage
+        Optional<byte[]> concatenatedData =
+                objectGraphSource == null ? Optional.empty() : objectGraphSource.get(hash);
+        if (concatenatedData.isPresent()) {
+            RLPList data = RLP.decode2(concatenatedData.get());
+            if (!(data.get(0) instanceof RLPList)) {
+                throw new IllegalArgumentException(
+                        "rlp decode error: invalid concatenated storage for AVM");
+            }
+            RLPList pair = (RLPList) data.get(0);
+            if (pair.size() != 2) {
+                throw new IllegalArgumentException(
+                        "rlp decode error: invalid concatenated storage for AVM");
             }
 
-            snapStorage =
-                    wrap(storageRootHash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                            ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                            : new SecureTrie(storageTrie.getCache(), storageRootHash);
-            snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-            details = new AvmContractDetails(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
-
-            // object graph information
-            details.objectGraphHash = graphHash;
-            details.concatenatedStorageHash = hash;
+            storageRootHash = pair.get(0).getRLPData();
+            graphHash = pair.get(1).getRLPData();
         } else {
-            snapStorage =
-                    wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                            ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                            : new SecureTrie(storageTrie.getCache(), hash);
-            snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-            details = new AvmContractDetails(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
+            storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
+            graphHash = EMPTY_DATA_HASH;
         }
 
-        // vm information
-        details.vmType = this.vmType;
+        snapStorage =
+                wrap(storageRootHash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
+                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
+                        : new SecureTrie(storageTrie.getCache(), storageRootHash);
+        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
+
+        details = new AvmContractDetails(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
+
+        // object graph information
+        details.objectGraphHash = graphHash;
+        details.concatenatedStorageHash = hash;
 
         // storage information
         details.externalStorage = this.externalStorage;
@@ -527,9 +473,6 @@ public class AvmContractDetails implements StoredContractDetails {
     @Override
     public AvmContractDetails copy() {
         AvmContractDetails aionContractDetailsCopy = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
-
-        // vm information
-        aionContractDetailsCopy.vmType = this.vmType;
 
         // storage information
         aionContractDetailsCopy.externalStorage = this.externalStorage;
@@ -582,7 +525,7 @@ public class AvmContractDetails implements StoredContractDetails {
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
-        ret.append("  VM: ").append(vmType.toString()).append("\n");
+        ret.append("  VM: ").append(InternalVmType.AVM).append("\n");
         ret.append("  dirty: ").append(isDirty()).append("\n");
 
         if (codes.size() == 0) {
