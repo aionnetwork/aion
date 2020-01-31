@@ -47,7 +47,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     private ByteArrayKeyValueStore dataSource;
     private ByteArrayKeyValueStore objectGraphSource = null;
 
-    private AionAddress address;
+    private final AionAddress address;
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -56,7 +56,9 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
 
-    public AionContractDetailsImpl() {}
+    public AionContractDetailsImpl(AionAddress address) {
+        this(address, null, null);
+    }
 
     /**
      * Creates a object with attached database access for the storage and object graph.
@@ -64,18 +66,21 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      * @param storageSource
      * @param objectGraphSource
      */
-    public AionContractDetailsImpl(ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
-        this.dataSource = storageSource;
-        this.objectGraphSource = objectGraphSource;
-    }
-
-    private AionContractDetailsImpl(
-            AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
             this.address = address;
+            if (ContractInfo.isPrecompiledContract(address)) {
+                setVmType(InternalVmType.FVM);
+            }
         }
+        this.dataSource = storageSource;
+        this.objectGraphSource = objectGraphSource;
+    }
+
+    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
+        this(address, externalStorageSource, objectGraphSource);
         this.storageTrie = storageTrie;
         setCodes(codes);
     }
@@ -288,9 +293,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      * @param input The encoding to decode.
      */
     public static AionContractDetailsImpl decode(RLPContractDetails input, InternalVmType vm, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
-        AionContractDetailsImpl details = new AionContractDetailsImpl(storageSource, objectGraphSource);
+        AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource, objectGraphSource);
         details.vmType = vm;
-        details.address = input.address;
         details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
@@ -393,22 +397,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     @Override
     public AionAddress getAddress() {
         return address;
-    }
-
-    /**
-     * Sets the associated address to address.
-     *
-     * @param address The address to set.
-     */
-    @Override
-    public void setAddress(AionAddress address) {
-        if (address == null) {
-            throw new IllegalArgumentException("Address can not be null!");
-        }
-        this.address = address;
-        if (ContractInfo.isPrecompiledContract(address)) {
-            setVmType(InternalVmType.FVM);
-        }
     }
 
     /** Syncs the storage trie. */
@@ -529,10 +517,9 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             : new SecureTrie(storageTrie.getCache(), storageRootHash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes());
+            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.dataSource, this.objectGraphSource);
 
             // object graph information
-            details.objectGraphSource = this.objectGraphSource;
             details.objectGraphHash = graphHash;
             details.concatenatedStorageHash = hash;
         } else {
@@ -541,7 +528,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                             : new SecureTrie(storageTrie.getCache(), hash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes());
+            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.dataSource, this.objectGraphSource);
         }
 
         // vm information
@@ -549,7 +536,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
         // storage information
         details.externalStorage = this.externalStorage;
-        details.dataSource = dataSource;
 
         return details;
     }
@@ -570,17 +556,15 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     @Override
     public AionContractDetailsImpl copy() {
-        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl();
+        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.dataSource, this.objectGraphSource);
 
         // vm information
         aionContractDetailsCopy.vmType = this.vmType;
 
         // storage information
-        aionContractDetailsCopy.dataSource = this.dataSource;
         aionContractDetailsCopy.externalStorage = this.externalStorage;
 
         // object graph information
-        aionContractDetailsCopy.objectGraphSource = this.objectGraphSource;
         aionContractDetailsCopy.objectGraph =
                 objectGraph == null
                         ? null
@@ -600,9 +584,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
-        aionContractDetailsCopy.address = this.address;
-        aionContractDetailsCopy.storageTrie =
-                (this.storageTrie == null) ? null : this.storageTrie.copy();
+        aionContractDetailsCopy.storageTrie = (this.storageTrie == null) ? null : this.storageTrie.copy();
         return aionContractDetailsCopy;
     }
 

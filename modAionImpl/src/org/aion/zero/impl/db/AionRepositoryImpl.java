@@ -175,16 +175,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                     ContractDetailsCacheImpl contractDetailsCache =
                             (ContractDetailsCacheImpl) contractDetails;
                     if (contractDetailsCache.origContract == null) {
-                        contractDetailsCache.origContract = new AionContractDetailsImpl();
-
-                        try {
-                            contractDetailsCache.origContract.setAddress(address);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            LOG.error(
-                                    "contractDetailsCache setAddress exception [{}]", e.toString());
-                        }
-
+                        contractDetailsCache.origContract = new AionContractDetailsImpl(address);
                         contractDetailsCache.commit();
                     }
 

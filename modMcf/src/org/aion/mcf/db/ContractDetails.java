@@ -128,13 +128,6 @@ public interface ContractDetails {
     AionAddress getAddress();
 
     /**
-     * Sets the associated address to address.
-     *
-     * @param address The address to set.
-     */
-    void setAddress(AionAddress address);
-
-    /**
      * Returns a string representation of this ContractDetails.
      *
      * @return a string representation.

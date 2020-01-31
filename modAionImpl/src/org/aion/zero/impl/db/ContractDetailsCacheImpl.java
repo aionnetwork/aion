@@ -244,18 +244,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
-    /**
-     * Sets the address associated with this ContractDetailsCacheImpl.
-     *
-     * @param address The address to set.
-     */
-    @Override
-    public void setAddress(AionAddress address) {
-        if (origContract != null) {
-            origContract.setAddress(address);
-        }
-    }
-
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {

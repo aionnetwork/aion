@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.db.ContractDetails;
+import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;
@@ -26,8 +27,8 @@ public class IContractDetailsTest {
 
     @Before
     public void setup() {
-        cache1 = new AionContractDetailsImpl();
-        cache2 = new ContractDetailsCacheImpl(new AionContractDetailsImpl());
+        cache1 = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS);
+        cache2 = new ContractDetailsCacheImpl(new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS));
     }
 
     @After

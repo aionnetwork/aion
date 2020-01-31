@@ -67,14 +67,13 @@ public class AionContractDetailsTest {
         byte[] key_2 = ByteUtil.hexStringToBytes("222222");
         byte[] val_2 = ByteUtil.hexStringToBytes("bbbbbb");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
+        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS);
         contractDetails.setCode(code);
         contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
                 new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
         contractDetails.put(
                 new DataWord(key_2).toWrapper(), new DataWord(val_2).toWrapper());
-        contractDetails.setAddress(AddressUtils.ZERO_ADDRESS);
 
         byte[] data = contractDetails.getEncoded();
 
@@ -146,10 +145,9 @@ public class AionContractDetailsTest {
         byte[] key_13 = ByteUtil.hexStringToBytes("65c996598dc972688b7ace676c89077b");
         byte[] val_13 = ByteUtil.hexStringToBytes("d6ee27e285f2de7b68e8db25cf1b1063");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
+        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(address);
         contractDetails.setCode(code);
         contractDetails.setVmType(InternalVmType.FVM);
-        contractDetails.setAddress(address);
         contractDetails.put(
                 new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
         contractDetails.put(
@@ -256,8 +254,7 @@ public class AionContractDetailsTest {
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
         ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        original.setAddress(address);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         original.initializeExternalStorageTrieForTest();
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
@@ -309,8 +306,7 @@ public class AionContractDetailsTest {
         sharedProps.setProperty(DatabaseFactory.Props.DB_NAME, "storage");
         ByteArrayKeyValueDatabase storagedb = connectAndOpen(sharedProps, LOG);
         JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb, LOG);
-        AionContractDetailsImpl original = new AionContractDetailsImpl(jpd, null);
-        original.setAddress(address);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, jpd, null);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
 
@@ -371,8 +367,7 @@ public class AionContractDetailsTest {
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
         ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        original.setAddress(address);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         original.setCode(code);
         original.setVmType(InternalVmType.FVM);
 
@@ -433,8 +428,7 @@ public class AionContractDetailsTest {
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
         ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(externalStorage, graphDatabase);
-        details.setAddress(address);
+        AionContractDetailsImpl details = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         details.setCode(code);
         details.setVmType(InternalVmType.FVM);
 

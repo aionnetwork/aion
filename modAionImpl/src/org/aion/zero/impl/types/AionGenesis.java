@@ -426,7 +426,7 @@ public class AionGenesis extends AionBlock {
 
         byte[] generateRootHash() {
             Trie worldTrie = new SecureTrie(null);
-            AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl();
+            AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl(NETWORK_BALANCE_ADDRESS);
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 // we assume there are no deletions in the genesis

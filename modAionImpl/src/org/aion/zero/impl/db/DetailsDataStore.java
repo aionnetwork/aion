@@ -62,8 +62,6 @@ public class DetailsDataStore {
     }
 
     public synchronized void update(AionAddress key, AionContractDetailsImpl contractDetails) {
-
-        contractDetails.setAddress(key);
         contractDetails.setObjectGraphSource(graphSrc);
 
         // Put into cache.
