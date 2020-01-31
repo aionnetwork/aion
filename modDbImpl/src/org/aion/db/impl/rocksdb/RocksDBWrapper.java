@@ -40,6 +40,7 @@ public class RocksDBWrapper extends AbstractDB {
     private final int writeBufferSize;
     private final int readBufferSize;
     private final int cacheSize;
+    private WriteOptions writeOptions;
 
     public RocksDBWrapper(
             String name,
@@ -81,11 +82,11 @@ public class RocksDBWrapper extends AbstractDB {
                         ? CompressionType.LZ4_COMPRESSION
                         : CompressionType.NO_COMPRESSION);
 
-        options.setBottommostCompressionType(CompressionType.LZ4_COMPRESSION);
+        options.setBottommostCompressionType(CompressionType.ZLIB_COMPRESSION);
         options.setMinWriteBufferNumberToMerge(MIN_WRITE_BUFFER_NUMBER_TOMERGE);
         options.setLevel0StopWritesTrigger(LEVEL0_STOP_WRITES_TRIGGER);
         options.setLevel0SlowdownWritesTrigger(LEVEL0_SLOWDOWN_WRITES_TRIGGER);
-
+        options.setAtomicFlush(true);
         options.setWriteBufferSize(this.writeBufferSize);
         options.setRandomAccessMaxBufferSize(this.readBufferSize);
         options.setParanoidChecks(true);
@@ -133,6 +134,8 @@ public class RocksDBWrapper extends AbstractDB {
             }
         }
 
+        writeOptions = setupWriteOptions();
+
         Options options = setupRocksDbOptions();
 
         try {
@@ -154,6 +157,12 @@ public class RocksDBWrapper extends AbstractDB {
         }
 
         return isOpen();
+    }
+
+    private WriteOptions setupWriteOptions() {
+        WriteOptions options = new WriteOptions();
+        options.setLowPri(true);
+        return options;
     }
 
     @Override
@@ -371,7 +380,7 @@ public class RocksDBWrapper extends AbstractDB {
     public void commitBatch() {
         if (batch != null) {
             try {
-                db.write(new WriteOptions(), batch);
+                db.write(writeOptions, batch);
             } catch (RocksDBException e) {
                 LOG.error(
                         "Unable to execute batch put/update/delete operation on "
@@ -397,7 +406,7 @@ public class RocksDBWrapper extends AbstractDB {
             }
 
             // bulk atomic update
-            db.write(new WriteOptions(), batch);
+            db.write(writeOptions, batch);
         } catch (RocksDBException e) {
             LOG.error(
                     "Unable to execute batch put/update operation on " + this.toString() + ".", e);
@@ -413,7 +422,7 @@ public class RocksDBWrapper extends AbstractDB {
             }
 
             // bulk atomic update
-            db.write(new WriteOptions(), batch);
+            db.write(writeOptions, batch);
         } catch (RocksDBException e) {
             LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
         }
@@ -437,7 +446,7 @@ public class RocksDBWrapper extends AbstractDB {
             }
 
             // bulk automatic update
-            db.write(new WriteOptions(), batch);
+            db.write(writeOptions, batch);
 
             success = true;
         } catch (RocksDBException e) {
