@@ -175,7 +175,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                     ContractDetailsCacheImpl contractDetailsCache =
                             (ContractDetailsCacheImpl) contractDetails;
                     if (contractDetailsCache.origContract == null) {
-                        contractDetailsCache.origContract = detailsDS.newContractDetails(address);
+                        contractDetailsCache.origContract = detailsDS.newContractDetails(address, contractDetailsCache.getVmType());
                         contractDetailsCache.commit();
                     }
 

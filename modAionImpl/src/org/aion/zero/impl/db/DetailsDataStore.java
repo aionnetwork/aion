@@ -77,8 +77,17 @@ public class DetailsDataStore {
             RLPContractDetails rlpDetails = fromEncoding(rawDetails.get());
             ByteArrayKeyValueStore storage = createStorageSource(rlpDetails.address);
             ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
-            AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, vm, storage, graph);
-            return detailsImpl.getSnapshotTo(storageRoot, vm);
+            if (vm == InternalVmType.AVM) {
+                AvmContractDetails detailsImpl = AvmContractDetails.decode(rlpDetails, vm, storage, graph);
+                return detailsImpl.getSnapshotTo(storageRoot, vm);
+            } else if (vm == InternalVmType.FVM) {
+                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, vm, storage, graph);
+                return detailsImpl.getSnapshotTo(storageRoot, vm);
+            } else {
+                // This may be a regular account or a contract that is not stored yet.
+                // There is no need to instantiate a ContractDetails object.
+                return null;
+            }
         } else {
             return null;
         }
@@ -90,10 +99,14 @@ public class DetailsDataStore {
         return rawDetails.isPresent();
     }
 
-    public StoredContractDetails newContractDetails(AionAddress address) {
+    public StoredContractDetails newContractDetails(AionAddress address, InternalVmType vm) {
         ByteArrayKeyValueStore storage = createStorageSource(address);
         ByteArrayKeyValueStore graph = createGraphSource(address);
-        return new AionContractDetailsImpl(address, storage, graph);
+        if (vm == InternalVmType.AVM) {
+            return new AvmContractDetails(address, storage, graph);
+        } else {
+            return new AionContractDetailsImpl(address, storage, graph);
+        }
     }
 
     public synchronized void update(AionAddress key, StoredContractDetails contractDetails) {
