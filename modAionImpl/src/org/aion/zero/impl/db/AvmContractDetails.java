@@ -5,7 +5,6 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,10 +31,6 @@ public class AvmContractDetails implements StoredContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    /** Indicates the maximum storage size before shifting to the storage database. */
-    @VisibleForTesting
-    static int detailsInMemoryStorageLimit = 64 * 1024;
-
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
@@ -45,16 +40,10 @@ public class AvmContractDetails implements StoredContractDetails {
 
     private final AionAddress address;
 
-    private SecureTrie storageTrie = new SecureTrie(null);
-
-    private boolean externalStorage;
+    private SecureTrie storageTrie;
 
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
-
-    public AvmContractDetails(AionAddress address) {
-        this(address, null, null);
-    }
 
     /**
      * Creates a object with attached database access for the external storage and object graph.
@@ -75,17 +64,13 @@ public class AvmContractDetails implements StoredContractDetails {
         }
         this.externalStorageSource = externalStorageSource;
         this.objectGraphSource = objectGraphSource;
+        this.storageTrie = new SecureTrie(this.externalStorageSource);
     }
 
     private AvmContractDetails(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
         this(address, externalStorageSource, objectGraphSource);
         this.storageTrie = storageTrie;
         setCodes(codes);
-    }
-
-    @VisibleForTesting
-    public boolean isExternalStorage() {
-        return externalStorage;
     }
 
     @Override
@@ -273,10 +258,6 @@ public class AvmContractDetails implements StoredContractDetails {
         return h256(concatenated);
     }
 
-    public static AvmContractDetails decode(RLPContractDetails input) {
-        return decode(input, null, null);
-    }
-
     /**
      * Decodes an AvmContractDetails object from the RLP encoding.
      *
@@ -284,7 +265,6 @@ public class AvmContractDetails implements StoredContractDetails {
      */
     public static AvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
         AvmContractDetails details = new AvmContractDetails(input.address, storageSource, objectGraphSource);
-        details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
         if (code instanceof RLPList) {
@@ -297,7 +277,6 @@ public class AvmContractDetails implements StoredContractDetails {
 
         RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
-        boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
@@ -328,16 +307,14 @@ public class AvmContractDetails implements StoredContractDetails {
         }
 
         // load/deserialize storage trie
-        if (details.externalStorage) {
+        if (input.isExternalStorage) { // ensure transition from old encoding
             details.storageTrie = new SecureTrie(details.externalStorageSource, storageRootHash);
         } else {
+            details.storageTrie = new SecureTrie(null);
             details.storageTrie.deserialize(storage.getRLPData());
-        }
-
-        // switch from in-memory to external storage
-        if (!details.externalStorage && !keepStorageInMem) {
-            details.externalStorage = true;
+            // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
+            details.storageTrie.sync();
         }
         return details;
     }
@@ -345,19 +322,17 @@ public class AvmContractDetails implements StoredContractDetails {
     /**
      * Returns an rlp encoding of this AvmContractDetails object.
      *
-     * <p>The encoding is a list of 6 elements:<br>
-     * { 0:address, 1:isExternalStorage, 2:storageRoot, 3:storage, 4:code, 5:vmType }
+     * <p>The encoding is a list of 3 elements:<br>
+     * { 0:address, 1:storageRoot, 2:code }
      *
      * @return an rlp encoding of this.
      */
     @Override
     public byte[] getEncoded() {
         byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
         byte[] rlpStorageRoot;
         // encoding for AVM
         rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
-        byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
         byte[][] codes = new byte[getCodes().size()][];
         int i = 0;
         for (byte[] bytes : this.getCodes().values()) {
@@ -365,7 +340,7 @@ public class AvmContractDetails implements StoredContractDetails {
         }
         byte[] rlpCode = RLP.encodeList(codes);
 
-        return RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+        return RLP.encodeList(rlpAddress, rlpStorageRoot, rlpCode);
     }
 
     /**
@@ -391,18 +366,7 @@ public class AvmContractDetails implements StoredContractDetails {
         }
         objectGraphSource.put(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
 
-        if (externalStorage) {
-            storageTrie.sync();
-        }
-    }
-
-    /**
-     * Sets the external storage data source to dataSource.
-     */
-    @VisibleForTesting
-    void initializeExternalStorageTrieForTest() {
-        this.externalStorage = true;
-        this.storageTrie = new SecureTrie(externalStorageSource);
+        storageTrie.sync();
     }
 
     /**
@@ -450,9 +414,6 @@ public class AvmContractDetails implements StoredContractDetails {
         details.objectGraphHash = graphHash;
         details.concatenatedStorageHash = hash;
 
-        // storage information
-        details.externalStorage = this.externalStorage;
-
         return details;
     }
 
@@ -473,9 +434,6 @@ public class AvmContractDetails implements StoredContractDetails {
     @Override
     public AvmContractDetails copy() {
         AvmContractDetails aionContractDetailsCopy = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
-
-        // storage information
-        aionContractDetailsCopy.externalStorage = this.externalStorage;
 
         // object graph information
         aionContractDetailsCopy.objectGraph =

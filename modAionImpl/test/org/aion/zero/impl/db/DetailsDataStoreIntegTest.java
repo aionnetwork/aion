@@ -116,7 +116,7 @@ public class DetailsDataStoreIntegTest {
         boolean stakingIsNext = true;
         for (int i = 0; i < numberOfStorageBlocks; i++) {
             // verify that the storage is empty
-            assertThat(chain.getRepository().storageDatabase.isEmpty()).isTrue();
+            assertThat(chain.getRepository().storageDatabase.isEmpty()).isFalse();
 
             // call contracts to increase storage
             for (int j = 0; j < txPerBlock; j++) {
