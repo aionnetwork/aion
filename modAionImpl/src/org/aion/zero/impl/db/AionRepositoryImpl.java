@@ -191,7 +191,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                     contractDetails = contractDetailsCache.origContract;
 
                     // this method requires the encoding functionality therefore can be applied only to AionContractDetailsImpl
-                    updateContractDetails(address, (AionContractDetailsImpl) contractDetails);
+                    detailsDS.update(address, (AionContractDetailsImpl) contractDetails);
 
                     // TODO: incorrect check codeHash != trie hash
                     if (!Arrays.equals(accountState.getCodeHash(), ConstantUtil.EMPTY_TRIE_HASH)) {
@@ -235,12 +235,6 @@ public class AionRepositoryImpl extends AbstractRepository {
         } finally {
             rwLock.writeLock().unlock();
         }
-    }
-
-    /** @implNote The method calling this method must handle the locking. */
-    private void updateContractDetails(final AionAddress address, final AionContractDetailsImpl contractDetails) {
-        // locked by calling method
-        detailsDS.update(address, contractDetails);
     }
 
     @Override
