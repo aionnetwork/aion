@@ -542,10 +542,14 @@ public class AionRepositoryImpl extends AbstractRepository {
             Map<AionAddress, ContractDetails> cacheDetails) {
 
         AccountState account = getAccountState(address);
-        ContractDetails details = getContractDetails(address);
-
-        account = (account == null) ? new AccountState() : new AccountState(account);
-        details = new ContractDetailsCacheImpl(details);
+        ContractDetails details;
+        if (account != null) {
+            account = new AccountState(account);
+            details = new ContractDetailsCacheImpl(getContractDetails(address));
+        } else {
+            account = new AccountState();
+            details = new ContractDetailsCacheImpl(null);
+        }
 
         cacheAccounts.put(address, account);
         cacheDetails.put(address, details);
