@@ -163,6 +163,7 @@ subprojects {
             inputs.property("moduleName", moduleName)
             doFirst {
                 options.compilerArgs = [
+                	'-g',
                     '--module-path', classpath.asPath,
                     '--add-modules', 'javafx.controls'
                 ]
@@ -174,6 +175,7 @@ subprojects {
             inputs.property("moduleName", moduleName)
             doFirst {
                 options.compilerArgs = [
+                	'-g',
                     '--module-path', classpath.asPath,
                 ]
                 classpath = files()

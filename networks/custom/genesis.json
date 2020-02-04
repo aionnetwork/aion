@@ -2,6 +2,9 @@
   "alloc": {
     "0xa02df9004be3c4a20aeb50c459212412b1d0a58da3e1ac70ba74dde6b4accf4b": {
       "balance": "1000000000000000000000000"
+    },
+    "0xa0d16a2fcdc7f6065c7d8e520a1b0adfd0ebaf6d0075e327d4362e77639c019f": {
+      "balance": "1000000000000000000000000"
     }
   },
   "energyLimit": "15000000",
