@@ -1,9 +1,34 @@
 package org.aion;
 
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-import static org.aion.zero.impl.Version.KERNEL_VERSION;
-import static org.aion.zero.impl.cli.Cli.ReturnType;
+import org.aion.api.server.BlockchainCallbackForApiServer;
+import org.aion.api.server.account.AccountManager;
+import org.aion.api.server.http.RpcServer;
+import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.api.server.http.RpcServerVendor;
+import org.aion.api.server.http.nano.NanoRpcServer;
+import org.aion.api.server.http.undertow.UndertowRpcServer;
+import org.aion.api.server.pb.ApiAion0;
+import org.aion.api.server.pb.IHdlr;
+import org.aion.api.server.zmq.HdlrZmq;
+import org.aion.api.server.zmq.ProtocolProcessor;
+import org.aion.avm.stub.AvmVersion;
+import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
+import org.aion.equihash.EquihashMiner;
+import org.aion.evtmgr.EventMgrModule;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.solidity.Compiler;
+import org.aion.utils.NativeLibrary;
+import org.aion.zero.impl.SystemExitCodes;
+import org.aion.zero.impl.blockchain.AionFactory;
+import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.cli.Cli;
+import org.aion.zero.impl.config.*;
+import org.aion.zero.impl.keystore.Keystore;
+import org.aion.zero.impl.vm.avm.AvmProvider;
+import org.slf4j.Logger;
+import org.zeromq.ZMQ;
 
 import java.io.Console;
 import java.io.File;
@@ -16,53 +41,27 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import org.aion.api.server.BlockchainCallbackForApiServer;
-import org.aion.api.server.account.AccountManager;
-import org.aion.api.server.http.RpcServer;
-import org.aion.api.server.http.RpcServerBuilder;
-import org.aion.api.server.http.RpcServerVendor;
-import org.aion.api.server.http.nano.NanoRpcServer;
-import org.aion.api.server.http.undertow.UndertowRpcServer;
-import org.aion.api.server.pb.ApiAion0;
-import org.aion.api.server.pb.IHdlr;
-import org.aion.api.server.zmq.HdlrZmq;
-import org.aion.api.server.zmq.ProtocolProcessor;
-import org.aion.zero.impl.vm.avm.AvmProvider;
-import org.aion.avm.stub.AvmVersion;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
-import org.aion.equihash.EquihashMiner;
-import org.aion.evtmgr.EventMgrModule;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.zero.impl.keystore.Keystore;
-import org.aion.zero.impl.config.CfgApiRpc;
-import org.aion.zero.impl.config.CfgApiZmq;
-import org.aion.zero.impl.config.CfgSsl;
-import org.aion.solidity.Compiler;
-import org.aion.utils.NativeLibrary;
-import org.aion.zero.impl.SystemExitCodes;
-import org.aion.zero.impl.blockchain.AionFactory;
-import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.zero.impl.cli.Cli;
-import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.config.Network;
-import org.slf4j.Logger;
-import org.zeromq.ZMQ;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
+import static org.aion.zero.impl.cli.Cli.ReturnType;
 
 public class Aion {
 
     public static void main(String args[]) {
         // TODO: should we load native libraries first thing?
         NativeLibrary.checkNativeLibrariesLoaded();
+        List<String> argsVector = new ArrayList<String>();
+
+        for (int i = 5; i < args.length; i++) {
+            argsVector.add(args[i]);
+        }
+
+        args = (String[]) argsVector.toArray(new String[0]);
 
         try {
             Compiler.getInstance().compileHelloAion();
