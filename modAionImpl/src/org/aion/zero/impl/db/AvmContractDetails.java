@@ -43,7 +43,6 @@ public class AvmContractDetails implements StoredContractDetails {
     private SecureTrie storageTrie;
 
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
-    private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
 
     /**
      * Creates a object with attached database access for the external storage and object graph.
@@ -275,18 +274,17 @@ public class AvmContractDetails implements StoredContractDetails {
             details.setCode(code.getRLPData());
         }
 
+        // The root is the concatenated storage hash.
+        // It points to the external storage hash and the object graph hash.
         RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
-        // points to the storage hash and the object graph hash
-        details.concatenatedStorageHash = root.getRLPData();
-
         Optional<byte[]> concatenatedData =
                 details.objectGraphSource == null
                         ? Optional.empty()
-                        : details.objectGraphSource.get(details.concatenatedStorageHash);
+                        : details.objectGraphSource.get(root.getRLPData());
         if (concatenatedData.isPresent()) {
             RLPList data = RLP.decode2(concatenatedData.get());
             if (!(data.get(0) instanceof RLPList)) {
@@ -412,7 +410,6 @@ public class AvmContractDetails implements StoredContractDetails {
 
         // object graph information
         details.objectGraphHash = graphHash;
-        details.concatenatedStorageHash = hash;
 
         return details;
     }
@@ -444,13 +441,6 @@ public class AvmContractDetails implements StoredContractDetails {
                 Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)
                         ? EMPTY_DATA_HASH
                         : Arrays.copyOf(this.objectGraphHash, this.objectGraphHash.length);
-
-        // storage hash used by AVM
-        aionContractDetailsCopy.concatenatedStorageHash =
-                Arrays.equals(concatenatedStorageHash, EMPTY_DATA_HASH)
-                        ? EMPTY_DATA_HASH
-                        : Arrays.copyOf(
-                                this.concatenatedStorageHash, this.concatenatedStorageHash.length);
 
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.dirty = this.dirty;
