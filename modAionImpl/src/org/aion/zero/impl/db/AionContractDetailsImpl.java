@@ -579,10 +579,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         return copyOfCodes;
     }
 
-    public byte[] getConcatenatedStorageHash() {
-        return concatenatedStorageHash;
-    }
-
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
@@ -610,9 +606,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         }
 
         ret.append("  objectGraphHash: ").append(Hex.toHexString(objectGraphHash)).append("\n");
-        ret.append("  concatenatedStorageHash: ")
-                .append(Hex.toHexString(concatenatedStorageHash))
-                .append("\n");
 
         return ret.toString();
     }

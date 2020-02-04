@@ -392,14 +392,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         ret.append("  objectGraphHash: ")
                 .append(objectGraph == null ? "null" : Hex.toHexString(h256(objectGraph)))
                 .append("\n");
-        if (origContract != null && origContract instanceof AionContractDetailsImpl) {
-            byte[] hash = ((AionContractDetailsImpl) origContract).getConcatenatedStorageHash();
-            if (hash != null) {
-                ret.append("  concatenatedStorageHash: ")
-                        .append(Hex.toHexString(hash))
-                        .append("\n");
-            }
-        }
         return ret.toString();
     }
 }
