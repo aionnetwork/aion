@@ -293,18 +293,22 @@ public class AvmContractDetails implements StoredContractDetails {
         if (concatenatedData.isPresent()) {
             RLPList data = RLP.decode2(concatenatedData.get());
             if (!(data.get(0) instanceof RLPList)) {
-                throw new IllegalArgumentException(
-                        "rlp decode error: invalid concatenated storage for AVM");
+                throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
             }
             RLPList pair = (RLPList) data.get(0);
             if (pair.size() != 2) {
-                throw new IllegalArgumentException(
-                        "rlp decode error: invalid concatenated storage for AVM");
+                throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
             }
 
             storageRootHash = pair.get(0).getRLPData();
             details.objectGraphHash = pair.get(1).getRLPData();
         } else {
+            // An AVM contract should always have the object graph when written to disk.
+            // As a result the concatenated storage hash should not be missing from the database.
+            // TODO: throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
+            // However, the key to the details can be shared with FVM contracts and
+            // the 2 step process (1) decode the details and (2) move to the correct snapshot root
+            // makes it possible for the object graph to be missing when the decode is processed.
             storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
             details.objectGraphHash = EMPTY_DATA_HASH;
         }
