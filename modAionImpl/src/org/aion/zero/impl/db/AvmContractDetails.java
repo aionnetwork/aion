@@ -27,49 +27,57 @@ import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
+/**
+ * Stores contract details as required by the AVM with support for the use of the object graph and
+ * the concatenated storage root value.
+ *
+ * <p>The encoding produced for storing the contract contains 3 elements:<br>
+ * {@code { 0:address, 1:storageRoot, 2:code }}.
+ *
+ * <p>{@link RLPContractDetails} objects created based on the old encoding:<br>
+ * {@code { 0:address, 1: isExternalStorage, 2:storageRoot, 3:storageTrie, 4:code }}<br>
+ * are accepted by the decode functionality. When the storage read from disk was in-line the
+ * contract will transition to the external storage database.
+ */
 public class AvmContractDetails implements StoredContractDetails {
-    private boolean dirty = false;
-    private boolean deleted = false;
+    // identifies the contract
+    private final AionAddress address;
 
-    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    // classes extending this rely on this value starting off as null
-    private byte[] objectGraph = null;
-
+    // external databases used for storage and the object graph
     private final ByteArrayKeyValueStore externalStorageSource;
     private final ByteArrayKeyValueStore objectGraphSource;
 
-    private final AionAddress address;
+    // code variants for the same address on different chains
+    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
 
+    // attributes that record the current state of the contract
+    private boolean dirty = false;
+    private boolean deleted = false;
+    private byte[] objectGraph = null; // consumer classed expect the initial value to be null
+    private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private SecureTrie storageTrie;
 
-    private byte[] objectGraphHash = EMPTY_DATA_HASH;
-
     /**
-     * Creates a object with attached database access for the external storage and object graph.
+     * Creates an object with attached database access for the external storage and object graph.
      *
      * @param externalStorageSource the external storage data source associated with the given
      *     contract address
      * @param objectGraphSource the object graph data source associated with the given contract
      *     address
+     * @throws NullPointerException when any of the given parameters are null.
+     * @throws IllegalArgumentException when the contract address belongs to a precompiled contract.
      */
     public AvmContractDetails(AionAddress address, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
-        if (address == null) {
-            throw new IllegalArgumentException("Address can not be null!");
-        } else {
-            this.address = address;
-            if (ContractInfo.isPrecompiledContract(address)) {
-                setVmType(InternalVmType.FVM);
-            }
+        Objects.requireNonNull(address,"The address cannot be null!");
+        Objects.requireNonNull(externalStorageSource,"The storage data source cannot be null!");
+        Objects.requireNonNull(objectGraphSource,"The graph data source cannot be null!");
+        if (ContractInfo.isPrecompiledContract(address)) {
+            throw new IllegalArgumentException("The address cannot be a precompiled contract!");
         }
+        this.address = address;
         this.externalStorageSource = externalStorageSource;
         this.objectGraphSource = objectGraphSource;
         this.storageTrie = new SecureTrie(this.externalStorageSource);
-    }
-
-    private AvmContractDetails(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
-        this(address, externalStorageSource, objectGraphSource);
-        this.storageTrie = storageTrie;
-        setCodes(codes);
     }
 
     @Override
@@ -118,24 +126,24 @@ public class AvmContractDetails implements StoredContractDetails {
         return deleted;
     }
 
+    /** @throws NullPointerException when any of the given keys are null. */
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
-        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys cannot be null");
-        } else {
-            for (ByteArrayWrapper key : keys) {
-                ByteArrayWrapper value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if (value != null) {
-                    storage.put(key, value);
-                }
-            }
+        Objects.requireNonNull(keys, "The keys cannot be null.");
+        if (keys.contains(null)) {
+            throw new NullPointerException("The keys cannot be null.");
         }
 
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+        for (ByteArrayWrapper key : keys) {
+            ByteArrayWrapper value = get(key);
+
+            // we check if the value is not null,
+            // cause we keep all historical keys
+            if (value != null) {
+                storage.put(key, value);
+            }
+        }
         return storage;
     }
 
@@ -146,15 +154,12 @@ public class AvmContractDetails implements StoredContractDetails {
      *
      * @param key The key.
      * @param value The value.
+     * @throws NullPointerException when any of the given parameters are null.
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(value);
-
-        // The following must be done before making this call:
-        // We strip leading zeros of a DataWordImpl but not a DoubleDataWord so that when we call
-        // get we can differentiate between the two.
+        Objects.requireNonNull(key, "The key cannot be null.");
+        Objects.requireNonNull(value, "The value cannot be null.");
 
         byte[] data = RLP.encodeElement(value.toBytes());
         storageTrie.update(key.toBytes(), data);
@@ -162,9 +167,10 @@ public class AvmContractDetails implements StoredContractDetails {
         dirty = true;
     }
 
+    /** @throws NullPointerException when the given parameters is null. */
     @Override
     public void delete(ByteArrayWrapper key) {
-        Objects.requireNonNull(key);
+        Objects.requireNonNull(key, "The key cannot be null.");
 
         storageTrie.delete(key.toBytes());
 
@@ -177,9 +183,11 @@ public class AvmContractDetails implements StoredContractDetails {
      *
      * @param key The key to query.
      * @return the corresponding value or a zero-byte DataWordImpl if no such value.
+     * @throws NullPointerException when the given parameters is null.
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
+        Objects.requireNonNull(key, "The key cannot be null.");
         byte[] data = storageTrie.get(key.toBytes());
         return (data == null || data.length == 0)
                 ? null
@@ -214,16 +222,16 @@ public class AvmContractDetails implements StoredContractDetails {
             // the object graph was not stored yet
             if (Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)) {
                 return EMPTY_BYTE_ARRAY;
-            } else if (objectGraphSource != null) {
+            } else {
                 // note: the enforced use of optional is rather cumbersome here
                 Optional<byte[]> dbVal = objectGraphSource.get(objectGraphHash);
-                objectGraph = dbVal.isPresent() ? dbVal.get() : null;
+                objectGraph = dbVal.orElse(null);
             }
         }
 
         return objectGraph == null ? EMPTY_BYTE_ARRAY : objectGraph;
     }
-
+    /** @throws NullPointerException when the given parameters is null. */
     @Override
     public void setObjectGraph(byte[] graph) {
         Objects.requireNonNull(graph);
@@ -281,10 +289,7 @@ public class AvmContractDetails implements StoredContractDetails {
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
-        Optional<byte[]> concatenatedData =
-                details.objectGraphSource == null
-                        ? Optional.empty()
-                        : details.objectGraphSource.get(root.getRLPData());
+        Optional<byte[]> concatenatedData = details.objectGraphSource.get(root.getRLPData());
         if (concatenatedData.isPresent()) {
             RLPList data = RLP.decode2(concatenatedData.get());
             if (!(data.get(0) instanceof RLPList)) {
@@ -354,10 +359,6 @@ public class AvmContractDetails implements StoredContractDetails {
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
-        if (objectGraphSource == null) {
-            throw new NullPointerException("The contract object graph source was not initialized.");
-        }
-
         byte[] graph = getObjectGraph();
         if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
             objectGraphSource.put(objectGraphHash, graph);
@@ -379,8 +380,7 @@ public class AvmContractDetails implements StoredContractDetails {
         AvmContractDetails details;
         byte[] storageRootHash, graphHash;
         // get the concatenated storage hash from storage
-        Optional<byte[]> concatenatedData =
-                objectGraphSource == null ? Optional.empty() : objectGraphSource.get(hash);
+        Optional<byte[]> concatenatedData = objectGraphSource.get(hash);
         if (concatenatedData.isPresent()) {
             RLPList data = RLP.decode2(concatenatedData.get());
             if (!(data.get(0) instanceof RLPList)) {
@@ -406,7 +406,9 @@ public class AvmContractDetails implements StoredContractDetails {
                         : new SecureTrie(storageTrie.getCache(), storageRootHash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
-        details = new AvmContractDetails(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
+        details = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
+        details.storageTrie = snapStorage;
+        details.setCodes(getCodes());
 
         // object graph information
         details.objectGraphHash = graphHash;
