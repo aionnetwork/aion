@@ -27,6 +27,7 @@ import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentOppositeTypeRule;
 import org.aion.zero.impl.valid.SignatureRule;
 import org.aion.zero.impl.valid.StakingBlockTimeStampRule;
+import org.aion.zero.impl.valid.StakingSeedRule;
 import org.aion.zero.impl.valid.TimeStampRule;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
@@ -171,12 +172,16 @@ public class ChainConfiguration {
 
     public GreatGrandParentBlockHeaderValidator createUnityGreatGrandParentHeaderValidator() {
 
-        List<GreatGrandParentDependantBlockHeaderRule> rules =
+        List<GreatGrandParentDependantBlockHeaderRule> powRules =
                 Collections.singletonList(new UnityDifficultyRule(this));
 
-        Map<BlockSealType, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
-        unityRules.put(BlockSealType.SEAL_POW_BLOCK, rules);
-        unityRules.put(BlockSealType.SEAL_POS_BLOCK, rules);
+        List<GreatGrandParentDependantBlockHeaderRule> posRules =
+            Arrays.asList(new UnityDifficultyRule(this),
+                new StakingSeedRule());
+
+                Map<BlockSealType, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
 
         return new GreatGrandParentBlockHeaderValidator(unityRules);
     }
