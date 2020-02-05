@@ -6,7 +6,7 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
-public class StakingSeedRule implements DependentBlockHeaderRule {
+public class StakingSeedRule implements GreatGrandParentDependantBlockHeaderRule {
 
     private boolean validateInner(
             StakingBlockHeader header, StakingBlockHeader dependency, List<RuleError> errors) {
@@ -23,39 +23,6 @@ public class StakingSeedRule implements DependentBlockHeaderRule {
         return true;
     }
 
-    @Override
-    public boolean validate(BlockHeader header, BlockHeader dependency, List<RuleError> errors) {
-        if (!(header instanceof StakingBlockHeader)) {
-            BlockHeaderValidatorUtil.addError("Invalid header type", this.getClass(), errors);
-            return false;
-        }
-
-        if (!(dependency instanceof StakingBlockHeader)) {
-            BlockHeaderValidatorUtil.addError(
-                    "Invalid parent header type", this.getClass(), errors);
-            return false;
-        }
-
-        return validateInner((StakingBlockHeader) header, (StakingBlockHeader) dependency, errors);
-    }
-
-    @Override
-    public boolean validate(
-            BlockHeader header, BlockHeader dependency, List<RuleError> errors, Object arg) {
-        if (!(header instanceof StakingBlockHeader)) {
-            BlockHeaderValidatorUtil.addError("Invalid header type", this.getClass(), errors);
-            return false;
-        }
-
-        if (!(dependency instanceof StakingBlockHeader)) {
-            BlockHeaderValidatorUtil.addError(
-                    "Invalid parent header type", this.getClass(), errors);
-            return false;
-        }
-
-        return validateInner((StakingBlockHeader) header, (StakingBlockHeader) dependency, errors);
-    }
-
     private static String formatError(byte[] seed, byte[] parentSeed, byte[] pubkey) {
         return "block seed output ("
                 + ByteUtil.toHexString(seed)
@@ -64,5 +31,11 @@ public class StakingSeedRule implements DependentBlockHeaderRule {
                 + ") and public key condition ( publicKey:"
                 + ByteUtil.toHexString(pubkey)
                 + ")";
+    }
+
+    @Override
+    public boolean validate(BlockHeader grandParent, BlockHeader greatGrandParent,
+        BlockHeader current, List<RuleError> errors) {
+        return validateInner((StakingBlockHeader) current, (StakingBlockHeader) grandParent, errors);
     }
 }
