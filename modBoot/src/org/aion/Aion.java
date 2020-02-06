@@ -55,13 +55,14 @@ public class Aion {
     public static void main(String args[]) {
         // TODO: should we load native libraries first thing?
         NativeLibrary.checkNativeLibrariesLoaded();
-        List<String> argsVector = new ArrayList<String>();
 
+        // Hack ----------------------------------------------------
+        /*List<String> argsVector = new ArrayList<String>();
         for (int i = 5; i < args.length; i++) {
             argsVector.add(args[i]);
         }
-
-        args = (String[]) argsVector.toArray(new String[0]);
+        args = (String[]) argsVector.toArray(new String[0]);*/
+        // ---------------------------------------------------------
 
         try {
             Compiler.getInstance().compileHelloAion();

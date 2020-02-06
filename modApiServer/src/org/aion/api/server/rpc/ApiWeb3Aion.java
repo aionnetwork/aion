@@ -3005,4 +3005,19 @@ public class ApiWeb3Aion extends ApiAion {
             shutDownES();
         }
     }
+
+    // test rpc call
+    public RpcMsg getSeedAndDifficulty() {
+        JSONObject obj = new JSONObject();
+
+        boolean isUnity = this.ac.getAionHub().getBlockchain().isUnityForkEnabledAtNextBlock();
+        if (isUnity)
+            return new RpcMsg(JSONObject.NULL);
+
+        obj.put("seed", StringUtils.toJsonHex(this.ac.getBlockchain().getSeed()));
+        obj.put("staking_diff", StringUtils.toJsonHex(this.ac.getBlockchain().getBestStakingBlock().getDifficulty()));
+        obj.put("mining_diff", StringUtils.toJsonHex(this.ac.getBlockchain().getBestMiningBlock().getDifficulty()));
+
+        return new RpcMsg(obj);
+    }
 }

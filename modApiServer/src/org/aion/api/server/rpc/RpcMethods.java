@@ -253,7 +253,8 @@ public class RpcMethods {
                     Map.entry("eth_uninstallFilter", (params) -> api.eth_uninstallFilter(params)),
                     Map.entry("eth_getFilterChanges", (params) -> api.eth_getFilterChanges(params)),
                     Map.entry("eth_getFilterLogs", (params) -> api.eth_getFilterChanges(params)),
-                    Map.entry("eth_getLogs", (params) -> api.eth_getLogs(params)));
+                    Map.entry("eth_getLogs", (params) -> api.eth_getLogs(params)),
+                    Map.entry("eth_getSeedAndDifficulty", (params) -> api.getSeedAndDifficulty()));
 
     /** stratum */
     private final Map<String, RpcMethod> stratum =
