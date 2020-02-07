@@ -143,7 +143,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static boolean fork040Enable;
     private final BlockHeaderValidator headerValidator;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
-    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator;
+    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
     private StakingContractHelper stakingContractHelper = null;
@@ -269,6 +269,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
         unityGreatGrandParentBlockHeaderValidator = chainConfiguration.createUnityGreatGrandParentHeaderValidator();
+        nonceSeedValidator = chainConfiguration.createNonceSeedValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
 
@@ -1787,9 +1788,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
 
-            return unityParentBlockHeaderValidator.validate(header, parentBlock.getHeader(), LOG, stake) &&
-                    unityGreatGrandParentBlockHeaderValidator.validate(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header, LOG);
-
+            return unityParentBlockHeaderValidator.validate(header, parentBlock.getHeader(), LOG, stake)
+                    && (forkUtility.isNonceForkActive(header.getNumber())
+                            ? nonceSeedValidator.validate(grandparentBlock.getHeader(), parentBlock.getHeader(), header, LOG)
+                            : unityGreatGrandParentBlockHeaderValidator.validate(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header, LOG));
         } else {
             LOG.debug("Invalid header seal type!");
             return false;
