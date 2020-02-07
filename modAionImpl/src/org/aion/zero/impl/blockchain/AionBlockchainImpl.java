@@ -4,6 +4,7 @@ import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.TEN;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
+import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
@@ -1261,6 +1262,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private StakingBlock createNewStakingBlock(
             Block parent, List<AionTransaction> txs, byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
         BlockHeader parentHdr = parent.getHeader();
+        byte[] sealedSeed = newSeed;
 
         if (!forkUtility.isUnityForkActive(parentHdr.getNumber() + 1)) {
             LOG.debug("Unity fork has not been enabled! Can't create the staking blocks");
@@ -1294,7 +1296,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionAddress coinbaseAddress = new AionAddress(coinbase);
         if (signingPublicKey != null) { // Create block template for the external stakers.
-            
             if (!ECKeyEd25519.verify(parentSeed, newSeed, signingPublicKey)) {
                 LOG.debug(
                         "Seed verification failed! oldSeed:{} newSeed{} pKey{}",
@@ -1302,6 +1303,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ByteUtil.toHexString(newSeed),
                         ByteUtil.toHexString(signingPublicKey));
                 return null;
+            }
+
+            if (forkUtility.isNonceForkActive(parentHdr.getNumber() + 1)) {
+                // new seed generation
+                BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
+
+                // retrieve components
+                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
+                byte[] signer = signingPublicKey;
+                byte[] powNonce = ((AionBlock) parent).getNonce();
+                int lastIndex = parentSeed.length + signer.length + powNonce.length;
+                byte[] concatenated = new byte[lastIndex + 1];
+                System.arraycopy(parentSeed, 0, concatenated, 0, parentSeed.length);
+                System.arraycopy(signer, 0, concatenated, parentSeed.length, signer.length);
+                System.arraycopy(powNonce, 0, concatenated, parentSeed.length + signer.length, powNonce.length);
+
+                concatenated[lastIndex] = 0;
+                byte[] hash1 = h256(concatenated);
+                concatenated[lastIndex] = 1;
+                byte[] hash2 = h256(concatenated);
+
+                sealedSeed = new byte[hash1.length + hash2.length];
+                System.arraycopy(hash1, 0, sealedSeed, 0, hash1.length);
+                System.arraycopy(hash2, 0, sealedSeed, hash1.length, hash2.length);
             }
 
             AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey));
@@ -1347,7 +1372,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             .withTxTrieRoot(calcTxTrie(txs))
                             .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
                             .withDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
-                            .withSeed(newSeed)
+                            .withSeed(sealedSeed)
                             .withDefaultStateRoot()
                             .withDefaultReceiptTrieRoot()
                             .withDefaultLogsBloom()
