@@ -43,4 +43,29 @@ public class ForkUtility {
     public boolean isUnityForkBlock(long contextBlockNumber) {
         return unityForkEnabled && (contextBlockNumber == unityForkBlockHeight);
     }
+
+
+    // variables used by the Nonce addition fork
+    private boolean nonceForkEnabled = false;
+    private long nonceForkBlockHeight = Long.MAX_VALUE;
+
+    public void enableNonceFork(long nonceForkBlockHeight) {
+        Preconditions.checkArgument(nonceForkBlockHeight >= 2, "Invalid fork1.3 block number: must be >= 2");
+        this.nonceForkBlockHeight = nonceForkBlockHeight;
+        this.nonceForkEnabled = true;
+    }
+
+    @VisibleForTesting
+    public void disableNonceFork() {
+        this.nonceForkBlockHeight = Long.MAX_VALUE;
+        this.nonceForkEnabled = false;
+    }
+
+    public boolean isNonceForkActive(long contextBlockNumber) {
+        return nonceForkEnabled && (contextBlockNumber > nonceForkBlockHeight);
+    }
+
+    public boolean isNonceForkBlock(long contextBlockNumber) {
+        return nonceForkEnabled && (contextBlockNumber == nonceForkBlockHeight);
+    }
 }
