@@ -1372,7 +1372,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
     
     private BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
-        if (!forkUtility.isUnityForkBlock(block.getNumber())) {
+        if (!forkUtility.isUnityForkBlock(block.getNumber()) && !forkUtility.isNonceForkBlock(block.getNumber())) {
             throw new IllegalArgumentException("This cannot be the parent of the first PoS block");
         } else {
             byte[] stateRoot = block.getStateRoot();
@@ -1402,6 +1402,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (forkUtility.isUnityForkBlock(parentHdr.getNumber())) {
                 // this is the first PoS block, use all zeroes as seed, and totalStake / 10 as difficulty
                 parentSeed = GENESIS_SEED;
+                newDiff = calculateFirstPoSDifficultyAtBlock(parent);
+            } else if (forkUtility.isNonceForkBlock(parentHdr.getNumber())) {
+                BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
+                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
                 newDiff = calculateFirstPoSDifficultyAtBlock(parent);
             } else {
                 Block[] blockFamily = getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
@@ -1777,6 +1781,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     return false;
                 }
                 grandparentBlock = new GenesisStakingBlock(expectedDiff);
+            } else if (forkUtility.isNonceForkBlock(parentBlock.getNumber())) {
+                BigInteger expectedDiff = calculateFirstPoSDifficultyAtBlock(parentBlock);
+                if (!expectedDiff.equals(header.getDifficultyBI())) {
+                    return false;
+                }
             }
 
             BigInteger stake = null;
