@@ -314,6 +314,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             this.forkUtility.enable040Fork(maybe040Fork.get());
         }
 
+        Optional<Long> maybeNonceFork = loadNonceForkNumberFromConfig(CfgAion.inst());
+        if (maybeNonceFork.isPresent()) {
+            if (maybeNonceFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
+                LOG.warn("The nonce fork number cannot be less than 2, set the fork number to 2");
+                maybeNonceFork = Optional.of(2L);
+            }
+
+            this.forkUtility.enableNonceFork(maybeNonceFork.get());
+        }
+
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
     }
@@ -331,6 +341,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Optional.empty();
         } else {
             return Optional.of(Long.valueOf(unityforkSetting));
+        }
+    }
+
+    private static Optional<Long> loadNonceForkNumberFromConfig(CfgAion cfgAion) {
+        String nonceFork = cfgAion.getFork().getProperties().getProperty("fork1.3");
+        if(nonceFork == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(nonceFork));
         }
     }
 
