@@ -4,8 +4,11 @@ import static org.aion.crypto.HashUtil.h256;
 
 import java.util.Arrays;
 import java.util.List;
+import org.aion.crypto.AddressSpecs;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
@@ -27,13 +30,15 @@ public class StakingSeedCreationRule implements GreatGrandParentDependantBlockHe
     public boolean validateInner(StakingBlockHeader stakingParent, A0BlockHeader miningParent, StakingBlockHeader current, List<RuleError> errors) {
         // retrieve components
         byte[] parentSeed = stakingParent.getSeed();
-        byte[] signer = current.getSigningPublicKey();
+        byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(current.getSigningPublicKey())).toByteArray();
+        byte[] powMineHash = miningParent.getMineHash();
         byte[] powNonce = miningParent.getNonce();
-        int lastIndex = parentSeed.length + signer.length + powNonce.length;
+        int lastIndex = parentSeed.length + signerAddress.length + powMineHash.length + powNonce.length;
         byte[] concatenated = new byte[lastIndex + 1];
         System.arraycopy(parentSeed, 0, concatenated, 0, parentSeed.length);
-        System.arraycopy(signer, 0, concatenated, parentSeed.length, signer.length);
-        System.arraycopy(powNonce, 0, concatenated, parentSeed.length + signer.length, powNonce.length);
+        System.arraycopy(signerAddress, 0, concatenated, parentSeed.length, signerAddress.length);
+        System.arraycopy(powMineHash, 0, concatenated, parentSeed.length + signerAddress.length, powMineHash.length);
+        System.arraycopy(powNonce, 0, concatenated, parentSeed.length + signerAddress.length + powMineHash.length, powNonce.length);
 
         concatenated[lastIndex] = 0;
         byte[] hash1 = h256(concatenated);

@@ -189,10 +189,16 @@ public class ChainConfiguration {
 
     public GreatGrandParentBlockHeaderValidator createNonceSeedValidator() {
 
-        List<GreatGrandParentDependantBlockHeaderRule> posRules =
-                Arrays.asList(
-                        new UnityDifficultyRule(this),
-                        new StakingSeedCreationRule());
+        List<GreatGrandParentDependantBlockHeaderRule> posRules = Collections.singletonList(new StakingSeedCreationRule());
+
+        Map<BlockSealType, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
+        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new GreatGrandParentBlockHeaderValidator(unityRules);
+    }
+
+    public GreatGrandParentBlockHeaderValidator createNonceSeedDifficultyValidator() {
+        List<GreatGrandParentDependantBlockHeaderRule> posRules = Collections.singletonList(new UnityDifficultyRule(this));
 
         Map<BlockSealType, List<GreatGrandParentDependantBlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
         unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);

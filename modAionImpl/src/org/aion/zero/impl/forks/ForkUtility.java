@@ -2,6 +2,7 @@ package org.aion.zero.impl.forks;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import java.math.BigInteger;
 
 /** Utility for managing the fork checks. Currently implements only Unity fork functionality. */
 public class ForkUtility {
@@ -84,6 +85,7 @@ public class ForkUtility {
     // variables used by the Nonce addition fork
     private boolean nonceForkEnabled = false;
     private long nonceForkBlockHeight = Long.MAX_VALUE;
+    private BigInteger nonceForkResetDiff;
 
     public void enableNonceFork(long nonceForkBlockHeight) {
         Preconditions.checkArgument(nonceForkBlockHeight >= 2, "Invalid fork1.3 block number: must be >= 2");
@@ -103,5 +105,17 @@ public class ForkUtility {
 
     public boolean isNonceForkBlock(long contextBlockNumber) {
         return nonceForkEnabled && (contextBlockNumber == nonceForkBlockHeight);
+    }
+
+    public void setNonceForkResetDiff(BigInteger newDiff) {
+        nonceForkResetDiff = newDiff;
+    }
+
+    public BigInteger getNonceForkResetDiff() {
+        return nonceForkResetDiff;
+    }
+
+    public long getNonceForkBlockHeight() {
+        return nonceForkBlockHeight;
     }
 }
