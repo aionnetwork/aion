@@ -493,6 +493,13 @@ public class AionHub {
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), ConstantUtil.EMPTY_TRIE_HASH)) {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
+
+        long bestNumber = blockchain.getBestBlock().getNumber();
+        if (blockchain.forkUtility.isNonceForkActive(bestNumber + 1)) {
+            Block block = blockchain.getBlockByNumber(blockchain.forkUtility.getNonceForkBlockHeight());
+            BigInteger newDiff = blockchain.calculateFirstPoSDifficultyAtBlock(block);
+            blockchain.forkUtility.setNonceForkResetDiff(newDiff);
+        }
     }
 
     public void close() {

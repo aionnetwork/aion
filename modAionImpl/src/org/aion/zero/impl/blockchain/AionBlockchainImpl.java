@@ -138,7 +138,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static boolean fork040Enable;
     private final BlockHeaderValidator headerValidator;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
-    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator;
+    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator, nonceSeedDifficultyValidator;;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
     private StakingContractHelper stakingContractHelper = null;
@@ -265,6 +265,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         unityParentBlockHeaderValidator = chainConfig.createUnityParentBlockHeaderValidator();
         preUnityGrandParentBlockHeaderValidator = chainConfiguration.createPreUnityGrandParentHeaderValidator();
         unityGreatGrandParentBlockHeaderValidator = chainConfiguration.createUnityGreatGrandParentHeaderValidator();
+        nonceSeedDifficultyValidator = chainConfiguration.createNonceSeedDifficultyValidator();
         nonceSeedValidator = chainConfiguration.createNonceSeedValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
@@ -1250,7 +1251,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
     
-    private BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
+    public BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
         if (!forkUtility.isUnityForkBlock(block.getNumber()) && !forkUtility.isNonceForkBlock(block.getNumber())) {
             throw new IllegalArgumentException("This cannot be the parent of the first PoS block");
         } else {
@@ -1286,6 +1287,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
                 parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
                 newDiff = calculateFirstPoSDifficultyAtBlock(parent);
+                forkUtility.setNonceForkResetDiff(newDiff);
             } else {
                 BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
                 BlockHeader parentStakingBlocksParent = getParent(parentStakingBlock).getHeader();
@@ -1316,13 +1318,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 // retrieve components
                 parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
-                byte[] signer = signingPublicKey;
+                byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey)).toByteArray();;
+                byte[] powMineHash = ((AionBlock) parent).getHeader().getMineHash();
                 byte[] powNonce = ((AionBlock) parent).getNonce();
-                int lastIndex = parentSeed.length + signer.length + powNonce.length;
+                int lastIndex = parentSeed.length + signerAddress.length + powMineHash.length + powNonce.length;
                 byte[] concatenated = new byte[lastIndex + 1];
                 System.arraycopy(parentSeed, 0, concatenated, 0, parentSeed.length);
-                System.arraycopy(signer, 0, concatenated, parentSeed.length, signer.length);
-                System.arraycopy(powNonce, 0, concatenated, parentSeed.length + signer.length, powNonce.length);
+                System.arraycopy(signerAddress, 0, concatenated, parentSeed.length, signerAddress.length);
+                System.arraycopy(powMineHash, 0, concatenated, parentSeed.length + signerAddress.length, powMineHash.length);
+                System.arraycopy(powNonce, 0, concatenated, parentSeed.length + signerAddress.length + powMineHash.length, powNonce.length);
 
                 concatenated[lastIndex] = 0;
                 byte[] hash1 = h256(concatenated);
@@ -1352,7 +1356,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            long newDelta = StakingDeltaCalculator.calculateDelta(newSeed, newDiff, stakes);
+            long newDelta = StakingDeltaCalculator.calculateDelta(sealedSeed, newDiff, stakes);
 
             newTimestamp =
                     Long.max(
@@ -1451,6 +1455,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
             storeBlock(block, summary.getReceipts(), summary.getSummaries());
 
             flush();
+
+            if (forkUtility.isNonceForkBlock(block.getNumber())) {
+                BigInteger newDiff = calculateFirstPoSDifficultyAtBlock(block);
+                forkUtility.setNonceForkResetDiff(newDiff);
+            }
         }
 
         return summary;
@@ -1679,7 +1688,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             return unityParentBlockHeaderValidator.validate(header, parent.getHeader(), LOG, stake)
                     && (forkUtility.isNonceForkActive(header.getNumber())
-                            ? nonceSeedValidator.validate(grandParent.getHeader(), parent.getHeader(), header, LOG)
+                            ? (nonceSeedValidator.validate(grandParent.getHeader(), parent.getHeader(), header, LOG)
+                                    && (forkUtility.isNonceForkBlock(header.getNumber() - 1)
+                                            ? header.getDifficultyBI().equals(forkUtility.getNonceForkResetDiff())
+                                            : nonceSeedDifficultyValidator.validate(grandParent.getHeader(), greatGrandParent.getHeader(), header, LOG)))
                             : unityGreatGrandParentBlockHeaderValidator.validate(grandParent.getHeader(), greatGrandParent.getHeader(), header, LOG));
 
         } else {
