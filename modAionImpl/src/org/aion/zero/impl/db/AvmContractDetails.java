@@ -343,15 +343,13 @@ public class AvmContractDetails implements StoredContractDetails {
     @Override
     public byte[] getEncoded() {
         byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpStorageRoot;
-        // encoding for AVM
-        rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
-        byte[][] codes = new byte[getCodes().size()][];
+        byte[] rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
+        byte[][] codesArray = new byte[codes.size()][];
         int i = 0;
-        for (byte[] bytes : this.getCodes().values()) {
-            codes[i++] = RLP.encodeElement(bytes);
+        for (byte[] bytes : codes.values()) {
+            codesArray[i++] = RLP.encodeElement(bytes);
         }
-        byte[] rlpCode = RLP.encodeList(codes);
+        byte[] rlpCode = RLP.encodeList(codesArray);
 
         return RLP.encodeList(rlpAddress, rlpStorageRoot, rlpCode);
     }
@@ -412,14 +410,12 @@ public class AvmContractDetails implements StoredContractDetails {
 
     // TODO: move this method up to the parent class.
     private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
-        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
-
-        if (originalCodes == null) {
+        if (codes == null) {
             return null;
         }
 
         Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
-        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
+        for (Entry<ByteArrayWrapper, byte[]> codeEntry : codes.entrySet()) {
 
             byte[] copyOfValue =
                     (codeEntry.getValue() == null)
