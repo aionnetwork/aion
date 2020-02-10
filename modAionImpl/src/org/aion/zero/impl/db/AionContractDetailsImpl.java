@@ -36,7 +36,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     @VisibleForTesting
     static int detailsInMemoryStorageLimit = 64 * 1024;
 
-    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    private Map<ByteArrayWrapper, ByteArrayWrapper> codes = new HashMap<>();
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
@@ -80,10 +80,10 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         this.objectGraphSource = objectGraphSource;
     }
 
-    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
+    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
         this(address, externalStorageSource, objectGraphSource);
         this.storageTrie = storageTrie;
-        setCodes(codes);
+        this.codes = new HashMap<>(codes);
     }
 
     @VisibleForTesting
@@ -96,21 +96,17 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
             return EMPTY_BYTE_ARRAY;
         }
-        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
-        return code == null ? EMPTY_BYTE_ARRAY : code;
+        ByteArrayWrapper code = codes.get(ByteArrayWrapper.wrap(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code.toBytes();
     }
 
     @Override
-    public Map<ByteArrayWrapper, byte[]> getCodes() {
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getCodes() {
         return codes;
     }
 
-    private void setCodes(Map<ByteArrayWrapper, byte[]> codes) {
-        this.codes = new HashMap<>(codes);
-    }
-
     @Override
-    public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+    public void appendCodes(Map<ByteArrayWrapper, ByteArrayWrapper> codes) {
         if (!this.codes.keySet().containsAll(codes.keySet())) {
             this.dirty = true;
         }
@@ -223,7 +219,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
             return;
         }
         try {
-            codes.put(ByteArrayWrapper.wrap(h256(code)), code);
+            codes.put(ByteArrayWrapper.wrap(h256(code)), ByteArrayWrapper.wrap(code));
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -382,8 +378,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
         byte[][] codes = new byte[getCodes().size()][];
         int i = 0;
-        for (byte[] bytes : this.getCodes().values()) {
-            codes[i++] = RLP.encodeElement(bytes);
+        for (ByteArrayWrapper bytes : this.getCodes().values()) {
+            codes[i++] = RLP.encodeElement(bytes.toBytes());
         }
         byte[] rlpCode = RLP.encodeList(codes);
 
@@ -487,7 +483,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             : new SecureTrie(storageTrie.getCache(), storageRootHash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
+            details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
 
             // object graph information
             details.objectGraphHash = graphHash;
@@ -498,7 +494,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                             ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                             : new SecureTrie(storageTrie.getCache(), hash);
             snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-            details = new AionContractDetailsImpl(this.address, snapStorage, getCodes(), this.externalStorageSource, this.objectGraphSource);
+            details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
         }
 
         // vm information
@@ -551,32 +547,11 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                         : Arrays.copyOf(
                                 this.concatenatedStorageHash, this.concatenatedStorageHash.length);
 
-        aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
+        aionContractDetailsCopy.codes = new HashMap<>(codes);
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
         aionContractDetailsCopy.storageTrie = (this.storageTrie == null) ? null : this.storageTrie.copy();
         return aionContractDetailsCopy;
-    }
-
-    // TODO: move this method up to the parent class.
-    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
-        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
-
-        if (originalCodes == null) {
-            return null;
-        }
-
-        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
-        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
-
-            byte[] copyOfValue =
-                    (codeEntry.getValue() == null)
-                            ? null
-                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
-            // the ByteArrayWrapper is immutable
-            copyOfCodes.put(codeEntry.getKey(), copyOfValue);
-        }
-        return copyOfCodes;
     }
 
     @Override
@@ -593,7 +568,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         } else {
             ret.append("  Code: ")
                 .append(codes.keySet().stream()
-                    .map(key -> key + " -> " + Hex.toHexString(codes.get(key)))
+                    .map(key -> key + " -> " + codes.get(key))
                     .collect(Collectors.joining(",\n          ", "{ ", " }")))
                 .append("\n");
         }

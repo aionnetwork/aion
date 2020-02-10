@@ -187,8 +187,8 @@ public class AvmContractDetailsTest {
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
 
         assertThat(details.getCodes().size()).isEqualTo(2);
-        assertThat(details.getCodes().values()).contains(codeBytes1);
-        assertThat(details.getCodes().values()).contains(codeBytes2);
+        assertThat(details.getCodes().values()).contains(ByteArrayWrapper.wrap(codeBytes1));
+        assertThat(details.getCodes().values()).contains(ByteArrayWrapper.wrap(codeBytes2));
         assertThat(details.getCode(h256(codeBytes1))).isEqualTo(codeBytes1);
         assertThat(details.getCode(h256(codeBytes2))).isEqualTo(codeBytes2);
 
@@ -243,7 +243,7 @@ public class AvmContractDetailsTest {
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
 
         assertThat(details.getCodes().size()).isEqualTo(1);
-        assertThat(details.getCodes().values()).contains(codeBytes);
+        assertThat(details.getCodes().values()).contains(ByteArrayWrapper.wrap(codeBytes));
         assertThat(details.getCode(h256(codeBytes))).isEqualTo(codeBytes);
 
         storageHash = trie.getRootHash();
@@ -304,7 +304,7 @@ public class AvmContractDetailsTest {
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
 
         assertThat(details.getCodes().size()).isEqualTo(1);
-        assertThat(details.getCodes().values()).contains(codeBytes);
+        assertThat(details.getCodes().values()).contains(ByteArrayWrapper.wrap(codeBytes));
         assertThat(details.getCode(h256(codeBytes))).isEqualTo(codeBytes);
 
         byte[] concatenated = new byte[storageHash.length + graphHash.length];

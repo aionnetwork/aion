@@ -47,7 +47,7 @@ public class AvmContractDetails implements StoredContractDetails {
     private final ByteArrayKeyValueStore objectGraphSource;
 
     // code variants for the same address on different chains
-    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    private Map<ByteArrayWrapper, ByteArrayWrapper> codes = new HashMap<>();
 
     // attributes that record the current state of the contract
     private boolean dirty = false;
@@ -84,21 +84,21 @@ public class AvmContractDetails implements StoredContractDetails {
         if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
             return EMPTY_BYTE_ARRAY;
         }
-        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
-        return code == null ? EMPTY_BYTE_ARRAY : code;
+        ByteArrayWrapper code = codes.get(ByteArrayWrapper.wrap(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code.toBytes();
     }
 
     @Override
-    public Map<ByteArrayWrapper, byte[]> getCodes() {
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getCodes() {
         return codes;
     }
 
-    private void setCodes(Map<ByteArrayWrapper, byte[]> codes) {
+    private void setCodes(Map<ByteArrayWrapper,ByteArrayWrapper> codes) {
         this.codes = new HashMap<>(codes);
     }
 
     @Override
-    public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+    public void appendCodes(Map<ByteArrayWrapper, ByteArrayWrapper> codes) {
         if (!this.codes.keySet().containsAll(codes.keySet())) {
             this.dirty = true;
         }
@@ -207,7 +207,7 @@ public class AvmContractDetails implements StoredContractDetails {
             return;
         }
         try {
-            codes.put(ByteArrayWrapper.wrap(h256(code)), code);
+            codes.put(ByteArrayWrapper.wrap(h256(code)), ByteArrayWrapper.wrap(code));
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -346,8 +346,8 @@ public class AvmContractDetails implements StoredContractDetails {
         byte[] rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
         byte[][] codesArray = new byte[codes.size()][];
         int i = 0;
-        for (byte[] bytes : codes.values()) {
-            codesArray[i++] = RLP.encodeElement(bytes);
+        for (ByteArrayWrapper bytes : codes.values()) {
+            codesArray[i++] = RLP.encodeElement(bytes.toBytes());
         }
         byte[] rlpCode = RLP.encodeList(codesArray);
 
@@ -401,30 +401,11 @@ public class AvmContractDetails implements StoredContractDetails {
                         ? EMPTY_DATA_HASH
                         : Arrays.copyOf(this.objectGraphHash, this.objectGraphHash.length);
 
-        aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
+        aionContractDetailsCopy.codes = new HashMap<>(codes);
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
         aionContractDetailsCopy.storageTrie = (this.storageTrie == null) ? null : this.storageTrie.copy();
         return aionContractDetailsCopy;
-    }
-
-    // TODO: move this method up to the parent class.
-    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
-        if (codes == null) {
-            return null;
-        }
-
-        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
-        for (Entry<ByteArrayWrapper, byte[]> codeEntry : codes.entrySet()) {
-
-            byte[] copyOfValue =
-                    (codeEntry.getValue() == null)
-                            ? null
-                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
-            // the ByteArrayWrapper is immutable
-            copyOfCodes.put(codeEntry.getKey(), copyOfValue);
-        }
-        return copyOfCodes;
     }
 
     @Override
@@ -441,7 +422,7 @@ public class AvmContractDetails implements StoredContractDetails {
         } else {
             ret.append("  Code: ")
                 .append(codes.keySet().stream()
-                    .map(key -> key + " -> " + Hex.toHexString(codes.get(key)))
+                    .map(key -> key + " -> " + codes.get(key))
                     .collect(Collectors.joining(",\n          ", "{ ", " }")))
                 .append("\n");
         }

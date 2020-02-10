@@ -28,7 +28,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    private Map<ByteArrayWrapper, ByteArrayWrapper> codes = new HashMap<>();
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
@@ -38,13 +38,13 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
-            setCodes(this.origContract.getCodes());
+            this.codes = new HashMap<>(this.origContract.getCodes());
         }
     }
 
     public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
         ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
-        copy.setCodes(new HashMap<>(cache.getCodes()));
+        copy.codes = new HashMap<>(cache.getCodes());
         copy.vmType = cache.vmType;
         if (cache.objectGraph != null) {
             copy.objectGraph = Arrays.copyOf(cache.objectGraph, cache.objectGraph.length);
@@ -60,8 +60,8 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
             return EMPTY_BYTE_ARRAY;
         }
-        byte[] code = codes.get(ByteArrayWrapper.wrap(codeHash));
-        return code == null ? EMPTY_BYTE_ARRAY : code;
+        ByteArrayWrapper code = codes.get(ByteArrayWrapper.wrap(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code.toBytes();
     }
 
     @Override
@@ -70,7 +70,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             return;
         }
         try {
-            codes.put(ByteArrayWrapper.wrap(h256(code)), code);
+            codes.put(ByteArrayWrapper.wrap(h256(code)), ByteArrayWrapper.wrap(code));
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -79,16 +79,12 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     @Override
-    public Map<ByteArrayWrapper, byte[]> getCodes() {
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getCodes() {
         return codes;
     }
 
-    private void setCodes(Map<ByteArrayWrapper, byte[]> codes) {
-        this.codes = new HashMap<>(codes);
-    }
-
     @Override
-    public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
+    public void appendCodes(Map<ByteArrayWrapper, ByteArrayWrapper> codes) {
         if (!this.codes.keySet().containsAll(codes.keySet())) {
             this.dirty = true;
         }
@@ -324,30 +320,10 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);
         }
         copy.storage = getDeepCopyOfStorage();
-        copy.setCodes(getDeepCopyOfCodes());
+        copy.codes = new HashMap<>(codes);
         copy.dirty = this.dirty;
         copy.deleted = this.deleted;
         return copy;
-    }
-
-    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
-        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
-
-        if (originalCodes == null) {
-            return null;
-        }
-
-        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
-        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
-
-            byte[] copyOfValue =
-                    (codeEntry.getValue() == null)
-                            ? null
-                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
-            // the ByteArrayWrapper is immutable
-            copyOfCodes.put(codeEntry.getKey(), copyOfValue);
-        }
-        return copyOfCodes;
     }
 
     private Map<ByteArrayWrapper, ByteArrayWrapper> getDeepCopyOfStorage() {
@@ -377,7 +353,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         } else {
             ret.append("  Code: ")
                 .append(codes.keySet().stream()
-                    .map(key -> key + " -> " + Hex.toHexString(codes.get(key)))
+                    .map(key -> key + " -> " + codes.get(key))
                     .collect(Collectors.joining(",\n          ", "{ ", " }")))
                 .append("\n");
         }

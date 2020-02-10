@@ -41,7 +41,7 @@ public interface ContractDetails {
     byte[] getCode(byte[] codeHash);
 
     /** Returns all the stored codes keyed by their code hashes. */
-    Map<ByteArrayWrapper, byte[]> getCodes();
+    Map<ByteArrayWrapper, ByteArrayWrapper> getCodes();
 
     /**
      * Sets the code of the associated address to code.
@@ -51,7 +51,7 @@ public interface ContractDetails {
     void setCode(byte[] code);
 
     /** Stores all the given codes. */
-    void appendCodes(Map<ByteArrayWrapper, byte[]> codes);
+    void appendCodes(Map<ByteArrayWrapper, ByteArrayWrapper> codes);
 
     /**
      * Returns the transaction type used to deploy the contract indicating which VM was used.
