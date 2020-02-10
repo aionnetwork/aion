@@ -266,11 +266,20 @@ public class AvmContractDetails implements StoredContractDetails {
     }
 
     /**
-     * Decodes an AvmContractDetails object from the RLP encoding.
+     * Decodes an AvmContractDetails object from the RLP encoding and returns a snapshot to the
+     * specific point in the blockchain history given by the consensus root hash.
      *
-     * @param input The encoding to decode.
+     * @param input the stored encoding representing the contract details
+     * @param storageSource the data source for the contract storage data
+     * @param objectGraphSource the data source for the object graph
+     * @param consensusRoot the consensus root linking to specific external storage and object graph
+     *     data at the point of interest in the blockchain history
+     * @return a snapshot of the contract details with the information it contained at the specified
+     *     point in the blockchain history
      */
-    public static AvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+    public static AvmContractDetails decodeAtRoot(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource, byte[] consensusRoot) {
+        Objects.requireNonNull(input, "The contract data for the snapshot cannot be null.");
+        // additional null check are performed by the constructor
         AvmContractDetails details = new AvmContractDetails(input.address, storageSource, objectGraphSource);
 
         RLPElement code = input.code;
@@ -284,12 +293,11 @@ public class AvmContractDetails implements StoredContractDetails {
 
         // The root is the concatenated storage hash.
         // It points to the external storage hash and the object graph hash.
-        RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash;
-        Optional<byte[]> concatenatedData = details.objectGraphSource.get(root.getRLPData());
+        Optional<byte[]> concatenatedData = details.objectGraphSource.get(consensusRoot);
         if (concatenatedData.isPresent()) {
             RLPList data = RLP.decode2(concatenatedData.get());
             if (!(data.get(0) instanceof RLPList)) {
@@ -303,14 +311,9 @@ public class AvmContractDetails implements StoredContractDetails {
             storageRootHash = pair.get(0).getRLPData();
             details.objectGraphHash = pair.get(1).getRLPData();
         } else {
-            // An AVM contract should always have the object graph when written to disk.
-            // As a result the concatenated storage hash should not be missing from the database.
-            // TODO: throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
-            // However, the key to the details can be shared with FVM contracts and
-            // the 2 step process (1) decode the details and (2) move to the correct snapshot root
-            // makes it possible for the object graph to be missing when the decode is processed.
-            storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-            details.objectGraphHash = EMPTY_DATA_HASH;
+            // An AVM contract must always have the object graph when written to disk.
+            // As a result the concatenated storage hash cannot be missing from the database.
+            throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
         }
 
         // load/deserialize storage trie
@@ -322,6 +325,10 @@ public class AvmContractDetails implements StoredContractDetails {
             // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
             details.storageTrie.sync();
+        }
+
+        if (Arrays.equals(storageRootHash, ConstantUtil.EMPTY_TRIE_HASH)) {
+            details.storageTrie = new SecureTrie(details.storageTrie.getCache(), "".getBytes());
         }
         return details;
     }
@@ -370,54 +377,6 @@ public class AvmContractDetails implements StoredContractDetails {
         objectGraphSource.put(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
 
         storageTrie.sync();
-    }
-
-    /**
-     * Returns an AvmContractDetails object pertaining to a specific point in time given by the
-     * storage root hash.
-     *
-     * @param hash the storage root hash to search for
-     * @return the specified AvmContractDetails.
-     */
-    public AvmContractDetails getSnapshotTo(byte[] hash) {
-        SecureTrie snapStorage;
-        AvmContractDetails details;
-        byte[] storageRootHash, graphHash;
-        // get the concatenated storage hash from storage
-        Optional<byte[]> concatenatedData = objectGraphSource.get(hash);
-        if (concatenatedData.isPresent()) {
-            RLPList data = RLP.decode2(concatenatedData.get());
-            if (!(data.get(0) instanceof RLPList)) {
-                throw new IllegalArgumentException(
-                        "rlp decode error: invalid concatenated storage for AVM");
-            }
-            RLPList pair = (RLPList) data.get(0);
-            if (pair.size() != 2) {
-                throw new IllegalArgumentException(
-                        "rlp decode error: invalid concatenated storage for AVM");
-            }
-
-            storageRootHash = pair.get(0).getRLPData();
-            graphHash = pair.get(1).getRLPData();
-        } else {
-            storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-            graphHash = EMPTY_DATA_HASH;
-        }
-
-        snapStorage =
-                wrap(storageRootHash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                        : new SecureTrie(storageTrie.getCache(), storageRootHash);
-        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-        details = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
-        details.storageTrie = snapStorage;
-        details.setCodes(getCodes());
-
-        // object graph information
-        details.objectGraphHash = graphHash;
-
-        return details;
     }
 
     /**

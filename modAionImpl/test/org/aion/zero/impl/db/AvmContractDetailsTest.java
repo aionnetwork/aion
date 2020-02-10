@@ -1,6 +1,7 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.mockito.Mockito.mock;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 public class AvmContractDetailsTest {
     @Mock AionAddress mockAddress;
     @Mock ByteArrayKeyValueStore mockDatabase;
+    @Mock RLPContractDetails mockInput;
 
     @Before
     public void setup() {
@@ -74,6 +76,26 @@ public class AvmContractDetailsTest {
         assertThat(details.getCodes()).isEmpty();
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullInput() {
+        AvmContractDetails.decodeAtRoot(null, mockDatabase, mockDatabase, new byte[32]);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullStorageDatabase() {
+        AvmContractDetails.decodeAtRoot(mockInput, null, mockDatabase, new byte[32]);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullGraphDatabase() {
+        AvmContractDetails.decodeAtRoot(mockInput, mockDatabase, null, new byte[32]);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullRoot() {
+        AvmContractDetails.decodeAtRoot(mockInput, mockDatabase, mockDatabase, null);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testDecode_withIncorrectEncodingForConcatenatedData() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
@@ -92,7 +114,7 @@ public class AvmContractDetailsTest {
         when(mockDatabase.get(rootHash)).thenReturn(Optional.of(RLP.encodeElement(storageHash)));
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
-        AvmContractDetails.decode(input, mockDatabase, mockDatabase);
+        AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, rootHash);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -113,11 +135,10 @@ public class AvmContractDetailsTest {
         when(mockDatabase.get(rootHash)).thenReturn(Optional.of(RLP.encodeList(RLP.encodeElement(storageHash))));
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
-        AvmContractDetails.decode(input, mockDatabase, mockDatabase);
+        AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, rootHash);
     }
 
-    // TODO: after snapshot refactor, change to: @Test(expected = IllegalArgumentException.class)
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testDecode_withMissingConcatenatedData() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
@@ -134,8 +155,7 @@ public class AvmContractDetailsTest {
         when(mockDatabase.get(rootHash)).thenReturn(Optional.empty());
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
-        AvmContractDetails details = AvmContractDetails.decode(input, mockDatabase, mockDatabase);
-        assertThat(details.getObjectGraph()).isEqualTo(EMPTY_BYTE_ARRAY);
+        AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, rootHash);
     }
 
     @Test
@@ -160,7 +180,7 @@ public class AvmContractDetailsTest {
         when(mockDatabase.get(graphHash)).thenReturn(Optional.of(graphBytes));
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
-        AvmContractDetails details = AvmContractDetails.decode(input, mockDatabase, mockDatabase);
+        AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, rootHash);
         assertThat(details.getAddress()).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
@@ -181,13 +201,13 @@ public class AvmContractDetailsTest {
     @Test
     public void testDecode_withInLineStorageAndTransition() {
         SecureTrie trie = new SecureTrie(null);
-        Map<ByteArrayWrapper, byte[]> storage = new HashMap<>();
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
         for (int i = 0; i < 3; i++) {
             byte[] key = RandomUtils.nextBytes(32);
             byte[] value = RandomUtils.nextBytes(100);
 
-            trie.update(key, value);
-            storage.put(ByteArrayWrapper.wrap(key), value);
+            trie.update(key, RLP.encodeElement(value));
+            storage.put(ByteArrayWrapper.wrap(key), ByteArrayWrapper.wrap(value));
         }
 
         RLPElement storageTrie = mock(RLPItem.class);
@@ -216,7 +236,7 @@ public class AvmContractDetailsTest {
         assertThat(db.isEmpty()).isTrue();
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
-        AvmContractDetails details = AvmContractDetails.decode(input, db, mockDatabase);
+        AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, db, mockDatabase, rootHash);
         assertThat(details.getAddress()).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
@@ -231,6 +251,70 @@ public class AvmContractDetailsTest {
         System.arraycopy(storageHash, 0, concatenated, 0, storageHash.length);
         System.arraycopy(graphHash, 0, concatenated, storageHash.length, graphHash.length);
         assertThat(details.getStorageHash()).isEqualTo(h256(concatenated));
+
+        for (ByteArrayWrapper key : storage.keySet()) {
+            assertThat(details.get(key)).isEqualTo(storage.get(key));
+        }
+
+        assertThat(db.isEmpty()).isFalse();
+    }
+
+    @Test
+    public void testDecode_withInLineStorageAndEmptyStorageTrie() {
+        SecureTrie trie = new SecureTrie(null);
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+        for (int i = 0; i < 3; i++) {
+            byte[] key = RandomUtils.nextBytes(32);
+            byte[] value = RandomUtils.nextBytes(100);
+
+            trie.update(key, RLP.encodeElement(value));
+            storage.put(ByteArrayWrapper.wrap(key), ByteArrayWrapper.wrap(value));
+        }
+
+        RLPElement storageTrie = mock(RLPItem.class);
+        when(storageTrie.getRLPData()).thenReturn(trie.serialize());
+
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+
+        byte[] codeBytes = RandomUtils.nextBytes(100);
+        RLPElement code = mock(RLPItem.class);
+        when(code.getRLPData()).thenReturn(codeBytes);
+
+        byte[] rootHash = RandomUtils.nextBytes(32);
+        RLPElement root = mock(RLPItem.class);
+        when(root.getRLPData()).thenReturn(rootHash);
+
+        byte[] storageHash = EMPTY_TRIE_HASH;
+
+        byte[] graphHash = RandomUtils.nextBytes(32);
+        byte[] graphBytes = RandomUtils.nextBytes(100);
+        when(mockDatabase.get(rootHash)).thenReturn(Optional.of(RLP.encodeList(RLP.encodeElement(storageHash), RLP.encodeElement(graphHash))));
+        when(mockDatabase.get(graphHash)).thenReturn(Optional.of(graphBytes));
+
+        Logger log = mock(Logger.class);
+        ByteArrayKeyValueDatabase db = new MockDB("db", log);
+        db.open();
+        assertThat(db.isEmpty()).isTrue();
+
+        RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
+        AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, db, mockDatabase, rootHash);
+        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
+        assertThat(details.isDeleted()).isFalse();
+        assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
+
+        assertThat(details.getCodes().size()).isEqualTo(1);
+        assertThat(details.getCodes().values()).contains(codeBytes);
+        assertThat(details.getCode(h256(codeBytes))).isEqualTo(codeBytes);
+
+        byte[] concatenated = new byte[storageHash.length + graphHash.length];
+        System.arraycopy(storageHash, 0, concatenated, 0, storageHash.length);
+        System.arraycopy(graphHash, 0, concatenated, storageHash.length, graphHash.length);
+        assertThat(details.getStorageHash()).isEqualTo(h256(concatenated));
+
+        for (ByteArrayWrapper key : storage.keySet()) {
+            assertThat(details.get(key)).isNull();
+        }
 
         assertThat(db.isEmpty()).isFalse();
     }
