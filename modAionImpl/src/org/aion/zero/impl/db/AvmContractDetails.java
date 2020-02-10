@@ -3,7 +3,6 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,7 +52,7 @@ public class AvmContractDetails implements StoredContractDetails {
     // attributes that record the current state of the contract
     private boolean dirty = false;
     private boolean deleted = false;
-    private byte[] objectGraph = null; // consumer classed expect the initial value to be null
+    private ByteArrayWrapper objectGraph = null;
     private byte[] objectGraphHash = EMPTY_DATA_HASH;
     private SecureTrie storageTrie;
 
@@ -225,19 +224,19 @@ public class AvmContractDetails implements StoredContractDetails {
             } else {
                 // note: the enforced use of optional is rather cumbersome here
                 Optional<byte[]> dbVal = objectGraphSource.get(objectGraphHash);
-                objectGraph = dbVal.orElse(null);
+                objectGraph = dbVal.map(ByteArrayWrapper::wrap).orElse(null);
             }
         }
 
-        return objectGraph == null ? EMPTY_BYTE_ARRAY : objectGraph;
+        return objectGraph == null ? EMPTY_BYTE_ARRAY : objectGraph.toBytes();
     }
     /** @throws NullPointerException when the given parameters is null. */
     @Override
-    public void setObjectGraph(byte[] graph) {
+    public void setObjectGraph(final byte[] graph) {
         Objects.requireNonNull(graph);
 
-        this.objectGraph = graph;
-        this.objectGraphHash = h256(objectGraph);
+        objectGraph = ByteArrayWrapper.wrap(graph);
+        objectGraphHash = h256(graph);
 
         dirty = true;
     }
@@ -398,10 +397,7 @@ public class AvmContractDetails implements StoredContractDetails {
         AvmContractDetails aionContractDetailsCopy = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
 
         // object graph information
-        aionContractDetailsCopy.objectGraph =
-                objectGraph == null
-                        ? null
-                        : Arrays.copyOf(this.objectGraph, this.objectGraph.length);
+        aionContractDetailsCopy.objectGraph = objectGraph; // can pass reference since the class is immutable
         aionContractDetailsCopy.objectGraphHash =
                 Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)
                         ? EMPTY_DATA_HASH
