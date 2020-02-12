@@ -10,6 +10,7 @@ import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.db.store.XorDataSource;
 import org.aion.mcf.db.InternalVmType;
+import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -103,8 +104,10 @@ public class DetailsDataStore {
         ByteArrayKeyValueStore graph = createGraphSource(address);
         if (vm == InternalVmType.AVM) {
             return new AvmContractDetails(address, storage, graph);
-        } else {
+        } else if (vm == InternalVmType.FVM || ContractInfo.isPrecompiledContract(address)) {
             return new AionContractDetailsImpl(address, storage, graph);
+        } else {
+            throw new IllegalArgumentException("The given VM=" + vm + " does not correspond to a type of contract.");
         }
     }
 
