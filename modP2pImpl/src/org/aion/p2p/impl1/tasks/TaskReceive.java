@@ -37,13 +37,13 @@ public class TaskReceive implements Runnable {
                 startTime = System.nanoTime();
                 MsgIn mi = this.receiveMsgQue.take();
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskReceive: retrieve message, duration = {} ns.", duration);
+                surveyLog.debug("TaskReceive: retrieve message, duration = {} ns.", duration);
 
                 startTime = System.nanoTime();
                 List<Handler> hs = this.handlers.get(mi.getRoute());
                 if (hs == null) {
                     duration = System.nanoTime() - startTime;
-                    surveyLog.info("TaskReceive: process message, duration = {} ns.", duration);
+                    surveyLog.debug("TaskReceive: process message, duration = {} ns.", duration);
                     continue;
                 }
                 for (Handler hlr : hs) {
@@ -60,7 +60,7 @@ public class TaskReceive implements Runnable {
                     }
                 }
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskReceive: process message, duration = {} ns.", duration);
+                surveyLog.debug("TaskReceive: process message, duration = {} ns.", duration);
             } catch (InterruptedException e) {
                 p2pLOG.error("TaskReceive interrupted.", e);
                 return;

@@ -91,6 +91,6 @@ public final class ResStatusHandler extends Handler {
             }
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("Receive Stage 1: process status, duration = {} ns.", duration);
+        surveyLog.debug("Receive Stage 1: process status, duration = {} ns.", duration);
     }
 }

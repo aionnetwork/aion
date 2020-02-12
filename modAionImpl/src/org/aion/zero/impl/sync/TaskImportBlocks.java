@@ -85,7 +85,7 @@ final class TaskImportBlocks implements Runnable {
                 startTime = System.nanoTime();
                 bw = sortedBlocks.take();
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 1.B: wait for sorted blocks, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 1.B: wait for sorted blocks, duration = {} ns.", duration);
             } catch (InterruptedException ex) {
                 if (start.get()) {
                     log.error("Import blocks thread interrupted without shutdown request.", ex);
@@ -96,7 +96,7 @@ final class TaskImportBlocks implements Runnable {
             startTime = System.nanoTime();
             SyncMode syncMode = syncHeaderRequestManager.getSyncMode(bw.nodeId);
             duration = System.nanoTime() - startTime;
-            surveyLog.info("Import Stage 2: wait for peer state, duration = {} ns.", duration);
+            surveyLog.debug("Import Stage 2: wait for peer state, duration = {} ns.", duration);
 
             if (syncMode == null) {
                 // ignoring these blocks
@@ -105,13 +105,13 @@ final class TaskImportBlocks implements Runnable {
                 startTime = System.nanoTime();
                 List<Block> batch = filterBatch(bw.blocks, chain, importedBlockHashes);
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 3: filter batch, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 3: filter batch, duration = {} ns.", duration);
 
                 startTime = System.nanoTime();
                 // process batch and update the peer state
                 SyncMode newMode = processBatch(syncMode, batch, bw.displayId);
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
 
                 // transition to recommended sync mode
                 if (syncMode != newMode) {
@@ -246,11 +246,11 @@ final class TaskImportBlocks implements Runnable {
                     // check if it is below the current importable blocks
                     if (b.getNumber() <= getBestBlockNumber() + 1) {
                         duration = System.nanoTime() - startTime;
-                        surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+                        surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
                         return BACKWARD;
                     }
                     duration = System.nanoTime() - startTime;
-                    surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+                    surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
                     return returnMode;
                 } else if (importResult.isStored()) {
                     if (syncMode == BACKWARD) {
@@ -262,7 +262,7 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("Import Stage 4.A: import received batch, duration = {} ns.", duration);
+        surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
 
         startTime = System.nanoTime();
         // check for stored blocks
@@ -270,7 +270,7 @@ final class TaskImportBlocks implements Runnable {
             returnMode = importFromStorage(returnMode, first, last);
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
+        surveyLog.debug("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
 
         return returnMode;
     }
@@ -364,7 +364,7 @@ final class TaskImportBlocks implements Runnable {
             Map<ByteArrayWrapper, List<Block>> levelFromDisk =
                     chain.loadPendingBlocksAtLevel(level);
             duration = System.nanoTime() - startTime;
-            surveyLog.info("Import Stage 4.B.i: load batch from disk, duration = {} ns.", duration);
+            surveyLog.debug("Import Stage 4.B.i: load batch from disk, duration = {} ns.", duration);
 
             if (levelFromDisk.isEmpty()) {
                 // move on to next level
@@ -392,7 +392,7 @@ final class TaskImportBlocks implements Runnable {
                 // filter already imported blocks
                 batchFromDisk = filterBatch(batchFromDisk, chain, importedBlockHashes);
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 4.B.ii: filter batch from disk, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 4.B.ii: filter batch from disk, duration = {} ns.", duration);
 
                 if (!batchFromDisk.isEmpty()) {
                     if (log.isDebugEnabled()) {
@@ -440,7 +440,7 @@ final class TaskImportBlocks implements Runnable {
                     }
                 }
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 4.B.iii: import batch from disk, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 4.B.iii: import batch from disk, duration = {} ns.", duration);
 
                 imported += batch;
             }

@@ -222,7 +222,7 @@ public class SyncHeaderRequestManager {
         }
 
         long duration = System.nanoTime() - startTime;
-        surveyLog.info(
+        surveyLog.debug(
                 "Request Stage 2: made {} header request{}, duration = {} ns.",
                 count,
                 (count == 1 ? "" : "s"),

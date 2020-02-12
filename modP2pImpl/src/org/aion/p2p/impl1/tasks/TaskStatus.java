@@ -54,7 +54,7 @@ public class TaskStatus implements Runnable {
                     p2pLOG.info(status);
                 }
                 long duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskStatus: duration = {} ns.", duration);
+                surveyLog.debug("TaskStatus: duration = {} ns.", duration);
             } catch (InterruptedException e) {
                 p2pLOG.warn("P2p taskStatus InterruptedException! ", e);
             } catch (Exception e) {

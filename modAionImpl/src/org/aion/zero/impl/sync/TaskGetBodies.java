@@ -64,11 +64,11 @@ final class TaskGetBodies implements Runnable {
                 hw = downloadedHeaders.take();
             } catch (InterruptedException e) {
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("TaskGetBodies: wait for headers, duration = {} ns.", duration);
+                surveyLog.debug("TaskGetBodies: wait for headers, duration = {} ns.", duration);
                 continue;
             }
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskGetBodies: wait for headers, duration = {} ns.", duration);
+            surveyLog.debug("TaskGetBodies: wait for headers, duration = {} ns.", duration);
 
             startTime = System.nanoTime();
             int idHash = hw.nodeId;
@@ -90,7 +90,7 @@ final class TaskGetBodies implements Runnable {
             stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
 
             duration = System.nanoTime() - startTime;
-            surveyLog.info("TaskGetBodies: make request, duration = {} ns.", duration);
+            surveyLog.debug("TaskGetBodies: make request, duration = {} ns.", duration);
         }
     }
 }

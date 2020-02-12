@@ -67,7 +67,7 @@ public class TaskSend implements Runnable {
                 duration = System.nanoTime() - startTime;
                 waitTime += duration;
                 if (waitTime > MIN_DURATION) { // print and reset total time so far
-                    surveyLog.info("TaskSend: wait for message, duration = {} ns.", waitTime);
+                    surveyLog.debug("TaskSend: wait for message, duration = {} ns.", waitTime);
                     waitTime = 0;
                 }
 
@@ -76,7 +76,7 @@ public class TaskSend implements Runnable {
                 duration = System.nanoTime() - startTime;
                 fullProcessTime += duration;
                 if (fullProcessTime > MIN_DURATION) { // print and reset total time so far
-                    surveyLog.info("TaskSend: full process message, duration = {} ns.", fullProcessTime);
+                    surveyLog.debug("TaskSend: full process message, duration = {} ns.", fullProcessTime);
                     fullProcessTime = 0;
                 }
             } catch (InterruptedException e) {
@@ -90,14 +90,14 @@ public class TaskSend implements Runnable {
         }
 
         // print remaining total times
-        surveyLog.info("TaskSend: wait for message, duration = {} ns.", waitTime);
-        surveyLog.info("TaskSend: full process message, duration = {} ns.", fullProcessTime);
-        surveyLog.info("TaskSend: timeout, duration = {} ns.", timeoutTime);
-        surveyLog.info("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
-        surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
-        surveyLog.info("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
-        surveyLog.info("TaskSend: write message, duration = {} ns.", writeTime);
-        surveyLog.info("TaskSend: start to end of write try, duration = {} ns.", tryTime);
+        surveyLog.debug("TaskSend: wait for message, duration = {} ns.", waitTime);
+        surveyLog.debug("TaskSend: full process message, duration = {} ns.", fullProcessTime);
+        surveyLog.debug("TaskSend: timeout, duration = {} ns.", timeoutTime);
+        surveyLog.debug("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
+        surveyLog.debug("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
+        surveyLog.debug("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
+        surveyLog.debug("TaskSend: write message, duration = {} ns.", writeTime);
+        surveyLog.debug("TaskSend: start to end of write try, duration = {} ns.", tryTime);
     }
 
     /**
@@ -120,7 +120,7 @@ public class TaskSend implements Runnable {
             duration = System.nanoTime() - startTime;
             timeoutTime += duration;
             if (timeoutTime > MIN_DURATION) { // print and reset total time so far
-                surveyLog.info("TaskSend: timeout, duration = {} ns.", timeoutTime);
+                surveyLog.debug("TaskSend: timeout, duration = {} ns.", timeoutTime);
                 timeoutTime = 0;
             }
             return false;
@@ -151,7 +151,7 @@ public class TaskSend implements Runnable {
         duration = System.nanoTime() - startTime;
         internalProcessTime += duration;
         if (internalProcessTime > MIN_DURATION) { // print and reset total time so far
-            surveyLog.info("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
+            surveyLog.debug("TaskSend: internal process message, duration = {} ns.", internalProcessTime);
             internalProcessTime = 0;
         }
         return true;
@@ -181,7 +181,7 @@ public class TaskSend implements Runnable {
         duration = System.nanoTime() - startTime;
         closedCheckTime += duration;
         if (closedCheckTime > MIN_DURATION) { // print and reset total time so far
-            surveyLog.info("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
+            surveyLog.debug("TaskSend: check for closed channel, duration = {} ns.", closedCheckTime);
             closedCheckTime = 0;
         }
 
@@ -210,7 +210,7 @@ public class TaskSend implements Runnable {
             duration = System.nanoTime() - startTime;
             setupWriteTime += duration;
             if (setupWriteTime > MIN_DURATION) { // print and reset total time so far
-                surveyLog.info("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
+                surveyLog.debug("TaskSend: setup for write, duration = {} ns.", setupWriteTime);
                 setupWriteTime = 0;
             }
 
@@ -233,7 +233,7 @@ public class TaskSend implements Runnable {
                 duration = System.nanoTime() - startTime;
                 writeTime += duration;
                 if (writeTime > MIN_DURATION) { // print and reset total time so far
-                    surveyLog.info("TaskSend: write message, duration = {} ns.", writeTime);
+                    surveyLog.debug("TaskSend: write message, duration = {} ns.", writeTime);
                     writeTime = 0;
                 }
 
@@ -272,7 +272,7 @@ public class TaskSend implements Runnable {
             duration = System.nanoTime() - startTime2;
             tryTime += duration;
             if (tryTime > MIN_DURATION) { // print and reset total time so far
-                surveyLog.info("TaskSend: start to end of write try, duration = {} ns.", tryTime);
+                surveyLog.debug("TaskSend: start to end of write try, duration = {} ns.", tryTime);
                 tryTime = 0;
             }
             channelBuffer.lock.unlock();

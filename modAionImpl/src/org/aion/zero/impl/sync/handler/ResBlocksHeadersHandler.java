@@ -43,7 +43,7 @@ public final class ResBlocksHeadersHandler extends Handler {
         startTime = System.nanoTime();
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes, log);
         duration = System.nanoTime() - startTime;
-        surveyLog.info("Receive Stage 2: decode headers, duration = {} ns.", duration);
+        surveyLog.debug("Receive Stage 2: decode headers, duration = {} ns.", duration);
 
         startTime = System.nanoTime();
         if (resHeaders != null) {
@@ -79,6 +79,6 @@ public final class ResBlocksHeadersHandler extends Handler {
             }
         }
         duration = System.nanoTime() - startTime;
-        surveyLog.info("Receive Stage 3: validate headers, duration = {} ns.", duration);
+        surveyLog.debug("Receive Stage 3: validate headers, duration = {} ns.", duration);
     }
 }

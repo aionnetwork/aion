@@ -104,7 +104,7 @@ public class TaskInbound implements Runnable {
             duration = System.nanoTime() - startTime;
             waitTime += duration;
             if (waitTime > MIN_DURATION) { // print and reset total time so far
-                surveyLog.info("TaskInbound: find selectors, duration = {} ns.", waitTime);
+                surveyLog.debug("TaskInbound: find selectors, duration = {} ns.", waitTime);
                 waitTime = 0;
             }
 
@@ -150,14 +150,14 @@ public class TaskInbound implements Runnable {
             duration = System.nanoTime() - startTime;
             processTime += duration;
             if (processTime > MIN_DURATION) { // print and reset total time so far
-                surveyLog.info("TaskInbound: process incoming msg, duration = {} ns.", processTime);
+                surveyLog.debug("TaskInbound: process incoming msg, duration = {} ns.", processTime);
                 processTime = 0;
             }
         }
 
         // print remaining total times
-        surveyLog.info("TaskInbound: find selectors, duration = {} ns.", waitTime);
-        surveyLog.info("TaskInbound: process incoming msg, duration = {} ns.", processTime);
+        surveyLog.debug("TaskInbound: find selectors, duration = {} ns.", waitTime);
+        surveyLog.debug("TaskInbound: process incoming msg, duration = {} ns.", processTime);
 
         p2pLOG.info("p2p-pi shutdown");
     }

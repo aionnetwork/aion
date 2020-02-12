@@ -52,7 +52,7 @@ public final class BroadcastNewBlockHandler extends Handler {
                 log.trace("new-block-handler dump: {}", ByteUtil.toHexString(_msgBytes));
             }
             duration = System.nanoTime() - startTime;
-            surveyLog.info("Receive Stage 6: process propagated block, duration = {} ns.", duration);
+            surveyLog.debug("Receive Stage 6: process propagated block, duration = {} ns.", duration);
             return;
         }
 
@@ -67,7 +67,7 @@ public final class BroadcastNewBlockHandler extends Handler {
                         this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Receive Stage 6: process propagated block, duration = {} ns.", duration);
+                surveyLog.debug("Receive Stage 6: process propagated block, duration = {} ns.", duration);
 
                 if (this.log.isDebugEnabled()) {
                     String hash = block.getShortHash();

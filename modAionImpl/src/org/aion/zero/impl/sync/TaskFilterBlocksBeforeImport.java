@@ -61,7 +61,7 @@ final class TaskFilterBlocksBeforeImport implements Runnable {
                 startTime = System.nanoTime();
                 BlocksWrapper bw = downloadedBlocks.take();
                 duration = System.nanoTime() - startTime;
-                surveyLog.info("Import Stage 1.A: wait for downloaded blocks, duration = {} ns.", duration);
+                surveyLog.debug("Import Stage 1.A: wait for downloaded blocks, duration = {} ns.", duration);
 
                 long currentBest = getBestBlockNumber();
                 boolean isFarInFuture = bw.firstBlockNumber > currentBest + MAX_STORAGE_DIFF;
