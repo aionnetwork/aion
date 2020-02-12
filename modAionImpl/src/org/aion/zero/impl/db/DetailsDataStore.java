@@ -81,8 +81,8 @@ public class DetailsDataStore {
             if (vm == InternalVmType.AVM) {
                 return AvmContractDetails.decodeAtRoot(rlpDetails, storage, graph, storageRoot);
             } else if (vm == InternalVmType.FVM) {
-                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, vm, storage, graph);
-                return detailsImpl.getSnapshotTo(storageRoot, vm);
+                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, storage, graph);
+                return detailsImpl.getSnapshotTo(storageRoot);
             } else {
                 // This may be a regular account or a contract that is not stored yet.
                 // There is no need to instantiate a ContractDetails object.

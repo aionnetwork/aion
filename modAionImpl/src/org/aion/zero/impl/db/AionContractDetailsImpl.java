@@ -40,9 +40,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     // classes extending this rely on this value starting off as null
     private byte[] objectGraph = null;
 
-    // using the default transaction type to specify undefined VM
-    private InternalVmType vmType = InternalVmType.EITHER;
-
     private final ByteArrayKeyValueStore externalStorageSource;
     private final ByteArrayKeyValueStore objectGraphSource;
 
@@ -72,9 +69,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
             this.address = address;
-            if (ContractInfo.isPrecompiledContract(address)) {
-                setVmType(InternalVmType.FVM);
-            }
         }
         this.externalStorageSource = externalStorageSource;
         this.objectGraphSource = objectGraphSource;
@@ -202,15 +196,11 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     public void setVmType(InternalVmType vmType) {
-        if (this.vmType != vmType
-                && vmType != InternalVmType.EITHER
-                && vmType != InternalVmType.UNKNOWN) {
-            this.vmType = vmType;
-        }
+        // nothing to do
     }
 
     public InternalVmType getVmType() {
-        return vmType;
+        return InternalVmType.FVM;
     }
 
     @Override
@@ -260,28 +250,11 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     @Override
     public byte[] getStorageHash() {
-        if (vmType == InternalVmType.AVM) {
-            return computeAvmStorageHash();
-        } else {
-            return storageTrie.getRootHash();
-        }
+        return storageTrie.getRootHash();
     }
 
-    /**
-     * Computes the concatenated storage hash used by the AVM by concatenating 1: the storage root
-     * and 2: the object graph and hashing the result.
-     */
-    private byte[] computeAvmStorageHash() {
-        byte[] storageRoot = storageTrie.getRootHash();
-        byte[] graphHash = objectGraphHash;
-        byte[] concatenated = new byte[storageRoot.length + graphHash.length];
-        System.arraycopy(storageRoot, 0, concatenated, 0, storageRoot.length);
-        System.arraycopy(graphHash, 0, concatenated, storageRoot.length, graphHash.length);
-        return h256(concatenated);
-    }
-
-    public static AionContractDetailsImpl decode(RLPContractDetails input, InternalVmType vm) {
-        return decode(input, vm, null, null);
+    public static AionContractDetailsImpl decode(RLPContractDetails input) {
+        return decode(input, null, null);
     }
 
     /**
@@ -289,9 +262,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      *
      * @param input The encoding to decode.
      */
-    public static AionContractDetailsImpl decode(RLPContractDetails input, InternalVmType vm, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
+    public static AionContractDetailsImpl decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
         AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource, objectGraphSource);
-        details.vmType = vm;
         details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
@@ -310,36 +282,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
-        byte[] storageRootHash;
-        if (details.vmType == InternalVmType.AVM) {
-            // points to the storage hash and the object graph hash
-            details.concatenatedStorageHash = root.getRLPData();
-
-            Optional<byte[]> concatenatedData =
-                    details.objectGraphSource == null
-                            ? Optional.empty()
-                            : details.objectGraphSource.get(details.concatenatedStorageHash);
-            if (concatenatedData.isPresent()) {
-                RLPList data = RLP.decode2(concatenatedData.get());
-                if (!(data.get(0) instanceof RLPList)) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-                RLPList pair = (RLPList) data.get(0);
-                if (pair.size() != 2) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-
-                storageRootHash = pair.get(0).getRLPData();
-                details.objectGraphHash = pair.get(1).getRLPData();
-            } else {
-                storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-                details.objectGraphHash = EMPTY_DATA_HASH;
-            }
-        } else {
-            storageRootHash = root.getRLPData();
-        }
+        byte[] storageRootHash = root.getRLPData();
 
         // load/deserialize storage trie
         if (details.externalStorage) {
@@ -368,13 +311,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     public byte[] getEncoded() {
         byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
         byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-        byte[] rlpStorageRoot;
-        // encoding for AVM
-        if (vmType == InternalVmType.AVM) {
-            rlpStorageRoot = RLP.encodeElement(computeAvmStorageHash());
-        } else {
-            rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-        }
+        byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
         byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
         byte[][] codes = new byte[getCodes().size()][];
         int i = 0;
@@ -399,29 +336,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
-        if (vmType == InternalVmType.AVM) {
-            // if (objectGraph == null || Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)) {
-            //     throw new IllegalStateException(
-            //             "The AVM object graph must be set before pushing data to disk.");
-            // }
-
-            if (objectGraphSource == null) {
-                throw new NullPointerException(
-                        "The contract object graph source was not initialized.");
-            }
-
-            byte[] graph = getObjectGraph();
-            if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
-                objectGraphSource.put(objectGraphHash, graph);
-            }
-            objectGraphSource
-                    .put(
-                            computeAvmStorageHash(),
-                            RLP.encodeList(
-                                    RLP.encodeElement(storageTrie.getRootHash()),
-                                    RLP.encodeElement(objectGraphHash)));
-        }
-
         if (externalStorage) {
             storageTrie.sync();
         }
@@ -441,64 +355,17 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      * storage root hash.
      *
      * @param hash the storage root hash to search for
-     * @param vm used to direct the interpretation of the storage root hash, since AVM contracts
-     *     also include the hash of the object graph.
      * @return the specified AionContractDetailsImpl.
      */
-    public AionContractDetailsImpl getSnapshotTo(byte[] hash, InternalVmType vm) {
-        // set the VM type using the code hash
-        vmType = vm;
-
+    public AionContractDetailsImpl getSnapshotTo(byte[] hash) {
         SecureTrie snapStorage;
         AionContractDetailsImpl details;
-        if (vmType == InternalVmType.AVM) {
-            byte[] storageRootHash, graphHash;
-            // get the concatenated storage hash from storage
-            Optional<byte[]> concatenatedData =
-                    objectGraphSource == null
-                            ? Optional.empty()
-                            : objectGraphSource.get(hash);
-            if (concatenatedData.isPresent()) {
-                RLPList data = RLP.decode2(concatenatedData.get());
-                if (!(data.get(0) instanceof RLPList)) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-                RLPList pair = (RLPList) data.get(0);
-                if (pair.size() != 2) {
-                    throw new IllegalArgumentException(
-                            "rlp decode error: invalid concatenated storage for AVM");
-                }
-
-                storageRootHash = pair.get(0).getRLPData();
-                graphHash = pair.get(1).getRLPData();
-            } else {
-                storageRootHash = ConstantUtil.EMPTY_TRIE_HASH;
-                graphHash = EMPTY_DATA_HASH;
-            }
-
-            snapStorage =
-                    wrap(storageRootHash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                            ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                            : new SecureTrie(storageTrie.getCache(), storageRootHash);
-            snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-            details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
-
-            // object graph information
-            details.objectGraphHash = graphHash;
-            details.concatenatedStorageHash = hash;
-        } else {
-            snapStorage =
-                    wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                            ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                            : new SecureTrie(storageTrie.getCache(), hash);
-            snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-            details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
-        }
-
-        // vm information
-        details.vmType = this.vmType;
+        snapStorage =
+                wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
+                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
+                        : new SecureTrie(storageTrie.getCache(), hash);
+        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
+        details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
 
         // storage information
         details.externalStorage = this.externalStorage;
@@ -523,9 +390,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     @Override
     public AionContractDetailsImpl copy() {
         AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource, this.objectGraphSource);
-
-        // vm information
-        aionContractDetailsCopy.vmType = this.vmType;
 
         // storage information
         aionContractDetailsCopy.externalStorage = this.externalStorage;
@@ -557,7 +421,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
-        ret.append("  VM: ").append(vmType.toString()).append("\n");
+        ret.append("  VM: ").append(InternalVmType.FVM.toString()).append("\n");
         ret.append("  dirty: ").append(isDirty()).append("\n");
 
         if (codes.size() == 0) {

@@ -69,7 +69,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS);
         contractDetails.setCode(code);
-        contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
                 new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
         contractDetails.put(
@@ -77,7 +76,7 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), InternalVmType.FVM);
+        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data));
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -147,7 +146,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(address);
         contractDetails.setCode(code);
-        contractDetails.setVmType(InternalVmType.FVM);
         contractDetails.put(
                 new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
         contractDetails.put(
@@ -177,7 +175,7 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), InternalVmType.FVM);
+        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data));
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -257,7 +255,6 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         original.initializeExternalStorageTrieForTest();
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM);
 
         for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
@@ -271,7 +268,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), InternalVmType.FVM, externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), externalStorage, graphDatabase);
 
         assertTrue(deserialized.isExternalStorage());
         assertTrue(address.equals(deserialized.getAddress()));
@@ -308,7 +305,6 @@ public class AionContractDetailsTest {
         JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb, LOG);
         AionContractDetailsImpl original = new AionContractDetailsImpl(address, jpd, null);
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM);
 
         // the first 2 insertion use memory storage
         for (int i = 0; i < 2; i++) {
@@ -319,7 +315,7 @@ public class AionContractDetailsTest {
             original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), InternalVmType.FVM, jpd, null);
+        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd, null);
         original.syncStorage();
         assertFalse(original.isExternalStorage());
 
@@ -329,13 +325,13 @@ public class AionContractDetailsTest {
         elements.put(key3rd, value);
         original.put(key3rd.toWrapper(), wrapValueForPut(value));
 
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), InternalVmType.FVM, jpd, null);
+        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd, null);
         original.syncStorage();
         assertTrue(original.isExternalStorage());
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), InternalVmType.FVM, jpd, null);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), jpd, null);
 
         assertTrue(deserialized.isExternalStorage());
         assertEquals(address, deserialized.getAddress());
@@ -369,7 +365,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         original.setCode(code);
-        original.setVmType(InternalVmType.FVM);
 
         for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
@@ -384,7 +379,7 @@ public class AionContractDetailsTest {
         original.syncStorage();
         assertTrue(externalStorage.isEmpty());
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), InternalVmType.FVM, externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), externalStorage, graphDatabase);
         assertTrue(deserialized.isExternalStorage());
 
         // adds keys for in-memory storage limit overflow
@@ -400,7 +395,7 @@ public class AionContractDetailsTest {
         deserialized.syncStorage();
         assertTrue(!externalStorage.isEmpty());
 
-        AionContractDetailsImpl deserialized2 = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()), InternalVmType.FVM, externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized2 = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()), externalStorage, graphDatabase);
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
@@ -430,7 +425,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl details = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
         details.setCode(code);
-        details.setVmType(InternalVmType.FVM);
 
         // ensure correct size after VM type is set
         RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
@@ -438,9 +432,5 @@ public class AionContractDetailsTest {
 
         // check that the initial VM type is as expected
         assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
-
-        // check that the decoding has the given VM type
-        AionContractDetailsImpl decoded = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(details.getEncoded()), InternalVmType.FVM);
-        assertThat(decoded.getVmType()).isEqualTo(InternalVmType.FVM);
     }
 }
