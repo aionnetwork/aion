@@ -81,7 +81,7 @@ public class DetailsDataStore {
                 ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
                 return AvmContractDetails.decodeAtRoot(rlpDetails, storage, graph, storageRoot);
             } else if (vm == InternalVmType.FVM) {
-                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, storage);
+                FvmContractDetails detailsImpl = FvmContractDetails.decode(rlpDetails, storage);
                 return detailsImpl.getSnapshotTo(storageRoot);
             } else {
                 // This may be a regular account or a contract that is not stored yet.
@@ -105,7 +105,7 @@ public class DetailsDataStore {
             ByteArrayKeyValueStore graph = createGraphSource(address);
             return new AvmContractDetails(address, storage, graph);
         } else if (vm == InternalVmType.FVM || ContractInfo.isPrecompiledContract(address)) {
-            return new AionContractDetailsImpl(address, storage);
+            return new FvmContractDetails(address, storage);
         } else {
             throw new IllegalArgumentException("The given VM=" + vm + " does not correspond to a type of contract.");
         }

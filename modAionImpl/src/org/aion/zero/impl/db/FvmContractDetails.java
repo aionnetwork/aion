@@ -23,7 +23,7 @@ import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
-public class AionContractDetailsImpl implements StoredContractDetails {
+public class FvmContractDetails implements StoredContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
@@ -35,7 +35,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
     private SecureTrie storageTrie;
 
-    public AionContractDetailsImpl(AionAddress address) {
+    public FvmContractDetails(AionAddress address) {
         this(address, null);
     }
 
@@ -45,7 +45,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      * @param externalStorageSource the external storage data source associated with the given
      *     contract address
      */
-    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore externalStorageSource) {
+    public FvmContractDetails(AionAddress address, ByteArrayKeyValueStore externalStorageSource) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
@@ -55,7 +55,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         this.storageTrie = new SecureTrie(this.externalStorageSource);
     }
 
-    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource) {
+    private FvmContractDetails(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource) {
         this(address, externalStorageSource);
         this.storageTrie = storageTrie;
         this.codes = new HashMap<>(codes);
@@ -214,12 +214,12 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Decodes an AionContractDetailsImpl object from the RLP encoding.
+     * Decodes an FvmContractDetails object from the RLP encoding.
      *
      * @param input The encoding to decode.
      */
-    public static AionContractDetailsImpl decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
-        AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource);
+    public static FvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
+        FvmContractDetails details = new FvmContractDetails(input.address, storageSource);
 
         RLPElement code = input.code;
         if (code instanceof RLPList) {
@@ -252,7 +252,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Returns an rlp encoding of this AionContractDetailsImpl object.
+     * Returns an rlp encoding of this FvmContractDetails object.
      *
      * <p>The encoding is a list of 3 elements:<br>
      * { 0:address, 1:storageRoot, 2:code }
@@ -274,7 +274,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Get the address associated with this AionContractDetailsImpl.
+     * Get the address associated with this FvmContractDetails.
      *
      * @return the associated address.
      */
@@ -290,20 +290,20 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     /**
-     * Returns an AionContractDetailsImpl object pertaining to a specific point in time given by the
+     * Returns an FvmContractDetails object pertaining to a specific point in time given by the
      * storage root hash.
      *
      * @param hash the storage root hash to search for
-     * @return the specified AionContractDetailsImpl.
+     * @return the specified FvmContractDetails.
      */
-    public AionContractDetailsImpl getSnapshotTo(byte[] hash) {
+    public FvmContractDetails getSnapshotTo(byte[] hash) {
         SecureTrie snapStorage;
         snapStorage =
                 wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
                         ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                         : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-        return new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource);
+        return new FvmContractDetails(this.address, snapStorage, this.codes, this.externalStorageSource);
     }
 
     /**
@@ -321,8 +321,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      * @return A copy of this object.
      */
     @Override
-    public AionContractDetailsImpl copy() {
-        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource);
+    public FvmContractDetails copy() {
+        FvmContractDetails aionContractDetailsCopy = new FvmContractDetails(this.address, this.externalStorageSource);
 
         // storage information
         aionContractDetailsCopy.codes = new HashMap<>(codes);

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
+import org.aion.zero.impl.db.FvmContractDetails;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.util.types.DataWord;
@@ -16,7 +17,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.db.AionContractDetailsImpl;
 
 public class AionGenesis extends AionBlock {
     /**
@@ -426,7 +426,7 @@ public class AionGenesis extends AionBlock {
 
         byte[] generateRootHash() {
             Trie worldTrie = new SecureTrie(null);
-            AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl(NETWORK_BALANCE_ADDRESS);
+            FvmContractDetails networkBalanceStorage = new FvmContractDetails(NETWORK_BALANCE_ADDRESS);
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 // we assume there are no deletions in the genesis

@@ -541,8 +541,8 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                             ContractDetailsCacheImpl.copy(
                                     (ContractDetailsCacheImpl) contractDetailsCache.origContract));
                 } else {
-                    // Either no parent or we have Repo's AionContractDetailsImpl, which should be
-                    // flushed through RepoImpl
+                    // Either no parent or we have RepoImpl's StoredContractDetails
+                    // which should be flushed through RepoImpl
                     cachedDetails.put(
                             ctdEntry.getKey(), ContractDetailsCacheImpl.copy(contractDetailsCache));
                 }

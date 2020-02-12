@@ -181,7 +181,7 @@ public class AionRepositoryImpl extends AbstractRepository {
 
                     contractDetails = contractDetailsCache.origContract;
 
-                    // this method requires the encoding functionality therefore can be applied only to AionContractDetailsImpl
+                    // this method requires the encoding functionality therefore can be applied only to StoredContractDetails
                     detailsDS.update(address, (StoredContractDetails) contractDetails);
 
                     // TODO: incorrect check codeHash != trie hash

@@ -27,8 +27,8 @@ public class IContractDetailsTest {
 
     @Before
     public void setup() {
-        cache1 = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS);
-        cache2 = new ContractDetailsCacheImpl(new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS));
+        cache1 = new FvmContractDetails(AddressUtils.ZERO_ADDRESS);
+        cache2 = new ContractDetailsCacheImpl(new FvmContractDetails(AddressUtils.ZERO_ADDRESS));
     }
 
     @After

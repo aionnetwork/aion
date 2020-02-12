@@ -153,9 +153,9 @@ public class AionRepositoryImplTest {
         byte[] root = repository.getAccountState(defaultAccount).getStateRoot();
         StoredContractDetails snapshot = repository.detailsDS.getSnapshot(InternalVmType.FVM, defaultAccount.toByteArray(), root);
 
-        assertThat(snapshot instanceof AionContractDetailsImpl).isTrue();
+        assertThat(snapshot instanceof FvmContractDetails).isTrue();
 
-        AionContractDetailsImpl details = (AionContractDetailsImpl) snapshot;
+        FvmContractDetails details = (FvmContractDetails) snapshot;
         assertThat(details.get(new DataWord(key).toWrapper())).isEqualTo(new DataWord(value).toWrapper());
     }
 

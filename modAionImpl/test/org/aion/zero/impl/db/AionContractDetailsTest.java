@@ -67,7 +67,7 @@ public class AionContractDetailsTest {
         byte[] key_2 = ByteUtil.hexStringToBytes("222222");
         byte[] val_2 = ByteUtil.hexStringToBytes("bbbbbb");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS, db);
+        FvmContractDetails contractDetails = new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db);
         contractDetails.setCode(code);
         contractDetails.put(
                 new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
@@ -79,7 +79,7 @@ public class AionContractDetailsTest {
         // flush changes to the database
         contractDetails.syncStorage();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), db);
+        FvmContractDetails contractDetails_ = FvmContractDetails.decode(DetailsDataStore.fromEncoding(data), db);
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -150,7 +150,7 @@ public class AionContractDetailsTest {
         byte[] key_13 = ByteUtil.hexStringToBytes("65c996598dc972688b7ace676c89077b");
         byte[] val_13 = ByteUtil.hexStringToBytes("d6ee27e285f2de7b68e8db25cf1b1063");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(address, db);
+        FvmContractDetails contractDetails = new FvmContractDetails(address, db);
         contractDetails.setCode(code);
         contractDetails.put(
                 new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
@@ -184,7 +184,7 @@ public class AionContractDetailsTest {
         // flush changes to the database
         contractDetails.syncStorage();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), db);
+        FvmContractDetails contractDetails_ = FvmContractDetails.decode(DetailsDataStore.fromEncoding(data), db);
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -260,7 +260,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage);
+        FvmContractDetails original = new FvmContractDetails(address, externalStorage);
         original.setCode(code);
 
         for (int i = 0; i < 1034; i++) {
@@ -275,7 +275,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), externalStorage);
+        FvmContractDetails deserialized = FvmContractDetails.decode(DetailsDataStore.fromEncoding(rlp), externalStorage);
 
         assertTrue(address.equals(deserialized.getAddress()));
         byte[] codeHash = h256(code);
@@ -311,7 +311,7 @@ public class AionContractDetailsTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(address, externalStorage);
+        FvmContractDetails details = new FvmContractDetails(address, externalStorage);
         details.setCode(code);
 
         // ensure correct size after VM type is set
