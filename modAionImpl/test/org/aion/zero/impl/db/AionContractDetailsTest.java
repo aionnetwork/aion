@@ -2,9 +2,7 @@ package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.crypto.HashUtil.h256;
-import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -15,7 +13,7 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.store.JournalPruneDataSource;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.config.CfgPrune;
@@ -57,6 +55,9 @@ public class AionContractDetailsTest {
 
     @Test
     public void test_1() {
+        ByteArrayKeyValueDatabase db = new MockDB("db", LOG);
+        db.open();
+        assertThat(db.isEmpty()).isTrue();
 
         byte[] code = ByteUtil.hexStringToBytes("60016002");
 
@@ -66,7 +67,7 @@ public class AionContractDetailsTest {
         byte[] key_2 = ByteUtil.hexStringToBytes("222222");
         byte[] val_2 = ByteUtil.hexStringToBytes("bbbbbb");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS);
+        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(AddressUtils.ZERO_ADDRESS, db);
         contractDetails.setCode(code);
         contractDetails.put(
                 new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
@@ -75,7 +76,10 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data));
+        // flush changes to the database
+        contractDetails.syncStorage();
+
+        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), db);
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -97,6 +101,9 @@ public class AionContractDetailsTest {
 
     @Test
     public void test_2() {
+        ByteArrayKeyValueDatabase db = new MockDB("db", LOG);
+        db.open();
+        assertThat(db.isEmpty()).isTrue();
 
         byte[] code =
                 ByteUtil.hexStringToBytes(
@@ -143,7 +150,7 @@ public class AionContractDetailsTest {
         byte[] key_13 = ByteUtil.hexStringToBytes("65c996598dc972688b7ace676c89077b");
         byte[] val_13 = ByteUtil.hexStringToBytes("d6ee27e285f2de7b68e8db25cf1b1063");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(address);
+        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(address, db);
         contractDetails.setCode(code);
         contractDetails.put(
                 new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
@@ -174,7 +181,10 @@ public class AionContractDetailsTest {
 
         byte[] data = contractDetails.getEncoded();
 
-        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data));
+        // flush changes to the database
+        contractDetails.syncStorage();
+
+        AionContractDetailsImpl contractDetails_ = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(data), db);
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -251,10 +261,9 @@ public class AionContractDetailsTest {
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
 
         AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage);
-        original.initializeExternalStorageTrieForTest();
         original.setCode(code);
 
-        for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
+        for (int i = 0; i < 1034; i++) {
             DataWord key = new DataWord(RandomUtils.nextBytes(16));
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
@@ -268,7 +277,6 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), externalStorage);
 
-        assertTrue(deserialized.isExternalStorage());
         assertTrue(address.equals(deserialized.getAddress()));
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
@@ -283,122 +291,6 @@ public class AionContractDetailsTest {
 
         deserialized.delete(deletedKey.toWrapper());
         deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
-    }
-
-    @Test
-    public void testContractStorageSwitch() {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-        Map<DataWord, DataWord> elements = new HashMap<>();
-
-        AionContractDetailsImpl.detailsInMemoryStorageLimit = 512;
-
-        // getting storage specific properties
-        Properties sharedProps;
-        sharedProps = repoConfig.getDatabaseConfig("storage");
-        sharedProps.setProperty(DatabaseFactory.Props.ENABLE_LOCKING, "false");
-        sharedProps.setProperty(DatabaseFactory.Props.DB_PATH, repoConfig.getDbPath());
-        sharedProps.setProperty(DatabaseFactory.Props.DB_NAME, "storage");
-        ByteArrayKeyValueDatabase storagedb = connectAndOpen(sharedProps, LOG);
-        JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb, LOG);
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, jpd);
-        original.setCode(code);
-
-        // the first 2 insertion use memory storage
-        for (int i = 0; i < 2; i++) {
-            DataWord key = new DataWord(RandomUtils.nextBytes(16));
-            DataWord value = new DataWord(RandomUtils.nextBytes(16));
-
-            elements.put(key, value);
-            original.put(key.toWrapper(), wrapValueForPut(value));
-        }
-
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd);
-        original.syncStorage();
-        assertFalse(original.isExternalStorage());
-
-        // transfer to external storage since 3rd insert
-        DataWord key3rd = new DataWord(RandomUtils.nextBytes(16));
-        DataWord value = new DataWord(RandomUtils.nextBytes(16));
-        elements.put(key3rd, value);
-        original.put(key3rd.toWrapper(), wrapValueForPut(value));
-
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd);
-        original.syncStorage();
-        assertTrue(original.isExternalStorage());
-
-        byte[] rlp = original.getEncoded();
-
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), jpd);
-
-        assertTrue(deserialized.isExternalStorage());
-        assertEquals(address, deserialized.getAddress());
-        byte[] codeHash = h256(code);
-        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode(codeHash)));
-
-        for (DataWord key : elements.keySet()) {
-            assertEquals(
-                    elements.get(key).toWrapper(),
-                    wrapValueFromGet(deserialized.get(key.toWrapper())));
-        }
-
-        DataWord deletedKey = elements.keySet().iterator().next();
-
-        deserialized.delete(deletedKey.toWrapper());
-        deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
-
-        // reset static variable to original value
-        AionContractDetailsImpl.detailsInMemoryStorageLimit =  64 * 1024;
-    }
-
-    @Test
-    public void testExternalStorageTransition() {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-        Map<DataWord, DataWord> elements = new HashMap<>();
-
-        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
-
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage);
-        original.setCode(code);
-
-        for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
-            DataWord key = new DataWord(RandomUtils.nextBytes(16));
-            DataWord value = new DataWord(RandomUtils.nextBytes(16));
-
-            elements.put(key, value);
-            original.put(key.toWrapper(), wrapValueForPut(value));
-        }
-
-        /* NOTE: This operation does not actually transition the storage to the external database.
-           The transition occurs only during decoding. */
-        original.syncStorage();
-        assertTrue(externalStorage.isEmpty());
-
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), externalStorage);
-        assertTrue(deserialized.isExternalStorage());
-
-        // adds keys for in-memory storage limit overflow
-        for (int i = 0; i < 10; i++) {
-            DataWord key = new DataWord(RandomUtils.nextBytes(16));
-            DataWord value = new DataWord(RandomUtils.nextBytes(16));
-
-            elements.put(key, value);
-
-            deserialized.put(key.toWrapper(), wrapValueForPut(value));
-        }
-
-        deserialized.syncStorage();
-        assertTrue(!externalStorage.isEmpty());
-
-        AionContractDetailsImpl deserialized2 = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()), externalStorage);
-
-        for (DataWord key : elements.keySet()) {
-            assertEquals(
-                    elements.get(key).toWrapper(),
-                    wrapValueFromGet(deserialized2.get(key.toWrapper())));
-        }
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {
@@ -424,7 +316,7 @@ public class AionContractDetailsTest {
 
         // ensure correct size after VM type is set
         RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
-        assertThat(data.size()).isEqualTo(5);
+        assertThat(data.size()).isEqualTo(3);
 
         // check that the initial VM type is as expected
         assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);

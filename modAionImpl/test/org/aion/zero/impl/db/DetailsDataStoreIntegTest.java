@@ -5,37 +5,27 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.addMiningBlock;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.addStakingBlock;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.deployLargeStorageContractTransaction;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts;
-import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateNextMiningBlock;
-import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateNextStakingBlock;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateRandomUnityChain;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.putToLargeStorageTransaction;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -270,7 +260,7 @@ public class DetailsDataStoreIntegTest {
             // importing without transition first
             // In case there is any bias due to caching, it will disfavour this option.
             // Even with any potential nevative bias, the option seems to have better performance.
-            AionContractDetailsImpl.detailsInMemoryStorageLimit = 0;
+//             AionContractDetailsImpl.detailsInMemoryStorageLimit = 0;
 
             start = System.nanoTime();
             importResult = chainWithoutTransition.tryToConnect(block);
@@ -291,25 +281,26 @@ public class DetailsDataStoreIntegTest {
             totalSizeWithoutTransition += size;
 
             // importing with transition second
-            AionContractDetailsImpl.detailsInMemoryStorageLimit = 65536;
-
-            start = System.nanoTime();
-            importResult = chainWithTransition.tryToConnect(block);
-            duration = System.nanoTime() - start;
-            assertThat(importResult).isEqualTo(ImportResult.IMPORTED_BEST);
-            details = chainWithTransition.getRepository().detailsDatabase.approximateSize();
-            storage = chainWithTransition.getRepository().storageDatabase.approximateSize();
-            size = details + storage;
-
-            results[i][0] = duration;
-            results[i][1] = details;
-            results[i][2] = storage;
-            results[i][3] = size;
-
-            totalTimeWithTransition += duration;
-            totalDetailsSizeWithTransition += details;
-            totalStorageSizeWithTransition += storage;
-            totalSizeWithTransition += size;
+            // TODO: re-purpose test for db size impact on storage or data locality impact on eternal storage
+//            AionContractDetailsImpl.detailsInMemoryStorageLimit = 65536;
+//
+//            start = System.nanoTime();
+//            importResult = chainWithTransition.tryToConnect(block);
+//            duration = System.nanoTime() - start;
+//            assertThat(importResult).isEqualTo(ImportResult.IMPORTED_BEST);
+//            details = chainWithTransition.getRepository().detailsDatabase.approximateSize();
+//            storage = chainWithTransition.getRepository().storageDatabase.approximateSize();
+//            size = details + storage;
+//
+//            results[i][0] = duration;
+//            results[i][1] = details;
+//            results[i][2] = storage;
+//            results[i][3] = size;
+//
+//            totalTimeWithTransition += duration;
+//            totalDetailsSizeWithTransition += details;
+//            totalStorageSizeWithTransition += storage;
+//            totalSizeWithTransition += size;
 
             if (storage != 0 && isEmptyStorage) {
                 isEmptyStorage = false;

@@ -5,19 +5,14 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
-import com.google.common.annotations.VisibleForTesting;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -32,19 +27,13 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    /** Indicates the maximum storage size before shifting to the storage database. */
-    @VisibleForTesting
-    static int detailsInMemoryStorageLimit = 64 * 1024;
-
     private Map<ByteArrayWrapper, ByteArrayWrapper> codes = new HashMap<>();
 
     private final ByteArrayKeyValueStore externalStorageSource;
 
     private final AionAddress address;
 
-    private SecureTrie storageTrie = new SecureTrie(null);
-
-    private boolean externalStorage;
+    private SecureTrie storageTrie;
 
     public AionContractDetailsImpl(AionAddress address) {
         this(address, null);
@@ -63,17 +52,13 @@ public class AionContractDetailsImpl implements StoredContractDetails {
             this.address = address;
         }
         this.externalStorageSource = externalStorageSource;
+        this.storageTrie = new SecureTrie(this.externalStorageSource);
     }
 
     private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource) {
         this(address, externalStorageSource);
         this.storageTrie = storageTrie;
         this.codes = new HashMap<>(codes);
-    }
-
-    @VisibleForTesting
-    public boolean isExternalStorage() {
-        return externalStorage;
     }
 
     @Override
@@ -228,10 +213,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         return storageTrie.getRootHash();
     }
 
-    public static AionContractDetailsImpl decode(RLPContractDetails input) {
-        return decode(input, null);
-    }
-
     /**
      * Decodes an AionContractDetailsImpl object from the RLP encoding.
      *
@@ -239,7 +220,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     public static AionContractDetailsImpl decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
         AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource);
-        details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
         if (code instanceof RLPList) {
@@ -254,22 +234,19 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         // Do not forget to set the vmType value externally during tests!!!
         RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
-        boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
 
         // Instantiates the storage interpreting the storage root according to the VM specification.
         byte[] storageRootHash = root.getRLPData();
 
         // load/deserialize storage trie
-        if (details.externalStorage) {
+        if (input.isExternalStorage) { // ensure transition from old encoding
             details.storageTrie = new SecureTrie(details.externalStorageSource, storageRootHash);
         } else {
+            details.storageTrie = new SecureTrie(null);
             details.storageTrie.deserialize(storage.getRLPData());
-        }
-
-        // switch from in-memory to external storage
-        if (!details.externalStorage && !keepStorageInMem) {
-            details.externalStorage = true;
+            // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
+            details.storageTrie.sync();
         }
         return details;
     }
@@ -277,17 +254,15 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     /**
      * Returns an rlp encoding of this AionContractDetailsImpl object.
      *
-     * <p>The encoding is a list of 6 elements:<br>
-     * { 0:address, 1:isExternalStorage, 2:storageRoot, 3:storage, 4:code, 5:vmType }
+     * <p>The encoding is a list of 3 elements:<br>
+     * { 0:address, 1:storageRoot, 2:code }
      *
      * @return an rlp encoding of this.
      */
     @Override
     public byte[] getEncoded() {
         byte[] rlpAddress = RLP.encodeElement(address.toByteArray());
-        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-        byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-        byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
+        byte[] rlpStorageRoot = RLP.encodeElement(storageTrie.getRootHash());
         byte[][] codes = new byte[getCodes().size()][];
         int i = 0;
         for (ByteArrayWrapper bytes : this.getCodes().values()) {
@@ -295,7 +270,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         }
         byte[] rlpCode = RLP.encodeList(codes);
 
-        return RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+        return RLP.encodeList(rlpAddress, rlpStorageRoot, rlpCode);
     }
 
     /**
@@ -311,18 +286,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
-        if (externalStorage) {
-            storageTrie.sync();
-        }
-    }
-
-    /**
-     * Sets the external storage data source to dataSource.
-     */
-    @VisibleForTesting
-    void initializeExternalStorageTrieForTest() {
-        this.externalStorage = true;
-        this.storageTrie = new SecureTrie(externalStorageSource);
+        storageTrie.sync();
     }
 
     /**
@@ -334,18 +298,12 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     public AionContractDetailsImpl getSnapshotTo(byte[] hash) {
         SecureTrie snapStorage;
-        AionContractDetailsImpl details;
         snapStorage =
                 wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
                         ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                         : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-        details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource);
-
-        // storage information
-        details.externalStorage = this.externalStorage;
-
-        return details;
+        return new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource);
     }
 
     /**
@@ -367,7 +325,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource);
 
         // storage information
-        aionContractDetailsCopy.externalStorage = this.externalStorage;
         aionContractDetailsCopy.codes = new HashMap<>(codes);
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;

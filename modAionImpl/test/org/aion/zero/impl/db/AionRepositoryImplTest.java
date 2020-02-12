@@ -137,7 +137,6 @@ public class AionRepositoryImplTest {
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
 
         // Consider the original root the one after an account has been added
-        byte[] originalRoot = repository.getRoot();
         byte[] key = HashUtil.blake128("hello".getBytes());
         byte[] value = HashUtil.blake128("world".getBytes());
         track.addStorageRow(
@@ -148,18 +147,16 @@ public class AionRepositoryImplTest {
 
         // does not call parent's flush
         track.flush();
-
         repository.flush();
 
         /** Verify that the account has been flushed */
-        ByteArrayKeyValueDatabase detailsDB = repository.getDetailsDatabase();
-        Optional<byte[]> serializedDetails = detailsDB.get(defaultAccount.toByteArray());
+        byte[] root = repository.getAccountState(defaultAccount).getStateRoot();
+        StoredContractDetails snapshot = repository.detailsDS.getSnapshot(InternalVmType.FVM, defaultAccount.toByteArray(), root);
 
-        assertThat(serializedDetails.isPresent()).isEqualTo(true);
+        assertThat(snapshot instanceof AionContractDetailsImpl).isTrue();
 
-        AionContractDetailsImpl details = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(serializedDetails.get()));
-        assertThat(details.get(new DataWord(key).toWrapper()))
-                .isEqualTo(new DataWord(value).toWrapper());
+        AionContractDetailsImpl details = (AionContractDetailsImpl) snapshot;
+        assertThat(details.get(new DataWord(key).toWrapper())).isEqualTo(new DataWord(value).toWrapper());
     }
 
     /** Repo track test suite */
