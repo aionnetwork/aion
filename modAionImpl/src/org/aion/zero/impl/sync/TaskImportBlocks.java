@@ -335,7 +335,7 @@ final class TaskImportBlocks implements Runnable {
                 }
             }
 
-            if (System.currentTimeMillis() >= lastLogImportTime + (60L * ONE_SECOND)) {
+            if (System.currentTimeMillis() >= lastLogImportTime + (60L * 1000)) {
                 surveyLog.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms"
                     , totalImportedBlocks, (totalImportTime / DIVISOR_MS), LongImportTimeCount, SuperLongImportTimeCount, longestImportTime / DIVISOR_MS);
                 lastLogImportTime = System.currentTimeMillis();
