@@ -23,6 +23,17 @@ import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
+/**
+ * Stores contract details as required by the FVM.
+ *
+ * <p>The encoding produced for storing the contract contains 3 elements:<br>
+ * {@code { 0:address, 1:storageRoot, 2:code }}.
+ *
+ * <p>{@link RLPContractDetails} objects created based on the old encoding:<br>
+ * {@code { 0:address, 1: isExternalStorage, 2:storageRoot, 3:storageTrie, 4:code }}<br>
+ * are accepted by the decode functionality. When the storage read from disk was in-line the
+ * contract will transition to the external storage database.
+ */
 public class FvmContractDetails implements StoredContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
@@ -35,22 +46,17 @@ public class FvmContractDetails implements StoredContractDetails {
 
     private SecureTrie storageTrie;
 
-    public FvmContractDetails(AionAddress address) {
-        this(address, null);
-    }
-
     /**
-     * Creates a object with attached database access for the external storage and object graph.
+     * Creates an object with attached database access for the external storage.
      *
      * @param externalStorageSource the external storage data source associated with the given
      *     contract address
+     * @throws NullPointerException when any of the given parameters are null
      */
     public FvmContractDetails(AionAddress address, ByteArrayKeyValueStore externalStorageSource) {
-        if (address == null) {
-            throw new IllegalArgumentException("Address can not be null!");
-        } else {
-            this.address = address;
-        }
+        Objects.requireNonNull(address, "The address cannot be null!");
+        Objects.requireNonNull(externalStorageSource,"The storage data source cannot be null!");
+        this.address = address;
         this.externalStorageSource = externalStorageSource;
         this.storageTrie = new SecureTrie(this.externalStorageSource);
     }
@@ -326,7 +332,7 @@ public class FvmContractDetails implements StoredContractDetails {
         aionContractDetailsCopy.codes = new HashMap<>(codes);
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
-        aionContractDetailsCopy.storageTrie = (this.storageTrie == null) ? null : this.storageTrie.copy();
+        aionContractDetailsCopy.storageTrie = this.storageTrie.copy();
         return aionContractDetailsCopy;
     }
 

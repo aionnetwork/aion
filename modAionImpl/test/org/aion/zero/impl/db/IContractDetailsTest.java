@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
@@ -16,6 +17,8 @@ import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class IContractDetailsTest {
     // The two ways of instantiating the cache.
@@ -25,10 +28,14 @@ public class IContractDetailsTest {
     private static final int DOUBLE_BYTES = 32;
     private static final ByteArrayWrapper ZERO_WRAPPED_32 = ByteArrayWrapper.wrap(new byte[32]);
 
+    @Mock ByteArrayKeyValueDatabase db;
+
     @Before
     public void setup() {
-        cache1 = new FvmContractDetails(AddressUtils.ZERO_ADDRESS);
-        cache2 = new ContractDetailsCacheImpl(new FvmContractDetails(AddressUtils.ZERO_ADDRESS));
+        MockitoAnnotations.initMocks(this);
+
+        cache1 = new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db);
+        cache2 = new ContractDetailsCacheImpl(new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db));
     }
 
     @After
