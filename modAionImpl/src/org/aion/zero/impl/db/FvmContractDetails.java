@@ -55,12 +55,6 @@ public class FvmContractDetails implements StoredContractDetails {
         this.storageTrie = new SecureTrie(this.externalStorageSource);
     }
 
-    private FvmContractDetails(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource) {
-        this(address, externalStorageSource);
-        this.storageTrie = storageTrie;
-        this.codes = new HashMap<>(codes);
-    }
-
     @Override
     public byte[] getCode(byte[] codeHash) {
         if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
@@ -303,7 +297,11 @@ public class FvmContractDetails implements StoredContractDetails {
                         ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                         : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-        return new FvmContractDetails(this.address, snapStorage, this.codes, this.externalStorageSource);
+
+        FvmContractDetails details = new FvmContractDetails(this.address, this.externalStorageSource);
+        details.codes = new HashMap<>(codes);
+        details.storageTrie = snapStorage;
+        return details;
     }
 
     /**
