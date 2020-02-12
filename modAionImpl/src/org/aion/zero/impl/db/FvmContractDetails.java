@@ -219,6 +219,8 @@ public class FvmContractDetails implements StoredContractDetails {
      * @param input The encoding to decode.
      */
     public static FvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
+        Objects.requireNonNull(input, "The contract data for the snapshot cannot be null.");
+        // additional null check are performed by the constructor
         FvmContractDetails details = new FvmContractDetails(input.address, storageSource);
 
         RLPElement code = input.code;
