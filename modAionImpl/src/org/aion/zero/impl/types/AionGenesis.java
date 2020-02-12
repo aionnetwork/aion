@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
-import org.aion.zero.impl.db.FvmContractDetails;
+import org.aion.rlp.RLP;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.util.types.DataWord;
@@ -426,15 +426,13 @@ public class AionGenesis extends AionBlock {
 
         byte[] generateRootHash() {
             Trie worldTrie = new SecureTrie(null);
-            FvmContractDetails networkBalanceStorage = new FvmContractDetails(NETWORK_BALANCE_ADDRESS);
+            Trie networkBalanceStorage = new SecureTrie(null);
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
-                // we assume there are no deletions in the genesis
-                networkBalanceStorage.put(
-                        new DataWord(entry.getKey()).toWrapper(),
-                        wrapValueForPut(new DataWord(entry.getValue())));
+                byte[] value = RLP.encodeElement(wrapValueForPut(new DataWord(entry.getValue())).toBytes());
+                networkBalanceStorage.update(new DataWord(entry.getKey()).toWrapper().toBytes(), value);
             }
-            byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
+            byte[] networkBalanceStorageHash = networkBalanceStorage.getRootHash();
 
             AccountState networkBalanceAccount = new AccountState();
             networkBalanceAccount.setStateRoot(networkBalanceStorageHash);
