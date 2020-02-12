@@ -77,11 +77,11 @@ public class DetailsDataStore {
             // decode raw details and return snapshot
             RLPContractDetails rlpDetails = fromEncoding(rawDetails.get());
             ByteArrayKeyValueStore storage = createStorageSource(rlpDetails.address);
-            ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
             if (vm == InternalVmType.AVM) {
+                ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
                 return AvmContractDetails.decodeAtRoot(rlpDetails, storage, graph, storageRoot);
             } else if (vm == InternalVmType.FVM) {
-                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, storage, graph);
+                AionContractDetailsImpl detailsImpl = AionContractDetailsImpl.decode(rlpDetails, storage);
                 return detailsImpl.getSnapshotTo(storageRoot);
             } else {
                 // This may be a regular account or a contract that is not stored yet.
@@ -101,11 +101,11 @@ public class DetailsDataStore {
 
     public StoredContractDetails newContractDetails(AionAddress address, InternalVmType vm) {
         ByteArrayKeyValueStore storage = createStorageSource(address);
-        ByteArrayKeyValueStore graph = createGraphSource(address);
         if (vm == InternalVmType.AVM) {
+            ByteArrayKeyValueStore graph = createGraphSource(address);
             return new AvmContractDetails(address, storage, graph);
         } else if (vm == InternalVmType.FVM || ContractInfo.isPrecompiledContract(address)) {
-            return new AionContractDetailsImpl(address, storage, graph);
+            return new AionContractDetailsImpl(address, storage);
         } else {
             throw new IllegalArgumentException("The given VM=" + vm + " does not correspond to a type of contract.");
         }

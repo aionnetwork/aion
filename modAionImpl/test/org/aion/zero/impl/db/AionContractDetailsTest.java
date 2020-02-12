@@ -3,7 +3,6 @@ package org.aion.zero.impl.db;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
-import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -57,7 +56,7 @@ public class AionContractDetailsTest {
             };
 
     @Test
-    public void test_1() throws Exception {
+    public void test_1() {
 
         byte[] code = ByteUtil.hexStringToBytes("60016002");
 
@@ -97,7 +96,7 @@ public class AionContractDetailsTest {
     }
 
     @Test
-    public void test_2() throws Exception {
+    public void test_2() {
 
         byte[] code =
                 ByteUtil.hexStringToBytes(
@@ -250,9 +249,8 @@ public class AionContractDetailsTest {
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
-        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage);
         original.initializeExternalStorageTrieForTest();
         original.setCode(code);
 
@@ -268,7 +266,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), externalStorage);
 
         assertTrue(deserialized.isExternalStorage());
         assertTrue(address.equals(deserialized.getAddress()));
@@ -303,7 +301,7 @@ public class AionContractDetailsTest {
         sharedProps.setProperty(DatabaseFactory.Props.DB_NAME, "storage");
         ByteArrayKeyValueDatabase storagedb = connectAndOpen(sharedProps, LOG);
         JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb, LOG);
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, jpd, null);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, jpd);
         original.setCode(code);
 
         // the first 2 insertion use memory storage
@@ -315,7 +313,7 @@ public class AionContractDetailsTest {
             original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd, null);
+        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd);
         original.syncStorage();
         assertFalse(original.isExternalStorage());
 
@@ -325,13 +323,13 @@ public class AionContractDetailsTest {
         elements.put(key3rd, value);
         original.put(key3rd.toWrapper(), wrapValueForPut(value));
 
-        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd, null);
+        original = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), jpd);
         original.syncStorage();
         assertTrue(original.isExternalStorage());
 
         byte[] rlp = original.getEncoded();
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), jpd, null);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(rlp), jpd);
 
         assertTrue(deserialized.isExternalStorage());
         assertEquals(address, deserialized.getAddress());
@@ -361,9 +359,8 @@ public class AionContractDetailsTest {
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
-        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
+        AionContractDetailsImpl original = new AionContractDetailsImpl(address, externalStorage);
         original.setCode(code);
 
         for (int i = 0; i < AionContractDetailsImpl.detailsInMemoryStorageLimit / 64 + 10; i++) {
@@ -379,7 +376,7 @@ public class AionContractDetailsTest {
         original.syncStorage();
         assertTrue(externalStorage.isEmpty());
 
-        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(original.getEncoded()), externalStorage);
         assertTrue(deserialized.isExternalStorage());
 
         // adds keys for in-memory storage limit overflow
@@ -395,7 +392,7 @@ public class AionContractDetailsTest {
         deserialized.syncStorage();
         assertTrue(!externalStorage.isEmpty());
 
-        AionContractDetailsImpl deserialized2 = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()), externalStorage, graphDatabase);
+        AionContractDetailsImpl deserialized2 = AionContractDetailsImpl.decode(DetailsDataStore.fromEncoding(deserialized.getEncoded()), externalStorage);
 
         for (DataWord key : elements.keySet()) {
             assertEquals(
@@ -421,9 +418,8 @@ public class AionContractDetailsTest {
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
-        ByteArrayKeyValueDatabase graphDatabase = repository.graphDatabase;
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(address, externalStorage, graphDatabase);
+        AionContractDetailsImpl details = new AionContractDetailsImpl(address, externalStorage);
         details.setCode(code);
 
         // ensure correct size after VM type is set

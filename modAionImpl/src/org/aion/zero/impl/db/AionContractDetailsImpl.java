@@ -37,11 +37,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     static int detailsInMemoryStorageLimit = 64 * 1024;
 
     private Map<ByteArrayWrapper, ByteArrayWrapper> codes = new HashMap<>();
-    // classes extending this rely on this value starting off as null
-    private byte[] objectGraph = null;
 
     private final ByteArrayKeyValueStore externalStorageSource;
-    private final ByteArrayKeyValueStore objectGraphSource;
 
     private final AionAddress address;
 
@@ -49,11 +46,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
     private boolean externalStorage;
 
-    private byte[] objectGraphHash = EMPTY_DATA_HASH;
-    private byte[] concatenatedStorageHash = EMPTY_DATA_HASH;
-
     public AionContractDetailsImpl(AionAddress address) {
-        this(address, null, null);
+        this(address, null);
     }
 
     /**
@@ -61,21 +55,18 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      *
      * @param externalStorageSource the external storage data source associated with the given
      *     contract address
-     * @param objectGraphSource the object graph data source associated with the given contract
-     *     address
      */
-    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
+    public AionContractDetailsImpl(AionAddress address, ByteArrayKeyValueStore externalStorageSource) {
         if (address == null) {
             throw new IllegalArgumentException("Address can not be null!");
         } else {
             this.address = address;
         }
         this.externalStorageSource = externalStorageSource;
-        this.objectGraphSource = objectGraphSource;
     }
 
-    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource, ByteArrayKeyValueStore objectGraphSource) {
-        this(address, externalStorageSource, objectGraphSource);
+    private AionContractDetailsImpl(AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, ByteArrayWrapper> codes, ByteArrayKeyValueStore externalStorageSource) {
+        this(address, externalStorageSource);
         this.storageTrie = storageTrie;
         this.codes = new HashMap<>(codes);
     }
@@ -219,28 +210,12 @@ public class AionContractDetailsImpl implements StoredContractDetails {
 
     @Override
     public byte[] getObjectGraph() {
-        if (objectGraph == null) {
-            // the object graph was not stored yet
-            if (Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)) {
-                return EMPTY_BYTE_ARRAY;
-            } else if (objectGraphSource != null) {
-                // note: the enforced use of optional is rather cumbersome here
-                Optional<byte[]> dbVal = objectGraphSource.get(objectGraphHash);
-                objectGraph = dbVal.isPresent() ? dbVal.get() : null;
-            }
-        }
-
-        return objectGraph == null ? EMPTY_BYTE_ARRAY : objectGraph;
+        throw new UnsupportedOperationException("The object graph is an AVM feature. It is not compatible with the FVM.");
     }
 
     @Override
     public void setObjectGraph(byte[] graph) {
-        Objects.requireNonNull(graph);
-
-        this.objectGraph = graph;
-        this.objectGraphHash = h256(objectGraph);
-
-        dirty = true;
+        throw new UnsupportedOperationException("The object graph is an AVM feature. It is not compatible with the FVM.");
     }
 
     /**
@@ -254,7 +229,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
     }
 
     public static AionContractDetailsImpl decode(RLPContractDetails input) {
-        return decode(input, null, null);
+        return decode(input, null);
     }
 
     /**
@@ -262,8 +237,8 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      *
      * @param input The encoding to decode.
      */
-    public static AionContractDetailsImpl decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource) {
-        AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource, objectGraphSource);
+    public static AionContractDetailsImpl decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
+        AionContractDetailsImpl details = new AionContractDetailsImpl(input.address, storageSource);
         details.externalStorage = input.isExternalStorage;
 
         RLPElement code = input.code;
@@ -365,7 +340,7 @@ public class AionContractDetailsImpl implements StoredContractDetails {
                         ? new SecureTrie(storageTrie.getCache(), "".getBytes())
                         : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-        details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource, this.objectGraphSource);
+        details = new AionContractDetailsImpl(this.address, snapStorage, this.codes, this.externalStorageSource);
 
         // storage information
         details.externalStorage = this.externalStorage;
@@ -389,28 +364,10 @@ public class AionContractDetailsImpl implements StoredContractDetails {
      */
     @Override
     public AionContractDetailsImpl copy() {
-        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource, this.objectGraphSource);
+        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl(this.address, this.externalStorageSource);
 
         // storage information
         aionContractDetailsCopy.externalStorage = this.externalStorage;
-
-        // object graph information
-        aionContractDetailsCopy.objectGraph =
-                objectGraph == null
-                        ? null
-                        : Arrays.copyOf(this.objectGraph, this.objectGraph.length);
-        aionContractDetailsCopy.objectGraphHash =
-                Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)
-                        ? EMPTY_DATA_HASH
-                        : Arrays.copyOf(this.objectGraphHash, this.objectGraphHash.length);
-
-        // storage hash used by AVM
-        aionContractDetailsCopy.concatenatedStorageHash =
-                Arrays.equals(concatenatedStorageHash, EMPTY_DATA_HASH)
-                        ? EMPTY_DATA_HASH
-                        : Arrays.copyOf(
-                                this.concatenatedStorageHash, this.concatenatedStorageHash.length);
-
         aionContractDetailsCopy.codes = new HashMap<>(codes);
         aionContractDetailsCopy.dirty = this.dirty;
         aionContractDetailsCopy.deleted = this.deleted;
@@ -443,9 +400,6 @@ public class AionContractDetailsImpl implements StoredContractDetails {
         } else {
             ret.append("  Storage: null\n");
         }
-
-        ret.append("  objectGraphHash: ").append(Hex.toHexString(objectGraphHash)).append("\n");
-
         return ret.toString();
     }
 }
