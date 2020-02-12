@@ -155,7 +155,7 @@ public class AionBlockStore {
                 bestBlock = getChainBlockByNumber(maxLevel);
             }
 
-            BlockInfo bestBlockInfo = getBlockInfoForHash(bestBlock.getHash(), bestBlock.getNumber());
+            BlockInfo bestBlockInfo = getBlockInfoWithHashAndNumber(bestBlock.getHash(), bestBlock.getNumber());
             if (bestBlockInfo == null) {
                 LOG.error(
                     "Encountered a kernel database corruption: cannot find blockInfos at level {} in index data store. "
@@ -573,22 +573,31 @@ public class AionBlockStore {
         lock.lock();
 
         try {
-            Block retBlock = blocks.get(hash);
-            if (retBlock == null) {
-                return null;
-            } else {
-                BlockInfo blockInfo = getBlockInfoForHash(hash, retBlock.getNumber());
-                if (blockInfo != null) {
-                    if (blockInfo.isMainChain()) {
-                        retBlock.setMainChain();
-                    }
-
-                    retBlock.setTotalDifficulty(blockInfo.getTotalDifficulty());
-                }
-                return retBlock;
-            }
+            return getBlockWithInfo(hash);
         } finally {
             lock.unlock();
+        }
+    }
+
+    /**
+     * Retrieve block with unity protocol info for the inner call
+     * @param hash given hash of the block
+     * @return the block data has matched hash with unity protocol info
+     */
+    private Block getBlockWithInfo(byte[] hash) {
+        Block returnBlock = blocks.get(hash);
+        if (returnBlock == null) {
+            return null;
+        } else {
+            BlockInfo blockInfo = getBlockInfoWithHashAndNumber(hash, returnBlock.getNumber());
+            if (blockInfo != null) {
+                if (blockInfo.isMainChain()) {
+                    returnBlock.setMainChain();
+                }
+
+                returnBlock.setTotalDifficulty(blockInfo.getTotalDifficulty());
+            }
+            return returnBlock;
         }
     }
 
@@ -619,7 +628,7 @@ public class AionBlockStore {
      * @return null when the hash info is not matched or database corruption. Otherwise, return the
      * BlockInfoV1 stored in the index database.
      */
-    private BlockInfo getBlockInfoForHash(byte[] hash, long blockNumber) {
+    private BlockInfo getBlockInfoWithHashAndNumber(byte[] hash, long blockNumber) {
         List<BlockInfo> blockInfos = index.get(blockNumber);
         if (blockInfos == null) {
             LOG.error(
@@ -1379,6 +1388,76 @@ public class AionBlockStore {
                 // replace all the block info with empty list
                 index.set(block.getNumber(), Collections.emptyList());
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     *  Retrieve three generation blocks with unity protocol info with one lock.
+     * @param hash given hash of the block
+     * @return the 3 generation block data have matched hash with unity protocol info. Block[0] is the parent block,
+     * Block[1] is the grandParent block, and Block[2] is the greatParentBlock. The return might only contain the parent
+     * block and still return the 3-elements array.
+     */
+    public final Block[] getThreeGenerationBlocksByHashWithInfo(byte[] hash) {
+        if (hash == null) {
+            return null;
+        }
+
+        Block[] blockFamily = new Block[] { null, null, null};
+        lock.lock();
+
+        try {
+            Block block = getBlockWithInfo(hash);
+            if (block != null) {
+                blockFamily[0] = block;
+
+                Block parentBlock = getBlockWithInfo(block.getParentHash());
+                if (parentBlock != null) {
+                    blockFamily[1] = parentBlock;
+
+                    Block grandParentBlock = getBlockWithInfo(parentBlock.getParentHash());
+                    if (grandParentBlock != null) {
+                        blockFamily[2] = grandParentBlock;
+                    }
+                }
+            }
+
+            return blockFamily;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Retrieve two generation blocks with unity protocol info with one lock.
+     *
+     * @param hash given hash of the block
+     * @return the 2 generation block data have matched hash with unity protocol info. Block[0] is
+     *     the parent block, Block[1] is the grandParent block. The return might only contain the
+     *     parent block and still return the 2-elements array.
+     */
+    public final Block[] getTwoGenerationBlocksByHashWithInfo(byte[] hash) {
+        if (hash == null) {
+            return null;
+        }
+        Block[] blockFamily = new Block[] { null, null};
+
+        lock.lock();
+
+        try {
+            Block block = getBlockWithInfo(hash);
+            if (block != null) {
+                blockFamily[0] = block;
+
+                Block parentBlock = getBlockWithInfo(block.getParentHash());
+                if (parentBlock != null) {
+                    blockFamily[1] = parentBlock;
+                }
+            }
+
+            return blockFamily;
         } finally {
             lock.unlock();
         }
