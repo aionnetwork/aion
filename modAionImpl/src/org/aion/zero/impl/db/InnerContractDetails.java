@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.aion.mcf.db.ContractDetails;
@@ -322,26 +321,12 @@ public class InnerContractDetails implements ContractDetails {
         if (this.objectGraph != null) {
             copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);
         }
-        copy.storage = getDeepCopyOfStorage();
+        copy.storage = new HashMap<>(storage);
         copy.codes = new HashMap<>(codes);
         copy.dirty = this.dirty;
         copy.deleted = this.deleted;
         return copy;
     }
-
-    private Map<ByteArrayWrapper, ByteArrayWrapper> getDeepCopyOfStorage() {
-        if (this.storage == null) {
-            return null;
-        }
-
-        Map<ByteArrayWrapper, ByteArrayWrapper> storageCopy = new HashMap<>();
-        for (Entry<ByteArrayWrapper, ByteArrayWrapper> storageEntry : this.storage.entrySet()) {
-            // the ByteArrayWrapper is immutable
-            storageCopy.put(storageEntry.getKey(), storageEntry.getValue());
-        }
-        return storageCopy;
-    }
-
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
