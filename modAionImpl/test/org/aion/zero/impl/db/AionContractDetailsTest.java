@@ -84,6 +84,7 @@ public class AionContractDetailsTest {
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
 
+
         assertEquals(
                 ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(
@@ -303,22 +304,4 @@ public class AionContractDetailsTest {
         return ByteArrayWrapper.wrap(new DataWord(value.toBytes()).getData());
     }
 
-    @Test
-    public void testEncodingCorrectSize() {
-        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
-        byte[] code = RandomUtils.nextBytes(512);
-
-        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        ByteArrayKeyValueStore externalStorage = repository.detailsDS.getStorageDSPrune();
-
-        FvmContractDetails details = new FvmContractDetails(address, externalStorage);
-        details.setCode(code);
-
-        // ensure correct size after VM type is set
-        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
-        assertThat(data.size()).isEqualTo(3);
-
-        // check that the initial VM type is as expected
-        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
-    }
 }

@@ -211,4 +211,17 @@ public class FvmContractDetailsTest {
 
         assertThat(details.getStorageHash()).isEqualTo(storageHash);
     }
+
+    @Test
+    public void testEncodingCorrectSize() {
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        FvmContractDetails details = new FvmContractDetails(address, mockDatabase);
+        details.setCode(code);
+
+        // ensure correct size after VM type is set
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        assertThat(data.size()).isEqualTo(3);
+    }
 }

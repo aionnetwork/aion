@@ -325,4 +325,17 @@ public class AvmContractDetailsTest {
 
         assertThat(db.isEmpty()).isFalse();
     }
+
+    @Test
+    public void testEncodingCorrectSize() {
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        AvmContractDetails details = new AvmContractDetails(address, mockDatabase, mockDatabase);
+        details.setCode(code);
+
+        // ensure correct size after VM type is set
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        assertThat(data.size()).isEqualTo(3);
+    }
 }
