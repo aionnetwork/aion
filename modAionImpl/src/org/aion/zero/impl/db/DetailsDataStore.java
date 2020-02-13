@@ -81,8 +81,7 @@ public class DetailsDataStore {
                 ByteArrayKeyValueStore graph = createGraphSource(rlpDetails.address);
                 return AvmContractDetails.decodeAtRoot(rlpDetails, storage, graph, storageRoot);
             } else if (vm == InternalVmType.FVM) {
-                FvmContractDetails detailsImpl = FvmContractDetails.decode(rlpDetails, storage);
-                return detailsImpl.getSnapshotTo(storageRoot);
+                return FvmContractDetails.decodeAtRoot(rlpDetails, storage, storageRoot);
             } else {
                 // This may be a regular account or a contract that is not stored yet.
                 // There is no need to instantiate a ContractDetails object.

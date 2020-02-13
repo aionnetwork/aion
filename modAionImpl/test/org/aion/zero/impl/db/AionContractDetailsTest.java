@@ -79,7 +79,7 @@ public class AionContractDetailsTest {
         // flush changes to the database
         contractDetails.syncStorage();
 
-        FvmContractDetails contractDetails_ = FvmContractDetails.decode(DetailsDataStore.fromEncoding(data), db);
+        FvmContractDetails contractDetails_ = FvmContractDetails.decodeAtRoot(DetailsDataStore.fromEncoding(data), db, contractDetails.getStorageHash());
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -184,7 +184,7 @@ public class AionContractDetailsTest {
         // flush changes to the database
         contractDetails.syncStorage();
 
-        FvmContractDetails contractDetails_ = FvmContractDetails.decode(DetailsDataStore.fromEncoding(data), db);
+        FvmContractDetails contractDetails_ = FvmContractDetails.decodeAtRoot(DetailsDataStore.fromEncoding(data), db, contractDetails.getStorageHash());
 
         byte[] codeHash = h256(code);
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode(codeHash)));
@@ -275,7 +275,7 @@ public class AionContractDetailsTest {
 
         byte[] rlp = original.getEncoded();
 
-        FvmContractDetails deserialized = FvmContractDetails.decode(DetailsDataStore.fromEncoding(rlp), externalStorage);
+        FvmContractDetails deserialized = FvmContractDetails.decodeAtRoot(DetailsDataStore.fromEncoding(rlp), externalStorage, original.getStorageHash());
 
         assertTrue(address.equals(deserialized.getAddress()));
         byte[] codeHash = h256(code);

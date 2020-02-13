@@ -35,6 +35,7 @@ public class FvmContractDetailsTest {
     @Mock AionAddress mockAddress;
     @Mock ByteArrayKeyValueStore mockDatabase;
     @Mock RLPContractDetails mockInput;
+    byte[] mockRoot = new byte[32];
 
     @Before
     public void setup() {
@@ -78,12 +79,23 @@ public class FvmContractDetailsTest {
 
     @Test(expected = NullPointerException.class)
     public void testDecode_withNullInput() {
-        FvmContractDetails.decode(null, mockDatabase);
+        FvmContractDetails.decodeAtRoot(null, mockDatabase, mockRoot);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDecode_withNullStorageDatabase() {
-        FvmContractDetails.decode(mockInput, null);
+        FvmContractDetails.decodeAtRoot(mockInput, null, mockRoot);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullConsensusRoot() {
+        FvmContractDetails.decodeAtRoot(mockInput, mockDatabase, null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullAddress() {
+        RLPContractDetails input = new RLPContractDetails(null, false, null, null, null);
+        FvmContractDetails.decodeAtRoot(input, mockDatabase, mockRoot);
     }
 
     @Test
@@ -101,7 +113,7 @@ public class FvmContractDetailsTest {
         code.add(new RLPItem(codeBytes2));
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
-        FvmContractDetails details = FvmContractDetails.decode(input, mockDatabase);
+        FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, mockDatabase, storageHash);
         assertThat(details.getAddress()).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
@@ -146,7 +158,7 @@ public class FvmContractDetailsTest {
         assertThat(db.isEmpty()).isTrue();
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
-        FvmContractDetails details = FvmContractDetails.decode(input, db);
+        FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, db, rootHash);
         assertThat(details.getAddress()).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
@@ -188,7 +200,7 @@ public class FvmContractDetailsTest {
         assertThat(db.isEmpty()).isTrue();
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
-        FvmContractDetails details = FvmContractDetails.decode(input, db);
+        FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, db, storageHash);
         assertThat(details.getAddress()).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();

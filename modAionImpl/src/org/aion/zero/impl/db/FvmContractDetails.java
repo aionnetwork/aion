@@ -5,6 +5,7 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -214,12 +215,20 @@ public class FvmContractDetails implements StoredContractDetails {
     }
 
     /**
-     * Decodes an FvmContractDetails object from the RLP encoding.
+     * Decodes an FvmContractDetails object from the RLP encoding and returns a snapshot to the
+     * specific point in the blockchain history given by the consensus root hash.
      *
-     * @param input The encoding to decode.
+     * @param input the stored encoding representing the contract details
+     * @param storageSource the data source for the contract storage data
+     * @param consensusRoot the consensus root linking to specific external storage and object graph
+     *     data at the point of interest in the blockchain history
+     * @return a snapshot of the contract details with the information it contained at the specified
+     *     point in the blockchain history
      */
-    public static FvmContractDetails decode(RLPContractDetails input, ByteArrayKeyValueStore storageSource) {
+    public static FvmContractDetails decodeAtRoot(RLPContractDetails input, ByteArrayKeyValueStore storageSource, byte[] consensusRoot) {
         Objects.requireNonNull(input, "The contract data for the snapshot cannot be null.");
+        Objects.requireNonNull(consensusRoot, "The consensus root for the snapshot cannot be null.");
+
         // additional null check are performed by the constructor
         FvmContractDetails details = new FvmContractDetails(input.address, storageSource);
 
@@ -234,21 +243,20 @@ public class FvmContractDetails implements StoredContractDetails {
 
         // NOTE: under normal circumstances the VM type is set by the details data store
         // Do not forget to set the vmType value externally during tests!!!
-        RLPElement root = input.storageRoot;
         RLPElement storage = input.storageTrie;
-
-        // Instantiates the storage interpreting the storage root according to the VM specification.
-        byte[] storageRootHash = root.getRLPData();
 
         // load/deserialize storage trie
         if (input.isExternalStorage) { // ensure transition from old encoding
-            details.storageTrie = new SecureTrie(details.externalStorageSource, storageRootHash);
+            details.storageTrie = new SecureTrie(details.externalStorageSource, consensusRoot);
         } else {
             details.storageTrie = new SecureTrie(null);
             details.storageTrie.deserialize(storage.getRLPData());
             // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
             details.storageTrie.sync();
+        }
+        if (Arrays.equals(consensusRoot, ConstantUtil.EMPTY_TRIE_HASH)) {
+            details.storageTrie = new SecureTrie(details.storageTrie.getCache(), "".getBytes());
         }
         return details;
     }
@@ -289,27 +297,6 @@ public class FvmContractDetails implements StoredContractDetails {
     @Override
     public void syncStorage() {
         storageTrie.sync();
-    }
-
-    /**
-     * Returns an FvmContractDetails object pertaining to a specific point in time given by the
-     * storage root hash.
-     *
-     * @param hash the storage root hash to search for
-     * @return the specified FvmContractDetails.
-     */
-    public FvmContractDetails getSnapshotTo(byte[] hash) {
-        SecureTrie snapStorage;
-        snapStorage =
-                wrap(hash).equals(wrap(ConstantUtil.EMPTY_TRIE_HASH))
-                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
-                        : new SecureTrie(storageTrie.getCache(), hash);
-        snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-        FvmContractDetails details = new FvmContractDetails(this.address, this.externalStorageSource);
-        details.codes = new HashMap<>(codes);
-        details.storageTrie = snapStorage;
-        return details;
     }
 
     /**
