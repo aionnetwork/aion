@@ -278,6 +278,8 @@ public class AvmContractDetails implements StoredContractDetails {
      */
     public static AvmContractDetails decodeAtRoot(RLPContractDetails input, ByteArrayKeyValueStore storageSource, ByteArrayKeyValueStore objectGraphSource, byte[] consensusRoot) {
         Objects.requireNonNull(input, "The contract data for the snapshot cannot be null.");
+        Objects.requireNonNull(consensusRoot, "The consensus root for the snapshot cannot be null.");
+
         // additional null check are performed by the constructor
         AvmContractDetails details = new AvmContractDetails(input.address, storageSource, objectGraphSource);
 

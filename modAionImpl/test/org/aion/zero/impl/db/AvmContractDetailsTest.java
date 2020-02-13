@@ -38,6 +38,7 @@ public class AvmContractDetailsTest {
     @Mock AionAddress mockAddress;
     @Mock ByteArrayKeyValueStore mockDatabase;
     @Mock RLPContractDetails mockInput;
+    byte[] mockRoot = new byte[32];
 
     @Before
     public void setup() {
@@ -78,22 +79,28 @@ public class AvmContractDetailsTest {
 
     @Test(expected = NullPointerException.class)
     public void testDecode_withNullInput() {
-        AvmContractDetails.decodeAtRoot(null, mockDatabase, mockDatabase, new byte[32]);
+        AvmContractDetails.decodeAtRoot(null, mockDatabase, mockDatabase, mockRoot);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDecode_withNullStorageDatabase() {
-        AvmContractDetails.decodeAtRoot(mockInput, null, mockDatabase, new byte[32]);
+        AvmContractDetails.decodeAtRoot(mockInput, null, mockDatabase, mockRoot);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDecode_withNullGraphDatabase() {
-        AvmContractDetails.decodeAtRoot(mockInput, mockDatabase, null, new byte[32]);
+        AvmContractDetails.decodeAtRoot(mockInput, mockDatabase, null, mockRoot);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testDecode_withNullRoot() {
+    public void testDecode_withNullConsensusRoot() {
         AvmContractDetails.decodeAtRoot(mockInput, mockDatabase, mockDatabase, null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_withNullAddress() {
+        RLPContractDetails input = new RLPContractDetails(null, false, null, null, null);
+        AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, mockRoot);
     }
 
     @Test(expected = IllegalArgumentException.class)
