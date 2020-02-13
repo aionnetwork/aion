@@ -536,10 +536,7 @@ public class AionRepositoryImpl extends AbstractRepository {
      *     details.
      */
     @Override
-    public void loadAccountState(
-            AionAddress address,
-            Map<AionAddress, AccountState> cacheAccounts,
-            Map<AionAddress, ContractDetails> cacheDetails) {
+    public Pair<AccountState, ContractDetails> loadAccountState(AionAddress address) {
 
         AccountState account = getAccountState(address);
         ContractDetails details;
@@ -551,8 +548,7 @@ public class AionRepositoryImpl extends AbstractRepository {
             details = new InnerContractDetails(null);
         }
 
-        cacheAccounts.put(address, account);
-        cacheDetails.put(address, details);
+        return Pair.of(account, details);
     }
 
     @Override

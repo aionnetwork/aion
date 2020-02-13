@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Database-like functionality.
@@ -152,19 +153,14 @@ public interface Repository<AS> {
     boolean hasAccountState(AionAddress address);
 
     /**
-     * Loads the account (and contract) state associated with the given address into the given hash
-     * maps.
+     * Returns a pair of objects representing the account and contract details state associated with
+     * the given address.
      *
      * @param address the address of the account of interest
-     * @param accounts a map representing a cache of {@link AS} where the account state will be
-     *     loaded
-     * @param details a map representing a cache of {@link ContractDetails >} where the contract
-     *     details will be loaded
+     * @return a {@link Pair} where the first element is the account state and the second element is
+     *     the contract details
      */
-    void loadAccountState(
-        AionAddress address,
-        Map<AionAddress, AS> accounts,
-        Map<AionAddress, ContractDetails> details);
+    Pair<AS, ContractDetails> loadAccountState(AionAddress address);
 
     /**
      * Retrieves the current state of the account associated with the given address.

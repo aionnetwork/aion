@@ -23,6 +23,7 @@ import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 public final class AionRepositoryCache implements RepositoryCache<AccountState> {
@@ -88,9 +89,10 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
             // when the account is not cached load it from the repository
             if (accountState == null) {
-                // must unlock to perform write operation from loadAccountState(address)
-                loadAccountState(address);
-                accountState = this.cachedAccounts.get(address);
+                Pair<AccountState, ContractDetails> pair = loadAccountState(address);
+                this.cachedAccounts.put(address, pair.getLeft());
+                this.cachedDetails.put(address, pair.getRight());
+                accountState = pair.getLeft();
             }
 
             return accountState;
@@ -125,11 +127,10 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             ContractDetails contractDetails = this.cachedDetails.get(address);
 
             if (contractDetails == null) {
-                // loads the address into cache
-                // must unlock to perform write operation from loadAccountState(address)
-                loadAccountState(address);
-                // retrieves the contract details
-                contractDetails = this.cachedDetails.get(address);
+                Pair<AccountState, ContractDetails> pair = loadAccountState(address);
+                this.cachedAccounts.put(address, pair.getLeft());
+                this.cachedDetails.put(address, pair.getRight());
+                contractDetails = pair.getRight();
             }
 
             return contractDetails;
@@ -162,10 +163,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
      *     contract details.
      */
     @Override
-    public void loadAccountState(
-            AionAddress address,
-            Map<AionAddress, AccountState> accounts,
-            Map<AionAddress, ContractDetails> details) {
+    public Pair<AccountState, ContractDetails> loadAccountState(AionAddress address) {
         lock.lock();
 
         try {
@@ -176,29 +174,11 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             // when account not cached load from repository
             if (accountState == null) {
                 // load directly to the caches given as parameters
-                repository.loadAccountState(address, accounts, details);
+                return repository.loadAccountState(address);
             } else {
                 // copy the objects if they were cached locally
-                accounts.put(address, new AccountState(accountState));
-                ContractDetails cd = new InnerContractDetails(contractDetails);
-                details.put(address, cd);
+                return Pair.of(new AccountState(accountState), new InnerContractDetails(contractDetails));
             }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Loads the state of the account into <b>this object's caches</b>.
-     *
-     * @implNote If the calling method has acquired a weaker lock, the lock must be released before
-     *     calling this method.
-     * @apiNote If the account was never stored this call will create it.
-     */
-    private void loadAccountState(AionAddress address) {
-        lock.lock();
-        try {
-            repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
         } finally {
             lock.unlock();
         }
