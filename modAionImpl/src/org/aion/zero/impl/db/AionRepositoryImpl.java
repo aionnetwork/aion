@@ -172,8 +172,8 @@ public class AionRepositoryImpl extends AbstractRepository {
                         continue;
                     }
 
-                    ContractDetailsCacheImpl contractDetailsCache =
-                            (ContractDetailsCacheImpl) contractDetails;
+                    InnerContractDetails contractDetailsCache =
+                            (InnerContractDetails) contractDetails;
                     if (contractDetailsCache.origContract == null) {
                         contractDetailsCache.origContract = detailsDS.newContractDetails(address, contractDetailsCache.getVmType());
                         contractDetailsCache.commit();
@@ -545,10 +545,10 @@ public class AionRepositoryImpl extends AbstractRepository {
         ContractDetails details;
         if (account != null) {
             account = new AccountState(account);
-            details = new ContractDetailsCacheImpl(getContractDetails(address));
+            details = new InnerContractDetails(getContractDetails(address));
         } else {
             account = new AccountState();
-            details = new ContractDetailsCacheImpl(null);
+            details = new InnerContractDetails(null);
         }
 
         cacheAccounts.put(address, account);

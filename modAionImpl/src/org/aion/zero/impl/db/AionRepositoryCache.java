@@ -62,7 +62,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             cachedAccounts.put(address, accountState);
 
             // TODO: unify contract details initialization from Impl and Track
-            ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
+            ContractDetails contractDetails = new InnerContractDetails(null);
             contractDetails.markAsDirty();
             cachedDetails.put(address, contractDetails);
         } finally {
@@ -180,7 +180,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             } else {
                 // copy the objects if they were cached locally
                 accounts.put(address, new AccountState(accountState));
-                ContractDetails cd = new ContractDetailsCacheImpl(contractDetails);
+                ContractDetails cd = new InnerContractDetails(contractDetails);
                 details.put(address, cd);
             }
         } finally {
@@ -468,8 +468,8 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                 ContractDetails ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
-                if (ctd instanceof ContractDetailsCacheImpl) {
-                    ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
+                if (ctd instanceof InnerContractDetails) {
+                    InnerContractDetails contractDetailsCache = (InnerContractDetails) ctd;
                     contractDetailsCache.commit();
 
                     if (contractDetailsCache.origContract == null
@@ -530,21 +530,21 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             }
 
             for (Map.Entry<AionAddress, ContractDetails> ctdEntry : details.entrySet()) {
-                ContractDetailsCacheImpl contractDetailsCache =
-                        (ContractDetailsCacheImpl) ctdEntry.getValue().copy();
+                InnerContractDetails contractDetailsCache =
+                        (InnerContractDetails) ctdEntry.getValue().copy();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract instanceof StoredContractDetails)) {
                     // Copying the parent because contract details changes were pushed to the parent
                     // in previous method (flush)
                     cachedDetails.put(
                             ctdEntry.getKey(),
-                            ContractDetailsCacheImpl.copy(
-                                    (ContractDetailsCacheImpl) contractDetailsCache.origContract));
+                            InnerContractDetails.copy(
+                                    (InnerContractDetails) contractDetailsCache.origContract));
                 } else {
                     // Either no parent or we have RepoImpl's StoredContractDetails
                     // which should be flushed through RepoImpl
                     cachedDetails.put(
-                            ctdEntry.getKey(), ContractDetailsCacheImpl.copy(contractDetailsCache));
+                            ctdEntry.getKey(), InnerContractDetails.copy(contractDetailsCache));
                 }
             }
         } finally {

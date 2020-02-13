@@ -18,8 +18,11 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Node;
 
-/** Contract details cache implementation. */
-public class ContractDetailsCacheImpl implements ContractDetails {
+/**
+ * A short-term container for contract details information used for frequent updates without the
+ * overhead of storing data in a secure trie.
+ */
+public class InnerContractDetails implements ContractDetails {
 
     private Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
 
@@ -35,15 +38,15 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     // using the default transaction type to specify undefined VM
     private InternalVmType vmType = InternalVmType.EITHER;
 
-    public ContractDetailsCacheImpl(ContractDetails origContract) {
+    public InnerContractDetails(ContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
             this.codes = new HashMap<>(this.origContract.getCodes());
         }
     }
 
-    public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
-        ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
+    public static InnerContractDetails copy(InnerContractDetails cache) {
+        InnerContractDetails copy = new InnerContractDetails(cache.origContract);
         copy.codes = new HashMap<>(cache.getCodes());
         copy.vmType = cache.vmType;
         if (cache.objectGraph != null) {
@@ -231,7 +234,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     /**
-     * Get the address associated with this ContractDetailsCacheImpl.
+     * Get the address associated with this InnerContractDetails.
      *
      * @return the associated address.
      */
@@ -249,7 +252,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     }
 
     /**
-     * Puts all of the key-value pairs and object graph from this ContractDetailsCacheImpl into the
+     * Puts all of the key-value pairs and object graph from this InnerContractDetails into the
      * original contract injected into this class' constructor, transfers over any code and sets the
      * original contract to dirty only if it already is dirty or if this class is dirty, otherwise
      * sets it as clean.
@@ -290,7 +293,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
      * Returns a sufficiently deep copy of this contract details object.
      *
      * <p>If this contract details object's "original contract" is of type {@link
-     * ContractDetailsCacheImpl}, and the same is true for all of its ancestors, then this method
+     * InnerContractDetails}, and the same is true for all of its ancestors, then this method
      * will return a perfectly deep copy of this contract details object.
      *
      * <p>Otherwise, the "original contract" copy will retain some references that are also held by
@@ -305,16 +308,16 @@ public class ContractDetailsCacheImpl implements ContractDetails {
      * @return A copy of this object.
      */
     @Override
-    public ContractDetailsCacheImpl copy() {
+    public InnerContractDetails copy() {
         // TODO: better to move this check into all constructors instead.
         if (this == this.origContract) {
             throw new IllegalStateException(
-                    "Cannot copy a ContractDetailsCacheImpl whose original contract is itself!");
+                    "Cannot copy a InnerContractDetails whose original contract is itself!");
         }
 
         ContractDetails originalContractCopy =
                 (this.origContract == null) ? null : this.origContract.copy();
-        ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(originalContractCopy);
+        InnerContractDetails copy = new InnerContractDetails(originalContractCopy);
         copy.vmType = this.vmType;
         if (this.objectGraph != null) {
             copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);

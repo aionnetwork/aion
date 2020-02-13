@@ -35,7 +35,7 @@ public class IContractDetailsTest {
         MockitoAnnotations.initMocks(this);
 
         cache1 = new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db);
-        cache2 = new ContractDetailsCacheImpl(new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db));
+        cache2 = new InnerContractDetails(new FvmContractDetails(AddressUtils.ZERO_ADDRESS, db));
     }
 
     @After
@@ -233,13 +233,13 @@ public class IContractDetailsTest {
     }
 
     /**
-     * This test is specific to the ContractDetailsCacheImpl class, which has a commit method. This
+     * This test is specific to the InnerContractDetails class, which has a commit method. This
      * test class is not concerned with testing all of the functionality of this method, only with
      * how this method handles zero-byte values.
      */
     @Test
     public void testCommitEnMassOriginalIsAionContract() {
-        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache1);
+        InnerContractDetails impl = new InnerContractDetails(cache1);
 
         int numEntries = RandomUtils.nextInt(1_000, 5_000);
         int deleteOdds = 3;
@@ -271,13 +271,13 @@ public class IContractDetailsTest {
     }
 
     /**
-     * This test is specific to the ContractDetailsCacheImpl class, which has a commit method. This
+     * This test is specific to the InnerContractDetails class, which has a commit method. This
      * test class is not concerned with testing all of the functionality of this method, only with
      * how this method handles zero-byte values.
      */
     @Test
     public void testCommitEnMassOriginalIsContractDetails() {
-        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache2);
+        InnerContractDetails impl = new InnerContractDetails(cache2);
 
         int numEntries = RandomUtils.nextInt(1_000, 5_000);
         int deleteOdds = 3;
@@ -309,7 +309,7 @@ public class IContractDetailsTest {
     }
 
     /**
-     * This test is specific to the ContractDetailsCacheImpl class, which at times holds a different
+     * This test is specific to the InnerContractDetails class, which at times holds a different
      * storage value for contracts. This test checks that after an update to the cache object, the
      * original value from the contract details is not returned for use.
      */
@@ -329,7 +329,7 @@ public class IContractDetailsTest {
         // ensure the initial cache has the value
         cache1.put(key, value1);
 
-        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache1);
+        InnerContractDetails impl = new InnerContractDetails(cache1);
 
         // check that original value is retrieved
         assertThat(impl.get(key)).isEqualTo(value1);
