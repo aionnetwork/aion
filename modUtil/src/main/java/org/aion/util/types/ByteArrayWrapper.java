@@ -2,6 +2,7 @@ package org.aion.util.types;
 
 import java.util.Arrays;
 import java.util.Objects;
+import org.aion.util.conversions.Hex;
 
 /**
  * Immutable class used to wrap byte arrays for use in scenarios where value-based equality needs to
@@ -29,6 +30,23 @@ public final class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
      */
     public static ByteArrayWrapper wrap(byte[] bytes) {
         return new ByteArrayWrapper(bytes);
+    }
+
+    /**
+     * Returns a wrapper for the given hex string.
+     *
+     * @param hexString non-{@code null} string of hex characters to be wrapped
+     * @return a wrapper for the given hex string
+     * @throws NullPointerException if the given string is null
+     */
+    public static ByteArrayWrapper fromHex(String hexString) {
+        Objects.requireNonNull(hexString, "The given string must not be null.");
+
+        String data = hexString.startsWith("0x") ? hexString.substring(2) : hexString;
+        if ((data.length() & 1) == 1) {
+            data = "0" + data;
+        }
+        return new ByteArrayWrapper(Hex.decode(data));
     }
 
     /**
