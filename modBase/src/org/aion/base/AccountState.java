@@ -12,9 +12,6 @@ import org.aion.util.conversions.Hex;
 /** Account state. */
 public class AccountState {
 
-    /** The RLP encoding of this account state. */
-    protected byte[] rlpEncoded = null;
-
     /** Flag indicating whether the account has been deleted. */
     protected boolean deleted = false;
 
@@ -90,9 +87,7 @@ public class AccountState {
      * @param rlpData the RLP representation of the state of an account
      */
     public AccountState(byte[] rlpData) {
-        rlpEncoded = rlpData;
-
-        RLPList items = (RLPList) RLP.decode2(rlpEncoded).get(0);
+        RLPList items = (RLPList) RLP.decode2(rlpData).get(0);
 
         byte[] nonceValue = items.get(0).getRLPData();
         nonce = nonceValue == null ? BigInteger.ZERO : new BigInteger(1, nonceValue);
@@ -127,7 +122,6 @@ public class AccountState {
      *     Resets the stored RLP encoding.
      */
     protected void makeDirty() {
-        this.rlpEncoded = null;
         this.dirty = true;
     }
 
@@ -335,10 +329,6 @@ public class AccountState {
                 (this.stateRoot == null)
                         ? null
                         : Arrays.copyOf(this.stateRoot, this.stateRoot.length);
-        accountStateCopy.rlpEncoded =
-                (this.rlpEncoded == null)
-                        ? null
-                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
         return accountStateCopy;
     }
 
@@ -350,14 +340,11 @@ public class AccountState {
      *     if the object has been modified during execution.
      */
     public byte[] getEncoded() {
-        if (rlpEncoded == null) {
-            byte[] nonce = RLP.encodeBigInteger(this.nonce);
-            byte[] balance = RLP.encodeBigInteger(this.balance);
-            byte[] stateRoot = RLP.encodeElement(this.stateRoot);
-            byte[] codeHash = RLP.encodeElement(this.codeHash);
-            this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
-        }
-        return rlpEncoded;
+        byte[] nonce = RLP.encodeBigInteger(this.nonce);
+        byte[] balance = RLP.encodeBigInteger(this.balance);
+        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
+        byte[] codeHash = RLP.encodeElement(this.codeHash);
+        return RLP.encodeList(nonce, balance, stateRoot, codeHash);
     }
 
     /**
