@@ -188,6 +188,13 @@ public class InnerContractDetails implements ContractDetails {
         return value;
     }
 
+    /**
+     * Sets the transaction type value used to deploy the contract symbolizing the VM that manages
+     * the contract.
+     *
+     * @param vmType the transaction type value used to deploy the contract symbolizing the VM that
+     *     manages the contract
+     */
     public void setVmType(InternalVmType vmType) {
         if (this.vmType != vmType && vmType != InternalVmType.EITHER) {
             this.vmType = vmType;
@@ -263,8 +270,8 @@ public class InnerContractDetails implements ContractDetails {
         }
 
         // passing on the vm type
-        if (vmType != InternalVmType.EITHER && vmType != InternalVmType.UNKNOWN) {
-            origContract.setVmType(vmType);
+        if (vmType != InternalVmType.EITHER && vmType != InternalVmType.UNKNOWN && origContract instanceof InnerContractDetails) {
+            ((InnerContractDetails) origContract).setVmType(vmType);
         }
 
         // passing on the object graph

@@ -193,10 +193,6 @@ public class AvmContractDetails implements StoredContractDetails {
                 : ByteArrayWrapper.wrap(RLP.decode2(data).get(0).getRLPData());
     }
 
-    public void setVmType(InternalVmType vmType) {
-        // nothing to do, always AVM
-    }
-
     public InternalVmType getVmType() {
         return InternalVmType.AVM;
     }

@@ -172,10 +172,6 @@ public class FvmContractDetails implements StoredContractDetails {
                 : ByteArrayWrapper.wrap(RLP.decode2(data).get(0).getRLPData());
     }
 
-    public void setVmType(InternalVmType vmType) {
-        // nothing to do
-    }
-
     public InternalVmType getVmType() {
         return InternalVmType.FVM;
     }

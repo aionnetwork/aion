@@ -61,15 +61,6 @@ public interface ContractDetails {
     InternalVmType getVmType();
 
     /**
-     * Sets the transaction type value used to deploy the contract symbolizing the VM that manages
-     * the contract.
-     *
-     * @param vmType the transaction type value used to deploy the contract symbolizing the VM that
-     *     manages the contract
-     */
-    void setVmType(InternalVmType vmType);
-
-    /**
      * Returns a byte array from contract storage representing an encoding of the object graph for
      * the given contract.
      *
