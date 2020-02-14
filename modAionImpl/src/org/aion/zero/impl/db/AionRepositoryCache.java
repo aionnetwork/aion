@@ -127,19 +127,23 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         lock.lock();
 
         try {
-            ContractDetails contractDetails = this.cachedDetails.get(address);
-
-            if (contractDetails == null) {
-                Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
-                this.cachedAccounts.put(address, pair.getLeft());
-                this.cachedDetails.put(address, pair.getRight());
-                contractDetails = pair.getRight();
-            }
-
-            return contractDetails;
+            return getInnerContractDetails(address);
         } finally {
             lock.unlock();
         }
+    }
+
+    private InnerContractDetails getInnerContractDetails(AionAddress address) {
+        InnerContractDetails contractDetails = this.cachedDetails.get(address);
+
+        if (contractDetails == null) {
+            Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
+            this.cachedAccounts.put(address, pair.getLeft());
+            this.cachedDetails.put(address, pair.getRight());
+            contractDetails = pair.getRight();
+        }
+
+        return contractDetails;
     }
 
     @Override
@@ -202,10 +206,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         lock.lock();
         try {
             getAccountState(address).delete();
-            ContractDetails cd = getContractDetails(address);
-            if (cd != null) {
-                cd.delete();
-            }
+            getInnerContractDetails(address).delete();
         } finally {
             lock.unlock();
         }
@@ -265,11 +266,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public void saveCode(AionAddress address, byte[] code) {
         lock.lock();
         try {
-            // save the code
-            // TODO: why not create contract here directly? also need to check that there is no
-            // preexisting code!
-            ContractDetails contractDetails = getContractDetails(address);
-            contractDetails.setCode(code);
+            getInnerContractDetails(address).setCode(code);
 
             // update the code hash
             getAccountState(address).setCodeHash(h256(code));
@@ -280,14 +277,18 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
     @Override
     public byte[] getCode(AionAddress address) {
-        if (!hasAccountState(address)) {
-            return EMPTY_BYTE_ARRAY;
+        lock.lock();
+
+        try {
+            if (!hasAccountState(address)) {
+                return EMPTY_BYTE_ARRAY;
+            }
+
+            byte[] codeHash = getAccountState(address).getCodeHash();
+            return getInnerContractDetails(address).getCode(codeHash);
+        } finally {
+            lock.unlock();
         }
-
-        byte[] codeHash = getAccountState(address).getCodeHash();
-
-        // TODO: why use codeHash here? may require refactoring
-        return getContractDetails(address).getCode(codeHash);
     }
 
     @Override
@@ -334,7 +335,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public void saveVmType(AionAddress contract, InternalVmType vmType) {
         lock.lock();
         try {
-            getContractDetails(contract).setVmType(vmType);
+            getInnerContractDetails(contract).setVmType(vmType);
         } finally {
             lock.unlock();
         }
@@ -351,7 +352,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         // this requires loading the account and details
         lock.lock();
         try {
-            return getContractDetails(contract).getVmType();
+            return getInnerContractDetails(contract).getVmType();
         } finally {
             lock.unlock();
         }
@@ -359,15 +360,14 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
     @Override
     public void saveObjectGraph(AionAddress contract, byte[] graph) {
-        // TODO: unsure about impl
         lock.lock();
         try {
             // this change will mark the contract as dirty (requires update in the db)
-            ContractDetails contractDetails = getContractDetails(contract);
-            contractDetails.setObjectGraph(graph);
+            InnerContractDetails details = getInnerContractDetails(contract);
+            details.setObjectGraph(graph);
 
             // update the storage hash
-            getAccountState(contract).setStateRoot(contractDetails.getStorageHash());
+            getAccountState(contract).setStateRoot(details.getStorageHash());
         } finally {
             lock.unlock();
         }
@@ -377,7 +377,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public byte[] getObjectGraph(AionAddress contract) {
         lock.lock();
         try {
-            return getContractDetails(contract).getObjectGraph();
+            return getInnerContractDetails(contract).getObjectGraph();
         } finally {
             lock.unlock();
         }
@@ -387,7 +387,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public void addStorageRow(AionAddress address, ByteArrayWrapper key, ByteArrayWrapper value) {
         lock.lock();
         try {
-            getContractDetails(address).put(key, value);
+            getInnerContractDetails(address).put(key, value);
         } finally {
             lock.unlock();
         }
@@ -397,7 +397,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public void removeStorageRow(AionAddress address, ByteArrayWrapper key) {
         lock.lock();
         try {
-            getContractDetails(address).delete(key);
+            getInnerContractDetails(address).delete(key);
         } finally {
             lock.unlock();
         }
@@ -405,14 +405,24 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
     @Override
     public ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key) {
-        return getContractDetails(address).get(key);
+        lock.lock();
+        try {
+            return getInnerContractDetails(address).get(key);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
             AionAddress address, Collection<ByteArrayWrapper> keys) {
-        ContractDetails details = getContractDetails(address);
-        return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
+        lock.lock();
+        try {
+            InnerContractDetails details = getInnerContractDetails(address);
+            return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
