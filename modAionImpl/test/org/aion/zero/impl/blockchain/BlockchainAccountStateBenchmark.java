@@ -341,7 +341,7 @@ public class BlockchainAccountStateBenchmark {
             System.out.println("deployed at: " + contractAddress);
 
             RLPContractDetails acdi = DetailsDataStore.fromEncoding(bc.getRepository().getContractDetails(contractAddress).getEncoded());
-            assertFalse(acdi.isExternalStorage);
+            assertTrue(acdi.isExternalStorage);
 
             // around 350 tx to letting the contract storage from memory switch to the external
             // storage.
