@@ -11,17 +11,21 @@ pipeline {
         PATH = '/home/aion/.cargo/bin:/home/aion/bin:/home/aion/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/usr/lib/jvm/java-11-openjdk-amd64/bin'
         LIBRARY_PATH = '/usr/lib/jvm/java-11-openjdk-amd64/lib/server'
 	
-	GIT_TAG = sh(returnStdout: true, script:
-	'''\
-     	#!/bin/bash -e
-     	if git rev-parse --verify -q refs/tags/${GIT_BRANCH}^{} | grep -q ${GIT_COMMIT}
-       	    then echo tag
-       	    exit 0
-     	else echo unknown
-       	    exit 0
-     	fi
-	'''.stripIndent()).trim()
+        P2P_PORT = sh(returnStdout: true, script: 'shuf -i 30304-65000 -n 1').trim()
+
+        GIT_TAG = sh(returnStdout: true, script:
+        '''\
+        #!/bin/bash -e
+        if git rev-parse --verify -q refs/tags/${GIT_BRANCH}^{} | grep -q ${GIT_COMMIT}
+        then echo tag
+            exit 0
+        else echo unknown
+            exit 0
+        fi
+        '''.stripIndent()).trim()
     }
+
+    triggers { cron('0 2 * * 6') }
 
     stages {
         stage('Build') {
@@ -66,7 +70,7 @@ pipeline {
                 // - this branch is in a PR (env.CHANGE_ID not null), or
                 // - this branch is not master
                 not {
-                    expression {GIT_BRANCH == 'master'}
+                    expression {GIT_BRANCH == 'master' || GIT_TAG == 'tag'}
                 }
             }
 
@@ -99,6 +103,43 @@ pipeline {
                 }
             }
         }
+
+        stage('Testnet Sync test') {
+	    when {
+		triggeredBy 'TimerTrigger'
+                expression{GIT_BRANCH == 'master'|| GIT_TAG == 'tag'}
+	    }
+
+	    steps {
+                timeout(time: 4, unit: 'HOURS') {
+                    dir('pack') {
+                        sh('tar xvf oan.tar.bz2')
+                        echo "Start amity sync test..."
+                        sh('./oan/aion.sh -n amity e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev fs')
+                        echo "finished amity sync test..."
+                        sh('rm -rf ./oan/amity/*')
+		    }
+                }
+            }
+	}
+
+        stage('Mainnet Sync test') {
+            when {
+                triggeredBy 'TimerTrigger'
+                expression{GIT_BRANCH == 'master'|| GIT_TAG == 'tag'}
+            }
+
+            steps {
+                timeout(time: 12, unit: 'HOURS') {
+                    dir('pack') {
+                        echo "Start mainnet sync test..."
+                        sh('./oan/aion.sh e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev xs=5371168')
+                        echo "finished mainnet sync test..."
+                        sh('rm -rf ./oan')
+                    }
+                }
+            }
+        }
     }
 
     post {
@@ -108,19 +149,18 @@ pipeline {
             junit "report/**/*.xml"
             sh 'bash script/jenkins-dump-heapfiles.sh'
             cleanWs()
-    }
+        }
 
-    success {
-        slackSend channel: '#ci',
-            color: 'good',
-            message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
-    } 
+        success {
+            slackSend channel: '#ci',
+                color: 'good',
+                message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
+        }
 
         failure {
             slackSend channel: '#ci',
                     color: 'danger', 
                     message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
         }
-
     }
 }
