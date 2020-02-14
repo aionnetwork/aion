@@ -40,7 +40,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     final Map<AionAddress, AccountState> cachedAccounts;
     /** local contract details cache */
     @VisibleForTesting
-    final Map<AionAddress, ContractDetails> cachedDetails;
+    final Map<AionAddress, InnerContractDetails> cachedDetails;
     /** local transformed code cache */
     private final Map<AionAddress, TransformedCodeInfo> cachedTransformedCode;
 
@@ -66,7 +66,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             cachedAccounts.put(address, accountState);
 
             // TODO: unify contract details initialization from Impl and Track
-            ContractDetails contractDetails = new InnerContractDetails(null);
+            InnerContractDetails contractDetails = new InnerContractDetails(null);
             contractDetails.markAsDirty();
             cachedDetails.put(address, contractDetails);
         } finally {
@@ -92,7 +92,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
             // when the account is not cached load it from the repository
             if (accountState == null) {
-                Pair<AccountState, ContractDetails> pair = getAccountStateFromParent(address);
+                Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
                 this.cachedAccounts.put(address, pair.getLeft());
                 this.cachedDetails.put(address, pair.getRight());
                 accountState = pair.getLeft();
@@ -130,7 +130,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             ContractDetails contractDetails = this.cachedDetails.get(address);
 
             if (contractDetails == null) {
-                Pair<AccountState, ContractDetails> pair = getAccountStateFromParent(address);
+                Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
                 this.cachedAccounts.put(address, pair.getLeft());
                 this.cachedDetails.put(address, pair.getRight());
                 contractDetails = pair.getRight();
@@ -169,7 +169,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
      * @return a pair of objects representing copies of the {@link AccountState} and {@link
      *     ContractDetails} as they are known to the closest ancestor repository
      */
-    private Pair<AccountState, ContractDetails> getAccountStateFromParent(AionAddress address) {
+    private Pair<AccountState, InnerContractDetails> getAccountStateFromParent(AionAddress address) {
         if (repository instanceof AionRepositoryCache) {
             AionRepositoryCache parent = (AionRepositoryCache) repository;
 
@@ -185,7 +185,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             }
         } else {
             AccountState account = repository.getAccountState(address);
-            ContractDetails details;
+            InnerContractDetails details;
             if (account != null) {
                 account = new AccountState(account);
                 details = new InnerContractDetails(repository.getContractDetails(address));
@@ -457,26 +457,16 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<AionAddress, ContractDetails> entry : cachedDetails.entrySet()) {
-                ContractDetails ctd = entry.getValue();
-                // TODO: this functionality will be improved with the switch to a
-                // different ContractDetails implementation
-                if (ctd instanceof InnerContractDetails) {
-                    InnerContractDetails contractDetailsCache = (InnerContractDetails) ctd;
-                    contractDetailsCache.commit();
+            for (Map.Entry<AionAddress, InnerContractDetails> entry : cachedDetails.entrySet()) {
+                InnerContractDetails contractDetailsCache = entry.getValue();
+                contractDetailsCache.commit();
 
-                    if (contractDetailsCache.origContract == null
-                            && other.hasContractDetails(entry.getKey())) {
-                        // in forked block the contract account might not exist thus
-                        // it is created without
-                        // origin, but on the main chain details can contain data
-                        // which should be merged
-                        // into a single storage trie so both branches with
-                        // different stateRoots are valid
-                        contractDetailsCache.origContract =
-                                other.getContractDetails(entry.getKey());
-                        contractDetailsCache.commit();
-                    }
+                if (contractDetailsCache.origContract == null && other.hasContractDetails(entry.getKey())) {
+                    // in forked block the contract account might not exist thus it is created without origin,
+                    // but on the main chain details can contain data which should be merged into a single storage trie
+                    // so both branches with different stateRoots are valid
+                    contractDetailsCache.origContract = other.getContractDetails(entry.getKey());
+                    contractDetailsCache.commit();
                 }
             }
 
@@ -631,7 +621,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         s.append("cachedDetails [");
         if (cachedDetails != null && !cachedDetails.isEmpty()) {
             s.append("\n");
-            for (Map.Entry<AionAddress, ContractDetails> ca : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, InnerContractDetails> ca : cachedDetails.entrySet()) {
                 s.append(ca.getKey()).append("\n").append(ca.getValue()).append("\n");
             }
         } else {
