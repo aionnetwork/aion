@@ -954,6 +954,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public static long shutdownHook = Long.MAX_VALUE;
 
+    public static boolean enableFullSyncCheck = false;
+    public static boolean reachedFullSync = false;
+
     public synchronized ImportResult tryToConnect(final Block block) {
         if (bestBlock.getNumber() == shutdownHook) {
             LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
@@ -965,6 +968,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             // requested shutdown
+            System.exit(SystemExitCodes.NORMAL);
+        } else if (enableFullSyncCheck && reachedFullSync) {
+            LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
             System.exit(SystemExitCodes.NORMAL);
         }
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);

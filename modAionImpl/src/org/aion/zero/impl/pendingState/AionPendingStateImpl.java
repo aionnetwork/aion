@@ -634,6 +634,11 @@ public class AionPendingStateImpl implements IPendingState {
 
         currentBestBlock.set(newBlock);
 
+        // For Cli full-sync check
+        if (AionBlockchainImpl.enableFullSyncCheck) {
+            AionBlockchainImpl.reachedFullSync = isFullSynced();
+        }
+
         closeToNetworkBest = isCloseToNetworkBest();
         LOGGER_TX.debug("PendingStateImpl.processBest: close to the network best: {}", closeToNetworkBest ? "true" : "false");
 
@@ -654,6 +659,10 @@ public class AionPendingStateImpl implements IPendingState {
         if (this.poolDumpEnable) {
             DumpPool();
         }
+    }
+
+    private boolean isFullSynced() {
+        return currentBestBlock.get().getNumber() >= networkBestBlockCallback.getNetworkBestBlockNumber();
     }
 
     @Override

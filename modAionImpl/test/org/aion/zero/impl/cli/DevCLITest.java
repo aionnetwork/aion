@@ -88,6 +88,10 @@ public class DevCLITest {
         composite = new DevCLI.Composite();
         composite.setStopAtParam(testNumber);
         composite.checkOptions();
+
+        composite = new DevCLI.Composite();
+        composite.setFullSync(true);
+        composite.checkOptions();
     }
 
     @Parameters(method = "paramatersForTestRunCommand")
@@ -103,14 +107,15 @@ public class DevCLITest {
         composite.setDumpStateParam(toLong(params[6]));
         composite.setDumpForTestParams((String[]) params[7]);
         composite.setDumpBlocksParam(toLong(params[8]));
+        composite.setFullSync(toBool(params[9]));
         DevCLI devCLI = new DevCLI();
         devCLI.setArgs(composite);
         assertThat(devCLI.runCommand()).isEqualTo(expectedReturn);
     }
 
     public Object[] paramatersForTestRunCommand() {
-        Object[] empty = new Object[] {null, null, null, null, null, null, null, null, null};
-        Object[] help = new Object[] {null, null, null, null, true, null, null, null, null};
+        Object[] empty = new Object[] {null, null, null, null, null, null, null, null, null, null};
+        Object[] help = new Object[] {null, null, null, null, true, null, null, null, null, null};
         return List.of(
                         new Object[] {empty, Cli.ReturnType.ERROR},
                         new Object[] {help, Cli.ReturnType.EXIT})

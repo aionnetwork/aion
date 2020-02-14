@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.DBUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -34,7 +35,15 @@ public class DevCLI {
             return Cli.ReturnType.ERROR;
         }
         System.out.println("Shutdown hook set at block " + blockNumber);
+        CfgAion.inst().getConsensus().setMining(false);
         AionBlockchainImpl.shutdownHook = blockNumber;
+        return Cli.ReturnType.RUN;
+    }
+
+    public static Cli.ReturnType fullSync() {
+        CfgAion.inst().getConsensus().setMining(false);
+        AionBlockchainImpl.enableFullSyncCheck = true;
+        System.out.println("Shutdown hook set to fully sync.");
         return Cli.ReturnType.RUN;
     }
 
@@ -191,6 +200,8 @@ public class DevCLI {
                 return printAccountDetails(args.queryAccountParams);
             } else if (args.stopAtParam != null) {
                 return stopAt(args.stopAtParam);
+            } else if (args.fullSync != null) {
+                return fullSync();
             }
         } catch (IllegalArgumentException e) {
             printUsage(System.out, this);
@@ -261,7 +272,13 @@ public class DevCLI {
                 paramLabel = "<block_number>",
                 description = "dumps the heap and shuts down after the specified block is imported",
                 arity = "1")
+
         private Long stopAtParam = null;
+
+        @CommandLine.Option(
+            names = {"fs", "full-sync"},
+            description = "Fully sync blocks from the given network and shutdown the kernel")
+        private Boolean fullSync = null;
 
         void checkOptions() {
             if (stopAtParam == null
@@ -272,7 +289,8 @@ public class DevCLI {
                     && dumpBlocksParam == null
                     && help == null
                     && dumpStateParam == null
-                    && dumpStateSizeParam == null) {
+                    && dumpStateSizeParam == null
+                    && fullSync == null) {
                 throw new IllegalArgumentException("Expected at least one argument");
             }
         }
@@ -311,6 +329,10 @@ public class DevCLI {
 
         void setStopAtParam(Long stopAtParam) {
             this.stopAtParam = stopAtParam;
+        }
+
+        void setFullSync(Boolean fullSync) {
+            this.fullSync = fullSync;
         }
     }
 }
