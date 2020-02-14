@@ -531,26 +531,6 @@ public class AionRepositoryImpl extends AbstractRepository {
         return getAccountState(address) != null;
     }
 
-    /**
-     * @implNote The loaded objects are fresh copies of the original account state and contract
-     *     details.
-     */
-    @Override
-    public Pair<AccountState, ContractDetails> loadAccountState(AionAddress address) {
-
-        AccountState account = getAccountState(address);
-        ContractDetails details;
-        if (account != null) {
-            account = new AccountState(account);
-            details = new InnerContractDetails(getContractDetails(address));
-        } else {
-            account = new AccountState();
-            details = new InnerContractDetails(null);
-        }
-
-        return Pair.of(account, details);
-    }
-
     @Override
     public byte[] getRoot() {
         rwLock.readLock().lock();

@@ -153,16 +153,6 @@ public interface Repository<AS> {
     boolean hasAccountState(AionAddress address);
 
     /**
-     * Returns a pair of objects representing the account and contract details state associated with
-     * the given address.
-     *
-     * @param address the address of the account of interest
-     * @return a {@link Pair} where the first element is the account state and the second element is
-     *     the contract details
-     */
-    Pair<AS, ContractDetails> loadAccountState(AionAddress address);
-
-    /**
      * Retrieves the current state of the account associated with the given address.
      *
      * @param address the address of the account of interest

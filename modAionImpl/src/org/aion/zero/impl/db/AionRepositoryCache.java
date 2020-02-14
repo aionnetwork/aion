@@ -92,7 +92,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
             // when the account is not cached load it from the repository
             if (accountState == null) {
-                Pair<AccountState, ContractDetails> pair = loadAccountState(address);
+                Pair<AccountState, ContractDetails> pair = getAccountStateFromParent(address);
                 this.cachedAccounts.put(address, pair.getLeft());
                 this.cachedDetails.put(address, pair.getRight());
                 accountState = pair.getLeft();
@@ -130,7 +130,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             ContractDetails contractDetails = this.cachedDetails.get(address);
 
             if (contractDetails == null) {
-                Pair<AccountState, ContractDetails> pair = loadAccountState(address);
+                Pair<AccountState, ContractDetails> pair = getAccountStateFromParent(address);
                 this.cachedAccounts.put(address, pair.getLeft());
                 this.cachedDetails.put(address, pair.getRight());
                 contractDetails = pair.getRight();
@@ -162,28 +162,38 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     /**
-     * @implNote The loaded objects are fresh copies of the locally cached account state and
-     *     contract details.
+     * Returns copies of the {@link AccountState} and {@link ContractDetails} from the closest
+     * ancestor.
+     *
+     * @param address the address for the account of interest
+     * @return a pair of objects representing copies of the {@link AccountState} and {@link
+     *     ContractDetails} as they are known to the closest ancestor repository
      */
-    @Override
-    public Pair<AccountState, ContractDetails> loadAccountState(AionAddress address) {
-        lock.lock();
+    private Pair<AccountState, ContractDetails> getAccountStateFromParent(AionAddress address) {
+        if (repository instanceof AionRepositoryCache) {
+            AionRepositoryCache parent = (AionRepositoryCache) repository;
 
-        try {
-            // check if the account is cached locally
-            AccountState accountState = this.cachedAccounts.get(address);
-            ContractDetails contractDetails = this.cachedDetails.get(address);
+            AccountState account = parent.cachedAccounts.get(address);
+            ContractDetails details = parent.cachedDetails.get(address);
 
-            // when account not cached load from repository
-            if (accountState == null) {
-                // load directly to the caches given as parameters
-                return repository.loadAccountState(address);
+            // when account not cached load from grandparent
+            if (account == null) {
+                return parent.getAccountStateFromParent(address);
             } else {
                 // copy the objects if they were cached locally
-                return Pair.of(new AccountState(accountState), new InnerContractDetails(contractDetails));
+                return Pair.of(new AccountState(account), new InnerContractDetails(details));
             }
-        } finally {
-            lock.unlock();
+        } else {
+            AccountState account = repository.getAccountState(address);
+            ContractDetails details;
+            if (account != null) {
+                account = new AccountState(account);
+                details = new InnerContractDetails(repository.getContractDetails(address));
+            } else {
+                account = new AccountState();
+                details = new InnerContractDetails(null);
+            }
+            return Pair.of(account, details);
         }
     }
 
