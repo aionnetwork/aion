@@ -87,21 +87,25 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         lock.lock();
 
         try {
-            // check if the account is cached locally
-            AccountState accountState = this.cachedAccounts.get(address);
-
-            // when the account is not cached load it from the repository
-            if (accountState == null) {
-                Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
-                this.cachedAccounts.put(address, pair.getLeft());
-                this.cachedDetails.put(address, pair.getRight());
-                accountState = pair.getLeft();
-            }
-
-            return accountState;
+            return getLocalAccountState(address);
         } finally {
             lock.unlock();
         }
+    }
+
+    private AccountState getLocalAccountState(AionAddress address) {
+        // check if the account is cached locally
+        AccountState accountState = this.cachedAccounts.get(address);
+
+        // when the account is not cached load it from the repository
+        if (accountState == null) {
+            Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
+            this.cachedAccounts.put(address, pair.getLeft());
+            this.cachedDetails.put(address, pair.getRight());
+            accountState = pair.getLeft();
+        }
+
+        return accountState;
     }
 
     public boolean hasAccountState(AionAddress address) {
@@ -205,7 +209,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public void deleteAccount(AionAddress address) {
         lock.lock();
         try {
-            getAccountState(address).delete();
+            getLocalAccountState(address).delete();
             getInnerContractDetails(address).delete();
         } finally {
             lock.unlock();
@@ -216,7 +220,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public BigInteger incrementNonce(AionAddress address) {
         lock.lock();
         try {
-            return getAccountState(address).incrementNonce();
+            return getLocalAccountState(address).incrementNonce();
         } finally {
             lock.unlock();
         }
@@ -226,7 +230,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     public BigInteger setNonce(AionAddress address, BigInteger newNonce) {
         lock.lock();
         try {
-            return getAccountState(address).setNonce(newNonce);
+            return getLocalAccountState(address).setNonce(newNonce);
         } finally {
             lock.unlock();
         }
@@ -234,20 +238,30 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
     @Override
     public BigInteger getNonce(AionAddress address) {
-        AccountState accountState = getAccountState(address);
-        // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted())
-                ? BigInteger.ZERO
-                : accountState.getNonce();
+        lock.lock();
+        try {
+            AccountState accountState = getLocalAccountState(address);
+            // account state can never be null, but may be empty or deleted
+            return (accountState.isEmpty() || accountState.isDeleted())
+                    ? BigInteger.ZERO
+                    : accountState.getNonce();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public BigInteger getBalance(AionAddress address) {
-        AccountState accountState = getAccountState(address);
-        // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted())
-                ? BigInteger.ZERO
-                : accountState.getBalance();
+        lock.lock();
+        try {
+            AccountState accountState = getLocalAccountState(address);
+            // account state can never be null, but may be empty or deleted
+            return (accountState.isEmpty() || accountState.isDeleted())
+                    ? BigInteger.ZERO
+                    : accountState.getBalance();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
@@ -255,7 +269,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         lock.lock();
         try {
             // TODO: where do we ensure that this does not result in a negative value?
-            AccountState accountState = getAccountState(address);
+            AccountState accountState = getLocalAccountState(address);
             return accountState.addToBalance(value);
         } finally {
             lock.unlock();
@@ -269,7 +283,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             getInnerContractDetails(address).setCode(code);
 
             // update the code hash
-            getAccountState(address).setCodeHash(h256(code));
+            getLocalAccountState(address).setCodeHash(h256(code));
         } finally {
             lock.unlock();
         }
@@ -284,7 +298,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                 return EMPTY_BYTE_ARRAY;
             }
 
-            byte[] codeHash = getAccountState(address).getCodeHash();
+            byte[] codeHash = getLocalAccountState(address).getCodeHash();
             return getInnerContractDetails(address).getCode(codeHash);
         } finally {
             lock.unlock();
@@ -367,7 +381,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             details.setObjectGraph(graph);
 
             // update the storage hash
-            getAccountState(contract).setStateRoot(details.getStorageHash());
+            getLocalAccountState(contract).setStateRoot(details.getStorageHash());
         } finally {
             lock.unlock();
         }
