@@ -1,14 +1,22 @@
 package org.aion.zero.impl.db;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
+import static org.aion.crypto.HashUtil.h256;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.aion.base.AccountState;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.db.ContractDetails;
+import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.config.CfgPrune;
 import org.aion.zero.impl.config.PruneConfig;
 import org.aion.util.types.DataWord;
@@ -20,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AionRepositoryCacheTest {
+    private  AionRepositoryImpl repository;
     private AionRepositoryCache cache;
     private static final int SINGLE_BYTES = 16;
     private static final int DOUBLE_BYTES = 32;
@@ -46,7 +55,8 @@ public class AionRepositoryCacheTest {
                         return props;
                     }
                 };
-        cache = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        repository = AionRepositoryImpl.createForTesting(repoConfig);
+        cache = new AionRepositoryCache(repository);
     }
 
     @After
@@ -176,6 +186,155 @@ public class AionRepositoryCacheTest {
         for (AionAddress address : addresses) {
             checkStorage(address, keys, values, deleteOdds);
         }
+    }
+
+    @Test
+    public void testLoadAccountState_withNewAccount() {
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+
+        AionRepositoryCache tracker = (AionRepositoryCache) cache.startTracking();
+        assertThat(tracker.hasAccountState(address)).isFalse();
+        assertThat(tracker.hasContractDetails(address)).isFalse();
+        assertThat(tracker.cachedAccounts.containsKey(address)).isFalse();
+        assertThat(tracker.cachedDetails.containsKey(address)).isFalse();
+
+        // load account state for new address
+        AccountState account = tracker.getAccountState(address);
+        InnerContractDetails details = (InnerContractDetails) tracker.getContractDetails(address);
+
+        // 1. Ensure new account and details were created
+        assertThat(tracker.cachedAccounts.containsKey(address)).isTrue();
+        assertThat(tracker.cachedDetails.containsKey(address)).isTrue();
+
+        assertThat(account.isEmpty()).isTrue();
+        assertThat(account.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+
+        assertThat(details.origContract).isNull();
+        assertThat(details.isDeleted()).isFalse();
+        assertThat(details.isDirty()).isFalse();
+
+        // 2. Ensure that the cache does not contain the new account and details
+        assertThat(cache.cachedAccounts.containsKey(address)).isFalse();
+        assertThat(cache.cachedDetails.containsKey(address)).isFalse();
+
+        // 3. Ensure that the repository does not contain the new account and details
+        assertThat(repository.hasAccountState(address)).isFalse();
+        assertThat(repository.hasContractDetails(address)).isFalse();
+    }
+
+    @Test
+    public void testLoadAccountState_withExistingAccountFromRepository() {
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+        byte[] code = RandomUtils.nextBytes(100);
+        byte[] codeHash = h256(code);
+
+        // initialize contract in the repository
+        RepositoryCache<AccountState> tempCache = repository.startTracking();
+        tempCache.createAccount(address);
+        tempCache.saveCode(address, code);
+        tempCache.saveVmType(address, InternalVmType.FVM);
+        tempCache.addBalance(address, BigInteger.TEN);
+        tempCache.flush();
+
+        AionRepositoryCache tracker = (AionRepositoryCache) cache.startTracking();
+        assertThat(tracker.hasAccountState(address)).isTrue();
+        assertThat(tracker.hasContractDetails(address)).isTrue();
+        assertThat(tracker.cachedAccounts.containsKey(address)).isFalse();
+        assertThat(tracker.cachedDetails.containsKey(address)).isFalse();
+
+        // load account state for new address
+        AccountState account = tracker.getAccountState(address);
+        InnerContractDetails details = (InnerContractDetails) tracker.getContractDetails(address);
+
+        // 1. Ensure new account and details were created
+        assertThat(tracker.cachedAccounts.containsKey(address)).isTrue();
+        assertThat(tracker.cachedDetails.containsKey(address)).isTrue();
+
+        assertThat(account.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(account.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(account.getCodeHash()).isEqualTo(codeHash);
+        assertThat(account.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+
+        assertThat(details.origContract).isNotNull();
+        assertThat(details.getCode(codeHash)).isEqualTo(code);
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
+        assertThat(details.isDeleted()).isFalse();
+        assertThat(details.isDirty()).isFalse();
+
+        // 2. Ensure that the cache does not contain the account and details
+        assertThat(cache.cachedAccounts.containsKey(address)).isFalse();
+        assertThat(cache.cachedDetails.containsKey(address)).isFalse();
+
+        // 3. Ensure that the repository does contain the account and details
+        assertThat(repository.hasAccountState(address)).isTrue();
+        assertThat(repository.hasContractDetails(address)).isTrue();
+
+    }
+
+    @Test
+    public void testLoadAccountState_withExistingAccountFromCache() {
+        AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
+        byte[] code = RandomUtils.nextBytes(100);
+        byte[] codeHash = h256(code);
+
+        // initialize contract in the repository
+        RepositoryCache<AccountState> tempCache = repository.startTracking();
+        tempCache.createAccount(address);
+        tempCache.saveCode(address, code);
+        tempCache.saveVmType(address, InternalVmType.FVM);
+        tempCache.addBalance(address, BigInteger.ONE);
+        tempCache.flush();
+
+        // update the contract in the cache without flushing
+        cache.addBalance(address, BigInteger.ONE);
+        ByteArrayWrapper store = ByteArrayWrapper.wrap(RandomUtils.nextBytes(32));
+        cache.addStorageRow(address, store, store);
+
+        AionRepositoryCache tracker = (AionRepositoryCache) cache.startTracking();
+        assertThat(tracker.hasAccountState(address)).isTrue();
+        assertThat(tracker.hasContractDetails(address)).isTrue();
+        assertThat(tracker.cachedAccounts.containsKey(address)).isFalse();
+        assertThat(tracker.cachedDetails.containsKey(address)).isFalse();
+
+        // load account state for new address
+        AccountState account = tracker.getAccountState(address);
+        InnerContractDetails details = (InnerContractDetails) tracker.getContractDetails(address);
+
+        // 1. Ensure new account and details were created
+        assertThat(tracker.cachedAccounts.containsKey(address)).isTrue();
+        assertThat(tracker.cachedDetails.containsKey(address)).isTrue();
+
+        assertThat(account.getBalance()).isEqualTo(BigInteger.TWO);
+        assertThat(account.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(account.getCodeHash()).isEqualTo(codeHash);
+        assertThat(account.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+
+        assertThat(details.origContract).isNotNull();
+        assertThat(details.getCode(codeHash)).isEqualTo(code);
+        assertThat(details.get(store)).isEqualTo(store);
+        assertThat(details.getVmType()).isEqualTo(InternalVmType.FVM);
+        assertThat(details.isDeleted()).isFalse();
+        assertThat(details.isDirty()).isFalse();
+
+        // 2. Ensure that the cache contains the loaded account and details
+        assertThat(cache.cachedAccounts.containsKey(address)).isTrue();
+        assertThat(cache.cachedDetails.containsKey(address)).isTrue();
+
+        AccountState accountCache = cache.getAccountState(address);
+        InnerContractDetails detailsCache = (InnerContractDetails) cache.getContractDetails(address);
+
+        assertThat(accountCache.getBalance()).isEqualTo(BigInteger.TWO);
+        assertThat(detailsCache.get(store)).isEqualTo(store);
+
+        // 3. Ensure that the repository contains the old account and details
+        assertThat(repository.hasAccountState(address)).isTrue();
+        assertThat(repository.hasContractDetails(address)).isTrue();
+
+        AccountState accountRepo = repository.getAccountState(address);
+        ContractDetails detailsRepo = repository.getContractDetails(address);
+
+        assertThat(accountRepo.getBalance()).isEqualTo(BigInteger.ONE);
+        assertThat(detailsRepo.get(store)).isNull();
     }
 
     // <-----------------------------------------HELPERS-------------------------------------------->

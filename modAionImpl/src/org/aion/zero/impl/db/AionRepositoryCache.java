@@ -3,6 +3,7 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,9 +36,11 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     private final Repository<AccountState> repository;
 
     /** local accounts cache */
-    private final Map<AionAddress, AccountState> cachedAccounts;
+    @VisibleForTesting
+    final Map<AionAddress, AccountState> cachedAccounts;
     /** local contract details cache */
-    private final Map<AionAddress, ContractDetails> cachedDetails;
+    @VisibleForTesting
+    final Map<AionAddress, ContractDetails> cachedDetails;
     /** local transformed code cache */
     private final Map<AionAddress, TransformedCodeInfo> cachedTransformedCode;
 
