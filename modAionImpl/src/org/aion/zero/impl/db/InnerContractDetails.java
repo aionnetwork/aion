@@ -258,46 +258,6 @@ public class InnerContractDetails implements ContractDetails {
     }
 
     /**
-     * Returns a sufficiently deep copy of this contract details object.
-     *
-     * <p>If this contract details object's "original contract" is of type {@link
-     * InnerContractDetails}, and the same is true for all of its ancestors, then this method
-     * will return a perfectly deep copy of this contract details object.
-     *
-     * <p>Otherwise, the "original contract" copy will retain some references that are also held by
-     * the object it is a copy of. In particular, the following references will not be copied:
-     *
-     * <p>- The external storage data source. - The previous root of the trie will pass its original
-     * object reference if this root is not of type {@code byte[]}. - The current root of the trie
-     * will pass its original object reference if this root is not of type {@code byte[]}. - Each
-     * {@link org.aion.rlp.Value} object reference held by each of the {@link
-     * Node} objects in the underlying cache.
-     *
-     * @return A copy of this object.
-     */
-    @Override
-    public InnerContractDetails copy() {
-        // TODO: better to move this check into all constructors instead.
-        if (this == this.origContract) {
-            throw new IllegalStateException(
-                    "Cannot copy a InnerContractDetails whose original contract is itself!");
-        }
-
-        ContractDetails originalContractCopy =
-                (this.origContract == null) ? null : this.origContract.copy();
-        InnerContractDetails copy = new InnerContractDetails(originalContractCopy);
-        copy.vmType = this.vmType;
-        if (this.objectGraph != null) {
-            copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);
-        }
-        copy.storage = new HashMap<>(storage);
-        copy.codes = new HashMap<>(codes);
-        copy.dirty = this.dirty;
-        copy.deleted = this.deleted;
-        return copy;
-    }
-
-    /**
      * Puts all of the storage key-value pairs, code, VM type and object graph from this
      * InnerContractDetails into the given parent contract. Sets the original contract to dirty if
      * this object is dirty.

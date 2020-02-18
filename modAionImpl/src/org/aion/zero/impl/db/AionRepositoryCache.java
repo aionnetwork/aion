@@ -537,8 +537,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
             }
 
             for (Map.Entry<AionAddress, ContractDetails> ctdEntry : details.entrySet()) {
-                InnerContractDetails contractDetailsCache =
-                        (InnerContractDetails) ctdEntry.getValue().copy();
+                InnerContractDetails contractDetailsCache = (InnerContractDetails) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract instanceof StoredContractDetails)) {
                     // Copying the parent because contract details changes were pushed to the parent

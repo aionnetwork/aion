@@ -363,38 +363,6 @@ public class AvmContractDetails implements StoredContractDetails {
         storageTrie.sync();
     }
 
-    /**
-     * Returns a sufficiently deep copy of this contract details object.
-     *
-     * <p>The copy is not completely deep. The following object references will be passed on from
-     * this object to the copy:
-     *
-     * <p>- The external storage data source: the copy will back-end on this same source. - The
-     * previous root of the trie will pass its original object reference if this root is not of type
-     * {@code byte[]}. - The current root of the trie will pass its original object reference if
-     * this root is not of type {@code byte[]}. - Each {@link org.aion.rlp.Value} object reference
-     * held by each of the {@link Node} objects in the underlying cache.
-     *
-     * @return A copy of this object.
-     */
-    @Override
-    public AvmContractDetails copy() {
-        AvmContractDetails aionContractDetailsCopy = new AvmContractDetails(this.address, this.externalStorageSource, this.objectGraphSource);
-
-        // object graph information
-        aionContractDetailsCopy.objectGraph = objectGraph; // can pass reference since the class is immutable
-        aionContractDetailsCopy.objectGraphHash =
-                Arrays.equals(objectGraphHash, EMPTY_DATA_HASH)
-                        ? EMPTY_DATA_HASH
-                        : Arrays.copyOf(this.objectGraphHash, this.objectGraphHash.length);
-
-        aionContractDetailsCopy.codes = new HashMap<>(codes);
-        aionContractDetailsCopy.dirty = this.dirty;
-        aionContractDetailsCopy.deleted = this.deleted;
-        aionContractDetailsCopy.storageTrie = (this.storageTrie == null) ? null : this.storageTrie.copy();
-        return aionContractDetailsCopy;
-    }
-
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
