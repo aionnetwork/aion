@@ -289,7 +289,6 @@ public class FvmContractDetails implements StoredContractDetails {
         return address;
     }
 
-    /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
         storageTrie.sync();

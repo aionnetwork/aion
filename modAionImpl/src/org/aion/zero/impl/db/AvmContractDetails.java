@@ -362,7 +362,6 @@ public class AvmContractDetails implements StoredContractDetails {
         return address;
     }
 
-    /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
         byte[] graph = getObjectGraph();

@@ -125,9 +125,6 @@ public interface ContractDetails {
      */
     String toString();
 
-    /** Syncs the storage trie. */
-    void syncStorage();
-
     /**
      * Returns a sufficiently deep copy of this object. It is up to all implementations of this
      * method to declare which original object references are in fact leaked by this copy, if any,

@@ -250,14 +250,6 @@ public class InnerContractDetails implements ContractDetails {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
-    /** Syncs the storage trie. */
-    @Override
-    public void syncStorage() {
-        if (origContract != null) {
-            origContract.syncStorage();
-        }
-    }
-
     /**
      * Puts all of the key-value pairs and object graph from this InnerContractDetails into the
      * original contract injected into this class' constructor, transfers over any code and sets the
