@@ -226,6 +226,7 @@ public class InnerContractDetails implements ContractDetails {
         Objects.requireNonNull(graph);
 
         objectGraph = graph;
+        vmType = InternalVmType.AVM;
         dirty = true;
     }
 
@@ -269,29 +270,10 @@ public class InnerContractDetails implements ContractDetails {
             return;
         }
 
-        // passing on the vm type
-        if (vmType != InternalVmType.EITHER && vmType != InternalVmType.UNKNOWN && origContract instanceof InnerContractDetails) {
-            ((InnerContractDetails) origContract).setVmType(vmType);
-        }
-
-        // passing on the object graph
-        if (objectGraph != null) {
-            origContract.setObjectGraph(objectGraph);
-        }
-
-        // passing on the storage keys
-        for (ByteArrayWrapper key : storage.keySet()) {
-            ByteArrayWrapper value = storage.get(key);
-            if (value != null) {
-                origContract.put(key, storage.get(key));
-            } else {
-                origContract.delete(key);
-            }
-        }
-
-        origContract.appendCodes(getCodes());
-        if (this.isDirty()) {
-            origContract.markAsDirty();
+        if (origContract instanceof InnerContractDetails) {
+            commitTo((InnerContractDetails) origContract);
+        } else {
+            commitTo((StoredContractDetails) origContract);
         }
     }
 
@@ -334,6 +316,69 @@ public class InnerContractDetails implements ContractDetails {
         copy.deleted = this.deleted;
         return copy;
     }
+
+    /**
+     * Puts all of the storage key-value pairs, code, VM type and object graph from this
+     * InnerContractDetails into the given parent contract. Sets the original contract to dirty if
+     * this object is dirty.
+     *
+     * @param parentContract the contract into which this object's changes will be pushed
+     * @throws NullPointerException if the given parameter is null
+     */
+    public void commitTo(InnerContractDetails parentContract) {
+        Objects.requireNonNull(parentContract, "Cannot commit to null contract.");
+
+        // passing on the vm type
+        if (vmType != InternalVmType.EITHER && vmType != InternalVmType.UNKNOWN) {
+            parentContract.setVmType(vmType);
+        }
+
+        // passing on the object graph
+        if (objectGraph != null) {
+            parentContract.setObjectGraph(objectGraph);
+        }
+
+        // passing on the storage keys
+        parentContract.storage.putAll(this.storage);
+
+        parentContract.appendCodes(getCodes());
+        if (this.isDirty()) {
+            parentContract.markAsDirty();
+        }
+    }
+
+    /**
+     * Puts all of the storage key-value pairs, code and object graph from this InnerContractDetails
+     * into the given parent contract. Sets the original contract to dirty if this object is dirty.
+     *
+     * @implNote {@link StoredContractDetails} objects do not require setting a VM type since it is
+     *     specific to each implementation.
+     * @param parentContract the contract into which this object's changes will be pushed
+     * @throws NullPointerException if the given parameter is null
+     */
+    public void commitTo(StoredContractDetails parentContract) {
+        Objects.requireNonNull(parentContract, "Cannot commit to null contract.");
+
+        // passing on the object graph
+        if (objectGraph != null) {
+            parentContract.setObjectGraph(objectGraph);
+        }
+
+        // passing on the storage keys
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
+            if (entry.getValue() != null) {
+                parentContract.put(entry.getKey(), entry.getValue());
+            } else {
+                parentContract.delete(entry.getKey());
+            }
+        }
+
+        parentContract.appendCodes(getCodes());
+        if (this.isDirty()) {
+            parentContract.markAsDirty();
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
