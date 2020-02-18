@@ -184,10 +184,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                     // this method requires the encoding functionality therefore can be applied only to StoredContractDetails
                     detailsDS.update(address, parentDetails);
 
-                    // TODO: incorrect check codeHash != trie hash
-                    if (!Arrays.equals(accountState.getCodeHash(), ConstantUtil.EMPTY_TRIE_HASH)) {
-                        accountState.setStateRoot(parentDetails.getStorageHash());
-                    }
+                    accountState.setStateRoot(parentDetails.getStorageHash());
 
                     updateAccountState(address, accountState);
 
