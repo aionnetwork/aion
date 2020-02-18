@@ -179,25 +179,19 @@ public class AionRepositoryImpl extends AbstractRepository {
                         contractDetailsCache.commit();
                     }
 
-                    contractDetails = contractDetailsCache.origContract;
+                    StoredContractDetails parentDetails = (StoredContractDetails) contractDetailsCache.origContract;
 
                     // this method requires the encoding functionality therefore can be applied only to StoredContractDetails
-                    detailsDS.update(address, (StoredContractDetails) contractDetails);
+                    detailsDS.update(address, parentDetails);
 
                     // TODO: incorrect check codeHash != trie hash
                     if (!Arrays.equals(accountState.getCodeHash(), ConstantUtil.EMPTY_TRIE_HASH)) {
-                        accountState.setStateRoot(contractDetails.getStorageHash());
+                        accountState.setStateRoot(parentDetails.getStorageHash());
                     }
 
                     updateAccountState(address, accountState);
 
-                    if (contractDetails.getVmType().isContract()) {
-                        cachedContractIndex.put(
-                                contractDetails.getAddress(),
-                                Pair.of(
-                                        ByteArrayWrapper.wrap(accountState.getCodeHash()),
-                                        contractDetails.getVmType()));
-                    }
+                    cachedContractIndex.put(address, Pair.of(ByteArrayWrapper.wrap(accountState.getCodeHash()), parentDetails.getVmType()));
 
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(
@@ -205,7 +199,7 @@ public class AionRepositoryImpl extends AbstractRepository {
                                 Hex.toHexString(address.toByteArray()),
                                 accountState.getNonce(),
                                 accountState.getBalance(),
-                                Hex.toHexString(contractDetails.getStorageHash()));
+                                Hex.toHexString(parentDetails.getStorageHash()));
                     }
                 }
             }
