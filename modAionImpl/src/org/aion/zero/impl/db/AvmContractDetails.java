@@ -40,7 +40,7 @@ import org.aion.zero.impl.trie.SecureTrie;
  */
 public class AvmContractDetails implements StoredContractDetails {
     // identifies the contract
-    private final AionAddress address;
+    public final AionAddress address;
 
     // external databases used for storage and the object graph
     private final ByteArrayKeyValueStore externalStorageSource;
@@ -350,16 +350,6 @@ public class AvmContractDetails implements StoredContractDetails {
         byte[] rlpCode = RLP.encodeList(codesArray);
 
         return RLP.encodeList(rlpAddress, rlpStorageRoot, rlpCode);
-    }
-
-    /**
-     * Get the address associated with this AvmContractDetails.
-     *
-     * @return the associated address.
-     */
-    @Override
-    public AionAddress getAddress() {
-        return address;
     }
 
     @Override

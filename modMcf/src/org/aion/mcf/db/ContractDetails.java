@@ -112,13 +112,6 @@ public interface ContractDetails {
     Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
 
     /**
-     * Get the address associated with this ContractDetails.
-     *
-     * @return the associated address.
-     */
-    AionAddress getAddress();
-
-    /**
      * Returns a sufficiently deep copy of this object. It is up to all implementations of this
      * method to declare which original object references are in fact leaked by this copy, if any,
      * and to provide justification of why, despite this, the copy is nonetheless sufficiently deep.

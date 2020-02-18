@@ -43,7 +43,7 @@ public class FvmContractDetails implements StoredContractDetails {
 
     private final ByteArrayKeyValueStore externalStorageSource;
 
-    private final AionAddress address;
+    public final AionAddress address;
 
     private SecureTrie storageTrie;
 
@@ -277,16 +277,6 @@ public class FvmContractDetails implements StoredContractDetails {
         byte[] rlpCode = RLP.encodeList(codes);
 
         return RLP.encodeList(rlpAddress, rlpStorageRoot, rlpCode);
-    }
-
-    /**
-     * Get the address associated with this FvmContractDetails.
-     *
-     * @return the associated address.
-     */
-    @Override
-    public AionAddress getAddress() {
-        return address;
     }
 
     @Override

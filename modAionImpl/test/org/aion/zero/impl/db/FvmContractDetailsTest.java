@@ -61,7 +61,7 @@ public class FvmContractDetailsTest {
     public void testStateAfterInstantiation() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         FvmContractDetails details = new FvmContractDetails(address, mockDatabase);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isFalse();
         assertThat(details.isDeleted()).isFalse();
         assertThat(details.getCodes()).isEmpty();
@@ -118,7 +118,7 @@ public class FvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
         FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, mockDatabase, storageHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
 
@@ -163,7 +163,7 @@ public class FvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
         FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, db, rootHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
 
@@ -204,7 +204,7 @@ public class FvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
         FvmContractDetails details = FvmContractDetails.decodeAtRoot(input, db, storageHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
 
@@ -257,7 +257,7 @@ public class FvmContractDetailsTest {
         assertThat(decoded.getCode(codeHash)).isEqualTo(code);
 
         // check address
-        assertThat(decoded.getAddress()).isEqualTo(AddressUtils.ZERO_ADDRESS);
+        assertThat(decoded.address).isEqualTo(AddressUtils.ZERO_ADDRESS);
 
         // check storage
         assertThat(decoded.get(key_1)).isEqualTo(val_1);
@@ -316,7 +316,7 @@ public class FvmContractDetailsTest {
         assertThat(decoded.getCode(codeHash)).isEqualTo(code2);
 
         // check address
-        assertThat(decoded.getAddress()).isEqualTo(address);
+        assertThat(decoded.address).isEqualTo(address);
 
         // check storage
         for (ByteArrayWrapper key : storage.keySet()) {

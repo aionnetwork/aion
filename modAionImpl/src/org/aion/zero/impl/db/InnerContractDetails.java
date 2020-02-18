@@ -12,10 +12,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
-import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.trie.Node;
 
 /**
  * A short-term container for contract details information used for frequent updates without the
@@ -238,16 +236,6 @@ public class InnerContractDetails implements ContractDetails {
     @Override
     public byte[] getStorageHash() {
         return origContract == null ? null : origContract.getStorageHash();
-    }
-
-    /**
-     * Get the address associated with this InnerContractDetails.
-     *
-     * @return the associated address.
-     */
-    @Override
-    public AionAddress getAddress() {
-        return (origContract == null) ? null : origContract.getAddress();
     }
 
     /**

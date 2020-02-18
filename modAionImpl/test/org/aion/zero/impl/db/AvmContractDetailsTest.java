@@ -70,7 +70,7 @@ public class AvmContractDetailsTest {
     public void testStateAfterInstantiation() {
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
         AvmContractDetails details = new AvmContractDetails(address, mockDatabase, mockDatabase);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isFalse();
         assertThat(details.isDeleted()).isFalse();
         assertThat(details.getObjectGraph()).isEqualTo(EMPTY_BYTE_ARRAY);
@@ -188,7 +188,7 @@ public class AvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, true, root, null, code);
         AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, mockDatabase, mockDatabase, rootHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
@@ -244,7 +244,7 @@ public class AvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
         AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, db, mockDatabase, rootHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
@@ -305,7 +305,7 @@ public class AvmContractDetailsTest {
 
         RLPContractDetails input = new RLPContractDetails(address, false, root, storageTrie, code);
         AvmContractDetails details = AvmContractDetails.decodeAtRoot(input, db, mockDatabase, rootHash);
-        assertThat(details.getAddress()).isEqualTo(address);
+        assertThat(details.address).isEqualTo(address);
         assertThat(details.isDirty()).isTrue(); // because it uses the setCodes method
         assertThat(details.isDeleted()).isFalse();
         assertThat(details.getObjectGraph()).isEqualTo(graphBytes);
