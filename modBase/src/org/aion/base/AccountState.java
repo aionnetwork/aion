@@ -4,13 +4,14 @@ import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
-import org.aion.util.conversions.Hex;
+import org.aion.util.types.ByteArrayWrapper;
 
 /** Account state. */
 public class AccountState {
+    public static final ByteArrayWrapper EMPTY_TRIE = ByteArrayWrapper.wrap(EMPTY_TRIE_HASH);
+    public static final ByteArrayWrapper EMPTY_DATA = ByteArrayWrapper.wrap(EMPTY_DATA_HASH);
 
     /** Flag indicating whether the account has been deleted. */
     protected boolean deleted = false;
@@ -37,7 +38,7 @@ public class AccountState {
      * shall be understood that σ[a] s is not a ‘physical’ member of the account and does not
      * contribute to its later serialisation
      */
-    private byte[] stateRoot = EMPTY_TRIE_HASH;
+    private ByteArrayWrapper stateRoot = EMPTY_TRIE;
 
     /**
      * The hash of the EVM code of this contract—this is the code that gets executed should this
@@ -45,7 +46,7 @@ public class AccountState {
      * changed after construction. All such code fragments are contained in the state database under
      * their corresponding hashes for later retrieval
      */
-    private byte[] codeHash = EMPTY_DATA_HASH;
+    private ByteArrayWrapper codeHash = EMPTY_DATA;
 
     /** Constructs a new object with ZERO initial transactions and ZERO Wei balance. */
     public AccountState() {
@@ -73,8 +74,8 @@ public class AccountState {
     public AccountState(AccountState previous) {
         this(previous.getNonce(), previous.getBalance());
 
-        this.codeHash = previous.getCodeHash();
-        this.stateRoot = previous.getStateRoot();
+        this.codeHash = previous.codeHash;
+        this.stateRoot = previous.stateRoot;
 
         // maintains the state of the copied object
         this.dirty = previous.isDirty();
@@ -95,8 +96,8 @@ public class AccountState {
         byte[] balanceValue = items.get(1).getRLPData();
         balance = balanceValue == null ? BigInteger.ZERO : new BigInteger(1, balanceValue);
 
-        stateRoot = items.get(2).getRLPData();
-        codeHash = items.get(3).getRLPData();
+        stateRoot = ByteArrayWrapper.wrap(items.get(2).getRLPData());
+        codeHash = ByteArrayWrapper.wrap(items.get(3).getRLPData());
     }
 
     /**
@@ -182,7 +183,7 @@ public class AccountState {
      * @return the hash of the trie root node
      */
     public byte[] getStateRoot() {
-        return stateRoot;
+        return stateRoot.toBytes();
     }
 
     /**
@@ -193,8 +194,10 @@ public class AccountState {
      * @implNote Will change the status of the object to dirty.
      */
     public void setStateRoot(byte[] stateRoot) {
-        this.stateRoot = stateRoot;
-        makeDirty();
+        if (stateRoot != null) {
+            this.stateRoot = ByteArrayWrapper.wrap(stateRoot);
+            makeDirty();
+        }
     }
 
     /**
@@ -218,7 +221,7 @@ public class AccountState {
      * @return the hash of the contract code
      */
     public byte[] getCodeHash() {
-        return codeHash;
+        return codeHash.toBytes();
     }
 
     /**
@@ -231,25 +234,14 @@ public class AccountState {
      *     method. After initialization the code hash is immutable.
      * @implNote Attempting to calling this method on an object where the code hash has already been
      *     initialized is ineffectual since only the initialization call will modify the {@code
-     *     codeHash} value.
+     *     newCodeHash} value.
      */
-    public void setCodeHash(byte[] codeHash) {
-        if (!isInitialized()) {
-            this.codeHash = codeHash;
+    public void setCodeHash(byte[] newCodeHash) {
+        // the contract code can be set only once per contract
+        if (this.codeHash.equals(EMPTY_DATA) && newCodeHash != null) {
+            this.codeHash = ByteArrayWrapper.wrap(newCodeHash);
             makeDirty();
         }
-    }
-
-    /**
-     * Flag indicating whether the contract code has been initialized.
-     *
-     * <p>
-     *
-     * @apiNote Used to ensure that initialized contracts cannot modify the code hash.
-     */
-    private boolean isInitialized() {
-        // TODO: discuss alternative of storing a boolean value
-        return !Arrays.equals(codeHash, EMPTY_DATA_HASH);
     }
 
     /**
@@ -323,12 +315,8 @@ public class AccountState {
         accountStateCopy.nonce = this.nonce;
         accountStateCopy.dirty = this.dirty;
         accountStateCopy.deleted = this.deleted;
-        accountStateCopy.codeHash =
-                (this.codeHash == null) ? null : Arrays.copyOf(this.codeHash, this.codeHash.length);
-        accountStateCopy.stateRoot =
-                (this.stateRoot == null)
-                        ? null
-                        : Arrays.copyOf(this.stateRoot, this.stateRoot.length);
+        accountStateCopy.codeHash = this.codeHash;
+        accountStateCopy.stateRoot = this.stateRoot;
         return accountStateCopy;
     }
 
@@ -342,8 +330,8 @@ public class AccountState {
     public byte[] getEncoded() {
         byte[] nonce = RLP.encodeBigInteger(this.nonce);
         byte[] balance = RLP.encodeBigInteger(this.balance);
-        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
-        byte[] codeHash = RLP.encodeElement(this.codeHash);
+        byte[] stateRoot = RLP.encodeElement(this.stateRoot.toBytes());
+        byte[] codeHash = RLP.encodeElement(this.codeHash.toBytes());
         return RLP.encodeList(nonce, balance, stateRoot, codeHash);
     }
 
@@ -356,22 +344,22 @@ public class AccountState {
      *     be contract accounts.
      */
     public boolean isEmpty() {
-        return Arrays.equals(codeHash, EMPTY_DATA_HASH)
+        return codeHash.equals(EMPTY_DATA)
                 && BigInteger.ZERO.equals(balance)
                 && BigInteger.ZERO.equals(nonce);
     }
 
     public String toString() {
         return "  Nonce: "
-                + this.getNonce().toString()
+                + this.nonce
                 + "\n"
                 + "  Balance: "
-                + getBalance()
+                + this.balance
                 + "\n"
                 + "  State Root: "
-                + Hex.toHexString(this.getStateRoot())
+                + this.stateRoot
                 + "\n"
                 + "  Code Hash: "
-                + Hex.toHexString(this.getCodeHash());
+                + this.codeHash;
     }
 }
