@@ -5,6 +5,7 @@ import java.util.Properties;
 import org.aion.base.AccountState;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.db.Repository;
 import org.aion.zero.impl.config.CfgPrune;
 import org.aion.zero.impl.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
@@ -22,10 +23,12 @@ import org.aion.zero.impl.db.RepositoryConfig;
  * A basic testing implementation of the interface.
  */
 public final class ExternalStateForTests implements IExternalStateForPrecompiled {
+    private final Repository<AccountState> sourceRepository;
     private final RepositoryCache<AccountState> repository;
 
-    private ExternalStateForTests(RepositoryCache<AccountState> repository) {
-        this.repository = repository;
+    private ExternalStateForTests(Repository<AccountState> repository) {
+        this.sourceRepository = repository;
+        this.repository = this.sourceRepository.startTracking();
     }
 
     public static ExternalStateForTests usingDefaultRepository() {
@@ -47,23 +50,22 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
                 return props;
             }
         };
-        AionRepositoryCache repository = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         return new ExternalStateForTests(repository);
     }
 
-    public static ExternalStateForTests usingRepository(
-        RepositoryCache<AccountState> repository) {
-        return new ExternalStateForTests(repository);
+    public static ExternalStateForTests usingRepository(RepositoryCache<AccountState> repository) {
+        return new ExternalStateForTests(repository.getParent());
     }
 
     @Override
     public void commit() {
-        this.repository.flush();
+        this.repository.flushTo(sourceRepository, true);
     }
 
     @Override
     public IExternalStateForPrecompiled newChildExternalState() {
-        return new ExternalStateForTests(this.repository.startTracking());
+        return new ExternalStateForTests(this.repository);
     }
 
     @Override
