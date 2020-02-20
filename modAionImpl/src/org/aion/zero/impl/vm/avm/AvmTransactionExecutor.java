@@ -218,7 +218,7 @@ public final class AvmTransactionExecutor {
      */
     private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) {
         IAvmExternalState externalState = AvmProvider.newExternalStateBuilder(versionToUse)
-            .withRepository(repository.startTracking())
+            .withRepository(repository)
             .withMiner(miner)
             .withDifficulty(blockDifficulty)
             .withBlockNumber(blockNumber)

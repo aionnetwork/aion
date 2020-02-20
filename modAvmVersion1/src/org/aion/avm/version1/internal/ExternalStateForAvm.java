@@ -7,6 +7,7 @@ import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.InternalVmType;
+import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -21,6 +22,7 @@ import org.aion.util.types.ByteArrayWrapper;
  * a new equivalent object for whatever world we are talking to.
  */
 public final class ExternalStateForAvm implements IExternalState, IAvmExternalState {
+    private Repository<AccountState> repositorySource;
     private RepositoryCache<AccountState> repositoryCache;
     private BigInteger blockDifficulty;
     private AionAddress blockCoinbase;
@@ -30,8 +32,9 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     private long blockTimestamp;
     private long blockNrgLimit;
 
-    public ExternalStateForAvm(RepositoryCache<AccountState> repositoryCache, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
-        this.repositoryCache = repositoryCache;
+    public ExternalStateForAvm(Repository<AccountState> repositorySource, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
+        this.repositorySource = repositorySource;
+        this.repositoryCache = this.repositorySource.startTracking();
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
         this.blockDifficulty = blockDifficulty;
@@ -44,17 +47,17 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public ExternalStateForAvm newChildExternalState() {
-        return new ExternalStateForAvm(this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall, this.blockDifficulty, this.blockNumber, this.blockTimestamp, this.blockNrgLimit, this.blockCoinbase, this.energyRules);
+        return new ExternalStateForAvm(this.repositoryCache, this.allowNonceIncrement, this.isLocalCall, this.blockDifficulty, this.blockNumber, this.blockTimestamp, this.blockNrgLimit, this.blockCoinbase, this.energyRules);
     }
 
     @Override
     public void commit() {
-        this.repositoryCache.flush();
+        this.repositoryCache.flushTo(repositorySource, true);
     }
 
     @Override
     public void commitTo(IExternalState target) {
-        this.repositoryCache.flushTo(((ExternalStateForAvm) target).repositoryCache, false);
+        this.repositoryCache.flushTo(((ExternalStateForAvm) target).repositorySource, false);
     }
 
     @Override
