@@ -82,7 +82,7 @@ public final class FvmTransactionExecutor {
         // Run the transactions.
         IExternalStateForFvm externalState =
                 new ExternalStateForFvm(
-                        repository.startTracking(),
+                        repository,
                         blockCoinbase,
                         getDifficultyAsDataWord(blockDifficulty),
                         isLocalCall,
@@ -128,7 +128,7 @@ public final class FvmTransactionExecutor {
                 payMiner(repositoryTracker, blockCoinbase, summary);
                 deleteAccountsMarkedForDeletion(repositoryTracker, summary.getDeletedAccounts(), result);
 
-                repositoryTracker.flush();
+                repositoryTracker.flushTo(repository, true);
             }
 
             // Do any post execution work.

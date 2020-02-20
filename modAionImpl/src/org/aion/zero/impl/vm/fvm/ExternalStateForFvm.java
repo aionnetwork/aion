@@ -2,14 +2,14 @@ package org.aion.zero.impl.vm.fvm;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
+import org.aion.base.InternalVmType;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
-import org.aion.zero.impl.config.CfgFork;
-import org.aion.base.InternalVmType;
-import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.ContractExecutor;
@@ -18,14 +18,16 @@ import org.aion.precompiled.type.PrecompiledTransactionContext;
 import org.aion.types.AionAddress;
 import org.aion.types.TransactionStatus;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.config.CfgFork;
+import org.aion.zero.impl.vm.common.TxNrgRule;
 import org.aion.zero.impl.vm.precompiled.ExternalCapabilitiesForPrecompiled;
 import org.aion.zero.impl.vm.precompiled.ExternalStateForPrecompiled;
-import org.aion.zero.impl.vm.common.TxNrgRule;
 
 /**
  * An implementation of the {@link IExternalStateForFvm} interface defined in the FVM.
  */
 public final class ExternalStateForFvm implements IExternalStateForFvm {
+    private final Repository sourceRepository;
     private final RepositoryCache repository;
     private final AionAddress miner;
     private final boolean isLocalCall;
@@ -38,8 +40,20 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     private final boolean isUnityForkEnabled;
     private final boolean signatureSwapForkEnabled;
 
-    public ExternalStateForFvm(RepositoryCache repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled, boolean signatureSwapForkEnabled) {
-        this.repository = repository;
+    public ExternalStateForFvm(
+            RepositoryCache repository,
+            AionAddress miner,
+            FvmDataWord blockDifficulty,
+            boolean isLocalCall,
+            boolean allowNonceIncrement,
+            boolean isFork040enabled,
+            long blockNumber,
+            long blockTimestamp,
+            long blockEnergyLimit,
+            boolean unityForkEnabled,
+            boolean signatureSwapForkEnabled) {
+        this.sourceRepository = repository;
+        this.repository = this.sourceRepository.startTracking();
         this.miner = miner;
         this.blockDifficulty = blockDifficulty;
         this.isLocalCall = isLocalCall;
@@ -55,7 +69,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     /** Commits the changes in this world state to its parent world state. */
     @Override
     public void commit() {
-        this.repository.flush();
+        this.repository.flushTo(sourceRepository, true);
     }
 
     /**
@@ -81,7 +95,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
      */
     @Override
     public IExternalStateForFvm newChildExternalState() {
-        return new ExternalStateForFvm(this.repository.startTracking(), this.miner, this.blockDifficulty, this.isLocalCall, this.allowNonceIncrement, this.isFork040enabled, this.blockNumber, this.blockTimestamp, this.blockEnergyLimit, this.isUnityForkEnabled, this.signatureSwapForkEnabled);
+        return new ExternalStateForFvm(this.repository, this.miner, this.blockDifficulty, this.isLocalCall, this.allowNonceIncrement, this.isFork040enabled, this.blockNumber, this.blockTimestamp, this.blockEnergyLimit, this.isUnityForkEnabled, this.signatureSwapForkEnabled);
     }
 
     /**
