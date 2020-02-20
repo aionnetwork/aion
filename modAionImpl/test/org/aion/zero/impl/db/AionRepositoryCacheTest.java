@@ -293,8 +293,8 @@ public class AionRepositoryCacheTest {
         AionRepositoryCache tracker = (AionRepositoryCache) cache.startTracking();
         assertThat(tracker.hasAccountState(address)).isTrue();
         assertThat(tracker.hasContractDetails(address)).isTrue();
-        assertThat(tracker.cachedAccounts.containsKey(address)).isFalse();
-        assertThat(tracker.cachedDetails.containsKey(address)).isFalse();
+        assertThat(tracker.cachedAccounts.containsKey(address)).isTrue();
+        assertThat(tracker.cachedDetails.containsKey(address)).isTrue();
 
         // load account state for new address
         AccountState account = tracker.getAccountState(address);

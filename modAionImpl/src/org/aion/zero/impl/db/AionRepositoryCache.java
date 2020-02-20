@@ -1,5 +1,6 @@
 package org.aion.zero.impl.db;
 
+import static java.util.stream.Collectors.toMap;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -31,7 +32,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** the repository being tracked */
-    private final Repository<AccountState> repository;
+    private final AionRepositoryImpl repository;
 
     /** local accounts cache */
     @VisibleForTesting
@@ -44,7 +45,21 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
 
     private final Lock lock = new ReentrantLock();
 
-    public AionRepositoryCache(final Repository trackedRepository) {
+    public AionRepositoryCache(final AionRepositoryCache trackedRepository) {
+        this.repository = trackedRepository.repository;
+        this.cachedAccounts = trackedRepository.cachedAccounts.entrySet().stream().collect(toMap(Map.Entry::getKey, e -> new AccountState(e.getValue())));
+        this.cachedDetails = trackedRepository.cachedDetails.entrySet().stream().collect(toMap(Map.Entry::getKey, e -> new InnerContractDetails(e.getValue())));
+        this.cachedTransformedCode = new HashMap<>();
+        for (Map.Entry<AionAddress, TransformedCodeInfo> entry : trackedRepository.cachedTransformedCode.entrySet()) {
+            for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : entry.getValue().transformedCodeMap.entrySet()) {
+                for (Map.Entry<Integer, byte[]> innerEntry : infoMap.getValue().entrySet()) {
+                    setTransformedCode(entry.getKey(), infoMap.getKey().toBytes(), innerEntry.getKey(), innerEntry.getValue());
+                }
+            }
+        }
+    }
+
+    public AionRepositoryCache(final AionRepositoryImpl trackedRepository) {
         this.repository = trackedRepository;
         this.cachedAccounts = new HashMap<>();
         this.cachedDetails = new HashMap<>();
@@ -198,31 +213,16 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
      *     ContractDetails} as they are known to the closest ancestor repository
      */
     private Pair<AccountState, InnerContractDetails> getAccountStateFromParent(AionAddress address) {
-        if (repository instanceof AionRepositoryCache) {
-            AionRepositoryCache parent = (AionRepositoryCache) repository;
-
-            AccountState account = parent.cachedAccounts.get(address);
-            ContractDetails details = parent.cachedDetails.get(address);
-
-            // when account not cached load from grandparent
-            if (account == null) {
-                return parent.getAccountStateFromParent(address);
-            } else {
-                // copy the objects if they were cached locally
-                return Pair.of(new AccountState(account), new InnerContractDetails(details));
-            }
+        AccountState account = repository.getAccountState(address);
+        InnerContractDetails details;
+        if (account != null) {
+            account = new AccountState(account);
+            details = new InnerContractDetails(repository.getContractDetails(address));
         } else {
-            AccountState account = repository.getAccountState(address);
-            InnerContractDetails details;
-            if (account != null) {
-                account = new AccountState(account);
-                details = new InnerContractDetails(repository.getContractDetails(address));
-            } else {
-                account = new AccountState();
-                details = new InnerContractDetails(null);
-            }
-            return Pair.of(account, details);
+            account = new AccountState();
+            details = new InnerContractDetails(null);
         }
+        return Pair.of(account, details);
     }
 
     @Override
