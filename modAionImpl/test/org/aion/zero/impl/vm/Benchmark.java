@@ -210,7 +210,7 @@ public class Benchmark {
     private static void flush() {
         long t1 = System.currentTimeMillis();
 
-        repo.flush();
+        repo.flushTo(db, true);
         db.flush();
 
         long t2 = System.currentTimeMillis();

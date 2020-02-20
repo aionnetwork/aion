@@ -114,7 +114,7 @@ public class OldTxExecutorTest {
         cache.saveCode(to, Hex.decode(contract));
         cache.saveVmType(to, InternalVmType.FVM);
 
-        cache.flush();
+        cache.flushTo(repo, true);
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);
@@ -203,7 +203,7 @@ public class OldTxExecutorTest {
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
         repo.saveVmType(to, InternalVmType.FVM);
-        repo.flush();
+        repo.flushTo(repoTop, true);
 
         long t1 = System.nanoTime();
         long repeat = 1000;
@@ -241,7 +241,7 @@ public class OldTxExecutorTest {
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache repo = repoTop.startTracking();
         repo.addBalance(tx.getSenderAddress(), BigInteger.valueOf(1_000_000_000L));
-        repo.flush();
+        repo.flushTo(repoTop, true);
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();
         System.out.println(receipt);

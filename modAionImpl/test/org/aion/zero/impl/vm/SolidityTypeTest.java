@@ -130,7 +130,7 @@ public class SolidityTypeTest {
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.saveVmType(tx.getDestinationAddress(), InternalVmType.FVM);
-        track.flush();
+        track.flushTo(repo, true);
         return track;
     }
 

@@ -23,9 +23,6 @@ public interface Repository<AS> {
      */
     RepositoryCache startTracking();
 
-    /** Commits all the changes made in this repository to the database storage. */
-    void flush();
-
     /**
      * Performs batch updates on the data.
      *

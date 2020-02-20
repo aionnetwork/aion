@@ -665,7 +665,7 @@ public class ContractIntegTest {
         }
 
         BigInteger deployerBalance = repo.getBalance(deployer);
-        repo.flush();
+        repo.flushTo(blockchain.getRepository(), true);
         repo = blockchain.getRepository().startTracking();
 
         // Contract has no funds, try to withdraw just 1 coin.
@@ -1047,7 +1047,7 @@ public class ContractIntegTest {
 
         deployerBalance = repo.getBalance(deployer);
         deployerNonce = repo.getNonce(deployer);
-        repo.flush();
+        repo.flushTo(blockchain.getRepository(), true);
         repo = blockchain.getRepository().startTracking();
 
         // Now recurse the max amount of times and ensure we fail.
