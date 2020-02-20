@@ -373,7 +373,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         PostExecutionLogic logic =
                 (topRepository, childRepository, transactionSummary, transaction) -> {
                     if (!transactionSummary.isRejected()) {
-                        childRepository.flush();
+                        childRepository.flushTo(topRepository, true);
 
                         AionTxReceipt receipt = transactionSummary.getReceipt();
                         receipt.setPostTxState(topRepository.getRoot());
@@ -394,7 +394,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static PostExecutionWork getPostExecutionWorkForApplyBlock(Repository repository) {
         PostExecutionLogic logic =
                 (topRepository, childRepository, transactionSummary, transaction) -> {
-                    childRepository.flush();
+                    childRepository.flushTo(topRepository, true);
                     AionTxReceipt receipt = transactionSummary.getReceipt();
                     receipt.setPostTxState(topRepository.getRoot());
                 };
@@ -1447,7 +1447,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             pushState(parentHdr.getHash());
             track = repository.startTracking();
             RetValidPreBlock preBlock = generatePreBlock(block);
-            track.flush();
+            track.flushTo(repository, true);
 
             // Calculate the gas used for the included transactions
             long totalEnergyUsed = 0;
@@ -1519,7 +1519,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Pair.of(summary, track);
         }
 
-        track.flush();
+        track.flushTo(repository, true);
         repository.commitCachedVMs(block.getHashWrapper());
 
         if (blockWrapper.reBuild) {

@@ -1486,7 +1486,7 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             track.createAccount(addr);
             track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
         }
-        track.flush();
+        track.flushTo(this, true);
 
         commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
         blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);

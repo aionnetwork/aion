@@ -364,7 +364,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 track.createAccount(key);
                 track.addBalance(key, genesis.getPremine().get(key).getBalance());
             }
-            track.flush();
+            track.flushTo(bc.getRepository(), true);
 
             bc.getRepository()
                     .commitBlock(
