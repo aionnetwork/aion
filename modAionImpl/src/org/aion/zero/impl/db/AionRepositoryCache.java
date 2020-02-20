@@ -57,6 +57,11 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     @Override
+    public Repository getParent() {
+        return this.repository;
+    }
+
+    @Override
     public void createAccount(AionAddress address) {
         lock.lock();
         try {

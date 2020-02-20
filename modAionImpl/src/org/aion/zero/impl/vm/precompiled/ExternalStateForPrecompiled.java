@@ -2,6 +2,7 @@ package org.aion.zero.impl.vm.precompiled;
 
 import java.math.BigInteger;
 import org.aion.base.AccountState;
+import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
@@ -16,6 +17,7 @@ import org.aion.zero.impl.vm.common.TxNrgRule;
  * contract module.
  */
 public final class ExternalStateForPrecompiled implements IExternalStateForPrecompiled {
+    private final Repository<AccountState> sourceRepository;
     private final RepositoryCache<AccountState> repository;
     private final long blockNumber;
     private final boolean isLocalCall;
@@ -33,11 +35,12 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      * @param isLocalCall Whether this is a local call or not (eth_call).
      * @param allowNonceIncrement Whether or not to increment account nonces.
      */
-    public ExternalStateForPrecompiled(RepositoryCache<AccountState> repository, long blockNumber, boolean isLocalCall, boolean fork032Enabled, boolean allowNonceIncrement) {
+    public ExternalStateForPrecompiled(Repository<AccountState> repository, long blockNumber, boolean isLocalCall, boolean fork032Enabled, boolean allowNonceIncrement) {
         if (repository == null) {
             throw new NullPointerException("Cannot create precompiled external state with null repository!");
         }
-        this.repository = repository;
+        this.sourceRepository = repository;
+        this.repository = sourceRepository.startTracking();
         this.blockNumber = blockNumber;
         this.isLocalCall = isLocalCall;
         this.fork032Enabled = fork032Enabled;
@@ -47,7 +50,7 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
     /** Commits the changes in this external state to its parent external state. */
     @Override
     public void commit() {
-        this.repository.flush();
+        this.repository.flushTo(sourceRepository, true);
     }
 
     /**
@@ -64,7 +67,7 @@ public final class ExternalStateForPrecompiled implements IExternalStateForPreco
      */
     @Override
     public IExternalStateForPrecompiled newChildExternalState() {
-        return new ExternalStateForPrecompiled(this.repository.startTracking(), this.blockNumber, this.isLocalCall, this.fork032Enabled, this.allowNonceIncrement);
+        return new ExternalStateForPrecompiled(this.repository, this.blockNumber, this.isLocalCall, this.fork032Enabled, this.allowNonceIncrement);
     }
 
     /**

@@ -11,6 +11,8 @@ import org.aion.util.types.ByteArrayWrapper;
  */
 public interface RepositoryCache<AS> extends Repository<AS> {
 
+    Repository<AS> getParent();
+
     /**
      * Creates a new account state in the database or cache.
      *
