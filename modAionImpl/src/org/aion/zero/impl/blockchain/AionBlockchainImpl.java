@@ -976,10 +976,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
 
-    public synchronized void compactState() {
-        repository.compactState();
-    }
-
     /* TODO AKI-440: We should either refactor this to remove the redundant parameter,
         or provide it as an input to isValid() */
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(

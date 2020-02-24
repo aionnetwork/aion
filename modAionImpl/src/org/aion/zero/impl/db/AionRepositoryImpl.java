@@ -881,15 +881,6 @@ public class AionRepositoryImpl extends AbstractRepository {
         }
     }
 
-    public void compactState() {
-        rwLock.writeLock().lock();
-        try {
-            this.stateDatabase.compact();
-        } finally {
-            rwLock.writeLock().unlock();
-        }
-    }
-
     /**
      * Retrieves the value for a given node from the database associated with the given type.
      *
