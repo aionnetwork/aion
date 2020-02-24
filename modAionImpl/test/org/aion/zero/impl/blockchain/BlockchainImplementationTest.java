@@ -79,7 +79,7 @@ public class BlockchainImplementationTest {
         for (int i = 0; i < stored; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             importBlock = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L).block;
-            assertThat(chain.tryToConnectInternal(importBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(importBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         Block fork = chain.getBestBlock();
@@ -87,14 +87,14 @@ public class BlockchainImplementationTest {
         for (int i = stored; i < height; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             importBlock = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L).block;
-            assertThat(chain.tryToConnectInternal(importBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(importBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
             // create the sidechain block
             repo.syncToRoot(fork.getStateRoot());
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             repo.syncToRoot(chain.getBestBlock().getStateRoot());
             sidechainBlock =chain.createNewMiningBlockInternal(fork, txs, true, (time - 10) / 10000L).block;
-            assertThat(chain.tryToConnectInternal(sidechainBlock, (time + 1))).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+            assertThat(chain.tryToConnect(sidechainBlock)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
             fork = sidechainBlock;
         }
 
@@ -143,8 +143,7 @@ public class BlockchainImplementationTest {
         for (int i = 0; i < height; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // testing restriction for unrestricted blocks
@@ -185,8 +184,7 @@ public class BlockchainImplementationTest {
         for (int i = 0; i < height; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 100000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // testing restriction for unrestricted blocks
@@ -235,8 +233,7 @@ public class BlockchainImplementationTest {
             block =
                     chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L)
                             .block;
-            assertThat(chain.tryToConnectInternal(block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
             for (int j = 0; j < block.getNumber() + 100; j++) {
                 if (j < block.getNumber() - 32 || j > block.getNumber() + 32) {

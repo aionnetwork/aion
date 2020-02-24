@@ -150,8 +150,7 @@ public class AionHubTest {
                     BlockchainTestUtils.generateTransactions(
                             MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
@@ -162,8 +161,7 @@ public class AionHubTest {
                     BlockchainTestUtils.generateTransactions(
                             MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }
@@ -223,8 +221,7 @@ public class AionHubTest {
                     BlockchainTestUtils.generateTransactions(
                             MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
         BigInteger td6 = BigInteger.ZERO;
 
@@ -236,8 +233,7 @@ public class AionHubTest {
                     BlockchainTestUtils.generateTransactions(
                             MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
 

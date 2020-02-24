@@ -107,7 +107,7 @@ public class BlockchainConcurrentImportTest {
                             .build();
             block.updateHeader(newBlockHeader);
 
-            ImportResult result = sourceChain.tryToConnectInternal(block, (time += 10));
+            ImportResult result = sourceChain.tryToConnect(block);
             knownBlocks.add(block);
             if (result == ImportResult.IMPORTED_BEST) {
                 mainChain = block;

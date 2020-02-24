@@ -973,13 +973,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+        return tryToConnectAndFetchSummary(block, true).getLeft();
     }
 
-    /* TODO AKI-440: We should either refactor this to remove the redundant parameter,
-        or provide it as an input to isValid() */
-    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
-            Block block, long currTimeSeconds, boolean doExistCheck) {
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
         // Check block exists before processing more rules
         if (doExistCheck // skipped when redoing imports
                 && getBlockStore().getMaxNumber() >= block.getNumber()
@@ -1131,15 +1128,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final Block block) {
         repository.syncToRoot(bestBlock.getStateRoot());
         return add(block, false, false);
-    }
-
-    /**
-     * Processes a new block and potentially appends it to the blockchain, thereby changing the
-     * state of the world. Decoupled from wrapper function {@link #tryToConnect(Block)} so we
-     * can feed timestamps manually
-     */
-    ImportResult tryToConnectInternal(final Block block, long currTimeSeconds) {
-        return tryToConnectAndFetchSummary(block, currTimeSeconds, true).getLeft();
     }
 
     /**

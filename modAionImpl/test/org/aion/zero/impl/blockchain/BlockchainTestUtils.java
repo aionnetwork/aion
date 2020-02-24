@@ -222,7 +222,7 @@ public class BlockchainTestUtils {
         A0BlockHeader newBlockHeader = A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).withExtraData(extraData).build();
         block.updateHeader(newBlockHeader);
 
-        ImportResult result = chain.tryToConnectInternal(block, (time + 10));
+        ImportResult result = chain.tryToConnect(block);
 
         System.out.format(
                 "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
@@ -752,7 +752,7 @@ public class BlockchainTestUtils {
         byte[] mineHashSig = key.sign(block.getHeader().getMineHash()).getSignature();
         block.seal(mineHashSig, key.getPubKey());
 
-        ImportResult result = chain.tryToConnectInternal(block, (time + 10));
+        ImportResult result = chain.tryToConnect(block);
 
         System.out.format(
                 "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",

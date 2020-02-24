@@ -64,8 +64,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
@@ -74,8 +73,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }
@@ -153,8 +151,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }
@@ -235,8 +232,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
         }
 
@@ -328,8 +324,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
         repo.flush();
 
@@ -358,8 +353,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             // skipping middle block
             if (context.block.getNumber() != NUMBER_OF_BLOCKS / 2) {
@@ -466,8 +460,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the index
@@ -476,8 +469,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
         }
@@ -582,8 +574,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < EVEN_NUMBER_OF_BLOCKS / 2 - 1; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // splitting chains
@@ -593,8 +584,7 @@ public class BlockchainDataRecoveryTest {
 
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewMiningBlockInternal(mainChainBlock, txs, true, time / 10000L);
-        assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         mainChainBlock = context.block;
 
         // starting side chain
@@ -608,8 +598,7 @@ public class BlockchainDataRecoveryTest {
 
         context.block.updateHeader(newHeader);
 
-        assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         sideChainBlock = context.block;
 
         // building chains; sidechain will have missing index
@@ -619,16 +608,14 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < EVEN_NUMBER_OF_BLOCKS / 2 - 1; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(mainChainBlock, txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             mainChainBlock = context.block;
             blocksToImportMainChain.add(context.block);
 
             // adding side chain
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(sideChainBlock, txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
             sideChainBlock = context.block;
             blocksToDelete.put(sideChainBlock.getNumber(), sideChainBlock.getHash());
             blocksToImportSideChain.add(context.block);
@@ -637,8 +624,7 @@ public class BlockchainDataRecoveryTest {
         // making the main chain longer
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewMiningBlockInternal(mainChainBlock, txs, true, time / 10000L);
-        assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         mainChainBlock = context.block;
 
         Block bestBlock = chain.getBestBlock();
@@ -761,8 +747,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             blocksToImport.add(context.block);
         }
@@ -868,8 +853,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
         }
 
@@ -943,8 +927,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             blocksToImport.add(context.block);
         }
@@ -1059,8 +1042,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
         }
         repo.flush();
 
@@ -1089,8 +1071,7 @@ public class BlockchainDataRecoveryTest {
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
-            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            assertThat(chain.tryToConnect(context.block)).isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             // skipping middle block
             if (context.block.getNumber() != NUMBER_OF_BLOCKS / 2) {

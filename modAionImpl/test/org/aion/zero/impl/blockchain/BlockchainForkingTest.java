@@ -282,8 +282,7 @@ public class BlockchainForkingTest {
                 bc.createNewMiningBlockInternal(
                                 bc.getGenesis(), Collections.emptyList(), true, time / 1000L)
                         .block;
-        assertThat(bc.tryToConnectInternal(firstBlock, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(firstBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         Pair<Long, BlockCachingContext> cacheContext = bc.getAvmCachingContext();
@@ -294,8 +293,7 @@ public class BlockchainForkingTest {
         AionBlock secondBlock =
                 bc.createNewMiningBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
-        assertThat(bc.tryToConnectInternal(secondBlock, time += 10))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(secondBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
@@ -315,35 +313,19 @@ public class BlockchainForkingTest {
                 .build();
         slowerSecondBlock.updateHeader(newBlockHeader);
 
-        assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(fasterSecondBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
         assertThat(cacheContext.getLeft()).isEqualTo(secondBlock.getNumber()); // the parent
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
 
-        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100))
-                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(bc.tryToConnect(slowerSecondBlock)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
         assertThat(cacheContext.getLeft()).isEqualTo(secondBlock.getNumber()); // the parent
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.SIDECHAIN);
-
-        // represents the amount of time we would have waited for the lower TD block to come in
-        long timeDelta = 1000L;
-
-        // loweredDifficulty = bi - bi / 1024
-        BigInteger loweredDifficulty =
-                BIUtil.max(
-                        secondBlock
-                                .getDifficultyBI()
-                                .subtract(
-                                        secondBlock
-                                                .getDifficultyBI()
-                                                .divide(BigInteger.valueOf(1024L))),
-                        BigInteger.valueOf(16L));
 
         time += 100;
 
@@ -369,16 +351,14 @@ public class BlockchainForkingTest {
         System.out.println(
                 "slower block descendant TD: " + slowerBlockDescendant.getDifficultyBI());
 
-        assertThat(bc.tryToConnectInternal(slowerBlockDescendant, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(slowerBlockDescendant)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
         assertThat(cacheContext.getLeft()).isEqualTo(0); // no known parent
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.DEEP_SIDECHAIN);
 
-        assertThat(bc.tryToConnectInternal(fastBlockDescendant, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(fastBlockDescendant)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
@@ -393,8 +373,7 @@ public class BlockchainForkingTest {
                                 fastBlockDescendant, Collections.emptyList(), true, time / 1000L)
                         .block;
 
-        assertThat(bc.tryToConnectInternal(switchBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(switchBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
@@ -406,7 +385,7 @@ public class BlockchainForkingTest {
                 bc.createNewMiningBlockInternal(switchBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
 
-        assertThat(bc.tryToConnectInternal(lastBlock, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(lastBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the correct caching context was used
         cacheContext = bc.getAvmCachingContext();
@@ -431,15 +410,13 @@ public class BlockchainForkingTest {
         BlockContext firstBlock =
                 bc.createNewMiningBlockInternal(
                         bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(firstBlock.block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now connect the second block
         BlockContext secondBlock =
                 bc.createNewMiningBlockInternal(
                         firstBlock.block, Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(secondBlock.block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now on the third block, we diverge with one block having higher TD than the other
         BlockContext fasterSecondBlock =
@@ -454,10 +431,8 @@ public class BlockchainForkingTest {
                 .build();
         slowerSecondBlock.updateHeader(newBlockHeader);
 
-        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100))
-                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(bc.tryToConnect(fasterSecondBlock.block)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(slowerSecondBlock)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         time += 100;
 
@@ -468,10 +443,6 @@ public class BlockchainForkingTest {
                 bc.createNewMiningBlockInternal(
                         slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
 
-        // increment by another hundred (this is supposed to be when the slower block descendant is
-        // completed)
-        time += 100;
-
         assertThat(fastBlockDescendant.block.getDifficultyBI())
                 .isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
         System.out.println(
@@ -479,8 +450,7 @@ public class BlockchainForkingTest {
         System.out.println(
                 "slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
 
-        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnect(slowerBlockDescendant.block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // corrupt the parent for the fast block descendant
         bc.getRepository().getStateDatabase().delete(fasterSecondBlock.block.getStateRoot());
@@ -488,8 +458,7 @@ public class BlockchainForkingTest {
                 .isFalse();
 
         // attempt adding the fastBlockDescendant
-        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time))
-                .isEqualTo(ImportResult.INVALID_BLOCK);
+        assertThat(bc.tryToConnect(fastBlockDescendant.block)).isEqualTo(ImportResult.INVALID_BLOCK);
 
         // check for correct state rollback
         assertThat(bc.getBestBlock()).isEqualTo(slowerBlockDescendant.block);
@@ -577,15 +546,14 @@ public class BlockchainForkingTest {
                                 sourceChain.genesis, Arrays.asList(deployTx), true, time / 10_000L)
                         .block;
 
-        Pair<ImportResult, AionBlockSummary> connectResult =
-                sourceChain.tryToConnectAndFetchSummary(block, (time += 10), true);
+        Pair<ImportResult, AionBlockSummary> connectResult = sourceChain.tryToConnectAndFetchSummary(block);
         AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
         assertThat(receipt.isSuccessful()).isTrue();
 
         ImportResult result = connectResult.getLeft();
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        result = testChain.tryToConnectInternal(block, time);
+        result = testChain.tryToConnect(block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         assertThat(testChain.getRepository().getRoot())
@@ -600,10 +568,10 @@ public class BlockchainForkingTest {
                                 sourceChain.getBestBlock(), txs, true, time / 10_000L)
                         .block;
 
-        result = sourceChain.tryToConnectInternal(block, (time += 10));
+        result = sourceChain.tryToConnect(block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        result = testChain.tryToConnectInternal(block, time);
+        result = testChain.tryToConnect(block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         assertThat(testChain.getRepository().getRoot())
@@ -639,14 +607,11 @@ public class BlockchainForkingTest {
         time += 100;
 
         // sourceChain imports only fast block
-        assertThat(sourceChain.tryToConnectInternal(fastBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(sourceChain.tryToConnect(fastBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // testChain imports both blocks
-        assertThat(testChain.tryToConnectInternal(fastBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(testChain.tryToConnectInternal(slowBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(testChain.tryToConnect(fastBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(testChain.tryToConnect(slowBlock)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // build two blocks with different contract storage calls
         // the second block gets a higher total difficulty
@@ -667,10 +632,8 @@ public class BlockchainForkingTest {
         // System.out.println("***lowBlock TD: " + lowBlock.getDifficultyBI());
         assertThat(highBlock.getDifficultyBI()).isGreaterThan(lowBlock.getDifficultyBI());
 
-        time += 100;
-
         // build first chain with highBlock applied directly
-        connectResult = sourceChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        connectResult = sourceChain.tryToConnectAndFetchSummary(highBlock);
         receipt = connectResult.getRight().getReceipts().get(0);
         assertThat(receipt.isSuccessful()).isTrue();
 
@@ -686,11 +649,10 @@ public class BlockchainForkingTest {
         // ****** test fork behavior ******
 
         // first import lowBlock
-        assertThat(testChain.tryToConnectInternal(lowBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(testChain.tryToConnect(lowBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // next import highBlock causing the fork
-        connectResult = testChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        connectResult = testChain.tryToConnectAndFetchSummary(highBlock);
         receipt = connectResult.getRight().getReceipts().get(0);
         assertThat(receipt.isSuccessful()).isTrue();
         System.out.println(receipt);
@@ -883,7 +845,7 @@ public class BlockchainForkingTest {
         time += 100;
 
         // sourceChain imports only fast block
-        connectResult = sourceChain.tryToConnectAndFetchSummary(fastBlock, time, true);
+        connectResult = sourceChain.tryToConnectAndFetchSummary(fastBlock);
         result = connectResult.getLeft();
         receipt = connectResult.getRight().getReceipts().get(0);
 
@@ -893,7 +855,7 @@ public class BlockchainForkingTest {
         AionAddress contract = TxUtil.calculateContractAddress(receipt.getTransaction());
 
         // testChain imports both blocks
-        connectResult = testChain.tryToConnectAndFetchSummary(fastBlock, time, true);
+        connectResult = testChain.tryToConnectAndFetchSummary(fastBlock);
         result = connectResult.getLeft();
         receipt = connectResult.getRight().getReceipts().get(0);
 
@@ -901,7 +863,7 @@ public class BlockchainForkingTest {
         assertThat(receipt.isSuccessful()).isTrue();
         assertThat(TxUtil.calculateContractAddress(receipt.getTransaction())).isEqualTo(contract);
 
-        connectResult = testChain.tryToConnectAndFetchSummary(slowBlock, time, true);
+        connectResult = testChain.tryToConnectAndFetchSummary(slowBlock);
         result = connectResult.getLeft();
         receipt = connectResult.getRight().getReceipts().get(0);
 
@@ -964,10 +926,9 @@ public class BlockchainForkingTest {
                         .block;
 
         assertThat(highBlock.getDifficultyBI()).isGreaterThan(lowBlock.getDifficultyBI());
-        time += 100;
 
         // build first chain with highBlock applied directly
-        connectResult = sourceChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        connectResult = sourceChain.tryToConnectAndFetchSummary(highBlock);
         receipt = connectResult.getRight().getReceipts().get(expectedCount); // get last tx
         assertThat(receipt.isSuccessful()).isTrue();
 
@@ -986,11 +947,10 @@ public class BlockchainForkingTest {
         // ****** test fork behavior ******
 
         // first import lowBlock
-        assertThat(testChain.tryToConnectInternal(lowBlock, time))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(testChain.tryToConnect(lowBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // next import highBlock causing the fork
-        connectResult = testChain.tryToConnectAndFetchSummary(highBlock, time, true);
+        connectResult = testChain.tryToConnectAndFetchSummary(highBlock);
         receipt = connectResult.getRight().getReceipts().get(expectedCount);
         assertThat(receipt.isSuccessful()).isTrue();
         System.out.println(receipt);
