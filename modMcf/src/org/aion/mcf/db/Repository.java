@@ -100,7 +100,7 @@ public interface Repository<AS> {
     void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool);
 
     /** Performs batch transactions remove. */
-    void removeTxBatch(Set<byte[]> pendingTx, boolean isPool);
+    void removeTxBatch(List<byte[]> pendingTx, boolean isPool);
 
     /**
      * Retrieves the vm type used when the given contract with the given code hash was deployed.

@@ -589,7 +589,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     @Override
-    public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {
+    public void removeTxBatch(List<byte[]> pendingTx, boolean isPool) {
         throw new UnsupportedOperationException(
                 "removeTxBatch should be called on the tracked repository.");
     }

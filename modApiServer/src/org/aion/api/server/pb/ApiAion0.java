@@ -3215,7 +3215,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Retcode.r_fail_unknown_VALUE,
                         msgHash,
                         result.getMessage().getBytes());
-            case REPAYTX_POOL_EXCEPTION:
+            case REPAYTX_BUFFER_FULL:
             case EXCEPTION:
                 return ApiUtil.toReturnHeader(
                         getApiVersion(),
