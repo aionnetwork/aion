@@ -232,7 +232,6 @@ public class InternalTransactionTest {
         System.out.println(info.getReceipt());
         assertEquals(1, info.getReceipt().getLogInfoList().size());
         Thread.sleep(1000);
-        bc.close();
     }
 
     /*
@@ -303,7 +302,6 @@ public class InternalTransactionTest {
         AionTxExecSummary summary = executeTransaction(bc, context, tx2);
 
         assertEquals(2, summary.getInternalTransactions().size());
-        bc.close();
     }
 
     /*
@@ -354,7 +352,6 @@ public class InternalTransactionTest {
         for (InternalTransaction tx : summary.getInternalTransactions()) {
             System.out.println(tx);
         }
-        bc.close();
     }
 
     @Test
@@ -474,7 +471,6 @@ public class InternalTransactionTest {
                 firstItx = false;
             }
         }
-        bc.close();
     }
 
     private AionTxExecSummary executeTransaction(

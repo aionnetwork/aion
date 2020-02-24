@@ -49,7 +49,6 @@ final class TaskImportBlocks implements Runnable {
     private long totalImportTime = 0;
     private long LongImportTimeCount = 0;
     private long SuperLongImportTimeCount = 0;
-    private long lastLogImportTime = System.currentTimeMillis();
     private long totalImportedBlocks = 0;
     private long longestImportTime = 0;
     private long DIVISOR_MS = 1_000_000L;
@@ -121,9 +120,6 @@ final class TaskImportBlocks implements Runnable {
                 syncStats.update(getBestBlockNumber());
             }
         }
-
-        surveyLog.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms"
-            , totalImportedBlocks, (totalImportTime / DIVISOR_MS), LongImportTimeCount, SuperLongImportTimeCount, longestImportTime / DIVISOR_MS);
 
         log.debug(
                 "Thread ["
@@ -294,7 +290,6 @@ final class TaskImportBlocks implements Runnable {
         long t1 = System.nanoTime();
         importResult = this.chain.tryToConnect(b);
         long import_time = (System.nanoTime() - t1);
-        long ONE_SECOND = 1_000L * DIVISOR_MS;
         if (log.isDebugEnabled()) {
             // printing sync mode only when debug is enabled
             log.debug(
@@ -320,25 +315,6 @@ final class TaskImportBlocks implements Runnable {
                         b.getTransactionsList().size(),
                         importResult,
                         import_time / DIVISOR_MS);
-            }
-        }
-
-        if (surveyLog.isInfoEnabled()) {
-            if (importResult.isValid()) {
-                longestImportTime = Math.max(longestImportTime, import_time);
-                totalImportTime += import_time;
-                totalImportedBlocks++;
-                if (import_time >= (10L * ONE_SECOND)) {
-                    SuperLongImportTimeCount++;
-                } else if (import_time >= (ONE_SECOND)) {
-                    LongImportTimeCount++;
-                }
-            }
-
-            if (System.currentTimeMillis() >= lastLogImportTime + (60L * 1000)) {
-                surveyLog.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms"
-                    , totalImportedBlocks, (totalImportTime / DIVISOR_MS), LongImportTimeCount, SuperLongImportTimeCount, longestImportTime / DIVISOR_MS);
-                lastLogImportTime = System.currentTimeMillis();
             }
         }
         return importResult;

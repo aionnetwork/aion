@@ -130,6 +130,7 @@ import org.slf4j.LoggerFactory;
 public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
+    private static final Logger SURVEY_LOG = LoggerFactory.getLogger(LogEnum.SURVEY.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
     private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
@@ -973,7 +974,46 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectAndFetchSummary(block, true).getLeft();
+        return tryToConnectWithTimedExecution(block);
+    }
+
+    private long surveyTotalImportTime = 0;
+    private long surveyLongImportTimeCount = 0;
+    private long surveySuperLongImportTimeCount = 0;
+    private long surveyLastLogImportTime = System.currentTimeMillis();
+    private long surveyTotalImportedBlocks = 0;
+    private long surveyLongestImportTime = 0;
+    private final long DIVISOR_MS = 1_000_000L;
+    private final long ONE_SECOND = 1_000L * DIVISOR_MS;
+
+    public ImportResult tryToConnectWithTimedExecution(Block block) {
+        long importTime = System.nanoTime();
+        ImportResult importResult = tryToConnectAndFetchSummary(block, true).getLeft();
+        importTime = (System.nanoTime() - importTime);
+
+        if (SURVEY_LOG.isInfoEnabled()) {
+            if (importResult.isValid()) {
+                surveyLongestImportTime = Math.max(surveyLongestImportTime, importTime);
+                surveyTotalImportTime += importTime;
+                surveyTotalImportedBlocks++;
+                if (importTime >= (10L * ONE_SECOND)) {
+                    surveySuperLongImportTimeCount++;
+                } else if (importTime >= (ONE_SECOND)) {
+                    surveyLongImportTimeCount++;
+                }
+            }
+
+            if (System.currentTimeMillis() >= surveyLastLogImportTime + (60L * 1_000L)) {
+                SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
+                        surveyTotalImportedBlocks,
+                        (surveyTotalImportTime / DIVISOR_MS),
+                        surveyLongImportTimeCount,
+                        surveySuperLongImportTimeCount,
+                        surveyLongestImportTime / DIVISOR_MS);
+                surveyLastLogImportTime = System.currentTimeMillis();
+            }
+        }
+        return importResult;
     }
 
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
@@ -2017,7 +2057,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public synchronized void close() {
-        getBlockStore().close();
+        SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
+                surveyTotalImportedBlocks,
+                (surveyTotalImportTime / DIVISOR_MS),
+                surveyLongImportTimeCount,
+                surveySuperLongImportTimeCount,
+                surveyLongestImportTime / DIVISOR_MS);
     }
 
     @Override

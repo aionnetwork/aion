@@ -546,6 +546,8 @@ public class AionHub {
             genLOG.info("shutdown DB... Done!");
         }
 
+        blockchain.close();
+
         this.start.set(false);
     }
 

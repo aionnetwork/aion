@@ -131,8 +131,6 @@ public class BlockchainConcurrentImportTest {
     @AfterClass
     public static void teardown() {
         AvmTestConfig.clearConfigurations();
-        testChain.close();
-        sourceChain.close();
     }
 
     /**
