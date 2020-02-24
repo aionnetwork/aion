@@ -7,4 +7,5 @@ module aion.txpool {
     requires com.google.common;
 
     exports org.aion.txpool;
+    exports org.aion.txpool.v1;
 }
