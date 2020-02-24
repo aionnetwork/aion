@@ -1028,16 +1028,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     importTime,
                     block.getTotalDifficulty(),
                     getTotalDifficulty());
-            if (!SYNC_LOG.isDebugEnabled()) {
-                SYNC_LOG.info(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        peerDisplayId,
-                        block.getShortHash(),
-                        block.getNumber(),
-                        block.getTransactionsList().size(),
-                        importResult,
-                        importTime);
-            }
 
             // stop at invalid blocks
             if (!importResult.isStored()) {

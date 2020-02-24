@@ -100,7 +100,7 @@ final class TaskFilterBlocksBeforeImport implements Runnable {
         this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
 
         // log operation
-        log.info(
+        log.debug(
                 "<import-status: STORED {} out of {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
                 stored,
                 batch.size(),

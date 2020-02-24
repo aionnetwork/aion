@@ -213,7 +213,9 @@ final class TaskImportBlocks implements Runnable {
 
         startTime = System.nanoTime();
         try {
+            long importDuration = System.currentTimeMillis();
             Triple<Long, Set<ByteArrayWrapper>, ImportResult> resultTriple = chain.tryToConnect(batch, displayId);
+            importDuration = System.currentTimeMillis() - importDuration;
 
             currentBest = resultTriple.getLeft();
             Set<ByteArrayWrapper> importedHashes = resultTriple.getMiddle();
@@ -224,6 +226,7 @@ final class TaskImportBlocks implements Runnable {
                 last = currentBest + 1;
                 importedHashes.stream().forEach(v -> importedBlockHashes.put(v, true));
                 syncStats.updatePeerBlocks(displayId, count, BlockType.IMPORTED);
+                log.info("<import-status: node = {}, from = #{}, to = #{}, time elapsed = {} ms>", displayId, first, currentBest, importDuration);
             }
         } catch (Exception e) {
             log.error("<import-block throw> ", e);
@@ -351,7 +354,9 @@ final class TaskImportBlocks implements Runnable {
                 startTime = System.nanoTime();
                 try {
                     first = batchFromDisk.get(0).getNumber();
+                    long importDuration = System.currentTimeMillis();
                     Triple<Long, Set<ByteArrayWrapper>, ImportResult> resultTriple = chain.tryToConnect(batchFromDisk, "STORAGE");
+                    importDuration = System.currentTimeMillis() - importDuration;
 
                     long currentBest = resultTriple.getLeft();
                     Set<ByteArrayWrapper> importedHashes = resultTriple.getMiddle();
@@ -361,6 +366,7 @@ final class TaskImportBlocks implements Runnable {
                     if (currentBest >= first) {
                         last = currentBest + 1;
                         importedHashes.stream().forEach(v -> importedBlockHashes.put(v, true));
+                        log.info("<import-status: node = {}, from = #{}, to = #{}, time elapsed = {} ms>", "STORAGE", first, currentBest, importDuration);
                     } else {
                         // do not delete queue from storage
                         importedQueues.remove(entry.getKey());
@@ -410,7 +416,7 @@ final class TaskImportBlocks implements Runnable {
         this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
 
         // log operation
-        log.info(
+        log.debug(
                 "<import-status: STORED {} out of {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
                 stored,
                 batch.size(),
