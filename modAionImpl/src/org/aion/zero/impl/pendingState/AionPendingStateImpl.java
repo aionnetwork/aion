@@ -265,7 +265,7 @@ public final class AionPendingStateImpl implements IPendingState {
             if (blockchain.beaconHashValidator.validateTxForPendingState(tx)) {
                 validTransactions.add(tx);
             } else {
-                fireDroppedTx(tx, TxResponse.INVALID_TX_BEACONHASH.name());
+                fireDroppedTx(tx, TxResponse.INVALID_TX_BEACONHASH.getMessage());
             }
         }
 
@@ -493,11 +493,11 @@ public final class AionPendingStateImpl implements IPendingState {
                         repayTransaction.add(tx);
                         return TxResponse.REPAID;
                     } else {
-                        fireDroppedTx(tx, TxResponse.REPAYTX_BUFFER_FULL.name());
+                        fireDroppedTx(tx, TxResponse.REPAYTX_BUFFER_FULL.getMessage());
                         return TxResponse.DROPPED;
                     }
                 } else {
-                    fireDroppedTx(tx, TxResponse.REPAYTX_LOWPRICE.name());
+                    fireDroppedTx(tx, TxResponse.REPAYTX_LOWPRICE.getMessage());
                     return TxResponse.REPAYTX_LOWPRICE;
                 }
             }
@@ -866,7 +866,7 @@ public final class AionPendingStateImpl implements IPendingState {
                 PooledTransaction droppedPtx = txPool.getDroppedPoolTx();
                 if (droppedPtx != null) {
                     removeBackupDBPendingTx(droppedPtx.tx.getTransactionHash());
-                    fireDroppedTx(droppedPtx.tx, TxResponse.DROPPED.name());
+                    fireDroppedTx(droppedPtx.tx, TxResponse.DROPPED.getMessage());
                 }
             }
         }
