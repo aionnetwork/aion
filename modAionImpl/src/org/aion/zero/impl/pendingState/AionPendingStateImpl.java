@@ -202,7 +202,7 @@ public final class AionPendingStateImpl implements IPendingState {
 
         TxResponse response = validateTx(tx);
         if (response.isFail()) {
-            LOGGER_TX.info("tx is not valid - status: {} tx: {}", response.name(), tx);
+            LOGGER_TX.warn("tx is not valid - status: {} tx: {}", response.name(), tx);
             return response;
         }
 
@@ -258,7 +258,7 @@ public final class AionPendingStateImpl implements IPendingState {
      * the transactions broadcast.
      * @param transactions transaction list come from the cache or backup.
      */
-    private void addTransactionsFromCacheOrBackup(List<AionTransaction> transactions) {
+    private void addTransactionsFromBackupDB(List<AionTransaction> transactions) {
         List<AionTransaction> validTransactions = new ArrayList<>();
 
         for (AionTransaction tx : transactions) {
@@ -1043,29 +1043,16 @@ public final class AionPendingStateImpl implements IPendingState {
 
         Map<AionAddress, SortedMap<BigInteger, AionTransaction>> sortedMap = new HashMap<>();
         for (AionTransaction tx : pendingTx) {
-            if (sortedMap.get(tx.getSenderAddress()) == null) {
-                SortedMap<BigInteger, AionTransaction> accountSortedMap = new TreeMap<>();
-                accountSortedMap.put(tx.getNonceBI(), tx);
-
-                sortedMap.put(tx.getSenderAddress(), accountSortedMap);
-            } else {
-                sortedMap.get(tx.getSenderAddress()).put(tx.getNonceBI(), tx);
-            }
+            SortedMap<BigInteger, AionTransaction> accountSortedMap =
+                    sortedMap.getOrDefault(tx.getSenderAddress(), new TreeMap<>());
+            accountSortedMap.put(tx.getNonceBI(), tx);
+            sortedMap.putIfAbsent(tx.getSenderAddress(), accountSortedMap);
         }
 
-        List<AionTransaction> pendingPoolTx = new ArrayList<>();
+        sortedMap.values().forEach( kv -> addTransactionsFromBackupDB(new ArrayList<>(kv.values())));
+        blockchain.getRepository().removePoolTx();
 
-        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e :
-                sortedMap.entrySet()) {
-            pendingPoolTx.addAll(e.getValue().values());
-        }
-
-        addTransactionsFromCacheOrBackup(pendingPoolTx);
-        long t2 = System.currentTimeMillis() - t1;
-        LOGGER_TX.info(
-                "{} pendingPoolTx loaded from DB loaded into the txpool, {} ms",
-                pendingPoolTx.size(),
-                t2);
+        LOGGER_TX.info("backupTx loaded from DB to the txPool, {} ms", System.currentTimeMillis() - t1);
     }
 
     public String getVersion() {

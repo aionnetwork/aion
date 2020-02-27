@@ -1145,6 +1145,15 @@ public class AionRepositoryImpl extends AbstractRepository {
         }
     }
 
+    public void removePoolTx() {
+        rwLock.readLock().lock();
+        try {
+            txPoolDatabase.drop();
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
