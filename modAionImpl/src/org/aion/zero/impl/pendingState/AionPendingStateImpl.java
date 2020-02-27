@@ -1003,27 +1003,16 @@ public final class AionPendingStateImpl implements IPendingState {
 
         Map<AionAddress, SortedMap<BigInteger, AionTransaction>> sortedMap = new HashMap<>();
         for (AionTransaction tx : pendingTx) {
-            if (sortedMap.get(tx.getSenderAddress()) == null) {
-                SortedMap<BigInteger, AionTransaction> accountSortedMap = new TreeMap<>();
-                accountSortedMap.put(tx.getNonceBI(), tx);
-
-                sortedMap.put(tx.getSenderAddress(), accountSortedMap);
-            } else {
-                sortedMap.get(tx.getSenderAddress()).put(tx.getNonceBI(), tx);
-            }
+            SortedMap<BigInteger, AionTransaction> accountSortedMap =
+                sortedMap.getOrDefault(tx.getSenderAddress(), new TreeMap<>());
+            accountSortedMap.put(tx.getNonceBI(), tx);
+            sortedMap.putIfAbsent(tx.getSenderAddress(), accountSortedMap);
         }
 
-        int cnt = 0;
-        for (Map.Entry<AionAddress, SortedMap<BigInteger, AionTransaction>> e :
-                sortedMap.entrySet()) {
-            for (AionTransaction tx : e.getValue().values()) {
-                pendingTxCache.addCacheTx(tx);
-                cnt++;
-            }
-        }
+        sortedMap.values().forEach(kv -> kv.values().forEach(pendingTxCache::addCacheTx));
+        blockchain.getRepository().removeCacheTx();
 
-        long t2 = System.currentTimeMillis() - t1;
-        LOGGER_TX.info("{} pendingCacheTx loaded from DB into the pendingCache, {} ms", cnt, t2);
+        LOGGER_TX.info("tx loaded from DB to the cachePool, {} ms", System.currentTimeMillis() - t1);
     }
 
     private void recoverPool() {

@@ -1154,6 +1154,15 @@ public class AionRepositoryImpl extends AbstractRepository {
         }
     }
 
+    public void removeCacheTx() {
+        rwLock.readLock().lock();
+        try {
+            pendingTxCacheDatabase.drop();
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
