@@ -8,9 +8,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.log.AionLoggerFactory;
@@ -589,18 +587,6 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     @Override
-    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
-        throw new UnsupportedOperationException(
-                "addTxBatch should be called on the tracked repository.");
-    }
-
-    @Override
-    public void removeTxBatch(List<byte[]> pendingTx, boolean isPool) {
-        throw new UnsupportedOperationException(
-                "removeTxBatch should be called on the tracked repository.");
-    }
-
-    @Override
     public boolean isValidRoot(byte[] root) {
         return this.repository.isValidRoot(root);
     }
@@ -608,18 +594,6 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     @Override
     public boolean isIndexed(byte[] hash, long level) {
         return repository.isIndexed(hash, level);
-    }
-
-    @Override
-    public List<byte[]> getPoolTx() {
-        throw new UnsupportedOperationException(
-                "getPoolTx should be called on the tracked repository.");
-    }
-
-    @Override
-    public List<byte[]> getCacheTx() {
-        throw new UnsupportedOperationException(
-                "getCachelTx should be called on the tracked repository.");
     }
 
     public InternalVmType getVMUsed(AionAddress contract, byte[] codeHash) {

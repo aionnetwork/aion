@@ -324,8 +324,7 @@ public class AionRepositoryImpl extends AbstractRepository {
         return (details == null) ? null : details.get(key);
     }
 
-    @Override
-    public List<byte[]> getPoolTx() {
+    public final List<byte[]> getPoolTx() {
 
         List<byte[]> rtn = new ArrayList<>();
         rwLock.readLock().lock();
@@ -344,8 +343,7 @@ public class AionRepositoryImpl extends AbstractRepository {
         return rtn;
     }
 
-    @Override
-    public List<byte[]> getCacheTx() {
+    public final List<byte[]> getCacheTx() {
 
         List<byte[]> rtn = new ArrayList<>();
         rwLock.readLock().lock();
@@ -650,39 +648,53 @@ public class AionRepositoryImpl extends AbstractRepository {
         }
     }
 
-    @Override
-    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
-
-        if (pendingTx.isEmpty()) {
+    public void addPooledTxToDB(Map<byte[], byte[]> pooledTx) {
+        if (pooledTx.isEmpty()) {
             return;
         }
 
         rwLock.writeLock().lock();
         try {
-            if (isPool) {
-                txPoolDatabase.putBatch(pendingTx);
-            } else {
-                pendingTxCacheDatabase.putBatch(pendingTx);
-            }
+            txPoolDatabase.putBatch(pooledTx);
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
-    @Override
-    public void removeTxBatch(List<byte[]> clearTxSet, boolean isPool) {
-
-        if (clearTxSet.isEmpty()) {
+    public void addCachedTxToDB(Map<byte[], byte[]> cachedTx) {
+        if (cachedTx.isEmpty()) {
             return;
         }
 
         rwLock.writeLock().lock();
         try {
-            if (isPool) {
-                txPoolDatabase.deleteBatch(clearTxSet);
-            } else {
-                pendingTxCacheDatabase.deleteBatch(clearTxSet);
-            }
+            pendingTxCacheDatabase.putBatch(cachedTx);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    public void removePooledTxInDB(List<byte[]> pooledTx) {
+        if (pooledTx.isEmpty()) {
+            return;
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            txPoolDatabase.deleteBatch(pooledTx);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    public void removeCachedTxInDB(List<byte[]> cachedTx) {
+        if (cachedTx.isEmpty()) {
+            return;
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            pendingTxCacheDatabase.deleteBatch(cachedTx);
         } finally {
             rwLock.writeLock().unlock();
         }

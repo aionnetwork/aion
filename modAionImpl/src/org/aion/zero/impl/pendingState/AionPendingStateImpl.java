@@ -96,15 +96,15 @@ public final class AionPendingStateImpl implements IPendingState {
         long t1 = System.currentTimeMillis();
 
         if (!backupPendingPoolAdd.isEmpty()) {
-            blockchain.getRepository().addTxBatch(backupPendingPoolAdd, true);
+            blockchain.getRepository().addPooledTxToDB(backupPendingPoolAdd);
         }
 
         if (!backupPendingCacheAdd.isEmpty()) {
-            blockchain.getRepository().addTxBatch(backupPendingCacheAdd, false);
+            blockchain.getRepository().addCachedTxToDB(backupPendingCacheAdd);
         }
 
         if (!backupPendingPoolRemove.isEmpty()) {
-            blockchain.getRepository().removeTxBatch(backupPendingPoolRemove, true);
+            blockchain.getRepository().removePooledTxInDB(backupPendingPoolRemove);
         }
 
         for (AionTransaction tx : pendingTxCache.pollRemovedTransactionForPoolBackup()) {
@@ -112,7 +112,7 @@ public final class AionPendingStateImpl implements IPendingState {
         }
 
         if (!backupPendingCacheRemove.isEmpty()) {
-            blockchain.getRepository().removeTxBatch(backupPendingCacheRemove, false);
+            blockchain.getRepository().removeCachedTxInDB(backupPendingCacheRemove);
         }
 
         blockchain.getRepository().flush();

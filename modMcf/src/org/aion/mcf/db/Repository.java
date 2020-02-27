@@ -97,12 +97,6 @@ public interface Repository<AS> {
 
     byte[] getBlockHashByNumber(long blockNumber);
 
-    /** Performs batch transactions add. */
-    void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool);
-
-    /** Performs batch transactions remove. */
-    void removeTxBatch(List<byte[]> pendingTx, boolean isPool);
-
     /**
      * Retrieves the vm type used when the given contract with the given code hash was deployed.
      *
@@ -246,19 +240,4 @@ public interface Repository<AS> {
      * @return a {@link ByteArrayWrapper} representing the data associated with the given key
      */
     ByteArrayWrapper getStorageValue(AionAddress address, ByteArrayWrapper key);
-
-    /**
-     * Retrieves the stored transactions for recovering pool tx.
-     *
-     * @return the list of transactions encoded bytes.
-     */
-    List<byte[]> getPoolTx();
-
-    /**
-     * Retrieves the stored transactions for recovering caching tx.
-     *
-     * @return the list of transactions encoded bytes.
-     */
-    List<byte[]> getCacheTx();
-
 }
