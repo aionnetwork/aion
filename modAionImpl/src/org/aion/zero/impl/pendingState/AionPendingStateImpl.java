@@ -479,27 +479,19 @@ public final class AionPendingStateImpl implements IPendingState {
         if (txPool.isContained(tx.getSenderAddress(), tx.getNonceBI())) {
             // check energy usage
             PooledTransaction poolTx = txPool.getPoolTx(tx.getSenderAddress(), tx.getNonceBI());
-            if (poolTx == null) {
-                LOGGER_TX.error(
-                    "The pool data has broken, missing the transaction! sender: {}, nonce: {}",
-                    tx.getSenderAddress(),
-                    tx.getNonceBI());
-                throw new IllegalStateException();
-            } else {
-                //Use BigInteger to avoid the overflow
-                BigInteger repayValidPrice = BigInteger.valueOf(poolTx.tx.getEnergyPrice()).multiply(BigInteger.TWO);
-                if (BigInteger.valueOf(tx.getEnergyPrice()).compareTo(repayValidPrice) >= 0) {
-                    if (repayTransaction.size() < (txPool.maxPoolSize / 4)) {
-                        repayTransaction.add(tx);
-                        return TxResponse.REPAID;
-                    } else {
-                        fireDroppedTx(tx, TxResponse.REPAYTX_BUFFER_FULL.getMessage());
-                        return TxResponse.DROPPED;
-                    }
+            //Use BigInteger to avoid the overflow
+            BigInteger repayValidPrice = BigInteger.valueOf(poolTx.tx.getEnergyPrice()).multiply(BigInteger.TWO);
+            if (BigInteger.valueOf(tx.getEnergyPrice()).compareTo(repayValidPrice) >= 0) {
+                if (repayTransaction.size() < (txPool.maxPoolSize / 4)) {
+                    repayTransaction.add(tx);
+                    return TxResponse.REPAID;
                 } else {
-                    fireDroppedTx(tx, TxResponse.REPAYTX_LOWPRICE.getMessage());
-                    return TxResponse.REPAYTX_LOWPRICE;
+                    fireDroppedTx(tx, TxResponse.REPAYTX_BUFFER_FULL.getMessage());
+                    return TxResponse.DROPPED;
                 }
+            } else {
+                fireDroppedTx(tx, TxResponse.REPAYTX_LOWPRICE.getMessage());
+                return TxResponse.REPAYTX_LOWPRICE;
             }
         } else {
             AionTxExecSummary txSum = executeTx(tx);
@@ -518,11 +510,7 @@ public final class AionPendingStateImpl implements IPendingState {
                 PooledTransaction rtn = this.txPool.add(pendingTx);
                 if (rtn == null|| rtn != pendingTx) {
                     // Replay tx case should not happen in this check.
-                    LOGGER_TX.debug(
-                        "The pool data has broken, missing the transaction! sender: {}, nonce: {}",
-                        tx.getSenderAddress(),
-                        tx.getNonceBI());
-                    throw new IllegalStateException();
+                    throw new IllegalStateException("The pool data has broken, missing the tx: " + pendingTx);
                 } else {
                     fireTxUpdate(txSum.getReceipt(), PendingTransactionState.NEW_PENDING, currentBestBlock.get());
                     return TxResponse.SUCCESS;
