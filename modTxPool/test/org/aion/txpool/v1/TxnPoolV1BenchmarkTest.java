@@ -11,6 +11,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.Constant;
+import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.junit.Assert;
@@ -53,8 +54,8 @@ public class TxnPoolV1BenchmarkTest {
     @Test
     public void benchmarkSnapshot() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
-        config.put("pool-size-max", "100000");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -101,8 +102,8 @@ public class TxnPoolV1BenchmarkTest {
     */
     public void benchmarkSnapshot2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
-        config.put("pool-size-max", "101000");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "101000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -179,8 +180,8 @@ public class TxnPoolV1BenchmarkTest {
     */
     public void benchmarkSnapshot3() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
-        config.put("pool-size-max", "1000000");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "1000000");
 
 
         TxPoolV1 tp = new TxPoolV1(config);
@@ -235,8 +236,8 @@ public class TxnPoolV1BenchmarkTest {
      */
     public void benchmarkSnapshot4() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
-        config.put("pool-size-max", "100000");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -305,8 +306,8 @@ public class TxnPoolV1BenchmarkTest {
     */
     public void benchmarkSnapshot5() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
-        config.put("pool-size-max", "100000");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 

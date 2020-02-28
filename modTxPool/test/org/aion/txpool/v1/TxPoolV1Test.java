@@ -18,6 +18,7 @@ import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.txpool.Constant;
+import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.time.TimeInstant;
@@ -62,7 +63,7 @@ public class TxPoolV1Test {
     @Test
     public void add1() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txnl = getMockTransaction(0);
@@ -75,7 +76,7 @@ public class TxPoolV1Test {
     @Test
     public void add2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
         PooledTransaction pooledTx = genTransaction(new byte[0], 0);
@@ -88,7 +89,7 @@ public class TxPoolV1Test {
     @Test(expected = NullPointerException.class)
     public void add3() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txl = null;
@@ -116,7 +117,7 @@ public class TxPoolV1Test {
     @Test
     public void remove() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txnl = getMockTransaction(0);
@@ -130,7 +131,7 @@ public class TxPoolV1Test {
     @Test
     public void remove2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100"); // 100 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100"); // 100 sec
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txl = new ArrayList<>();
@@ -159,7 +160,7 @@ public class TxPoolV1Test {
     @Test
     public void remove3() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100"); // 100 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100"); // 100 sec
 
         TxPoolV1 txPool = new TxPoolV1(config);
         List<PooledTransaction> txl = new ArrayList<>();
@@ -190,7 +191,7 @@ public class TxPoolV1Test {
     @Test
     public void remove4() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100"); // 100 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100"); // 100 sec
 
         TxPoolV1 txPool = new TxPoolV1(config);
         List<PooledTransaction> txl = new ArrayList<>();
@@ -299,7 +300,7 @@ public class TxPoolV1Test {
     @Test
     public void timeout1() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10"); // 10 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10"); // 10 sec
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txnl = getMockTransaction(30000L);
@@ -315,7 +316,7 @@ public class TxPoolV1Test {
     @Test
     public void timeout2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "1"); // still 10 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "1"); // still 10 sec
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txnl = getMockTransaction(30000L);
@@ -331,7 +332,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10"); // 10 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10"); // 10 sec
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txnl = getMockTransaction(0);
@@ -344,7 +345,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100"); // 100 sec
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100"); // 100 sec
 
         TxPoolV1 tp = new TxPoolV1(config);
         List<PooledTransaction> txl = new ArrayList<>();
@@ -364,7 +365,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot3() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -392,7 +393,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot4() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -420,7 +421,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot5() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -450,7 +451,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot6() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -494,7 +495,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot7() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -539,7 +540,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshot8() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -599,7 +600,7 @@ public class TxPoolV1Test {
     @Test
     public void snapshotWithSameTransactionTimestamp() {
         Properties config = new Properties();
-        config.put("tx-timeout", "100");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -668,7 +669,7 @@ public class TxPoolV1Test {
     @Test
     public void addRepeatedTxn() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
         AionTransaction txn =
@@ -696,7 +697,7 @@ public class TxPoolV1Test {
     @Test
     public void addRepeatedTxn2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -727,7 +728,7 @@ public class TxPoolV1Test {
     @Test
     public void addRepeatedTxn3() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -759,7 +760,7 @@ public class TxPoolV1Test {
     @Test
     public void addTxWithSameNonce() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
         TxPoolV1 tp = new TxPoolV1(config);
 
         PooledTransaction pooledTx =
@@ -780,7 +781,7 @@ public class TxPoolV1Test {
     @Test
     public void noncebyAccountTest() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -823,7 +824,7 @@ public class TxPoolV1Test {
     @Test
     public void noncebyAccountTest2() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
@@ -868,7 +869,7 @@ public class TxPoolV1Test {
     @Test
     public void feemapTest() {
         Properties config = new Properties();
-        config.put("tx-timeout", "10");
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10");
 
         TxPoolV1 tp = new TxPoolV1(config);
 

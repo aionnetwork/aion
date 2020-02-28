@@ -24,6 +24,7 @@ import org.aion.base.PooledTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.txpool.Constant;
+import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.tuple.Triple;
@@ -72,23 +73,23 @@ public final class TxPoolV1 {
      */
     public TxPoolV1(Properties config) {
 
-        if (Optional.ofNullable(config.get(Constant.PROP_TX_TIMEOUT)).isPresent()) {
-            transactionTimeout = Math.max(Integer.parseInt(config.get(Constant.PROP_TX_TIMEOUT).toString()), 10);
+        if (Optional.ofNullable(config.get(TXPOOL_PROPERTY.PROP_TX_TIMEOUT)).isPresent()) {
+            transactionTimeout = Math.max(Integer.parseInt(config.get(TXPOOL_PROPERTY.PROP_TX_TIMEOUT).toString()), Constant.TRANSACTION_TIMEOUT_MIN);
         } else {
-            transactionTimeout = 3600;
+            transactionTimeout = Constant.TRANSACTION_TIMEOUT_DEFAULT;
         }
 
-        if (Optional.ofNullable(config.get(Constant.PROP_BLOCK_NRG_LIMIT)).isPresent()) {
+        if (Optional.ofNullable(config.get(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT)).isPresent()) {
             blockEnergyLimit =new AtomicLong(
-                Math.max(Long.parseLong((String) config.get(Constant.PROP_BLOCK_NRG_LIMIT)), 1_000_000L));
+                Math.max(Long.parseLong((String) config.get(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT)), Constant.BLOCK_ENERGY_LIMIT_MIN));
         } else {
-            blockEnergyLimit = new AtomicLong(10_000_000L);
+            blockEnergyLimit = new AtomicLong(Constant.BLOCK_ENERGY_LIMIT_DEFAULT);
         }
 
-        if (Optional.ofNullable(config.get(Constant.PROP_POOL_SIZE_MAX)).isPresent()) {
-            maxPoolSize = Math.max(Integer.parseInt((String) config.get(Constant.PROP_POOL_SIZE_MAX)), 1024);
+        if (Optional.ofNullable(config.get(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX)).isPresent()) {
+            maxPoolSize = Math.max(Integer.parseInt((String) config.get(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX)), Constant.TXPOOL_SIZE_MIN);
         } else {
-            maxPoolSize = 8192;
+            maxPoolSize = Constant.TXPOOL_SIZE_DEFAULT;
         }
 
         poolTransactions = new HashMap<>();

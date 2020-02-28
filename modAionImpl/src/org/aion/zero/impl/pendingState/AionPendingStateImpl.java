@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.txpool.v1.TxPoolV1;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
@@ -36,7 +37,6 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.txpool.Constant;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -150,8 +150,8 @@ public final class AionPendingStateImpl implements IPendingState {
         } else {
             Properties prop = new Properties();
             // The BlockEnergyLimit will be updated when the best block found.
-            prop.put(Constant.PROP_BLOCK_NRG_LIMIT, String.valueOf(energyUpperBound));
-            prop.put(Constant.PROP_TX_TIMEOUT, String.valueOf(txPendingTimeout));
+            prop.put(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT, String.valueOf(energyUpperBound));
+            prop.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, String.valueOf(txPendingTimeout));
             this.txPool = new TxPoolV1(prop);
         }
 
