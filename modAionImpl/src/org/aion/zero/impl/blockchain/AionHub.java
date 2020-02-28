@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
-import org.aion.base.ConstantUtil;
 import org.aion.base.TransactionTypeRule;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
@@ -22,7 +21,6 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.SystemExitCodes;
@@ -40,10 +38,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.pendingState.IPendingState;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.sync.SyncMgr;
@@ -125,7 +120,7 @@ public class AionHub {
         blockchain.setEventManager(this.eventMgr);
 
         try {
-            loadBlockchain();
+            this.blockchain.load(cfg.getGenesis(), genLOG);
         } catch (IllegalStateException e) {
             genLOG.error(
                     "Found database corruption, please re-import your database by using ./aion.sh -n <network> --redo-import",
@@ -313,219 +308,6 @@ public class AionHub {
 
     public BlockPropagationHandler getPropHandler() {
         return propHandler;
-    }
-
-    private void loadBlockchain() {
-
-        // function repurposed for integrity checks since previously not implemented
-        try {
-            this.blockchain.getBlockStore().load();
-        } catch (RuntimeException re) {
-            genLOG.error("Fatal: can't load blockstore; exiting.", re);
-            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
-        }
-
-        // Note: if block DB corruption, the bestBlock may not match with the indexDB.
-        Block bestBlock = this.blockchain.getBlockStore().getBestBlock();
-
-        boolean recovered = true;
-        boolean bestBlockShifted = true;
-        int countRecoveryAttempts = 0;
-
-        // fix the trie if necessary
-        while (bestBlockShifted
-                && // the best block was updated after recovery attempt
-                (countRecoveryAttempts < 5)
-                && // allow 5 recovery attempts
-                bestBlock != null
-                && // recover only for non-null blocks
-                !this.blockchain.getRepository().isValidRoot(bestBlock.getStateRoot())) {
-
-            genLOG.info(
-                    "Recovery initiated due to corrupt world state at block "
-                            + bestBlock.getNumber()
-                            + ".");
-
-            long bestBlockNumber = bestBlock.getNumber();
-            byte[] bestBlockRoot = bestBlock.getStateRoot();
-
-            // ensure that the genesis state exists before attempting recovery
-            AionGenesis genesis = cfg.getGenesis();
-            if (!this.blockchain.getRepository().isValidRoot(genesis.getStateRoot())) {
-                genLOG.info(
-                        "Corrupt world state for genesis block hash: "
-                                + genesis.getShortHash()
-                                + ", number: "
-                                + genesis.getNumber()
-                                + ".");
-
-                AionHubUtils.buildGenesis(genesis, blockchain.getRepository());
-
-                if (blockchain.getRepository().isValidRoot(genesis.getStateRoot())) {
-                    genLOG.info("Rebuilding genesis block SUCCEEDED.");
-                } else {
-                    genLOG.info("Rebuilding genesis block FAILED.");
-                }
-            }
-
-            recovered = this.blockchain.recoverWorldState(this.blockchain.getRepository(), bestBlock);
-
-            if (recovered && !blockchain.getRepository().isIndexed(bestBlock.getHash(), bestBlock.getNumber())) {
-                // correct the index for this block
-                recovered = blockchain.recoverIndexEntry(this.blockchain.getRepository(), bestBlock);
-            }
-
-            long blockNumber = bestBlock.getNumber();
-            if (!this.blockchain.getRepository().isValidRoot(bestBlock.getStateRoot())) {
-                // reverting back one block
-                genLOG.info("Rebuild state FAILED. Reverting to previous block.");
-
-                --blockNumber;
-                DBUtils.Status status = DBUtils.revertTo(this.blockchain, blockNumber, genLOG);
-
-                recovered =
-                        (status == DBUtils.Status.SUCCESS)
-                                && this.blockchain.getRepository().isValidRoot(
-                                        this.blockchain.getRepository()
-                                                .getBlockStore()
-                                                .getChainBlockByNumber(blockNumber)
-                                                .getStateRoot());
-            }
-
-            if (recovered) {
-                // reverting block & index DB
-                blockchain.getBlockStore().rollback(blockNumber);
-
-                // new best block after recovery
-                bestBlock = this.blockchain.getBlockStore().getBestBlock();
-                if (bestBlock != null) {
-
-                    bestBlock.setTotalDifficulty(blockchain.getTotalDifficultyForHash(bestBlock.getHash()));
-
-                    startingBlock = bestBlock;
-                    // TODO : [unity] The publicbestblock is a weird settings, should consider to remove it.
-                    ((AionBlockchainImpl) blockchain).resetPubBestBlock(bestBlock);
-                } else {
-                    genLOG.error(
-                            "Recovery failed! please re-import your database by ./aion.sh -n <network> --redo-import, it will take a while.");
-                    throw new IllegalStateException("Recovery failed due to database corruption.");
-                }
-
-                // checking is the best block has changed since attempting recovery
-                bestBlockShifted =
-                        !(bestBlockNumber == bestBlock.getNumber()) // block number changed
-                                || !(Arrays.equals(
-                                        bestBlockRoot,
-                                        bestBlock.getStateRoot())); // root hash changed
-
-                if (bestBlockShifted) {
-                    genLOG.info(
-                            "Rebuilding world state SUCCEEDED by REVERTING to a previous block.");
-                } else {
-                    genLOG.info("Rebuilding world state SUCCEEDED.");
-                }
-            } else {
-                genLOG.error(
-                        "Rebuilding world state FAILED. "
-                                + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
-                                + "Check the Aion wiki for recommendations on choosing the block number.");
-            }
-
-            countRecoveryAttempts++;
-        }
-
-        // rebuild from genesis if (1) no best block (2) recovery failed
-        if (bestBlock == null || !recovered) {
-            if (bestBlock == null) {
-                genLOG.info("DB is empty - adding Genesis");
-            } else {
-                genLOG.info("DB could not be recovered - adding Genesis");
-            }
-
-            AionGenesis genesis = cfg.getGenesis();
-
-            AionHubUtils.buildGenesis(genesis, blockchain.getRepository());
-
-            blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
-
-            if (genesis.getTotalDifficulty().equals(BigInteger.ZERO)) {
-                // setting the object runtime value
-                genesis.setTotalDifficulty(genesis.getDifficultyBI());
-            }
-
-        } else {
-            blockchain.setBestBlock(bestBlock);
-            if (bestBlock instanceof StakingBlock) {
-                blockchain.loadBestMiningBlock();
-            } else if (bestBlock instanceof AionBlock) {
-                blockchain.loadBestStakingBlock();
-            } else {
-                throw new IllegalStateException();
-            }
-
-            BigInteger totalDifficulty = getBlockStore().getBestBlockWithInfo().getTotalDifficulty();
-            blockchain.setTotalDifficulty(totalDifficulty);
-            if (bestBlock.getTotalDifficulty().equals(BigInteger.ZERO)) {
-                // setting the object runtime value
-                bestBlock.setTotalDifficulty(totalDifficulty);
-            }
-
-            genLOG.info(
-                    "loaded block <num={}, root={}, td={}>",
-                    blockchain.getBestBlock().getNumber(),
-                    LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()),
-                    blockchain.getTotalDifficulty());
-        }
-
-        byte[] genesisHash = cfg.getGenesis().getHash();
-        byte[] databaseGenHash =
-                blockchain.getBlockByNumber(0) == null
-                        ? null
-                        : blockchain.getBlockByNumber(0).getHash();
-
-        // this indicates that DB and genesis are inconsistent
-        if (genesisHash == null
-                || databaseGenHash == null
-                || (!Arrays.equals(genesisHash, databaseGenHash))) {
-            if (genesisHash == null) {
-                genLOG.error("failed to load genesis from config");
-            }
-
-            if (databaseGenHash == null) {
-                genLOG.error("failed to load block 0 from database");
-            }
-
-            genLOG.error(
-                    "genesis json rootHash {} is inconsistent with database rootHash {}\n"
-                            + "your configuration and genesis are incompatible, please do the following:\n"
-                            + "\t1) Remove your database folder\n"
-                            + "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
-                            + "\t3) Reboot with correct genesis and empty database\n",
-                    genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
-                    databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
-            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
-        }
-
-        if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), ConstantUtil.EMPTY_TRIE_HASH)) {
-            this.blockchain.getRepository().syncToRoot(blockchain.getBestBlock().getStateRoot());
-        }
-
-        long bestNumber = blockchain.getBestBlock().getNumber();
-        if (blockchain.forkUtility.isNonceForkActive(bestNumber + 1)) {
-            // Reset the PoS difficulty as part of the fork logic.
-            if (bestNumber == blockchain.forkUtility.getNonceForkBlockHeight()) {
-                // If this is the trigger for the fork calculate the new difficulty.
-                Block block = blockchain.getBestBlock();
-                BigInteger newDiff = blockchain.calculateFirstPoSDifficultyAtBlock(block);
-                blockchain.forkUtility.setNonceForkResetDiff(newDiff);
-            } else {
-                // Otherwise, assume that it was already calculated and validated during import.
-                // The difficulty cannot be calculated here due to possible pruning of the world state.
-                Block firstStaked = blockchain.getBlockByNumber(blockchain.forkUtility.getNonceForkBlockHeight() + 1);
-                blockchain.forkUtility.setNonceForkResetDiff(firstStaked.getDifficultyBI());
-            }
-        }
     }
 
     public void close() {

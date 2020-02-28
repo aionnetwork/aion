@@ -9,6 +9,7 @@ import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.EnumMap;
+import org.aion.log.LogUtil;
 import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
 import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
 import org.aion.zero.impl.core.IDifficultyCalculator;
@@ -37,6 +38,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.zero.impl.db.DBUtils;
+import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
 
@@ -827,8 +830,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
-    @Override
-    public void loadBestMiningBlock() {
+    private void loadBestMiningBlock() {
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             bestMiningBlock = (AionBlock) bestBlock;
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
@@ -838,8 +840,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
-    public void loadBestStakingBlock() {
+    private void loadBestStakingBlock() {
         long bestBlockNumber = bestBlock.getNumber();
 
         if (bestStakingBlock == null && forkUtility.isUnityForkActive(bestBlockNumber)) {
@@ -1361,7 +1362,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
     
-    public BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
+    private BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
         if (!forkUtility.isUnityForkBlock(block.getNumber()) && !forkUtility.isNonceForkBlock(block.getNumber())) {
             throw new IllegalArgumentException("This cannot be the parent of the first PoS block");
         } else {
@@ -2837,5 +2838,190 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     void setBestBlockImportCallback(BestBlockImportCallback callback) {
         bestBlockCallback = callback;
+    }
+
+    /**
+     * Loads the block chain attempting recovery if necessary and returns the starting block.
+     *
+     * @param genesis the expected genesis block
+     * @param genLOG logger for output messages
+     */
+    public void load(AionGenesis genesis, Logger genLOG) {
+        // function repurposed for integrity checks since previously not implemented
+        try {
+            repository.getBlockStore().load();
+        } catch (RuntimeException re) {
+            genLOG.error("Fatal: can't load blockstore; exiting.", re);
+            System.exit(org.aion.zero.impl.SystemExitCodes.INITIALIZATION_ERROR);
+        }
+
+        // Note: if block DB corruption, the bestBlock may not match with the indexDB.
+        Block bestBlock = repository.getBlockStore().getBestBlock();
+
+        boolean recovered = true;
+        boolean bestBlockShifted = true;
+        int countRecoveryAttempts = 0;
+
+        // fix the trie if necessary
+        while (bestBlockShifted
+                && // the best block was updated after recovery attempt
+                (countRecoveryAttempts < 5)
+                && // allow 5 recovery attempts
+                bestBlock != null
+                && // recover only for non-null blocks
+                !repository.isValidRoot(bestBlock.getStateRoot())) {
+
+            genLOG.info("Recovery initiated due to corrupt world state at block " + bestBlock.getNumber() + ".");
+
+            long bestBlockNumber = bestBlock.getNumber();
+            byte[] bestBlockRoot = bestBlock.getStateRoot();
+
+            // ensure that the genesis state exists before attempting recovery
+            if (!repository.isValidRoot(genesis.getStateRoot())) {
+                genLOG.info("Corrupt world state for genesis block hash: " + genesis.getShortHash() + ", number: " + genesis.getNumber() + ".");
+
+                AionHubUtils.buildGenesis(genesis, repository);
+
+                if (repository.isValidRoot(genesis.getStateRoot())) {
+                    genLOG.info("Rebuilding genesis block SUCCEEDED.");
+                } else {
+                    genLOG.info("Rebuilding genesis block FAILED.");
+                }
+            }
+
+            recovered = recoverWorldState(repository, bestBlock);
+
+            if (recovered && !repository.isIndexed(bestBlock.getHash(), bestBlock.getNumber())) {
+                // correct the index for this block
+                recovered = recoverIndexEntry(repository, bestBlock);
+            }
+
+            long blockNumber = bestBlock.getNumber();
+            if (!repository.isValidRoot(bestBlock.getStateRoot())) {
+                // reverting back one block
+                genLOG.info("Rebuild state FAILED. Reverting to previous block.");
+
+                --blockNumber;
+                DBUtils.Status status = DBUtils.revertTo(this, blockNumber, genLOG);
+
+                recovered = (status == DBUtils.Status.SUCCESS) && repository.isValidRoot(getBlockByNumber(blockNumber).getStateRoot());
+            }
+
+            if (recovered) {
+                // reverting block & index DB
+                repository.getBlockStore().rollback(blockNumber);
+
+                // new best block after recovery
+                bestBlock = repository.getBlockStore().getBestBlock();
+                if (bestBlock != null) {
+
+                    bestBlock.setTotalDifficulty(getTotalDifficultyForHash(bestBlock.getHash()));
+                    // TODO : [unity] The publicbestblock is a weird settings, should consider to remove it.
+                    resetPubBestBlock(bestBlock);
+                } else {
+                    genLOG.error("Recovery failed! please re-import your database by ./aion.sh -n <network> --redo-import, it will take a while.");
+                    throw new IllegalStateException("Recovery failed due to database corruption.");
+                }
+
+                // checking is the best block has changed since attempting recovery
+                bestBlockShifted = !(bestBlockNumber == bestBlock.getNumber()) // block number changed
+                                || !(Arrays.equals(bestBlockRoot, bestBlock.getStateRoot())); // root hash changed
+
+                if (bestBlockShifted) {
+                    genLOG.info("Rebuilding world state SUCCEEDED by REVERTING to a previous block.");
+                } else {
+                    genLOG.info("Rebuilding world state SUCCEEDED.");
+                }
+            } else {
+                genLOG.error("Rebuilding world state FAILED. "
+                                + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
+                                + "Check the Aion wiki for recommendations on choosing the block number.");
+            }
+
+            countRecoveryAttempts++;
+        }
+
+        // rebuild from genesis if (1) no best block (2) recovery failed
+        if (bestBlock == null || !recovered) {
+            if (bestBlock == null) {
+                genLOG.info("DB is empty - adding Genesis");
+            } else {
+                genLOG.info("DB could not be recovered - adding Genesis");
+            }
+
+            AionHubUtils.buildGenesis(genesis, repository);
+
+            setBestBlock(genesis);
+            setTotalDifficulty(genesis.getDifficultyBI());
+
+            if (genesis.getTotalDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                genesis.setTotalDifficulty(genesis.getDifficultyBI());
+            }
+
+        } else {
+            setBestBlock(bestBlock);
+            if (bestBlock instanceof StakingBlock) {
+                loadBestMiningBlock();
+            } else if (bestBlock instanceof AionBlock) {
+                loadBestStakingBlock();
+            } else {
+                throw new IllegalStateException();
+            }
+
+            BigInteger totalDifficulty = getBlockStore().getBestBlockWithInfo().getTotalDifficulty();
+            setTotalDifficulty(totalDifficulty);
+            if (bestBlock.getTotalDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                bestBlock.setTotalDifficulty(totalDifficulty);
+            }
+
+            genLOG.info("loaded block <num={}, root={}, td={}>", getBestBlock().getNumber(), LogUtil.toHexF8(getBestBlock().getStateRoot()), getTotalDifficulty());
+        }
+
+        ByteArrayWrapper genesisHash = genesis.getHashWrapper();
+        ByteArrayWrapper databaseGenHash = getBlockByNumber(0) == null ? null : getBlockByNumber(0).getHashWrapper();
+
+        // this indicates that DB and genesis are inconsistent
+        if (genesisHash == null
+                || databaseGenHash == null
+                || !genesisHash.equals(databaseGenHash)) {
+            if (genesisHash == null) {
+                genLOG.error("failed to load genesis from config");
+            }
+
+            if (databaseGenHash == null) {
+                genLOG.error("failed to load block 0 from database");
+            }
+
+            genLOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n"
+                            + "your configuration and genesis are incompatible, please do the following:\n"
+                            + "\t1) Remove your database folder\n"
+                            + "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
+                            + "\t3) Reboot with correct genesis and empty database\n",
+                    genesisHash == null ? "null" : genesisHash,
+                    databaseGenHash == null ? "null" : databaseGenHash);
+            System.exit(org.aion.zero.impl.SystemExitCodes.INITIALIZATION_ERROR);
+        }
+
+        if (!Arrays.equals(getBestBlock().getStateRoot(), ConstantUtil.EMPTY_TRIE_HASH)) {
+            repository.syncToRoot(getBestBlock().getStateRoot());
+        }
+
+        long bestNumber = getBestBlock().getNumber();
+        if (forkUtility.isNonceForkActive(bestNumber + 1)) {
+            // Reset the PoS difficulty as part of the fork logic.
+            if (bestNumber == forkUtility.getNonceForkBlockHeight()) {
+                // If this is the trigger for the fork calculate the new difficulty.
+                Block block = getBestBlock();
+                BigInteger newDiff = calculateFirstPoSDifficultyAtBlock(block);
+                forkUtility.setNonceForkResetDiff(newDiff);
+            } else {
+                // Otherwise, assume that it was already calculated and validated during import.
+                // The difficulty cannot be calculated here due to possible pruning of the world state.
+                Block firstStaked = getBlockByNumber(forkUtility.getNonceForkBlockHeight() + 1);
+                forkUtility.setNonceForkResetDiff(firstStaked.getDifficultyBI());
+            }
+        }
     }
 }

@@ -47,10 +47,6 @@ public interface UnityChain {
 
     AionBlock getBestMiningBlock();
 
-    void loadBestStakingBlock();
-    
-    void loadBestMiningBlock();
-    
     boolean isUnityForkEnabledAtNextBlock();
 
     BigInteger calculateBlockRewards(long block_number);
