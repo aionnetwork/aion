@@ -5,6 +5,7 @@ import static org.aion.zero.impl.pendingState.v1.PendingTxCacheV1.TX_PER_ACCOUNT
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -368,5 +369,95 @@ public class PendingTxCacheV1Test {
         cachedTxs = new ArrayList<>(cache.getCacheTxBySender(new AionAddress(key.get(1).getAddress())).values());
         assertEquals(TX_PER_ACCOUNT_MAX - remove, cachedTxs.size());
         assertEquals(ACCOUNT_CACHE_MAX * TX_PER_ACCOUNT_MAX - remove * 2, cache.cacheTxSize());
+    }
+
+    @Test
+    public void isInCacheTest() {
+        PendingTxCacheV1 cache = new PendingTxCacheV1();
+
+        List<AionTransaction> txn = getMockTransaction(0, 1, 0);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
+        }
+
+        assertEquals(txn.size(), cache.cacheTxSize());
+        assertThat(cache.isInCache(new AionAddress(key.get(1).getAddress()), BigInteger.ZERO)).isFalse();
+        assertThat(cache.isInCache(new AionAddress(key.get(0).getAddress()), BigInteger.ONE)).isFalse();
+        assertThat(cache.isInCache(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO)).isTrue();
+    }
+
+    @Test
+    public void getNewPendingTransactionTest() {
+        PendingTxCacheV1 cache = new PendingTxCacheV1();
+
+        List<AionTransaction> txn = getMockTransaction(0, 5, 0);
+        List<AionTransaction> txn2 = getMockTransaction(0, 5, 1);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
+        }
+
+        for (AionTransaction tx : txn2) {
+            cache.addCacheTx(tx);
+        }
+
+        assertEquals(10, cache.cacheTxSize());
+        assertThat(cache.getNewPendingTransactions(new HashMap<>()).isEmpty()).isTrue();
+        Map<AionAddress, BigInteger> testMap = new HashMap<>();
+
+        testMap.put(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO);
+        assertEquals(5, cache.getNewPendingTransactions(testMap).size());
+
+        testMap.put(new AionAddress(key.get(1).getAddress()), BigInteger.ZERO);
+        assertEquals(10, cache.getNewPendingTransactions(testMap).size());
+
+        testMap.put(new AionAddress(key.get(0).getAddress()), BigInteger.TWO);
+        assertEquals(8, cache.getNewPendingTransactions(testMap).size());
+
+        testMap.put(new AionAddress(key.get(1).getAddress()), BigInteger.TWO);
+        assertEquals(6, cache.getNewPendingTransactions(testMap).size());
+    }
+
+    @Test
+    public void removeTransactionTest() {
+        PendingTxCacheV1 cache = new PendingTxCacheV1();
+
+        List<AionTransaction> txn = getMockTransaction(0, 2, 0);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
+        }
+
+        assertEquals(2, cache.cacheTxSize());
+
+        cache.removeTransaction(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO);
+        assertEquals(1, cache.cacheTxSize());
+        assertEquals(1, cache.getCacheTxAccount().size());
+
+        cache.removeTransaction(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO);
+        assertEquals(1, cache.cacheTxSize());
+
+        cache.removeTransaction(new AionAddress(key.get(1).getAddress()), BigInteger.ZERO);
+        assertEquals(1, cache.cacheTxSize());
+        assertEquals(1, cache.getCacheTxAccount().size());
+
+        cache.removeTransaction(new AionAddress(key.get(0).getAddress()), BigInteger.ONE);
+        assertEquals(0, cache.cacheTxSize());
+        assertEquals(0, cache.getCacheTxAccount().size());
+
+    }
+
+    @Test
+    public void flushTimeoutTransactionTest() {
+        PendingTxCacheV1 cache = new PendingTxCacheV1();
+
+        List<AionTransaction> txn = getMockTransaction(0, 2, 0);
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
+        }
+
+        assertEquals(2, cache.cacheTxSize());
+
+        List<AionTransaction> flushedTx = cache.flushTimeoutTxForTest();
+        assertEquals(2, flushedTx.size());
+        assertEquals(0, cache.cacheTxSize());
     }
 }

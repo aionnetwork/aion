@@ -1,5 +1,6 @@
 package org.aion.zero.impl.pendingState.v1;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -161,7 +162,7 @@ public final class PendingTxCacheV1 {
             }
 
             // Update the timeout cached Tx
-            txList.addAll(flushTimeoutTx());
+            txList.addAll(flushTimeoutTx(false));
             LOG.info("cacheTx.flush cacheTx# {}", cacheTxSize());
 
             return txList;
@@ -170,9 +171,16 @@ public final class PendingTxCacheV1 {
         }
     }
 
-    private List<AionTransaction> flushTimeoutTx() {
+    @VisibleForTesting
+    List<AionTransaction> flushTimeoutTxForTest() {
+        return flushTimeoutTx(true);
+    }
+
+    private List<AionTransaction> flushTimeoutTx(boolean forTest) {
         List<AionTransaction> timeoutTransactions = new ArrayList<>();
-        long current =  TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        long current =
+                TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+                        + (forTest ? CACHE_TIMEOUT + 1 : 0);
         Map<Long, Set<AionTransaction>> timeoutTxs = timeOutMap.headMap(current);
         if (!timeoutTxs.isEmpty()) {
             for (Set<AionTransaction> set : timeoutTxs.values()) {
