@@ -251,8 +251,8 @@ public class DBUtils {
     }
 
     /** Used by internal world state recovery method. */
-    public static Status revertTo(IAionBlockchain blockchain, long nbBlock, Logger log) {
-        AionBlockStore store = blockchain.getBlockStore();
+    public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock, Logger log) {
+        AionBlockStore store = blockchain.getRepository().getBlockStore();
 
         Block bestBlock = store.getBestBlock();
         if (bestBlock == null) {
@@ -692,7 +692,7 @@ public class DBUtils {
 
             for (Map.Entry<ByteArrayWrapper, AionTxInfo> entry : txInfoList.entrySet()) {
 
-                Block block = blockchain.getBlockStore().getBlockByHash(entry.getKey().toBytes());
+                Block block = blockchain.getBlockByHash(entry.getKey().toBytes());
                 if (block == null) {
                     log.error("Cannot find the block data for the block hash from the transaction info. The database might be corrupted. Please consider reimporting the database by running ./aion.sh -n <network> --redo-import");
                     return Status.FAILURE;
@@ -732,7 +732,7 @@ public class DBUtils {
         AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
 
         try {
-            List<Block> blocks = blockchain.getBlockStore().getAllChainBlockByNumber(nbBlock);
+            List<Block> blocks = blockchain.getRepository().getBlockStore().getAllChainBlockByNumber(nbBlock);
 
             if (blocks == null || blocks.isEmpty()) {
                 log.error("Cannot find the block with given block height.");
@@ -748,7 +748,7 @@ public class DBUtils {
             // TODO: the worldstate can not read the data after the stateroot has been setup, need
             // to fix the issue first then the tooling can print the states between the block.
 
-            Block mainChainBlock = blockchain.getBlockStore().getChainBlockByNumber(nbBlock);
+            Block mainChainBlock = blockchain.getBlockByNumber(nbBlock);
             if (mainChainBlock == null) {
                 log.error("Cannot find the main chain block with given block height.");
                 return Status.FAILURE;
@@ -797,12 +797,12 @@ public class DBUtils {
         AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
 
         try {
-            Block bestBlock = blockchain.getBlockStore().getBestBlock();
+            Block bestBlock = blockchain.getRepository().getBlockStore().getBestBlock();
 
             Repository<AccountState> repository =
                     blockchain
                             .getRepository()
-                            .getSnapshotTo(((AionBlock) bestBlock).getStateRoot())
+                            .getSnapshotTo((bestBlock).getStateRoot())
                             .startTracking();
 
             AccountState account = repository.getAccountState(address);

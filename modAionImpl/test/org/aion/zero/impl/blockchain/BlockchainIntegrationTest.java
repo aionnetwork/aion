@@ -67,7 +67,6 @@ public class BlockchainIntegrationTest {
         // after instantiation, check that the following elements are set correctly
         // note that this is pre-best block setting
         assertThat(bc.getBestBlock()).isNotEqualTo(null);
-        assertThat(bc.getBlockStore()).isNotEqualTo(null);
         assertThat(bc.getRepository()).isNotEqualTo(null);
         assertThat(bc.getTotalDifficulty()).isEqualTo(bc.getBestBlock().getTotalDifficulty());
         assertThat(bc.getTransactionStore()).isNotEqualTo(null);
@@ -315,7 +314,7 @@ public class BlockchainIntegrationTest {
                 bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
 
         // gets the first main-chain block
-        Block storedBlock1 = bundle.bc.getBlockStore().getChainBlockByNumber(1L);
+        Block storedBlock1 = bundle.bc.getBlockByNumber(1L);
         System.out.println(ByteUtil.toHexString(storedBlock1.getHash()));
         System.out.println(ByteUtil.toHexString(newBlock.getParentHash()));
 

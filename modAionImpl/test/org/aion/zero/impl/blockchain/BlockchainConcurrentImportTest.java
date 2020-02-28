@@ -162,7 +162,7 @@ public class BlockchainConcurrentImportTest {
                     // checking total difficulty
                     if (result == ImportResult.IMPORTED_BEST
                             || result == ImportResult.IMPORTED_NOT_BEST) {
-                        AionBlockStore store = _chain.getBlockStore();
+                        AionBlockStore store = _chain.getRepository().getBlockStore();
 
                         BigInteger tdFromStore = _chain.getTotalDifficultyForHash(_block.getHash());
                         BigInteger tdCalculated =
@@ -225,7 +225,7 @@ public class BlockchainConcurrentImportTest {
                         // checking total difficulty
                         if (result == ImportResult.IMPORTED_BEST
                                 || result == ImportResult.IMPORTED_NOT_BEST) {
-                            AionBlockStore store = _chain.getBlockStore();
+                            AionBlockStore store = _chain.getRepository().getBlockStore();
 
                             BigInteger tdFromStore =
                                     _chain.getTotalDifficultyForHash(_block.getHash());

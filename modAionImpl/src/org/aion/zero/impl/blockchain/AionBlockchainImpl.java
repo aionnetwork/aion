@@ -552,10 +552,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.evtMgr = eventManager;
     }
 
-    public AionBlockStore getBlockStore() {
-        return repository.getBlockStore();
-    }
-
     /**
      * Referenced only by external
      *
@@ -591,17 +587,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public Block getBlockByNumber(long blockNr) {
-        return getBlockStore().getChainBlockByNumber(blockNr);
+        return repository.getBlockStore().getChainBlockByNumber(blockNr);
     }
 
     @Override
     public List<Block> getBlocksByNumber(long blockNr) {
-        return getBlockStore().getBlocksByNumber(blockNr);
+        return repository.getBlockStore().getBlocksByNumber(blockNr);
     }
 
     @Override
     public List<Block> getBlocksByRange(long first, long last) {
-        return getBlockStore().getBlocksByRange(first, last);
+        return repository.getBlockStore().getBlocksByRange(first, last);
     }
 
     @Override
@@ -666,12 +662,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public Block getBlockByHash(byte[] hash) {
-        return getBlockStore().getBlockByHash(hash);
+        return repository.getBlockStore().getBlockByHash(hash);
     }
 
     @Override
     public List<byte[]> getListOfHashesEndWith(byte[] hash, int qty) {
-        return getBlockStore().getListHashesEndWith(hash, qty < 1 ? 1 : qty);
+        return repository.getBlockStore().getListHashesEndWith(hash, qty < 1 ? 1 : qty);
     }
 
     @Override
@@ -693,7 +689,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Block block = getBlockByNumber(endNumber);
 
-        List<byte[]> hashes = getBlockStore().getListHashesEndWith(block.getHash(), qty);
+        List<byte[]> hashes = repository.getBlockStore().getListHashesEndWith(block.getHash(), qty);
 
         // asc order of hashes is required in the response
         Collections.reverse(hashes);
@@ -711,18 +707,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        this.bestBlock = getBlockStore().getBlockByHashWithInfo(bestBlockHash);
+        this.bestBlock = repository.getBlockStore().getBlockByHashWithInfo(bestBlockHash);
 
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             bestMiningBlock = (AionBlock) bestBlock;            
             if (forkUtility.isUnityForkActive(bestBlock.getNumber())) {
-                bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getParentHash());
+                bestStakingBlock = (StakingBlock) getBlockByHash(bestBlock.getParentHash());
             } else {
                 bestStakingBlock = null;
             }
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             bestStakingBlock = (StakingBlock) bestBlock;
-            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getParentHash());
+            bestMiningBlock = (AionBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
             throw new IllegalStateException("Invalid best block data!");
         }
@@ -780,7 +776,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             // main branch become this branch cause we proved that total difficulty is greater
-            forkLevel = getBlockStore().reBranch(block);
+            forkLevel = repository.getBlockStore().reBranch(block);
 
             // The main repository rebranch
             this.repository = savedState.savedRepo;
@@ -834,7 +830,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             bestMiningBlock = (AionBlock) bestBlock;
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            bestMiningBlock = (AionBlock) getBlockStore().getBlockByHash(bestBlock.getParentHash());
+            bestMiningBlock = (AionBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
             throw new IllegalStateException("Invalid block type");
         }
@@ -847,7 +843,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                 bestStakingBlock = (StakingBlock) bestBlock;
             } else {
-                bestStakingBlock = (StakingBlock) getBlockStore().getBlockByHash(bestBlock.getParentHash());
+                bestStakingBlock = (StakingBlock) getBlockByHash(bestBlock.getParentHash());
             }
         }
     }
@@ -912,18 +908,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         // check that the block is not already known
-        Block known = getBlockStore().getBlockByHash(block.getHash());
+        Block known = getBlockByHash(block.getHash());
         if (known != null && known.getNumber() == block.getNumber()) {
             return FastImportResult.KNOWN;
         }
 
         // a child must be present to import the parent
-        Block child = getBlockStore().getChainBlockByNumber(block.getNumber() + 1);
+        Block child = getBlockByNumber(block.getNumber() + 1);
         if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
             return FastImportResult.NO_CHILD;
         } else {
             // the total difficulty will be updated after the chain is complete
-            getBlockStore().saveBlock(block, ZERO, true);
+            repository.getBlockStore().saveBlock(block, ZERO, true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -953,12 +949,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         byte[] currentHash = block.getHash();
         long currentNumber = block.getNumber();
 
-        Block known = getBlockStore().getBlockByHash(currentHash);
+        Block known = getBlockByHash(currentHash);
 
         while (known != null && known.getNumber() > 0) {
             currentHash = known.getParentHash();
             currentNumber--;
-            known = getBlockStore().getBlockByHash(currentHash);
+            known = getBlockByHash(currentHash);
         }
 
         if (known == null) {
@@ -1093,7 +1089,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
         // Check block exists before processing more rules
         if (doExistCheck // skipped when redoing imports
-                && getBlockStore().getMaxNumber() >= block.getNumber()
+                && repository.getBlockStore().getMaxNumber() >= block.getNumber()
                 && isBlockStored(block.getHash(), block.getNumber())) {
 
             if (LOG.isDebugEnabled()) {
@@ -1156,7 +1152,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 // determine if the block parent is main chain or side chain
                 long parentHeight = block.getNumber() - 1; // inferred parent number
-                if (getBlockStore().isMainChain(block.getParentHash(), parentHeight)) {
+                if (repository.getBlockStore().isMainChain(block.getParentHash(), parentHeight)) {
                     // main chain parent, therefore can use its number for getting the cache
                     executionTypeForAVM = BlockCachingContext.SIDECHAIN;
                     cachedBlockNumberForAVM = parentHeight;
@@ -1337,7 +1333,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.warn("Tried to create 2 PoW blocks in a row");
                 return null;
             } else {
-                Block[] blockFamily = getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
+                Block[] blockFamily = repository.getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
                 parentMiningBlock = blockFamily[0].getHeader();
                 parentMiningBlocksParent = blockFamily[1].getHeader();
                 diffCalculator = chainConfiguration.getUnityDifficultyCalculator();
@@ -1400,7 +1396,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 newDiff = calculateFirstPoSDifficultyAtBlock(parent);
                 forkUtility.setNonceForkResetDiff(newDiff);
             } else {
-                Block[] blockFamily = getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
+                Block[] blockFamily = repository.getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
 
                 BlockHeader parentStakingBlock = blockFamily[0].getHeader();
                 BlockHeader parentStakingBlocksParent = blockFamily[1].getHeader();
@@ -1715,7 +1711,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public void flush() {
         repository.flush();
         try {
-            getBlockStore().flush();
+            repository.getBlockStore().flush();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -1729,7 +1725,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private Block getParent(BlockHeader header) {
-        return getBlockStore().getBlockByHashWithInfo(header.getParentHash());
+        return repository.getBlockStore().getBlockByHashWithInfo(header.getParentHash());
     }
 
     public boolean isValid(BlockHeader header) {
@@ -1741,7 +1737,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
 
-        Block[] threeGenParents = getBlockStore().getThreeGenerationBlocksByHashWithInfo(header.getParentHash());
+        Block[] threeGenParents = repository.getBlockStore().getThreeGenerationBlocksByHashWithInfo(header.getParentHash());
 
         if (threeGenParents == null) {
             return false;
@@ -2066,7 +2062,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         BigInteger td = totalDifficulty.get();
 
-        getBlockStore().saveBlock(block, td, !fork);
+        repository.getBlockStore().saveBlock(block, td, !fork);
 
         for (int i = 0; i < receipts.size(); i++) {
             AionTxInfo infoWithInternalTxs = AionTxInfo.newInstanceWithInternalTransactions(receipts.get(i), block.getHashWrapper(), i, summaries.get(i).getInternalTransactions());
@@ -2286,7 +2282,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return emptyList();
         }
 
-        List<BlockHeader> headers = getBlockStore().getListHeadersEndWith(startHash, qty);
+        List<BlockHeader> headers = repository.getBlockStore().getListHeadersEndWith(startHash, qty);
 
         // blocks come with decreasing numbers
         Collections.reverse(headers);
@@ -2525,7 +2521,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // find all the blocks missing a world state
         do {
-            other = repo.getBlockStore().getBlockByHash(other.getParentHash());
+            other = getBlockByHash(other.getParentHash());
 
             // cannot recover if no valid states exist (must build from genesis)
             if (other == null) {
@@ -2562,7 +2558,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             // Load bestblock for executing the CLI command.
             if (bestBlock == null) {
-                bestBlock = getBlockStore().getBestBlock();
+                bestBlock = repo.getBlockStore().getBestBlock();
 
                 if (bestBlock instanceof AionBlock) {
                     bestMiningBlock = (AionBlock) bestBlock;
@@ -2648,12 +2644,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public boolean isMainChain(byte[] hash, long level) {
-        return getBlockStore().isMainChain(hash, level);
+        return repository.getBlockStore().isMainChain(hash, level);
     }
 
     @Override
     public boolean isMainChain(byte[] hash) {
-        return getBlockStore().isMainChain(hash);
+        return repository.getBlockStore().isMainChain(hash);
     }
 
     @Override
@@ -2738,12 +2734,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public Block getBlockWithInfoByHash(byte[] hash) {
-        return getBlockStore().getBlockByHashWithInfo(hash);
+        return repository.getBlockStore().getBlockByHashWithInfo(hash);
     }
 
     @Override
     public Block getBestBlockWithInfo() {
-        return getBlockStore().getBestBlockWithInfo();
+        return repository.getBlockStore().getBestBlockWithInfo();
     }
 
     void setNodeStatusCallback(SelfNodeStatusCallback callback) {
@@ -2883,7 +2879,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 throw new IllegalStateException();
             }
 
-            BigInteger totalDifficulty = getBlockStore().getBestBlockWithInfo().getTotalDifficulty();
+            BigInteger totalDifficulty = repository.getBlockStore().getBestBlockWithInfo().getTotalDifficulty();
             setTotalDifficulty(totalDifficulty);
             if (bestBlock.getTotalDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value

@@ -19,8 +19,6 @@ public interface UnityChain {
 
     Block getBlockByHash(byte[] hash);
 
-    AionBlockStore getBlockStore();
-
     Block getBestBlock();
 
     void flush();
