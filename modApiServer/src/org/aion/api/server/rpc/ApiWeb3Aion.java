@@ -721,6 +721,9 @@ public class ApiWeb3Aion extends ApiAion {
             case CACHED_NONCE:
             case ALREADY_SEALED:
             case REPAID:
+            case CACHED_TIMEOUT:
+            case TXPOOL_TIMEOUT:
+            case CACHED_ACCOUNTMAX:
                 return new RpcMsg(StringUtils.toJsonHex(rsp.getTxHash()));
             case INVALID_TX:
             case INVALID_TX_NRG_PRICE:
@@ -739,7 +742,7 @@ public class ApiWeb3Aion extends ApiAion {
             case INVALID_ACCOUNT:
                 return new RpcMsg(null, RpcError.NOT_ALLOWED, rsp.getMessage());
 
-            case REPAYTX_POOL_EXCEPTION:
+            case REPAYTX_BUFFER_FULL:
             case DROPPED:
             case EXCEPTION:
             default:

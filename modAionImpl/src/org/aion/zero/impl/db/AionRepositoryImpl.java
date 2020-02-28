@@ -670,7 +670,7 @@ public class AionRepositoryImpl extends AbstractRepository {
     }
 
     @Override
-    public void removeTxBatch(Set<byte[]> clearTxSet, boolean isPool) {
+    public void removeTxBatch(List<byte[]> clearTxSet, boolean isPool) {
 
         if (clearTxSet.isEmpty()) {
             return;

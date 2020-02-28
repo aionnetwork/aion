@@ -11,7 +11,7 @@ public enum TxResponse {
     CACHED_POOLMAX(7, false),
     REPAID(8, false),
     ALREADY_SEALED(9, false),
-    REPAYTX_POOL_EXCEPTION(10, true),
+    REPAYTX_BUFFER_FULL(10, true),
     REPAYTX_LOWPRICE(11, true),
     DROPPED(12, true),
     EXCEPTION(13, true),
@@ -23,7 +23,11 @@ public enum TxResponse {
     INVALID_TX_HASH(19, true),
     INVALID_TX_SIGNATURE(20, true),
     INVALID_TX_TYPE(21, true),
-    INVALID_TX_BEACONHASH(22, true);
+    INVALID_TX_BEACONHASH(22, true),
+    CACHED_TIMEOUT(23, false),
+    TXPOOL_TIMEOUT(24,false),
+    CACHED_ACCOUNTMAX(25, false);
+
 
     private int val;
     private boolean fail;

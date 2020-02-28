@@ -78,12 +78,18 @@ public class ApiTxResponse {
                 return "Transaction successfully repaid";
             case ALREADY_SEALED:
                 return "Transaction has already been sealed in the repo";
-            case REPAYTX_POOL_EXCEPTION:
-                return "Repaid transaction wasn't found in the pool";
+            case REPAYTX_BUFFER_FULL:
+                return "Repaid transaction dropped due to the buffer full";
             case REPAYTX_LOWPRICE:
                 return "Repaid transaction needs to have a higher energy price";
             case DROPPED:
                 return "Transaction dropped";
+            case CACHED_TIMEOUT:
+                return "Transaction dropped due to the transaction cache timeout";
+            case TXPOOL_TIMEOUT:
+                return "Transaction dropped due to the transaction pool timeout";
+            case CACHED_ACCOUNTMAX:
+                return "Transaction dropped due to the cache account reach max";
             case EXCEPTION:
                 return ex.getMessage();
             default:
