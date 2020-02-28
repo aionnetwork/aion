@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,8 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
+import org.aion.db.utils.FileUtils;
+import org.aion.txpool.Constant;
 import org.aion.zero.impl.blockchain.AionHub;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
@@ -75,6 +78,30 @@ public class PendingStateTest {
 
         pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain,
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst())).getPendingState();
+    }
+
+    private List<AionTransaction> getMockTransaction(int startNonce, int num, int keyIndex) {
+
+        List<AionTransaction> txn = new ArrayList<>();
+
+        for (int i = startNonce; i < startNonce + num; i++) {
+
+            AionTransaction tx =
+                AionTransaction.create(
+                    bundle.privateKeys.get(keyIndex),
+                    BigInteger.valueOf(i).toByteArray(),
+                    new AionAddress(bundle.privateKeys.get(keyIndex + 1).getAddress()),
+                    ByteUtil.hexStringToBytes("1"),
+                    ByteUtil.hexStringToBytes("1"),
+                    Constant.MIN_ENERGY_CONSUME * 10,
+                    energyPrice,
+                    TransactionTypes.DEFAULT,
+                    null);
+
+            txn.add(tx);
+        }
+
+        return txn;
     }
 
     @Test
@@ -737,5 +764,139 @@ public class PendingStateTest {
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst()));
 
         CfgAion.inst().getTx().setSeedMode(false);
+    }
+
+    @Test
+    public void addTransactionFromNetworkTest() {
+        List<AionTransaction> mockTransactions = getMockTransaction(0, 10, 0);
+        pendingState.addTransactionsFromNetwork(mockTransactions);
+        assertEquals(10 , pendingState.getPendingTxSize());
+
+        List<AionTransaction> pooledTransactions = pendingState.getPendingTransactions();
+
+        for (int i=0 ; i< 10 ; i++) {
+            assertEquals(mockTransactions.get(i), pooledTransactions.get(i));
+        }
+    }
+
+    @Test
+    public void addTransactionsFromCacheTest() {
+        List<AionTransaction> transactionsInPool = getMockTransaction(0, 5, 0);
+        List<AionTransaction> transactionsInCache = getMockTransaction(6, 5, 0);
+        List<AionTransaction> missingTransaction = getMockTransaction(5, 1, 0);
+
+        pendingState.addTransactionsFromNetwork(transactionsInPool);
+        assertEquals(5 , pendingState.getPendingTxSize());
+
+        pendingState.addTransactionsFromNetwork(transactionsInCache);
+        assertEquals(5 , pendingState.getPendingTxSize());
+        assertEquals(5 , pendingState.getCachePoolSize());
+
+        pendingState.addTransactionsFromNetwork(missingTransaction);
+        assertEquals(11 , pendingState.getPendingTxSize());
+        assertEquals(0 , pendingState.getCachePoolSize());
+
+        List<AionTransaction> pooledTransactions = pendingState.getPendingTransactions();
+        assertEquals(11, pooledTransactions.size());
+    }
+
+    @Test
+    public void repayTransactionTest() {
+        AionTransaction tx =
+            AionTransaction.create(
+                deployerKey,
+                BigInteger.ZERO.toByteArray(),
+                new AionAddress(new byte[32]),
+                BigInteger.ZERO.toByteArray(),
+                ByteUtils.fromHexString("1"),
+                21_000L * 10,
+                energyPrice,
+                TransactionTypes.DEFAULT, null);
+
+        AionTransaction repayTx = AionTransaction.create(
+            deployerKey,
+            BigInteger.ZERO.toByteArray(),
+            new AionAddress(new byte[32]),
+            BigInteger.ZERO.toByteArray(),
+            ByteUtils.fromHexString("1"),
+            21_000L * 10,
+            energyPrice * 2,
+            TransactionTypes.DEFAULT, null);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addTransactionFromApiServer(tx));
+        assertEquals(1 , pendingState.getPendingTxSize());
+
+        assertEquals(TxResponse.REPAID, pendingState.addTransactionFromApiServer(repayTx));
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(tx, pendingState.getPendingTransactions().get(0));
+
+        AionBlock block =
+            blockchain.createNewMiningBlock(
+                blockchain.getBestBlock(), Collections.emptyList(), false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(repayTx, pendingState.getPendingTransactions().get(0));
+    }
+
+    @Test
+    public void addTransactionInFullPoolTest() {
+        List<AionTransaction> transactionsInPool = getMockTransaction(0, 2048, 0);
+
+        pendingState.addTransactionsFromNetwork(transactionsInPool);
+        assertEquals(2048, pendingState.getPendingTxSize());
+
+        List<AionTransaction> transactionInCache = getMockTransaction(2048, 1, 0);
+        pendingState.addTransactionsFromNetwork(transactionInCache);
+        assertEquals(2048, pendingState.getPendingTxSize());
+        assertEquals(1, pendingState.getCachePoolSize());
+    }
+
+    @Test
+    public void updateCacheTransactionsTest() {
+        List<AionTransaction> transactions = getMockTransaction(0, 2, 0);
+        List<AionTransaction> cachedTx = getMockTransaction(2, 1, 0);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addTransactionFromApiServer(transactions.get(0)));
+        assertEquals(1 , pendingState.getPendingTxSize());
+
+        assertEquals(TxResponse.CACHED_NONCE, pendingState.addTransactionFromApiServer(cachedTx.get(0)));
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(1 , pendingState.getCachePoolSize());
+
+        AionBlock block =
+            blockchain.createNewMiningBlock(
+                blockchain.getBestBlock(), transactions, false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(0 , pendingState.getCachePoolSize());
+        assertEquals(cachedTx.get(0), pendingState.getPendingTransactions().get(0));
+    }
+
+    @Test
+    public void updateCacheTransactionsTest2() {
+        List<AionTransaction> transactions = getMockTransaction(0, 2, 0);
+        List<AionTransaction> cachedTx = getMockTransaction(2, 2, 0);
+
+        assertEquals(TxResponse.SUCCESS, pendingState.addTransactionFromApiServer(transactions.get(0)));
+        assertEquals(1 , pendingState.getPendingTxSize());
+
+        pendingState.addTransactionsFromNetwork(cachedTx);
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(2 , pendingState.getCachePoolSize());
+
+        transactions.add(cachedTx.get(0));
+        AionBlock block =
+            blockchain.createNewMiningBlock(
+                blockchain.getBestBlock(), transactions, false);
+        Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
+        assertEquals(connectResult.getLeft(), ImportResult.IMPORTED_BEST);
+
+        assertEquals(1 , pendingState.getPendingTxSize());
+        assertEquals(0 , pendingState.getCachePoolSize());
+        assertEquals(cachedTx.get(1), pendingState.getPendingTransactions().get(0));
     }
 }

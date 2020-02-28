@@ -312,10 +312,15 @@ public final class AionPendingStateImpl implements IPendingState {
                     // This case happens when this tx was received before, but never sealed,
                     // typically because of low energy
                     TxResponse implResponse = addPendingTransactionInner(tx);
-                    if (implResponse.equals(TxResponse.SUCCESS)) {
+                    if (implResponse.equals(TxResponse.REPAID)) {
                         newPending.add(tx);
                         response = TxResponse.REPAID;
                         addPendingTxToBackupDatabase(tx);
+
+                        PooledTransaction ptx = txPool.getDroppedPoolTx();
+                        if (ptx != null) {
+                            fireDroppedTx(ptx.tx, TxResponse.REPAYTX_LOWPRICE.getMessage());
+                        }
                     } else {
                         response = implResponse;
                     }
@@ -667,8 +672,6 @@ public final class AionPendingStateImpl implements IPendingState {
             nonceMap.put(addr, bestPendingStateNonce(addr));
         }
 
-        updateCachedTxToTxPool(nonceMap);
-
         List<AionTransaction> outdatedTransaction = this.pendingTxCache.removeSealedTransactions(nonceMap);
         LOGGER_TX.debug("PendingStateImpl.flushCachePendingTx: outdatedTransaction#[{}]", outdatedTransaction.size());
 
@@ -678,6 +681,8 @@ public final class AionPendingStateImpl implements IPendingState {
                 removeBackupDBCachedTx(tx.getTransactionHash());
             }
         }
+
+        updateCachedTxToTxPool(nonceMap);
     }
 
     private void updateCachedTxToTxPool(Map<AionAddress, BigInteger> nonceMap) {
@@ -1026,5 +1031,9 @@ public final class AionPendingStateImpl implements IPendingState {
 
     public String getVersion() {
         return isSeedMode ? "0" : this.txPool.getVersion();
+    }
+
+    public synchronized int getCachePoolSize() {
+        return pendingTxCache.cacheTxSize();
     }
 }
