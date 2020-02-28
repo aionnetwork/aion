@@ -1,6 +1,8 @@
 package org.aion.txpool.v1;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -28,6 +30,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+import static com.google.common.truth.Truth.assertThat;
+
 
 public class TxPoolV1Test {
 
@@ -1020,5 +1024,209 @@ public class TxPoolV1Test {
         tp.remove(txs.subList(41, 70));
         assertEquals(1, tp.snapshot().size());
         assertEquals(1, tp.snapshotAll().size());
+    }
+
+    @Test
+    public void isFullTest() {
+
+        List<PooledTransaction> txs = new ArrayList<>();
+        for (int i = 0; i < Constant.TXPOOL_SIZE_MIN; i++) {
+            AionTransaction tx =
+                AionTransaction.create(
+                    key.get(0),
+                    BigInteger.valueOf(i).toByteArray(),
+                    AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000001"),
+                    ByteUtils.fromHexString("1"),
+                    ByteUtils.fromHexString("1"),
+                    Constant.MIN_ENERGY_CONSUME,
+                    1L,
+                    TransactionTypes.DEFAULT,
+                    null);
+            PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+            txs.add(pooledTx);
+        }
+
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        assertThat(tp.isFull()).isFalse();
+
+        tp.add(txs);
+        assertThat(tp.isFull()).isTrue();
+    }
+
+    @Test
+    public void poolFullTest() {
+        List<PooledTransaction> txs = new ArrayList<>();
+        for (int i = 0; i < Constant.TXPOOL_SIZE_MIN + 1; i++) {
+            AionTransaction tx =
+                AionTransaction.create(
+                    key.get(0),
+                    BigInteger.valueOf(i).toByteArray(),
+                    AddressUtils.wrapAddress(
+                        "0000000000000000000000000000000000000000000000000000000000000001"),
+                    ByteUtils.fromHexString("1"),
+                    ByteUtils.fromHexString("1"),
+                    Constant.MIN_ENERGY_CONSUME,
+                    1L,
+                    TransactionTypes.DEFAULT,
+                    null);
+            PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+            txs.add(pooledTx);
+        }
+
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        List<PooledTransaction> pooledTransactions = tp.add(txs);
+        assertThat(tp.isFull()).isTrue();
+        assertEquals(Constant.TXPOOL_SIZE_MIN, pooledTransactions.size());
+    }
+
+    @Test
+    public void getPoolTxTest() {
+
+        List<PooledTransaction> txs = new ArrayList<>();
+        AionTransaction tx =
+            AionTransaction.create(
+                key.get(0),
+                BigInteger.valueOf(0).toByteArray(),
+                AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                Constant.MIN_ENERGY_CONSUME,
+                1L,
+                TransactionTypes.DEFAULT,
+                null);
+        PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+        txs.add(pooledTx);
+
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        List<PooledTransaction> pooledTransactions = tp.add(txs);
+
+        assertNull(tp.getPoolTx(new AionAddress(key.get(1).getAddress()), BigInteger.ZERO));
+        assertNull(tp.getPoolTx(new AionAddress(key.get(0).getAddress()), BigInteger.ONE));
+        PooledTransaction pTx = tp.getPoolTx(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO);
+        assertNotNull(pTx);
+        assertEquals(tx, pTx.tx);
+    }
+
+    @Test
+    public void isContainedTest() {
+        List<PooledTransaction> txs = new ArrayList<>();
+        AionTransaction tx =
+            AionTransaction.create(
+                key.get(0),
+                BigInteger.valueOf(0).toByteArray(),
+                AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                Constant.MIN_ENERGY_CONSUME,
+                1L,
+                TransactionTypes.DEFAULT,
+                null);
+        PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+        txs.add(pooledTx);
+
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        assertThat(tp.isContained(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO)).isFalse();
+        tp.add(txs);
+        assertThat(tp.isContained(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO)).isTrue();
+        assertThat(tp.isContained(new AionAddress(key.get(0).getAddress()), BigInteger.ONE)).isFalse();
+    }
+
+    @Test
+    public void updatePoolTransactionTest() {
+        List<PooledTransaction> txs = new ArrayList<>();
+        AionTransaction tx =
+            AionTransaction.create(
+                key.get(0),
+                BigInteger.valueOf(0).toByteArray(),
+                AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                Constant.MIN_ENERGY_CONSUME,
+                1L,
+                TransactionTypes.DEFAULT,
+                null);
+        PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+        txs.add(pooledTx);
+
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        PooledTransaction pTx = tp.add(txs).get(0);
+        assertNotNull(pTx);
+        assertEquals(tx, pTx.tx);
+
+        PooledTransaction newPtx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME+1);
+        tp.updatePoolTransaction(newPtx);
+
+        PooledTransaction ptx = tp.getPoolTx(new AionAddress(key.get(0).getAddress()), BigInteger.ZERO);
+        assertNotNull(ptx);
+        assertEquals(newPtx, ptx);
+        assertEquals(tx, ptx.tx);
+    }
+
+    @Test
+    public void getDroppedTxTest() {
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, String.valueOf(Constant.TXPOOL_SIZE_MIN));
+        TxPoolV1 tp = new TxPoolV1(config);
+
+        List<PooledTransaction> txs = new ArrayList<>();
+        AionTransaction tx =
+            AionTransaction.create(
+                key.get(0),
+                BigInteger.valueOf(0).toByteArray(),
+                AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                Constant.MIN_ENERGY_CONSUME,
+                1L,
+                TransactionTypes.DEFAULT,
+                null);
+        PooledTransaction pooledTx = new PooledTransaction(tx, Constant.MIN_ENERGY_CONSUME);
+        txs.add(pooledTx);
+
+        PooledTransaction pTx = tp.add(txs).get(0);
+        assertNotNull(pTx);
+
+
+        AionTransaction tx2 =
+            AionTransaction.create(
+                key.get(0),
+                BigInteger.valueOf(0).toByteArray(),
+                AddressUtils.wrapAddress(
+                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"),
+                ByteUtils.fromHexString("1"),
+                Constant.MIN_ENERGY_CONSUME,
+                2L,
+                TransactionTypes.DEFAULT,
+                null);
+
+        PooledTransaction newPtx = new PooledTransaction(tx2, Constant.MIN_ENERGY_CONSUME+1);
+        PooledTransaction ptx = tp.add(newPtx);
+        assertEquals(newPtx, ptx);
+
+        PooledTransaction drppedPtx = tp.getDroppedPoolTx();
+        assertNotNull(drppedPtx);
+        assertEquals(pooledTx, drppedPtx);
+
     }
 }
