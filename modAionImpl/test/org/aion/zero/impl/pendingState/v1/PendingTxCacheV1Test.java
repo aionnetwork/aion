@@ -165,7 +165,7 @@ public class PendingTxCacheV1Test {
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(0).getAddress()), BigInteger.TWO);
 
-        newCache = cache.flush(map);
+        newCache = cache.removeSealedTransactions(map);
         assertEquals(2, newCache.size());
 
         List<AionTransaction> cachedTxs =
@@ -188,7 +188,7 @@ public class PendingTxCacheV1Test {
 
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(1).getAddress()), BigInteger.TWO);
-        List<AionTransaction> flushedTx = cache.flush(map);
+        List<AionTransaction> flushedTx = cache.removeSealedTransactions(map);
         assertEquals(0, flushedTx.size());
 
         List<AionTransaction> cachedTxs =
@@ -213,7 +213,7 @@ public class PendingTxCacheV1Test {
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(0).getAddress()), BigInteger.TWO);
         map.put(new AionAddress(key.get(1).getAddress()), BigInteger.ONE);
-        cache.flush(map);
+        cache.removeSealedTransactions(map);
 
         List<AionTransaction> cachedTxs =
                 new ArrayList<>(cache.getCacheTxBySender(new AionAddress(key.get(0).getAddress())).values());
@@ -245,7 +245,7 @@ public class PendingTxCacheV1Test {
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(0).getAddress()), BigInteger.valueOf(TX_PER_ACCOUNT_MAX));
         map.put(new AionAddress(key.get(1).getAddress()), BigInteger.valueOf(TX_PER_ACCOUNT_MAX));
-        List<AionTransaction> flushedTx = cache.flush(map);
+        List<AionTransaction> flushedTx = cache.removeSealedTransactions(map);
         assertEquals(TX_PER_ACCOUNT_MAX * 2, flushedTx.size());
         assertEquals(ACCOUNT_CACHE_MAX * TX_PER_ACCOUNT_MAX - TX_PER_ACCOUNT_MAX * 2, cache.cacheTxSize());
 
@@ -261,7 +261,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void getRemovedTxHashWithoutPoolBackupTest() {
         PendingTxCacheV1 cache = new PendingTxCacheV1();
-        assertNotNull(cache.getRemovedTransactionForPoolBackup());
+        assertNotNull(cache.pollRemovedTransactionForPoolBackup());
     }
 
     @Test
@@ -279,7 +279,7 @@ public class PendingTxCacheV1Test {
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(0).getAddress()), BigInteger.TWO);
 
-        newCache = cache.flush(map);
+        newCache = cache.removeSealedTransactions(map);
         assertEquals(2, newCache.size());
         assertEquals(0, newCache.get(0).getNonceBI().longValue());
         assertEquals(1, newCache.get(1).getNonceBI().longValue());
@@ -288,7 +288,7 @@ public class PendingTxCacheV1Test {
                 new ArrayList<>(cache.getCacheTxBySender(new AionAddress(key.get(0).getAddress())).values());
         assertEquals(8, cachedTxs.size());
 
-        List<AionTransaction> removedTxHash = cache.getRemovedTransactionForPoolBackup();
+        List<AionTransaction> removedTxHash = cache.pollRemovedTransactionForPoolBackup();
         assertEquals(2, removedTxHash.size());
         for (int i = 0; i < removedTxHash.size(); i++) {
             assertEquals(newCache.get(i), removedTxHash.get(i));
@@ -310,20 +310,20 @@ public class PendingTxCacheV1Test {
         Map<AionAddress, BigInteger> map = new HashMap<>();
         map.put(new AionAddress(key.get(0).getAddress()), BigInteger.TWO);
 
-        newCache = cache.flush(map);
+        newCache = cache.removeSealedTransactions(map);
         assertEquals(2, newCache.size());
 
         List<AionTransaction> cachedTxs =
                 new ArrayList<>(cache.getCacheTxBySender(new AionAddress(key.get(0).getAddress())).values());
         assertEquals(8, cachedTxs.size());
 
-        List<AionTransaction> removedTxHash = cache.getRemovedTransactionForPoolBackup();
+        List<AionTransaction> removedTxHash = cache.pollRemovedTransactionForPoolBackup();
         assertEquals(2, removedTxHash.size());
         for (int i = 0; i < removedTxHash.size(); i++) {
             assertEquals(newCache.get(i), removedTxHash.get(i));
         }
 
-        assertEquals(0, cache.getRemovedTransactionForPoolBackup().size());
+        assertEquals(0, cache.pollRemovedTransactionForPoolBackup().size());
     }
 
     @Test
@@ -357,7 +357,7 @@ public class PendingTxCacheV1Test {
         flushMap.put(new AionAddress(key.get(1).getAddress()), BigInteger.valueOf(remove));
 
         t1 = System.currentTimeMillis();
-        cache.flush(flushMap);
+        cache.removeSealedTransactions(flushMap);
         t2 = System.currentTimeMillis() - t1;
         System.out.println("flush took " + t2 + " ms");
 

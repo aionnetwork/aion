@@ -107,7 +107,7 @@ public final class AionPendingStateImpl implements IPendingState {
             blockchain.getRepository().removeTxBatch(backupPendingPoolRemove, true);
         }
 
-        for (AionTransaction tx : pendingTxCache.getRemovedTransactionForPoolBackup()) {
+        for (AionTransaction tx : pendingTxCache.pollRemovedTransactionForPoolBackup()) {
             backupPendingCacheRemove.add(tx.getTransactionHash());
         }
 
@@ -689,7 +689,7 @@ public final class AionPendingStateImpl implements IPendingState {
 
         updateCachedTxToTxPool(nonceMap);
 
-        List<AionTransaction> outdatedTransaction = this.pendingTxCache.flush(nonceMap);
+        List<AionTransaction> outdatedTransaction = this.pendingTxCache.removeSealedTransactions(nonceMap);
         LOGGER_TX.debug("PendingStateImpl.flushCachePendingTx: outdatedTransaction#[{}]", outdatedTransaction.size());
 
         if (!outdatedTransaction.isEmpty()) {
@@ -752,7 +752,7 @@ public final class AionPendingStateImpl implements IPendingState {
                 currentBestBlock.get());
         }
 
-        List<AionTransaction> clearedTxFromCache = pendingTxCache.getRemovedTransactionForPoolBackup();
+        List<AionTransaction> clearedTxFromCache = pendingTxCache.pollRemovedTransactionForPoolBackup();
         for (AionTransaction tx : clearedTxFromCache) {
             removeBackupDBCachedTx(tx.getTransactionHash());
             fireTxUpdate(

@@ -2,7 +2,9 @@ package org.aion.zero.impl.pendingState.v1;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,7 +19,6 @@ import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.types.AionAddress;
-import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 /**
@@ -32,29 +33,28 @@ public final class PendingTxCacheV1 {
     public static final int ACCOUNT_CACHE_MAX = 2_000;
     public static final int TX_PER_ACCOUNT_MAX = 500;
     public static final int CACHE_TIMEOUT = 3_600;
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
-    private final LRUMap<AionAddress, SortedMap<BigInteger, AionTransaction>> cacheTxMap;
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
+    private final Map<AionAddress, SortedMap<BigInteger, AionTransaction>> cacheTxMap;
     private final SortedMap<Long, Set<AionTransaction>> timeOutMap;
     private final Lock lock = new ReentrantLock();
-    private List<AionTransaction> removedTransactionForPoolBackup;
+    private final List<AionTransaction> removedTransactionForPoolBackup;
 
     /** @implNote the default constructor */
-    PendingTxCacheV1() {
-        cacheTxMap = new LRUMap<>(ACCOUNT_CACHE_MAX);
+    public PendingTxCacheV1() {
+        cacheTxMap = new LinkedHashMap<>(ACCOUNT_CACHE_MAX);
         timeOutMap = new TreeMap<>();
+        removedTransactionForPoolBackup = null;
     }
 
     /**
-     * @implNote the constructor with poolBackup option
+     * @implNote the constructor with the backupTransactions option
      *
-     * @param poolBackup the flag to enable/disable the removedTxHash set
+     * @param backupTransactions the flag to enable/disable the removedTxHash set
      */
-    public PendingTxCacheV1(boolean poolBackup) {
-        cacheTxMap = new LRUMap<>(ACCOUNT_CACHE_MAX);
+    public PendingTxCacheV1(boolean backupTransactions) {
+        cacheTxMap = new LinkedHashMap<>(ACCOUNT_CACHE_MAX);
         timeOutMap = new TreeMap<>();
-        if (poolBackup) {
-            removedTransactionForPoolBackup = new ArrayList<>();
-        }
+        removedTransactionForPoolBackup = backupTransactions ? new ArrayList<>() : null;
     }
 
     private static long getExpiredTime(long longValue) {
@@ -69,55 +69,39 @@ public final class PendingTxCacheV1 {
     public AionTransaction addCacheTx(AionTransaction tx) {
         Objects.requireNonNull(tx);
 
-        long time = getExpiredTime(tx.getTimeStampBI().longValue());
-
         lock.lock();
         try {
+            long time = getExpiredTime(tx.getTimeStampBI().longValue());
             AionAddress sender = tx.getSenderAddress();
-            if (cacheTxMap.isFull() && !cacheTxMap.containsKey(sender)) {
-                AionAddress removeAddress = cacheTxMap.firstKey();
-                Map<BigInteger, AionTransaction> removedTxMap = cacheTxMap.remove(removeAddress);
+            if (cacheTxMap.size() == ACCOUNT_CACHE_MAX && !cacheTxMap.containsKey(sender)) {
+                AionAddress removeAgedAddress = cacheTxMap.entrySet().iterator().next().getKey();
+                Map<BigInteger, AionTransaction> removedTxMap = cacheTxMap.remove(removeAgedAddress);
                 for (AionTransaction removedTx : removedTxMap.values()) {
                     removeTxInTimeoutMap(removedTx);
-                    if (removedTransactionForPoolBackup != null) {
-                        removedTransactionForPoolBackup.add(removedTx);
-                    }
+                    addTransactionToRemovedTransactionForPoolBackup(removedTx);
                 }
             }
 
-            SortedMap<BigInteger, AionTransaction> cachedTxBySender = cacheTxMap.get(sender);
-            if (cachedTxBySender == null) {
-                TreeMap<BigInteger, AionTransaction> newMap = new TreeMap<>();
-                newMap.put(tx.getNonceBI(), tx);
-                cacheTxMap.put(sender, newMap);
-            } else {
-                if (cachedTxBySender.size() < TX_PER_ACCOUNT_MAX) {
-                    cachedTxBySender.put(tx.getNonceBI(), tx);
-                    cacheTxMap.put(sender, cachedTxBySender);
+            SortedMap<BigInteger, AionTransaction> cachedTxBySender = cacheTxMap.getOrDefault(sender, new TreeMap<>());
+            if (cachedTxBySender.size() < TX_PER_ACCOUNT_MAX) {
+                cachedTxBySender.put(tx.getNonceBI(), tx);
+                cacheTxMap.putIfAbsent(sender, cachedTxBySender);
 
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(
-                                "PendingTx added {}, cachedTxSize:{} by the sender:{}",
-                                tx,
-                                cachedTxBySender.size(),
-                                sender);
-                    }
-                } else {
-                    LOG.info(
-                            "Cannot add tx:{} into the cache, reached the account cached limit.",
-                            tx);
-                    return null;
-                }
+                LOG.trace(
+                    "PendingTx added {}, cachedTxSize:{} by the sender:{}",
+                    tx,
+                    cachedTxBySender.size(),
+                    sender);
+            } else {
+                LOG.info(
+                    "Cannot add tx:{} into the cache, reached the account cached limit.",
+                    tx);
+                return null;
             }
 
-            Set<AionTransaction> txSet = timeOutMap.get(time);
-            if (txSet == null) {
-                Set<AionTransaction> newSet = new HashSet<>();
-                newSet.add(tx);
-                timeOutMap.put(time, newSet);
-            } else {
-                txSet.add(tx);
-            }
+            Set<AionTransaction> txSet = timeOutMap.getOrDefault(time, new HashSet<>());
+            txSet.add(tx);
+            timeOutMap.putIfAbsent(time, txSet);
 
             return tx;
         } finally {
@@ -125,16 +109,20 @@ public final class PendingTxCacheV1 {
         }
     }
 
+    private void addTransactionToRemovedTransactionForPoolBackup(AionTransaction removedTx) {
+        if (removedTransactionForPoolBackup == null) {
+            return;
+        }
+
+        removedTransactionForPoolBackup.add(removedTx);
+    }
+
     private void removeTxInTimeoutMap(AionTransaction tx) {
         long expiredTime = getExpiredTime(tx.getTimeStampBI().longValue());
         Set<AionTransaction> set = timeOutMap.get(expiredTime);
-        if (set != null) {
-            set.remove(tx);
-            if (set.isEmpty()) {
-                timeOutMap.remove(expiredTime);
-            } else {
-                timeOutMap.put(expiredTime, set);
-            }
+        set.remove(tx);
+        if (set.isEmpty()) {
+            timeOutMap.remove(expiredTime);
         }
     }
 
@@ -143,27 +131,23 @@ public final class PendingTxCacheV1 {
      * @param nonceMap The account with the latest nonce.
      * @return The transaction has been removed in the pending tx cache.
      */
-    public List<AionTransaction> flush(Map<AionAddress, BigInteger> nonceMap) {
+    public List<AionTransaction> removeSealedTransactions(Map<AionAddress, BigInteger> nonceMap) {
         Objects.requireNonNull(nonceMap);
+        Objects.requireNonNull(nonceMap.entrySet());
 
-        List<AionTransaction> txList = new ArrayList<>();
         lock.lock();
         try {
+            List<AionTransaction> txList = new ArrayList<>();
             for (Entry<AionAddress, BigInteger> e : nonceMap.entrySet()) {
                 AionAddress address = e.getKey();
                 SortedMap<BigInteger, AionTransaction> accountCachedTx = cacheTxMap.get(address);
                 if (accountCachedTx != null) {
                     BigInteger nonce = e.getValue();
-                    Objects.requireNonNull(nonce);
-
                     Map<BigInteger, AionTransaction> flushedTxMap = accountCachedTx.headMap(nonce);
                     if (!flushedTxMap.isEmpty()) {
-                        for (AionTransaction t : flushedTxMap.values()) {
-                            removeTxInTimeoutMap(t);
-
-                            if (removedTransactionForPoolBackup != null) {
-                                removedTransactionForPoolBackup.add(t);
-                            }
+                        for (AionTransaction tx : flushedTxMap.values()) {
+                            removeTxInTimeoutMap(tx);
+                            addTransactionToRemovedTransactionForPoolBackup(tx);
                         }
 
                         txList.addAll(flushedTxMap.values());
@@ -187,7 +171,7 @@ public final class PendingTxCacheV1 {
     }
 
     private List<AionTransaction> flushTimeoutTx() {
-        List<AionTransaction> txList = new ArrayList<>();
+        List<AionTransaction> timeoutTransactions = new ArrayList<>();
         long current =  TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         Map<Long, Set<AionTransaction>> timeoutTxs = timeOutMap.headMap(current);
         if (!timeoutTxs.isEmpty()) {
@@ -198,15 +182,15 @@ public final class PendingTxCacheV1 {
                         SortedMap<BigInteger, AionTransaction> map = cacheTxMap.get(sender);
                         BigInteger nonce = tx.getNonceBI();
                         if (map.containsKey(nonce)) {
-                            txList.add(map.remove(nonce));
-                            cacheTxMap.put(sender, map);
+                            timeoutTransactions.add(map.remove(nonce));
                         }
                     }
                 }
             }
         }
 
-        return txList;
+        timeOutMap.headMap(current).clear();
+        return timeoutTransactions;
     }
 
     /**
@@ -214,9 +198,9 @@ public final class PendingTxCacheV1 {
      * @return the total transaction numbers.
      */
     public int cacheTxSize() {
-        int size = 0;
         lock.lock();
         try {
+            int size = 0;
             for (Map<BigInteger, AionTransaction> accountMap : cacheTxMap.values()) {
                 size += accountMap.values().size();
             }
@@ -279,22 +263,22 @@ public final class PendingTxCacheV1 {
     }
 
     /**
-     * @implNote get the list of the transactions have been removed in the cache instance and clear the
+     * @implNote poll the list of the transactions have been removed in the cache instance and clear the
      * removedList
      * @return the list of the transaction
      */
-    public List<AionTransaction> getRemovedTransactionForPoolBackup() {
-        if (removedTransactionForPoolBackup != null) {
-            lock.lock();
-            try {
+    public List<AionTransaction> pollRemovedTransactionForPoolBackup() {
+        lock.lock();
+        try {
+            if (removedTransactionForPoolBackup == null) {
+                return Collections.emptyList();
+            } else {
                 List<AionTransaction> removedTx = new ArrayList<>(removedTransactionForPoolBackup);
                 removedTransactionForPoolBackup.clear();
                 return removedTx;
-            } finally {
-                lock.unlock();
             }
-        } else {
-            return new ArrayList<>();
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -305,16 +289,17 @@ public final class PendingTxCacheV1 {
      */
     public List<AionTransaction> getNewPendingTransactions(Map<AionAddress, BigInteger> nonceMap) {
         Objects.requireNonNull(nonceMap);
+        Objects.requireNonNull(nonceMap.entrySet());
 
-        List<AionTransaction> txList = new ArrayList<>();
         lock.lock();
+
         try {
+            List<AionTransaction> txList = new ArrayList<>();
             for (Entry<AionAddress, BigInteger> e : nonceMap.entrySet()) {
                 AionAddress address = e.getKey();
                 SortedMap<BigInteger, AionTransaction> accountCachedTx = cacheTxMap.get(address);
                 if (accountCachedTx != null) {
                     BigInteger nonce = e.getValue();
-                    Objects.requireNonNull(nonce);
 
                     while (accountCachedTx.containsKey(nonce)) {
                         txList.add(accountCachedTx.get(nonce));
@@ -344,8 +329,8 @@ public final class PendingTxCacheV1 {
                 LOG.debug("remove cachedTransaction: sender:{}, nonce:{}", sender, nonce);
                 Map<BigInteger, AionTransaction> accountInfo = cacheTxMap.get(sender);
                 AionTransaction removedTx = accountInfo.remove(nonce);
-                if (removedTx != null && removedTransactionForPoolBackup != null) {
-                    removedTransactionForPoolBackup.add(removedTx);
+                if (removedTx != null) {
+                    addTransactionToRemovedTransactionForPoolBackup(removedTx);
                 }
 
                 if (accountInfo.isEmpty()) {
@@ -355,6 +340,5 @@ public final class PendingTxCacheV1 {
         } finally{
             lock.unlock();
         }
-
     }
 }
