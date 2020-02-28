@@ -25,7 +25,7 @@ pipeline {
         '''.stripIndent()).trim()
     }
 
-    triggers { cron('0 2 * * 6') }
+    triggers { cron('0 3 * * 6') }
 
     stages {
         stage('Build') {
@@ -133,7 +133,7 @@ pipeline {
                 timeout(time: 12, unit: 'HOURS') {
                     dir('pack') {
                         echo "Start mainnet sync test..."
-                        sh('./oan/aion.sh e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev xs=5371168')
+                        sh('./oan/aion.sh e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev fs')
                         echo "finished mainnet sync test..."
                         sh('rm -rf ./oan')
                     }
