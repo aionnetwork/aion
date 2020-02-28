@@ -30,6 +30,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
@@ -46,6 +47,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
+import org.aion.zero.impl.types.AionGenesis;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** Has direct database connection. */
@@ -1216,5 +1218,42 @@ public class AionRepositoryImpl extends AbstractRepository {
 
     public BigInteger getTotalDifficultyForHash(byte[] blockHash) {
         return this.blockStore.getTotalDifficultyForHash(blockHash);
+    }
+
+    /**
+     * Saves the genesis block data inside the repository.
+     *
+     * @param genesis the genesis block to be flushed into the repository
+     */
+    public void buildGenesis(AionGenesis genesis) {
+        // initialization section for network balance contract
+        RepositoryCache track = startTracking();
+
+        AionAddress networkBalanceAddress = ContractInfo.TOTAL_CURRENCY.contractAddress;
+        track.createAccount(networkBalanceAddress);
+        // saving FVM type for networkBalance contract
+        track.saveVmType(networkBalanceAddress, InternalVmType.FVM);
+
+        for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+            // assumes only additions are performed in the genesis
+            track.addStorageRow(networkBalanceAddress,
+                    new DataWord(addr.getKey()).toWrapper(),
+                    wrapValueForPut(new DataWord(addr.getValue())));
+        }
+
+        for (AionAddress addr : genesis.getPremine().keySet()) {
+            track.createAccount(addr);
+            track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
+        }
+        track.flush();
+
+        commitBlock(genesis.getHashWrapper(), genesis.getNumber(), genesis.getStateRoot());
+        blockStore.saveBlock(genesis, genesis.getDifficultyBI(), true);
+    }
+
+    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+        return (value.isZero())
+                ? value.toWrapper()
+                : ByteArrayWrapper.wrap(value.getNoLeadZeroesData());
     }
 }

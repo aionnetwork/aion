@@ -2880,7 +2880,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (!repository.isValidRoot(genesis.getStateRoot())) {
                 genLOG.info("Corrupt world state for genesis block hash: " + genesis.getShortHash() + ", number: " + genesis.getNumber() + ".");
 
-                AionHubUtils.buildGenesis(genesis, repository);
+                repository.buildGenesis(genesis);
 
                 if (repository.isValidRoot(genesis.getStateRoot())) {
                     genLOG.info("Rebuilding genesis block SUCCEEDED.");
@@ -2949,7 +2949,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 genLOG.info("DB could not be recovered - adding Genesis");
             }
 
-            AionHubUtils.buildGenesis(genesis, repository);
+            repository.buildGenesis(genesis);
 
             setBestBlock(genesis);
             setTotalDifficulty(genesis.getDifficultyBI());

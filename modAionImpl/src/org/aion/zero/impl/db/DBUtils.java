@@ -23,7 +23,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionGenesis;
-import org.aion.zero.impl.blockchain.AionHubUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.DatabaseType;
@@ -446,7 +445,7 @@ public class DBUtils {
         // recover genesis
         log.info("Rebuilding genesis block ...");
         AionGenesis genesis = cfg.getGenesis();
-        AionHubUtils.buildGenesis(genesis, repo);
+        repo.buildGenesis(genesis);
 
         // recover all blocks
         Block block = store.getBestBlock();
@@ -527,7 +526,7 @@ public class DBUtils {
                 // recover genesis
                 AionGenesis genesis = cfg.getGenesis();
                 store.redoIndexWithoutSideChains(genesis); // clear the index entry
-                AionHubUtils.buildGenesis(genesis, repo);
+                repo.buildGenesis(genesis);
                 LOG.info("Finished rebuilding genesis block.");
                 startBlock = genesis;
                 currentBlock = 1L;
