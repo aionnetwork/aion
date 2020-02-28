@@ -274,7 +274,7 @@ public class AionImpl implements IAionChain {
     public Optional<AccountState> getAccountState(AionAddress address, long blockNumber) {
         try {
             byte[] stateRoot =
-                    this.aionHub.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot();
+                    this.aionHub.getBlockchain().getBlockByNumber(blockNumber).getStateRoot();
             AccountState account =
                     (AccountState)
                             this.aionHub

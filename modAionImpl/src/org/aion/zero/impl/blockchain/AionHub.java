@@ -35,7 +35,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.zero.impl.pendingState.IPendingState;
 import org.aion.zero.impl.config.CfgAion;
@@ -287,11 +286,6 @@ public class AionHub {
 
     public IAionBlockchain getBlockchain() {
         return blockchain;
-    }
-
-    @VisibleForTesting
-    AionBlockStore getBlockStore() {
-        return this.blockchain.getBlockStore();
     }
 
     public BigInteger getTotalDifficultyForHash(byte[] hash) {

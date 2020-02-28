@@ -44,7 +44,6 @@ public class AionHubTest {
         assertThat(hub.getRepository()).isNotNull();
         assertThat(hub.getEventMgr()).isNotNull();
         assertThat(hub.getSyncMgr()).isNotNull();
-        assertThat(hub.getBlockStore()).isNotNull();
         assertThat(hub.getPropHandler()).isNotNull();
     }
 
