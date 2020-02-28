@@ -72,7 +72,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.util.types.Hash256;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.BlockContext;
@@ -1645,7 +1644,7 @@ public class ApiWeb3Aion extends ApiAion {
         blockchain.put("bestNumber", block.getNumber());
         blockchain.put(
                 "totalDifficulty",
-                this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash())));
+                this.ac.getBlockchain().getTotalDifficultyForHash(block.getHash()));
         // end
         obj.put("local", blockchain);
 

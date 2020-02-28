@@ -2550,8 +2550,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 al.add(ByteString.copyFrom(tx.getTransactionHash()));
             }
 
-            BigInteger td =
-                    this.ac.getBlockchain().getTotalDifficultyByHash(Hash256.wrap(blk.getHash()));
+            BigInteger td = this.ac.getBlockchain().getTotalDifficultyForHash(blk.getHash());
             Message.rsp_getBlock rsp = getRsp_getBlock(blk, al, td);
 
             byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);

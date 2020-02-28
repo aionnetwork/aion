@@ -205,10 +205,7 @@ public class BlockchainForkingTest {
         // check for correct state rollback
         assertThat(bc.getRepository().getRoot()).isEqualTo(standardBlock.getStateRoot());
         assertThat(bc.getTotalDifficulty())
-                .isEqualTo(
-                        bc.getRepository()
-                                .getBlockStore()
-                                .getTotalDifficultyForHash(standardBlock.getHash()));
+                .isEqualTo(bc.getTotalDifficultyForHash(standardBlock.getHash()));
     }
 
     /*-
@@ -465,10 +462,7 @@ public class BlockchainForkingTest {
         assertThat(bc.getRepository().getRoot())
                 .isEqualTo(slowerBlockDescendant.block.getStateRoot());
         assertThat(bc.getTotalDifficulty())
-                .isEqualTo(
-                        bc.getRepository()
-                                .getBlockStore()
-                                .getTotalDifficultyForHash(slowerBlockDescendant.block.getHash()));
+                .isEqualTo(bc.getTotalDifficultyForHash(slowerBlockDescendant.block.getHash()));
     }
 
     @Test
@@ -500,10 +494,7 @@ public class BlockchainForkingTest {
         assertThat(bc.getBestBlock()).isEqualTo(block);
         assertThat(bc.getRepository().getRoot()).isEqualTo(block.getStateRoot());
         assertThat(bc.getTotalDifficulty())
-                .isEqualTo(
-                        bc.getRepository()
-                                .getBlockStore()
-                                .getTotalDifficultyForHash(block.getHash()));
+                .isEqualTo(bc.getTotalDifficultyForHash(block.getHash()));
     }
 
     /**

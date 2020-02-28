@@ -21,7 +21,6 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.util.types.Hash256;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.A0BlockHeader;
@@ -165,16 +164,15 @@ public class BlockchainConcurrentImportTest {
                             || result == ImportResult.IMPORTED_NOT_BEST) {
                         AionBlockStore store = _chain.getBlockStore();
 
-                        BigInteger tdFromStore = store.getTotalDifficultyForHash(_block.getHash());
+                        BigInteger tdFromStore = _chain.getTotalDifficultyForHash(_block.getHash());
                         BigInteger tdCalculated =
-                                store.getTotalDifficultyForHash(_block.getParentHash())
+                                _chain.getTotalDifficultyForHash(_block.getParentHash())
                                         .add(_block.getDifficultyBI());
 
                         assertThat(tdFromStore).isEqualTo(tdCalculated);
                         assertThat(tdCalculated)
                                 .isEqualTo(
-                                        _chain.getTotalDifficultyByHash(
-                                                new Hash256(_block.getHash())));
+                                        _chain.getTotalDifficultyForHash(_block.getHash()));
 
                         if (result == ImportResult.IMPORTED_BEST) {
                             // can't check for equality since other blocks may have already been
@@ -230,16 +228,15 @@ public class BlockchainConcurrentImportTest {
                             AionBlockStore store = _chain.getBlockStore();
 
                             BigInteger tdFromStore =
-                                    store.getTotalDifficultyForHash(_block.getHash());
+                                    _chain.getTotalDifficultyForHash(_block.getHash());
                             BigInteger tdCalculated =
-                                    store.getTotalDifficultyForHash(_block.getParentHash())
+                                    _chain.getTotalDifficultyForHash(_block.getParentHash())
                                             .add(_block.getDifficultyBI());
 
                             assertThat(tdFromStore).isEqualTo(tdCalculated);
                             assertThat(tdCalculated)
                                     .isEqualTo(
-                                            _chain.getTotalDifficultyByHash(
-                                                    new Hash256(_block.getHash())));
+                                            _chain.getTotalDifficultyForHash(_block.getHash()));
 
                             if (result == ImportResult.IMPORTED_BEST) {
                                 // can't check for equality since other blocks may have already been
@@ -476,15 +473,13 @@ public class BlockchainConcurrentImportTest {
                 .isEqualTo(sourceChain.getCachedTotalDifficulty());
         testChain.assertEqualTotalDifficulty();
 
-        AionBlockStore sourceStore = sourceChain.getBlockStore();
-
         // comparing total diff for each block of the two chains
         for (AionBlock blk : knownBlocks) {
-            assertThat(testChain.getBlockStore().getTotalDifficultyForHash(blk.getHash()))
-                    .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
-            Hash256 hash = new Hash256(blk.getHash());
-            assertThat(testChain.getTotalDifficultyByHash(hash))
-                    .isEqualTo(sourceChain.getTotalDifficultyByHash(hash));
+            assertThat(testChain.getTotalDifficultyForHash(blk.getHash()))
+                    .isEqualTo(sourceChain.getTotalDifficultyForHash(blk.getHash()));
+            byte[] hash = blk.getHash();
+            assertThat(testChain.getTotalDifficultyForHash(hash))
+                    .isEqualTo(sourceChain.getTotalDifficultyForHash(hash));
         }
     }
 

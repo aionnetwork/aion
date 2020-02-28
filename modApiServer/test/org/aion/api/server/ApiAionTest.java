@@ -171,8 +171,7 @@ public class ApiAionTest {
         // check because blk might be the genesis block
         assertEquals(
                 rslt.getValue(),
-                impl.getBlockchain().getBlockStore()
-                        .getTotalDifficultyForHash(blk.getHash()));
+                impl.getBlockchain().getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
         assertEquals(

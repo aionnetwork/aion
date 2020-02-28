@@ -605,7 +605,7 @@ public class AionBlockStore {
      * @return 0 when the hash info is not matched or database corruption. Otherwise, return the
      *     total difficulty info stored in the index database.
      */
-    public BigInteger getTotalDifficultyForHash(byte[] hash) {
+    BigInteger getTotalDifficultyForHash(byte[] hash) {
         if (hash == null) {
             return null;
         }

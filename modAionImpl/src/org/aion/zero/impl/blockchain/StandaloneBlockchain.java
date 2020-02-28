@@ -36,7 +36,6 @@ import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.util.types.Hash256;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
@@ -483,14 +482,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         synchronized (this) {
             bestBlockHash = getBestBlock().getHash();
-            tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
+            tdForHash = getTotalDifficultyForHash(getBestBlock().getHash());
             tdCached = getCacheTD();
             tdPublic = getTotalDifficulty();
         }
 
         assert (tdPublic.equals(tdForHash));
         assert (tdPublic.equals(tdCached));
-        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
+        assert (tdForHash.equals(getTotalDifficultyForHash(bestBlockHash)));
     }
 
     @Override
@@ -498,7 +497,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         ImportResult result = tryToConnectAndFetchSummary(block, true).getLeft();
 
         if (result == ImportResult.IMPORTED_BEST) {
-            BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
+            BigInteger tdForHash = getTotalDifficultyForHash(block.getHash());
             assert (getTotalDifficulty().equals(tdForHash));
             assert (getCacheTD().equals(tdForHash));
         }

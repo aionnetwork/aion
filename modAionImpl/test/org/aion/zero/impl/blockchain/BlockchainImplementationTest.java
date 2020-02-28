@@ -207,7 +207,7 @@ public class BlockchainImplementationTest {
 
         StandaloneBlockchain chain = bundle.bc;
 
-        chain.getTotalDifficultyByHash(null);
+        chain.getTotalDifficultyForHash(null);
     }
 
     @Test

@@ -88,7 +88,6 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.util.types.Hash256;
 import org.aion.utils.HeapDumper;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
@@ -2664,8 +2663,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // return a flag indicating if the recovery worked
         if (repo.isIndexed(block.getHash(), block.getNumber())) {
             Block mainChain = getBlockStore().getBestBlock();
-            BigInteger mainChainTotalDiff =
-                    getBlockStore().getTotalDifficultyForHash(mainChain.getHash());
+            BigInteger mainChainTotalDiff = getTotalDifficultyForHash(mainChain.getHash());
 
             // check if the main chain needs to be updated
             if (mainChainTotalDiff.compareTo(totalDiff) < 0) {
@@ -2712,11 +2710,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public BigInteger getTotalDifficultyByHash(Hash256 hash) {
-        if (hash == null) {
-            throw new NullPointerException();
-        }
-        return this.getBlockStore().getTotalDifficultyForHash(hash.toBytes());
+    public BigInteger getTotalDifficultyForHash(byte[] blockHash) {
+        Objects.requireNonNull(blockHash, "The block hash cannot be null.");
+        return this.repository.getTotalDifficultyForHash(blockHash);
     }
 
     private class State {

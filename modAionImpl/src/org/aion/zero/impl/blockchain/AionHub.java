@@ -300,7 +300,7 @@ public class AionHub {
     }
 
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
-        return getBlockStore().getTotalDifficultyForHash(hash);
+        return this.blockchain.getTotalDifficultyForHash(hash);
     }
 
     public AionPendingStateImpl getPendingState() {
@@ -400,7 +400,7 @@ public class AionHub {
                 bestBlock = this.blockchain.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
 
-                    bestBlock.setTotalDifficulty(blockchain.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
+                    bestBlock.setTotalDifficulty(blockchain.getTotalDifficultyForHash(bestBlock.getHash()));
 
                     startingBlock = bestBlock;
                     // TODO : [unity] The publicbestblock is a weird settings, should consider to remove it.

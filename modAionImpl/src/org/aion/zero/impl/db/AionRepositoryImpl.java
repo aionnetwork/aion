@@ -1213,4 +1213,8 @@ public class AionRepositoryImpl extends AbstractRepository {
             blockStore.flush();
         }
     }
+
+    public BigInteger getTotalDifficultyForHash(byte[] blockHash) {
+        return this.blockStore.getTotalDifficultyForHash(blockHash);
+    }
 }
