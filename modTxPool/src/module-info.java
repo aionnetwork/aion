@@ -5,6 +5,8 @@ module aion.txpool {
     requires aion.log;
     requires slf4j.api;
     requires com.google.common;
+    requires commons.lang3;
 
     exports org.aion.txpool;
+    exports org.aion.txpool.v1;
 }
