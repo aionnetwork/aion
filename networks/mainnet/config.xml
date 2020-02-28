@@ -91,6 +91,6 @@
         <API>INFO</API>
         <P2P>INFO</P2P>
         <TX>WARN</TX>
-        <TXPOOL>INFO</TXPOOL>
+        <TXPOOL>WARN</TXPOOL>
     </log>
 </aion>
