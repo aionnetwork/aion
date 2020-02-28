@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
@@ -61,7 +60,7 @@ public final class TxPoolV1 {
 
     private final Lock lock = new ReentrantLock();
     private final Logger LOG_TXPOOL;
-    private final AtomicLong blockEnergyLimit;
+    private long blockEnergyLimit;
     public final int maxPoolSize;
     public final int transactionTimeout;
 
@@ -80,10 +79,9 @@ public final class TxPoolV1 {
         }
 
         if (Optional.ofNullable(config.get(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT)).isPresent()) {
-            blockEnergyLimit =new AtomicLong(
-                Math.max(Long.parseLong((String) config.get(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT)), Constant.BLOCK_ENERGY_LIMIT_MIN));
+            blockEnergyLimit = Math.max(Long.parseLong((String) config.get(TXPOOL_PROPERTY.PROP_BLOCK_NRG_LIMIT)), Constant.BLOCK_ENERGY_LIMIT_MIN);
         } else {
-            blockEnergyLimit = new AtomicLong(Constant.BLOCK_ENERGY_LIMIT_DEFAULT);
+            blockEnergyLimit = Constant.BLOCK_ENERGY_LIMIT_DEFAULT;
         }
 
         if (Optional.ofNullable(config.get(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX)).isPresent()) {
@@ -409,7 +407,7 @@ public final class TxPoolV1 {
                         long txEnergyConsumed = Math.max(pendingTx.energyConsumed, (Constant.MIN_ENERGY_CONSUME / 2));
 
                         if ((cumulatedTxEncodedSize + pickedTxEncodedSize + txEncodedSize) <= Constant.MAX_BLK_SIZE
-                            && (cumulatedTxEnergy + pickedEnergyConsumed + txEncodedSize) <= blockEnergyLimit.get()) {
+                            && (cumulatedTxEnergy + pickedEnergyConsumed + txEncodedSize) <= blockEnergyLimit) {
                             LOG_TXPOOL.trace("Transaction picked: [{}]", pendingTx.tx);
                             pickedTx.add(pendingTx.tx);
                             pickedTxHash.add(hash);
@@ -433,7 +431,7 @@ public final class TxPoolV1 {
     private BigInteger getAccountFirstPickingNonce(AionAddress sender) {
         SortedMap<BigInteger, ByteArrayWrapper> accountInfo = accountView.get(sender);
         if (accountInfo == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Can't find the account info relate with sender: " + sender);
         }
 
         return accountInfo.firstKey();
@@ -518,17 +516,21 @@ public final class TxPoolV1 {
     public void updateBlkNrgLimit(long nrg) {
         int BLK_NRG_MAX = 100_000_000;
         int BLK_NRG_MIN = 1_000_000;
-        if (nrg < BLK_NRG_MIN) {
-            blockEnergyLimit.set(BLK_NRG_MIN);
-        } else if (nrg > BLK_NRG_MAX) {
-            blockEnergyLimit.set(BLK_NRG_MAX);
-        } else {
-            blockEnergyLimit.set(nrg);
-        }
 
-        if (LOG_TXPOOL.isDebugEnabled()) {
-            LOG_TXPOOL
-                .debug("TxPoolA1.updateBlkNrgLimit nrg[{}] blkNrgLimit[{}]", nrg, blockEnergyLimit.get());
+        lock.lock();
+        try {
+            if (nrg < BLK_NRG_MIN) {
+                blockEnergyLimit = BLK_NRG_MIN;
+            } else if (nrg > BLK_NRG_MAX) {
+                blockEnergyLimit = BLK_NRG_MAX;
+            } else {
+                blockEnergyLimit = nrg;
+            }
+
+            LOG_TXPOOL.debug(
+                    "TxPoolA1.updateBlkNrgLimit nrg[{}] blkNrgLimit[{}]", nrg, blockEnergyLimit);
+        } finally {
+            lock.unlock();
         }
     }
 
