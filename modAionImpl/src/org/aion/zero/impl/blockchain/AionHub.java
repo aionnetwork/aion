@@ -144,7 +144,6 @@ public class AionHub {
                         blockchain,
                         cfg.getConsensus().getEnergyStrategy().getUpperBound(),
                         cfg.getTx().getTxPendingTimeout(),
-                        cfg.getTx().getCacheMax(),
                         cfg.getTx().getPoolBackup(),
                         cfg.getTx().isSeedMode(),
                         cfg.getTx().getPoolDump(),

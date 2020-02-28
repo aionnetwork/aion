@@ -39,7 +39,6 @@ public class BlockPropagationTest {
 
     private long blockEnergyUpperBound = 20_000_000L;
     private int pendingTransactionTimeout = 3600;
-    private int transactionCacheSizeMax = 256;
     private boolean enablePoolBackup = false;
     private boolean enableSeedMode = false;
     private boolean enablePoolDump = false;
@@ -355,7 +354,6 @@ public class BlockPropagationTest {
                                 anotherBundle.bc,
                                 blockEnergyUpperBound,
                                 pendingTransactionTimeout,
-                                transactionCacheSizeMax,
                                 enablePoolBackup,
                                 enableSeedMode,
                                 enablePoolDump,
@@ -433,7 +431,6 @@ public class BlockPropagationTest {
                                 anotherBundle.bc,
                                 blockEnergyUpperBound,
                                 pendingTransactionTimeout,
-                                transactionCacheSizeMax,
                                 enablePoolBackup,
                                 enableSeedMode,
                                 enablePoolDump,
@@ -506,7 +503,6 @@ public class BlockPropagationTest {
                                 anotherBundle.bc,
                                 blockEnergyUpperBound,
                                 pendingTransactionTimeout,
-                                transactionCacheSizeMax,
                                 enablePoolBackup,
                                 enableSeedMode,
                                 enablePoolDump,
@@ -574,7 +570,6 @@ public class BlockPropagationTest {
                                 anotherBundle.bc,
                                 blockEnergyUpperBound,
                                 pendingTransactionTimeout,
-                                transactionCacheSizeMax,
                                 enablePoolBackup,
                                 enableSeedMode,
                                 enablePoolDump,

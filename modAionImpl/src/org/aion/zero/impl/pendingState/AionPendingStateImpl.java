@@ -129,7 +129,6 @@ public final class AionPendingStateImpl implements IPendingState {
             AionBlockchainImpl blockchain,
             long energyUpperBound,
             int txPendingTimeout,
-            int maxTxCacheSize,
             boolean seedMode,
             boolean poolBackup,
             boolean poolDump,
