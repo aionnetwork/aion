@@ -31,7 +31,7 @@ import org.slf4j.Logger;
  */
 public final class PendingTxCacheV1 {
 
-    public static final int ACCOUNT_CACHE_MAX = 2_000;
+    static int ACCOUNT_CACHE_MAX = 2_000;
     public static final int TX_PER_ACCOUNT_MAX = 500;
     public static final int CACHE_TIMEOUT = 3_600;
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
@@ -56,6 +56,17 @@ public final class PendingTxCacheV1 {
         cacheTxMap = new LinkedHashMap<>(ACCOUNT_CACHE_MAX);
         timeOutMap = new TreeMap<>();
         removedTransactionForPoolBackup = backupTransactions ? new ArrayList<>() : null;
+    }
+
+    @VisibleForTesting
+    /**
+     * the constructor for the unit test
+     */
+    public PendingTxCacheV1(int  accountMax) {
+        ACCOUNT_CACHE_MAX = accountMax;
+        cacheTxMap = new LinkedHashMap<>(ACCOUNT_CACHE_MAX);
+        timeOutMap = new TreeMap<>();
+        removedTransactionForPoolBackup = null;
     }
 
     private static long getExpiredTime(long longValue) {

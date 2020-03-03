@@ -54,7 +54,7 @@ public class TxPoolV1Test {
         }
 
         if (key2 == null) {
-            keyCnt = 10000;
+            keyCnt = 10;
             key2 = new ArrayList<>();
             System.out.println("gen key list 2--------------");
             for (int i = 0; i < keyCnt; i++) {
@@ -878,7 +878,7 @@ public class TxPoolV1Test {
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
-        int cnt = 100;
+        int cnt = 10;
         byte[] nonce = new byte[Long.BYTES];
         for (int i = 0; i < cnt; i++) {
             nonce[Long.BYTES - 1] = (byte) i;
@@ -907,7 +907,7 @@ public class TxPoolV1Test {
         List<Long> nl = tp.getFeeList();
         assertEquals(cnt, nl.size());
 
-        long val = 100;
+        long val = 10;
         for (int i = 0; i < cnt; i++) {
             Assert.assertEquals(0, nl.get(i).compareTo(val--));
         }
@@ -915,14 +915,12 @@ public class TxPoolV1Test {
 
     @Test
     public void testSnapshotAll() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-        ECKey key = ECKeyFac.inst().create();
 
         List<PooledTransaction> txs = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             AionTransaction tx =
                     AionTransaction.create(
-                            key,
+                            key.get(0),
                             BigInteger.valueOf(i).toByteArray(),
                             AddressUtils.wrapAddress(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
@@ -950,14 +948,12 @@ public class TxPoolV1Test {
 
     @Test
     public void testSnapshotAll2() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-        ECKey key = ECKeyFac.inst().create();
 
         List<PooledTransaction> txs = new ArrayList<>();
         for (int i = 0; i < 17; i++) {
             AionTransaction tx =
                     AionTransaction.create(
-                            key,
+                            key.get(0),
                             BigInteger.valueOf(i).toByteArray(),
                             AddressUtils.wrapAddress(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
@@ -981,14 +977,12 @@ public class TxPoolV1Test {
 
     @Test
     public void testRemove2() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-        ECKey key = ECKeyFac.inst().create();
 
         List<PooledTransaction> txs = new ArrayList<>();
         for (int i = 0; i < 95; i++) {
             AionTransaction tx =
                     AionTransaction.create(
-                            key,
+                            key.get(0),
                             BigInteger.valueOf(i).toByteArray(),
                             AddressUtils.wrapAddress(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),

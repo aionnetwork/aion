@@ -24,12 +24,13 @@ import org.junit.Test;
 
 public class PendingTxCacheV1Test {
     private static List<ECKey> key;
+    private static int ACCOUNT_MAX = 10;
 
     @Before
     public void Setup() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
 
-        int keyCnt = 2_001;
+        int keyCnt = ACCOUNT_MAX + 1;
         System.out.println("gen key list----------------");
         if (key == null) {
             key = new ArrayList<>();
@@ -68,7 +69,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void addCacheTxTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         for (AionTransaction tx : txn) {
@@ -81,7 +82,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void addCacheTxWith2SendersTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(0, 10, 1));
 
@@ -97,7 +98,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void addCacheTxReachAccountCacheMaxTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = new ArrayList<>();
         for (int i = 0; i < key.size(); i++) {
@@ -114,7 +115,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void addTxReachAccountCacheMaxTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
         List<AionTransaction> txn = getMockTransaction(0, 500, 0);
         for (AionTransaction tx : txn) {
             cache.addCacheTx(tx);
@@ -135,7 +136,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void addCacheTxWithDuplicateNonceTransactionsTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(5, 10, 0));
 
@@ -153,7 +154,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void flush2TxInOneAccountTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         List<AionTransaction> newCache;
@@ -177,7 +178,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void flushTxWithOtherAccountTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
 
@@ -200,7 +201,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void flushTxWith2AccountsTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
         txn.addAll(getMockTransaction(0, 10, 1));
@@ -227,7 +228,7 @@ public class PendingTxCacheV1Test {
     @Test
     public void fullFlush2SendersUnderFullCachedInstanceTest() {
 
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = new ArrayList<>();
         for (int i = 0; i < ACCOUNT_CACHE_MAX; i++) {
@@ -261,7 +262,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void getRemovedTxHashWithoutPoolBackupTest() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
         assertNotNull(cache.pollRemovedTransactionForPoolBackup());
     }
 
@@ -329,7 +330,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void benchmark() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         System.out.println("Gen 1M txs");
         List<AionTransaction> txn = new ArrayList<>();
@@ -373,7 +374,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void isInCacheTest() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 1, 0);
         for (AionTransaction tx : txn) {
@@ -388,7 +389,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void getNewPendingTransactionTest() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 5, 0);
         List<AionTransaction> txn2 = getMockTransaction(0, 5, 1);
@@ -419,7 +420,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void removeTransactionTest() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 2, 0);
         for (AionTransaction tx : txn) {
@@ -447,7 +448,7 @@ public class PendingTxCacheV1Test {
 
     @Test
     public void flushTimeoutTransactionTest() {
-        PendingTxCacheV1 cache = new PendingTxCacheV1();
+        PendingTxCacheV1 cache = new PendingTxCacheV1(ACCOUNT_MAX);
 
         List<AionTransaction> txn = getMockTransaction(0, 2, 0);
         for (AionTransaction tx : txn) {

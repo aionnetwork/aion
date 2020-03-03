@@ -22,7 +22,6 @@ import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 public class TxnPoolV1BenchmarkTest {
 
     private List<ECKey> key;
-    private List<ECKey> key2;
     private Random r = new Random();
 
     @Before
@@ -38,29 +37,18 @@ public class TxnPoolV1BenchmarkTest {
             }
             System.out.println("gen key list finished-------");
         }
-
-        if (key2 == null) {
-            keyCnt = 10000;
-            key2 = new ArrayList<>();
-            System.out.println("gen key list 2--------------");
-            for (int i = 0; i < keyCnt; i++) {
-                key2.add(ECKeyFac.inst().create());
-            }
-            System.out.println("gen key list 2 finished-----");
-        }
     }
 
-    /* 100K new transactions in pool around 1200ms (cold-call)*/
     @Test
     public void benchmarkSnapshot() {
         Properties config = new Properties();
         config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
-        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "10000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
-        int cnt = 10000;
+        int cnt = 1000;
         for (ECKey aKey1 : key) {
             for (int i = 0; i < cnt; i++) {
                 AionTransaction txn =
@@ -97,18 +85,15 @@ public class TxnPoolV1BenchmarkTest {
     }
 
     @Test
-    /* 100K new transactions in pool around 650ms (cold-call)
-      1K new transactions insert to the pool later around 150ms to snap (including sort)
-    */
     public void benchmarkSnapshot2() {
         Properties config = new Properties();
         config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
-        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "101000");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "10100");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
-        int cnt = 10000;
+        int cnt = 1000;
         for (ECKey aKey2 : key) {
             for (int i = 0; i < cnt; i++) {
                 AionTransaction txn =
@@ -136,7 +121,7 @@ public class TxnPoolV1BenchmarkTest {
         tp.snapshot();
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
-        int cnt2 = 100;
+        int cnt2 = 10;
         txnl.clear();
         for (ECKey aKey1 : key) {
             for (int i = 0; i < cnt2; i++) {
@@ -173,24 +158,19 @@ public class TxnPoolV1BenchmarkTest {
     }
 
     @Test
-    /* 1M new transactions with 10000 accounts (100 txs per account)in pool snapshot around 10s (cold-call)
-      gen new txns 55s (spent a lot of time to sign tx)
-      put txns into pool 2.5s
-      snapshot txn 5s
-    */
     public void benchmarkSnapshot3() {
         Properties config = new Properties();
         config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
-        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "1000000");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "10000");
 
 
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
-        int cnt = 100;
+        int cnt = 1000;
         System.out.println("Gen new transactions --");
         long start = System.currentTimeMillis();
-        for (ECKey aKey21 : key2) {
+        for (ECKey aKey21 : key) {
             for (int i = 0; i < cnt; i++) {
                 AionTransaction txn =
                         AionTransaction.create(
@@ -215,7 +195,7 @@ public class TxnPoolV1BenchmarkTest {
         tp.add(txnl);
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
-        Assert.assertEquals(tp.size(), cnt * key2.size());
+        Assert.assertEquals(tp.size(), cnt * key.size());
 
         // sort the inserted txs
         System.out.println("Snapshoting --");
@@ -223,7 +203,7 @@ public class TxnPoolV1BenchmarkTest {
         tp.snapshot();
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
-        for (ECKey aKey2 : key2) {
+        for (ECKey aKey2 : key) {
             List<BigInteger> nl = tp.getNonceList(new AionAddress(aKey2.getAddress()));
             for (int i = 0; i < cnt; i++) {
                 Assert.assertEquals(nl.get(i), BigInteger.valueOf(i));
@@ -237,13 +217,13 @@ public class TxnPoolV1BenchmarkTest {
     public void benchmarkSnapshot4() {
         Properties config = new Properties();
         config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
-        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "10000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
         List<PooledTransaction> txnlrm = new ArrayList<>();
-        int cnt = 100000;
+        int cnt = 1000;
         int rmCnt = 10;
         System.out.println("gen new transactions...");
         long start = System.currentTimeMillis();
@@ -307,12 +287,12 @@ public class TxnPoolV1BenchmarkTest {
     public void benchmarkSnapshot5() {
         Properties config = new Properties();
         config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "100");
-        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "100000");
+        config.put(TXPOOL_PROPERTY.PROP_POOL_SIZE_MAX, "10000");
 
         TxPoolV1 tp = new TxPoolV1(config);
 
         List<PooledTransaction> txnl = new ArrayList<>();
-        int cnt = 10000;
+        int cnt = 1000;
         for (ECKey aKey1 : key) {
             for (int i = 0; i < cnt; i++) {
                 AionTransaction txn =
