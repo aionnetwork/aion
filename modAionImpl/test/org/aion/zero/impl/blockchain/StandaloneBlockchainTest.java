@@ -25,21 +25,4 @@ public class StandaloneBlockchainTest {
                     .isGreaterThan(BigInteger.ZERO);
         }
     }
-
-    @Test
-    public void testStandaloneBlockchainSetNumber() {
-        final long BLOCK_NUMBER = 1_000_000L;
-        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle bundle = builder.withDefaultAccounts().build();
-
-        bundle.bc.setBlockNumber(BLOCK_NUMBER);
-        assertThat(bundle.bc.getBestBlock().getNumber()).isEqualTo(BLOCK_NUMBER);
-        assertThat(bundle.bc.getBestBlock().getStateRoot())
-                .isEqualTo(bundle.bc.genesis.getStateRoot());
-
-        AionBlock block =
-                bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), false);
-        assertThat(block).isNotNull();
-        assertThat(block.getNumber()).isEqualTo(BLOCK_NUMBER + 1);
-    }
 }
