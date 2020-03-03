@@ -3,13 +3,16 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.util.conversions.Hex.toHexString;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,6 +52,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl extends AbstractRepository {
@@ -1256,4 +1260,108 @@ public class AionRepositoryImpl extends AbstractRepository {
                 ? value.toWrapper()
                 : ByteArrayWrapper.wrap(value.getNoLeadZeroesData());
     }
+
+    /**
+     * Method called by the blockchain when a block index is missing from the database.
+     *
+     * @param missingBlock the block that should have existed but is missing due to potential database corruption
+     * @param bestBlock the current best known block
+     * @param log the log used for printing messages
+     * @return {@code true} is the recovery was successful, {@code false} otherwise
+     */
+    public boolean recoverIndexEntry(Block missingBlock, Block bestBlock, Logger log) {
+        Deque<Block> dirtyBlocks = new ArrayDeque<>();
+        // already known to be missing the state
+        dirtyBlocks.push(missingBlock);
+
+        Block other = missingBlock;
+
+        // find all the blocks missing a world state
+        do {
+            other = blockStore.getBlockByHash(other.getParentHash());
+
+            // cannot recover if no valid states exist (must build from genesis)
+            if (other == null) {
+                return false;
+            } else {
+                dirtyBlocks.push(other);
+            }
+        } while (!isIndexed(other.getHash(), other.getNumber()) && other.getNumber() > 0);
+
+        if (other.getNumber() == 0 && !isIndexed(other.getHash(), other.getNumber())) {
+            log.info("Rebuild index FAILED because a valid index could not be found.");
+            return false;
+        }
+
+        // if the size key is missing we set it to the MAX(best block, this block, current value)
+        long maxNumber = blockStore.getMaxNumber();
+        if (bestBlock != null && bestBlock.getNumber() > maxNumber) {
+            maxNumber = bestBlock.getNumber();
+        }
+        if (missingBlock.getNumber() > maxNumber) {
+            maxNumber = missingBlock.getNumber();
+        }
+        blockStore.correctSize(maxNumber, log);
+
+        // remove the last added block because it has a correct world state
+        Block parentBlock = blockStore.getBlockByHashWithInfo(dirtyBlocks.pop().getHash());
+
+        BigInteger totalDiff = parentBlock.getTotalDifficulty();
+
+        log.info(
+                "Valid index found at block hash: {}, number: {}.",
+                other.getShortHash(),
+                other.getNumber());
+
+        // rebuild world state for dirty blocks
+        while (!dirtyBlocks.isEmpty()) {
+            other = dirtyBlocks.pop();
+            log.info(
+                    "Rebuilding index for block hash: {}, number: {}, txs: {}.",
+                    other.getShortHash(),
+                    other.getNumber(),
+                    other.getTransactionsList().size());
+            totalDiff = blockStore.correctIndexEntry(other, parentBlock.getTotalDifficulty());
+            parentBlock = other;
+        }
+
+        // update the repository
+        flush();
+
+        // return a flag indicating if the recovery worked
+        if (isIndexed(missingBlock.getHash(), missingBlock.getNumber())) {
+            Block mainChain = blockStore.getBestBlock();
+            BigInteger mainChainTotalDiff = getTotalDifficultyForHash(mainChain.getHash());
+
+            // check if the main chain needs to be updated
+            if (mainChainTotalDiff.compareTo(totalDiff) < 0) {
+                if (log.isInfoEnabled()) {
+                    log.info(
+                            "branching: from = {}/{}, to = {}/{}",
+                            mainChain.getNumber(),
+                            toHexString(mainChain.getHash()),
+                            missingBlock.getNumber(),
+                            toHexString(missingBlock.getHash()));
+                }
+                blockStore.reBranch(missingBlock);
+                syncToRoot(missingBlock.getStateRoot());
+                flush();
+            } else {
+                if (mainChain.getNumber() > missingBlock.getNumber()) {
+                    // checking if the current recovered blocks are a subsection of the main chain
+                    Block ancestor = blockStore.getChainBlockByNumber(missingBlock.getNumber() + 1);
+                    if (ancestor != null
+                            && Arrays.equals(ancestor.getParentHash(), missingBlock.getHash())) {
+                        blockStore.correctMainChain(missingBlock, log);
+                        flush();
+                    }
+                }
+            }
+            return true;
+        } else {
+            log.info("Rebuild index FAILED.");
+            return false;
+        }
+    }
+
 }

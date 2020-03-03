@@ -2591,7 +2591,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    public synchronized boolean recoverIndexEntry(Repository repository, Block block) {
+    public synchronized boolean recoverIndexEntry(AionRepositoryImpl repository, Block block) {
         if (block == null) {
             LOG.error("Index recovery attempted with null block.");
             return false;
@@ -2606,105 +2606,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 block.getShortHash(),
                 block.getNumber());
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) repository;
-
-        Deque<Block> dirtyBlocks = new ArrayDeque<>();
-        // already known to be missing the state
-        dirtyBlocks.push(block);
-
-        Block other = block;
-
-        // find all the blocks missing a world state
-        do {
-            other = repo.getBlockStore().getBlockByHash(other.getParentHash());
-
-            // cannot recover if no valid states exist (must build from genesis)
-            if (other == null) {
-                return false;
-            } else {
-                dirtyBlocks.push(other);
-            }
-        } while (!repo.isIndexed(other.getHash(), other.getNumber()) && other.getNumber() > 0);
-
-        if (other.getNumber() == 0 && !repo.isIndexed(other.getHash(), other.getNumber())) {
-            LOG.info("Rebuild index FAILED because a valid index could not be found.");
-            return false;
+        boolean isSuccessful = repository.recoverIndexEntry(block, bestBlock, LOG);
+        if (isSuccessful) {
+            clearBlockTemplate();
         }
-
-        // if the size key is missing we set it to the MAX(best block, this block, current value)
-        long maxNumber = getBlockStore().getMaxNumber();
-        if (bestBlock != null && bestBlock.getNumber() > maxNumber) {
-            maxNumber = bestBlock.getNumber();
-        }
-        if (block.getNumber() > maxNumber) {
-            maxNumber = block.getNumber();
-        }
-        getBlockStore().correctSize(maxNumber, LOG);
-
-        // remove the last added block because it has a correct world state
-        Block parentBlock =
-                repo.getBlockStore().getBlockByHashWithInfo(dirtyBlocks.pop().getHash());
-
-        BigInteger totalDiff = parentBlock.getTotalDifficulty();
-
-        LOG.info(
-                "Valid index found at block hash: {}, number: {}.",
-                other.getShortHash(),
-                other.getNumber());
-
-        // rebuild world state for dirty blocks
-        while (!dirtyBlocks.isEmpty()) {
-            other = dirtyBlocks.pop();
-            LOG.info(
-                    "Rebuilding index for block hash: {}, number: {}, txs: {}.",
-                    other.getShortHash(),
-                    other.getNumber(),
-                    other.getTransactionsList().size());
-            totalDiff =
-                    repo.getBlockStore()
-                            .correctIndexEntry(other, parentBlock.getTotalDifficulty());
-            parentBlock = other;
-        }
-
-        // update the repository
-        repo.flush();
-
-        // return a flag indicating if the recovery worked
-        if (repo.isIndexed(block.getHash(), block.getNumber())) {
-            Block mainChain = getBlockStore().getBestBlock();
-            BigInteger mainChainTotalDiff = getTotalDifficultyForHash(mainChain.getHash());
-
-            // check if the main chain needs to be updated
-            if (mainChainTotalDiff.compareTo(totalDiff) < 0) {
-                if (LOG.isInfoEnabled()) {
-                    LOG.info(
-                            "branching: from = {}/{}, to = {}/{}",
-                            mainChain.getNumber(),
-                            toHexString(mainChain.getHash()),
-                            block.getNumber(),
-                            toHexString(block.getHash()));
-                }
-                getBlockStore().reBranch(block);
-                repo.syncToRoot(block.getStateRoot());
-                repo.flush();
-
-                clearBlockTemplate();
-            } else {
-                if (mainChain.getNumber() > block.getNumber()) {
-                    // checking if the current recovered blocks are a subsection of the main chain
-                    Block ancestor = getBlockByNumber(block.getNumber() + 1);
-                    if (ancestor != null
-                            && Arrays.equals(ancestor.getParentHash(), block.getHash())) {
-                        getBlockStore().correctMainChain(block, LOG);
-                        repo.flush();
-                    }
-                }
-            }
-            return true;
-        } else {
-            LOG.info("Rebuild index FAILED.");
-            return false;
-        }
+        return isSuccessful;
     }
 
     /**

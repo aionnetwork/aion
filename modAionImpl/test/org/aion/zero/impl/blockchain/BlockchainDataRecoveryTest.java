@@ -1046,10 +1046,7 @@ public class BlockchainDataRecoveryTest {
         }
         repo.flush();
 
-        assertThat(
-                        chain.recoverIndexEntry(
-                                repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
-                .isFalse();
+        assertThat(chain.recoverIndexEntry((AionRepositoryImpl) repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock())).isFalse();
     }
 
     @Test
