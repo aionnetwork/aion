@@ -47,20 +47,6 @@ public interface IAionBlockchain extends UnityChain {
     List<Block> getBlocksByRange(long first, long last);
 
     /**
-     * Recovery functionality for rebuilding the world state.
-     *
-     * @return {@code true} if the recovery was successful, {@code false} otherwise
-     */
-    boolean recoverWorldState(Repository repository, Block block);
-
-    /**
-     * Recovery functionality for recreating the block info in the index database.
-     *
-     * @return {@code true} if the recovery was successful, {@code false} otherwise
-     */
-    boolean recoverIndexEntry(Repository repository, Block block);
-
-    /**
      * Heuristic for skipping the call to tryToConnect with very large or very small block number.
      */
     boolean skipTryToConnect(long blockNumber);

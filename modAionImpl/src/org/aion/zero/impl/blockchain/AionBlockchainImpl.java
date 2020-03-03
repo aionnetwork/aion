@@ -2490,7 +2490,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return this.evtMgr;
     }
 
-    @Override
+    /**
+     * Recovery functionality for rebuilding the world state.
+     *
+     * @return {@code true} if the recovery was successful, {@code false} otherwise
+     */
     public synchronized boolean recoverWorldState(Repository repository, Block block) {
         if (block == null) {
             LOG.error("World state recovery attempted with null block.");
@@ -2582,7 +2586,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return repo.isValidRoot(block.getStateRoot());
     }
 
-    @Override
+    /**
+     * Recovery functionality for recreating the block info in the index database.
+     *
+     * @return {@code true} if the recovery was successful, {@code false} otherwise
+     */
     public synchronized boolean recoverIndexEntry(Repository repository, Block block) {
         if (block == null) {
             LOG.error("Index recovery attempted with null block.");
