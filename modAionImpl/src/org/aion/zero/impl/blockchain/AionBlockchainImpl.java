@@ -133,6 +133,7 @@ import org.slf4j.LoggerFactory;
 public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
+    private static final Logger GEN_LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
     private static final Logger SURVEY_LOG = LoggerFactory.getLogger(LogEnum.SURVEY.name());
     private static final Logger SYNC_LOG = LoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
@@ -2186,6 +2187,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public synchronized void close() {
+        // The main repository instance is stashed when the snapshot is created. If the current repository is a snapshot that means the main one is in the stack.
+        // We pop the stack until we get to the main repository instance that contains access too all the databases that must be closed.
+        while (repository.isSnapshot()) {
+            popState();
+        }
+
+        // We do not flush before closing the database because under normal circumstances the repository was already flushed.
+        // If close was called due to an error (like a VM issue) then flushing may store corrupt data, so it shouldn't be done.
+        GEN_LOG.info("shutting down DB...");
+        repository.close();
+        GEN_LOG.info("shutdown DB... Done!");
+
         SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
                 surveyTotalImportedBlocks,
                 (surveyTotalImportTime / DIVISOR_MS),

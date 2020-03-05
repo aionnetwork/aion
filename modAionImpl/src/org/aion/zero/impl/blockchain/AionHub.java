@@ -555,12 +555,6 @@ public class AionHub {
             genLOG.info("shutdown consensus... Done!");
         }
 
-        if (blockchain.getRepository() != null) {
-            genLOG.info("shutting down DB...");
-            blockchain.getRepository().close();
-            genLOG.info("shutdown DB... Done!");
-        }
-
         blockchain.close();
 
         this.start.set(false);
