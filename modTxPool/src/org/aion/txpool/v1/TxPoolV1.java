@@ -444,22 +444,46 @@ public final class TxPoolV1 {
     public List<PooledTransaction> clearOutDateTransaction() {
         lock.lock();
         try {
-            List<PooledTransaction> clearedTransactions = new ArrayList<>();
-            Map<Long, Set<ByteArrayWrapper>> timeoutTxHashes = timeView.headMap(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-
-            for (Set<ByteArrayWrapper> hashes : timeoutTxHashes.values()) {
-                for (ByteArrayWrapper hash : hashes) {
-                    PooledTransaction pTx = poolRemove(hash);
-                    if (pTx != null) {
-                        clearedTransactions.add(pTx);
-                    }
-                }
-            }
-
-            return clearedTransactions;
+            return clearOutDateTransaction(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         } finally {
             lock.unlock();
         }
+    }
+
+    List<PooledTransaction> clearOutDateTransaction(long outDateTime) {
+        List<PooledTransaction> clearedTransactions = new ArrayList<>();
+
+        for (Set<ByteArrayWrapper> set : timeView.headMap(outDateTime).values()) {
+            for (ByteArrayWrapper txHash : set) {
+                PooledTransaction removedTx = poolTransactions.remove(txHash);
+                if (removedTx == null) {
+                    LOG_TXPOOL.debug("Did not find the transaction hash:{} in the pool", txHash);
+                    continue;
+                }
+
+                LOG_TXPOOL.debug("Removing tx[{}]", removedTx.tx);
+
+                Set<ByteArrayWrapper> feeSet = feeView.get(removedTx.tx.getEnergyPrice());
+                feeSet.remove(txHash);
+                if (feeSet.isEmpty()) {
+                    feeView.remove(removedTx.tx.getEnergyPrice());
+                }
+
+                SortedMap<BigInteger, ByteArrayWrapper> accountInfo =
+                    accountView.get(removedTx.tx.getSenderAddress());
+
+                accountInfo.remove(removedTx.tx.getNonceBI());
+                if (accountInfo.isEmpty()) {
+                    accountView.remove(removedTx.tx.getSenderAddress());
+                }
+
+                clearedTransactions.add(removedTx);
+                LOG_TXPOOL.debug("Removed tx[{}]", removedTx.tx);
+            }
+        }
+        timeView.headMap(outDateTime).clear();
+
+        return clearedTransactions;
     }
 
     /**
@@ -623,10 +647,8 @@ public final class TxPoolV1 {
     public List<AionTransaction> snapshot(long outDateTime) {
         lock.lock();
         try {
-            Map<Long, Set<ByteArrayWrapper>> timeoutTxHashes = timeView.headMap(outDateTime);
-
-            for (Set<ByteArrayWrapper> hashes : timeoutTxHashes.values()) {
-                for (ByteArrayWrapper hash : hashes) {
+            for (Set<ByteArrayWrapper> hashes : new ArrayList<>(timeView.headMap(outDateTime).values())) {
+                for (ByteArrayWrapper hash : new ArrayList<>(hashes)) {
                     PooledTransaction pTx = poolRemove(hash);
                     if (pTx == null) {
                         throw new IllegalStateException("The pool data has broken, cannot find the txHash:" + hash);

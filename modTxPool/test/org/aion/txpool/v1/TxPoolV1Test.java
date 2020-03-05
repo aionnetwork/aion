@@ -1223,4 +1223,26 @@ public class TxPoolV1Test {
         assertEquals(pooledTx, drppedPtx);
 
     }
+
+    @Test
+    public void clearOutDateTransactionTest() {
+        Properties config = new Properties();
+        config.put(TXPOOL_PROPERTY.PROP_TX_TIMEOUT, "10"); // 10 sec
+
+        TxPoolV1 tp = new TxPoolV1(config);
+        List<PooledTransaction> txl = new ArrayList<>();
+        int cnt = 2;
+        for (int i = 0; i < cnt; i++) {
+            PooledTransaction tx =
+                genTransaction(BigInteger.valueOf(i).toByteArray(), Constant.MIN_ENERGY_CONSUME);
+            txl.add(tx);
+        }
+        tp.add(txl);
+
+        tp.clearOutDateTransaction(TimeUnit.MICROSECONDS.toSeconds(txl.get(0).tx.getTimeStampBI().longValue()) + 10);
+        Assert.assertEquals(cnt, tp.size());
+
+        tp.clearOutDateTransaction(TimeUnit.MICROSECONDS.toSeconds(txl.get(0).tx.getTimeStampBI().longValue()) + 11);
+        Assert.assertEquals(0, tp.size());
+    }
 }
