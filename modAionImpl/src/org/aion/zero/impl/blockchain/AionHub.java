@@ -513,9 +513,18 @@ public class AionHub {
 
         long bestNumber = blockchain.getBestBlock().getNumber();
         if (blockchain.forkUtility.isNonceForkActive(bestNumber + 1)) {
-            Block block = blockchain.getBlockByNumber(blockchain.forkUtility.getNonceForkBlockHeight());
-            BigInteger newDiff = blockchain.calculateFirstPoSDifficultyAtBlock(block);
-            blockchain.forkUtility.setNonceForkResetDiff(newDiff);
+            // Reset the PoS difficulty as part of the fork logic.
+            if (bestNumber == blockchain.forkUtility.getNonceForkBlockHeight()) {
+                // If this is the trigger for the fork calculate the new difficulty.
+                Block block = blockchain.getBestBlock();
+                BigInteger newDiff = blockchain.calculateFirstPoSDifficultyAtBlock(block);
+                blockchain.forkUtility.setNonceForkResetDiff(newDiff);
+            } else {
+                // Otherwise, assume that it was already calculated and validated during import.
+                // The difficulty cannot be calculated here due to possible pruning of the world state.
+                Block firstStaked = blockchain.getBlockByNumber(blockchain.forkUtility.getNonceForkBlockHeight() + 1);
+                blockchain.forkUtility.setNonceForkResetDiff(firstStaked.getDifficultyBI());
+            }
         }
     }
 
