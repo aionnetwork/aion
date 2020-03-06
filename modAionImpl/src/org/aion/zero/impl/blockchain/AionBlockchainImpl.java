@@ -970,6 +970,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public static boolean reachedFullSync = false;
 
     public synchronized ImportResult tryToConnect(final Block block) {
+        checkKernelShutdownForCLI();
+        return tryToConnectWithTimedExecution(block).getLeft();
+    }
+
+    private void checkKernelShutdownForCLI() {
         if (bestBlock.getNumber() == shutdownHook) {
             LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
 
@@ -985,7 +990,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
             System.exit(SystemExitCodes.NORMAL);
         }
-        return tryToConnectWithTimedExecution(block).getLeft();
     }
 
     /**
@@ -1004,21 +1008,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ImportResult importResult = null;
         Set<ByteArrayWrapper> imported = new HashSet<>();
         for (Block block : blockRange) {
-            if (bestBlock.getNumber() == shutdownHook) {
-                LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
-
-                try {
-                    HeapDumper.dumpHeap(new File(System.currentTimeMillis() + "-heap-report.hprof").getAbsolutePath(), true);
-                } catch (Exception e) {
-                    LOG.error("Unable to dump heap due to exception:", e);
-                }
-
-                // requested shutdown
-                System.exit(SystemExitCodes.NORMAL);
-            } else if (enableFullSyncCheck && reachedFullSync) {
-                LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
-                System.exit(SystemExitCodes.NORMAL);
-            }
+            checkKernelShutdownForCLI();
 
             Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(block);
             importResult = result.getLeft();
