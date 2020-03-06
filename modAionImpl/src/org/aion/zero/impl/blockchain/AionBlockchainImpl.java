@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
@@ -298,81 +297,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         this.energyLimitStrategy = config.getEnergyLimitStrategy();
 
-        // initialize fork utility
-        this.forkUtility = new ForkUtility(); // forks are disabled by default
-        Optional<Long> maybeUnityFork = loadUnityForkNumberFromConfig(CfgAion.inst());
-        if (maybeUnityFork.isPresent()) {
-            if (maybeUnityFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
-                LOG.warn("The unity fork number cannot be less than 2, set the fork number to 2");
-                maybeUnityFork = Optional.of(2L);
-            }
-
-            this.forkUtility.enableUnityFork(maybeUnityFork.get());
-        }
-
-        Optional<Long> maybe040Fork = load040ForkNumberFromConfig(CfgAion.inst());
-        if (maybe040Fork.isPresent()) {
-            if (maybe040Fork.get() < 0) {
-                LOG.warn("The 040 fork number cannot be less than 0, set the fork number to 0");
-                maybe040Fork = Optional.of(0L);
-            }
-
-            this.forkUtility.enable040Fork(maybe040Fork.get());
-        }
-
-        Optional<Long> maybeNonceFork = loadNonceForkNumberFromConfig(CfgAion.inst());
-        if (maybeNonceFork.isPresent()) {
-            if (maybeNonceFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
-                LOG.warn("The nonce fork number cannot be less than 2, set the fork number to 2");
-                maybeNonceFork = Optional.of(2L);
-            }
-
-            this.forkUtility.enableNonceFork(maybeNonceFork.get());
-        }
+        this.forkUtility = new ForkUtility(CfgAion.inst().getFork().getProperties(), LOG);
 
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
-    }
-
-    /**
-     * Determine fork 1.0 fork number from Aion Config.
-     *
-     * @param cfgAion configuration
-     * @return 1.0 fork number, if configured; {@link Optional#empty()} otherwise.
-     * @throws NumberFormatException if "fork1.0" present in the config, but not parseable
-     */
-    private static Optional<Long> loadUnityForkNumberFromConfig(CfgAion cfgAion) {
-        String unityforkSetting = cfgAion.getFork().getProperties().getProperty("fork1.0");
-        if(unityforkSetting == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(Long.valueOf(unityforkSetting));
-        }
-    }
-
-    private static Optional<Long> loadNonceForkNumberFromConfig(CfgAion cfgAion) {
-        String nonceFork = cfgAion.getFork().getProperties().getProperty("fork1.3");
-        if(nonceFork == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(Long.valueOf(nonceFork));
-        }
-    }
-
-    /**
-     * Determine fork 0.4.0 fork number from Aion Config.
-     *
-     * @param cfgAion configuration
-     * @return 0.4.0 fork number, if configured; {@link Optional#empty()} otherwise.
-     * @throws NumberFormatException if "fork0.4.0" present in the config, but not parseable
-     */
-    private static Optional<Long> load040ForkNumberFromConfig(CfgAion cfgAion) {
-        String fork040Setting = cfgAion.getFork().getProperties().getProperty("fork0.4.0");
-        if(fork040Setting == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(Long.valueOf(fork040Setting));
-        }
     }
 
     /**

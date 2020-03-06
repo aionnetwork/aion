@@ -3,6 +3,10 @@ package org.aion.zero.impl.forks;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.math.BigInteger;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import org.slf4j.Logger;
 
 /** Utility for managing the fork checks. Currently implements only Unity fork functionality. */
 public class ForkUtility {
@@ -14,6 +18,43 @@ public class ForkUtility {
     // variable used by the 0.4.0 fork
     private boolean fork040Enabled = false;
     private long fork040BlockHeight = Long.MAX_VALUE;
+
+    public ForkUtility() {}
+
+    public ForkUtility(Properties properties, Logger log) {
+        Objects.requireNonNull(properties);
+        Objects.requireNonNull(log);
+
+        Optional<Long> maybeUnityFork = loadUnityForkNumberFromConfig(properties);
+        if (maybeUnityFork.isPresent()) {
+            if (maybeUnityFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
+                log.warn("The unity fork number cannot be less than 2, set the fork number to 2");
+                maybeUnityFork = Optional.of(2L);
+            }
+
+            enableUnityFork(maybeUnityFork.get());
+        }
+
+        Optional<Long> maybe040Fork = load040ForkNumberFromConfig(properties);
+        if (maybe040Fork.isPresent()) {
+            if (maybe040Fork.get() < 0) {
+                log.warn("The 040 fork number cannot be less than 0, set the fork number to 0");
+                maybe040Fork = Optional.of(0L);
+            }
+
+            enable040Fork(maybe040Fork.get());
+        }
+
+        Optional<Long> maybeNonceFork = loadNonceForkNumberFromConfig(properties);
+        if (maybeNonceFork.isPresent()) {
+            if (maybeNonceFork.get() < 2) {   // AKI-419, Constrain the minimum unity fork number
+                log.warn("The nonce fork number cannot be less than 2, set the fork number to 2");
+                maybeNonceFork = Optional.of(2L);
+            }
+
+            enableNonceFork(maybeNonceFork.get());
+        }
+    }
 
     /**
      * Enables the Unity fork after the given block number.
@@ -117,5 +158,50 @@ public class ForkUtility {
 
     public long getNonceForkBlockHeight() {
         return nonceForkBlockHeight;
+    }
+
+    /**
+     * Determine fork 1.0 fork number from Aion Config.
+     *
+     * @return 1.0 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork1.0" present in the config, but not parseable
+     */
+    private static Optional<Long> loadUnityForkNumberFromConfig(Properties properties) {
+        String unityforkSetting = properties.getProperty("fork1.0");
+        if(unityforkSetting == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(unityforkSetting));
+        }
+    }
+
+    /**
+     * Determine fork 1.3 fork number from Aion Config.
+     *
+     * @return 1.3 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork1.3" present in the config, but not parseable
+     */
+    private static Optional<Long> loadNonceForkNumberFromConfig(Properties properties) {
+        String nonceFork = properties.getProperty("fork1.3");
+        if(nonceFork == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(nonceFork));
+        }
+    }
+
+    /**
+     * Determine fork 0.4.0 fork number from Aion Config.
+     *
+     * @return 0.4.0 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork0.4.0" present in the config, but not parseable
+     */
+    private static Optional<Long> load040ForkNumberFromConfig(Properties properties) {
+        String fork040Setting = properties.getProperty("fork0.4.0");
+        if(fork040Setting == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(fork040Setting));
+        }
     }
 }
