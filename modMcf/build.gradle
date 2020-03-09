@@ -12,7 +12,7 @@ dependencies {
     compile 'com.madgag.spongycastle:prov:1.58.0.0'
     compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile files('../lib/libnsc.jar')
-    compile files("${rootProject.projectDir}/lib/fastvm-93a258f.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-cae6cab.jar")
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'com.google.guava:guava:25.1-jre'

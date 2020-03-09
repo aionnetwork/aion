@@ -5,7 +5,7 @@ unitTest.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
-    compile files("${rootProject.projectDir}/lib/fastvm-39cde69.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-cae6cab.jar")
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile project(':modUtil')
     compile project(':modLogger')
