@@ -1392,18 +1392,21 @@ public class AionBlockStore {
     }
 
     /**
-     *  Retrieve three generation blocks with unity protocol info with one lock.
-     * @param hash given hash of the block
-     * @return the 3 generation block data have matched hash with unity protocol info. Block[0] is the parent block,
-     * Block[1] is the grandParent block, and Block[2] is the greatParentBlock. The return might only contain the parent
-     * block and still return the 3-elements array.
+     * Retrieves three generation blocks with unity protocol info.
+     * <p>
+     * Always returns a 3-element array. If the blocks cannot be retrieved the array will contain null values.
+     * Block[0] is the parent block and has the given hash. Block[1] is the grandparent block.
+     * Block[2] is the great grandparent block.
+     *
+     * @param hash the hash of the parent block
+     * @return the retrieved three generation blocks with unity protocol info
      */
     public final Block[] getThreeGenerationBlocksByHashWithInfo(byte[] hash) {
+        Block[] blockFamily = new Block[] { null, null, null};
         if (hash == null) {
-            return null;
+            return blockFamily;
         }
 
-        Block[] blockFamily = new Block[] { null, null, null};
         lock.lock();
 
         try {

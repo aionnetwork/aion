@@ -562,4 +562,141 @@ public class AionBlockStoreTest {
         assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
         assertThat(blocks[1].isMainChain()).isFalse();
     }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo_withNullInput() {
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(null);
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isNull();
+        assertThat(blocks[1]).isNull();
+        assertThat(blocks[2]).isNull();
+    }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo_withMissingParent() {
+        byte[] parentHash = RandomUtils.nextBytes(32);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        assertThat(index.isEmpty()).isTrue();
+        assertThat(blocks.isEmpty()).isTrue();
+
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(parentHash);
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isNull();
+        assertThat(blocks[1]).isNull();
+        assertThat(blocks[2]).isNull();
+    }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo_withMissingGrandparent() {
+        Block parent = consecutiveBlocks.get(0);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(parent, BigInteger.TEN, true);
+
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isTrue();
+        assertThat(blocks[1]).isNull();
+        assertThat(blocks[2]).isNull();
+    }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo_withMissingGreatGrandparent() {
+        Block grandparent = consecutiveBlocks.get(0);
+        Block parent = consecutiveBlocks.get(1);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(grandparent, BigInteger.TWO, true);
+        store.saveBlock(parent, BigInteger.TEN, true);
+
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isTrue();
+        assertThat(blocks[1]).isEqualTo(grandparent);
+        assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
+        assertThat(blocks[1].isMainChain()).isTrue();
+        assertThat(blocks[2]).isNull();
+    }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo() {
+        Block greatGrandparent = consecutiveBlocks.get(0);
+        Block grandparent = consecutiveBlocks.get(1);
+        Block parent = consecutiveBlocks.get(2);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(greatGrandparent, BigInteger.ONE, true);
+        store.saveBlock(grandparent, BigInteger.TWO, true);
+        store.saveBlock(parent, BigInteger.TEN, true);
+
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isTrue();
+        assertThat(blocks[1]).isEqualTo(grandparent);
+        assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
+        assertThat(blocks[1].isMainChain()).isTrue();
+        assertThat(blocks[2]).isEqualTo(greatGrandparent);
+        assertThat(blocks[2].getTotalDifficulty()).isEqualTo(BigInteger.ONE);
+        assertThat(blocks[2].isMainChain()).isTrue();
+    }
+
+    @Test
+    public void testGetThreeGenerationBlocksByHashWithInfo_withSidechains() {
+        Block greatGrandparent = consecutiveBlocks.get(0);
+        Block grandparent = consecutiveBlocks.get(1);
+        Block parent = consecutiveBlocks.get(2);
+
+        Block sideGreatGrandparent = spy(greatGrandparent);
+        byte[] newHash = RandomUtils.nextBytes(32);
+        when(sideGreatGrandparent.getHash()).thenReturn(newHash);
+        when(sideGreatGrandparent.getHashWrapper()).thenReturn(ByteArrayWrapper.wrap(newHash));
+        assertThat(greatGrandparent.getHash()).isNotEqualTo(sideGreatGrandparent.getHash());
+
+        Block sideGrandparent = spy(grandparent);
+        newHash = RandomUtils.nextBytes(32);
+        when(sideGrandparent.getHash()).thenReturn(newHash);
+        when(sideGrandparent.getHashWrapper()).thenReturn(ByteArrayWrapper.wrap(newHash));
+        assertThat(grandparent.getHash()).isNotEqualTo(sideGrandparent.getHash());
+
+        Block sideParent = spy(parent);
+        newHash = RandomUtils.nextBytes(32);
+        when(sideParent.getHash()).thenReturn(newHash);
+        when(sideParent.getHashWrapper()).thenReturn(ByteArrayWrapper.wrap(newHash));
+        assertThat(parent.getHash()).isNotEqualTo(sideParent.getHash());
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(greatGrandparent, BigInteger.ONE, false);
+        store.saveBlock(grandparent, BigInteger.TWO, false);
+        store.saveBlock(parent, BigInteger.TEN, false);
+        store.saveBlock(sideGreatGrandparent, sideGreatGrandparent.getTotalDifficulty(), true);
+        store.saveBlock(sideGrandparent, sideGrandparent.getTotalDifficulty(), true);
+        store.saveBlock(sideParent, sideParent.getTotalDifficulty(), true);
+
+        Block[] blocks = store.getThreeGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(3);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getHash()).isEqualTo(parent.getHash());
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isFalse();
+        assertThat(blocks[1]).isEqualTo(grandparent);
+        assertThat(blocks[1].getHash()).isEqualTo(grandparent.getHash());
+        assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
+        assertThat(blocks[1].isMainChain()).isFalse();
+        assertThat(blocks[2]).isEqualTo(greatGrandparent);
+        assertThat(blocks[2].getHash()).isEqualTo(greatGrandparent.getHash());
+        assertThat(blocks[2].getTotalDifficulty()).isEqualTo(BigInteger.ONE);
+        assertThat(blocks[2].isMainChain()).isFalse();
+    }
 }

@@ -1667,12 +1667,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         Block[] threeGenParents = repository.getBlockStore().getThreeGenerationBlocksByHashWithInfo(header.getParentHash());
-
-        if (threeGenParents == null) {
+        Block parentBlock = threeGenParents[0];
+        if (parentBlock == null) {
             return false;
         }
-
-        Block parentBlock = threeGenParents[0];
         Block grandparentBlock = threeGenParents[1];
         Block greatGrandparentBlock = threeGenParents[2];
 
