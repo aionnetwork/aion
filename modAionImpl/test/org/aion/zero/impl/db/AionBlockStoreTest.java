@@ -20,6 +20,7 @@ import org.aion.db.impl.mockdb.MockDB;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.TestResources;
 import org.aion.util.types.AddressUtils;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.BlockUtil;
 import org.apache.commons.lang3.RandomUtils;
@@ -465,5 +466,100 @@ public class AionBlockStoreTest {
         assertTrue(
                 message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
                 exceptions.isEmpty());
+    }
+
+    @Test
+    public void testGetTwoGenerationBlocksByHashWithInfo_withNullInput() {
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        Block[] blocks = store.getTwoGenerationBlocksByHashWithInfo(null);
+        assertThat(blocks.length).isEqualTo(2);
+        assertThat(blocks[0]).isNull();
+        assertThat(blocks[1]).isNull();
+    }
+
+    @Test
+    public void testGetTwoGenerationBlocksByHashWithInfo_withMissingParent() {
+        byte[] parentHash = RandomUtils.nextBytes(32);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        assertThat(index.isEmpty()).isTrue();
+        assertThat(blocks.isEmpty()).isTrue();
+
+        Block[] blocks = store.getTwoGenerationBlocksByHashWithInfo(parentHash);
+        assertThat(blocks.length).isEqualTo(2);
+        assertThat(blocks[0]).isNull();
+        assertThat(blocks[1]).isNull();
+    }
+
+    @Test
+    public void testGetTwoGenerationBlocksByHashWithInfo_withMissingGrandParent() {
+        Block parent = consecutiveBlocks.get(0);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(parent, BigInteger.TEN, true);
+
+        Block[] blocks = store.getTwoGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(2);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isTrue();
+        assertThat(blocks[1]).isNull();
+    }
+
+    @Test
+    public void testGetTwoGenerationBlocksByHashWithInfo() {
+        Block grandparent = consecutiveBlocks.get(0);
+        Block parent = consecutiveBlocks.get(1);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(grandparent, BigInteger.TWO, true);
+        store.saveBlock(parent, BigInteger.TEN, true);
+
+        Block[] blocks = store.getTwoGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(2);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isTrue();
+        assertThat(blocks[1]).isEqualTo(grandparent);
+        assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
+        assertThat(blocks[1].isMainChain()).isTrue();
+    }
+
+    @Test
+    public void testGetTwoGenerationBlocksByHashWithInfo_withSidechainGrandparent() {
+        Block grandparent = consecutiveBlocks.get(0);
+        Block parent = consecutiveBlocks.get(1);
+
+        Block sideGrandparent = spy(grandparent);
+        byte[] newHash = RandomUtils.nextBytes(32);
+        when(sideGrandparent.getHash()).thenReturn(newHash);
+        when(sideGrandparent.getHashWrapper()).thenReturn(ByteArrayWrapper.wrap(newHash));
+        assertThat(grandparent.getHash()).isNotEqualTo(sideGrandparent.getHash());
+
+        Block sideParent = spy(parent);
+        newHash = RandomUtils.nextBytes(32);
+        when(sideParent.getHash()).thenReturn(newHash);
+        when(sideParent.getHashWrapper()).thenReturn(ByteArrayWrapper.wrap(newHash));
+        assertThat(parent.getHash()).isNotEqualTo(sideParent.getHash());
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(grandparent, BigInteger.TWO, false);
+        store.saveBlock(sideGrandparent, sideGrandparent.getTotalDifficulty(), true);
+        store.saveBlock(parent, BigInteger.TEN, false);
+        store.saveBlock(sideParent, sideParent.getTotalDifficulty(), true);
+
+        Block[] blocks = store.getTwoGenerationBlocksByHashWithInfo(parent.getHash());
+        assertThat(blocks.length).isEqualTo(2);
+        assertThat(blocks[0]).isEqualTo(parent);
+        assertThat(blocks[0].getHash()).isEqualTo(parent.getHash());
+        assertThat(blocks[0].getTotalDifficulty()).isEqualTo(BigInteger.TEN);
+        assertThat(blocks[0].isMainChain()).isFalse();
+        assertThat(blocks[1]).isEqualTo(grandparent);
+        assertThat(blocks[1].getHash()).isEqualTo(grandparent.getHash());
+        assertThat(blocks[1].getTotalDifficulty()).isEqualTo(BigInteger.TWO);
+        assertThat(blocks[1].isMainChain()).isFalse();
     }
 }

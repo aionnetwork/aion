@@ -1289,6 +1289,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             } else {
                 Block[] blockFamily = repository.getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
+                Objects.requireNonNull(blockFamily[0]);
                 parentMiningBlock = blockFamily[0].getHeader();
                 parentMiningBlocksParent = blockFamily[1].getHeader();
                 diffCalculator = chainConfiguration.getUnityDifficultyCalculator();
@@ -1352,7 +1353,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 forkUtility.setNonceForkResetDiff(newDiff);
             } else {
                 Block[] blockFamily = repository.getBlockStore().getTwoGenerationBlocksByHashWithInfo(parentHdr.getParentHash());
-
+                Objects.requireNonNull(blockFamily[0]);
                 BlockHeader parentStakingBlock = blockFamily[0].getHeader();
                 BlockHeader parentStakingBlocksParent = blockFamily[1].getHeader();
                 parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();

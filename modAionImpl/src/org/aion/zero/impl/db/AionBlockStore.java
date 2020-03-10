@@ -1429,18 +1429,19 @@ public class AionBlockStore {
     }
 
     /**
-     * Retrieve two generation blocks with unity protocol info with one lock.
+     * Retrieves two generation blocks with unity protocol info.
+     * <p>
+     * Always returns a 2-element array. If the blocks cannot be retrieved the array will contain null values.
+     * Block[0] is the parent block and has the given hash. Block[1] is the grandparent block.
      *
-     * @param hash given hash of the block
-     * @return the 2 generation block data have matched hash with unity protocol info. Block[0] is
-     *     the parent block, Block[1] is the grandParent block. The return might only contain the
-     *     parent block and still return the 2-elements array.
+     * @param hash the hash of the parent block
+     * @return the retrieved two generation blocks with unity protocol info
      */
     public final Block[] getTwoGenerationBlocksByHashWithInfo(byte[] hash) {
-        if (hash == null) {
-            return null;
-        }
         Block[] blockFamily = new Block[] { null, null};
+        if (hash == null) {
+            return blockFamily;
+        }
 
         lock.lock();
 
