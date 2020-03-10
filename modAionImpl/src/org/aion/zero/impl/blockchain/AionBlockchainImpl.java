@@ -972,8 +972,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final static long ONE_SECOND_TO_NANO = TimeUnit.SECONDS.toNanos(1);
     private final static long TEN_SECOND_TO_NANO = TimeUnit.SECONDS.toNanos(10);
     private final static long SIXTY_SECOND_TO_MILLI = TimeUnit.SECONDS.toMillis(60);
-    
-    public Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
+
+    private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
         ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block), true).getLeft();
         importTime = (System.nanoTime() - importTime);
@@ -1022,7 +1022,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
             TimeUnit.NANOSECONDS.toMillis(surveyLongestImportTime));
     }
 
-    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper, boolean doExistCheck) {
+    /**
+     * Redo importing block from the DB Utility
+     * @param blockWrapper the block including the block status
+     * @param doExistCheck
+     * @return import result and the block summary
+     */
+    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper, boolean doExistCheck) {
+        Objects.requireNonNull(blockWrapper);
+        return tryToConnectAndFetchSummary(blockWrapper, doExistCheck);
+    }
+
+    Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper, boolean doExistCheck) {
 
         Block block = blockWrapper.block;
         // Check block exists before processing more rules
