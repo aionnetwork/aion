@@ -676,7 +676,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionBlockSummary summary = null;
         try {
-            summary = add(blockWrapper);
+            summary = add(blockWrapper, true).getLeft();
+            kernelStateUpdate(block, summary);
+
+
         } catch (Exception e) {
             LOG.error("Unexpected error: ", e);
         } finally {
@@ -712,6 +715,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return summary;
+    }
+
+    private void kernelStateUpdate(Block block, AionBlockSummary summary) {
+        if (summary != null) {
+            updateTotalDifficulty(block);
+            summary.setTotalDifficulty(block.getTotalDifficulty());
+
+            storeBlock(block, summary.getReceipts(), summary.getSummaries());
+
+            flush();
+
+            if (forkUtility.isNonceForkBlock(block.getNumber())) {
+                BigInteger newDiff = calculateFirstPoSDifficultyAtBlock(block);
+                forkUtility.setNonceForkResetDiff(newDiff);
+            }
+        }
     }
 
     /**
@@ -1086,7 +1105,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 cachedBlockNumberForAVM = forkLevel;
             }
 
-            summary = add(blockWrapper);
+            summary = add(blockWrapper, true).getLeft();
+            kernelStateUpdate(block, summary);
+
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
 
             if (executionTypeForAVM == BlockCachingContext.SWITCHING_MAINCHAIN
@@ -1499,28 +1520,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 totalEnergyUsed);
 
         return totalTransactionFee;
-    }
-
-    private AionBlockSummary add(BlockWrapper blockWrapper) {
-        // typical use without rebuild
-        AionBlockSummary summary = add(blockWrapper, true).getLeft();
-
-        if (summary != null) {
-            Block block = blockWrapper.block;
-            updateTotalDifficulty(block);
-            summary.setTotalDifficulty(block.getTotalDifficulty());
-
-            storeBlock(block, summary.getReceipts(), summary.getSummaries());
-
-            flush();
-
-            if (forkUtility.isNonceForkBlock(block.getNumber())) {
-                BigInteger newDiff = calculateFirstPoSDifficultyAtBlock(block);
-                forkUtility.setNonceForkResetDiff(newDiff);
-            }
-        }
-
-        return summary;
     }
 
     /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
