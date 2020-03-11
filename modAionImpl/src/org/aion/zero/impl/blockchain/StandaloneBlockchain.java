@@ -499,7 +499,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     @Override
     public synchronized ImportResult tryToConnect(final Block block) {
-        ImportResult result = tryToConnectAndFetchSummary(new BlockWrapper(block, false, true)).getLeft();
+        ImportResult result = tryToConnectAndFetchSummary(new BlockWrapper(block, false, true, false)).getLeft();
 
         if (result == ImportResult.IMPORTED_BEST) {
             BigInteger tdForHash = getTotalDifficultyForHash(block.getHash());
@@ -511,7 +511,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     // TEMPORARY: here to support the ConsensusTest
     public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block) {
-        return tryToConnectAndFetchSummary(new BlockWrapper(block, false, true));
+        return tryToConnectAndFetchSummary(new BlockWrapper(block, false, true, false));
     }
 
     /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */

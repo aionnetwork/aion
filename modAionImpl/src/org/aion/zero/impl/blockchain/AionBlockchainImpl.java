@@ -975,7 +975,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
-        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block, false, true)).getLeft();
+        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block, false, true, false)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -986,7 +986,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long importTime = System.nanoTime();
 
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true)).getLeft();
+                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true, false)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1185,7 +1185,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final Block block) {
         repository.syncToRoot(bestBlock.getStateRoot());
-        return add(new BlockWrapper(block), false, false);
+        return add(new BlockWrapper(block, false, false, false), false);
     }
 
     /**
@@ -1503,7 +1503,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private AionBlockSummary add(BlockWrapper blockWrapper) {
         // typical use without rebuild
-        AionBlockSummary summary = add(blockWrapper, false);
+        AionBlockSummary summary = add(blockWrapper, true).getLeft();
 
         if (summary != null) {
             Block block = blockWrapper.block;
@@ -1523,13 +1523,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return summary;
     }
 
-    private AionBlockSummary add(BlockWrapper blockWrapper, boolean rebuild) {
-        return add(blockWrapper, rebuild, true).getLeft();
-    }
-
     /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
     private Pair<AionBlockSummary, RepositoryCache> add(
-            BlockWrapper blockWrapper, boolean rebuild, boolean flushRepo) {
+            BlockWrapper blockWrapper, boolean flushRepo) {
         // reset cached VMs before processing the block
         repository.clearCachedVMs();
 
@@ -1543,12 +1539,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         byte[] origRoot = repository.getRoot();
 
         // (if not reconstructing old blocks) keep chain continuity
-        if (!rebuild && !Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
+        if (!blockWrapper.reBuild && !Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
             LOG.error("Attempting to add NON-SEQUENTIAL block.");
             return Pair.of(null, null);
         }
 
-        if (rebuild) {
+        if (blockWrapper.reBuild) {
             // when recovering blocks do not touch the cache
             executionTypeForAVM = BlockCachingContext.DEEP_SIDECHAIN;
             cachedBlockNumberForAVM = 0;
@@ -1607,25 +1603,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             repository.commitCachedVMs(block.getHashWrapper());
         }
 
-        if (!rebuild) {
-            byte[] blockStateRootHash = block.getStateRoot();
-            byte[] worldStateRootHash = repository.getRoot();
-
-            if (!Arrays.equals(blockStateRootHash, worldStateRootHash)) {
-
-                LOG.warn(
-                        "BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch",
-                        block.getNumber(),
-                        worldStateRootHash);
-                LOG.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
-
-                // block is bad so 'rollback' the state root to the original state
-                repository.setRoot(origRoot);
-                return Pair.of(null, null);
-            }
-        }
-
-        if (rebuild) {
+        if (blockWrapper.reBuild) {
             List<AionTxExecSummary> execSummaries = summary.getSummaries();
 
             for (int i = 0; i < receipts.size(); i++) {
@@ -1652,6 +1630,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNumber(),
                         block.getShortHash(),
                         getTotalDifficulty());
+        } else {
+            byte[] blockStateRootHash = block.getStateRoot();
+            byte[] worldStateRootHash = repository.getRoot();
+
+            if (!Arrays.equals(blockStateRootHash, worldStateRootHash)) {
+
+                LOG.warn(
+                    "BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch",
+                    block.getNumber(),
+                    worldStateRootHash);
+                LOG.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
+
+                // block is bad so 'rollback' the state root to the original state
+                repository.setRoot(origRoot);
+                return Pair.of(null, null);
+            }
         }
 
         return Pair.of(summary, null);
@@ -2343,7 +2337,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
 
-            this.add(new BlockWrapper(other), true);
+            this.add(new BlockWrapper(other, false, false, true), true);
         }
 
         // update the repository
