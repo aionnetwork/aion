@@ -995,7 +995,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, false, true, false, true)).getLeft();
+                tryToConnectAndFetchSummary(new BlockWrapper(block)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1006,7 +1006,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long importTime = System.nanoTime();
 
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true, false, true)).getLeft();
+                tryToConnectAndFetchSummary(new BlockWrapper(block, true, false, false, false)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1056,7 +1056,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Block block = blockWrapper.block;
         // Check block exists before processing more rules
-        if (blockWrapper.doExistCheck // skipped when redoing imports
+        if (!blockWrapper.skipExistCheck // skipped when redoing imports
                 && repository.getBlockStore().getMaxNumber() >= block.getNumber()
                 && isBlockStored(block.getHash(), block.getNumber())) {
 
@@ -1207,7 +1207,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final Block block) {
         repository.syncToRoot(bestBlock.getStateRoot());
-        return add(new BlockWrapper(block, false, false, false, false));
+        return add(new BlockWrapper(block, false, true, false, true));
     }
 
     /**
@@ -1593,7 +1593,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Pair.of(null, null);
         }
 
-        if (!blockWrapper.flushRepo) {
+        if (blockWrapper.skipRepoFlush) {
             return Pair.of(summary, track);
         }
 
@@ -2336,7 +2336,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
 
-            this.add(new BlockWrapper(other, false, false, true, true));
+            this.add(new BlockWrapper(other, false, true, true, false));
         }
 
         // update the repository

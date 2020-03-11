@@ -88,7 +88,7 @@ public class AionImpl implements IAionChain {
         ImportResult importResult =
                 this.aionHub
                         .getBlockchain()
-                        .tryToConnect(new BlockWrapper(block, true, true, false, true));
+                        .tryToConnect(new BlockWrapper(block, true, false, false, false));
 
         if (importResult == ImportResult.IMPORTED_BEST) {
             this.aionHub.getPropHandler().propagateNewBlock(block);
