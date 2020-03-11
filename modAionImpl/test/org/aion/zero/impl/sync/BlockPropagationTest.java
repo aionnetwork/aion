@@ -337,10 +337,9 @@ public class BlockPropagationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
+                        .withEventManger(this.loadEventMgr())
                         .build();
 
-        IEventMgr evtMgr = this.loadEventMgr();
-        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -407,6 +406,7 @@ public class BlockPropagationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
+                        .withEventManger(this.loadEventMgr())
                         .build();
 
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
@@ -416,8 +416,6 @@ public class BlockPropagationTest {
         Block bestBlock = bundle.bc.getBestBlock();
         assertThat(bestBlock.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
         SyncStats syncStats = new SyncStats(bestBlock.getNumber(), true);
-        IEventMgr evtMgr = this.loadEventMgr();
-        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -484,11 +482,10 @@ public class BlockPropagationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
+                        .withEventManger(this.loadEventMgr())
                         .build();
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
-        IEventMgr evtMgr = this.loadEventMgr();
-        anotherBundle.bc.setEventManager(evtMgr);
         SyncStats syncStats = new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
@@ -552,11 +549,10 @@ public class BlockPropagationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
+                        .withEventManger(this.loadEventMgr())
                         .build();
 
         SyncStats syncStats = new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
-        IEventMgr evtMgr = this.loadEventMgr();
-        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,

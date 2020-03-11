@@ -18,6 +18,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.evtmgr.IEventMgr;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.config.CfgPrune;
@@ -80,15 +81,16 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             };
 
-    protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, true);
+    protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig, final IEventMgr eventMgr) {
+        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
     }
 
     protected StandaloneBlockchain(
             final A0BCConfig config,
             final ChainConfiguration chainConfig,
-            RepositoryConfig repoConfig) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, true);
+            RepositoryConfig repoConfig,
+            final IEventMgr eventMgr) {
+        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
     }
 
     public void setGenesis(AionGenesis genesis) {
@@ -127,6 +129,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
 
         private RepositoryConfig repoConfig;
+        private IEventMgr eventMgr;
 
         public static final int INITIAL_ACC_LEN = 10;
         public static final BigInteger DEFAULT_BALANCE =
@@ -374,7 +377,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
 
             StandaloneBlockchain bc =
-                    new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
+                    new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig, this.eventMgr);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
@@ -468,6 +471,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             }
             return new Bundle(this.defaultKeys, bc);
+        }
+
+        public Builder withEventManger(IEventMgr eventManger) {
+            eventMgr = eventManger;
+            return this;
         }
     }
 

@@ -62,7 +62,7 @@ public class DBUtils {
         final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
 
         Status status = revertTo(blockchain, nbBlock, log);
 
@@ -85,7 +85,7 @@ public class DBUtils {
         AionLoggerFactory.initAll(cfgLog);
 
         // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
         blockchain.getRepository().pruneAndCorrectBlockStore();
         blockchain.getRepository().close();
     }
@@ -431,7 +431,7 @@ public class DBUtils {
 
         log.info("Reorganizing the state storage to " + option + " mode ...");
 
-        AionBlockchainImpl chain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl chain = new AionBlockchainImpl(cfg, null, false);
         AionRepositoryImpl repo = chain.getRepository();
         AionBlockStore store = repo.getBlockStore();
 
@@ -501,7 +501,7 @@ public class DBUtils {
 
         LOG.info("Importing stored blocks INITIATED...");
 
-        AionBlockchainImpl chain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl chain = new AionBlockchainImpl(cfg, null, false);
         AionRepositoryImpl repo = chain.getRepository();
         AionBlockStore store = repo.getBlockStore();
 
@@ -680,7 +680,7 @@ public class DBUtils {
         final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
 
         try {
             Map<ByteArrayWrapper, AionTxInfo> txInfoList = blockchain.getTransactionStore().getTxInfo(txHash);
@@ -729,7 +729,7 @@ public class DBUtils {
         final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
 
         try {
             List<Block> blocks = blockchain.getRepository().getBlockStore().getAllChainBlockByNumber(nbBlock);
@@ -794,7 +794,7 @@ public class DBUtils {
         final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, false);
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
 
         try {
             Block bestBlock = blockchain.getRepository().getBlockStore().getBestBlock();

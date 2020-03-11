@@ -115,8 +115,7 @@ public class AionHub {
         // the current unit tests require passing in a different repository instance
         // during normal execution we need to instantiate the repository
         // for this reason we pass in null when a new instance is required
-        this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, forTest) : _blockchain;
-        blockchain.setEventManager(this.eventMgr);
+        this.blockchain = _blockchain == null ? new AionBlockchainImpl(cfg, eventMgr, forTest) : _blockchain;
 
         try {
             this.blockchain.load(cfg.getGenesis(), genLOG);

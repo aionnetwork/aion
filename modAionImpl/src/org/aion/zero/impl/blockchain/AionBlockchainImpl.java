@@ -39,6 +39,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.zero.impl.db.DBUtils;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
@@ -97,9 +98,7 @@ import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -185,7 +184,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private AionAddress minerCoinbase;
     private byte[] minerExtraData;
     private Stack<State> stateStack = new Stack<>();
-    private IEventMgr evtMgr = null;
+    private IEventMgr evtMgr;
     private AbstractEnergyStrategyLimit energyLimitStrategy;
     private AtomicLong bestBlockNumber = new AtomicLong(0L);
 
@@ -203,8 +202,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;
-
-    public AionBlockchainImpl(CfgAion cfgAion, boolean forTest) {
+    
+    /**
+     * The constructor for the blockchain initialization {@see AionHub}.
+     */
+    public AionBlockchainImpl(CfgAion cfgAion, IEventMgr eventMgr, boolean forTest) {
         this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(),
             forTest ? new ChainConfiguration() {
                     /*
@@ -246,14 +248,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         return createBlockHeaderValidator();
                     }
                 } : new ChainConfiguration(),
-            forTest);
+            eventMgr);
     }
 
+    /**
+     * The constructor for the public constructor {@see AionBlockchainImpl(CfgAion, IEventMgr, boolean)}
+     * and the integrating test class {@see StandaloneBlockchain}
+     */
     protected AionBlockchainImpl(
             final A0BCConfig config,
             final AionRepositoryImpl repository,
             final ChainConfiguration chainConfig,
-            boolean forTest) {
+            final IEventMgr eventMgr) {
 
         // TODO AKI-318: this specialized class is very cumbersome to maintain; could be replaced with CfgAion
         this.config = config;
@@ -300,6 +306,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
+
+        evtMgr = eventMgr;
     }
 
     /**
@@ -467,16 +475,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Should be set after initialization, note that the blockchain will still operate if not set,
-     * just will not emit events.
-     *
-     * @param eventManager
-     */
-    public void setEventManager(IEventMgr eventManager) {
-        this.evtMgr = eventManager;
     }
 
     /**

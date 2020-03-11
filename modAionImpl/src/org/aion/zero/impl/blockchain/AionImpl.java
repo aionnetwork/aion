@@ -51,7 +51,7 @@ public class AionImpl implements IAionChain {
             aionHub =
                     AionHub.createForTesting(
                             cfg,
-                            new AionBlockchainImpl(cfg, true),
+                            new AionBlockchainImpl(cfg, null, true),
                             new PendingTxCallback(blockchainCallbackInterfaces),
                             new NetworkBestBlockCallback(this),
                             new TransactionBroadcastCallback(this));
