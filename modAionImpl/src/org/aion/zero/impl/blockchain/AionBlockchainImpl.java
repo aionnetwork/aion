@@ -676,7 +676,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionBlockSummary summary = null;
         try {
-            summary = add(blockWrapper, true).getLeft();
+            summary = add(blockWrapper).getLeft();
             kernelStateUpdate(block, summary);
 
 
@@ -994,7 +994,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
-        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block, false, true, false)).getLeft();
+        ImportResult importResult =
+                tryToConnectAndFetchSummary(new BlockWrapper(block, false, true, false, true)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1005,7 +1006,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long importTime = System.nanoTime();
 
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true, false)).getLeft();
+                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true, false, true)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1105,7 +1106,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 cachedBlockNumberForAVM = forkLevel;
             }
 
-            summary = add(blockWrapper, true).getLeft();
+            summary = add(blockWrapper).getLeft();
             kernelStateUpdate(block, summary);
 
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
@@ -1206,7 +1207,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final Block block) {
         repository.syncToRoot(bestBlock.getStateRoot());
-        return add(new BlockWrapper(block, false, false, false), false);
+        return add(new BlockWrapper(block, false, false, false, false));
     }
 
     /**
@@ -1523,8 +1524,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
-    private Pair<AionBlockSummary, RepositoryCache> add(
-            BlockWrapper blockWrapper, boolean flushRepo) {
+    private Pair<AionBlockSummary, RepositoryCache> add(BlockWrapper blockWrapper) {
         // reset cached VMs before processing the block
         repository.clearCachedVMs();
 
@@ -1593,7 +1593,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Pair.of(null, null);
         }
 
-        if (!flushRepo) {
+        if (!blockWrapper.flushRepo) {
             return Pair.of(summary, track);
         }
 
@@ -2336,7 +2336,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
 
-            this.add(new BlockWrapper(other, false, false, true), true);
+            this.add(new BlockWrapper(other, false, false, true, true));
         }
 
         // update the repository
