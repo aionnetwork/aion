@@ -9,6 +9,7 @@ import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.EnumMap;
+import java.util.concurrent.TimeUnit;
 import org.aion.log.LogUtil;
 import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
 import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
@@ -139,7 +140,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger SURVEY_LOG = LoggerFactory.getLogger(LogEnum.SURVEY.name());
     private static final Logger SYNC_LOG = LoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
-    private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     static long fork040BlockNumber = -1L;
@@ -896,7 +896,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.INVALID_BLOCK;
         }
         if (block.getTimestamp()
-                > (System.currentTimeMillis() / THOUSAND_MS
+                > (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
                         + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1043,37 +1043,46 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long surveyLastLogImportTime = System.currentTimeMillis();
     private long surveyTotalImportedBlocks = 0;
     private long surveyLongestImportTime = 0;
-    private final long DIVISOR_MS = 1_000_000L;
-    private final long ONE_SECOND = 1_000L * DIVISOR_MS;
-
+    private final static long ONE_SECOND_TO_NANO = TimeUnit.SECONDS.toNanos(1);
+    private final static long TEN_SECOND_TO_NANO = TimeUnit.SECONDS.toNanos(10);
+    private final static long SIXTY_SECOND_TO_MILLI = TimeUnit.SECONDS.toMillis(60);
+    
     public Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
         ImportResult importResult = tryToConnectAndFetchSummary(block, true).getLeft();
         importTime = (System.nanoTime() - importTime);
 
+        blockImportSurvey(importResult.isValid(), importTime);
+        return Pair.of(importResult, importTime);
+    }
+
+    private void blockImportSurvey(boolean valid, long importTime) {
         if (SURVEY_LOG.isInfoEnabled()) {
-            if (importResult.isValid()) {
+            if (valid) {
                 surveyLongestImportTime = Math.max(surveyLongestImportTime, importTime);
                 surveyTotalImportTime += importTime;
                 surveyTotalImportedBlocks++;
-                if (importTime >= (10L * ONE_SECOND)) {
+                if (importTime >= TEN_SECOND_TO_NANO) {
                     surveySuperLongImportTimeCount++;
-                } else if (importTime >= (ONE_SECOND)) {
+                } else if (importTime >= ONE_SECOND_TO_NANO) {
                     surveyLongImportTimeCount++;
                 }
             }
 
-            if (System.currentTimeMillis() >= surveyLastLogImportTime + (60L * 1_000L)) {
-                SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
-                        surveyTotalImportedBlocks,
-                        (surveyTotalImportTime / DIVISOR_MS),
-                        surveyLongImportTimeCount,
-                        surveySuperLongImportTimeCount,
-                        surveyLongestImportTime / DIVISOR_MS);
+            if (System.currentTimeMillis() >= surveyLastLogImportTime + SIXTY_SECOND_TO_MILLI) {
+                printBlockImportLog();
                 surveyLastLogImportTime = System.currentTimeMillis();
             }
         }
-        return Pair.of(importResult, importTime);
+    }
+
+    private void printBlockImportLog() {
+        SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
+            surveyTotalImportedBlocks,
+            TimeUnit.NANOSECONDS.toMillis(surveyTotalImportTime),
+            surveyLongImportTimeCount,
+            surveySuperLongImportTimeCount,
+            TimeUnit.NANOSECONDS.toMillis(surveyLongestImportTime));
     }
 
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
@@ -1258,7 +1267,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public synchronized BlockContext createNewMiningBlockContext(
         Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         final BlockContext blockContext = createNewMiningBlockInternal(
-            parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
+            parent, txs, waitUntilBlockTime, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         if(blockContext != null) {
             miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
         }
@@ -1276,7 +1285,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long time = currTimeSeconds;
         if (parentHdr.getTimestamp() >= time) {
             time = parentHdr.getTimestamp() + 1;
-            while (waitUntilBlockTime && (System.currentTimeMillis() / THOUSAND_MS) <= time) {
+            while (waitUntilBlockTime && TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) <= time) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -1462,7 +1471,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             parent.getHeader().getTimestamp() + newDelta,
                             parent.getHeader().getTimestamp() + 1);
         } else {
-            newTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+            newTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
             if (parentHdr.getTimestamp() >= newTimestamp) {
                 newTimestamp = parentHdr.getTimestamp() + 1;
             }
@@ -2174,12 +2183,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repository.close();
         GEN_LOG.info("shutdown DB... Done!");
 
-        SURVEY_LOG.info("Total import#[{}], importTime[{}]ms, 1s+Import#[{}], 10s+Import#[{}] longestImport[{}]ms",
-                surveyTotalImportedBlocks,
-                (surveyTotalImportTime / DIVISOR_MS),
-                surveyLongImportTimeCount,
-                surveySuperLongImportTimeCount,
-                surveyLongestImportTime / DIVISOR_MS);
+        printBlockImportLog();
     }
 
     @Override
