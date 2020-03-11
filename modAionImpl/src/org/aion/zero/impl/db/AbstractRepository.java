@@ -41,9 +41,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     protected static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-    // Configuration parameter
-    protected RepositoryConfig cfg;
-
     /** ********* Database Name Constants ********** */
     protected static final String TRANSACTION_DB = Names.TRANSACTION;
 
@@ -116,13 +113,13 @@ public abstract class AbstractRepository implements Repository<AccountState> {
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches()
+    protected void initializeDatabasesAndCaches(RepositoryConfig cfg)
         throws InvalidFilePathException, InvalidFileTypeException, IOException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety
          */
-        Objects.requireNonNull(this.cfg);
+        Objects.requireNonNull(cfg);
         //        Objects.requireNonNull(this.cfg.getVendorList());
         //        Objects.requireNonNull(this.cfg.getActiveVendor());
 
@@ -142,7 +139,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         boolean isPersistent = vendor.isFileBased();
         if (isPersistent) {
             // verify user-provided path
-            File f = new File(this.cfg.getDbPath());
+            File f = new File(cfg.getDbPath());
             verifyAndBuildPath(f);
 
             if (vendor.equals(DBVendor.LEVELDB) || vendor.equals(DBVendor.ROCKSDB)) {
@@ -309,11 +306,11 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                     new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG);
 
             // pruning config
-            pruneEnabled = this.cfg.getPruneConfig().isEnabled();
-            pruneBlockCount = this.cfg.getPruneConfig().getCurrentCount();
-            archiveRate = this.cfg.getPruneConfig().getArchiveRate();
+            pruneEnabled = cfg.getPruneConfig().isEnabled();
+            pruneBlockCount = cfg.getPruneConfig().getCurrentCount();
+            archiveRate = cfg.getPruneConfig().getArchiveRate();
 
-            if (pruneEnabled && this.cfg.getPruneConfig().isArchived()) {
+            if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
                 // using state config for state_archive
                 sharedProps = cfg.getDatabaseConfig(STATE_DB);
                 sharedProps.setProperty(Props.ENABLE_LOCKING, "false");

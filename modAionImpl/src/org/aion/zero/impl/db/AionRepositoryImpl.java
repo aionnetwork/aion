@@ -81,8 +81,7 @@ public class AionRepositoryImpl extends AbstractRepository {
 
     protected AionRepositoryImpl(RepositoryConfig repoConfig, int blockCacheSize) {
         this.blockCacheSize = blockCacheSize;
-        this.cfg = repoConfig;
-        init();
+        init(repoConfig);
     }
 
     public static AionRepositoryImpl inst() {
@@ -93,9 +92,9 @@ public class AionRepositoryImpl extends AbstractRepository {
         return new AionRepositoryImpl(repoConfig, 0);
     }
 
-    private void init() {
+    private void init(RepositoryConfig cfg) {
         try {
-            initializeDatabasesAndCaches();
+            initializeDatabasesAndCaches(cfg);
 
             // Setup the cache for transaction data source.
             this.transactionStore =
@@ -629,7 +628,6 @@ public class AionRepositoryImpl extends AbstractRepository {
             repo.blockStore = blockStore;
             repo.contractInfoSource = contractInfoSource;
             repo.transformedCodeSource = transformedCodeSource;
-            repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
             repo.stateDSPrune = this.stateDSPrune;
