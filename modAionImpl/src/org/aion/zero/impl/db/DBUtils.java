@@ -569,7 +569,7 @@ public class DBUtils {
                         // clear the index entry and prune side-chain blocks
                         store.redoIndexWithoutSideChains(block);
                         long t1 = System.currentTimeMillis();
-                        result = chain.tryToConnectAndFetchSummaryFromDbUtil(new BlockWrapper(block), false);
+                        result = chain.tryToConnectAndFetchSummaryFromDbUtil(new BlockWrapper(block));
                         long t2 = System.currentTimeMillis();
                         LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
                                                + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()

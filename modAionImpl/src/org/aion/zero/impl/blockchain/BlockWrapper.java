@@ -5,14 +5,17 @@ import org.aion.mcf.blockchain.Block;
 public class BlockWrapper {
     public final Block block;
     public final boolean validatedHeader;
+    public final boolean doExistCheck;
 
     public BlockWrapper(Block block) {
         this.block = block;
         this.validatedHeader = false;
+        this.doExistCheck = false;
     }
 
-    public BlockWrapper(Block block, boolean validHeader) {
+    public BlockWrapper(Block block, boolean validHeader, boolean doExistCheck) {
         this.block = block;
         this.validatedHeader = validHeader;
+        this.doExistCheck = doExistCheck;
     }
 }

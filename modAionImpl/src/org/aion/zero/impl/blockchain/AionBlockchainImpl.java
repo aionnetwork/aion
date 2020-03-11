@@ -975,7 +975,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
-        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block), true).getLeft();
+        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block, false, true)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -986,7 +986,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long importTime = System.nanoTime();
 
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, true), true).getLeft();
+                tryToConnectAndFetchSummary(new BlockWrapper(block, true, true)).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1025,19 +1025,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /**
      * Redo importing block from the DB Utility
      * @param blockWrapper the block including the block status
-     * @param doExistCheck
      * @return import result and the block summary
      */
-    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper, boolean doExistCheck) {
+    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper) {
         Objects.requireNonNull(blockWrapper);
-        return tryToConnectAndFetchSummary(blockWrapper, doExistCheck);
+        return tryToConnectAndFetchSummary(blockWrapper);
     }
 
-    Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper, boolean doExistCheck) {
+    Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper) {
 
         Block block = blockWrapper.block;
         // Check block exists before processing more rules
-        if (doExistCheck // skipped when redoing imports
+        if (blockWrapper.doExistCheck // skipped when redoing imports
                 && repository.getBlockStore().getMaxNumber() >= block.getNumber()
                 && isBlockStored(block.getHash(), block.getNumber())) {
 
