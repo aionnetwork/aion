@@ -912,11 +912,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public synchronized ImportResult tryToConnect(final BlockWrapper blockWrapper) {
         checkKernelShutdownForCLI();
-        if (blockWrapper.validatedHeader) {
-            return tryToConnectWithTimedExecutionAndValidatedHeader(blockWrapper.block).getLeft();
-        } else {
-            return tryToConnectWithTimedExecution(blockWrapper.block).getLeft();
-        }
+        return tryToConnectWithTimedExecution(blockWrapper).getLeft();
     }
 
     private void checkKernelShutdownForCLI() {
@@ -955,7 +951,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (Block block : blockRange) {
             checkKernelShutdownForCLI();
 
-            Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(block);
+            Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(new BlockWrapper(block));
             importResult = result.getLeft();
             long importTime = result.getRight();
 
@@ -992,21 +988,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final static long TEN_SECOND_TO_NANO = TimeUnit.SECONDS.toNanos(10);
     private final static long SIXTY_SECOND_TO_MILLI = TimeUnit.SECONDS.toMillis(60);
 
-    private Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
+    private Pair<ImportResult, Long> tryToConnectWithTimedExecution(final BlockWrapper blockWrapper) {
         long importTime = System.nanoTime();
         ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block)).getLeft();
-        importTime = (System.nanoTime() - importTime);
-
-        blockImportSurvey(importResult.isValid(), importTime);
-        return Pair.of(importResult, importTime);
-    }
-
-    private Pair<ImportResult, Long> tryToConnectWithTimedExecutionAndValidatedHeader(Block block) {
-        long importTime = System.nanoTime();
-
-        ImportResult importResult =
-                tryToConnectAndFetchSummary(new BlockWrapper(block, true, false, false, false)).getLeft();
+                tryToConnectAndFetchSummary(blockWrapper).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
