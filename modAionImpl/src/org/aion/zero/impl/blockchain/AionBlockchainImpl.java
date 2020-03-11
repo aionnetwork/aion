@@ -160,7 +160,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     protected ChainConfiguration chainConfiguration;
 
     private A0BCConfig config;
-    private long exitOn = Long.MAX_VALUE;
     private AionRepositoryImpl repository;
     private RepositoryCache<AccountState> track;
     private TransactionStore transactionStore;
@@ -497,20 +496,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /**
      * Referenced only by external
      *
-     * <p>Note: If you are making changes to this method and want to use it to track internal state,
-     * opt for {@link #getSizeInternal()} instead.
-     *
      * @return {@code positive long} representing the current size
      * @see #pubBestBlock
      */
     @Override
     public long getSize() {
         return getBestBlock().getNumber() + 1;
-    }
-
-    /** @see #getSize() */
-    private long getSizeInternal() {
-        return this.bestBlock.getNumber() + 1;
     }
 
     @Override
@@ -2093,7 +2084,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
             }
         }
-        updateBestKnownBlock(block);
+        updateBestKnownBlock(bestBlock.getHeader().getHash(), bestBlock.getHeader().getNumber());
         bestBlockNumber.set(bestBlock.getNumber());
     }
 
@@ -2143,10 +2134,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (LOG.isDebugEnabled()) {
             LOG.debug("UnityDifficulty updated: {}", newTotalDifficulty.toString());
         }
-    }
-
-    public void setExitOn(long exitOn) {
-        this.exitOn = exitOn;
     }
 
     @Override
@@ -2235,177 +2222,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return block.getHash();
     }
 
-    // NOTE: Functionality removed because not used and untested
-    //    /**
-    //     * Returns up to limit headers found with following search parameters
-    //     *
-    //     * @param identifier
-    //     *            Identifier of start block, by number of by hash
-    //     * @param skip
-    //     *            Number of blocks to skip between consecutive headers
-    //     * @param limit
-    //     *            Maximum number of headers in return
-    //     * @param reverse
-    //     *            Is search reverse or not
-    //     * @return {@link A0BlockHeader}'s list or empty list if none found
-    //     */
-    //    @Override
-    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int
-    // skip,
-    // int limit,
-    //            boolean reverse) {
-    //
-    //        // null identifier check
-    //        if (identifier == null){
-    //            return emptyList();
-    //        }
-    //
-    //        // Identifying block we'll move from
-    //        IAionBlock startBlock;
-    //        if (identifier.getHash() != null) {
-    //            startBlock = getBlockByHash(identifier.getHash());
-    //        } else {
-    //            startBlock = getBlockByNumber(identifier.getNumber());
-    //        }
-    //
-    //        // If nothing found or provided hash is not on main chain, return empty
-    //        // array
-    //        if (startBlock == null) {
-    //            return emptyList();
-    //        }
-    //        if (identifier.getHash() != null) {
-    //            IAionBlock mainChainBlock = getBlockByNumber(startBlock.getNumber());
-    //            if (!startBlock.equals(mainChainBlock)) {
-    //                return emptyList();
-    //            }
-    //        }
-    //
-    //        List<A0BlockHeader> headers;
-    //        if (skip == 0) {
-    //            long bestNumber = bestBlock.getNumber();
-    //            headers = getContinuousHeaders(bestNumber, startBlock.getNumber(), limit,
-    // reverse);
-    //        } else {
-    //            headers = getGapedHeaders(startBlock, skip, limit, reverse);
-    //        }
-    //
-    //        return headers;
-    //    }
-    //
-    //    /**
-    //     * Finds up to limit blocks starting from blockNumber on main chain
-    //     *
-    //     * @param bestNumber
-    //     *            Number of best block
-    //     * @param blockNumber
-    //     *            Number of block to start search (included in return)
-    //     * @param limit
-    //     *            Maximum number of headers in response
-    //     * @param reverse
-    //     *            Order of search
-    //     * @return headers found by query or empty list if none
-    //     */
-    //    private List<A0BlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int
-    // limit, boolean reverse) {
-    //        int qty = getQty(blockNumber, bestNumber, limit, reverse);
-    //
-    //        byte[] startHash = getStartHash(blockNumber, qty, reverse);
-    //
-    //        if (startHash == null) {
-    //            return emptyList();
-    //        }
-    //
-    //        List<A0BlockHeader> headers = getBlockStore().getListHeadersEndWith(startHash, qty);
-    //
-    //        // blocks come with falling numbers
-    //        if (!reverse) {
-    //            Collections.reverse(headers);
-    //        }
-    //
-    //        return headers;
-    //    }
-    //
-    //    /**
-    //     * Gets blocks from main chain with gaps between
-    //     *
-    //     * @param startBlock
-    //     *            Block to start from (included in return)
-    //     * @param skip
-    //     *            Number of blocks skipped between every header in return
-    //     * @param limit
-    //     *            Maximum number of headers in return
-    //     * @param reverse
-    //     *            Order of search
-    //     * @return headers found by query or empty list if none
-    //     */
-    //    private List<A0BlockHeader> getGapedHeaders(IAionBlock startBlock, int skip, int limit,
-    // boolean reverse) {
-    //        List<A0BlockHeader> headers = new ArrayList<>();
-    //        headers.add(startBlock.getHeader());
-    //        int offset = skip + 1;
-    //        if (reverse) {
-    //            offset = -offset;
-    //        }
-    //        long currentNumber = startBlock.getNumber();
-    //        boolean finished = false;
-    //
-    //        while (!finished && headers.size() < limit) {
-    //            currentNumber += offset;
-    //            IAionBlock nextBlock = getBlockStore().getChainBlockByNumber(currentNumber);
-    //            if (nextBlock == null) {
-    //                finished = true;
-    //            } else {
-    //                headers.add(nextBlock.getHeader());
-    //            }
-    //        }
-    //
-    //        return headers;
-    //    }
-    //
-    //
-    //    private int getQty(long blockNumber, long bestNumber, int limit, boolean reverse) {
-    //        if (reverse) {
-    //            return blockNumber - limit + 1 < 0 ? (int) (blockNumber + 1) : limit;
-    //        } else {
-    //            if (blockNumber + limit - 1 > bestNumber) {
-    //                return (int) (bestNumber - blockNumber + 1);
-    //            } else {
-    //                return limit;
-    //            }
-    //        }
-    //    }
-    //
-    //    private byte[] getStartHash(long blockNumber, int qty, boolean reverse) {
-    //
-    //        long startNumber;
-    //
-    //        if (reverse) {
-    //            startNumber = blockNumber;
-    //        } else {
-    //            startNumber = blockNumber + qty - 1;
-    //        }
-    //
-    //        IAionBlock block = getBlockByNumber(startNumber);
-    //
-    //        if (block == null) {
-    //            return null;
-    //        }
-    //
-    //        return block.getHash();
-    //    }
-
-    private void updateBestKnownBlock(Block block) {
-        updateBestKnownBlock(block.getHeader());
-    }
-
-    private void updateBestKnownBlock(BlockHeader header) {
-        if (bestKnownBlock.get() == null || header.getNumber() > bestKnownBlock.get().getNumber()) {
-            bestKnownBlock.set(new BlockIdentifier(header.getHash(), header.getNumber()));
+    private void updateBestKnownBlock(byte[] hash, long number) {
+        if (bestKnownBlock.get() == null || number > bestKnownBlock.get().getNumber()) {
+            bestKnownBlock.set(new BlockIdentifier(hash, number));
         }
-    }
-
-    public IEventMgr getEventMgr() {
-        return this.evtMgr;
     }
 
     /**

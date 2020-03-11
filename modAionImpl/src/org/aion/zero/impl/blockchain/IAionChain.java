@@ -32,8 +32,6 @@ public interface IAionChain  {
 
     AionHub getAionHub();
 
-    void exitOn(long number);
-
     long estimateTxNrg(AionTransaction tx, Block block);
 
     EquihashMiner getBlockMiner();

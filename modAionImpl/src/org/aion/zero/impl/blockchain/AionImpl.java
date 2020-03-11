@@ -224,11 +224,6 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public void exitOn(long number) {
-        aionHub.getBlockchain().setExitOn(number);
-    }
-
-    @Override
     public AionHub getAionHub() {
         return aionHub;
     }

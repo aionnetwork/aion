@@ -127,8 +127,6 @@ public interface IAionBlockchain extends UnityChain {
 
     List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
 
-    void setExitOn(long exitOn);
-
     AionAddress getMinerCoinbase();
 
     boolean isBlockStored(byte[] hash, long number);
