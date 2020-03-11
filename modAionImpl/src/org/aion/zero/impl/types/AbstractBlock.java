@@ -14,7 +14,7 @@ import org.aion.util.types.ByteArrayWrapper;
 public abstract class AbstractBlock implements Block {
 
     /** use for cli tooling */
-    Boolean mainChain;
+    boolean mainChain = false;
     
     // set from BlockInfos in index database
     protected BigInteger totalDifficulty;
@@ -93,7 +93,7 @@ public abstract class AbstractBlock implements Block {
 
     @Override
     public boolean isMainChain() {
-        return mainChain == null ? true : mainChain;
+        return mainChain;
     }
 
     @Override

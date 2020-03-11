@@ -21,6 +21,8 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.util.TestResources;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.BlockUtil;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -227,6 +229,62 @@ public class AionBlockStoreTest {
 
         // the returned list is null due to corrupt kernel
         assertThat(store.getBlocksByRange(first.getNumber(), last.getNumber())).isNull();
+    }
+
+    @Test
+    public void testGetBlockByHashWithInfo_withNullInput() {
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        Block block = store.getBlockByHashWithInfo(null);
+        assertThat(block).isNull();
+    }
+
+    @Test
+    public void testGetBlockByHashWithInfo_withMissingBlock() {
+        byte[] blockHash = RandomUtils.nextBytes(32);
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        assertThat(index.isEmpty()).isTrue();
+        assertThat(blocks.isEmpty()).isTrue();
+
+        Block block = store.getBlockByHashWithInfo(blockHash);
+        assertThat(block).isNull();
+    }
+
+    @Test
+    public void testGetBlockByHashWithInfo() {
+        Block givenBlock = consecutiveBlocks.get(0);
+        BigInteger totalDifficulty = BigInteger.TEN;
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(givenBlock, totalDifficulty, true);
+
+        Block block = store.getBlockByHashWithInfo(givenBlock.getHash());
+        assertThat(block).isEqualTo(givenBlock);
+        assertThat(block.getTotalDifficulty()).isEqualTo(totalDifficulty);
+        assertThat(block.isMainChain()).isTrue();
+    }
+
+    @Test
+    public void testGetBlockByHashWithInfo_withSideChain() {
+        Block givenBlock = consecutiveBlocks.get(0);
+        BigInteger totalDifficulty = BigInteger.TWO;
+
+        BigInteger sideTotalDifficulty = BigInteger.TEN;
+        Block sideBlock = BlockUtil.newBlockFromRlp(givenBlock.getEncoded());
+        sideBlock.updateHeaderDifficulty(sideTotalDifficulty.toByteArray());
+        assertThat(givenBlock.getHash()).isNotEqualTo(sideBlock.getHash());
+        assertThat(givenBlock.getEncoded()).isNotEqualTo(sideBlock.getEncoded());
+
+        AionBlockStore store = new AionBlockStore(index, blocks, false);
+        // does not require accurate total difficulty
+        store.saveBlock(givenBlock, totalDifficulty, false);
+        store.saveBlock(sideBlock, sideTotalDifficulty, true);
+
+        Block block = store.getBlockByHashWithInfo(givenBlock.getHash());
+        assertThat(block).isEqualTo(givenBlock);
+        assertThat(block.getTotalDifficulty()).isEqualTo(totalDifficulty);
+        assertThat(block.isMainChain()).isFalse();
     }
 
     @Test

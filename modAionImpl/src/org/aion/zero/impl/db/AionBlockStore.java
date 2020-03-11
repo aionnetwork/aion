@@ -558,9 +558,10 @@ public class AionBlockStore {
     }
 
     /**
-     *  Retrieve block with unity protocol info
-     * @param hash given hash of the block
-     * @return the block data has matched hash with unity protocol info
+     * Retrieve a block with unity protocol info.
+     *
+     * @param hash the hash of the requested block
+     * @return the block data for the given hash with unity protocol info
      */
     public Block getBlockByHashWithInfo(byte[] hash) {
         if (hash == null) {

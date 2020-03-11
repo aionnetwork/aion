@@ -325,9 +325,7 @@ public class StakingBlock extends AbstractBlock {
             toStringBuff.append(" total difficulty=").append(totalDifficulty).append("\n");
         }
 
-        if (mainChain != null) {
-            toStringBuff.append("  mainChain=").append(mainChain ? "yes" : "no").append("\n");
-        }
+        toStringBuff.append("  mainChain=").append(mainChain ? "yes" : "no").append("\n");
 
         if (!getTransactionsList().isEmpty()) {
             toStringBuff.append("Txs [\n");
