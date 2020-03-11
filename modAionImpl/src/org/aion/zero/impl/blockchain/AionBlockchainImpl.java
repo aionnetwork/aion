@@ -2060,10 +2060,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    public boolean hasParentOnTheChain(Block block) {
-        return getParent(block.getHeader()) != null;
-    }
-
     public TransactionStore getTransactionStore() {
         return transactionStore;
     }
