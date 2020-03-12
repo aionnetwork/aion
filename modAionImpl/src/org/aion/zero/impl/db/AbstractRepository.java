@@ -6,7 +6,6 @@ import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -136,10 +135,11 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.DB_TYPE));
         LOGGEN.info("The DB vendor is: {}", vendor);
 
+        String dbPath = cfg.getDbPath();
         boolean isPersistent = vendor.isFileBased();
         if (isPersistent) {
             // verify user-provided path
-            File f = new File(cfg.getDbPath());
+            File f = new File(dbPath);
             verifyAndBuildPath(f);
 
             if (vendor.equals(DBVendor.LEVELDB) || vendor.equals(DBVendor.ROCKSDB)) {
@@ -175,11 +175,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                                     .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
-            sharedProps = cfg.getDatabaseConfig(STATE_DB);
-            // locking enabled for state when JournalPrune not used
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, STATE_DB);
+            sharedProps = getDatabaseConfig(cfg, STATE_DB, dbPath);
             this.stateDatabase = connectAndOpen(sharedProps, LOG);
             if (stateDatabase == null || stateDatabase.isClosed()) {
                 throw newException(STATE_DB, sharedProps);
@@ -187,10 +183,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(stateDatabase);
 
             // getting transaction specific properties
-            sharedProps = cfg.getDatabaseConfig(TRANSACTION_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, TRANSACTION_DB);
+            sharedProps = getDatabaseConfig(cfg, TRANSACTION_DB, dbPath);
             this.transactionDatabase = connectAndOpen(sharedProps, LOG);
             if (transactionDatabase == null || transactionDatabase.isClosed()) {
                 throw newException(TRANSACTION_DB, sharedProps);
@@ -199,10 +192,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
 
             // getting contract index specific properties
             // this db will be used only for fast sync
-            sharedProps = cfg.getDatabaseConfig(CONTRACT_INDEX_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, CONTRACT_INDEX_DB);
+            sharedProps = getDatabaseConfig(cfg, CONTRACT_INDEX_DB, dbPath);
             this.contractIndexDatabase = connectAndOpen(sharedProps, LOG);
             if (contractIndexDatabase == null || contractIndexDatabase.isClosed()) {
                 throw newException(CONTRACT_INDEX_DB, sharedProps);
@@ -210,10 +200,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(contractIndexDatabase);
 
             // getting contract perform code specific properties
-            sharedProps = cfg.getDatabaseConfig(CONTRACT_PERFORM_CODE_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, CONTRACT_PERFORM_CODE_DB);
+            sharedProps = getDatabaseConfig(cfg, CONTRACT_PERFORM_CODE_DB, dbPath);
             this.contractPerformCodeDatabase = connectAndOpen(sharedProps, LOG);
             if (contractPerformCodeDatabase == null || contractPerformCodeDatabase.isClosed()) {
                 throw newException(CONTRACT_PERFORM_CODE_DB, sharedProps);
@@ -221,10 +208,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(contractPerformCodeDatabase);
 
             // getting details specific properties
-            sharedProps = cfg.getDatabaseConfig(DETAILS_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, DETAILS_DB);
+            sharedProps = getDatabaseConfig(cfg, DETAILS_DB, dbPath);
             this.detailsDatabase = connectAndOpen(sharedProps, LOG);
             if (detailsDatabase == null || detailsDatabase.isClosed()) {
                 throw newException(DETAILS_DB, sharedProps);
@@ -232,10 +216,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(detailsDatabase);
 
             // getting storage specific properties
-            sharedProps = cfg.getDatabaseConfig(STORAGE_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, STORAGE_DB);
+            sharedProps = getDatabaseConfig(cfg, STORAGE_DB, dbPath);
             this.storageDatabase = connectAndOpen(sharedProps, LOG);
             if (storageDatabase == null || storageDatabase.isClosed()) {
                 throw newException(STORAGE_DB, sharedProps);
@@ -243,10 +224,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(storageDatabase);
 
             // getting graph specific properties
-            sharedProps = cfg.getDatabaseConfig(GRAPH_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, GRAPH_DB);
+            sharedProps = getDatabaseConfig(cfg, GRAPH_DB, dbPath);
             this.graphDatabase = connectAndOpen(sharedProps, LOG);
             if (graphDatabase == null || graphDatabase.isClosed()) {
                 throw newException(GRAPH_DB, sharedProps);
@@ -254,10 +232,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(graphDatabase);
 
             // getting index specific properties
-            sharedProps = cfg.getDatabaseConfig(INDEX_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, INDEX_DB);
+            sharedProps = getDatabaseConfig(cfg, INDEX_DB, dbPath);
             this.indexDatabase = connectAndOpen(sharedProps, LOG);
             if (indexDatabase == null || indexDatabase.isClosed()) {
                 throw newException(INDEX_DB, sharedProps);
@@ -265,10 +240,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(indexDatabase);
 
             // getting block specific properties
-            sharedProps = cfg.getDatabaseConfig(BLOCK_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, BLOCK_DB);
+            sharedProps = getDatabaseConfig(cfg, BLOCK_DB, dbPath);
             this.blockDatabase = connectAndOpen(sharedProps, LOG);
             if (blockDatabase == null || blockDatabase.isClosed()) {
                 throw newException(BLOCK_DB, sharedProps);
@@ -280,10 +252,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             this.pendingStoreProperties = sharedProps;
 
             // getting pending tx pool specific properties
-            sharedProps = cfg.getDatabaseConfig(PENDING_TX_POOL_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, PENDING_TX_POOL_DB);
+            sharedProps = getDatabaseConfig(cfg, PENDING_TX_POOL_DB, dbPath);
             this.txPoolDatabase = connectAndOpen(sharedProps, LOG);
             if (txPoolDatabase == null || txPoolDatabase.isClosed()) {
                 throw newException(PENDING_TX_POOL_DB, sharedProps);
@@ -291,10 +260,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             databaseGroup.add(txPoolDatabase);
 
             // getting pending tx cache specific properties
-            sharedProps = cfg.getDatabaseConfig(PENDING_TX_CACHE_DB);
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-            sharedProps.setProperty(Props.DB_NAME, PENDING_TX_CACHE_DB);
+            sharedProps = getDatabaseConfig(cfg, PENDING_TX_CACHE_DB, dbPath);
             this.pendingTxCacheDatabase = connectAndOpen(sharedProps, LOG);
             if (pendingTxCacheDatabase == null || pendingTxCacheDatabase.isClosed()) {
                 throw newException(PENDING_TX_CACHE_DB, sharedProps);
@@ -312,10 +278,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
 
             if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
                 // using state config for state_archive
-                sharedProps = cfg.getDatabaseConfig(STATE_DB);
-                sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
-                sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
-                sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
+                sharedProps = getDatabaseConfig(cfg, STATE_ARCHIVE_DB, cfg.getDbPath());
                 this.stateArchiveDatabase = connectAndOpen(sharedProps, LOG);
                 databaseGroup.add(stateArchiveDatabase);
 
@@ -345,6 +308,14 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
         }
+    }
+
+    protected Properties getDatabaseConfig(RepositoryConfig cfg, String dbName, String dbPath) {
+        Properties prop = cfg.getDatabaseConfig(dbName);
+        prop.setProperty(Props.ENABLE_LOCKING, "false");
+        prop.setProperty(Props.DB_PATH, dbPath);
+        prop.setProperty(Props.DB_NAME, dbName);
+        return prop;
     }
 
     private InvalidFilePathException newException(String dbName, Properties props) {
