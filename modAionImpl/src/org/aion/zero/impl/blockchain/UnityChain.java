@@ -4,8 +4,8 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
 
@@ -36,6 +36,8 @@ public interface UnityChain {
     AionBlock getCachingMiningBlockTemplate(byte[] hash);
 
     ImportResult tryToConnect(Block block);
+
+    ImportResult tryToConnect(BlockWrapper blockWrapper);
 
     Block getBlockWithInfoByHash(byte[] hash);
 

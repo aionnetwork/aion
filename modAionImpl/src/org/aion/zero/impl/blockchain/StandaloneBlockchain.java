@@ -5,7 +5,6 @@ import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.Map;
 import java.util.Properties;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
-import org.aion.base.ConstantUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
@@ -48,7 +46,6 @@ import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.HeaderSealTypeRule;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.impl.types.A0BlockHeader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -502,7 +499,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     @Override
     public synchronized ImportResult tryToConnect(final Block block) {
-        ImportResult result = tryToConnectAndFetchSummary(block, true).getLeft();
+        ImportResult result = tryToConnectAndFetchSummary(new BlockWrapper(block), true).getLeft();
 
         if (result == ImportResult.IMPORTED_BEST) {
             BigInteger tdForHash = getTotalDifficultyForHash(block.getHash());
@@ -514,7 +511,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     // TEMPORARY: here to support the ConsensusTest
     public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block) {
-        return tryToConnectAndFetchSummary(block, true);
+        return tryToConnectAndFetchSummary(new BlockWrapper(block), true);
     }
 
     /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */

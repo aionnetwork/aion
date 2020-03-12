@@ -12,6 +12,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.blockchain.BlockWrapper;
 import org.aion.zero.impl.config.CfgDb;
 import org.aion.base.AccountState;
 import org.aion.util.types.ByteArrayWrapper;
@@ -568,7 +569,7 @@ public class DBUtils {
                         // clear the index entry and prune side-chain blocks
                         store.redoIndexWithoutSideChains(block);
                         long t1 = System.currentTimeMillis();
-                        result = chain.tryToConnectAndFetchSummary(block, false);
+                        result = chain.tryToConnectAndFetchSummary(new BlockWrapper(block), false);
                         long t2 = System.currentTimeMillis();
                         LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
                                                + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()

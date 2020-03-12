@@ -666,16 +666,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * Not thread safe, currently only run in {@link #tryToConnect(Block)}, assumes that the
      * environment is already locked
      *
-     * @param block
+     * @param blockWrapper
      * @return
      */
-    private AionBlockSummary tryConnectAndFork(final Block block) {
+    private AionBlockSummary tryConnectAndFork(final BlockWrapper blockWrapper) {
+        Block block = blockWrapper.block;
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
         AionBlockSummary summary = null;
         try {
-            summary = add(block);
+            summary = add(blockWrapper);
         } catch (Exception e) {
             LOG.error("Unexpected error: ", e);
         } finally {
@@ -886,9 +887,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public static boolean enableFullSyncCheck = false;
     public static boolean reachedFullSync = false;
 
-    public synchronized ImportResult tryToConnect(final Block block) {
+    public ImportResult tryToConnect(final Block block) {
+        return tryToConnect(new BlockWrapper(block));
+    }
+
+    public synchronized ImportResult tryToConnect(final BlockWrapper blockWrapper) {
         checkKernelShutdownForCLI();
-        return tryToConnectWithTimedExecution(block).getLeft();
+        if (blockWrapper.validatedHeader) {
+            return tryToConnectWithTimedExecutionAndValidatedHeader(blockWrapper.block).getLeft();
+        } else {
+            return tryToConnectWithTimedExecution(blockWrapper.block).getLeft();
+        }
     }
 
     private void checkKernelShutdownForCLI() {
@@ -966,7 +975,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
     
     public Pair<ImportResult, Long> tryToConnectWithTimedExecution(Block block) {
         long importTime = System.nanoTime();
-        ImportResult importResult = tryToConnectAndFetchSummary(block, true).getLeft();
+        ImportResult importResult = tryToConnectAndFetchSummary( new BlockWrapper(block), true).getLeft();
+        importTime = (System.nanoTime() - importTime);
+
+        blockImportSurvey(importResult.isValid(), importTime);
+        return Pair.of(importResult, importTime);
+    }
+
+    private Pair<ImportResult, Long> tryToConnectWithTimedExecutionAndValidatedHeader(Block block) {
+        long importTime = System.nanoTime();
+
+        ImportResult importResult =
+                tryToConnectAndFetchSummary(new BlockWrapper(block, true), true).getLeft();
         importTime = (System.nanoTime() - importTime);
 
         blockImportSurvey(importResult.isValid(), importTime);
@@ -1002,7 +1022,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             TimeUnit.NANOSECONDS.toMillis(surveyLongestImportTime));
     }
 
-    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block, boolean doExistCheck) {
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper, boolean doExistCheck) {
+
+        Block block = blockWrapper.block;
         // Check block exists before processing more rules
         if (doExistCheck // skipped when redoing imports
                 && repository.getBlockStore().getMaxNumber() >= block.getNumber()
@@ -1054,7 +1076,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 cachedBlockNumberForAVM = forkLevel;
             }
 
-            summary = add(block);
+            summary = add(blockWrapper);
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
 
             if (executionTypeForAVM == BlockCachingContext.SWITCHING_MAINCHAIN
@@ -1078,7 +1100,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     cachedBlockNumberForAVM = 0;
                 }
 
-                summary = tryConnectAndFork(block);
+                summary = tryConnectAndFork(blockWrapper);
                 ret =
                         summary == null
                                 ? INVALID_BLOCK
@@ -1133,10 +1155,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     if (receipt != null) {
                         byte[] transactionHash = receipt.getTransaction().getTransactionHash();
                         TX_LOG.debug(
-                                "Transaction: "
-                                        + Hex.toHexString(transactionHash)
-                                        + " was sealed into block #"
-                                        + block.getNumber());
+                            "Transaction: "
+                                + Hex.toHexString(transactionHash)
+                                + " was sealed into block #"
+                                + block.getNumber());
                     }
                 }
             }
@@ -1153,7 +1175,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public Pair<AionBlockSummary, RepositoryCache> tryImportWithoutFlush(final Block block) {
         repository.syncToRoot(bestBlock.getStateRoot());
-        return add(block, false, false);
+        return add(new BlockWrapper(block), false, false);
     }
 
     /**
@@ -1469,11 +1491,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return totalTransactionFee;
     }
 
-    private AionBlockSummary add(Block block) {
+    private AionBlockSummary add(BlockWrapper blockWrapper) {
         // typical use without rebuild
-        AionBlockSummary summary = add(block, false);
+        AionBlockSummary summary = add(blockWrapper, false);
 
         if (summary != null) {
+            Block block = blockWrapper.block;
             updateTotalDifficulty(block);
             summary.setTotalDifficulty(block.getTotalDifficulty());
 
@@ -1490,17 +1513,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return summary;
     }
 
-    private AionBlockSummary add(Block block, boolean rebuild) {
-        return add(block, rebuild, true).getLeft();
+    private AionBlockSummary add(BlockWrapper blockWrapper, boolean rebuild) {
+        return add(blockWrapper, rebuild, true).getLeft();
     }
 
     /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
-    public Pair<AionBlockSummary, RepositoryCache> add(
-            Block block, boolean rebuild, boolean flushRepo) {
+    private Pair<AionBlockSummary, RepositoryCache> add(
+            BlockWrapper blockWrapper, boolean rebuild, boolean flushRepo) {
         // reset cached VMs before processing the block
         repository.clearCachedVMs();
 
-        if (!isValid(block)) {
+        Block block = blockWrapper.block;
+        if (!blockWrapper.validatedHeader && !isValid(block)) {
             LOG.error("Attempting to add {} block.", (block == null ? "NULL" : "INVALID"));
             return Pair.of(null, null);
         }
@@ -2309,7 +2333,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
 
-            this.add(other, true);
+            this.add(new BlockWrapper(other), true);
         }
 
         // update the repository
