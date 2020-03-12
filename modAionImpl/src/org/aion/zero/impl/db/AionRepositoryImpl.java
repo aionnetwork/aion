@@ -4,6 +4,7 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.zero.impl.config.CfgDb.Names.STATE_ARCHIVE;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -136,7 +137,7 @@ public class AionRepositoryImpl extends AbstractRepository {
 
             if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
                 // using state config for state_archive
-                stateArchiveDatabase = connectAndOpen(getDatabaseConfig(cfg, STATE_ARCHIVE_DB, cfg.getDbPath()), LOG);
+                stateArchiveDatabase = connectAndOpen(getDatabaseConfig(cfg, STATE_ARCHIVE, cfg.getDbPath()), LOG);
                 databaseGroup.add(stateArchiveDatabase);
 
                 stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);

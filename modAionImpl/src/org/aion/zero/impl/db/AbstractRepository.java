@@ -1,5 +1,6 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.zero.impl.config.CfgDb.Names.*;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
@@ -18,7 +19,6 @@ import org.aion.db.impl.DBVendor;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
-import org.aion.zero.impl.config.CfgDb.Names;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.exception.InvalidFilePathException;
@@ -32,23 +32,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     protected static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-    /** ********* Database Name Constants ********** */
-    protected static final String TRANSACTION_DB = Names.TRANSACTION;
-
-    protected static final String INDEX_DB = Names.INDEX;
-    protected static final String BLOCK_DB = Names.BLOCK;
-    protected static final String PENDING_BLOCK_DB = Names.PENDING_BLOCK;
-    protected static final String CONTRACT_INDEX_DB = Names.CONTRACT_INDEX;
-    protected static final String DETAILS_DB = Names.DETAILS;
-    protected static final String STORAGE_DB = Names.STORAGE;
-    protected static final String GRAPH_DB = Names.GRAPH;
-    protected static final String STATE_DB = Names.STATE;
-    protected static final String STATE_ARCHIVE_DB = Names.STATE_ARCHIVE;
-    protected static final String PENDING_TX_POOL_DB = Names.TX_POOL;
-    protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
-    protected static final String CONTRACT_PERFORM_CODE_DB = Names.CONTRACT_PERFORM_CODE;
-
 
     // DB Path
     // protected final static String DB_PATH = new
@@ -109,7 +92,7 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
 
-        DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.DB_TYPE));
+        DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(DEFAULT).getProperty(Props.DB_TYPE));
         LOGGEN.info("The DB vendor is: {}", vendor);
 
         String dbPath = cfg.getDbPath();
@@ -148,99 +131,99 @@ public abstract class AbstractRepository implements Repository<AccountState> {
 
             checkIntegrity =
                     Boolean.valueOf(
-                            cfg.getDatabaseConfig(Names.DEFAULT)
+                            cfg.getDatabaseConfig(DEFAULT)
                                     .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
-            sharedProps = getDatabaseConfig(cfg, STATE_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, STATE, dbPath);
             this.stateDatabase = connectAndOpen(sharedProps, LOG);
             if (stateDatabase == null || stateDatabase.isClosed()) {
-                throw newException(STATE_DB, sharedProps);
+                throw newException(STATE, sharedProps);
             }
             databaseGroup.add(stateDatabase);
 
             // getting transaction specific properties
-            sharedProps = getDatabaseConfig(cfg, TRANSACTION_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, TRANSACTION, dbPath);
             this.transactionDatabase = connectAndOpen(sharedProps, LOG);
             if (transactionDatabase == null || transactionDatabase.isClosed()) {
-                throw newException(TRANSACTION_DB, sharedProps);
+                throw newException(TRANSACTION, sharedProps);
             }
             databaseGroup.add(transactionDatabase);
 
             // getting contract index specific properties
             // this db will be used only for fast sync
-            sharedProps = getDatabaseConfig(cfg, CONTRACT_INDEX_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, CONTRACT_INDEX, dbPath);
             this.contractIndexDatabase = connectAndOpen(sharedProps, LOG);
             if (contractIndexDatabase == null || contractIndexDatabase.isClosed()) {
-                throw newException(CONTRACT_INDEX_DB, sharedProps);
+                throw newException(CONTRACT_INDEX, sharedProps);
             }
             databaseGroup.add(contractIndexDatabase);
 
             // getting contract perform code specific properties
-            sharedProps = getDatabaseConfig(cfg, CONTRACT_PERFORM_CODE_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, CONTRACT_PERFORM_CODE, dbPath);
             this.contractPerformCodeDatabase = connectAndOpen(sharedProps, LOG);
             if (contractPerformCodeDatabase == null || contractPerformCodeDatabase.isClosed()) {
-                throw newException(CONTRACT_PERFORM_CODE_DB, sharedProps);
+                throw newException(CONTRACT_PERFORM_CODE, sharedProps);
             }
             databaseGroup.add(contractPerformCodeDatabase);
 
             // getting details specific properties
-            sharedProps = getDatabaseConfig(cfg, DETAILS_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, DETAILS, dbPath);
             this.detailsDatabase = connectAndOpen(sharedProps, LOG);
             if (detailsDatabase == null || detailsDatabase.isClosed()) {
-                throw newException(DETAILS_DB, sharedProps);
+                throw newException(DETAILS, sharedProps);
             }
             databaseGroup.add(detailsDatabase);
 
             // getting storage specific properties
-            sharedProps = getDatabaseConfig(cfg, STORAGE_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, STORAGE, dbPath);
             this.storageDatabase = connectAndOpen(sharedProps, LOG);
             if (storageDatabase == null || storageDatabase.isClosed()) {
-                throw newException(STORAGE_DB, sharedProps);
+                throw newException(STORAGE, sharedProps);
             }
             databaseGroup.add(storageDatabase);
 
             // getting graph specific properties
-            sharedProps = getDatabaseConfig(cfg, GRAPH_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, GRAPH, dbPath);
             this.graphDatabase = connectAndOpen(sharedProps, LOG);
             if (graphDatabase == null || graphDatabase.isClosed()) {
-                throw newException(GRAPH_DB, sharedProps);
+                throw newException(GRAPH, sharedProps);
             }
             databaseGroup.add(graphDatabase);
 
             // getting index specific properties
-            sharedProps = getDatabaseConfig(cfg, INDEX_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, INDEX, dbPath);
             this.indexDatabase = connectAndOpen(sharedProps, LOG);
             if (indexDatabase == null || indexDatabase.isClosed()) {
-                throw newException(INDEX_DB, sharedProps);
+                throw newException(INDEX, sharedProps);
             }
             databaseGroup.add(indexDatabase);
 
             // getting block specific properties
-            sharedProps = getDatabaseConfig(cfg, BLOCK_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, BLOCK, dbPath);
             this.blockDatabase = connectAndOpen(sharedProps, LOG);
             if (blockDatabase == null || blockDatabase.isClosed()) {
-                throw newException(BLOCK_DB, sharedProps);
+                throw newException(BLOCK, sharedProps);
             }
             databaseGroup.add(blockDatabase);
 
             // using block specific properties
-            sharedProps.setProperty(Props.DB_NAME, PENDING_BLOCK_DB);
+            sharedProps.setProperty(Props.DB_NAME, PENDING_BLOCK);
             this.pendingStoreProperties = sharedProps;
 
             // getting pending tx pool specific properties
-            sharedProps = getDatabaseConfig(cfg, PENDING_TX_POOL_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, TX_POOL, dbPath);
             this.txPoolDatabase = connectAndOpen(sharedProps, LOG);
             if (txPoolDatabase == null || txPoolDatabase.isClosed()) {
-                throw newException(PENDING_TX_POOL_DB, sharedProps);
+                throw newException(TX_POOL, sharedProps);
             }
             databaseGroup.add(txPoolDatabase);
 
             // getting pending tx cache specific properties
-            sharedProps = getDatabaseConfig(cfg, PENDING_TX_CACHE_DB, dbPath);
+            sharedProps = getDatabaseConfig(cfg, TX_CACHE, dbPath);
             this.pendingTxCacheDatabase = connectAndOpen(sharedProps, LOG);
             if (pendingTxCacheDatabase == null || pendingTxCacheDatabase.isClosed()) {
-                throw newException(PENDING_TX_CACHE_DB, sharedProps);
+                throw newException(TX_CACHE, sharedProps);
             }
             databaseGroup.add(pendingTxCacheDatabase);
 
