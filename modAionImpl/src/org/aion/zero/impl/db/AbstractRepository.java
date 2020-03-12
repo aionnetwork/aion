@@ -57,8 +57,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    protected boolean checkIntegrity = true;
-
     /**
      * Initializes all necessary databases and caches.
      *
@@ -122,11 +120,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         // Setup data stores
         try {
             databaseGroup = new ArrayList<>();
-
-            checkIntegrity =
-                    Boolean.valueOf(
-                            cfg.getDatabaseConfig(DEFAULT)
-                                    .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
             sharedProps = getDatabaseConfig(cfg, STATE, dbPath);

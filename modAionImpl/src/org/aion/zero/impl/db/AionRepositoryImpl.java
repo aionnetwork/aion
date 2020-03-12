@@ -4,6 +4,7 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.zero.impl.config.CfgDb.Names.DEFAULT;
 import static org.aion.zero.impl.config.CfgDb.Names.PENDING_BLOCK;
 import static org.aion.zero.impl.config.CfgDb.Names.STATE_ARCHIVE;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
@@ -39,6 +40,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.util.types.DataWord;
+import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.zero.impl.trie.SecureTrie;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
@@ -126,8 +128,8 @@ public class AionRepositoryImpl extends AbstractRepository {
                     new TransactionStore(
                             transactionDatabase, AionTransactionStoreSerializer.serializer);
 
-            // Setup block store.
-            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
+            // Setup block store. Read integrity check flag (set to perform a block store integrity check at startup) directly from config.
+            blockStore = new AionBlockStore(indexDatabase, blockDatabase, Boolean.valueOf(cfg.getDatabaseConfig(DEFAULT).getProperty(Props.CHECK_INTEGRITY)), blockCacheSize);
 
             pendingStore = new PendingBlockStore(getDatabaseConfig(cfg, PENDING_BLOCK, cfg.getDbPath()));
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10, true);
