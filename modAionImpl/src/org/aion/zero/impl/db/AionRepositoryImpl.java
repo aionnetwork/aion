@@ -117,10 +117,10 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
     private JournalPruneDataSource stateDSPrune;
     private ArchivedDataSource stateWithArchive;
     private Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
-    private long bestBlockNumber = 0;
+    private long bestBlockNumber;
     private int pruneBlockCount;
     private long archiveRate;
-    private boolean pruneEnabled = true;
+    private boolean pruneEnabled;
 
     private DetailsDataStore detailsDS;
     private TransactionStore transactionStore;
@@ -180,49 +180,69 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10, true);
             this.transformedCodeSource = Stores.newObjectStore(contractPerformCodeDatabase, TransformedCodeSerializer.RLP_SERIALIZER);
 
-
-            // pruning config
-            pruneEnabled = cfg.getPruneConfig().isEnabled();
-            pruneBlockCount = cfg.getPruneConfig().getCurrentCount();
-            archiveRate = cfg.getPruneConfig().getArchiveRate();
-
-            if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
-                // using state config for state_archive
-                stateArchiveDatabase = connectAndOpen(getDatabaseConfig(cfg, STATE_ARCHIVE, cfg.getDbPath()), LOG);
-                databaseGroup.add(stateArchiveDatabase);
-
-                stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
-                stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
-                // the size is defined assuming for two side chain blocks at each level
-                // since the pruned blocks are removed according to their level
-                // in practice the cache is likely to be one third the allocated size
-                cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
-
-                LOGGEN.info(
-                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
-                        pruneBlockCount,
-                        archiveRate);
+            // State and pruning config.
+            if (cfg.getPruneConfig().isArchived()) {
+                setupSpreadPruning(cfg.getPruneConfig().getCurrentCount(), cfg.getPruneConfig().getArchiveRate(), getDatabaseConfig(cfg, STATE_ARCHIVE, cfg.getDbPath()));
+            } else if (cfg.getPruneConfig().isEnabled()) {
+                setupTopPruning(cfg.getPruneConfig().getCurrentCount());
             } else {
+                // disable state pruning
+                pruneEnabled = false;
                 stateArchiveDatabase = null;
                 stateWithArchive = null;
                 stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
-
-                if (pruneEnabled) {
-                    LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
-                    cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
-                }
+                stateDSPrune.setPruneEnabled(pruneEnabled);
+                // Setup world trie.
+                worldState = createStateTrie();
             }
-
-            stateDSPrune.setPruneEnabled(pruneEnabled);
-
-            // Setup world trie.
-            worldState = createStateTrie();
         } catch (Exception e) {
             LOGGEN.error("Shutdown due to failure to initialize repository.");
             // the above message does not get logged without the printStackTrace below
             e.printStackTrace();
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
+    }
+
+    @VisibleForTesting
+    public void setupSpreadPruning(int blockCount, int rate, Properties dbConfig) {
+        this.pruneEnabled = true;
+        this.pruneBlockCount = blockCount;
+        this.bestBlockNumber = 0L;
+        this.archiveRate = rate;
+
+        // using state config for state_archive
+        stateArchiveDatabase = connectAndOpen(dbConfig, LOG);
+        databaseGroup.add(stateArchiveDatabase);
+
+        stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
+        stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
+        // the size is defined assuming for two side chain blocks at each level
+        // since the pruned blocks are removed according to their level
+        // in practice the cache is likely to be one third the allocated size
+        cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
+
+        stateDSPrune.setPruneEnabled(pruneEnabled);
+        worldState = createStateTrie();
+
+        LOGGEN.info("Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.", pruneBlockCount, archiveRate);
+    }
+
+    @VisibleForTesting
+    public void setupTopPruning(int blockCount) {
+        this.pruneEnabled = true;
+        this.pruneBlockCount = blockCount;
+        this.bestBlockNumber = 0L;
+
+        stateArchiveDatabase = null;
+        stateWithArchive = null;
+        stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
+
+        cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
+
+        stateDSPrune.setPruneEnabled(pruneEnabled);
+        worldState = createStateTrie();
+
+        LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
     }
 
     /**
