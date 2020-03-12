@@ -8,18 +8,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
-import org.aion.db.store.ArchivedDataSource;
-import org.aion.db.store.JournalPruneDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
@@ -27,8 +22,6 @@ import org.aion.zero.impl.config.CfgDb.Names;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.exception.InvalidFilePathException;
-import org.aion.zero.impl.trie.Trie;
-import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
@@ -56,8 +49,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
     protected static final String CONTRACT_PERFORM_CODE_DB = Names.CONTRACT_PERFORM_CODE;
 
-    // State trie.
-    protected Trie worldState;
 
     // DB Path
     // protected final static String DB_PATH = new
@@ -80,18 +71,8 @@ public abstract class AbstractRepository implements Repository<AccountState> {
 
     protected Collection<ByteArrayKeyValueDatabase> databaseGroup;
 
-    protected ArchivedDataSource stateWithArchive;
-    protected JournalPruneDataSource stateDSPrune;
-    protected Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
-
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-    // Block related parameters.
-    protected long bestBlockNumber = 0;
-    protected int pruneBlockCount;
-    protected long archiveRate;
-    protected boolean pruneEnabled = true;
 
     // Current blockstore.
     public AionBlockStore blockStore;
@@ -266,40 +247,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             }
             databaseGroup.add(pendingTxCacheDatabase);
 
-            // pruning config
-            pruneEnabled = cfg.getPruneConfig().isEnabled();
-            pruneBlockCount = cfg.getPruneConfig().getCurrentCount();
-            archiveRate = cfg.getPruneConfig().getArchiveRate();
-
-            if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
-                // using state config for state_archive
-                sharedProps = getDatabaseConfig(cfg, STATE_ARCHIVE_DB, cfg.getDbPath());
-                this.stateArchiveDatabase = connectAndOpen(sharedProps, LOG);
-                databaseGroup.add(stateArchiveDatabase);
-
-                stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
-                stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
-                // the size is defined assuming for two side chain blocks at each level
-                // since the pruned blocks are removed according to their level
-                // in practice the cache is likely to be one third the allocated size
-                cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
-
-                LOGGEN.info(
-                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
-                        pruneBlockCount,
-                        archiveRate);
-            } else {
-                stateArchiveDatabase = null;
-                stateWithArchive = null;
-                stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
-
-                if (pruneEnabled) {
-                    LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
-                    cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
-                }
-            }
-
-            stateDSPrune.setPruneEnabled(pruneEnabled);
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
         }

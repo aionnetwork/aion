@@ -4,6 +4,7 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
@@ -24,6 +25,8 @@ import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
+import org.aion.db.store.ArchivedDataSource;
+import org.aion.db.store.JournalPruneDataSource;
 import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Stores;
 import org.aion.db.store.XorDataSource;
@@ -56,6 +59,16 @@ import org.slf4j.Logger;
 
 /** Has direct database connection. */
 public class AionRepositoryImpl extends AbstractRepository {
+
+    // State trie and pruning setup.
+    private Trie worldState;
+    private JournalPruneDataSource stateDSPrune;
+    private ArchivedDataSource stateWithArchive;
+    private Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
+    private long bestBlockNumber = 0;
+    private int pruneBlockCount;
+    private long archiveRate;
+    private boolean pruneEnabled = true;
 
     private DetailsDataStore detailsDS;
     private TransactionStore transactionStore;
@@ -111,6 +124,41 @@ public class AionRepositoryImpl extends AbstractRepository {
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10, true);
             this.transformedCodeSource = Stores.newObjectStore(contractPerformCodeDatabase, TransformedCodeSerializer.RLP_SERIALIZER);
+
+
+            // pruning config
+            pruneEnabled = cfg.getPruneConfig().isEnabled();
+            pruneBlockCount = cfg.getPruneConfig().getCurrentCount();
+            archiveRate = cfg.getPruneConfig().getArchiveRate();
+
+            if (pruneEnabled && cfg.getPruneConfig().isArchived()) {
+                // using state config for state_archive
+                stateArchiveDatabase = connectAndOpen(getDatabaseConfig(cfg, STATE_ARCHIVE_DB, cfg.getDbPath()), LOG);
+                databaseGroup.add(stateArchiveDatabase);
+
+                stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
+                stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
+                // the size is defined assuming for two side chain blocks at each level
+                // since the pruned blocks are removed according to their level
+                // in practice the cache is likely to be one third the allocated size
+                cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
+
+                LOGGEN.info(
+                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
+                        pruneBlockCount,
+                        archiveRate);
+            } else {
+                stateArchiveDatabase = null;
+                stateWithArchive = null;
+                stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
+
+                if (pruneEnabled) {
+                    LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
+                    cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
+                }
+            }
+
+            stateDSPrune.setPruneEnabled(pruneEnabled);
 
             // Setup world trie.
             worldState = createStateTrie();
