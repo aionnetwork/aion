@@ -4,12 +4,27 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.zero.impl.config.CfgDb.Names.BLOCK;
+import static org.aion.zero.impl.config.CfgDb.Names.CONTRACT_INDEX;
+import static org.aion.zero.impl.config.CfgDb.Names.CONTRACT_PERFORM_CODE;
 import static org.aion.zero.impl.config.CfgDb.Names.DEFAULT;
+import static org.aion.zero.impl.config.CfgDb.Names.DETAILS;
+import static org.aion.zero.impl.config.CfgDb.Names.GRAPH;
+import static org.aion.zero.impl.config.CfgDb.Names.INDEX;
 import static org.aion.zero.impl.config.CfgDb.Names.PENDING_BLOCK;
+import static org.aion.zero.impl.config.CfgDb.Names.STATE;
 import static org.aion.zero.impl.config.CfgDb.Names.STATE_ARCHIVE;
+import static org.aion.zero.impl.config.CfgDb.Names.STORAGE;
+import static org.aion.zero.impl.config.CfgDb.Names.TRANSACTION;
+import static org.aion.zero.impl.config.CfgDb.Names.TX_CACHE;
+import static org.aion.zero.impl.config.CfgDb.Names.TX_POOL;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -22,23 +37,31 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
+import org.aion.db.impl.DBVendor;
 import org.aion.db.store.ArchivedDataSource;
 import org.aion.db.store.JournalPruneDataSource;
 import org.aion.db.store.ObjectStore;
 import org.aion.db.store.Stores;
 import org.aion.db.store.XorDataSource;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.ContractDetails;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
+import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.zero.impl.trie.SecureTrie;
@@ -62,7 +85,29 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 /** Has direct database connection. */
-public class AionRepositoryImpl extends AbstractRepository {
+public class AionRepositoryImpl implements Repository<AccountState> {
+
+    // Logger
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    private static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+    // Read Write Lock
+    private ReadWriteLock rwLock = new ReentrantReadWriteLock();
+
+    // Databases used by the repository.
+    private Collection<ByteArrayKeyValueDatabase> databaseGroup;
+    @VisibleForTesting ByteArrayKeyValueDatabase transactionDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase contractIndexDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase detailsDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase storageDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase graphDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase indexDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase blockDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase stateDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase stateArchiveDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase txPoolDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase pendingTxCacheDatabase;
+    @VisibleForTesting ByteArrayKeyValueDatabase contractPerformCodeDatabase;
 
     // Current block store.
     private AionBlockStore blockStore;
@@ -178,6 +223,143 @@ public class AionRepositoryImpl extends AbstractRepository {
             e.printStackTrace();
             System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
+    }
+
+    /**
+     * Initializes all necessary databases and caches.
+     *
+     * @throws IllegalStateException when called with a persistent database vendor for which the
+     *     data store cannot be created or opened.
+     * @implNote This function is not locked. Locking must be done from calling function.
+     */
+    protected void initializeDatabasesAndCaches(RepositoryConfig cfg)
+            throws InvalidFileTypeException, IOException {
+        // Given that this function is only called on startup, enforce conditions here for safety.
+        Objects.requireNonNull(cfg);
+
+        DBVendor vendor = DBVendor.fromString(cfg.getDatabaseConfig(DEFAULT).getProperty(Props.DB_TYPE));
+        LOGGEN.info("The DB vendor is: {}", vendor);
+
+        String dbPath = cfg.getDbPath();
+        boolean isPersistent = vendor.isFileBased();
+        if (isPersistent) {
+            // verify user-provided path
+            File f = new File(dbPath);
+            verifyAndBuildPath(f);
+
+            if (vendor.equals(DBVendor.LEVELDB) || vendor.equals(DBVendor.ROCKSDB)) {
+                verifyDBfileType(f, vendor.toValue());
+            }
+        }
+
+        Properties sharedProps;
+        databaseGroup = new ArrayList<>();
+
+        // getting state specific properties
+        sharedProps = getDatabaseConfig(cfg, STATE, dbPath);
+        this.stateDatabase = connectAndOpen(sharedProps, LOG);
+        if (stateDatabase == null || stateDatabase.isClosed()) {
+            throw newException(STATE, sharedProps);
+        }
+        databaseGroup.add(stateDatabase);
+
+        // getting transaction specific properties
+        sharedProps = getDatabaseConfig(cfg, TRANSACTION, dbPath);
+        this.transactionDatabase = connectAndOpen(sharedProps, LOG);
+        if (transactionDatabase == null || transactionDatabase.isClosed()) {
+            throw newException(TRANSACTION, sharedProps);
+        }
+        databaseGroup.add(transactionDatabase);
+
+        // getting contract index specific properties
+        // this db will be used only for fast sync
+        sharedProps = getDatabaseConfig(cfg, CONTRACT_INDEX, dbPath);
+        this.contractIndexDatabase = connectAndOpen(sharedProps, LOG);
+        if (contractIndexDatabase == null || contractIndexDatabase.isClosed()) {
+            throw newException(CONTRACT_INDEX, sharedProps);
+        }
+        databaseGroup.add(contractIndexDatabase);
+
+        // getting contract perform code specific properties
+        sharedProps = getDatabaseConfig(cfg, CONTRACT_PERFORM_CODE, dbPath);
+        this.contractPerformCodeDatabase = connectAndOpen(sharedProps, LOG);
+        if (contractPerformCodeDatabase == null || contractPerformCodeDatabase.isClosed()) {
+            throw newException(CONTRACT_PERFORM_CODE, sharedProps);
+        }
+        databaseGroup.add(contractPerformCodeDatabase);
+
+        // getting details specific properties
+        sharedProps = getDatabaseConfig(cfg, DETAILS, dbPath);
+        this.detailsDatabase = connectAndOpen(sharedProps, LOG);
+        if (detailsDatabase == null || detailsDatabase.isClosed()) {
+            throw newException(DETAILS, sharedProps);
+        }
+        databaseGroup.add(detailsDatabase);
+
+        // getting storage specific properties
+        sharedProps = getDatabaseConfig(cfg, STORAGE, dbPath);
+        this.storageDatabase = connectAndOpen(sharedProps, LOG);
+        if (storageDatabase == null || storageDatabase.isClosed()) {
+            throw newException(STORAGE, sharedProps);
+        }
+        databaseGroup.add(storageDatabase);
+
+        // getting graph specific properties
+        sharedProps = getDatabaseConfig(cfg, GRAPH, dbPath);
+        this.graphDatabase = connectAndOpen(sharedProps, LOG);
+        if (graphDatabase == null || graphDatabase.isClosed()) {
+            throw newException(GRAPH, sharedProps);
+        }
+        databaseGroup.add(graphDatabase);
+
+        // getting index specific properties
+        sharedProps = getDatabaseConfig(cfg, INDEX, dbPath);
+        this.indexDatabase = connectAndOpen(sharedProps, LOG);
+        if (indexDatabase == null || indexDatabase.isClosed()) {
+            throw newException(INDEX, sharedProps);
+        }
+        databaseGroup.add(indexDatabase);
+
+        // getting block specific properties
+        sharedProps = getDatabaseConfig(cfg, BLOCK, dbPath);
+        this.blockDatabase = connectAndOpen(sharedProps, LOG);
+        if (blockDatabase == null || blockDatabase.isClosed()) {
+            throw newException(BLOCK, sharedProps);
+        }
+        databaseGroup.add(blockDatabase);
+
+        // getting pending tx pool specific properties
+        sharedProps = getDatabaseConfig(cfg, TX_POOL, dbPath);
+        this.txPoolDatabase = connectAndOpen(sharedProps, LOG);
+        if (txPoolDatabase == null || txPoolDatabase.isClosed()) {
+            throw newException(TX_POOL, sharedProps);
+        }
+        databaseGroup.add(txPoolDatabase);
+
+        // getting pending tx cache specific properties
+        sharedProps = getDatabaseConfig(cfg, TX_CACHE, dbPath);
+        this.pendingTxCacheDatabase = connectAndOpen(sharedProps, LOG);
+        if (pendingTxCacheDatabase == null || pendingTxCacheDatabase.isClosed()) {
+            throw newException(TX_CACHE, sharedProps);
+        }
+        databaseGroup.add(pendingTxCacheDatabase);
+    }
+
+    protected Properties getDatabaseConfig(RepositoryConfig cfg, String dbName, String dbPath) {
+        Properties prop = cfg.getDatabaseConfig(dbName);
+        prop.setProperty(Props.ENABLE_LOCKING, "false");
+        prop.setProperty(Props.DB_PATH, dbPath);
+        prop.setProperty(Props.DB_NAME, dbName);
+        return prop;
+    }
+
+    private IllegalStateException newException(String dbName, Properties props) {
+        // A shutdown is required if the databases cannot be initialized.
+        return new IllegalStateException(
+                "The «"
+                        + dbName
+                        + "» database from the repository could not be initialized with the given parameters: "
+                        + props);
     }
 
     public PendingBlockStore getPendingBlockStore() {
