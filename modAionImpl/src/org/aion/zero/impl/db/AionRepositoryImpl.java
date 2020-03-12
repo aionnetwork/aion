@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 /** Has direct database connection. */
 public class AionRepositoryImpl extends AbstractRepository {
 
+    private DetailsDataStore detailsDS;
     private TransactionStore transactionStore;
 
     // pending block store
@@ -95,6 +96,9 @@ public class AionRepositoryImpl extends AbstractRepository {
     private void init(RepositoryConfig cfg) {
         try {
             initializeDatabasesAndCaches(cfg);
+
+            // Setup the cache for the contract details data source.
+            detailsDS = new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG);
 
             // Setup the cache for transaction data source.
             this.transactionStore =

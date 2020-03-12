@@ -82,7 +82,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
 
     protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
-    protected DetailsDataStore detailsDS;
     protected Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
 
     // Read Write Lock
@@ -266,10 +265,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                 throw newException(PENDING_TX_CACHE_DB, sharedProps);
             }
             databaseGroup.add(pendingTxCacheDatabase);
-
-            // Setup the cache for transaction data source.
-            this.detailsDS =
-                    new DetailsDataStore(detailsDatabase, storageDatabase, graphDatabase, LOG);
 
             // pruning config
             pruneEnabled = cfg.getPruneConfig().isEnabled();

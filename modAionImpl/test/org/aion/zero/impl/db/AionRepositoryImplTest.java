@@ -150,8 +150,7 @@ public class AionRepositoryImplTest {
         repository.flush();
 
         /** Verify that the account has been flushed */
-        byte[] root = repository.getAccountState(defaultAccount).getStateRoot();
-        StoredContractDetails snapshot = repository.detailsDS.getSnapshot(InternalVmType.FVM, defaultAccount.toByteArray(), root);
+        StoredContractDetails snapshot = repository.getContractDetails(defaultAccount);
 
         assertThat(snapshot instanceof FvmContractDetails).isTrue();
 
