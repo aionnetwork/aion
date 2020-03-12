@@ -4,6 +4,7 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
+import static org.aion.zero.impl.config.CfgDb.Names.PENDING_BLOCK;
 import static org.aion.zero.impl.config.CfgDb.Names.STATE_ARCHIVE;
 import static org.aion.zero.impl.db.DatabaseUtils.connectAndOpen;
 
@@ -128,7 +129,7 @@ public class AionRepositoryImpl extends AbstractRepository {
             // Setup block store.
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity, blockCacheSize);
 
-            this.pendingStore = new PendingBlockStore(pendingStoreProperties);
+            pendingStore = new PendingBlockStore(getDatabaseConfig(cfg, PENDING_BLOCK, cfg.getDbPath()));
             this.contractInfoSource = Stores.newObjectStoreWithCache(contractIndexDatabase, ContractInformation.RLP_SERIALIZER, 10, true);
             this.transformedCodeSource = Stores.newObjectStore(contractPerformCodeDatabase, TransformedCodeSerializer.RLP_SERIALIZER);
 

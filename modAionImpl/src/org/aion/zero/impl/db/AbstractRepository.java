@@ -57,9 +57,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    // pending block store
-    protected Properties pendingStoreProperties;
-
     protected boolean checkIntegrity = true;
 
     /**
@@ -203,10 +200,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                 throw newException(BLOCK, sharedProps);
             }
             databaseGroup.add(blockDatabase);
-
-            // using block specific properties
-            sharedProps.setProperty(Props.DB_NAME, PENDING_BLOCK);
-            this.pendingStoreProperties = sharedProps;
 
             // getting pending tx pool specific properties
             sharedProps = getDatabaseConfig(cfg, TX_POOL, dbPath);
