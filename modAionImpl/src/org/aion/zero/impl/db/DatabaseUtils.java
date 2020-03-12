@@ -36,14 +36,6 @@ public class DatabaseUtils {
                     info.getProperty(Props.DB_NAME));
         }
 
-        // check persistence status
-        if (!db.isCreatedOnDisk() && db.getPersistenceMethod() != PersistenceMethod.DBMS) {
-            LOG.error(
-                    "Database <{}> cannot be saved to disk for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
-
         return db;
     }
 

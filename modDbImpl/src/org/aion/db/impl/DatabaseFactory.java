@@ -97,15 +97,14 @@ public abstract class DatabaseFactory {
 
         if (dbType == DBVendor.MOCKDB) {
             // MockDB does not require name and path checks
-            log.warn("WARNING: Active vendor is set to MockDB, data will not persist!");
+            log.warn("WARNING: Active vendor for <{}> is set to MockDB, data will not persist!", dbName);
             return new MockDB(dbName, log);
         }
 
         String dbPath = info.getProperty(Props.DB_PATH);
 
         if (dbType == DBVendor.PERSISTENTMOCKDB) {
-            log.warn(
-                    "WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
+            log.warn("WARNING: Active vendor for <{}> is set to PersistentMockDB, data will be saved only at close!", dbName);
             return new PersistentMockDB(dbName, dbPath, log);
         }
 
