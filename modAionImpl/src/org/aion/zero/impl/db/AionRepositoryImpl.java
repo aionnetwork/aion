@@ -60,6 +60,9 @@ import org.slf4j.Logger;
 /** Has direct database connection. */
 public class AionRepositoryImpl extends AbstractRepository {
 
+    // Current block store.
+    private AionBlockStore blockStore;
+
     // State trie and pruning setup.
     private Trie worldState;
     private JournalPruneDataSource stateDSPrune;
@@ -1416,5 +1419,14 @@ public class AionRepositoryImpl extends AbstractRepository {
 
     public Block getBestBlock() {
         return this.blockStore.getBestBlock();
+    }
+
+    public AionBlockStore getBlockStore() {
+        return this.blockStore;
+    }
+
+    @Override
+    public byte[] getBlockHashByNumber(long blockNumber) {
+        return this.blockStore.getBlockHashByNumber(blockNumber);
     }
 }

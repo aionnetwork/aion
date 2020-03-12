@@ -74,9 +74,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    // Current blockstore.
-    public AionBlockStore blockStore;
-
     // pending block store
     protected Properties pendingStoreProperties;
 
@@ -266,15 +263,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                         + dbName
                         + "» database from the repository could not be initialized with the given parameters: "
                         + props);
-    }
-
-    public AionBlockStore getBlockStore() {
-        return this.blockStore;
-    }
-
-    @Override
-    public byte[] getBlockHashByNumber(long blockNumber) {
-        return this.blockStore.getBlockHashByNumber(blockNumber);
     }
 
     @Override
