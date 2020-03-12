@@ -557,12 +557,6 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     @Override
-    public boolean isClosed() {
-        // delegate to the tracked repository
-        return repository.isClosed();
-    }
-
-    @Override
     public void close() {
         throw new UnsupportedOperationException(
                 "The tracking cache cannot be closed. \'Close\' should be called on the tracked repository.");

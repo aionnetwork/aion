@@ -244,9 +244,4 @@ public abstract class AbstractRepository implements Repository<AccountState> {
                         + "» database from the repository could not be initialized with the given parameters: "
                         + props);
     }
-
-    @Override
-    public boolean isClosed() {
-        return stateDatabase == null;
-    }
 }

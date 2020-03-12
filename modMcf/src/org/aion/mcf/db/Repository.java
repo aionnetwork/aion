@@ -40,13 +40,6 @@ public interface Repository<AS> {
     /** Reverts all the changes performed by this repository. */
     void rollback();
 
-    /**
-     * Checks if the current repository has an open connection to the database.
-     *
-     * @return {@code true} if the database connection is open, {@code false} otherwise
-     */
-    boolean isClosed();
-
     /** Closes the connection to the database. */
     void close();
 
