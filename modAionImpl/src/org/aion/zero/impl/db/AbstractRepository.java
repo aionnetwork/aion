@@ -60,9 +60,6 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     // pending block store
     protected Properties pendingStoreProperties;
 
-    // Flag to see if the current instance is a snapshot.
-    protected boolean isSnapshot = false;
-
     protected boolean checkIntegrity = true;
 
     /**
@@ -251,10 +248,5 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     @Override
     public boolean isClosed() {
         return stateDatabase == null;
-    }
-
-    @Override
-    public boolean isSnapshot() {
-        return isSnapshot;
     }
 }

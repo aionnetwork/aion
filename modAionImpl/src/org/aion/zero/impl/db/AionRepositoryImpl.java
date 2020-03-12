@@ -89,6 +89,9 @@ public class AionRepositoryImpl extends AbstractRepository {
     // TODO: include in the repository config after the FVM is decoupled or remove RepositoryConfig and pass individual parameters
     private int blockCacheSize;
 
+    // Flag to see if the current instance is a snapshot.
+    private boolean isSnapshot = false;
+
     /**
      * used by getSnapShotTo
      *
@@ -1429,5 +1432,10 @@ public class AionRepositoryImpl extends AbstractRepository {
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
         return this.blockStore.getBlockHashByNumber(blockNumber);
+    }
+
+    @Override
+    public boolean isSnapshot() {
+        return isSnapshot;
     }
 }
