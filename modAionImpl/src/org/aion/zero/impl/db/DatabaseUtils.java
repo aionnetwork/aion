@@ -15,7 +15,6 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.db.impl.PersistenceMethod;
-import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.slf4j.Logger;
 
@@ -53,7 +52,7 @@ public class DatabaseUtils {
      * are missing in the path.
      *
      * @param dbFile the path to be verified.
-     * @throws InvalidFilePathException when:
+     * @throws IllegalArgumentException when:
      *     <ol>
      *       <li>the given path is not valid;
      *       <li>the directory structure cannot be created;
@@ -61,10 +60,10 @@ public class DatabaseUtils {
      *       <li>the give file is not a directory
      *     </ol>
      */
-    public static void verifyAndBuildPath(File dbFile) throws InvalidFilePathException {
+    public static void verifyAndBuildPath(File dbFile) {
         // to throw in case of issues with the path
-        InvalidFilePathException exception =
-                new InvalidFilePathException(
+        IllegalArgumentException exception =
+                new IllegalArgumentException(
                         "The path «"
                                 + dbFile.getAbsolutePath()
                                 + "» is not valid as reported by the OS or a read/write permissions error occurred."

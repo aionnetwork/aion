@@ -15,7 +15,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
@@ -41,7 +40,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -72,7 +71,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -99,7 +98,7 @@ public class PendingBlockStoreTest {
         // check persistence of storage
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -121,7 +120,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -195,7 +194,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -217,7 +216,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -267,7 +266,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -286,7 +285,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -327,7 +326,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -366,7 +365,7 @@ public class PendingBlockStoreTest {
         PendingBlockStore pb = null;
         try {
             pb = new PendingBlockStore(props);
-        } catch (InvalidFilePathException | IOException | InvalidFileTypeException e) {
+        } catch (IOException | InvalidFileTypeException e) {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
@@ -403,7 +402,7 @@ public class PendingBlockStoreTest {
 
     @Test(expected = InvalidFileTypeException.class)
     public void testSwitchDbVendorleveldbToRocksdbException()
-        throws InvalidFileTypeException, IOException, InvalidFilePathException {
+        throws InvalidFileTypeException, IOException {
 
         File dir = new File(System.getProperty("user.dir"), "tmp-" + System.currentTimeMillis());
         Properties levelDB = new Properties();
@@ -441,7 +440,7 @@ public class PendingBlockStoreTest {
 
     @Test(expected = InvalidFileTypeException.class)
     public void testSwitchDbVendorRocksdbToLeveldbException()
-        throws InvalidFileTypeException, IOException, InvalidFilePathException {
+        throws InvalidFileTypeException, IOException {
 
         File dir = new File(System.getProperty("user.dir"), "tmp-" + System.currentTimeMillis());
         Properties rocksDB = new Properties();

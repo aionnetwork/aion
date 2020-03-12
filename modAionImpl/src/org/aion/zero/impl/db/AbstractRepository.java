@@ -21,7 +21,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.mcf.db.Repository;
-import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
@@ -60,12 +59,12 @@ public abstract class AbstractRepository implements Repository<AccountState> {
     /**
      * Initializes all necessary databases and caches.
      *
-     * @throws InvalidFilePathException when called with a persistent database vendor for which the
+     * @throws IllegalStateException when called with a persistent database vendor for which the
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
     protected void initializeDatabasesAndCaches(RepositoryConfig cfg)
-        throws InvalidFilePathException, InvalidFileTypeException, IOException {
+        throws InvalidFileTypeException, IOException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety
@@ -210,8 +209,9 @@ public abstract class AbstractRepository implements Repository<AccountState> {
             }
             databaseGroup.add(pendingTxCacheDatabase);
 
-        } catch (Exception e) { // Setting up databases and caches went wrong.
-            throw e;
+        } catch (Exception cause) {
+            // Unable to set up the databases. Throw exception with underlying cause.
+            throw new IllegalStateException(cause);
         }
     }
 
@@ -223,8 +223,9 @@ public abstract class AbstractRepository implements Repository<AccountState> {
         return prop;
     }
 
-    private InvalidFilePathException newException(String dbName, Properties props) {
-        return new InvalidFilePathException(
+    private IllegalStateException newException(String dbName, Properties props) {
+        // A shutdown is required if the databases cannot be initialized.
+        return new IllegalStateException(
                 "The «"
                         + dbName
                         + "» database from the repository could not be initialized with the given parameters: "

@@ -30,7 +30,6 @@ import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -92,11 +91,11 @@ public class PendingBlockStore implements Closeable {
      * if persistence is requested but not achievable.
      *
      * @param _props properties of the databases to be used for storage
-     * @throws InvalidFilePathException when given a persistent database vendor for which the data
+     * @throws IllegalStateException when given a persistent database vendor for which the data
      *     store cannot be created or opened.
      */
     public PendingBlockStore(final Properties _props)
-        throws InvalidFilePathException, IOException, InvalidFileTypeException {
+        throws IOException, InvalidFileTypeException {
         Properties local = new Properties(_props);
 
         // check for database persistence requirements
@@ -121,10 +120,10 @@ public class PendingBlockStore implements Closeable {
      * Initializes and opens the databases where the pending blocks will be stored.
      *
      * @param props the database properties to be used in initializing the underlying databases
-     * @throws InvalidFilePathException when any of the required databases cannot be instantiated or
+     * @throws IllegalStateException when any of the required databases cannot be instantiated or
      *     opened.
      */
-    private void init(Properties props) throws InvalidFilePathException {
+    private void init(Properties props) {
         // create the level source
         props.setProperty(Props.DB_NAME, LEVEL_DB_NAME);
         this.levelDatabase = connectAndOpen(props, LOG);
@@ -149,8 +148,8 @@ public class PendingBlockStore implements Closeable {
         }
     }
 
-    private InvalidFilePathException newException(String dbName, Properties props) {
-        return new InvalidFilePathException(
+    private IllegalStateException newException(String dbName, Properties props) {
+        return new IllegalStateException(
                 "The «"
                         + dbName
                         + "» database from the pending block store could not be initialized with the given parameters: "
