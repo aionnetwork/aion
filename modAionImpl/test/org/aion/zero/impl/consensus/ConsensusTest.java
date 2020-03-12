@@ -203,7 +203,7 @@ public class ConsensusTest {
         assertEquals(CONTRACT, TxUtil.calculateContractAddress(deployTransaction));
 
         // Place the transaction in a block alone.
-        Block parentBlock = blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = blockchain.getRepository().getBestBlock();
         List<AionTransaction> transactions = Collections.singletonList(deployTransaction);
 
         // Run the transaction.
@@ -222,7 +222,7 @@ public class ConsensusTest {
         byte[] receiptPostTransactionState = receipt.getPostTxState();
         byte[] receiptTrieEncoded = receipt.getReceiptTrieEncoded();
 
-        parentBlock = blockchain.getRepository().blockStore.getBestBlock();
+        parentBlock = blockchain.getRepository().getBestBlock();
 
         // Place the transactions all in a block.
         transactions = new ArrayList<>();

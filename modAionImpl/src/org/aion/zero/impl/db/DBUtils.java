@@ -798,7 +798,7 @@ public class DBUtils {
         AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
 
         try {
-            Block bestBlock = blockchain.getRepository().getBlockStore().getBestBlock();
+            Block bestBlock = blockchain.getRepository().getBestBlock();
 
             Repository<AccountState> repository =
                     blockchain

@@ -1259,7 +1259,7 @@ public class AionRepositoryImpl extends AbstractRepository {
      * Removes blocks on side chains and recreates the block information inside the index database.
      */
     public void pruneAndCorrectBlockStore() {
-        Block bestBlock = blockStore.getBestBlock();
+        Block bestBlock = getBestBlock();
         if (bestBlock == null) {
             LOGGEN.error("Empty database. Nothing to do.");
             return;
@@ -1380,7 +1380,7 @@ public class AionRepositoryImpl extends AbstractRepository {
 
         // return a flag indicating if the recovery worked
         if (isIndexed(missingBlock.getHash(), missingBlock.getNumber())) {
-            Block mainChain = blockStore.getBestBlock();
+            Block mainChain = getBestBlock();
             BigInteger mainChainTotalDiff = getTotalDifficultyForHash(mainChain.getHash());
 
             // check if the main chain needs to be updated
@@ -1414,4 +1414,7 @@ public class AionRepositoryImpl extends AbstractRepository {
         }
     }
 
+    public Block getBestBlock() {
+        return this.blockStore.getBestBlock();
+    }
 }

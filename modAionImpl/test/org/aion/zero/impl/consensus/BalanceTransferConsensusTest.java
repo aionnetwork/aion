@@ -101,7 +101,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
 
         // Process the transaction.
-        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().getBestBlock();
         AionBlock block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -150,7 +150,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
 
         // Process the transaction.
-        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().getBestBlock();
         AionBlock block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -177,7 +177,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isFalse();
 
         // Process the transaction.
-        parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        parentBlock = this.blockchain.getRepository().getBestBlock();
         block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -203,7 +203,7 @@ public class BalanceTransferConsensusTest {
         assertThat(TransactionTypeValidator.isValid(transaction)).isTrue();
 
         // Process the transaction.
-        parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        parentBlock = this.blockchain.getRepository().getBestBlock();
         block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
@@ -339,7 +339,7 @@ public class BalanceTransferConsensusTest {
 
     private Pair<ImportResult, AionBlockSummary> processTransactions(
             List<AionTransaction> transactions, int numNonRejectedTransactions) {
-        Block parentBlock = this.blockchain.getRepository().blockStore.getBestBlock();
+        Block parentBlock = this.blockchain.getRepository().getBestBlock();
         AionBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);

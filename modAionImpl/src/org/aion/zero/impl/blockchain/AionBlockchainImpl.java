@@ -2310,7 +2310,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             // Load bestblock for executing the CLI command.
             if (bestBlock == null) {
-                bestBlock = repo.getBlockStore().getBestBlock();
+                bestBlock = repo.getBestBlock();
 
                 if (bestBlock instanceof AionBlock) {
                     bestMiningBlock = (AionBlock) bestBlock;
@@ -2518,7 +2518,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         // Note: if block DB corruption, the bestBlock may not match with the indexDB.
-        Block bestBlock = repository.getBlockStore().getBestBlock();
+        Block bestBlock = repository.getBestBlock();
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -2574,7 +2574,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 repository.getBlockStore().rollback(blockNumber);
 
                 // new best block after recovery
-                bestBlock = repository.getBlockStore().getBestBlock();
+                bestBlock = repository.getBestBlock();
                 if (bestBlock != null) {
 
                     bestBlock.setTotalDifficulty(getTotalDifficultyForHash(bestBlock.getHash()));
