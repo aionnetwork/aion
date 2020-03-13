@@ -244,18 +244,38 @@ public class BlockchainTestUtils {
      * @param resourceProvider provides the implementations of the two AVMs; <b>must have both enabled</b>
      * @param blocks number of blocks to be added to the chain
      * @param frequency every multiple of frequency block will be on the main chain
-     * @param accounts existing accounts with balance on the chain used to generate random transactions; <b>will be used as stakers after the Unity fork</b>
+     * @param stakers existing accounts with balance on the chain used to generate random transactions; <b>will be used as stakers after the Unity fork</b>
      * @param stakingRegistryOwner existing account with balance; <b>will be used to deploy the StakerRegistry contract</b>
      * @param txCount maximum number of transactions per block
      */
-    public static void generateRandomUnityChain(StandaloneBlockchain chain, TestResourceProvider resourceProvider, long blocks, int frequency, List<ECKey> accounts, ECKey stakingRegistryOwner, int txCount) {
+    public static void generateRandomUnityChain(StandaloneBlockchain chain, TestResourceProvider resourceProvider, long blocks, int frequency, List<ECKey> stakers, ECKey stakingRegistryOwner, int txCount) {
+        generateRandomUnityChain(chain, resourceProvider, blocks, frequency, stakers, Collections.emptyList(), stakingRegistryOwner, txCount);
+    }
+
+    /**
+     * Generates a random chain with alternating mining and staking blocks after the unity fork is reached. The staking registry contract is deployed in the block before the fork. Stakers are registered in the Unity fork block.
+     *
+     * @param chain blockchain implementation to be populated
+     * @param resourceProvider provides the implementations of the two AVMs; <b>must have both enabled</b>
+     * @param blocks number of blocks to be added to the chain
+     * @param frequency every multiple of frequency block will be on the main chain
+     * @param stakerAccounts existing accounts with balance on the chain used to generate random transactions; <b>will be used as stakers after the Unity fork</b>
+     * @param otherAccounts additional existing accounts with balance on the chain used to generate random transactions without staking;
+     * @param stakingRegistryOwner existing account with balance; <b>will be used to deploy the StakerRegistry contract</b>
+     * @param txCount maximum number of transactions per block
+     */
+    public static void generateRandomUnityChain(StandaloneBlockchain chain, TestResourceProvider resourceProvider, long blocks, int frequency, List<ECKey> stakerAccounts, List<ECKey> otherAccounts, ECKey stakingRegistryOwner, int txCount) {
         long seed = rand.nextLong();
         rand.setSeed(seed);
         System.out.println("Random seed used: " + seed);
 
         // ensure the stakingRegistryOwner is not among the stakers
-        List<ECKey> stakers = new ArrayList<>(accounts);
+        List<ECKey> stakers = new ArrayList<>(stakerAccounts);
         stakers.remove(stakingRegistryOwner);
+
+        // Will produce random transactions on the chain.
+        List<ECKey> users = new ArrayList<>(stakerAccounts);
+        stakers.addAll(otherAccounts);
 
         if (stakingRegistryOwner == null || stakers == null || stakers.isEmpty()) {
             throw new IllegalStateException("Please provide the accounts required to build a Unity chain.");
@@ -309,7 +329,7 @@ public class BlockchainTestUtils {
                     txs.add(registerStaker(resourceProvider.factoryForVersion1, key, MIN_SELF_STAKE, repo.getNonce(new AionAddress(key.getAddress())), contract));
                 }
             } else {
-                txs = txCount > 0 ? generateTransactions(txCount, accounts, repo) : Collections.emptyList();
+                txs = txCount > 0 ? generateTransactions(txCount, users, repo) : Collections.emptyList();
             }
             // get back to current root
             repo.syncToRoot(originalRoot);
