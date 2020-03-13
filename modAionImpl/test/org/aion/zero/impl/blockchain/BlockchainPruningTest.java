@@ -6,17 +6,22 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.MIN_SELF_STAKE;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.config.CfgDb.Names;
+import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -178,6 +183,124 @@ public class BlockchainPruningTest {
 
             // Ensure the current state was not pruned after the import.
             verifyFullState(repository, nextBlock);
+        }
+    }
+
+    @Test
+    public void testSpreadPruningWithoutSideChains() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+        // Setup used accounts.
+        assertThat(accounts.size()).isAtLeast(12);
+        ECKey stakingRegistryOwner = accounts.get(0);
+        // Lists of stakers.
+        List<ECKey> allStakes = List.of(accounts.get(1), accounts.get(2), accounts.get(3), accounts.get(4), accounts.get(5), accounts.get(6));
+        List<ECKey> mainStakers = List.of(accounts.get(1), accounts.get(2), accounts.get(3));
+        List<ECKey> otherStakers = List.of(accounts.get(4), accounts.get(5), accounts.get(6));
+        // Lists of users.
+        List<ECKey> mainUsers = List.of(accounts.get(1), accounts.get(2), accounts.get(3), accounts.get(7), accounts.get(8), accounts.get(9));
+        List<ECKey> otherUsers = List.of(accounts.get(4), accounts.get(5), accounts.get(6), accounts.get(10), accounts.get(11), accounts.get(0));
+
+        // Setup the blockchain.
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain chain = builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).withAvmEnabled().build().bc;
+        chain.forkUtility.enableUnityFork(unityForkBlock);
+
+        // Setup TOP pruning for the repository.
+        AionRepositoryImpl repository = chain.getRepository();
+        Properties props = new Properties();
+        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+        props.setProperty(Props.ENABLE_LOCKING, "false");
+        props.setProperty(Props.DB_PATH, "");
+        props.setProperty(Props.DB_NAME, Names.STATE_ARCHIVE);
+        repository.setupSpreadPruning(1, 10, props);
+
+        // Setup the first block in the chain with the staker registry deployment.
+        Block nextBlock = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(chain, chain.getGenesis(), resourceProvider, stakingRegistryOwner);
+        Pair<ImportResult, AionBlockSummary> result = chain.tryToConnectAndFetchSummary(nextBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, nextBlock);
+
+        // Set the staking contract address in the staking genesis.
+        AionTransaction deploy = nextBlock.getTransactionsList().get(0);
+        AionAddress contract = TxUtil.calculateContractAddress(deploy.getSenderAddress().toByteArray(), deploy.getNonceBI());
+        chain.getGenesis().setStakingContractAddress(contract);
+
+        // Create block to register all stakers.
+        nextBlock = BlockchainTestUtils.generateNextMiningBlockWithStakers(chain, chain.getBestBlock(), resourceProvider, allStakes, MIN_SELF_STAKE);
+        result = chain.tryToConnectAndFetchSummary(nextBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, nextBlock);
+
+        // Verify that all stakers were registered.
+        verifyReceipts(result.getRight().getReceipts(), allStakes.size(), true);
+        verifyEffectiveSelfStake(otherStakers, chain, nextBlock, MIN_SELF_STAKE);
+
+        // Generate random transactions for all accounts to add them to the state.
+        List<AionTransaction> txs = BlockchainTestUtils.generateTransactions(1_000, accounts, chain.getRepository());
+        nextBlock = BlockchainTestUtils.generateNextStakingBlock(chain, nextBlock, txs, otherStakers.get(0));
+        result = chain.tryToConnectAndFetchSummary(nextBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, nextBlock);
+
+        BigInteger expectedStake = MIN_SELF_STAKE;
+
+        for (int i = 0; i < 6; i++) {
+            // Add blocks with transactions for mainStakers and mainUsers.
+            for (int j = 0; j < 6; j++) {
+                // Add transactions for frequent users.
+                txs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository());
+                // Seal the block with a frequent staker.
+                ECKey staker = mainStakers.get((i + j) % mainStakers.size());
+                if (nextBlock instanceof AionBlock) {
+                    nextBlock = BlockchainTestUtils.generateNextStakingBlock(chain, nextBlock, txs, staker);
+                } else {
+                    nextBlock = BlockchainTestUtils.generateNextMiningBlock(chain, nextBlock, txs);
+                }
+                result = chain.tryToConnectAndFetchSummary(nextBlock);
+                assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+                // Ensure the current state was not pruned after the import.
+                verifyFullState(repository, nextBlock);
+            }
+
+            // Increase stake of mainStakes.
+            txs = BlockchainTestUtils.generateIncreaseStakeTransactions(chain, nextBlock, resourceProvider, mainStakers, MIN_SELF_STAKE);
+            assertThat(txs.size()).isEqualTo(mainStakers.size());
+            nextBlock = BlockchainTestUtils.generateNextMiningBlock(chain, nextBlock, txs);
+            result = chain.tryToConnectAndFetchSummary(nextBlock);
+            assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+            verifyReceipts(result.getRight().getReceipts(), mainStakers.size(), false);
+
+            // Ensure the current state was not pruned after the import.
+            verifyFullState(repository, nextBlock);
+
+            // Verify stakers effective stake update.
+            expectedStake = expectedStake.add(MIN_SELF_STAKE);
+            verifyEffectiveSelfStake(mainStakers, chain, nextBlock, expectedStake);
+
+            // Add transactions for infrequent users.
+            txs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository());
+            // Seal the block with an infrequent staker.
+            ECKey staker = otherStakers.get(i % otherStakers.size());
+            nextBlock = BlockchainTestUtils.generateNextStakingBlock(chain, nextBlock, txs, staker);
+            result = chain.tryToConnectAndFetchSummary(nextBlock);
+            assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+            // Ensure the current state was not pruned after the import.
+            verifyFullState(repository, nextBlock);
+        }
+
+        // Ensure the state was not pruned for every 10th block.
+        for (long i = 10; i <= 50; i += 10) {
+            verifyFullState(repository, chain.getBlockByNumber(i));
         }
     }
 
