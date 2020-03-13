@@ -5,6 +5,7 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.MIN_SELF_STAKE;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ import org.aion.zero.impl.vm.TestResourceProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -187,6 +189,187 @@ public class BlockchainPruningTest {
     }
 
     @Test
+    @Ignore // TODO: [AKI-677]
+    public void testTopPruningWithSideChains() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+        // Setup used accounts.
+        assertThat(accounts.size()).isAtLeast(12);
+        ECKey stakingRegistryOwner = accounts.get(0);
+        // Lists of stakers.
+        List<ECKey> allStakers = List.of(accounts.get(1), accounts.get(2), accounts.get(3), accounts.get(4));
+        List<ECKey> mainStakers = List.of(accounts.get(1), accounts.get(2));
+        List<ECKey> otherStakers = List.of(accounts.get(3), accounts.get(4));
+        // Lists of users.
+        List<ECKey> txUsers = new ArrayList<>(accounts);
+        txUsers.removeAll(allStakers);
+        List<ECKey> mainUsers = List.of(accounts.get(5), accounts.get(6), accounts.get(7), accounts.get(8));
+        List<ECKey> otherUsers = List.of(accounts.get(9), accounts.get(10), accounts.get(11), accounts.get(0));
+
+        // Setup the blockchain.
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain chain = builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).withAvmEnabled().build().bc;
+        chain.forkUtility.enableUnityFork(unityForkBlock);
+
+        // Setup TOP pruning for the repository.
+        AionRepositoryImpl repository = chain.getRepository();
+        repository.setupTopPruning(2);
+        Block mainParent = chain.getGenesis();
+        Block sideParent = chain.getGenesis();
+
+        // Setup the first block in the chain with the staker registry deployment.
+        Block mainBlock = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(chain, mainParent, resourceProvider, stakingRegistryOwner);
+        Block sideBlock = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(chain, sideParent, resourceProvider, stakingRegistryOwner);
+
+        Pair<ImportResult, AionBlockSummary> result = chain.tryToConnectAndFetchSummary(mainBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+        result = chain.tryToConnectAndFetchSummary(sideBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, mainBlock);
+        verifyFullState(repository, sideBlock);
+        // Swap chains.
+        mainParent = sideBlock;
+        sideParent = mainBlock;
+
+        // Set the staking contract address in the staking genesis.
+        AionTransaction deploy = mainBlock.getTransactionsList().get(0);
+        AionAddress contract = TxUtil.calculateContractAddress(deploy.getSenderAddress().toByteArray(), deploy.getNonceBI());
+        chain.getGenesis().setStakingContractAddress(contract);
+
+        // Create block to register all stakers.
+        mainBlock = BlockchainTestUtils.generateNextMiningBlockWithStakers(chain, mainParent, resourceProvider, allStakers, MIN_SELF_STAKE);
+        sideBlock = BlockchainTestUtils.generateNextMiningBlockWithStakers(chain, sideParent, resourceProvider, allStakers, MIN_SELF_STAKE);
+
+        result = chain.tryToConnectAndFetchSummary(mainBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        // Verify that all stakers were registered.
+        verifyReceipts(result.getRight().getReceipts(), allStakers.size(), true);
+        verifyEffectiveSelfStake(otherStakers, chain, mainBlock, MIN_SELF_STAKE);
+
+        result = chain.tryToConnectAndFetchSummary(sideBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        // Verify that all stakers were registered.
+        verifyReceipts(result.getRight().getReceipts(), allStakers.size(), true);
+        verifyEffectiveSelfStake(otherStakers, chain, sideBlock, MIN_SELF_STAKE);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, mainBlock);
+        verifyFullState(repository, sideBlock);
+        // Swap chains.
+        mainParent = sideBlock;
+        sideParent = mainBlock;
+
+        // Generate random transactions for all accounts to add them to the state.
+        List<AionTransaction> mcTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), mainParent);
+        List<AionTransaction> scTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), sideParent);
+
+        mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, otherStakers.get(0));
+        sideBlock = BlockchainTestUtils.generateNextStakingBlock(chain, sideParent, scTxs, otherStakers.get(0));
+
+        assertThat(mainBlock.getParentHashWrapper()).isEqualTo(mainParent.getHashWrapper());
+        assertThat(sideBlock.getParentHashWrapper()).isEqualTo(sideParent.getHashWrapper());
+
+        result = chain.tryToConnectAndFetchSummary(mainBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        result = chain.tryToConnectAndFetchSummary(sideBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, mainBlock);
+        verifyFullState(repository, sideBlock);
+        // Swap chains.
+        mainParent = sideBlock;
+        sideParent = mainBlock;
+
+        BigInteger expectedStake = MIN_SELF_STAKE;
+        // Add blocks with transactions for mainStakers and mainUsers.
+        for (int j = 0; j < 4; j++) {
+            // Add transactions for frequent users.
+            mcTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), mainParent);
+            scTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), sideParent);
+
+            // Seal the block with a frequent staker.
+            if (mainParent instanceof AionBlock && sideParent instanceof AionBlock) {
+                mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, mainStakers.get(0));
+                sideBlock = BlockchainTestUtils.generateNextStakingBlock(chain, sideParent, scTxs, mainStakers.get(1));
+            } else {
+                mainBlock = BlockchainTestUtils.generateNextMiningBlock(chain, mainParent, mcTxs, mainParent.getTimestamp() + 1);
+                sideBlock = BlockchainTestUtils.generateNextMiningBlock(chain, sideParent, scTxs, sideParent.getTimestamp() + 1);
+            }
+
+            assertThat(mainBlock.getParentHashWrapper()).isEqualTo(mainParent.getHashWrapper());
+            assertThat(sideBlock.getParentHashWrapper()).isEqualTo(sideParent.getHashWrapper());
+
+            result = chain.tryToConnectAndFetchSummary(mainBlock);
+            assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+            result = chain.tryToConnectAndFetchSummary(sideBlock);
+            assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+            // Ensure the current state was not pruned after the import.
+            verifyFullState(repository, mainBlock);
+            verifyFullState(repository, sideBlock);
+            // Swap chains.
+            mainParent = sideBlock;
+            sideParent = mainBlock;
+        }
+
+        // Increase stake of mainStakes.
+        mcTxs = BlockchainTestUtils.generateIncreaseStakeTransactions(chain, mainParent, resourceProvider, mainStakers, MIN_SELF_STAKE);
+        scTxs = BlockchainTestUtils.generateIncreaseStakeTransactions(chain, sideParent, resourceProvider, mainStakers, MIN_SELF_STAKE);
+
+        assertThat(mcTxs.size()).isEqualTo(mainStakers.size());
+        assertThat(scTxs.size()).isEqualTo(mainStakers.size());
+
+        mainBlock = BlockchainTestUtils.generateNextMiningBlock(chain, mainParent, mcTxs, mainParent.getTimestamp() + 1);
+        sideBlock = BlockchainTestUtils.generateNextMiningBlock(chain, sideParent, scTxs, mainParent.getTimestamp() + 1);
+
+        result = chain.tryToConnectAndFetchSummary(mainBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), mainStakers.size(), false);
+        result = chain.tryToConnectAndFetchSummary(sideBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        verifyReceipts(result.getRight().getReceipts(), mainStakers.size(), false);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, mainBlock);
+        verifyFullState(repository, sideBlock);
+        // Swap chains.
+        mainParent = sideBlock;
+        sideParent = mainBlock;
+
+        // Verify stakers effective stake update.
+        expectedStake = expectedStake.add(MIN_SELF_STAKE);
+        verifyEffectiveSelfStake(mainStakers, chain, mainBlock, expectedStake);
+        verifyEffectiveSelfStake(mainStakers, chain, sideBlock, expectedStake);
+
+        // Add transactions for infrequent users.
+        mcTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), mainParent);
+        scTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), sideParent);
+
+        // Seal the block with an infrequent staker.
+        mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, otherStakers.get(0));
+        sideBlock = BlockchainTestUtils.generateNextStakingBlock(chain, sideParent, scTxs, otherStakers.get(1));
+
+        assertThat(mainBlock).isNotNull();
+        assertThat(sideBlock).isNotNull();
+
+        result = chain.tryToConnectAndFetchSummary(mainBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        result = chain.tryToConnectAndFetchSummary(sideBlock);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        // Ensure the current state was not pruned after the import.
+        verifyFullState(repository, mainBlock);
+        verifyFullState(repository, sideBlock);
+    }
+
+    @Test
     public void testSpreadPruningWithoutSideChains() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         // Setup used accounts.
         assertThat(accounts.size()).isAtLeast(12);
@@ -305,20 +488,24 @@ public class BlockchainPruningTest {
     }
 
     public void verifyFullState(AionRepositoryImpl repository, Block block) {
+        byte[] stateRoot = block.getStateRoot();
         try {
             // Traverse the trie and count the number of keys. Throws an exception when a key is expected to exist and not found.
-            byte[] stateRoot = block.getStateRoot();
             int size = repository.getWorldState().getTrieSize(stateRoot);
             assertThat(size).isNotNull();
             System.out.format(
-                    "Block #%2d hash=%s txs=%3d root=%s trie-size=%4d %n",
+                    "Block #%2d [%s] hash=%s parent=%s txs=%3d time=%d diff=%24d td=%24d root=%s trie-size=%4d %n",
                     block.getNumber(),
+                    block instanceof AionBlock ? "M" : "S",
                     block.getShortHash(),
+                    block.getParentHashWrapper().toString().substring(0, 6),
                     block.getTransactionsList().size(),
+                    block.getTimestamp(),
+                    block.getDifficultyBI(),
+                    block.getTotalDifficulty(),
                     ByteArrayWrapper.wrap(stateRoot), size);
         } catch (Exception e) {
-            System.out.println("The world state for the given root is incomplete.");
-            e.printStackTrace();
+            System.out.println("The world state for the root=" + ByteArrayWrapper.wrap(stateRoot) + " of block #" + block.getNumber() + ":" + block.getShortHash() + " is incomplete.");
             throw e;
         }
     }
