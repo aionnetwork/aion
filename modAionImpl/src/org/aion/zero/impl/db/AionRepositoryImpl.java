@@ -85,7 +85,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 /** Has direct database connection. */
-public class AionRepositoryImpl implements Repository<AccountState> {
+public final class AionRepositoryImpl implements Repository<AccountState> {
 
     // Logger
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -146,9 +146,9 @@ public class AionRepositoryImpl implements Repository<AccountState> {
      * <p>@ATTENTION: when do snap shot, another instance will be created. Make sure it is used only
      * by getSnapShotTo
      */
-    protected AionRepositoryImpl() {}
+    private AionRepositoryImpl() {}
 
-    protected AionRepositoryImpl(RepositoryConfig repoConfig, int blockCacheSize) {
+    private AionRepositoryImpl(RepositoryConfig repoConfig, int blockCacheSize) {
         this.blockCacheSize = blockCacheSize;
         init(repoConfig);
     }
@@ -232,7 +232,7 @@ public class AionRepositoryImpl implements Repository<AccountState> {
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches(RepositoryConfig cfg)
+    private void initializeDatabasesAndCaches(RepositoryConfig cfg)
             throws InvalidFileTypeException, IOException {
         // Given that this function is only called on startup, enforce conditions here for safety.
         Objects.requireNonNull(cfg);
@@ -345,7 +345,7 @@ public class AionRepositoryImpl implements Repository<AccountState> {
         databaseGroup.add(pendingTxCacheDatabase);
     }
 
-    protected Properties getDatabaseConfig(RepositoryConfig cfg, String dbName, String dbPath) {
+    private Properties getDatabaseConfig(RepositoryConfig cfg, String dbName, String dbPath) {
         Properties prop = cfg.getDatabaseConfig(dbName);
         prop.setProperty(Props.ENABLE_LOCKING, "false");
         prop.setProperty(Props.DB_PATH, dbPath);
