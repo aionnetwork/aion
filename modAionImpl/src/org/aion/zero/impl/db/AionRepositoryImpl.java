@@ -116,7 +116,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
     private Trie worldState;
     private JournalPruneDataSource stateDSPrune;
     private ArchivedDataSource stateWithArchive;
-    private Map<Long, Set<ByteArrayWrapper>> cacheForBlockPruning;
     private long bestBlockNumber;
     private int pruneBlockCount;
     private long archiveRate;
@@ -216,10 +215,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
 
         stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
         stateDSPrune = new JournalPruneDataSource(stateWithArchive, LOG);
-        // the size is defined assuming for two side chain blocks at each level
-        // since the pruned blocks are removed according to their level
-        // in practice the cache is likely to be one third the allocated size
-        cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
 
         stateDSPrune.setPruneEnabled(pruneEnabled);
         worldState = createStateTrie();
@@ -236,8 +231,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         stateArchiveDatabase = null;
         stateWithArchive = null;
         stateDSPrune = new JournalPruneDataSource(stateDatabase, LOG);
-
-        cacheForBlockPruning = new HashMap<>(3 * pruneBlockCount);
 
         stateDSPrune.setPruneEnabled(pruneEnabled);
         worldState = createStateTrie();
@@ -820,15 +813,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             worldState.sync();
 
             if (pruneEnabled) {
-                // cache the block number & hash for retrieval during pruneBlocks
-                if (cacheForBlockPruning.containsKey(blockNumber)) {
-                    cacheForBlockPruning.get(blockNumber).add(blockHash);
-                } else {
-                    Set<ByteArrayWrapper> hashes = new HashSet<>();
-                    hashes.add(blockHash);
-                    cacheForBlockPruning.put(blockNumber, hashes);
-                }
-
                 if (stateDSPrune.isArchiveEnabled() && blockNumber % archiveRate == 0) {
                     // archive block
                     worldState.saveDiffStateToDatabase(blockStateRoot, stateDSPrune.getArchiveSource());
@@ -848,23 +832,11 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             long pruneBlockNumber = currentBlockNumber - pruneBlockCount;
 
             if (pruneBlockNumber >= 0) {
-                // If the cacheForBlockPruning does not contain the block neither will the trie cache
-                if (cacheForBlockPruning.containsKey(pruneBlockNumber)) {
-                    // Prune all the blocks at that level
-                    Set<ByteArrayWrapper> hashes = cacheForBlockPruning.remove(pruneBlockNumber);
-                    for (ByteArrayWrapper hash : hashes) {
-                        stateDSPrune.prune(hash, pruneBlockNumber);
-                        detailsDS.getStorageDSPrune().prune(hash, pruneBlockNumber);
-                    }
-                } else {
-                    // Unlikely case where the block was evicted from the cache due to too many side chains
-                    // In this case we do not attempt to prune blocks on side chains.
-                    byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
-                    if (pruneBlockHash != null) {
-                        ByteArrayWrapper hash = ByteArrayWrapper.wrap(pruneBlockHash);
-                        stateDSPrune.prune(hash, pruneBlockNumber);
-                        detailsDS.getStorageDSPrune().prune(hash, pruneBlockNumber);
-                    }
+                byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
+                if (pruneBlockHash != null) {
+                    ByteArrayWrapper hash = ByteArrayWrapper.wrap(pruneBlockHash);
+                    stateDSPrune.prune(hash, pruneBlockNumber);
+                    detailsDS.getStorageDSPrune().prune(hash, pruneBlockNumber);
                 }
             }
         }
@@ -895,7 +867,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
             repo.stateDSPrune = this.stateDSPrune;
-            repo.cacheForBlockPruning = this.cacheForBlockPruning;
 
             // pruning config
             repo.pruneEnabled = this.pruneEnabled;
