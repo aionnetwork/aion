@@ -512,10 +512,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
                         db.commit();
                     }
                 }
-            } else {
-                if (LOG.isWarnEnabled()) {
-                    LOG.warn("databaseGroup is null");
-                }
             }
 
             if (LOG.isInfoEnabled()) {
