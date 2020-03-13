@@ -907,11 +907,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public static boolean reachedFullSync = false;
 
     public ImportResult tryToConnect(final Block block) {
+        checkKernelShutdownForCLI();
         return tryToConnect(new BlockWrapper(block));
     }
 
     public synchronized ImportResult tryToConnect(final BlockWrapper blockWrapper) {
-        checkKernelShutdownForCLI();
         return tryToConnectWithTimedExecution(blockWrapper).getLeft();
     }
 
@@ -2097,7 +2097,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public synchronized void close() {
         // The main repository instance is stashed when the snapshot is created. If the current repository is a snapshot that means the main one is in the stack.
         // We pop the stack until we get to the main repository instance that contains access too all the databases that must be closed.
-        while (repository.isSnapshot()) {
+        while (repository.isSnapshot() && !stateStack.isEmpty()) {
             popState();
         }
 
