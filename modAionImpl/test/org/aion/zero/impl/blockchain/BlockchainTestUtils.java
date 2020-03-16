@@ -425,6 +425,20 @@ public class BlockchainTestUtils {
     }
 
     /**
+     * Generates a single mining block (containing the given transactions) on top of the given chain.
+     * Does not import the block.
+     *
+     * @param chain blockchain implementation to be extended with the new block
+     * @param parent the parent for the block to be generated
+     * @param transactions list of transactions to be included in the block
+     * @param timestamp the desired block timestamp
+     * @return the generated block
+     */
+    public static Block generateNextMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> transactions, long timestamp) {
+        return chain.createNewMiningBlockInternal(parent, transactions, true, timestamp).block;
+    }
+
+    /**
      * Generates a single staking block containing transactions to register stakers on top of the given chain.
      * Does not import the block.
      *
