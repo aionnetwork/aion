@@ -341,11 +341,7 @@ public class BlockchainTestUtils {
                 if (parent.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                     importPair = addMiningBlock(chain, parent, txs, time, String.valueOf(i).getBytes());
                 } else {
-                    // get the parent seed
-                    byte[] parentSeed = chain.forkUtility.isUnityForkBlock(parent.getNumber())
-                            ? StakingBlockHeader.GENESIS_SEED
-                            : ((StakingBlock) chain.getBlockByHash(parent.getParentHash())).getSeed();
-                    importPair = addStakingBlock(chain, parentSeed, txs, time, stakers.get(rand.nextInt(stakers.size())));
+                    importPair = addStakingBlock(chain, parent, txs, stakers.get(rand.nextInt(stakers.size())));
                 }
 
                 if (importPair != null) {
@@ -458,7 +454,7 @@ public class BlockchainTestUtils {
 
         // create staking block
         byte[] newSeed = producer.sign(parentSeed).getSignature();
-        StakingBlock block = chain.createStakingBlockTemplate(transactions, producer.getPubKey(), newSeed, new AionAddress(producer.getAddress()).toByteArray());
+        StakingBlock block = chain.createStakingBlockTemplate(parent, transactions, producer.getPubKey(), newSeed, new AionAddress(producer.getAddress()).toByteArray());
 
         if (block == null) {
             return null;
@@ -748,22 +744,8 @@ public class BlockchainTestUtils {
 
     public static Pair<Block, ImportResult> addStakingBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, ECKey key) {
         byte[] parentSeed = chain.forkUtility.isUnityForkBlock(parent.getNumber()) ? StakingBlockHeader.GENESIS_SEED : ((StakingBlock) chain.getBlockByHash(parent.getParentHash())).getSeed();
-        return addStakingBlock(chain, parentSeed, txs, System.currentTimeMillis(), key);
-    }
-
-    private static Pair<Block, ImportResult> addStakingBlock(
-            StandaloneBlockchain chain,
-            byte[] parentSeed,
-            List<AionTransaction> txs,
-            long time,
-            ECKey key) {
         byte[] newSeed = key.sign(parentSeed).getSignature();
-        StakingBlock block =
-                chain.createStakingBlockTemplate(
-                        txs,
-                        key.getPubKey(),
-                        newSeed,
-                        new AionAddress(key.getAddress()).toByteArray());
+        StakingBlock block = chain.createStakingBlockTemplate(parent, txs, key.getPubKey(), newSeed, new AionAddress(key.getAddress()).toByteArray());
 
         if (block == null) {
             return null;

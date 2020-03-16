@@ -427,14 +427,14 @@ public class AionHub {
     
     // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
     public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
-        if (blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
+        Block best = blockchain.getBestBlock();
+        if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
             return null;
         } else {
             StakingBlock blockTemplate;
             blockTemplateLock.lock();
             try {
-                blockTemplate = blockchain.createStakingBlockTemplate(
-                        mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
+                blockTemplate = blockchain.createStakingBlockTemplate(best, mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
             } finally {
                 blockTemplateLock.unlock();
             }

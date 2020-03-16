@@ -26,6 +26,7 @@ public interface UnityChain {
     byte[] getSeed();
 
     Block createStakingBlockTemplate(
+        Block parent,
         List<AionTransaction> pendingTransactions,
         byte[] publicKey,
         byte[] seed,

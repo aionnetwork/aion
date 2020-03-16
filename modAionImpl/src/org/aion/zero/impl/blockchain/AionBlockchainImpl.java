@@ -2459,8 +2459,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return staking block template
      */
     @Override
-    public StakingBlock createStakingBlockTemplate(
-        List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed, byte[] coinbase) {
+    public StakingBlock createStakingBlockTemplate(Block parent, List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed, byte[] coinbase) {
         lock.lock();
         try {
             if (pendingTransactions == null) {
@@ -2483,7 +2482,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey, coinbase);
+            // Use a snapshot to the given parent.
+            pushState(parent.getHash());
+            try {
+                return createNewStakingBlock(parent, pendingTransactions, newSeed, signingPublicKey, coinbase);
+            } finally {
+                // Ensures that the repository is left in a valid state even if an exception occurs.
+                popState();
+            }
         } finally{
             lock.unlock();
         }
