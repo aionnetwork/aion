@@ -53,11 +53,16 @@ public class BlockchainTestUtils {
 
     public static List<AionTransaction> generateTransactions(
             int maxSize, List<ECKey> accounts, AionRepositoryImpl repo) {
+        return generateTransactions(maxSize, accounts, repo, repo.getBlockStore().getBestBlock());
+    }
+
+    public static List<AionTransaction> generateTransactions(int maxSize, List<ECKey> accounts, AionRepositoryImpl repository, Block block) {
         int size = rand.nextInt(maxSize);
 
         if (size == 0) {
             return Collections.emptyList();
         } else {
+            AionRepositoryImpl repo = (AionRepositoryImpl) repository.getSnapshotTo(block.getStateRoot());
             // get the current nonce for each account
             Map<ECKey, BigInteger> nonces = new HashMap<>();
             for (ECKey key : accounts) {
