@@ -10,6 +10,7 @@ import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.EnumMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.log.LogUtil;
 import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
@@ -204,7 +205,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;
     ReentrantLock lock = new ReentrantLock();
-    
+    private AtomicBoolean shutDownFlag = new AtomicBoolean();
+
     /**
      * The constructor for the blockchain initialization {@see AionHub}.
      */
@@ -921,14 +923,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public ImportResult tryToConnect(final BlockWrapper blockWrapper) {
         lock.lock();
         try {
-            checkKernelShutdownForCLI();
             return tryToConnectWithTimedExecution(blockWrapper).getLeft();
         } finally{
+            checkKernelShutdownForCLI();
             lock.unlock();
+            checkKernelExit();
         }
     }
 
-    private void checkKernelShutdownForCLI() {
+    private boolean checkKernelShutdownForCLI() {
         if (bestBlock.getNumber() == shutdownHook) {
             LOG.info("Shutting down and dumping heap as indicated by CLI request since block number {} was reached.", shutdownHook);
 
@@ -938,12 +941,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.error("Unable to dump heap due to exception:", e);
             }
 
-            // requested shutdown
-            System.exit(SystemExitCodes.NORMAL);
+            shutDownFlag.set(true);
+            return true;
         } else if (enableFullSyncCheck && reachedFullSync) {
             LOG.info("Shutting down as indicated by CLI request sync to the top {} was reached.", bestBlock.getNumber());
-            System.exit(SystemExitCodes.NORMAL);
+            shutDownFlag.set(true);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -965,8 +970,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             ImportResult importResult = null;
             Set<ByteArrayWrapper> imported = new HashSet<>();
             for (Block block : blockRange) {
-                checkKernelShutdownForCLI();
-
                 Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(new BlockWrapper(block));
                 importResult = result.getLeft();
                 long importTime = result.getRight();
@@ -984,8 +987,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     block.getTotalDifficulty(),
                     getTotalDifficulty());
 
-                // stop at invalid blocks
-                if (!importResult.isStored()) {
+                if (checkKernelShutdownForCLI()) {
+                    break;
+                } else if (!importResult.isStored()) {
+                    // stop at invalid blocks
                     return Triple.of(bestBlock.getNumber(), imported, importResult);
                 } else {
                     imported.add(block.getHashWrapper());
@@ -994,6 +999,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Triple.of(bestBlock.getNumber(), imported, importResult);
         } finally{
             lock.unlock();
+            checkKernelExit();
         }
     }
 
@@ -2744,6 +2750,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 Block firstStaked = getBlockByNumber(forkUtility.getNonceForkBlockHeight() + 1);
                 forkUtility.setNonceForkResetDiff(firstStaked.getDifficultyBI());
             }
+        }
+    }
+
+    private void checkKernelExit() {
+        if (shutDownFlag.get()) {
+            System.exit(SystemExitCodes.NORMAL);
         }
     }
 }
