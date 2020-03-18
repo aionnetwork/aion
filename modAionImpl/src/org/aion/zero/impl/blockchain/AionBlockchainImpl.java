@@ -397,7 +397,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * <p>This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(Block)}
      * method.
      */
-    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock(
+    @VisibleForTesting
+    static PostExecutionWork getPostExecutionWorkForGeneratePreBlock(
             Repository repository) {
         PostExecutionLogic logic =
                 (topRepository, childRepository, transactionSummary, transaction) -> {
