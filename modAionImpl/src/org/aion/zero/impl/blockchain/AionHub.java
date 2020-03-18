@@ -393,14 +393,12 @@ public class AionHub {
     // is ahead of the oldBlockTemplate
     // Returns null if we're waiting on a Staking block, or if creating a new block template failed for some reason
     public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
-        if (blockchain.isUnityForkEnabledAtNextBlock() &&
-                blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
-            return null;
-        } else {
-            BlockContext context;
-            
-            blockTemplateLock.lock();
-            try {
+        blockTemplateLock.lock();
+        try {
+            if (blockchain.isUnityForkEnabledAtNextBlock() && blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
+                return null;
+            } else {
+                BlockContext context;
                 Block bestBlock = blockchain.getBestBlock();
                 byte[] bestBlockHash = bestBlock.getHash();
 
@@ -417,29 +415,25 @@ public class AionHub {
                 } else {
                     context = oldBlockTemplate;
                 }
-            } finally {
-                blockTemplateLock.unlock();
+                return context;
             }
-
-            return context;
+        } finally {
+            blockTemplateLock.unlock();
         }
     }
     
     // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
     public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
-        Block best = blockchain.getBestBlock();
-        if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
-            return null;
-        } else {
-            StakingBlock blockTemplate;
-            blockTemplateLock.lock();
-            try {
-                blockTemplate = blockchain.createStakingBlockTemplate(best, mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
-            } finally {
-                blockTemplateLock.unlock();
+        blockTemplateLock.lock();
+        try {
+            Block best = blockchain.getBestBlock();
+            if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
+                return null;
+            } else {
+                return blockchain.createStakingBlockTemplate(best, mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
             }
-
-            return blockTemplate;
+        } finally {
+            blockTemplateLock.unlock();
         }
     }
 
