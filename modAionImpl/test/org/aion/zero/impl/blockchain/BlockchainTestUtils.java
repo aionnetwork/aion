@@ -1,5 +1,6 @@
 package org.aion.zero.impl.blockchain;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.zero.impl.vm.TestResourceProvider;
+import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -889,5 +891,19 @@ public class BlockchainTestUtils {
                 NRG_PRICE,
                 TransactionTypes.DEFAULT,
                 null);
+    }
+
+    public static AionTransaction deployFvmTickerContractTransaction(ECKey owner, BigInteger nonce) throws IOException {
+        byte[] contractBytes = ContractUtils.getContractDeployer("Ticker.sol", "Ticker");
+
+        return AionTransaction.create(
+                owner,
+                nonce.toByteArray(),
+                null,
+                new byte[0],
+                contractBytes,
+                LIMIT_DEPLOY,
+                NRG_PRICE,
+                TransactionTypes.DEFAULT, null);
     }
 }
