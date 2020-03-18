@@ -833,21 +833,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         lock.lock();
         try {
             if (block == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Fast sync import attempted with null block or header.");
-                }
+                LOG.debug("Fast sync import attempted with null block or header.");
                 return FastImportResult.INVALID_BLOCK;
             }
 
             if (block.getTimestamp()
                 > (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
                 + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(
-                        "Block {} invalid due to timestamp {}.",
-                        block.getShortHash(),
-                        block.getTimestamp());
-                }
+                LOG.debug(
+                    "Block {} invalid due to timestamp {}.",
+                    block.getShortHash(),
+                    block.getTimestamp());
                 return FastImportResult.INVALID_BLOCK;
             }
 
@@ -855,24 +851,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
             Block known = getBlockByHash(block.getHash());
             if (known != null && known.getNumber() == block.getNumber()) {
                 return FastImportResult.KNOWN;
-            }
-
-            // a child must be present to import the parent
-            Block child = getBlockByNumber(block.getNumber() + 1);
-            if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
-                return FastImportResult.NO_CHILD;
             } else {
-                // the total difficulty will be updated after the chain is complete
-                repository.getBlockStore().saveBlock(block, ZERO, true);
-
-                if (LOG.isDebugEnabled()) {
+                // a child must be present to import the parent
+                Block child = getBlockByNumber(block.getNumber() + 1);
+                if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
+                    return FastImportResult.NO_CHILD;
+                } else {
+                    // the total difficulty will be updated after the chain is complete
+                    repository.getBlockStore().saveBlock(block, ZERO, true);
                     LOG.debug(
                         "Fast sync block saved: number: {}, hash: {}, child: {}",
                         block.getNumber(),
                         block.getShortHash(),
                         child.getShortHash());
+                    return FastImportResult.IMPORTED;
                 }
-                return FastImportResult.IMPORTED;
             }
         } finally{
             lock.unlock();
@@ -1076,12 +1069,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 && repository.getBlockStore().getMaxNumber() >= block.getNumber()
                 && isBlockStored(block.getHash(), block.getNumber())) {
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(
-                        "Block already exists hash: {}, number: {}",
-                        block.getShortHash(),
-                        block.getNumber());
-            }
+            LOG.debug(
+                    "Block already exists hash: {}, number: {}",
+                    block.getShortHash(),
+                    block.getNumber());
 
             if (!repository.isValidRoot(block.getStateRoot())) {
                 // correct the world state for this block
@@ -1097,12 +1088,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Pair.of(EXIST, null);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                    "Try connect block hash: {}, number: {}",
-                    block.getShortHash(),
-                    block.getNumber());
-        }
+        LOG.debug(
+                "Try connect block hash: {}, number: {}", block.getShortHash(), block.getNumber());
 
         final ImportResult ret;
 
@@ -1508,10 +1495,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 ByteArrayWrapper.wrap(block.getHeader().getMineHash()), block);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("GetBlockTemp: {}", block.toString());
-        }
-
+        LOG.debug("GetBlockTemp: {}", block.toString());
         return block;
     }
 
@@ -1655,12 +1639,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             repository.commitBlock(block.getHashWrapper(), block.getNumber(), block.getStateRoot());
 
-            if (LOG.isDebugEnabled())
-                LOG.debug(
-                        "Block rebuilt: number: {}, hash: {}, TD: {}",
-                        block.getNumber(),
-                        block.getShortHash(),
-                        getTotalDifficulty());
+            LOG.debug(
+                    "Block rebuilt: number: {}, hash: {}, TD: {}",
+                    block.getNumber(),
+                    block.getShortHash(),
+                    getTotalDifficulty());
         } else {
             byte[] blockStateRootHash = block.getStateRoot();
             byte[] worldStateRootHash = repository.getRoot();
@@ -2055,15 +2038,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         repository.commitBlock(block.getHashWrapper(), block.getNumber(), block.getStateRoot());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                    "Block saved: number: {}, hash: {}, {}",
-                    block.getNumber(),
-                    block.getShortHash(),
-                    td.toString());
-
-            LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
-        }
+        LOG.debug(
+                "Block saved: number: {}, hash: {}, {}",
+                block.getNumber(),
+                block.getShortHash(),
+                td.toString());
+        LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
 
         setBestBlock(block);
     }
@@ -2127,16 +2107,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 throw new IllegalStateException("Invalid Block instance");
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("BestBlock {}", bestBlock.toString());
-                if (bestMiningBlock != null) {
-                    LOG.debug("BestMiningBlock {}", bestMiningBlock.toString());
-                }
+            LOG.debug("BestBlock {}", bestBlock);
+            LOG.debug("BestMiningBlock {}", bestMiningBlock);
+            LOG.debug("BestStakingBlock {}", bestStakingBlock);
 
-                if (bestStakingBlock != null) {
-                    LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
-                }
-            }
             updateBestKnownBlock(bestBlock.getHeader().getHash(), bestBlock.getHeader().getNumber());
             bestBlockNumber.set(bestBlock.getNumber());
         } finally{
@@ -2192,9 +2166,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BigInteger newTotalDifficulty = totalDifficulty.get().add(block.getDifficultyBI());
         totalDifficulty.set(newTotalDifficulty);
         block.setTotalDifficulty(newTotalDifficulty);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("UnityDifficulty updated: {}", newTotalDifficulty.toString());
-        }
+        LOG.debug("UnityDifficulty updated: {}", newTotalDifficulty.toString());
     }
 
     @Override
