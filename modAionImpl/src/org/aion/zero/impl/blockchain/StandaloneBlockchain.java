@@ -485,11 +485,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         BigInteger tdForHash, tdCached, tdPublic;
         byte[] bestBlockHash;
 
-        synchronized (this) {
+        lock.lock();
+        try {
             bestBlockHash = getBestBlock().getHash();
             tdForHash = getTotalDifficultyForHash(getBestBlock().getHash());
             tdCached = getCacheTD();
             tdPublic = getTotalDifficulty();
+        } finally{
+            lock.unlock();
         }
 
         assert (tdPublic.equals(tdForHash));
@@ -498,20 +501,30 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     @Override
-    public synchronized ImportResult tryToConnect(final Block block) {
-        ImportResult result = tryToConnectAndFetchSummary(new BlockWrapper(block)).getLeft();
+    public ImportResult tryToConnect(final Block block) {
+        lock.lock();
+        try {
+            ImportResult result = tryToConnectAndFetchSummary(new BlockWrapper(block)).getLeft();
 
-        if (result == ImportResult.IMPORTED_BEST) {
-            BigInteger tdForHash = getTotalDifficultyForHash(block.getHash());
-            assert (getTotalDifficulty().equals(tdForHash));
-            assert (getCacheTD().equals(tdForHash));
+            if (result == ImportResult.IMPORTED_BEST) {
+                BigInteger tdForHash = getTotalDifficultyForHash(block.getHash());
+                assert (getTotalDifficulty().equals(tdForHash));
+                assert (getCacheTD().equals(tdForHash));
+            }
+            return result;
+        } finally {
+            lock.unlock();
         }
-        return result;
     }
 
     // TEMPORARY: here to support the ConsensusTest
-    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block) {
-        return tryToConnectAndFetchSummary(new BlockWrapper(block));
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(Block block) {
+        lock.lock();
+        try {
+            return tryToConnectAndFetchSummary(new BlockWrapper(block));
+        } finally {
+            lock.unlock();
+        }
     }
 
     /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */

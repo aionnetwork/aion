@@ -10,6 +10,7 @@ import static org.aion.util.conversions.Hex.toHexString;
 
 import java.util.EnumMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.log.LogUtil;
 import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
 import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
@@ -202,6 +203,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;
+    ReentrantLock lock = new ReentrantLock();
     
     /**
      * The constructor for the blockchain initialization {@see AionHub}.
@@ -825,47 +827,53 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param block the block to be imported
      * @return a result describing the status of the attempted import
      */
-    public synchronized FastImportResult tryFastImport(final Block block) {
-        if (block == null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Fast sync import attempted with null block or header.");
+    public FastImportResult tryFastImport(final Block block) {
+        lock.lock();
+        try {
+            if (block == null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Fast sync import attempted with null block or header.");
+                }
+                return FastImportResult.INVALID_BLOCK;
             }
-            return FastImportResult.INVALID_BLOCK;
-        }
-        if (block.getTimestamp()
+
+            if (block.getTimestamp()
                 > (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
-                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(
+                + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
                         "Block {} invalid due to timestamp {}.",
                         block.getShortHash(),
                         block.getTimestamp());
+                }
+                return FastImportResult.INVALID_BLOCK;
             }
-            return FastImportResult.INVALID_BLOCK;
-        }
 
-        // check that the block is not already known
-        Block known = getBlockByHash(block.getHash());
-        if (known != null && known.getNumber() == block.getNumber()) {
-            return FastImportResult.KNOWN;
-        }
+            // check that the block is not already known
+            Block known = getBlockByHash(block.getHash());
+            if (known != null && known.getNumber() == block.getNumber()) {
+                return FastImportResult.KNOWN;
+            }
 
-        // a child must be present to import the parent
-        Block child = getBlockByNumber(block.getNumber() + 1);
-        if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
-            return FastImportResult.NO_CHILD;
-        } else {
-            // the total difficulty will be updated after the chain is complete
-            repository.getBlockStore().saveBlock(block, ZERO, true);
+            // a child must be present to import the parent
+            Block child = getBlockByNumber(block.getNumber() + 1);
+            if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
+                return FastImportResult.NO_CHILD;
+            } else {
+                // the total difficulty will be updated after the chain is complete
+                repository.getBlockStore().saveBlock(block, ZERO, true);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
                         "Fast sync block saved: number: {}, hash: {}, child: {}",
                         block.getNumber(),
                         block.getShortHash(),
                         child.getShortHash());
+                }
+                return FastImportResult.IMPORTED;
             }
-            return FastImportResult.IMPORTED;
+        } finally{
+            lock.unlock();
         }
     }
 
@@ -910,9 +918,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return tryToConnect(new BlockWrapper(block));
     }
 
-    public synchronized ImportResult tryToConnect(final BlockWrapper blockWrapper) {
-        checkKernelShutdownForCLI();
-        return tryToConnectWithTimedExecution(blockWrapper).getLeft();
+    public ImportResult tryToConnect(final BlockWrapper blockWrapper) {
+        lock.lock();
+        try {
+            checkKernelShutdownForCLI();
+            return tryToConnectWithTimedExecution(blockWrapper).getLeft();
+        } finally{
+            lock.unlock();
+        }
     }
 
     private void checkKernelShutdownForCLI() {
@@ -945,18 +958,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *     <li>the import result for the last imported block</li>
      * </ol>
      */
-    public synchronized Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId) {
-        ImportResult importResult = null;
-        Set<ByteArrayWrapper> imported = new HashSet<>();
-        for (Block block : blockRange) {
-            checkKernelShutdownForCLI();
+    public Triple<Long, Set<ByteArrayWrapper>, ImportResult> tryToConnect(final List<Block> blockRange, String peerDisplayId) {
 
-            Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(new BlockWrapper(block));
-            importResult = result.getLeft();
-            long importTime = result.getRight();
+        lock.lock();
+        try {
+            ImportResult importResult = null;
+            Set<ByteArrayWrapper> imported = new HashSet<>();
+            for (Block block : blockRange) {
+                checkKernelShutdownForCLI();
 
-            // printing additional information when debug is enabled
-            SYNC_LOG.debug(
+                Pair<ImportResult, Long> result = tryToConnectWithTimedExecution(new BlockWrapper(block));
+                importResult = result.getLeft();
+                long importTime = result.getRight();
+
+                // printing additional information when debug is enabled
+                SYNC_LOG.debug(
                     "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms, block td = {}, chain td = {}>",
                     peerDisplayId,
                     block.getShortHash(),
@@ -968,14 +984,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     block.getTotalDifficulty(),
                     getTotalDifficulty());
 
-            // stop at invalid blocks
-            if (!importResult.isStored()) {
-                return Triple.of(bestBlock.getNumber(), imported, importResult);
-            } else {
-                imported.add(block.getHashWrapper());
+                // stop at invalid blocks
+                if (!importResult.isStored()) {
+                    return Triple.of(bestBlock.getNumber(), imported, importResult);
+                } else {
+                    imported.add(block.getHashWrapper());
+                }
             }
+            return Triple.of(bestBlock.getNumber(), imported, importResult);
+        } finally{
+            lock.unlock();
         }
-        return Triple.of(bestBlock.getNumber(), imported, importResult);
     }
 
     private long surveyTotalImportTime = 0;
@@ -1032,9 +1051,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param blockWrapper the block including the block status
      * @return import result and the block summary
      */
-    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper) {
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper) {
         Objects.requireNonNull(blockWrapper);
-        return tryToConnectAndFetchSummary(blockWrapper);
+
+        lock.lock();
+        try {
+            return tryToConnectAndFetchSummary(blockWrapper);
+        } finally{
+            lock.unlock();
+        }
     }
 
     Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper) {
@@ -1204,10 +1229,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new block
      * @return new block
      */
-    public synchronized AionBlock createNewMiningBlock(
+    public AionBlock createNewMiningBlock(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
-        BlockContext newBlockContext = createNewMiningBlockContext(parent, transactions, waitUntilBlockTime);
-        return null == newBlockContext ? null : newBlockContext.block;
+        lock.lock();
+        try {
+            BlockContext newBlockContext = createNewMiningBlockContext(parent, transactions, waitUntilBlockTime);
+            return null == newBlockContext ? null : newBlockContext.block;
+        } finally{
+            lock.unlock();
+        }
     }
 
     /**
@@ -1220,14 +1250,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @see #createNewMiningBlockContext(Block, List, boolean)
      * @return a context with new mining block
      */
-    public synchronized BlockContext createNewMiningBlockContext(
+    public BlockContext createNewMiningBlockContext(
         Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        final BlockContext blockContext = createNewMiningBlockInternal(
-            parent, txs, waitUntilBlockTime, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-        if(blockContext != null) {
-            miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
+        lock.lock();
+        try {
+            final BlockContext blockContext = createNewMiningBlockInternal(
+                parent, txs, waitUntilBlockTime, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+            if(blockContext != null) {
+                miningBlockTemplate.put(ByteArrayWrapper.wrap(blockContext.block.getHeader().getMineHash()), blockContext.block);
+            }
+            return blockContext;
+        } finally{
+            lock.unlock();
         }
-        return blockContext;
     }
 
     BlockContext createNewMiningBlockInternal(
@@ -1474,39 +1509,44 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return block;
     }
 
-    private synchronized BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
-        // Begin execution phase
-        pushState(parentHdr.getHash());
-        track = repository.startTracking();
-        RetValidPreBlock preBlock = generatePreBlock(block);
-        track.flush();
+    private BigInteger blockPreSeal(BlockHeader parentHdr, Block block) {
+        lock.lock();
+        try {
+            // Begin execution phase
+            pushState(parentHdr.getHash());
+            track = repository.startTracking();
+            RetValidPreBlock preBlock = generatePreBlock(block);
+            track.flush();
 
-        // Calculate the gas used for the included transactions
-        long totalEnergyUsed = 0;
-        BigInteger totalTransactionFee = BigInteger.ZERO;
-        for (AionTxExecSummary summary : preBlock.summaries) {
-            totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
-            totalTransactionFee = totalTransactionFee.add(summary.getFee());
+            // Calculate the gas used for the included transactions
+            long totalEnergyUsed = 0;
+            BigInteger totalTransactionFee = BigInteger.ZERO;
+            for (AionTxExecSummary summary : preBlock.summaries) {
+                totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
+                totalTransactionFee = totalTransactionFee.add(summary.getFee());
+            }
+
+            byte[] stateRoot = getRepository().getRoot();
+            popState();
+
+            // End execution phase
+            Bloom logBloom = new Bloom();
+            for (AionTxReceipt receipt : preBlock.receipts) {
+                logBloom.or(receipt.getBloomFilter());
+            }
+
+            block.updateTransactionAndState(
+                    preBlock.txs,
+                    calcTxTrie(preBlock.txs),
+                    stateRoot,
+                    logBloom.getBloomFilterBytes(),
+                    calcReceiptsTrie(preBlock.receipts),
+                    totalEnergyUsed);
+
+            return totalTransactionFee;
+        } finally{
+            lock.unlock();
         }
-
-        byte[] stateRoot = getRepository().getRoot();
-        popState();
-
-        // End execution phase
-        Bloom logBloom = new Bloom();
-        for (AionTxReceipt receipt : preBlock.receipts) {
-            logBloom.or(receipt.getBloomFilter());
-        }
-
-        block.updateTransactionAndState(
-                preBlock.txs,
-                calcTxTrie(preBlock.txs),
-                stateRoot,
-                logBloom.getBloomFilterBytes(),
-                calcReceiptsTrie(preBlock.receipts),
-                totalEnergyUsed);
-
-        return totalTransactionFee;
     }
 
     /** @Param flushRepo true for the kernel runtime import and false for the DBUtil */
@@ -2069,45 +2109,55 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized void setBestBlock(Block block) {
-        bestBlock = block;
-        if (bestBlock instanceof AionBlock) {
-            bestMiningBlock = (AionBlock) bestBlock;
-        } else if (bestBlock instanceof StakingBlock) {
-            bestStakingBlock = (StakingBlock) bestBlock;
-        } else {
-            throw new IllegalStateException("Invalid Block instance");
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("BestBlock {}", bestBlock.toString());
-            if (bestMiningBlock != null) {
-                LOG.debug("BestMiningBlock {}", bestMiningBlock.toString());
+    public void setBestBlock(Block block) {
+        lock.lock();
+        try {
+            bestBlock = block;
+            if (bestBlock instanceof AionBlock) {
+                bestMiningBlock = (AionBlock) bestBlock;
+            } else if (bestBlock instanceof StakingBlock) {
+                bestStakingBlock = (StakingBlock) bestBlock;
+            } else {
+                throw new IllegalStateException("Invalid Block instance");
             }
 
-            if (bestStakingBlock != null) {
-                LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("BestBlock {}", bestBlock.toString());
+                if (bestMiningBlock != null) {
+                    LOG.debug("BestMiningBlock {}", bestMiningBlock.toString());
+                }
+
+                if (bestStakingBlock != null) {
+                    LOG.debug("BestStakingBlock {}", bestStakingBlock.toString());
+                }
             }
+            updateBestKnownBlock(bestBlock.getHeader().getHash(), bestBlock.getHeader().getNumber());
+            bestBlockNumber.set(bestBlock.getNumber());
+        } finally{
+            lock.unlock();
         }
-        updateBestKnownBlock(bestBlock.getHeader().getHash(), bestBlock.getHeader().getNumber());
-        bestBlockNumber.set(bestBlock.getNumber());
     }
 
     @Override
-    public synchronized void close() {
-        // The main repository instance is stashed when the snapshot is created. If the current repository is a snapshot that means the main one is in the stack.
-        // We pop the stack until we get to the main repository instance that contains access too all the databases that must be closed.
-        while (repository.isSnapshot()) {
-            popState();
+    public void close() {
+        lock.lock();
+        try {
+            // The main repository instance is stashed when the snapshot is created. If the current repository is a snapshot that means the main one is in the stack.
+            // We pop the stack until we get to the main repository instance that contains access too all the databases that must be closed.
+            while (repository.isSnapshot()) {
+                popState();
+            }
+
+            // We do not flush before closing the database because under normal circumstances the repository was already flushed.
+            // If close was called due to an error (like a VM issue) then flushing may store corrupt data, so it shouldn't be done.
+            GEN_LOG.info("shutting down DB...");
+            repository.close();
+            GEN_LOG.info("shutdown DB... Done!");
+
+            printBlockImportLog();
+        } finally{
+            lock.unlock();
         }
-
-        // We do not flush before closing the database because under normal circumstances the repository was already flushed.
-        // If close was called due to an error (like a VM issue) then flushing may store corrupt data, so it shouldn't be done.
-        GEN_LOG.info("shutting down DB...");
-        repository.close();
-        GEN_LOG.info("shutdown DB... Done!");
-
-        printBlockImportLog();
     }
 
     @Override
@@ -2238,95 +2288,100 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    public synchronized boolean recoverWorldState(Repository repository, Block block) {
-        if (block == null) {
-            LOG.error("World state recovery attempted with null block.");
-            return false;
-        }
-        if (repository.isSnapshot()) {
-            LOG.error("World state recovery attempted with snapshot repository.");
-            return false;
-        }
+    public boolean recoverWorldState(Repository repository, Block block) {
+        lock.lock();
+        try {
+            if (block == null) {
+                LOG.error("World state recovery attempted with null block.");
+                return false;
+            }
+            if (repository.isSnapshot()) {
+                LOG.error("World state recovery attempted with snapshot repository.");
+                return false;
+            }
 
-        long blockNumber = block.getNumber();
-        LOG.info(
+            long blockNumber = block.getNumber();
+            LOG.info(
                 "Pruned or corrupt world state at block hash: {}, number: {}."
-                        + " Looking for ancestor block with valid world state ...",
+                    + " Looking for ancestor block with valid world state ...",
                 block.getShortHash(),
                 blockNumber);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) repository;
+            AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
-        // keeping track of the original root
-        byte[] originalRoot = repo.getRoot();
+            // keeping track of the original root
+            byte[] originalRoot = repo.getRoot();
 
-        Deque<Block> dirtyBlocks = new ArrayDeque<>();
-        // already known to be missing the state
-        dirtyBlocks.push(block);
+            Deque<Block> dirtyBlocks = new ArrayDeque<>();
+            // already known to be missing the state
+            dirtyBlocks.push(block);
 
-        Block other = block;
+            Block other = block;
 
-        // find all the blocks missing a world state
-        do {
-            other = getBlockByHash(other.getParentHash());
+            // find all the blocks missing a world state
+            do {
+                other = getBlockByHash(other.getParentHash());
 
-            // cannot recover if no valid states exist (must build from genesis)
-            if (other == null) {
+                // cannot recover if no valid states exist (must build from genesis)
+                if (other == null) {
+                    return false;
+                } else {
+                    dirtyBlocks.push(other);
+                }
+            } while (!repo.isValidRoot(other.getStateRoot()) && other.getNumber() > 0);
+
+            if (other.getNumber() == 0 && !repo.isValidRoot(other.getStateRoot())) {
+                LOG.info("Rebuild state FAILED because a valid state could not be found.");
                 return false;
-            } else {
-                dirtyBlocks.push(other);
             }
-        } while (!repo.isValidRoot(other.getStateRoot()) && other.getNumber() > 0);
 
-        if (other.getNumber() == 0 && !repo.isValidRoot(other.getStateRoot())) {
-            LOG.info("Rebuild state FAILED because a valid state could not be found.");
-            return false;
-        }
+            // sync to the last correct state
+            repo.syncToRoot(other.getStateRoot());
 
-        // sync to the last correct state
-        repo.syncToRoot(other.getStateRoot());
+            // remove the last added block because it has a correct world state
+            dirtyBlocks.pop();
 
-        // remove the last added block because it has a correct world state
-        dirtyBlocks.pop();
-
-        LOG.info(
+            LOG.info(
                 "Valid state found at block hash: {}, number: {}.",
                 other.getShortHash(),
                 other.getNumber());
 
-        // rebuild world state for dirty blocks
-        while (!dirtyBlocks.isEmpty()) {
-            other = dirtyBlocks.pop();
-            LOG.info(
+            // rebuild world state for dirty blocks
+            while (!dirtyBlocks.isEmpty()) {
+                other = dirtyBlocks.pop();
+                LOG.info(
                     "Rebuilding block hash: {}, number: {}, txs: {}.",
                     other.getShortHash(),
                     other.getNumber(),
                     other.getTransactionsList().size());
 
-            // Load bestblock for executing the CLI command.
-            if (bestBlock == null) {
-                bestBlock = repo.getBestBlock();
+                // Load bestblock for executing the CLI command.
+                if (bestBlock == null) {
+                    bestBlock = repo.getBestBlock();
 
-                if (bestBlock instanceof AionBlock) {
-                    bestMiningBlock = (AionBlock) bestBlock;
-                } else if (bestBlock instanceof StakingBlock) {
-                    bestStakingBlock = (StakingBlock) bestBlock;
-                } else {
-                    throw new IllegalStateException("Invalid best block!");
+                    if (bestBlock instanceof AionBlock) {
+                        bestMiningBlock = (AionBlock) bestBlock;
+                    } else if (bestBlock instanceof StakingBlock) {
+                        bestStakingBlock = (StakingBlock) bestBlock;
+                    } else {
+                        throw new IllegalStateException("Invalid best block!");
+                    }
                 }
+
+                this.add(new BlockWrapper(other, false, true, true, false));
             }
 
-            this.add(new BlockWrapper(other, false, true, true, false));
+            // update the repository
+            repo.flush();
+
+            // setting the root back to its correct value
+            repo.syncToRoot(originalRoot);
+
+            // return a flag indicating if the recovery worked
+            return repo.isValidRoot(block.getStateRoot());
+        } finally {
+            lock.unlock();
         }
-
-        // update the repository
-        repo.flush();
-
-        // setting the root back to its correct value
-        repo.syncToRoot(originalRoot);
-
-        // return a flag indicating if the recovery worked
-        return repo.isValidRoot(block.getStateRoot());
     }
 
     /**
@@ -2334,26 +2389,31 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    public synchronized boolean recoverIndexEntry(AionRepositoryImpl repository, Block block) {
-        if (block == null) {
-            LOG.error("Index recovery attempted with null block.");
-            return false;
-        }
-        if (repository.isSnapshot()) {
-            LOG.error("Index recovery attempted with snapshot repository.");
-            return false;
-        }
+    public boolean recoverIndexEntry(AionRepositoryImpl repository, Block block) {
+        lock.lock();
+        try {
+            if (block == null) {
+                LOG.error("Index recovery attempted with null block.");
+                return false;
+            }
+            if (repository.isSnapshot()) {
+                LOG.error("Index recovery attempted with snapshot repository.");
+                return false;
+            }
 
-        LOG.info(
-                "Missing index at block hash: {}, number: {}. Looking for ancestor block with valid index ...",
-                block.getShortHash(),
-                block.getNumber());
+            LOG.info(
+                    "Missing index at block hash: {}, number: {}. Looking for ancestor block with valid index ...",
+                    block.getShortHash(),
+                    block.getNumber());
 
-        boolean isSuccessful = repository.recoverIndexEntry(block, bestBlock, LOG);
-        if (isSuccessful) {
-            clearBlockTemplate();
+            boolean isSuccessful = repository.recoverIndexEntry(block, bestBlock, LOG);
+            if (isSuccessful) {
+                clearBlockTemplate();
+            }
+            return isSuccessful;
+        } finally{
+            lock.unlock();
         }
-        return isSuccessful;
     }
 
     /**
@@ -2421,29 +2481,34 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return staking block template
      */
     @Override
-    public synchronized StakingBlock createStakingBlockTemplate(
+    public StakingBlock createStakingBlockTemplate(
         List<AionTransaction> pendingTransactions, byte[] signingPublicKey, byte[] newSeed, byte[] coinbase) {
-        if (pendingTransactions == null) {
-            LOG.error("createStakingBlockTemplate failed, The pendingTransactions list can not be null");
-            return null;
-        }
+        lock.lock();
+        try {
+            if (pendingTransactions == null) {
+                LOG.error("createStakingBlockTemplate failed, The pendingTransactions list can not be null");
+                return null;
+            }
 
-        if (signingPublicKey == null) {
-            LOG.error("createStakingBlockTemplate failed, The signing public key is null");
-            return null;
-        }
+            if (signingPublicKey == null) {
+                LOG.error("createStakingBlockTemplate failed, The signing public key is null");
+                return null;
+            }
 
-        if (newSeed == null) {
-            LOG.error("createStakingBlockTemplate failed, The seed is null");
-            return null;
-        }
+            if (newSeed == null) {
+                LOG.error("createStakingBlockTemplate failed, The seed is null");
+                return null;
+            }
 
-        if (coinbase == null) {
-            LOG.error("createStakingBlockTemplate failed, The coinbase is null");
-            return null;
-        }
+            if (coinbase == null) {
+                LOG.error("createStakingBlockTemplate failed, The coinbase is null");
+                return null;
+            }
 
-        return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey, coinbase);
+            return createNewStakingBlock(getBestBlock(), pendingTransactions, newSeed, signingPublicKey, coinbase);
+        } finally{
+            lock.unlock();
+        }
     }
 
     public StakingContractHelper getStakingContractHelper() {
