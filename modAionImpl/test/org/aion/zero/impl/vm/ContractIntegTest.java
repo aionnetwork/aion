@@ -480,7 +480,7 @@ public class ContractIntegTest {
 
         if (txType == TransactionTypes.DEFAULT) {
             assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
-            assertEquals(tx.getEnergyLimit(), summary.getReceipt().getEnergyUsed());
+            assertEquals(0, summary.getReceipt().getEnergyUsed());
 
             AionAddress contract = TxUtil.calculateContractAddress(tx);
             checkStateOfNewContract(

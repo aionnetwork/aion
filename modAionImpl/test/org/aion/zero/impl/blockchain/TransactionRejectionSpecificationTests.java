@@ -38,8 +38,6 @@ import org.slf4j.Logger;
 /**
  * Unit tests that verify that the output of transaction rejection is as defined by the specification documents.
  *
- * TODO: Update test for new specification such that all the rejection cases set the energy used to zero.
- *
  * @author Alexandra Roatis
  */
 public class TransactionRejectionSpecificationTests {
@@ -94,7 +92,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.INVALID_NONCE.toString());
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -117,7 +115,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.INSUFFICIENT_BALANCE.toString());
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -178,7 +176,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.INVALID_NONCE.toString());
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -205,7 +203,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.INSUFFICIENT_BALANCE.toString());
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -307,7 +305,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: invalid nonce");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -334,7 +332,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: insufficient balance");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -361,7 +359,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: invalid energy limit");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
 
         // Make balance transfer transaction to deployed contract with small energy limit.
@@ -372,7 +370,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: invalid energy limit");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 
@@ -398,7 +396,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: invalid energy limit");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
 
         // Make balance transfer transaction to deployed contract with small energy limit.
@@ -409,7 +407,7 @@ public class TransactionRejectionSpecificationTests {
 
         assertThat(result.isRejected()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo("Rejected: invalid energy limit");
-        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(transaction.getEnergyLimit()));
+        assertThat(result.getNrgUsed()).isEqualTo(BigInteger.ZERO);
         assertThat(result.getLogs()).isEmpty();
     }
 

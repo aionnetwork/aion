@@ -189,7 +189,7 @@ public final class ContractExecutor {
 
         if (!externalState.accountNonceEquals(transaction.senderAddress, transaction.nonce)) {
             result.setResultCode(TransactionStatus.rejection("INVALID_NONCE"));
-            result.setEnergyRemaining(0);
+            result.setEnergyRemaining(energyLimit);
             return;
         }
 
@@ -197,7 +197,7 @@ public final class ContractExecutor {
                 energyPrice.multiply(BigInteger.valueOf(energyLimit)).add(transaction.value);
         if (!externalState.accountBalanceIsAtLeast(transaction.senderAddress, transactionCost)) {
             result.setResultCode(TransactionStatus.rejection("INSUFFICIENT_BALANCE"));
-            result.setEnergyRemaining(0);
+            result.setEnergyRemaining(energyLimit);
         }
     }
 
