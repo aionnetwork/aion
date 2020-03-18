@@ -3,7 +3,7 @@ package org.aion.zero.impl.db;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.addMiningBlock;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.addStakingBlock;
-import static org.aion.zero.impl.blockchain.BlockchainTestUtils.deployLargeStorageContractTransaction;
+import static org.aion.zero.impl.blockchain.BlockchainTestUtils.deployAvmContractTransaction;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateRandomUnityChain;
 import static org.aion.zero.impl.blockchain.BlockchainTestUtils.putToLargeStorageTransaction;
@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.aion.avm.stub.IContractFactory.AvmContract;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.TxUtil;
@@ -93,9 +94,7 @@ public class DetailsDataStoreIntegTest {
         List<AionTransaction> txs = new ArrayList<>();
 
         // deploy the storage contract
-        AionTransaction tx =
-                deployLargeStorageContractTransaction(
-                        resourceProvider.factoryForVersion2, account, nonce);
+        AionTransaction tx = deployAvmContractTransaction(AvmContract.LARGE_STORAGE, resourceProvider.factoryForVersion2, account, nonce);
         nonce = nonce.add(BigInteger.ONE);
         addMiningBlock(chain, chain.getBestBlock(), List.of(tx));
 
@@ -170,7 +169,7 @@ public class DetailsDataStoreIntegTest {
 
         // deploy the storage contract
         BigInteger nonce = BigInteger.ZERO;
-        AionTransaction tx = deployLargeStorageContractTransaction(resourceProvider.factoryForVersion2, account, nonce);
+        AionTransaction tx = deployAvmContractTransaction(AvmContract.LARGE_STORAGE, resourceProvider.factoryForVersion2, account, nonce);
         nonce = nonce.add(BigInteger.ONE);
         addMiningBlock(chain, chain.getBestBlock(), List.of(tx));
 

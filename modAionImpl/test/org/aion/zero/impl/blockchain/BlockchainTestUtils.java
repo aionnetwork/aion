@@ -844,8 +844,8 @@ public class BlockchainTestUtils {
         return block;
     }
 
-    public static AionTransaction deployLargeStorageContractTransaction(IAvmResourceFactory avmFactory, ECKey owner, BigInteger nonce) {
-        byte[] jar = avmFactory.newContractFactory().getDeploymentBytes(AvmContract.LARGE_STORAGE);
+    public static AionTransaction deployAvmContractTransaction(AvmContract contract, IAvmResourceFactory avmFactory, ECKey owner, BigInteger nonce) {
+        byte[] jar = avmFactory.newContractFactory().getDeploymentBytes(contract);
         return AionTransaction.create(
                 owner,
                 nonce.toByteArray(),
