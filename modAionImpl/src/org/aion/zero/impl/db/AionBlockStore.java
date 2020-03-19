@@ -952,32 +952,38 @@ public class AionBlockStore {
         }
     }
 
-    public void pruneAndCorrect() {
+    public void pruneAndCorrect(Logger log) {
         lock.lock();
 
         try {
             Block block = getBestBlockWithInfo();
             if (block == null) {
-                LOG.error("Can't find the best block. PruneAndCorrect failed!");
-                LOG.error(
+                log.error("Can't find the best block. PruneAndCorrect failed!");
+                log.error(
                     "Please reboot your node to trigger automatic database recovery by the kernel.");
                 throw new IllegalStateException("Missing the best block from the database.");
             }
 
             long initialLevel = block.getNumber();
             long level = initialLevel;
+            long start = System.nanoTime();
+            final long TEN_SEC = 10_000_000_000L;
 
             // top down pruning of nodes on side chains
             while (level > 0) {
-                pruneSideChains(block);
+                if (System.nanoTime() - start > TEN_SEC) {
+                    log.info("Progress report: pruning side chains on level " + level + ".");
+                    start = System.nanoTime();
+                }
+                pruneSideChains(block, log);
                 block = blocks.get(block.getParentHash());
                 if (block == null) {
-                    LOG.error(
+                    log.error(
                             "Block #"
                                     + (level - 1)
                                     + " missing from the database. "
                                     + "Cannot proceed with block pruning and total difficulty updates.");
-                    LOG.error(
+                    log.error(
                             " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
                             level - 1);
                     throw new IllegalStateException("Missing block from the database.");
@@ -986,18 +992,18 @@ public class AionBlockStore {
             }
 
             // prune genesis
-            pruneSideChains(block);
+            pruneSideChains(block, log);
 
             // bottom up repair of information
             // initial TD set to genesis TD
             level = 1;
             while (level <= initialLevel) {
-                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getTotalDifficulty());
+                BigInteger totalDifficulty = correctTotalDifficulty(level, block.getTotalDifficulty(), log);
                 if (totalDifficulty == null) {
-                    LOG.error("CorrectTotalDifficulty failed! level:{}", level);
+                    log.error("CorrectTotalDifficulty failed! level:{}", level);
                     throw new IllegalStateException("The Index database might corrupt!");
                 }
-                LOG.info(
+                log.info(
                         "Updated difficulties on level "
                                 + level
                                 + " to "
@@ -1012,15 +1018,13 @@ public class AionBlockStore {
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private void pruneSideChains(Block block) {
+    private void pruneSideChains(Block block, Logger log) {
         lock.lock();
 
         try {
             // current level
             long level = block.getNumber();
             byte[] blockHash = block.getHash();
-
-            LOG.info("Pruning side chains on level " + level + ".");
 
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
             BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
@@ -1051,12 +1055,12 @@ public class AionBlockStore {
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty) {
+    private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty, Logger log) {
         List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
 
         if (levelBlocks.size() != 1) {
             // something went awry
-            LOG.error(
+            log.error(
                     "Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
             return null;
         } else {

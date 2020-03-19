@@ -1435,14 +1435,14 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
     /**
      * Removes blocks on side chains and recreates the block information inside the index database.
      */
-    public void pruneAndCorrectBlockStore() {
+    public void pruneAndCorrectBlockStore(Logger log) {
         Block bestBlock = getBestBlock();
         if (bestBlock == null) {
-            LOGGEN.error("Empty database. Nothing to do.");
+            log.error("Empty database. Nothing to do.");
             return;
         } else {
             // revert to block number and flush changes
-            blockStore.pruneAndCorrect();
+            blockStore.pruneAndCorrect(log);
             blockStore.flush();
         }
     }

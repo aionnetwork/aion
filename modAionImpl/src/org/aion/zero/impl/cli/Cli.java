@@ -345,7 +345,16 @@ public class Cli {
 
             if (options.isRebuildBlockInfo()) {
                 System.out.println("Starting database clean-up.");
-                DBUtils.pruneAndCorrect();
+                CfgAion.inst().dbFromXML();
+
+                Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
+                cfgLog.put(LogEnum.GEN, LogLevel.INFO);
+                AionLoggerFactory.initAll(cfgLog);
+
+                // get the current blockchain
+                AionRepositoryImpl repository = AionRepositoryImpl.inst();
+                repository.pruneAndCorrectBlockStore(AionLoggerFactory.getLogger(LogEnum.GEN.name()));
+                repository.close();
                 System.out.println("Finished database clean-up.");
                 return EXIT;
             }

@@ -48,24 +48,6 @@ public class DBUtils {
     }
 
     /** Used by the CLI call. */
-    public static void pruneAndCorrect() {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
-        cfgLog.put(LogEnum.DB, LogLevel.INFO);
-        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
-        AionLoggerFactory.initAll(cfgLog);
-
-        // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
-        blockchain.getRepository().pruneAndCorrectBlockStore();
-        blockchain.getRepository().close();
-    }
-
-    /** Used by the CLI call. */
     public static void dbCompact() {
         // ensure mining is disabled
         CfgAion cfg = CfgAion.inst();
