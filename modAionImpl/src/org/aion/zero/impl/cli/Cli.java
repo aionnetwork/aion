@@ -13,22 +13,28 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.vm.avm.AvmConfigurations;
 import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.config.CfgSsl;
-import org.aion.zero.impl.config.CfgSync;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.DBUtils;
+import org.slf4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
 
@@ -346,25 +352,12 @@ public class Cli {
 
             if (options.getRevertToBlock() != null) {
                 String block = options.getRevertToBlock();
-                switch (revertTo(block)) {
-                    case SUCCESS:
-                        {
-                            System.out.println(
-                                    "Blockchain successfully reverted to block number "
-                                            + block
-                                            + ".");
-                            return EXIT;
-                        }
-                    case FAILURE:
-                        {
-                            System.out.println("Unable to revert to block number " + block + ".");
-                            return ERROR;
-                        }
-                    case ILLEGAL_ARGUMENT:
-                    default:
-                        {
-                            return ERROR;
-                        }
+                if (revertTo(block)) {
+                    System.out.println("Blockchain successfully reverted to block number " + block + ".");
+                    return EXIT;
+                } else {
+                    System.out.println("Unable to revert to block number " + block + ".");
+                    return ERROR;
                 }
             }
 
@@ -735,7 +728,10 @@ public class Cli {
         return skippedTasks;
     }
 
-    private DBUtils.Status revertTo(String blockNumber) {
+    /**
+     * @return {@code true} if successful and {@code false} in case of any failure
+     */
+    private boolean revertTo(String blockNumber) {
         // try to convert to long
         long block;
 
@@ -744,10 +740,26 @@ public class Cli {
         } catch (NumberFormatException e) {
             System.out.println(
                     "The given argument «" + blockNumber + "» cannot be converted to a number.");
-            return DBUtils.Status.ILLEGAL_ARGUMENT;
+            return false;
         }
 
-        return DBUtils.revertTo(block);
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
+        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
+        AionLoggerFactory.initAll(cfgLog);
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        boolean isSuccessful = repository.revertTo(block, log);
+        repository.close();
+
+        // ok if we managed to get down to the expected block
+        return isSuccessful;
     }
 
     private void createKeystoreDirIfMissing() {

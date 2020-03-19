@@ -33,14 +33,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.ConstantUtil;
@@ -1609,5 +1607,54 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
     @Override
     public boolean isSnapshot() {
         return isSnapshot;
+    }
+
+    /**
+     * Used by internal world state recovery method.
+     *
+     * @return {@code true} if successful and {@code false} in case of any failure
+     */
+    public boolean revertTo(long nbBlock, Logger log) {
+        Block bestBlock = blockStore.getBestBlock();
+        if (bestBlock == null) {
+            log.error("Empty database. Nothing to do.");
+            return false;
+        }
+
+        long nbBestBlock = bestBlock.getNumber();
+
+        log.info("Attempting to revert best block from " + nbBestBlock + " to " + nbBlock + " ...");
+
+        // exit with warning if the given block is larger or negative
+        if (nbBlock < 0) {
+            log.error("Negative values <" + nbBlock + "> cannot be interpreted as block numbers. Nothing to do.");
+            return false;
+        }
+        if (nbBestBlock == 0) {
+            log.error("Only genesis block in database. Nothing to do.");
+            return false;
+        }
+        if (nbBlock == nbBestBlock) {
+            log.error("The block " + nbBlock + " is the current best block stored in the database. Nothing to do.");
+            return false;
+        }
+        if (nbBlock > nbBestBlock) {
+            log.error("The block #"
+                    + nbBlock
+                    + " is greater than the current best block #"
+                    + nbBestBlock
+                    + " stored in the database. "
+                    + "Cannot move to that block without synchronizing with peers. Start Aion instance to sync.");
+            return false;
+        }
+
+        // revert to block number and flush changes
+        blockStore.revert(nbBlock, log);
+        blockStore.flush();
+
+        nbBestBlock = blockStore.getBestBlock().getNumber();
+
+        // ok if we managed to get down to the expected block
+        return nbBestBlock == nbBlock;
     }
 }

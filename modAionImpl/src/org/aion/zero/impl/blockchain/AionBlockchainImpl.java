@@ -40,7 +40,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
@@ -2608,9 +2607,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 genLOG.info("Rebuild state FAILED. Reverting to previous block.");
 
                 --blockNumber;
-                DBUtils.Status status = DBUtils.revertTo(this, blockNumber, genLOG);
+                boolean isSuccessful = getRepository().revertTo(blockNumber, genLOG);
 
-                recovered = (status == DBUtils.Status.SUCCESS) && repository.isValidRoot(getBlockByNumber(blockNumber).getStateRoot());
+                recovered = isSuccessful && repository.isValidRoot(getBlockByNumber(blockNumber).getStateRoot());
             }
 
             if (recovered) {

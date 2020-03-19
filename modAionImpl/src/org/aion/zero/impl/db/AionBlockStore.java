@@ -890,15 +890,15 @@ public class AionBlockStore {
      *
      * @param targetLevel the height of the blockchain that we must revert to
      */
-    public void revert(long targetLevel) {
+    public void revert(long targetLevel, Logger log) {
         lock.lock();
 
         try {
-            LOG.info("Block store revert STARTED.");
+            log.info("Block store revert STARTED.");
 
             Block bestBlock = getBestBlock();
             if (bestBlock == null) {
-                LOG.error("Can't find the best block. Revert failed!"
+                log.error("Can't find the best block. Revert FAILED!"
                         + "Please reboot your node to trigger automatic database recovery by the kernel.");
                 throw new IllegalStateException("Missing the best block from the database.");
             }
@@ -918,7 +918,7 @@ public class AionBlockStore {
                 // remove all the blocks at that level
                 List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
                 if (currentLevelBlocks == null || currentLevelBlocks.isEmpty()) {
-                    LOG.error("Null block information found at " + currentLevel + " when information should exist."
+                    log.error("Null block information found at " + currentLevel + " when information should exist."
                             + "Please reboot your node to trigger automatic database recovery by the kernel.");
                 } else {
                     for (BlockInfo bk_info : currentLevelBlocks) {
@@ -932,7 +932,7 @@ public class AionBlockStore {
                 if (currentBatchSize >= TARGET_BATCH_SIZE) {
                     blocks.flushBatch();
                     if (System.nanoTime() - time > TEN_SEC) {
-                        LOG.info("Progress report: current height=" + currentLevel);
+                        log.info("Progress report: current height=" + currentLevel);
                         time = System.nanoTime();
                     }
                     currentBatchSize = 0;
@@ -941,13 +941,13 @@ public class AionBlockStore {
             }
             blocks.flushBatch();
 
-            LOG.warn("Revert complete. Please be aware that the current main chain is the same as at the start of the operation."
-                    + "To keep this revert operation fast the main chain has not been updated based on existing side chains.");
+            log.info("Block store revert COMPLETE.");
+            log.warn("Please be aware that the current main chain is the same chain that contained the best block encountered at the start of this operation. "
+                    + "To keep this revert operation fast the main chain has not been updated based on existing side chains. The main chain will adjust itself when new blocks are imported.");
         } catch (Exception e) {
             // making sure the blocks get deleted if interrupted
             blocks.flushBatch();
         } finally {
-            LOG.info("Block store revert COMPLETE.");
             lock.unlock();
         }
     }

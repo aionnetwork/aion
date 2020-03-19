@@ -25,9 +25,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,30 +45,6 @@ public class DBUtils {
         SUCCESS,
         FAILURE,
         ILLEGAL_ARGUMENT
-    }
-
-    /** Used by the CLI call. */
-    public static Status revertTo(long nbBlock) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
-        cfgLog.put(LogEnum.DB, LogLevel.INFO);
-        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
-        AionLoggerFactory.initAll(cfgLog);
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
-
-        Status status = revertTo(blockchain, nbBlock, log);
-
-        blockchain.getRepository().close();
-
-        // ok if we managed to get down to the expected block
-        return status;
     }
 
     /** Used by the CLI call. */
@@ -249,60 +223,6 @@ public class DBUtils {
         }
 
         repository.close();
-    }
-
-    /** Used by internal world state recovery method. */
-    public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock, Logger log) {
-        AionBlockStore store = blockchain.getRepository().getBlockStore();
-
-        Block bestBlock = store.getBestBlock();
-        if (bestBlock == null) {
-            log.error("Empty database. Nothing to do.");
-            return Status.ILLEGAL_ARGUMENT;
-        }
-
-        long nbBestBlock = bestBlock.getNumber();
-
-        log.info("Attempting to revert best block from " + nbBestBlock + " to " + nbBlock + " ...");
-
-        // exit with warning if the given block is larger or negative
-        if (nbBlock < 0) {
-            log.error(
-                    "Negative values <"
-                            + nbBlock
-                            + "> cannot be interpreted as block numbers. Nothing to do.");
-            return Status.ILLEGAL_ARGUMENT;
-        }
-        if (nbBestBlock == 0) {
-            log.error("Only genesis block in database. Nothing to do.");
-            return Status.ILLEGAL_ARGUMENT;
-        }
-        if (nbBlock == nbBestBlock) {
-            log.error(
-                    "The block "
-                            + nbBlock
-                            + " is the current best block stored in the database. Nothing to do.");
-            return Status.ILLEGAL_ARGUMENT;
-        }
-        if (nbBlock > nbBestBlock) {
-            log.error(
-                    "The block #"
-                            + nbBlock
-                            + " is greater than the current best block #"
-                            + nbBestBlock
-                            + " stored in the database. "
-                            + "Cannot move to that block without synchronizing with peers. Start Aion instance to sync.");
-            return Status.ILLEGAL_ARGUMENT;
-        }
-
-        // revert to block number and flush changes
-        store.revert(nbBlock);
-        store.flush();
-
-        nbBestBlock = store.getBestBlock().getNumber();
-
-        // ok if we managed to get down to the expected block
-        return (nbBestBlock == nbBlock) ? Status.SUCCESS : Status.FAILURE;
     }
 
     public static void printStateTrieSize(long blockNumber) {
