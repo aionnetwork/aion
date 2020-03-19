@@ -19,6 +19,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
+import org.aion.zero.impl.valid.BlockDetailsValidator;
 import org.slf4j.Logger;
 
 /**
@@ -93,13 +94,13 @@ public final class BlockUtil {
             List<AionTransaction> txs = parseTransactions(transactionsRLP);
             if (type[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                 A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!isValidRoot(miningHeader.getTxTrieRoot(), transactionsRLP)) {
+                if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), genLog)) {
                     return null;
                 }
                 return new AionBlock(miningHeader, txs);
             } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!isValidRoot(stakingHeader.getTxTrieRoot(), transactionsRLP)) {
+                if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), genLog)) {
                     return null;
                 }
                 return new StakingBlock(stakingHeader, txs);
@@ -131,7 +132,7 @@ public final class BlockUtil {
             RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
             RLPList transactions = (RLPList) items.get(0);
             List<AionTransaction> txs = parseTransactions(transactions);
-            if (!isValidRoot(header.getTxTrieRoot(), transactions)) {
+            if (!BlockDetailsValidator.isValidTxTrieRoot(header.getTxTrieRoot(), txs, header.getNumber(), genLog)) {
                 return null;
             }
             if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
@@ -186,17 +187,6 @@ public final class BlockUtil {
             transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
         }
         return transactionsList;
-    }
-
-    /** Builds the transaction trie and checks for root equality. */
-    public static boolean isValidRoot(byte[] expectedRoot, RLPList txTransactions) {
-        Trie txsState = new TrieImpl(null);
-        for (int i = 0; i < txTransactions.size(); i++) {
-            RLPElement transactionRaw = txTransactions.get(i);
-            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
-        }
-        byte[] txStateRoot = txsState.getRootHash();
-        return Arrays.equals(expectedRoot, txStateRoot);
     }
 
     public static byte[] calcTxTrieRoot(List<AionTransaction> transactions) {

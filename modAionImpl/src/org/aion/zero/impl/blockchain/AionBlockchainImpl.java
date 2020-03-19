@@ -44,10 +44,12 @@ import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 
-import static org.aion.zero.impl.types.BlockUtil.calcLogBloom;
 import static org.aion.zero.impl.types.BlockUtil.calcReceiptsTrie;
 import static org.aion.zero.impl.types.BlockUtil.calcTxTrieRoot;
 import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidBlock;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidStateRoot;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidTxTrieRoot;
 
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.BlockHeaderRule;
@@ -1506,45 +1508,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         AionBlockSummary summary = processBlock(block);
+        List<AionTxExecSummary> transactionSummaries = summary.getSummaries();
         List<AionTxReceipt> receipts = summary.getReceipts();
 
-        // Sanity checks
-        long energyUsed = 0L;
-        if (!receipts.isEmpty()) {
-            for (AionTxReceipt receipt : receipts) {
-                energyUsed += receipt.getEnergyUsed();
-            }
-        }
-        if (block.getHeader().getEnergyConsumed() != energyUsed) {
-            LOG.warn("Block's energy consumed doesn't match: calculated={} header={}", energyUsed, block.getHeader().getEnergyConsumed());
-            track.rollback();
-            return Pair.of(null, null);
-        }
-
-        byte[] receiptHash = block.getReceiptsRoot();
-        byte[] receiptListHash = calcReceiptsTrie(receipts);
-
-        if (!Arrays.equals(receiptHash, receiptListHash)) {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn(
-                        "Block's given Receipt Hash doesn't match: {} != {}",
-                        receiptHash,
-                        receiptListHash);
-                LOG.warn("Calculated receipts: " + receipts);
-            }
-            track.rollback();
-            return Pair.of(null, null);
-        }
-
-        byte[] logBloomHash = block.getLogBloom();
-        byte[] logBloomListHash = calcLogBloom(receipts);
-
-        if (!Arrays.equals(logBloomHash, logBloomListHash)) {
-            if (LOG.isWarnEnabled())
-                LOG.warn(
-                        "Block's given logBloom Hash doesn't match: {} != {}",
-                        ByteUtil.toHexString(logBloomHash),
-                        ByteUtil.toHexString(logBloomListHash));
+        if (!isValidBlock(block, transactionSummaries, receipts, forkUtility.isNonceForkActive(block.getNumber()), LOG)) {
             track.rollback();
             return Pair.of(null, null);
         }
@@ -1554,9 +1521,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         track.flush();
-        if (summary != null) {
-            repository.commitCachedVMs(block.getHashWrapper());
-        }
+        repository.commitCachedVMs(block.getHashWrapper());
 
         if (blockWrapper.reBuild) {
             List<AionTxExecSummary> execSummaries = summary.getSummaries();
@@ -1585,17 +1550,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     block.getShortHash(),
                     getTotalDifficulty());
         } else {
-            byte[] blockStateRootHash = block.getStateRoot();
-            byte[] worldStateRootHash = repository.getRoot();
-
-            if (!Arrays.equals(blockStateRootHash, worldStateRootHash)) {
-
-                LOG.warn(
-                    "BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch",
-                    block.getNumber(),
-                    worldStateRootHash);
-                LOG.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
-
+            if (!isValidStateRoot(block, repository.getRoot(), LOG)) {
                 // block is bad so 'rollback' the state root to the original state
                 repository.setRoot(origRoot);
                 return Pair.of(null, null);
@@ -1720,20 +1675,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return false;
             }
 
-            // Sanity checks
-            byte[] trieHash = block.getTxTrieRoot();
             List<AionTransaction> txs = block.getTransactionsList();
-
-            byte[] trieListHash = calcTxTrieRoot(txs);
-            if (!Arrays.equals(trieHash, trieListHash)) {
-                LOG.warn(
-                        "Block's given Trie Hash doesn't match: {} != {}",
-                        toHexString(trieHash),
-                        toHexString(trieListHash));
+            if (!isValidTxTrieRoot(block.getTxTrieRoot(), txs, block.getNumber(), LOG)) {
                 return false;
             }
 
-            if (txs != null && !txs.isEmpty()) {
+            if (!txs.isEmpty()) {
                 Repository parentRepo = repository;
 
                 if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
