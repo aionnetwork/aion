@@ -1855,6 +1855,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 cachedBlockNumberForAVM,
                                 forkUtility.isUnityForkActive(block.getNumber()));
 
+                // Check for rejected transaction already included in the chain.
+                if ((block.getNumber() == 4735401L || block.getNumber() == 4735403L || block.getNumber() == 4735405L) && getBlockByNumber(0).getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"))) {
+                    for (AionTxExecSummary summary : executionSummaries) {
+                        if (summary.isRejected()) {
+                            AionTxReceipt receipt = summary.getReceipt();
+                            receipt.setNrgUsed(receipt.getTransaction().getEnergyLimit());
+                        }
+                    }
+                }
+
                 for (AionTxExecSummary summary : executionSummaries) {
                     receipts.add(summary.getReceipt());
                     summaries.add(summary);
