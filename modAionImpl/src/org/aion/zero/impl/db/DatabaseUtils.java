@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.slf4j.Logger;
 
@@ -28,14 +27,6 @@ public class DatabaseUtils {
 
         // open the database connection
         db.open();
-
-        // check object status
-        if (db == null) {
-            LOG.error(
-                    "Database <{}> connection could not be established for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
 
         return db;
     }
@@ -79,7 +70,7 @@ public class DatabaseUtils {
             }
         }
 
-        if (path == null || !Files.isWritable(path) || !Files.isDirectory(path)) {
+        if (!Files.isWritable(path) || !Files.isDirectory(path)) {
             throw exception;
         }
     }
