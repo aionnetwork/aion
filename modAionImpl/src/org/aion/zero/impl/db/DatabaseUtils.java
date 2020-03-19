@@ -1,5 +1,7 @@
 package org.aion.zero.impl.db;
 
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -14,7 +16,6 @@ import java.util.stream.Stream;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
-import org.aion.db.impl.PersistenceMethod;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.slf4j.Logger;
 
@@ -110,7 +111,7 @@ public class DatabaseUtils {
         }
 
         if (dbType.equals("leveldb")) {
-            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+            try (Stream<Path> paths = Files.walk(dbFile.toPath(), FOLLOW_LINKS)) {
                 boolean shouldThrow =
                     paths.filter(Files::isRegularFile)
                         .anyMatch(
@@ -126,7 +127,7 @@ public class DatabaseUtils {
                 }
             }
         } else if (dbType.equals("rocksdb")) {
-            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+            try (Stream<Path> paths = Files.walk(dbFile.toPath(), FOLLOW_LINKS)) {
                 boolean shouldThrow =
                     paths.filter(Files::isRegularFile)
                         .anyMatch(filepath ->
@@ -141,7 +142,7 @@ public class DatabaseUtils {
                 }
             }
 
-            try (Stream<Path> paths = Files.walk(dbFile.toPath())) {
+            try (Stream<Path> paths = Files.walk(dbFile.toPath(), FOLLOW_LINKS)) {
                 boolean shouldThrow =
                     paths.filter(Files::isRegularFile)
                         .noneMatch(filepath ->
