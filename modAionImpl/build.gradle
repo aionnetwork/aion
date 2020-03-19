@@ -73,6 +73,7 @@ dependencies {
     testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     testCompile "org.mockito:mockito-core:2.23.0"
     testCompile 'com.google.truth:truth:0.42'
+    testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
 }
 
 task preBuild(type: Exec) {
