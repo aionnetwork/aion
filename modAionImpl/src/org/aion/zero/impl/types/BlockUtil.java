@@ -3,7 +3,11 @@ package org.aion.zero.impl.types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
+import org.aion.base.Bloom;
+import org.aion.base.ConstantUtil;
 import org.aion.base.TxUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -175,7 +179,7 @@ public final class BlockUtil {
     }
 
     /** Decodes the give transactions. */
-    public static List<AionTransaction> parseTransactions(RLPList txTransactions) {
+    private static List<AionTransaction> parseTransactions(RLPList txTransactions) {
         List<AionTransaction> transactionsList = new ArrayList<>();
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
@@ -193,5 +197,54 @@ public final class BlockUtil {
         }
         byte[] txStateRoot = txsState.getRootHash();
         return Arrays.equals(expectedRoot, txStateRoot);
+    }
+
+    public static byte[] calcTxTrieRoot(List<AionTransaction> transactions) {
+        Objects.requireNonNull(transactions);
+
+        if (transactions.isEmpty()) {
+            return ConstantUtil.EMPTY_TRIE_HASH;
+        }
+
+        Trie txsState = new TrieImpl(null);
+
+        for (int i = 0; i < transactions.size(); i++) {
+            byte[] txEncoding = transactions.get(i).getEncoded();
+            if (txEncoding != null) {
+                txsState.update(RLP.encodeInt(i), txEncoding);
+            } else {
+                return ConstantUtil.EMPTY_TRIE_HASH;
+            }
+        }
+        return txsState.getRootHash();
+    }
+
+    public static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
+        Objects.requireNonNull(receipts);
+
+        if (receipts.isEmpty()) {
+            return ConstantUtil.EMPTY_TRIE_HASH;
+        }
+
+        Trie receiptsTrie = new TrieImpl(null);
+        for (int i = 0; i < receipts.size(); i++) {
+            receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
+        }
+        return receiptsTrie.getRootHash();
+    }
+
+    public static byte[] calcLogBloom(List<AionTxReceipt> receipts) {
+        Objects.requireNonNull(receipts);
+
+        if (receipts.isEmpty()) {
+            return new byte[Bloom.SIZE];
+        }
+
+        Bloom retBloomFilter = new Bloom();
+        for (AionTxReceipt receipt : receipts) {
+            retBloomFilter.or(receipt.getBloomFilter());
+        }
+
+        return retBloomFilter.getBloomFilterBytes();
     }
 }

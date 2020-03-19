@@ -43,6 +43,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.GenesisStakingBlock;
+
+import static org.aion.zero.impl.types.BlockUtil.calcLogBloom;
+import static org.aion.zero.impl.types.BlockUtil.calcReceiptsTrie;
+import static org.aion.zero.impl.types.BlockUtil.calcTxTrieRoot;
 import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
 
 import org.aion.zero.impl.valid.AionExtraDataRule;
@@ -74,8 +78,6 @@ import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.TransactionStore;
 import org.aion.zero.impl.forks.ForkUtility;
-import org.aion.zero.impl.trie.Trie;
-import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
@@ -87,7 +89,6 @@ import org.aion.zero.impl.valid.GreatGrandParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.Bloom;
-import org.aion.rlp.RLP;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -384,50 +385,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         String monetaryForkNum = properties.getProperty("fork0.4.0");
         return monetaryForkNum == null ? null : Long.valueOf(monetaryForkNum);
-    }
-
-    private static byte[] calcTxTrie(List<AionTransaction> transactions) {
-
-        if (transactions == null || transactions.isEmpty()) {
-            return ConstantUtil.EMPTY_TRIE_HASH;
-        }
-
-        Trie txsState = new TrieImpl(null);
-
-        for (int i = 0; i < transactions.size(); i++) {
-            byte[] txEncoding = transactions.get(i).getEncoded();
-            if (txEncoding != null) {
-                txsState.update(RLP.encodeInt(i), txEncoding);
-            } else {
-                return ConstantUtil.EMPTY_TRIE_HASH;
-            }
-        }
-        return txsState.getRootHash();
-    }
-
-    private static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
-        if (receipts == null || receipts.isEmpty()) {
-            return ConstantUtil.EMPTY_TRIE_HASH;
-        }
-
-        Trie receiptsTrie = new TrieImpl(null);
-        for (int i = 0; i < receipts.size(); i++) {
-            receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
-        }
-        return receiptsTrie.getRootHash();
-    }
-
-    private static byte[] calcLogBloom(List<AionTxReceipt> receipts) {
-        if (receipts == null || receipts.isEmpty()) {
-            return new byte[Bloom.SIZE];
-        }
-
-        Bloom retBloomFilter = new Bloom();
-        for (AionTxReceipt receipt : receipts) {
-            retBloomFilter.or(receipt.getBloomFilter());
-        }
-
-        return retBloomFilter.getBloomFilterBytes();
     }
 
     /**
@@ -1272,7 +1229,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     .withNumber(parentHdr.getNumber() + 1)
                     .withTimestamp(time)
                     .withExtraData(minerExtraData)
-                    .withTxTrieRoot(calcTxTrie(txs))
+                    .withTxTrieRoot(calcTxTrieRoot(txs))
                     .withEnergyLimit(energyLimit)
                     .withDefaultStateRoot()
                     .withDefaultReceiptTrieRoot()
@@ -1454,7 +1411,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             .withNumber(parentHdr.getNumber() + 1)
                             .withTimestamp(newTimestamp)
                             .withExtraData(minerExtraData)
-                            .withTxTrieRoot(calcTxTrie(txs))
+                            .withTxTrieRoot(calcTxTrieRoot(txs))
                             .withEnergyLimit(energyLimitStrategy.getEnergyLimit(parentHdr))
                             .withDifficulty(ByteUtil.bigIntegerToBytes(newDiff, DIFFICULTY_BYTES))
                             .withSeed(sealedSeed)
@@ -1510,7 +1467,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             block.updateTransactionAndState(
                     preBlock.txs,
-                    calcTxTrie(preBlock.txs),
+                    calcTxTrieRoot(preBlock.txs),
                     stateRoot,
                     logBloom.getBloomFilterBytes(),
                     calcReceiptsTrie(preBlock.receipts),
@@ -1767,7 +1724,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             byte[] trieHash = block.getTxTrieRoot();
             List<AionTransaction> txs = block.getTransactionsList();
 
-            byte[] trieListHash = calcTxTrie(txs);
+            byte[] trieListHash = calcTxTrieRoot(txs);
             if (!Arrays.equals(trieHash, trieListHash)) {
                 LOG.warn(
                         "Block's given Trie Hash doesn't match: {} != {}",
