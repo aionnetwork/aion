@@ -26,6 +26,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.FutureBlockRule;
+import org.slf4j.Logger;
 
 public class AionChainHolder implements ChainHolder {
 
@@ -33,6 +34,7 @@ public class AionChainHolder implements ChainHolder {
     private final AtomicReference<BlockContext> currentTemplate;
     private final AccountManagerInterface accountManager;
     private final FutureBlockRule futureBlockRule;
+    private final Logger logger;
 
     public AionChainHolder(IAionChain chain,
         AccountManagerInterface accountManager) {
@@ -48,6 +50,7 @@ public class AionChainHolder implements ChainHolder {
         currentTemplate = new AtomicReference<>(null);
         this.accountManager = accountManager;
         this.futureBlockRule = new FutureBlockRule();
+        logger = AionLoggerFactory.getLogger(LogEnum.API.name());
     }
 
     @Override
