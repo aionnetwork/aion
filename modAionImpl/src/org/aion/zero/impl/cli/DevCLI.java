@@ -141,12 +141,25 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType writeState(long level) {
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
         if (level == -1L) {
-            System.out.println("Retrieving state for top main chain block...");
+            log.info("Retrieving state for top main chain block...");
+        } else if (level >= 0) {
+            log.info("Retrieving state for main chain block at level " + level + "...");
         } else {
-            System.out.println("Retrieving state for main chain block at level " + level + "...");
+            log.info("Invalid hight: " + level + ". Cannot retrieve state.");
+            return Cli.ReturnType.ERROR;
         }
-        DBUtils.printStateTrieDump(level);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        repository.printStateTrieDump(level, log);
+        repository.close();
         return Cli.ReturnType.EXIT;
     }
 

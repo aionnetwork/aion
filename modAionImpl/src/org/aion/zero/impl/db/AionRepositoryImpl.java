@@ -1790,4 +1790,34 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             targetBlock++;
         }
     }
+
+    public void printStateTrieDump(long blockNumber, Logger log) {
+        Block block;
+
+        if (blockNumber == -1L) {
+            block = blockStore.getBestBlock();
+            if (block == null) {
+                log.error("The requested block does not exist in the database.");
+                return;
+            }
+            blockNumber = block.getNumber();
+        } else {
+            block = blockStore.getChainBlockByNumber(blockNumber);
+            if (block == null) {
+                log.error("The requested block does not exist in the database.");
+                return;
+            }
+        }
+
+        byte[] stateRoot = block.getStateRoot();
+        log.info(
+                "\nBlock hash: "
+                        + block.getShortHash()
+                        + ", number: "
+                        + blockNumber
+                        + ", tx count: "
+                        + block.getTransactionsList().size()
+                        + "\n\n"
+                        + getWorldState().getTrieDump(stateRoot));
+    }
 }

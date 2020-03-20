@@ -39,50 +39,6 @@ public class DBUtils {
         ILLEGAL_ARGUMENT
     }
 
-    public static void printStateTrieDump(long blockNumber) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        // get the current blockchain
-        AionRepositoryImpl repository = AionRepositoryImpl.inst();
-
-        AionBlockStore store = repository.getBlockStore();
-
-        Block block;
-
-        if (blockNumber == -1L) {
-            block = store.getBestBlock();
-            if (block == null) {
-                log.error("The requested block does not exist in the database.");
-                return;
-            }
-            blockNumber = block.getNumber();
-        } else {
-            block = store.getChainBlockByNumber(blockNumber);
-            if (block == null) {
-                log.error("The requested block does not exist in the database.");
-                return;
-            }
-        }
-
-        byte[] stateRoot = block.getStateRoot();
-        log.info(
-                "\nBlock hash: "
-                        + block.getShortHash()
-                        + ", number: "
-                        + blockNumber
-                        + ", tx count: "
-                        + block.getTransactionsList().size()
-                        + "\n\n"
-                        + repository.getWorldState().getTrieDump(stateRoot));
-
-        repository.close();
-    }
 
     public static void pruneOrRecoverState(String pruning_type) {
         // ensure mining is disabled
