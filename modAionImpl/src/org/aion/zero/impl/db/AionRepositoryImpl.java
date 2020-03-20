@@ -1737,4 +1737,57 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             }
         }
     }
+
+    public void printStateTrieSize(long blockNumber, Logger log) {
+        long topBlock = blockStore.getBestBlock().getNumber();
+        if (topBlock < 0) {
+            log.error("The database is empty. Cannot print block information.");
+            return;
+        }
+
+        long targetBlock = topBlock - blockNumber + 1;
+        if (targetBlock < 0) {
+            targetBlock = 0;
+        }
+
+        Block block;
+        byte[] stateRoot;
+
+        while (targetBlock <= topBlock) {
+            block = blockStore.getChainBlockByNumber(targetBlock);
+            if (block != null) {
+                stateRoot = block.getStateRoot();
+                try {
+                    log.info(
+                            "Block hash: "
+                                    + block.getShortHash()
+                                    + ", number: "
+                                    + block.getNumber()
+                                    + ", tx count: "
+                                    + block.getTransactionsList().size()
+                                    + ", state trie kv count = "
+                                    + getWorldState().getTrieSize(stateRoot));
+                } catch (RuntimeException e) {
+                    log.error(
+                            "Block hash: "
+                                    + block.getShortHash()
+                                    + ", number: "
+                                    + block.getNumber()
+                                    + ", tx count: "
+                                    + block.getTransactionsList().size()
+                                    + ", state trie kv count threw exception: "
+                                    + e.getMessage());
+                }
+            } else {
+                long count = blockStore.getBlocksByNumber(targetBlock).size();
+                log.error(
+                        "Null block found at level "
+                                + targetBlock
+                                + ". There "
+                                + (count == 1 ? "is 1 block" : "are " + count + " blocks")
+                                + " at this level. No main chain block found.");
+            }
+            targetBlock++;
+        }
+    }
 }

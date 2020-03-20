@@ -151,13 +151,24 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType writeStateSize(long blockCount) {
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
         if (blockCount < 1) {
-            System.out.println("The given argument «" + blockCount + "» is not valid.");
+            log.error("The given argument «" + blockCount + "» is not valid.");
             blockCount = 2L;
         }
 
-        System.out.println("Retrieving state size for top " + blockCount + " blocks.");
-        DBUtils.printStateTrieSize(blockCount);
+        log.error("Retrieving state size for top " + blockCount + " blocks.");
+
+        // get the current repository
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        repository.printStateTrieSize(blockCount, log);
+        repository.close();
+
         return Cli.ReturnType.EXIT;
     }
 
