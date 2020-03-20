@@ -30,12 +30,9 @@ import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.config.CfgSsl;
-import org.aion.types.AionAddress;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
-import org.aion.zero.impl.db.DBUtils;
 import org.slf4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
@@ -469,22 +466,6 @@ public class Cli {
             e.printStackTrace();
             return ERROR;
         }
-    }
-
-    private DBUtils.Status getAccountDetails(String strAddress) {
-        AionAddress address;
-
-        try {
-            address = new AionAddress(ByteUtil.hexStringToBytes(strAddress));
-        } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «"
-                            + strAddress
-                            + "» cannot be converted to a valid account address.");
-            return DBUtils.Status.ILLEGAL_ARGUMENT;
-        }
-
-        return DBUtils.queryAccount(address);
     }
 
     /**

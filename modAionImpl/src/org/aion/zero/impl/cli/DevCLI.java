@@ -5,10 +5,12 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.aion.base.AccountState;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -16,7 +18,6 @@ import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.DBUtils;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -61,24 +62,39 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType printAccountDetails(String strAddress) {
+        // TODO AKI-681: more parameters would be useful, e.g. get account X at block Y
+
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
         AionAddress address;
 
         try {
             address = new AionAddress(ByteUtil.hexStringToBytes(strAddress));
         } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «"
-                            + strAddress
-                            + "» cannot be converted to a valid account address.");
+            log.error("The given argument «" + strAddress + "» cannot be converted to a valid account address.");
             return Cli.ReturnType.ERROR;
         }
 
-        DBUtils.Status status = DBUtils.queryAccount(address);
+        // get the current repository
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        try {
+            Block bestBlock = repository.getBestBlock();
+            Repository<AccountState> snapshot = repository.getSnapshotTo(bestBlock.getStateRoot()).startTracking();
 
-        if (status.equals(DBUtils.Status.SUCCESS)) {
+            AccountState account = snapshot.getAccountState(address);
+            log.info(account.toString());
+            log.info(snapshot.getContractDetails(address).toString());
+
             return Cli.ReturnType.EXIT;
-        } else {
+        } catch (Exception e) {
+            log.error("Error encountered while attempting to retrieve the account data.", e);
             return Cli.ReturnType.ERROR;
+        } finally {
+            repository.close();
         }
     }
 
