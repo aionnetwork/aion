@@ -2,17 +2,23 @@ package org.aion.zero.impl.cli;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
+import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.DBUtils;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -104,14 +110,59 @@ public class DevCLI {
         }
     }
 
-    public static Cli.ReturnType printBlockDetails(long param) {
-        DBUtils.Status status = DBUtils.queryBlock(param);
+    public static Cli.ReturnType printBlockDetails(long nbBlock) {
+        // ensure mining is disabled
+        CfgAion localCfg = CfgAion.inst();
+        localCfg.dbFromXML();
+        localCfg.getConsensus().setMining(false);
 
-        if (status == DBUtils.Status.SUCCESS) {
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+        // get the current blockchain
+        AionBlockchainImpl blockchain = new AionBlockchainImpl(localCfg, null, false);
+
+        try {
+            List<Block> blocks = blockchain.getRepository().getAllChainBlockByNumber(nbBlock, log);
+
+            if (blocks == null || blocks.isEmpty()) {
+                log.error("Cannot find the block with given block height.");
+                return Cli.ReturnType.ERROR;
+            }
+
+            for (Block b : blocks) {
+                log.info(b.toString());
+            }
+
+            // Now print the transaction state. Only for the mainchain.
+            // TODO: the worldstate can not read the data after the stateRoot has been setup, need to fix the issue first then the tooling can print the states between the block.
+
+            Block mainChainBlock = blockchain.getBlockByNumber(nbBlock);
+            if (mainChainBlock == null) {
+                log.error("Cannot find the main chain block with given block height.");
+                return Cli.ReturnType.ERROR;
+            }
+
+            Block parentBlock = blockchain.getBlockByHash(mainChainBlock.getParentHash());
+            if (parentBlock == null) {
+                log.error("Cannot find the parent block with given block height.");
+                return Cli.ReturnType.ERROR;
+            }
+
+            blockchain.setBestBlock(parentBlock);
+            Pair<AionBlockSummary, RepositoryCache> result = blockchain.tryImportWithoutFlush(mainChainBlock);
+            log.info("Import result: " + (result == null ? ImportResult.INVALID_BLOCK : ImportResult.IMPORTED_BEST));
+            if (result != null) {
+                log.info("Block summary:\n" + result.getLeft() + "\n");
+                log.info("RepoCacheDetails:\n" + result.getRight());
+            }
+
             return Cli.ReturnType.EXIT;
-        } else {
-            System.out.println("Invalid block query! Please check your input argument.");
+        } catch (Exception e) {
+            log.error("Error encountered while attempting to retrieve the block data.", e);
             return Cli.ReturnType.ERROR;
+        } finally {
+            blockchain.close();
         }
     }
 

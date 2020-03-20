@@ -357,8 +357,7 @@ public class AionBlockStore {
      * @param number block number
      * @return list of blocks in the given block level.
      */
-    List<Block> getAllChainBlockByNumber(long number) {
-
+    List<Block> getAllChainBlockByNumber(long number, Logger log) {
         lock.lock();
 
         try {
@@ -369,10 +368,10 @@ public class AionBlockStore {
 
             List<BlockInfo> blockInfos = index.get(number);
             if (blockInfos == null) {
-                LOG.error(
+                log.error(
                     "Encountered a kernel database corruption: cannot find block at level {} in data store.",
                     number);
-                LOG.error(
+                log.error(
                     " Please shutdown the kernel and rollback the database by executing:\t./aion.sh -n <network> -r {}",
                     number - 1);
                 throw  new IllegalStateException("Index Database corruption! ");
@@ -383,10 +382,10 @@ public class AionBlockStore {
                 Block b = blocks.get(blockInfo.getHash());
 
                 if (b == null) {
-                    LOG.error(
+                    log.error(
                         "Encountered a kernel database corruption: cannot find block with hash {} in data store.",
                         ByteUtil.toHexString(blockInfo.getHash()));
-                    LOG.error(
+                    log.error(
                         " Please shutdown the kernel and re import the database by executing:\t./aion.sh -n <network> --redo-import");
                     throw  new IllegalStateException("blocks Database corruption! ");
                 }

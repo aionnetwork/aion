@@ -1618,6 +1618,10 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         return this.blockStore.getBlockHashByNumber(blockNumber);
     }
 
+    public List<Block> getAllChainBlockByNumber(long number, Logger log) {
+        return this.blockStore.getAllChainBlockByNumber(number, log);
+    }
+
     @Override
     public boolean isSnapshot() {
         return isSnapshot;

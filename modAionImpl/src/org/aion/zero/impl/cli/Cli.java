@@ -471,20 +471,6 @@ public class Cli {
         }
     }
 
-    private DBUtils.Status getBlockDetails(String blockNumber) {
-        long block;
-
-        try {
-            block = Long.parseLong(blockNumber);
-        } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «" + blockNumber + "» cannot be converted to a number.");
-            return DBUtils.Status.ILLEGAL_ARGUMENT;
-        }
-
-        return DBUtils.queryBlock(block);
-    }
-
     private DBUtils.Status getAccountDetails(String strAddress) {
         AionAddress address;
 
