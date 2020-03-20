@@ -62,7 +62,6 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
-import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.config.CfgDb.Props;
@@ -248,8 +247,7 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    private void initializeDatabasesAndCaches(RepositoryConfig cfg)
-            throws InvalidFileTypeException, IOException {
+    private void initializeDatabasesAndCaches(RepositoryConfig cfg) throws IOException {
         // Given that this function is only called on startup, enforce conditions here for safety.
         Objects.requireNonNull(cfg);
 

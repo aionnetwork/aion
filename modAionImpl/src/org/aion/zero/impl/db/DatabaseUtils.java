@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.slf4j.Logger;
 
 /** @author Alexandra Roatis */
@@ -83,7 +82,7 @@ public class DatabaseUtils {
      * @author Jay Tseng
      * @param dbFile the path to be verified.
      * @param dbType the database type set by the config file
-     * @throws InvalidFileTypeException when:
+     * @throws IllegalStateException when:
      *     <ol>
      *       <li>the file type is ldb but found the prefix «OPTIONS» file or .sst file.
      *       <li>the file type is sst but found the .ldb file or cannot find the «OPTIONS» file.
@@ -94,7 +93,7 @@ public class DatabaseUtils {
      *     </ol>
      */
     static void verifyDBfileType(File dbFile, String dbType)
-        throws InvalidFileTypeException, IOException {
+        throws IllegalStateException, IOException {
 
         // Check if it is a new database folder
         if (Objects.requireNonNull(dbFile.listFiles()).length == 0) {
@@ -110,7 +109,7 @@ public class DatabaseUtils {
                                 filepath.getFileName().toString().startsWith("OPTIONS")
                                     || filepath.getFileName().toString().endsWith(".sst"));
                 if (shouldThrow) {
-                    throw new InvalidFileTypeException(
+                    throw new IllegalStateException(
                         "Found file type «sst» or the file name prefix «OPTIONS» in the database folder"
                             + ", it is not matched the current DB settings «"
                             + dbType
@@ -125,7 +124,7 @@ public class DatabaseUtils {
                             filepath.getFileName().toString().endsWith(".ldb"));
 
                 if (shouldThrow) {
-                    throw new InvalidFileTypeException(
+                    throw new IllegalStateException(
                         "Found file type «ldb» in the database folder"
                             + ", it is not matched the current DB settings «"
                             + dbType
@@ -140,7 +139,7 @@ public class DatabaseUtils {
                             filepath.getFileName().toString().startsWith("OPTIONS"));
 
                 if (shouldThrow) {
-                    throw new InvalidFileTypeException(
+                    throw new IllegalStateException(
                         "Cannot find the file «OPTIONS» in the database folder"
                             + ", it is not matched with the current DB settings «"
                             + dbType
@@ -148,7 +147,7 @@ public class DatabaseUtils {
                 }
             }
         } else {
-            throw new InvalidFileTypeException(
+            throw new IllegalStateException(
                     "The db type «" + dbType + "» has not been supported by the kernel.");
         }
     }

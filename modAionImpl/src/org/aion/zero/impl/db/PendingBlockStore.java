@@ -30,7 +30,6 @@ import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -94,8 +93,7 @@ public class PendingBlockStore implements Closeable {
      * @throws IllegalStateException when given a persistent database vendor for which the data
      *     store cannot be created or opened.
      */
-    public PendingBlockStore(final Properties _props)
-        throws IOException, InvalidFileTypeException {
+    public PendingBlockStore(final Properties _props) throws IOException {
         Properties local = new Properties(_props);
 
         // check for database persistence requirements
