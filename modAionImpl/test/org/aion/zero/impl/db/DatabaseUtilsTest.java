@@ -5,7 +5,6 @@ import static org.aion.zero.impl.db.DatabaseUtils.deleteRecursively;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class DatabaseUtilsTest {
     }
 
     @Test
-    public void testVerifyRocksDBfileTypeWithLinkDBPath() throws IOException, InvalidFileTypeException {
+    public void testVerifyRocksDBfileTypeWithLinkDBPath() throws IOException {
 
         File options = new File(linkedDB, "OPTIONS-123");
         options.createNewFile();
@@ -47,8 +46,8 @@ public class DatabaseUtilsTest {
         DatabaseUtils.verifyDBfileType(testDB, rocksDB);
     }
 
-    @Test (expected = InvalidFileTypeException.class)
-    public void testVerifyRocksDBfileTypeWithInvalidOptionFile() throws IOException, InvalidFileTypeException {
+    @Test (expected = IllegalStateException.class)
+    public void testVerifyRocksDBfileTypeWithInvalidOptionFile() throws IOException {
 
         File options = new File(linkedDB, "OPTION-123");
         options.createNewFile();
@@ -59,8 +58,8 @@ public class DatabaseUtilsTest {
         DatabaseUtils.verifyDBfileType(testDB, rocksDB);
     }
 
-    @Test (expected = InvalidFileTypeException.class)
-    public void testVerifyRocksDBfileTypeWithInvalidLDBFile() throws IOException, InvalidFileTypeException {
+    @Test (expected = IllegalStateException.class)
+    public void testVerifyRocksDBfileTypeWithInvalidLDBFile() throws IOException {
 
         File options = new File(linkedDB, "123.ldb");
         options.createNewFile();
@@ -72,7 +71,7 @@ public class DatabaseUtilsTest {
     }
 
     @Test
-    public void testVerifyLevelDBfileTypeWithLinkDBPath() throws IOException, InvalidFileTypeException {
+    public void testVerifyLevelDBfileTypeWithLinkDBPath() throws IOException {
 
         File options = new File(linkedDB, "123.ldb");
         options.createNewFile();
@@ -83,8 +82,8 @@ public class DatabaseUtilsTest {
         DatabaseUtils.verifyDBfileType(testDB, levelDB);
     }
 
-    @Test (expected = InvalidFileTypeException.class)
-    public void testVerifyLevelDBfileTypeWithInvalidOptionFile() throws IOException, InvalidFileTypeException {
+    @Test (expected = IllegalStateException.class)
+    public void testVerifyLevelDBfileTypeWithInvalidOptionFile() throws IOException {
 
         File options = new File(linkedDB, "OPTIONS-123");
         options.createNewFile();
@@ -95,8 +94,8 @@ public class DatabaseUtilsTest {
         DatabaseUtils.verifyDBfileType(testDB, levelDB);
     }
 
-    @Test (expected = InvalidFileTypeException.class)
-    public void testVerifyLevelDBfileTypeWithInvalidSSTFile() throws IOException, InvalidFileTypeException {
+    @Test (expected = IllegalStateException.class)
+    public void testVerifyLevelDBfileTypeWithInvalidSSTFile() throws IOException {
 
         File options = new File(linkedDB, "123.sst");
         options.createNewFile();
