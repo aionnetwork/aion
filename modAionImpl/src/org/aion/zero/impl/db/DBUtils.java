@@ -8,7 +8,6 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.BlockWrapper;
-import org.aion.zero.impl.config.CfgDb;
 import org.aion.base.AccountState;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.core.ImportResult;
@@ -37,63 +36,6 @@ public class DBUtils {
         SUCCESS,
         FAILURE,
         ILLEGAL_ARGUMENT
-    }
-
-
-    public static void pruneOrRecoverState(String pruning_type) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.fromXML();
-        cfg.getConsensus().setMining(false);
-
-        // setting pruning to the version requested
-        CfgDb.PruneOption option = CfgDb.PruneOption.fromValue(pruning_type);
-        cfg.getDb().setPrune(option.toString());
-
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        log.info("Reorganizing the state storage to " + option + " mode ...");
-
-        AionBlockchainImpl chain = new AionBlockchainImpl(cfg, null, false);
-        AionRepositoryImpl repo = chain.getRepository();
-        AionBlockStore store = repo.getBlockStore();
-
-        // dropping old state database
-        log.info("Deleting old data ...");
-        repo.getStateDatabase().drop();
-        if (pruning_type.equals("spread")) {
-            repo.getStateArchiveDatabase().drop();
-        }
-
-        // recover genesis
-        log.info("Rebuilding genesis block ...");
-        AionGenesis genesis = cfg.getGenesis();
-        repo.buildGenesis(genesis);
-
-        // recover all blocks
-        Block block = store.getBestBlock();
-        log.info(
-                "Rebuilding the main chain "
-                        + block.getNumber()
-                        + " blocks (may take a while) ...");
-
-        long topBlockNumber = block.getNumber();
-        long blockNumber = 1000;
-
-        // recover in increments of 1k blocks
-        while (blockNumber < topBlockNumber) {
-            block = store.getChainBlockByNumber(blockNumber);
-            chain.recoverWorldState(repo, block);
-            log.info("Finished with blocks up to " + blockNumber + ".");
-            blockNumber += 1000;
-        }
-
-        block = store.getBestBlock();
-        chain.recoverWorldState(repo, block);
-
-        repo.close();
-        log.info("Reorganizing the state storage COMPLETE.");
     }
 
     /**

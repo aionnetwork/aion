@@ -22,6 +22,8 @@ import java.util.Set;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.config.CfgDb;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.vm.avm.AvmConfigurations;
 import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
@@ -373,7 +375,23 @@ public class Cli {
             if (options.getPruneStateOption() != null) {
                 String pruning_type = options.getPruneStateOption();
                 try {
-                    DBUtils.pruneOrRecoverState(pruning_type);
+                    // ensure mining is disabled
+                    CfgAion localCfg = CfgAion.inst();
+                    localCfg.fromXML();
+                    localCfg.getConsensus().setMining(false);
+
+                    // setting pruning to the version requested
+                    CfgDb.PruneOption option = CfgDb.PruneOption.fromValue(pruning_type);
+                    localCfg.getDb().setPrune(option.toString());
+
+                    AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+                    final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+                    log.info("Reorganizing the state storage to " + option + " mode ...");
+
+                    AionBlockchainImpl chain = new AionBlockchainImpl(localCfg, null, false);
+                    chain.pruneOrRecoverState(pruning_type.equals("spread"), localCfg.getGenesis(), log);
+                    chain.close();
                     return EXIT;
                 } catch (Exception e) {
                     System.out.println("Reorganizing the state storage FAILED due to:");

@@ -2735,4 +2735,36 @@ public class AionBlockchainImpl implements IAionBlockchain {
             System.exit(SystemExitCodes.NORMAL);
         }
     }
+
+    public void pruneOrRecoverState(boolean dropArchive, AionGenesis genesis, Logger log) {
+        // dropping old state database
+        log.info("Deleting old data ...");
+        repository.getStateDatabase().drop();
+        if (dropArchive) {
+            repository.getStateArchiveDatabase().drop();
+        }
+
+        // recover genesis
+        log.info("Rebuilding genesis block ...");
+        repository.buildGenesis(genesis);
+
+        // recover all blocks
+        Block block = repository.getBestBlock();
+        log.info("Rebuilding the main chain " + block.getNumber() + " blocks (may take a while) ...");
+
+        long topBlockNumber = block.getNumber();
+        long blockNumber = 1000;
+
+        // recover in increments of 1k blocks
+        while (blockNumber < topBlockNumber) {
+            block = getBlockByNumber(blockNumber);
+            recoverWorldState(repository, block);
+            log.info("Finished with blocks up to " + blockNumber + ".");
+            blockNumber += 1000;
+        }
+
+        block = repository.getBestBlock();
+        recoverWorldState(repository, block);
+        log.info("Reorganizing the state storage COMPLETE.");
+    }
 }
