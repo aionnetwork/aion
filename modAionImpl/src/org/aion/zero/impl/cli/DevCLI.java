@@ -162,26 +162,30 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType writeForTest(String[] parameters) {
-        long level;
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+        long blockNumber;
 
         try {
-            level = Long.parseLong(parameters[0]);
+            blockNumber = Long.parseLong(parameters[0]);
         } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «" + parameters[0] + "» cannot be converted to a number.");
+            log.error("The given argument «" + parameters[0] + "» cannot be converted to a number.");
             return Cli.ReturnType.ERROR;
         }
-        if (level < 2) { // requires a parent and grandparent
-            System.out.println(
-                    "Negative block values are not legal input values for this functionality.");
+        if (blockNumber < 2) { // requires a parent and grandparent
+            log.error("Negative block values are not legal input values for this functionality.");
             return Cli.ReturnType.ERROR;
         } else {
-            System.out.println(
-                    "Retrieving consensus data for unit tests for the main chain block at level "
-                            + level
-                            + "...");
+            log.error("Retrieving consensus data for unit tests for the main chain block at level " + blockNumber + "...");
 
-            DBUtils.dumpTestData(level, parameters);
+            // get the current blockchain
+            AionRepositoryImpl repository = AionRepositoryImpl.inst();
+            repository.dumpTestData(blockNumber, parameters, CfgAion.inst().getBasePath(), log);
+            repository.close();
+
             return Cli.ReturnType.EXIT;
         }
     }

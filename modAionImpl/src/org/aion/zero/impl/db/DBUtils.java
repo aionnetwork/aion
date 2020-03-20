@@ -1,9 +1,5 @@
 package org.aion.zero.impl.db;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
@@ -19,12 +15,9 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
-import org.aion.util.conversions.Hex;
-import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -44,118 +37,6 @@ public class DBUtils {
         SUCCESS,
         FAILURE,
         ILLEGAL_ARGUMENT
-    }
-
-    /** Used by the CLI call. */
-    public static void dumpTestData(long blockNumber, String[] otherParameters) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        // get the current blockchain
-        AionRepositoryImpl repository = AionRepositoryImpl.inst();
-
-        // print 3 blocks: to import; parent; and grandparent
-        AionBlockStore store = repository.getBlockStore();
-        try {
-            String file = store.dumpPastBlocksForConsensusTest(blockNumber, cfg.getBasePath());
-            if (file == null) {
-                log.error("Illegal arguments. Cannot print block information.");
-            } else {
-                log.info("Block information stored in " + file);
-            }
-        } catch (IOException e) {
-            log.error("Exception encountered while writing data to file.", e);
-        }
-
-        int paramIndex = 1;
-        // print state for parent block
-        Block parent = store.getChainBlockByNumber(blockNumber - 1);
-        if (parent == null) {
-            log.error("Illegal arguments. Parent block is null.");
-        } else {
-            if (otherParameters.length > paramIndex
-                    && otherParameters[paramIndex].equals("skip-state")) {
-                log.info("Parent state information is not retrieved.");
-                paramIndex++;
-            } else {
-                try {
-                    repository.syncToRoot(parent.getStateRoot());
-
-                    File file =
-                            new File(
-                                    cfg.getBasePath(),
-                                    System.currentTimeMillis()
-                                            + "-state-for-parent-block-"
-                                            + parent.getNumber()
-                                            + ".out");
-
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-
-                    writer.append(
-                            Hex.toHexString(
-                                    repository.dumpImportableState(
-                                            parent.getStateRoot(),
-                                            Integer.MAX_VALUE,
-                                            DatabaseType.STATE)));
-                    writer.newLine();
-
-                    writer.close();
-                    log.info("Parent state information stored in " + file.getName());
-                } catch (IOException e) {
-                    log.error("Exception encountered while writing data to file.", e);
-                }
-            }
-
-            // print details and storage for the given contracts
-            if (otherParameters.length > paramIndex) {
-                try {
-                    repository.syncToRoot(parent.getStateRoot());
-                    File file =
-                            new File(
-                                    cfg.getBasePath(),
-                                    System.currentTimeMillis() + "-state-contracts.out");
-
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-
-                    // iterate through contracts
-                    for (int i = paramIndex; i < otherParameters.length; i++) {
-
-                        writer.append("Contract: " + AddressUtils.wrapAddress(otherParameters[i]));
-                        writer.newLine();
-
-                        StoredContractDetails details = repository.getContractDetails(AddressUtils.wrapAddress(otherParameters[i]));
-
-                        if (details != null) {
-                            writer.append("Details: " + Hex.toHexString(details.getEncoded()));
-                            writer.newLine();
-
-                            writer.append(
-                                    "Storage: "
-                                            + Hex.toHexString(
-                                                    repository.dumpImportableStorage(
-                                                            details.getStorageHash(),
-                                                            Integer.MAX_VALUE,
-                                                            AddressUtils.wrapAddress(
-                                                                    otherParameters[i]))));
-                            writer.newLine();
-                        }
-                        writer.newLine();
-                    }
-
-                    writer.close();
-                    log.info("Contract details and storage information stored in " + file.getName());
-                } catch (IOException e) {
-                    log.error("Exception encountered while writing data to file.", e);
-                }
-            }
-        }
-
-        repository.close();
     }
 
     public static void printStateTrieSize(long blockNumber) {

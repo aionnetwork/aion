@@ -23,7 +23,9 @@ import static org.aion.zero.impl.db.DatabaseUtils.verifyAndBuildPath;
 import static org.aion.zero.impl.db.DatabaseUtils.verifyDBfileType;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
@@ -60,6 +62,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
+import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.zero.impl.trie.SecureTrie;
@@ -1660,5 +1663,78 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
 
     public String dumpPastBlocks(long numberOfBlocks, String targetDirectory) throws IOException {
         return blockStore.dumpPastBlocks(numberOfBlocks, targetDirectory);
+    }
+
+    public void dumpTestData(long blockNumber, String[] otherParameters, String basePath, Logger log) {
+        try {
+            String file = blockStore.dumpPastBlocksForConsensusTest(blockNumber, basePath);
+            if (file == null) {
+                log.error("Illegal arguments. Cannot print block information.");
+            } else {
+                log.info("Block information stored in " + file);
+            }
+        } catch (IOException e) {
+            log.error("Exception encountered while writing data to file.", e);
+        }
+
+        int paramIndex = 1;
+        // print state for parent block
+        Block parent = blockStore.getChainBlockByNumber(blockNumber - 1);
+        if (parent == null) {
+            log.error("Illegal arguments. Parent block is null.");
+        } else {
+            if (otherParameters.length > paramIndex && otherParameters[paramIndex].equals("skip-state")) {
+                log.info("Parent state information is not retrieved.");
+                paramIndex++;
+            } else {
+                try {
+                    syncToRoot(parent.getStateRoot());
+
+                    File file = new File(basePath, System.currentTimeMillis() + "-state-for-parent-block-" + parent.getNumber() + ".out");
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    writer.append(Hex.toHexString(dumpImportableState(parent.getStateRoot(), Integer.MAX_VALUE, DatabaseType.STATE)));
+                    writer.newLine();
+
+                    writer.close();
+                    log.info("Parent state information stored in " + file.getName());
+                } catch (IOException e) {
+                    log.error("Exception encountered while writing data to file.", e);
+                }
+            }
+
+            // print details and storage for the given contracts
+            if (otherParameters.length > paramIndex) {
+                try {
+                    syncToRoot(parent.getStateRoot());
+                    File file = new File(basePath, System.currentTimeMillis() + "-state-contracts.out");
+
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    // iterate through contracts
+                    for (int i = paramIndex; i < otherParameters.length; i++) {
+
+                        writer.append("Contract: " + AddressUtils.wrapAddress(otherParameters[i]));
+                        writer.newLine();
+
+                        StoredContractDetails details = getContractDetails(AddressUtils.wrapAddress(otherParameters[i]));
+
+                        if (details != null) {
+                            writer.append("Details: " + Hex.toHexString(details.getEncoded()));
+                            writer.newLine();
+
+                            writer.append("Storage: " + Hex.toHexString(dumpImportableStorage(details.getStorageHash(), Integer.MAX_VALUE, AddressUtils.wrapAddress(otherParameters[i]))));
+                            writer.newLine();
+                        }
+                        writer.newLine();
+                    }
+
+                    writer.close();
+                    log.info("Contract details and storage information stored in " + file.getName());
+                } catch (IOException e) {
+                    log.error("Exception encountered while writing data to file.", e);
+                }
+            }
+        }
     }
 }
