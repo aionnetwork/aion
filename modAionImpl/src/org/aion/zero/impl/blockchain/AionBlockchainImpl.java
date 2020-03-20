@@ -1044,22 +1044,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             TimeUnit.NANOSECONDS.toMillis(surveyLongestImportTime));
     }
 
-    /**
-     * Redo importing block from the DB Utility
-     * @param blockWrapper the block including the block status
-     * @return import result and the block summary
-     */
-    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummaryFromDbUtil(BlockWrapper blockWrapper) {
-        Objects.requireNonNull(blockWrapper);
-
-        lock.lock();
-        try {
-            return tryToConnectAndFetchSummary(blockWrapper);
-        } finally{
-            lock.unlock();
-        }
-    }
-
     Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(BlockWrapper blockWrapper) {
 
         Block block = blockWrapper.block;
@@ -2766,5 +2750,180 @@ public class AionBlockchainImpl implements IAionBlockchain {
         block = repository.getBestBlock();
         recoverWorldState(repository, block);
         log.info("Reorganizing the state storage COMPLETE.");
+    }
+
+    /**
+     * Alternative to performing a full sync when the database already contains the <b>blocks</b>
+     * and <b>index</b> databases. It will rebuild the entire blockchain structure other than these
+     * two databases verifying consensus properties. It only redoes imports of the main chain
+     * blocks, i.e. does not perform the checks for side chains.
+     *
+     * <p>The minimum start height is 0, i.e. the genesis block. Specifying a height can be useful
+     * in performing the operation is sessions.
+     *
+     * @param startHeight the height from which to start importing the blocks
+     * @implNote The assumption is that the stored blocks are correct, but the code may interpret
+     *     them differently.
+     */
+    public void redoMainChainImport(long startHeight, AionGenesis genesis, Logger LOG) {
+        lock.lock();
+
+        try {
+            // determine the parameters of the rebuild
+            Block block = repository.getBestBlock();
+            Block startBlock;
+            long currentBlock;
+            if (block != null && startHeight <= block.getNumber()) {
+                LOG.info("Importing the main chain from block #"
+                        + startHeight
+                        + " to block #"
+                        + block.getNumber()
+                        + ". This may take a while.\n"
+                        + "The time estimates are optimistic based on current progress.\n"
+                        + "It is expected that later blocks take a longer time to import due to the increasing size of the database.");
+
+                if (startHeight == 0L) {
+                    // dropping databases that can be inferred when starting from genesis
+                    List<String> keep = List.of("block", "index");
+                    repository.dropDatabasesExcept(keep);
+
+                    // recover genesis
+                    repository.redoIndexWithoutSideChains(genesis); // clear the index entry
+                    repository.buildGenesis(genesis);
+                    LOG.info("Finished rebuilding genesis block.");
+                    startBlock = genesis;
+                    currentBlock = 1L;
+                    setTotalDifficulty(genesis.getDifficultyBI());
+                } else {
+                    startBlock = getBlockByNumber(startHeight - 1);
+                    currentBlock = startHeight;
+                    // initial TD = diff of parent of first block to import
+                    Block blockWithDifficulties = getBlockWithInfoByHash(startBlock.getHash());
+                    setTotalDifficulty(blockWithDifficulties.getTotalDifficulty());
+                }
+
+                boolean fail = false;
+
+                if (startBlock == null) {
+                    LOG.info("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
+                    fail = true;
+                } else {
+                    setBestBlock(startBlock);
+
+                    long topBlockNumber = block.getNumber();
+                    long stepSize = 10_000L;
+
+                    Pair<ImportResult, AionBlockSummary> result;
+
+                    long start = System.currentTimeMillis();
+
+                    // import in increments of 10k blocks
+                    while (currentBlock <= topBlockNumber) {
+                        block = getBlockByNumber(currentBlock);
+                        if (block == null) {
+                            LOG.error("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
+                            fail = true;
+                            break;
+                        }
+
+                        try {
+                            // clear the index entry and prune side-chain blocks
+                            repository.redoIndexWithoutSideChains(block);
+                            long t1 = System.currentTimeMillis();
+                            result = tryToConnectAndFetchSummary(new BlockWrapper(block));
+                            long t2 = System.currentTimeMillis();
+                            LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
+                                    + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()
+                                    + ", time elapsed = " + (t2 - t1) + " ms, td = " + getTotalDifficulty() + ">");
+                        } catch (Throwable t) {
+                            // we want to see the exception and the block where it occurred
+                            t.printStackTrace();
+                            if (t.getMessage() != null && t.getMessage().contains("Invalid Trie state, missing node ")) {
+                                LOG.info("The exception above is likely due to a pruned database and NOT a consensus problem.\n"
+                                        + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
+                            }
+                            result =
+                                    new Pair<>() {
+                                        @Override
+                                        public AionBlockSummary setValue(AionBlockSummary value) {
+                                            return null;
+                                        }
+
+                                        @Override
+                                        public ImportResult getLeft() {
+                                            return ImportResult.INVALID_BLOCK;
+                                        }
+
+                                        @Override
+                                        public AionBlockSummary getRight() {
+                                            return null;
+                                        }
+                                    };
+
+                            fail = true;
+                        }
+
+                        if (!result.getLeft().isSuccessful()) {
+                            LOG.error("Consensus break at block:\n" + block);
+                            LOG.info("Import attempt returned result "
+                                    + result.getLeft()
+                                    + " with summary\n"
+                                    + result.getRight());
+
+                            if (repository.isValidRoot(repository.getBestBlock().getStateRoot())) {
+                                LOG.info("The repository state trie was:\n");
+                                LOG.info(repository.getTrieDump());
+                            }
+
+                            fail = true;
+                            break;
+                        }
+
+                        if (currentBlock % stepSize == 0) {
+                            double time = System.currentTimeMillis() - start;
+
+                            double timePerBlock = time / (currentBlock - startHeight + 1);
+                            long remainingBlocks = topBlockNumber - currentBlock;
+                            double estimate = (timePerBlock * remainingBlocks) / 60_000 + 1; // in minutes
+                            LOG.info("Finished with blocks up to "
+                                    + currentBlock
+                                    + " in "
+                                    + String.format("%.0f", time)
+                                    + " ms (under "
+                                    + String.format("%.0f", time / 60_000 + 1)
+                                    + " min).\n\tThe average time per block is < "
+                                    + String.format("%.0f", timePerBlock + 1)
+                                    + " ms.\n\tCompletion for remaining "
+                                    + remainingBlocks
+                                    + " blocks estimated to take "
+                                    + String.format("%.0f", estimate)
+                                    + " min.");
+                        }
+
+                        currentBlock++;
+                    }
+                    LOG.info("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
+                }
+
+                if (fail) {
+                    LOG.info("Importing stored blocks FAILED.");
+                } else {
+                    LOG.info("Importing stored blocks SUCCESSFUL.");
+                }
+            } else {
+                if (block == null) {
+                    LOG.info("The best known block in null. The given database is likely empty. Nothing to do.");
+                } else {
+                    LOG.info("The given height "
+                            + startHeight
+                            + " is above the best known block "
+                            + block.getNumber()
+                            + ". Nothing to do.");
+                }
+            }
+            LOG.info("Importing stored blocks COMPLETE.");
+        } finally {
+            lock.unlock();
+        }
     }
 }

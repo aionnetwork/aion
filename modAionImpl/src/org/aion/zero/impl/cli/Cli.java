@@ -424,21 +424,38 @@ public class Cli {
                 long height = 0L;
                 String parameter = options.isRedoImport();
 
+                // ensure mining is disabled
+                CfgAion localCfg = CfgAion.inst();
+                localCfg.dbFromXML();
+                localCfg.getConsensus().setMining(false);
+
+                AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+                final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+                if (height < 0) {
+                    log.error("Negative values are not valid as starting height. Nothing to do.");
+                    return ERROR;
+                }
+
+                log.info("Importing stored blocks INITIATED...");
+
+                AionBlockchainImpl chain = new AionBlockchainImpl(localCfg, null, false);
+
                 if (parameter.isEmpty()) {
-                    DBUtils.redoMainChainImport(height);
+                    chain.redoMainChainImport(height, localCfg.getGenesis(), log);
+                    chain.close();
                     return EXIT;
                 } else {
                     try {
                         height = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
-                        System.out.println(
-                                "The given argument «"
-                                        + parameter
-                                        + "» cannot be converted to a number.");
+                        log.error("The given argument «" + parameter + "» cannot be converted to a number.");
+                        chain.close();
                         return ERROR;
                     }
 
-                    DBUtils.redoMainChainImport(height);
+                    chain.redoMainChainImport(height, localCfg.getGenesis(), log);
+                    chain.close();
                     return EXIT;
                 }
             }

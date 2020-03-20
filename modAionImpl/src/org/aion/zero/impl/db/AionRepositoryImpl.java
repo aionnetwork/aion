@@ -1598,6 +1598,15 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         return this.blockStore.getBestBlock();
     }
 
+    /**
+     * Performed before --redo-import to clear side chain blocks and reset the index.
+     *
+     * @param block the block that will be re-imported and should not be removed from the database
+     */
+    public void redoIndexWithoutSideChains(Block block) {
+        this.blockStore.redoIndexWithoutSideChains(block);
+    }
+
     public AionBlockStore getBlockStore() {
         return this.blockStore;
     }
