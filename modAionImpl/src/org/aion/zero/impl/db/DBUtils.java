@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
@@ -45,26 +44,6 @@ public class DBUtils {
         SUCCESS,
         FAILURE,
         ILLEGAL_ARGUMENT
-    }
-
-    /** Used by the CLI call. */
-    public static void dbCompact() {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        Map<LogEnum, LogLevel> cfgLog = new HashMap<>();
-        cfgLog.put(LogEnum.DB, LogLevel.INFO);
-        cfgLog.put(LogEnum.GEN, LogLevel.INFO);
-        AionLoggerFactory.initAll(cfgLog);
-
-        // get the current blockchain
-        AionRepositoryImpl repository = AionRepositoryImpl.inst();
-
-        // compact database after the changes were applied
-        repository.compact();
-        repository.close();
     }
 
     /** Used by the CLI call. */

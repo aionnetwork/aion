@@ -389,7 +389,16 @@ public class Cli {
                 }
             }
             if (options.isDbCompact()) {
-                DBUtils.dbCompact();
+                // read database configuration
+                CfgAion.inst().dbFromXML();
+                AionLoggerFactory.initAll(Map.of(LogEnum.DB, LogLevel.INFO));
+
+                // get the current blockchain
+                AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+                // compact database after the changes were applied
+                repository.compact();
+                repository.close();
                 return EXIT;
             }
 
