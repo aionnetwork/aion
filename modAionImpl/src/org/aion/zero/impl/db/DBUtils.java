@@ -47,34 +47,6 @@ public class DBUtils {
     }
 
     /** Used by the CLI call. */
-    public static void dumpBlocks(long count) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        // get the current blockchain
-        AionRepositoryImpl repository = AionRepositoryImpl.inst();
-
-        AionBlockStore store = repository.getBlockStore();
-        try {
-            String file = store.dumpPastBlocks(count, cfg.getBasePath());
-            if (file == null) {
-                log.error("The database is empty. Cannot print block information.");
-            } else {
-                log.info("Block information stored in " + file);
-            }
-        } catch (IOException e) {
-            log.error("Exception encountered while writing blocks to file.", e);
-        }
-
-        repository.close();
-    }
-
-    /** Used by the CLI call. */
     public static void dumpTestData(long blockNumber, String[] otherParameters) {
         // ensure mining is disabled
         CfgAion cfg = CfgAion.inst();

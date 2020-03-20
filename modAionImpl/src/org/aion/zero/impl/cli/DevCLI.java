@@ -1,12 +1,19 @@
 package org.aion.zero.impl.cli;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
 import java.util.Optional;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.DBUtils;
+import org.slf4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -103,12 +110,33 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType writeBlocks(long count) {
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
         if (count < 1) {
-            System.out.println("The given argument «" + count + "» is not valid.");
+            log.error("The given argument «" + count + "» is not valid.");
             count = 10L;
         }
-        System.out.println("Printing top " + count + " blocks from database.");
-        DBUtils.dumpBlocks(count);
+        log.info("Printing top " + count + " blocks from database.");
+
+        // get the current repository
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+        try {
+            String file = repository.dumpPastBlocks(count, CfgAion.inst().getBasePath());
+            if (file == null) {
+                log.error("The database is empty. Cannot print block information.");
+            } else {
+                log.info("Block information stored in " + file);
+            }
+        } catch (IOException e) {
+            log.error("Exception encountered while writing blocks to file.", e);
+        }
+
+        repository.close();
         return Cli.ReturnType.EXIT;
     }
 

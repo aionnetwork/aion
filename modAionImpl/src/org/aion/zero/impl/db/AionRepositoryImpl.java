@@ -1657,4 +1657,8 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         // ok if we managed to get down to the expected block
         return nbBestBlock == nbBlock;
     }
+
+    public String dumpPastBlocks(long numberOfBlocks, String targetDirectory) throws IOException {
+        return blockStore.dumpPastBlocks(numberOfBlocks, targetDirectory);
+    }
 }
