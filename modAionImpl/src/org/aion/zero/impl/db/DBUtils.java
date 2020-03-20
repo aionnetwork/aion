@@ -2,13 +2,11 @@ package org.aion.zero.impl.db;
 
 import java.util.List;
 import java.util.Map;
-import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.AccountState;
-import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
@@ -16,7 +14,6 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
@@ -34,53 +31,6 @@ public class DBUtils {
         SUCCESS,
         FAILURE,
         ILLEGAL_ARGUMENT
-    }
-
-    /** @implNote Used by the CLI call. */
-    public static Status queryTransaction(byte[] txHash) {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
-        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-        // get the current blockchain
-        AionBlockchainImpl blockchain = new AionBlockchainImpl(cfg, null, false);
-
-        try {
-            Map<ByteArrayWrapper, AionTxInfo> txInfoList = blockchain.getTransactionStore().getTxInfo(txHash);
-
-            if (txInfoList == null || txInfoList.isEmpty()) {
-                log.error("Can not find the transaction with given hash.");
-                return Status.FAILURE;
-            }
-
-            for (Map.Entry<ByteArrayWrapper, AionTxInfo> entry : txInfoList.entrySet()) {
-
-                Block block = blockchain.getBlockByHash(entry.getKey().toBytes());
-                if (block == null) {
-                    log.error("Cannot find the block data for the block hash from the transaction info. The database might be corrupted. Please consider reimporting the database by running ./aion.sh -n <network> --redo-import");
-                    return Status.FAILURE;
-                }
-
-                AionTransaction tx = block.getTransactionsList().get(entry.getValue().getIndex());
-
-                if (tx == null) {
-                    log.error("Cannot find the transaction data for the given hash. The database might be corrupted. Please consider reimporting the database by running ./aion.sh -n <network> --redo-import");
-                    return Status.FAILURE;
-                }
-
-                log.info(tx.toString());
-                log.info(entry.getValue().toString());
-            }
-
-            return Status.SUCCESS;
-        } catch (Exception e) {
-            log.error("Error encountered while attempting to retrieve the transaction data.", e);
-            return Status.FAILURE;
-        }
     }
 
     /** @implNote Used by the CLI call. */

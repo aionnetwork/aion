@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
@@ -82,6 +83,7 @@ import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionGenesis;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
@@ -1828,5 +1830,43 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
                         + block.getTransactionsList().size()
                         + "\n\n"
                         + getWorldState().getTrieDump(stateRoot));
+    }
+
+    /**
+     * @return {@code true} when the operation was successfult and {@code false} otherwise
+     */
+    public boolean queryTransaction(byte[] txHash, Logger log) {
+        try {
+            Map<ByteArrayWrapper, AionTxInfo> txInfoList = transactionStore.getTxInfo(txHash);
+
+            if (txInfoList == null || txInfoList.isEmpty()) {
+                log.error("Can not find the transaction with given hash.");
+                return false;
+            }
+
+            for (Map.Entry<ByteArrayWrapper, AionTxInfo> entry : txInfoList.entrySet()) {
+
+                Block block = blockStore.getBlockByHash(entry.getKey().toBytes());
+                if (block == null) {
+                    log.error("Cannot find the block data for the block hash from the transaction info. The database might be corrupted. Please consider reimporting the database by running ./aion.sh -n <network> --redo-import");
+                    return false;
+                }
+
+                AionTransaction tx = block.getTransactionsList().get(entry.getValue().getIndex());
+
+                if (tx == null) {
+                    log.error("Cannot find the transaction data for the given hash. The database might be corrupted. Please consider reimporting the database by running ./aion.sh -n <network> --redo-import");
+                    return false;
+                }
+
+                log.info(tx.toString());
+                log.info(entry.getValue().toString());
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Error encountered while attempting to retrieve the transaction data.", e);
+            return false;
+        }
     }
 }

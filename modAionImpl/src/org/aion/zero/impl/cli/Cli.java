@@ -485,22 +485,6 @@ public class Cli {
         return DBUtils.queryBlock(block);
     }
 
-    private DBUtils.Status getTransactionDetails(String txHash) {
-        byte[] hash;
-
-        try {
-            hash = ByteUtil.hexStringToBytes(txHash);
-        } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «"
-                            + txHash
-                            + "» cannot be converted to a valid transaction hash.");
-            return DBUtils.Status.ILLEGAL_ARGUMENT;
-        }
-
-        return DBUtils.queryTransaction(hash);
-    }
-
     private DBUtils.Status getAccountDetails(String strAddress) {
         AionAddress address;
 

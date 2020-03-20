@@ -77,21 +77,27 @@ public class DevCLI {
     }
 
     public static Cli.ReturnType printTxDetails(String txHash) {
+        // read database configuration
+        CfgAion.inst().dbFromXML();
+
+        AionLoggerFactory.initAll(Map.of(LogEnum.GEN, LogLevel.INFO));
+        final Logger log = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
         byte[] hash;
-        DBUtils.Status status;
+        boolean isSuccessful;
         try {
             hash = ByteUtil.hexStringToBytes(txHash);
         } catch (NumberFormatException e) {
-            System.out.println(
-                    "The given argument «"
-                            + txHash
-                            + "» cannot be converted to a valid transaction hash.");
+            log.error("The given argument «" + txHash + "» cannot be converted to a valid transaction hash.");
             return Cli.ReturnType.ERROR;
         }
 
-        status = DBUtils.queryTransaction(hash);
+        // get the current repository
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        isSuccessful = repository.queryTransaction(hash, log);
+        repository.close();
 
-        if (status == DBUtils.Status.SUCCESS) {
+        if (isSuccessful) {
             return Cli.ReturnType.EXIT;
         } else {
             return Cli.ReturnType.ERROR;
