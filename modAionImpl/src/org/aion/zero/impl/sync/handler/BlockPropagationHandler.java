@@ -194,7 +194,7 @@ public class BlockPropagationHandler {
         }
 
         // send
-        boolean sent = result.isValid() && send(block, nodeId);
+        boolean sent = result.isBest() && send(block, nodeId);
 
         // notify higher td peers in order to limit the rebroadcast on delay of res status updating
         if (result.isBest()) {

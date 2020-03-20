@@ -16,11 +16,7 @@ public enum ImportResult {
     public boolean isBest() {
         return equals(IMPORTED_BEST);
     }
-
-    public boolean isNotBest() {
-        return equals(IMPORTED_NOT_BEST);
-    }
-
+    
     public boolean isStored() {
         return equals(EXIST) || isSuccessful();
     }
