@@ -1,5 +1,8 @@
 package org.aion.zero.impl.vm;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
+import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -10,6 +13,7 @@ import java.util.List;
 import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAvmResourceFactory;
 import org.aion.avm.stub.IContractFactory.AvmContract;
+import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
@@ -163,13 +167,12 @@ public class AvmBulkTransactionTest {
     }
 
     /**
-     * Ensures that the block described below is processed correctly, where the block contains the
-     * following transactions:
+     * Ensures that a block containing the transactions described below is processed correctly:
      *
      * <ol>
-     *   <li>a FVM contract deployment,
+     *   <li>an FVM contract deployment,
      *   <li>an AVM contract deployment,
-     *   <li>a FVM call to the first contract,
+     *   <li>an FVM call to the first contract,
      *   <li>an AVM call to the second contract.
      * </ol>
      */
@@ -180,67 +183,169 @@ public class AvmBulkTransactionTest {
 
         List<AionTransaction> transactions = new ArrayList<>();
 
-        // deploy on FVM
-        String contractCode =
-                "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
-        AionTransaction deployTxFVM =
-                AionTransaction.create(
-                        deployerKey,
-                        expectedNonce.toByteArray(),
-                        null,
-                        BigInteger.ZERO.toByteArray(),
-                        ByteUtil.hexStringToBytes(contractCode),
-                        5_000_000L,
-                        energyPrice,
-                        TransactionTypes.DEFAULT, null);
+        // Deploy FVM contract with code.
+        String contractCode = "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
+        AionTransaction deployTxFVM = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), ByteUtil.hexStringToBytes(contractCode), 5_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
 
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
         transactions.add(deployTxFVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-        // deploy on AVM
+        // Deploy AVM contract.
         AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
         AionAddress avmContract = TxUtil.calculateContractAddress(deployTxAVM);
         transactions.add(deployTxAVM);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-        // call to FVM contract
-        AionTransaction contractCallTx =
-                AionTransaction.create(
-                        deployerKey,
-                        expectedNonce.toByteArray(),
-                        fvmContract,
-                        BigInteger.ZERO.toByteArray(),
-                        Hex.decode("62eb702a00000000000000000000000000000006"),
-                        2_000_000L,
-                        energyPrice,
-                        TransactionTypes.DEFAULT, null);
+        // Call FVM contract with code.
+        AionTransaction contractCallTx = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), fvmContract, BigInteger.ZERO.toByteArray(), Hex.decode("62eb702a00000000000000000000000000000006"), 2_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
         transactions.add(contractCallTx);
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-        // call to AVM contract
+        // Call AVM contract.
         transactions.add(makeAvmContractCallTransaction(deployerKey, expectedNonce, avmContract));
         expectedNonce = expectedNonce.add(BigInteger.ONE);
 
-        // process the transactions in bulk
+        // Process the 4 transactions in a single block.
         AionBlockSummary blockSummary = sendTransactionsInBulkInSingleBlock(transactions);
 
-        // verify all transactions were successful
-        assertEquals(transactions.size(), blockSummary.getSummaries().size());
+        // Verify that all transactions were successful.
+        assertThat(blockSummary.getSummaries().size()).isEqualTo(4);
+        BigInteger expectedBalance = initialBalance;
         for (AionTxExecSummary transactionSummary : blockSummary.getSummaries()) {
-            assertTrue(transactionSummary.getReceipt().isSuccessful());
+            AionTxReceipt receipt = transactionSummary.getReceipt();
+            assertThat(receipt.isSuccessful()).isTrue();
+            // Compute the expected balance.
+            expectedBalance = expectedBalance.subtract(BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(energyPrice)));
         }
 
-        BigInteger expectedBalance = initialBalance;
-        for (int i = 0; i < transactions.size(); i++) {
-            BigInteger energyUsed =
-                    BigInteger.valueOf(
-                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedBalance = expectedBalance.subtract(energyUsed.multiply(BigInteger.valueOf(energyPrice)));
-        }
+        // Verify that the code and storage of the FVM contract have changed.
+        AccountState fvm = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(fvm.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(fvm.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
 
         assertEquals(expectedBalance, getBalance(deployerKey));
         assertEquals(expectedNonce, getNonce(deployerKey));
+    }
+
+    /**
+     * Ensures that a block containing the transactions described below is processed correctly:
+     *
+     * <ol>
+     *   <li>an empty FVM contract deployment,
+     *   <li>an AVM contract deployment,
+     *   <li>an FVM call to the first contract,
+     *   <li>an AVM call to the second contract.
+     * </ol>
+     */
+    @Test
+    public void importBlockWithContractAndCallsForBothVMsWhereFVMContractIsEmpty() {
+        BigInteger expectedNonce = getNonce(deployerKey);
+        BigInteger initialBalance = getBalance(deployerKey);
+
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        // Deploy empty FVM contract.
+        AionTransaction deployTxFVM = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), new byte[0], 5_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
+        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
+        transactions.add(deployTxFVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Deploy AVM contract.
+        AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
+        AionAddress avmContract = TxUtil.calculateContractAddress(deployTxAVM);
+        transactions.add(deployTxAVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Call FVM contract with code data that will be ignored by the VM because the contract has no code.
+        AionTransaction contractCallTx = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), fvmContract, BigInteger.ZERO.toByteArray(), Hex.decode("6080608055"), 2_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
+        transactions.add(contractCallTx);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Call AVM contract.
+        transactions.add(makeAvmContractCallTransaction(deployerKey, expectedNonce, avmContract));
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Process the 4 transactions in a single block.
+        AionBlockSummary blockSummary = sendTransactionsInBulkInSingleBlock(transactions);
+
+        // Verify that all transactions were successful.
+        assertThat(blockSummary.getSummaries().size()).isEqualTo(4);
+        BigInteger expectedBalance = initialBalance;
+        for (AionTxExecSummary transactionSummary : blockSummary.getSummaries()) {
+            AionTxReceipt receipt = transactionSummary.getReceipt();
+            assertThat(receipt.isSuccessful()).isTrue();
+            // Compute the expected balance.
+            expectedBalance = expectedBalance.subtract(BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(energyPrice)));
+        }
+
+        // Verify that the code and storage of the FVM contract are unchanged.
+        AccountState fvm = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(fvm.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(fvm.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        assertThat(getBalance(deployerKey)).isEqualTo(expectedBalance);
+        assertThat(getNonce(deployerKey)).isEqualTo(expectedNonce);
+    }
+
+    /**
+     * Ensures that a block containing the transactions described below is processed correctly:
+     *
+     * <ol>
+     *   <li>an FVM contract deployment with storage (interpreted as empty),
+     *   <li>an AVM contract deployment,
+     *   <li>an FVM call to the first contract,
+     *   <li>an AVM call to the second contract.
+     * </ol>
+     */
+    @Test
+    public void importBlockWithContractAndCallsForBothVMsWhereFVMContractHashStorageOnly() {
+        BigInteger expectedNonce = getNonce(deployerKey);
+        BigInteger initialBalance = getBalance(deployerKey);
+
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        // Deploy storage-only FVM contract with data [PUSH1 0x80 PUSH1 0x80 SSTORE] (the storage change will not be registered by the kernel).
+        AionTransaction deployTxFVM = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), null, BigInteger.ZERO.toByteArray(), Hex.decode("6080608055"), 5_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
+        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
+        transactions.add(deployTxFVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Deploy AVM contract.
+        AionTransaction deployTxAVM = makeAvmContractCreateTransaction(deployerKey, expectedNonce);
+        AionAddress avmContract = TxUtil.calculateContractAddress(deployTxAVM);
+        transactions.add(deployTxAVM);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Call FVM contract with code data that will be ignored by the VM because the contract has no code.
+        AionTransaction contractCallTx = AionTransaction.create(deployerKey, expectedNonce.toByteArray(), fvmContract, BigInteger.ZERO.toByteArray(), Hex.decode("6080608055"), 2_000_000L, energyPrice, TransactionTypes.DEFAULT, null);
+        transactions.add(contractCallTx);
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Call AVM contract.
+        transactions.add(makeAvmContractCallTransaction(deployerKey, expectedNonce, avmContract));
+        expectedNonce = expectedNonce.add(BigInteger.ONE);
+
+        // Process the 4 transactions in a single block.
+        AionBlockSummary blockSummary = sendTransactionsInBulkInSingleBlock(transactions);
+
+        // Verify that all transactions were successful.
+        assertThat(blockSummary.getSummaries().size()).isEqualTo(4);
+        BigInteger expectedBalance = initialBalance;
+        for (AionTxExecSummary transactionSummary : blockSummary.getSummaries()) {
+            AionTxReceipt receipt = transactionSummary.getReceipt();
+            assertThat(receipt.isSuccessful()).isTrue();
+            // Compute the expected balance.
+            expectedBalance = expectedBalance.subtract(BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(energyPrice)));
+        }
+
+        AccountState fvm = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        // The current implementation does not allow storage-only contracts. They result in empty storage and code.
+        assertThat(fvm.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(fvm.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        assertThat(getBalance(deployerKey)).isEqualTo(expectedBalance);
+        assertThat(getNonce(deployerKey)).isEqualTo(expectedNonce);
     }
 
     @Test
