@@ -83,7 +83,7 @@ public class SyncHeaderRequestManager {
     private static final int BACKWARD_SYNC_STEP = 128;
 
     /** Cap on height of requests compared to the local chain. */
-    private static final int MAX_BLOCK_DIFF = 10_000;
+    static final int MAX_BLOCK_DIFF = 10_000;
 
     /**
      * Header request cap.
