@@ -119,7 +119,7 @@ public class StakingBlockHeader  implements BlockHeader {
     public static final int PUBKEY_LENGTH = 32;
     
     public static final byte[] GENESIS_SEED = new byte[SEED_LENGTH];
-
+    public static final byte[] DEFAULT_SIGNATURE = new byte[SIG_LENGTH];
     /**
      * private constructor. use builder to construct the header class.
      */
@@ -659,7 +659,7 @@ public class StakingBlockHeader  implements BlockHeader {
         }
 
         public Builder withDefaultSignature() {
-            signature = new byte[SIG_LENGTH];
+            signature = DEFAULT_SIGNATURE;
             return  this;
         }
 

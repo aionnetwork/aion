@@ -1474,7 +1474,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         blockPreSeal(parentHdr, block);
 
         if (signingPublicKey != null) {
-            stakingBlockTemplate.put(
+            stakingBlockTemplate.putIfAbsent(
                 ByteArrayWrapper.wrap(block.getHeader().getMineHash()), block);
         }
 

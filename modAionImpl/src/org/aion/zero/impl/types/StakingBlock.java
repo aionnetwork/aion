@@ -1,5 +1,7 @@
 package org.aion.zero.impl.types;
 
+import static org.aion.zero.impl.types.StakingBlockHeader.DEFAULT_SIGNATURE;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -441,5 +443,10 @@ public class StakingBlock extends AbstractBlock {
                 .withHeader(getHeader())
                 .withDifficulty(diff)
                 .build();
+    }
+
+    public boolean isSealed() {
+        return !Arrays.equals(this.header.getSigningPublicKey(), ByteUtil.EMPTY_WORD)
+                && !Arrays.equals(this.header.getSignature(), DEFAULT_SIGNATURE);
     }
 }

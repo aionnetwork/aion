@@ -3,6 +3,7 @@ package org.aion.api.server.rpc3;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.aion.zero.impl.types.StakingBlockHeader.DEFAULT_SIGNATURE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -162,9 +163,11 @@ public class StakingRPCImplTest {
             , new ArrayList<>()
             , 0
             , 0
-            , validSignature.toBytes()
+            , DEFAULT_SIGNATURE
             , validSeed.toBytes()
             , validSigningPublicKey.toBytes());
+
+        byte[] validSealHash = blockWithRightTimestamp.getHeader().getMineHash();
 
         AionImpl aionImpl = mock(AionImpl.class);
         AionBlockchainImpl chainImpl = mock(AionBlockchainImpl.class);
@@ -172,10 +175,10 @@ public class StakingRPCImplTest {
         chainHolder = spy(new AionChainHolder(aionImpl, accountManager));
         doReturn(true).when(chainHolder).isUnityForkEnabled();
         doReturn(chainImpl).when(aionImpl).getBlockchain();
-        doReturn(blockWithRightTimestamp).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        doReturn(blockWithRightTimestamp).when(chainImpl).getCachingStakingBlockTemplate(validSealHash);
         doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp);
 
-        doCallRealMethod().when(chainHolder).submitSignature(validSignature.toBytes(), validSealHash.toBytes());
+        doCallRealMethod().when(chainHolder).submitSignature(validSignature.toBytes(), validSealHash);
         rpcMethods= new RPCMethods(chainHolder);
 
         String method = "submitsignature";
@@ -185,7 +188,7 @@ public class StakingRPCImplTest {
                 new Request(
                     1,
                     method,
-                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, ByteArray.wrap(validSealHash))),
                     VersionType.Version2),
                 BoolConverter::decode));
 
@@ -203,11 +206,13 @@ public class StakingRPCImplTest {
             , new ArrayList<>()
             , 0
             , 0
-            , validSignature.toBytes()
+            , DEFAULT_SIGNATURE
             , validSeed.toBytes()
             , validSigningPublicKey.toBytes());
 
-        doReturn(blockWithRightTimestamp1).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        validSealHash = blockWithRightTimestamp1.getHeader().getMineHash();
+
+        doReturn(blockWithRightTimestamp1).when(chainImpl).getCachingStakingBlockTemplate(validSealHash);
         doReturn(true).when(chainHolder).addNewBlock(blockWithRightTimestamp1);
 
         assertTrue(
@@ -215,7 +220,7 @@ public class StakingRPCImplTest {
                 new Request(
                     1,
                     method,
-                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, ByteArray.wrap(validSealHash))),
                     VersionType.Version2),
                 BoolConverter::decode));
 
@@ -233,19 +238,21 @@ public class StakingRPCImplTest {
             , new ArrayList<>()
             , 0
             , 0
-            , validSignature.toBytes()
+            , DEFAULT_SIGNATURE
             , validSeed.toBytes()
             , validSigningPublicKey.toBytes());
 
-        doReturn(futureBlock).when(chainImpl).getCachingStakingBlockTemplate(validSealHash.toBytes());
+        validSealHash = futureBlock.getHeader().getMineHash();
+
+        doReturn(futureBlock).when(chainImpl).getCachingStakingBlockTemplate(validSealHash);
         doReturn(true).when(chainHolder).addNewBlock(futureBlock);
 
-        assertFalse(
+        assertTrue(
             execute(
                 new Request(
                     1,
                     method,
-                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, validSealHash)),
+                    SubmitSignatureParamsConverter.encode(new SubmitSignatureParams(validSignature, ByteArray.wrap(validSealHash))),
                     VersionType.Version2),
                 BoolConverter::decode));
     }

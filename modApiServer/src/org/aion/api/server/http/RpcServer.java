@@ -31,6 +31,7 @@ public abstract class RpcServer {
     protected boolean stuckThreadDetectorEnabled;
 
     private AccountManager accountManager;
+    private ChainHolder chainHolder;
 
     /**
      * to explicitly force any subclasses to check for null values, access to the following
@@ -61,7 +62,7 @@ public abstract class RpcServer {
                 Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
 
         accountManager = builder.accountManager;
-        ChainHolder chainHolder = new AionChainHolder(AionImpl.inst(), accountManager);
+        chainHolder = new AionChainHolder(AionImpl.inst(), accountManager);
 
         rpcProcessor =
                 new RpcProcessor(enabledEndpoints,
@@ -108,5 +109,7 @@ public abstract class RpcServer {
 
     public abstract void start();
 
-    public abstract void stop();
+    public void stop() {
+        chainHolder.shutDown();
+    }
 }

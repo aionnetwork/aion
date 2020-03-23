@@ -191,4 +191,6 @@ public interface ChainHolder {
      * @return the list of accounts in the kernel's keystore
      */
     List<AionAddress> listAccounts();
+
+    void shutDown();
 }

@@ -2,7 +2,10 @@ package org.aion.api.server.rpc3;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -16,9 +19,11 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.types.AionBlock;
@@ -35,6 +40,7 @@ public class AionChainHolder implements ChainHolder {
     private final AccountManagerInterface accountManager;
     private final FutureBlockRule futureBlockRule;
     private final Logger logger;
+    private final ScheduledExecutorService blockSubmitExecutor;
 
     public AionChainHolder(IAionChain chain,
         AccountManagerInterface accountManager) {
@@ -50,7 +56,8 @@ public class AionChainHolder implements ChainHolder {
         currentTemplate = new AtomicReference<>(null);
         this.accountManager = accountManager;
         this.futureBlockRule = new FutureBlockRule();
-        logger = AionLoggerFactory.getLogger(LogEnum.API.name());
+        logger = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+        blockSubmitExecutor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
@@ -96,20 +103,46 @@ public class AionChainHolder implements ChainHolder {
         if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
         else {
             StakingBlock stakingBlock = chain.getBlockchain().getCachingStakingBlockTemplate(sealHash);
-            stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
 
-            //AKI-648 reject the block add into the kernel if the timestamp of the block is in the future.
-            boolean isValidTimestamp = futureBlockRule.validate(stakingBlock.getHeader(), new ArrayList<>());
+            logger.debug(
+                    "submitSignature: sig[{}], sealHash[{}], block[{}]",
+                    ByteUtil.toHexString(signature),
+                    ByteUtil.toHexString(sealHash),
+                    stakingBlock);
 
-            final boolean sealed = isValidTimestamp && addNewBlock(stakingBlock);
+            if (!stakingBlock.isSealed()
+                    && Arrays.equals(sealHash, stakingBlock.getHeader().getMineHash())) {
+                stakingBlock.seal(signature, stakingBlock.getHeader().getSigningPublicKey());
 
-            if (sealed) {
+                boolean result =
+                        addSealedBlockToPool(
+                            stakingBlock,
+                            TimeUnit.SECONDS.toMillis(stakingBlock.getTimestamp())
+                                    - System.currentTimeMillis());
                 logSealedBlock(stakingBlock);
-            }else {
+                return result;
+            } else {
                 logFailedSealedBlock(stakingBlock);
+                return false;
             }
-            return sealed;
         }
+    }
+
+    /* package private for testing purpose) */
+    boolean addSealedBlockToPool(StakingBlock stakingBlock, long period) {
+        if (period > 0) {
+            // We are not using the future to block the tasks, So just return true directly
+            scheduleTask(stakingBlock, period);
+            return true;
+        } else {
+            return addNewBlock(stakingBlock);
+        }
+    }
+
+    /* package private for testing purpose) */
+    void scheduleTask(StakingBlock stakingBlock, long period) {
+        blockSubmitExecutor.schedule(
+            () -> addNewBlock(stakingBlock), period, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -172,7 +205,17 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public boolean addNewBlock(Block block) {
-        return ((AionImpl) chain).addNewBlock(block).isSuccessful();
+        ImportResult result = ((AionImpl) chain).addNewBlock(block);
+        logger.info(
+            "{} block {} to the blockchain DB <num={}, hash={}, diff={}, tx={}>",
+            block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK ? "mining" : "staking",
+            result.isSuccessful() ? "sealed" : "cannot seal",
+            block.getNumber(),
+            block.getShortHash(),
+            block.getDifficultyBI(),
+            block.getTransactionsList().size());
+
+        return result.isSuccessful();
     }
 
     @Override
@@ -233,6 +276,12 @@ public class AionChainHolder implements ChainHolder {
     }
 
     @Override
+    public void shutDown() {
+        logger.info("rpcChainHolder shutting down.");
+        blockSubmitExecutor.shutdownNow();
+    }
+
+    @Override
     public AionBlock getBestPOWBlock() {
         return this.chain.getBlockchain().getBestMiningBlock();
     }
@@ -249,7 +298,7 @@ public class AionChainHolder implements ChainHolder {
 
     private void logSealedBlock(Block block){
         //log that the block was sealed
-        AionLoggerFactory.getLogger(LogEnum.CONS.toString()).info(
+        logger.info(
             "{} block submitted via api <num={}, hash={}, diff={}, tx={}>",
             block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "Mining": "Staking",
             block.getNumber(),
@@ -260,7 +309,7 @@ public class AionChainHolder implements ChainHolder {
 
     private void logFailedSealedBlock(Block block){
         //log that the block could not be sealed
-        AionLoggerFactory.getLogger(LogEnum.CONS.toString()).info(
+        logger.debug(
             "Unable to submit {} block via api <num={}, hash={}, diff={}, tx={}>",
             block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "mining": "staking",
             block.getNumber(),
