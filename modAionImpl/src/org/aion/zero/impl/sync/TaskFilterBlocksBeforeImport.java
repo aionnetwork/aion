@@ -69,7 +69,8 @@ final class TaskFilterBlocksBeforeImport implements Runnable {
                                             && (bw.firstBlockNumber > currentBest + MIN_STORAGE_DIFF);
 
                 if (isFarInFuture || isRestrictedCapacity) {
-                    storePendingBlocks(bw.blocks, bw.displayId);
+                    int stored = chain.storePendingBlockRange(bw.blocks, log);
+                    syncStats.updatePeerBlocks(bw.displayId, stored, BlockType.STORED);
                 } else {
                     // unfortunately the PriorityBlockingQueue does not support a bounded size
                     // therefore this while mimics blocking when the queue is full
@@ -92,21 +93,5 @@ final class TaskFilterBlocksBeforeImport implements Runnable {
 
     private long getBestBlockNumber() {
         return chain.getBestBlock() == null ? 0 : chain.getBestBlock().getNumber();
-    }
-
-    private void storePendingBlocks(final List<Block> batch, final String displayId) {
-        Block first = batch.get(0);
-        int stored = chain.storePendingBlockRange(batch);
-        this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
-
-        // log operation
-        log.debug(
-                "<import-status: STORED {} out of {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
-                stored,
-                batch.size(),
-                displayId,
-                first.getShortHash(),
-                first.getNumber(),
-                first.getTransactionsList().size());
     }
 }

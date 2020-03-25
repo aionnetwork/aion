@@ -1929,16 +1929,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * parent block. The blocks from the range that are already stored with be skipped.
      *
      * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
+     * @param log the logger used for messages
      * @return an integer value (ranging from zero to the number of given blocks) representing the
      *     number of blocks that were stored from the given input.
      * @apiNote Functionality used to store blocks coming from <b>range import requests</b>.
      */
-    public int storePendingBlockRange(List<Block> blocks) {
+    public int storePendingBlockRange(List<Block> blocks, Logger log) {
         try {
-            return repository.getPendingBlockStore().addBlockRange(blocks);
+            return repository.getPendingBlockStore().addBlockRange(blocks, log);
         } catch (Exception e) {
-            LOG.error(
-                    "Unable to store range of blocks in " + repository.toString() + " due to: ", e);
+            log.error("Unable to store range of blocks in " + repository.toString() + " due to: ", e);
             return 0;
         }
     }
@@ -1947,18 +1947,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * Retrieves ranges of blocks from the pending block store for a specific blockchain height.
      *
      * @param level the blockchain height of interest
+     * @param log the logger used for messages
      * @return a map containing all the block ranges that are stored in the pending block store at
      *     the given height. The map may be empty if there is no data stored for the given height.
      *     It may also contain several entries if there are multiple ranges starting at the given
      *     level due to the storage of different chains.
      */
-    public Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level) {
+    public Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level, Logger log) {
         try {
-            return repository.getPendingBlockStore().loadBlockRange(level);
+            return repository.getPendingBlockStore().loadBlockRange(level, log);
         } catch (Exception e) {
-            LOG.error(
-                    "Unable to retrieve stored blocks from " + repository.toString() + " due to: ",
-                    e);
+            log.error("Unable to retrieve stored blocks from " + repository.toString() + " due to: ", e);
             return Collections.emptyMap();
         }
     }
@@ -1970,16 +1969,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param ranges the identifiers for the ranges to be deleted
      * @param blocks the range identifier to blocks mappings to me deleted (used to ensure that if
      *     the ranges have been expanded, only the relevant blocks get deleted)
+     * @param log the logger used for messages
      */
-    public void dropImported(
-            long level,
-            List<ByteArrayWrapper> ranges,
-            Map<ByteArrayWrapper, List<Block>> blocks) {
+    public void dropImported(long level, List<ByteArrayWrapper> ranges, Map<ByteArrayWrapper, List<Block>> blocks, Logger log) {
         try {
-            repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks);
+            repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks, log);
         } catch (Exception e) {
-            LOG.error(
-                    "Unable to delete used blocks from " + repository.toString() + " due to: ", e);
+            log.error("Unable to delete used blocks from " + repository.toString() + " due to: ", e);
             return;
         }
     }

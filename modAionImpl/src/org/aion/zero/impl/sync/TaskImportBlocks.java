@@ -240,7 +240,8 @@ final class TaskImportBlocks implements Runnable {
 
         // if any block results in NO_PARENT, all subsequent blocks will too
         if (importResult == ImportResult.NO_PARENT) {
-            storePendingBlocks(batch, displayId);
+            int stored = chain.storePendingBlockRange(batch, log);
+            syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
 
             // check if it is below the current importable blocks
             if (firstInBatch.getNumber() <= getBestBlockNumber() + 1) {
@@ -289,8 +290,7 @@ final class TaskImportBlocks implements Runnable {
 
             startTime = System.nanoTime();
             // get blocks stored for level
-            Map<ByteArrayWrapper, List<Block>> levelFromDisk =
-                    chain.loadPendingBlocksAtLevel(level);
+            Map<ByteArrayWrapper, List<Block>> levelFromDisk = chain.loadPendingBlocksAtLevel(level, log);
             duration = System.nanoTime() - startTime;
             surveyLog.debug("Import Stage 4.B.i: load batch from disk, duration = {} ns.", duration);
 
@@ -307,14 +307,6 @@ final class TaskImportBlocks implements Runnable {
                 batch = 0;
 
                 List<Block> batchFromDisk = entry.getValue();
-
-                if (log.isDebugEnabled()) {
-                    log.debug(
-                            "Loaded {} blocks from disk from level {} queue {} before filtering.",
-                            batchFromDisk.size(),
-                            entry.getKey(),
-                            level);
-                }
 
                 startTime = System.nanoTime();
                 // filter already imported blocks
@@ -375,7 +367,7 @@ final class TaskImportBlocks implements Runnable {
             }
 
             // remove imported data from storage
-            dropImportedBlocks(level, importedQueues, levelFromDisk);
+            chain.dropImported(level, importedQueues, levelFromDisk, log);
 
             // increment level
             level++;
@@ -395,35 +387,5 @@ final class TaskImportBlocks implements Runnable {
 
     private long getBestBlockNumber() {
         return chain.getBestBlock() == null ? 0 : chain.getBestBlock().getNumber();
-    }
-
-    private void storePendingBlocks(final List<Block> batch, final String displayId) {
-        Block first = batch.get(0);
-        int stored = chain.storePendingBlockRange(batch);
-        this.syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
-
-        // log operation
-        log.debug(
-                "<import-status: STORED {} out of {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
-                stored,
-                batch.size(),
-                displayId,
-                first.getShortHash(),
-                first.getNumber(),
-                first.getTransactionsList().size());
-    }
-
-    private void dropImportedBlocks(
-            final long level,
-            final List<ByteArrayWrapper> importedQueues,
-            final Map<ByteArrayWrapper, List<Block>> levelFromDisk) {
-
-        chain.dropImported(level, importedQueues, levelFromDisk);
-
-        // log operation
-        log.debug(
-                "Dropped from storage level = {} with queues = {}.",
-                level,
-                Arrays.toString(importedQueues.toArray()));
     }
 }

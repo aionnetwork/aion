@@ -243,7 +243,23 @@ public class PendingBlockStore implements Closeable {
      * @implNote The functionality is optimized for calls providing consecutive blocks, but ensures
      *     correct behavior even when the blocks are not consecutive.
      */
-    public int addBlockRange(List<Block> blocks) {
+    @VisibleForTesting
+    int addBlockRange(List<Block> blocks) {
+        return addBlockRange(blocks, LOG);
+    }
+
+    /**
+     * Attempts to store a range of blocks in the pending block store for importing later when the
+     * chain reaches the needed height and the parent blocks gets imported.
+     *
+     * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
+     * @param log external {@link Logger} for displaying messages
+     * @return an integer value (ranging from zero to the number of given blocks) representing the
+     *     number of blocks that were stored from the given input.
+     * @implNote The functionality is optimized for calls providing consecutive blocks, but ensures
+     *     correct behavior even when the blocks are not consecutive.
+     */
+    public int addBlockRange(List<Block> blocks, Logger log) {
         List<Block> blockRange = new ArrayList<>(blocks);
 
         // nothing to do when 0 blocks given
@@ -264,10 +280,11 @@ public class PendingBlockStore implements Closeable {
             levelSource.flushBatch();
             queueSource.flushBatch();
 
+            log.debug("<import-status: STORED {} out of {} blocks, starting with block #{} hash={}>", stored, blocks.size(), first.getNumber(), first.getShortHash());
             // the number of blocks added
             return stored;
         } catch (Exception e) {
-            LOG.error("Unable to store range of blocks due to: ", e);
+            log.error("Unable to store range of blocks due to: ", e);
             return 0;
         } finally {
             databaseLock.writeLock().unlock();
@@ -415,7 +432,20 @@ public class PendingBlockStore implements Closeable {
      * @return a map of queue identifiers and lists of blocks containing all the separate chain
      *     queues stored at that level.
      */
-    public Map<ByteArrayWrapper, List<Block>> loadBlockRange(long level) {
+    @VisibleForTesting
+    Map<ByteArrayWrapper, List<Block>> loadBlockRange(long level) {
+        return loadBlockRange(level, LOG);
+    }
+
+    /**
+     * Retrieves blocks from storage based on the height of the first block in the range.
+     *
+     * @param level the height / number of the first block in the queues to be retrieved
+     * @param log the logger used for messages
+     * @return a map of queue identifiers and lists of blocks containing all the separate chain
+     *     queues stored at that level.
+     */
+    public Map<ByteArrayWrapper, List<Block>> loadBlockRange(long level, Logger log) {
         databaseLock.readLock().lock();
 
         try {
@@ -432,13 +462,15 @@ public class PendingBlockStore implements Closeable {
             for (byte[] queue : queueHashes) {
                 list = queueSource.get(queue);
                 if (list != null) {
-                    blocks.put(ByteArrayWrapper.wrap(queue), list);
+                    ByteArrayWrapper key = ByteArrayWrapper.wrap(queue);
+                    blocks.put(key, list);
+                    log.debug("Loaded {} blocks from disk from level={} queue={} before filtering.", list.size(), key, level);
                 }
             }
 
             return blocks;
         } catch (Exception e) {
-            LOG.error("Unable to retrieve stored blocks due to: ", e);
+            log.error("Unable to retrieve stored blocks due to: ", e);
             return Collections.emptyMap();
         } finally {
             databaseLock.readLock().unlock();
@@ -453,10 +485,21 @@ public class PendingBlockStore implements Closeable {
      * @param blocks the queue to blocks mappings to be deleted (used to ensure that if the queues
      *     have been expanded, only the relevant blocks get deleted)
      */
-    public void dropPendingQueues(
-            long level,
-            Collection<ByteArrayWrapper> queues,
-            Map<ByteArrayWrapper, List<Block>> blocks) {
+    @VisibleForTesting
+    void dropPendingQueues(long level, Collection<ByteArrayWrapper> queues, Map<ByteArrayWrapper, List<Block>> blocks) {
+        dropPendingQueues(level, queues, blocks, LOG);
+    }
+
+    /**
+     * Used to delete imported queues from storage.
+     *
+     * @param level the block height of the queue starting point
+     * @param queues the identifiers for the queues to be deleted
+     * @param blocks the queue to blocks mappings to be deleted (used to ensure that if the queues
+     *     have been expanded, only the relevant blocks get deleted)
+     * @param log the logger used for messages
+     */
+    public void dropPendingQueues(long level, Collection<ByteArrayWrapper> queues, Map<ByteArrayWrapper, List<Block>> blocks, Logger log) {
 
         databaseLock.writeLock().lock();
 
@@ -478,8 +521,7 @@ public class PendingBlockStore implements Closeable {
             List<byte[]> levelData = levelSource.get(levelKey);
 
             if (levelData == null) {
-                LOG.error(
-                        "Corrupt data in PendingBlockStorage. Level (expected to exist) was not found.");
+                log.error("Corrupt data in PendingBlockStorage. Level (expected to exist) was not found.");
                 // level already missing so nothing to do here
             } else {
                 List<byte[]> updatedLevelData = new ArrayList<>();
@@ -504,8 +546,11 @@ public class PendingBlockStore implements Closeable {
             indexSource.commitBatch();
             queueSource.flushBatch();
             levelSource.flushBatch();
+
+            // log operation
+            log.debug("Dropped from storage level = {} with queues = {}.", level, Arrays.toString(queues.toArray()));
         } catch (Exception e) {
-            LOG.error("Unable to delete used blocks due to: ", e);
+            log.error("Unable to delete used blocks due to: ", e);
         } finally {
             databaseLock.writeLock().unlock();
         }
