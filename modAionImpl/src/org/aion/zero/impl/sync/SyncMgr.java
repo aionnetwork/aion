@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ import org.slf4j.Logger;
 public final class SyncMgr {
 
     // interval - show status
-    private static final int INTERVAL_SHOW_STATUS = 10000;
+    private static final long DELAY_SHOW_STATUS = 10L; // in seconds
     private static final long DELAY_STATUS_REQUEST = 2L; // in seconds
     /**
      * NOTE: This value was selected based on heap dumps for normal execution where the queue was
@@ -62,6 +63,7 @@ public final class SyncMgr {
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger survey_log = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
+    private static final Logger p2pLog = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
     private final NetworkStatus networkStatus = new NetworkStatus();
 
@@ -83,7 +85,6 @@ public final class SyncMgr {
     private final ScheduledExecutorService syncExecutors;
 
     private Thread syncIb;
-    private Thread syncSs = null;
 
     private BlockHeaderValidator blockHeaderValidator;
     private volatile long timeUpdated = 0;
@@ -100,12 +101,14 @@ public final class SyncMgr {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
-        syncExecutors = Executors.newScheduledThreadPool(3);
+        syncExecutors = Executors.newScheduledThreadPool(4);
 
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
+        Set<StatsType> statsTypes = Collections.unmodifiableSet(new HashSet<>(showStatistics));
+
         long selfBest = chain.getBestBlock().getNumber();
-        stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
+        stats = new SyncStats(selfBest, _showStatus, statsTypes, maxActivePeers);
 
         syncHeaderRequestManager =  new SyncHeaderRequestManager(log, survey_log);
 
@@ -126,19 +129,7 @@ public final class SyncMgr {
         syncExecutors.scheduleWithFixedDelay(() -> requestStatus(), 0L, DELAY_STATUS_REQUEST, TimeUnit.SECONDS);
 
         if (_showStatus) {
-            syncSs =
-                new Thread(
-                    new TaskShowStatus(
-                        start,
-                        INTERVAL_SHOW_STATUS,
-                        chain,
-                        networkStatus,
-                        stats,
-                        p2pMgr,
-                        showStatistics,
-                        AionLoggerFactory.getLogger(LogEnum.P2P.name())),
-                    "sync-ss");
-            syncSs.start();
+            syncExecutors.scheduleWithFixedDelay(() -> showStatus(statsTypes), 0, DELAY_SHOW_STATUS, TimeUnit.SECONDS);
         }
 
         setupEventHandler();
@@ -154,6 +145,61 @@ public final class SyncMgr {
             stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
             stats.updateRequestTime(node.getIdShort(), System.nanoTime(), RequestType.STATUS);
         }
+    }
+
+    /**
+     * Display the current node status.
+     */
+    private void showStatus(Set<StatsType> showStatistics) {
+        Thread.currentThread().setName("sync-ss");
+        p2pLog.info(getStatus(chain, networkStatus, stats));
+
+        String requestedStats;
+        if (showStatistics.contains(StatsType.REQUESTS)) {
+            requestedStats = stats.dumpRequestStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.info(requestedStats);
+            }
+        }
+
+        if (showStatistics.contains(StatsType.SEEDS)) {
+            requestedStats = stats.dumpTopSeedsStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.info(requestedStats);
+            }
+        }
+
+        if (showStatistics.contains(StatsType.LEECHES)) {
+            requestedStats = stats.dumpTopLeechesStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.info(requestedStats);
+            }
+        }
+
+        if (showStatistics.contains(StatsType.RESPONSES)) {
+            requestedStats = stats.dumpResponseStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.info(requestedStats);
+            }
+        }
+
+        if (showStatistics.contains(StatsType.SYSTEMINFO)) {
+            requestedStats = stats.dumpSystemInfo();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.info(requestedStats);
+            }
+        }
+    }
+
+    private static String getStatus(AionBlockchainImpl chain, NetworkStatus networkStatus, SyncStats syncStats) {
+        Block selfBest = chain.getBestBlock();
+        String selfTd = selfBest.getTotalDifficulty().toString(10);
+
+        return "sync-status avg-import="
+                + String.format("%.2f", syncStats.getAvgBlocksPerSec()) + " b/s"
+                + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10)
+                + " b-num=" + selfBest.getNumber() + "/" + networkStatus.getTargetBestBlockNumber()
+                + " b-hash=" + Hex.toHexString(chain.getBestBlockHash()) + "/" + networkStatus.getTargetBestBlockHash();
     }
 
     /**
@@ -393,11 +439,32 @@ public final class SyncMgr {
     }
 
     public synchronized void shutdown() {
+        if (p2pLog.isDebugEnabled()) {
+            // print all the gathered information before shutdown
+            p2pLog.debug(getStatus(chain, networkStatus, stats));
+
+            String requestedStats = stats.dumpRequestStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.debug(requestedStats);
+            }
+            requestedStats = stats.dumpTopSeedsStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.debug(requestedStats);
+            }
+            requestedStats = stats.dumpTopLeechesStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.debug(requestedStats);
+            }
+            requestedStats = stats.dumpResponseStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLog.debug(requestedStats);
+            }
+        }
+
         start.set(false);
         shutdownAndAwaitTermination(syncExecutors);
 
         interruptAndWait(syncIb, 10000);
-        interruptAndWait(syncSs, 10000);
     }
 
     private void interruptAndWait(Thread t, long timeout) {
