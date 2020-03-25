@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.p2p.INode;
 import org.aion.zero.impl.config.StatsType;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.bytes.ByteUtil;
@@ -31,6 +33,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
+import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.impl.types.BlockUtil;
@@ -43,6 +46,7 @@ public final class SyncMgr {
 
     // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
+    private static final long DELAY_STATUS_REQUEST = 2L; // in seconds
     /**
      * NOTE: This value was selected based on heap dumps for normal execution where the queue was
      * holding around 60 items.
@@ -76,14 +80,15 @@ public final class SyncMgr {
     private SyncStats stats;
     private AtomicBoolean start = new AtomicBoolean(true);
 
-    private final ExecutorService syncExecutors;
+    private final ScheduledExecutorService syncExecutors;
 
     private Thread syncIb;
-    private Thread syncGs;
     private Thread syncSs = null;
 
     private BlockHeaderValidator blockHeaderValidator;
     private volatile long timeUpdated = 0;
+
+    private static final ReqStatus cachedReqStatus = new ReqStatus();
 
     public SyncMgr(final AionBlockchainImpl _chain,
         final IP2pMgr _p2pMgr,
@@ -95,7 +100,7 @@ public final class SyncMgr {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
-        syncExecutors = Executors.newFixedThreadPool(2);
+        syncExecutors = Executors.newScheduledThreadPool(3);
 
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
@@ -117,8 +122,8 @@ public final class SyncMgr {
                     syncHeaderRequestManager),
                 "sync-ib");
         syncIb.start();
-        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");
-        syncGs.start();
+
+        syncExecutors.scheduleWithFixedDelay(() -> requestStatus(), 0L, DELAY_STATUS_REQUEST, TimeUnit.SECONDS);
 
         if (_showStatus) {
             syncSs =
@@ -137,6 +142,18 @@ public final class SyncMgr {
         }
 
         setupEventHandler();
+    }
+
+    /**
+     * Makes a status request to each active peer.
+     */
+    private void requestStatus() {
+        Thread.currentThread().setName("sync-gs");
+        for (INode node : p2pMgr.getActiveNodes().values()) {
+            p2pMgr.send(node.getIdHash(), node.getIdShort(), cachedReqStatus);
+            stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
+            stats.updateRequestTime(node.getIdShort(), System.nanoTime(), RequestType.STATUS);
+        }
     }
 
     /**
@@ -380,7 +397,6 @@ public final class SyncMgr {
         shutdownAndAwaitTermination(syncExecutors);
 
         interruptAndWait(syncIb, 10000);
-        interruptAndWait(syncGs, 10000);
         interruptAndWait(syncSs, 10000);
     }
 
