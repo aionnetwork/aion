@@ -1923,7 +1923,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         setBestBlock(block);
     }
 
-    @Override
+    /**
+     * Attempts to store the given range of blocks in the pending block store, saving them to be
+     * imported later when the chain has reached the required height or has imported the needed
+     * parent block. The blocks from the range that are already stored with be skipped.
+     *
+     * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
+     * @return an integer value (ranging from zero to the number of given blocks) representing the
+     *     number of blocks that were stored from the given input.
+     * @apiNote Functionality used to store blocks coming from <b>range import requests</b>.
+     */
     public int storePendingBlockRange(List<Block> blocks) {
         try {
             return repository.getPendingBlockStore().addBlockRange(blocks);
@@ -1934,7 +1943,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
+    /**
+     * Retrieves ranges of blocks from the pending block store for a specific blockchain height.
+     *
+     * @param level the blockchain height of interest
+     * @return a map containing all the block ranges that are stored in the pending block store at
+     *     the given height. The map may be empty if there is no data stored for the given height.
+     *     It may also contain several entries if there are multiple ranges starting at the given
+     *     level due to the storage of different chains.
+     */
     public Map<ByteArrayWrapper, List<Block>> loadPendingBlocksAtLevel(long level) {
         try {
             return repository.getPendingBlockStore().loadBlockRange(level);
@@ -1946,7 +1963,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
     }
 
-    @Override
+    /**
+     * Deletes the given blocks from the pending block storage.
+     *
+     * @param level the block height of the range starting point
+     * @param ranges the identifiers for the ranges to be deleted
+     * @param blocks the range identifier to blocks mappings to me deleted (used to ensure that if
+     *     the ranges have been expanded, only the relevant blocks get deleted)
+     */
     public void dropImported(
             long level,
             List<ByteArrayWrapper> ranges,
