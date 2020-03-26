@@ -1,8 +1,11 @@
 package org.libsodium.jni;
 
 /**
- * Created with IntelliJ IDEA. User: josh Date: 7/14/13 Time: 7:31 PM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: josh
+ * Date: 7/14/13
+ * Time: 7:31 PM
+ * To change this template use File | Settings | File Templates.
  */
 public abstract class SodiumConstants {
     public static final int SHA256BYTES = 32;
@@ -20,4 +23,7 @@ public abstract class SodiumConstants {
     public static final int AEAD_CHACHA20_POLY1305_KEYBYTES = 32;
     public static final int AEAD_CHACHA20_POLY1305_NPUBBYTES = 8;
     public static final int AEAD_CHACHA20_POLY1305_ABYTES = 8;
+    public static final int SESSIONKEYBYTES = 32;
+    public static final int MAC_BYTES = 16;
+    public static final int SEAL_BYTES = PUBLICKEY_BYTES + MAC_BYTES;
 }
