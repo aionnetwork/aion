@@ -69,7 +69,6 @@ public class TrieImpl implements Trie {
     private static final byte LIST_SIZE = 17;
     private static final int MAX_SIZE = 20;
 
-    // private Object prevRoot;
     private Object root;
     private Cache cache;
 
@@ -86,7 +85,6 @@ public class TrieImpl implements Trie {
     public TrieImpl(final Cache cache, Object root) {
         this.cache = cache;
         this.root = root;
-        // this.prevRoot = root;
     }
 
     public void setCache(Cache cache) {
@@ -96,15 +94,6 @@ public class TrieImpl implements Trie {
     public Cache getCache() {
         return this.cache;
     }
-
-    //    @Deprecated
-    //    public Object getPrevRoot() {
-    //        return prevRoot;
-    //    }
-    //
-    //    public void setPrevRoot(Object previousRoot) {
-    //        prevRoot = previousRoot;
-    //    }
 
     public Object getRoot() {
         return root;
@@ -505,18 +494,8 @@ public class TrieImpl implements Trie {
     public void sync(boolean flushCache) {
         synchronized (cache) {
             this.cache.commit(flushCache);
-            // this.prevRoot = this.root;
         }
     }
-
-    // never used
-    //    @Override
-    //    public void undo() {
-    //        synchronized (cache) {
-    //            this.cache.undo();
-    //            this.root = this.prevRoot;
-    //        }
-    //    }
 
     /** ****************************** Utility functions * ***************************** */
     // Created an array of empty elements of required length
@@ -527,38 +506,6 @@ public class TrieImpl implements Trie {
         }
         return slice;
     }
-
-    // not used
-    //    /**
-    //     * Insert/delete operations on a Trie structure leaves the old nodes in cache, this method
-    //     * scans the cache and removes them. The method is not thread safe, the tree should not be
-    //     * modified during the cleaning process.
-    //     */
-    //    public void cleanCache() {
-    //        synchronized (cache) {
-    //            CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
-    //
-    //            this.scanTree(this.getRootHash(), collectAction);
-    //
-    //            Set<ByteArrayWrapper> hashSet = collectAction.getCollectedHashes();
-    //            Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
-    //            Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
-    //
-    //            for (ByteArrayWrapper key : nodes.keySet()) {
-    //                if (!hashSet.contains(key)) {
-    //                    toRemoveSet.add(key);
-    //                }
-    //            }
-    //
-    //            for (ByteArrayWrapper key : toRemoveSet) {
-    //                this.getCache().delete(key.copyOfData());
-    //                // if (LOG.isTraceEnabled()) {
-    //                // LOG.trace("Garbage collected node: [{}]",
-    //                // Hex.toHexString(key.copyOfData()));
-    //                // }
-    //            }
-    //        }
-    //    }
 
     private void scanTree(byte[] hash, ScanAction scanAction) {
         synchronized (cache) {
@@ -859,18 +806,6 @@ public class TrieImpl implements Trie {
             }
         }
     }
-
-    // not used
-    //    public boolean validate() {
-    //        try {
-    //            // fails when a referenced node is not found
-    //            // indicating that the root is not valid
-    //            scanTreeLoop(getRootHash(), new CountNodes());
-    //        } catch (Exception e) {
-    //            return false;
-    //        }
-    //        return true;
-    //    }
 
     @Override
     public Set<ByteArrayWrapper> getMissingNodes(byte[] keyOrValue) {

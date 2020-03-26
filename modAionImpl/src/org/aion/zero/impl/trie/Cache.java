@@ -127,12 +127,6 @@ public class Cache {
         this.removedNodes.clear();
     }
 
-    // not used
-    //    public synchronized void undo() {
-    //        this.nodes.entrySet().removeIf(entry -> entry.getValue().isDirty());
-    //        this.isDirty = false;
-    //    }
-
     public synchronized boolean isDirty() {
         return isDirty;
     }
@@ -144,23 +138,6 @@ public class Cache {
     public synchronized ByteArrayKeyValueStore getDb() {
         return dataSource;
     }
-
-    // not used
-    //    public String cacheDump() {
-    //        StringBuilder cacheDump = new StringBuilder();
-    //        for (ByteArrayWrapper key : nodes.keySet()) {
-    //            Node node = nodes.get(key);
-    //            if (node.getValue() != null) {
-    //                cacheDump
-    //                        .append(key.toString())
-    //                        .append(" : ")
-    //                        .append(node.getValue().toString())
-    //                        .append("\n");
-    //            }
-    //        }
-    //
-    //        return cacheDump.toString();
-    //    }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public synchronized void setDB(ByteArrayKeyValueStore kvds) {
