@@ -470,7 +470,6 @@ public final class P2pMgr implements IP2pMgr {
                 this.start,
                 this.nodeMgr,
                 this.handlers,
-                this.sendMsgQue,
                 cachedResHandshake1,
                 this.receiveMsgQue);
     }

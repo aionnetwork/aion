@@ -40,7 +40,6 @@ public class TaskInbound implements Runnable {
     private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
     private final AtomicBoolean start;
-    private final BlockingQueue<MsgOut> sendMsgQue;
     private final ResHandshake1 cachedResHandshake1;
     private final BlockingQueue<MsgIn> receiveMsgQue;
 
@@ -62,7 +61,6 @@ public class TaskInbound implements Runnable {
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
             final Map<Integer, List<Handler>> _handlers,
-            final BlockingQueue<MsgOut> _sendMsgQue,
             final ResHandshake1 _cachedResHandshake1,
             final BlockingQueue<MsgIn> _receiveMsgQue) {
 
@@ -73,7 +71,6 @@ public class TaskInbound implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.handlers = _handlers;
-        this.sendMsgQue = _sendMsgQue;
         this.cachedResHandshake1 = _cachedResHandshake1;
         this.receiveMsgQue = _receiveMsgQue;
     }
@@ -455,10 +452,7 @@ public class TaskInbound implements Runnable {
                     INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
                     if (node != null) {
                         ResActiveNodes resActiveNodes = new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList());
-                        boolean added = sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), resActiveNodes, Dest.ACTIVE));
-                        if (!added) {
-                            p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", resActiveNodes, node.getIdShort());
-                        }
+                        mgr.send(node.getIdHash(), node.getIdShort(), resActiveNodes);
                     }
                 }
                 break;
@@ -536,10 +530,7 @@ public class TaskInbound implements Runnable {
                     binaryVersion = new String(_revision, StandardCharsets.UTF_8);
                     node.setBinaryVersion(binaryVersion);
                     nodeMgr.movePeerToActive(_channelHash, "inbound");
-                    boolean added = sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), cachedResHandshake1, Dest.ACTIVE));
-                    if (!added) {
-                        p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", cachedResHandshake1, node.getIdShort());
-                    }
+                    mgr.send(node.getIdHash(), node.getIdShort(), cachedResHandshake1);
                 }
 
             } else {
