@@ -112,6 +112,15 @@ public class InnerContractDetails implements ContractDetails {
         return deleted;
     }
 
+    /**
+     * Returns {@code true} only if the account has non-empty storage associated with it. Otherwise {@code false}.
+
+     * @return whether the account has non-empty storage or not.
+     */
+    public boolean hasStorage() {
+        return !storage.isEmpty();
+    }
+
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
         Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();

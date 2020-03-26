@@ -106,6 +106,23 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         return accountState;
     }
 
+    /**
+     * Returns {@code true} only if the specified account has non-empty storage associated with it. Otherwise {@code false}.
+     *
+     * @param address The account address.
+     * @return whether the account has non-empty storage or not.
+     */
+    @Override
+    public boolean hasStorage(AionAddress address) {
+        lock.lock();
+
+        try {
+            return getLocalAccountState(address).hasStorage() || getInnerContractDetails(address).hasStorage();
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public boolean hasAccountState(AionAddress address) {
         lock.lock();
         try {

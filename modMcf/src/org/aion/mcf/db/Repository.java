@@ -132,6 +132,14 @@ public interface Repository<AS> {
     byte[] getCode(AionAddress address);
 
     /**
+     * Returns {@code true} only if the specified account has non-empty storage associated with it. Otherwise {@code false}.
+     *
+     * @param address The account address.
+     * @return whether the account has non-empty storage or not.
+     */
+    boolean hasStorage(AionAddress address);
+
+    /**
      * Checks if the database contains an account state associated with the given address.
      *
      * @param address the address of the account of interest

@@ -177,6 +177,15 @@ public class AccountState {
     }
 
     /**
+     * Returns {@code true} only if the account has non-empty storage associated with it. Otherwise {@code false}.
+
+     * @return whether the account has non-empty storage or not.
+     */
+    public boolean hasStorage() {
+        return !stateRoot.equals(EMPTY_TRIE);
+    }
+
+    /**
      * Retrieves the hash of the root node of a trie structure that encodes the storage contents of
      * the contract account.
      *
