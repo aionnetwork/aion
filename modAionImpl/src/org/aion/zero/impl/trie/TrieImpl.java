@@ -453,7 +453,15 @@ public class TrieImpl implements Trie {
     }
 
     private Object putToCache(Object node) {
-        return this.cache.put(node);
+        Value value = new Value(node);
+        byte[] enc = value.encode();
+        if (enc.length >= 32) {
+            byte[] sha = HashUtil.h256(value.encode());
+            this.cache.put(ByteArrayWrapper.wrap(sha), value);
+            return sha;
+        }
+
+        return value;
     }
 
     private static boolean isEmptyNode(Object node) {
