@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.aion.crypto.HashUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -43,22 +42,15 @@ public class Cache {
     /**
      * Put the node in the cache if RLP encoded value is longer than 32 bytes
      *
-     * @param o the Node which could be a pair-, multi-item Node or single Value
+     *
+     * @param key
+     * @param value the Node which could be a pair-, multi-item Node or single Value
      * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
-    public synchronized Object put(Object o) {
-        Value value = new Value(o);
-        byte[] enc = value.encode();
-        if (enc.length >= 32) {
-            byte[] sha = HashUtil.h256(value.encode());
-            ByteArrayWrapper key = wrap(sha);
-            this.nodes.put(key, new Node(value, true));
-            this.removedNodes.remove(key);
-            this.isDirty = true;
-
-            return sha;
-        }
-        return value;
+    synchronized void put(ByteArrayWrapper key, Value value) {
+        this.nodes.put(key, new Node(value, true));
+        this.removedNodes.remove(key);
+        this.isDirty = true;
     }
 
     public synchronized Value get(byte[] key) {
