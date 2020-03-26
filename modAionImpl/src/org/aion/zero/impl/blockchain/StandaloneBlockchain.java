@@ -570,10 +570,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         return null;
     }
 
-    public void set040ForkNumber(long n) {
-        fork040BlockNumber = n;
-    }
-
     @VisibleForTesting
     public Pair<Long, BlockCachingContext> getAvmCachingContext() {
         return Pair.of(cachedBlockNumberForAVM, executionTypeForAVM);

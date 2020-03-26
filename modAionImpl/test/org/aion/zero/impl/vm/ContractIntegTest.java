@@ -339,7 +339,7 @@ public class ContractIntegTest {
             byte[] code = repo.getCode(contract);
             assertNotNull(code);
         } else {
-            blockchain.set040ForkNumber(0);
+            blockchain.forkUtility.enable040Fork(0);
             AionBlock block = makeBlock(tx);
             RepositoryCache repo = blockchain.getRepository().startTracking();
             AionTxExecSummary summary = executeTransaction(tx, block, repo);
@@ -1409,7 +1409,7 @@ public class ContractIntegTest {
             return;
         }
 
-        blockchain.set040ForkNumber(1000);
+        blockchain.forkUtility.enable040Fork(1000);
         long nrg = 1_000_000;
         long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;
@@ -1492,7 +1492,7 @@ public class ContractIntegTest {
             return;
         }
 
-        blockchain.set040ForkNumber(0);
+        blockchain.forkUtility.enable040Fork(0);
         long nrg = 1_000_000;
         long nrgPrice = energyPrice;
         BigInteger value = BigInteger.ONE;

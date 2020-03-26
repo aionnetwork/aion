@@ -81,7 +81,7 @@ public class ForkUtility {
      */
     public void enable040Fork(long fork040BlockHeight) {
         Preconditions.checkArgument(fork040BlockHeight >= 0, "Invalid fork0.4.0 block number: must be >= 0");
-        this.fork040BlockHeight = unityForkBlockHeight;
+        this.fork040BlockHeight = fork040BlockHeight;
         this.fork040Enabled = true;
     }
 
@@ -117,10 +117,6 @@ public class ForkUtility {
      */
     public boolean is040ForkActive(long contextBlockNumber) {
         return fork040Enabled && (contextBlockNumber >= fork040BlockHeight);
-    }
-
-    public boolean is040ForkBlock(long contextBlockNumber) {
-        return fork040Enabled && (contextBlockNumber == fork040BlockHeight);
     }
 
     // variables used by the Nonce addition fork

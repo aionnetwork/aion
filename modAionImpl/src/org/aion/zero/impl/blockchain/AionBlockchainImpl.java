@@ -144,8 +144,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-    static long fork040BlockNumber = -1L;
-    private static boolean fork040Enable;
     private final BlockHeaderValidator headerValidator;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator, nonceSeedDifficultyValidator;;
@@ -327,10 +325,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
 
-        if (blkNum != null) {
-            fork040BlockNumber = blkNum;
-        }
-
         BigInteger initialSupply = ZERO;
         for (AccountState as : cfgAion.getGenesis().getPremine().values()) {
             initialSupply = initialSupply.add(as.getBalance());
@@ -430,14 +424,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 };
 
         return new PostExecutionWork(repository, logic);
-    }
-
-    private static boolean checkFork040(long blkNum) {
-        if (fork040BlockNumber != -1) {
-            return blkNum >= fork040BlockNumber;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -1769,7 +1755,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (!block.getTransactionsList().isEmpty()) {
 
-            fork040Enable = checkFork040(block.getNumber());
+            boolean fork040Enable = forkUtility.is040ForkActive(block.getNumber());
             if (fork040Enable) {
                 TransactionTypeRule.allowAVMContractTransaction();
             }
@@ -1825,7 +1811,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (!block.getTransactionsList().isEmpty()) {
 
             // might apply the block before the 040 fork point.
-            fork040Enable = checkFork040(block.getNumber());
+            boolean fork040Enable = forkUtility.is040ForkActive(block.getNumber());
             if (fork040Enable) {
                 TransactionTypeRule.allowAVMContractTransaction();
             }

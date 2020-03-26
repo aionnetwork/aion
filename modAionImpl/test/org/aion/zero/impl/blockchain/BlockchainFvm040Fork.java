@@ -180,7 +180,7 @@ public class BlockchainFvm040Fork {
                         .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        bc.set040ForkNumber(3L);
+        bc.forkUtility.enable040Fork(3L);
 
         ECKey key = bundle.privateKeys.get(0);
         BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));

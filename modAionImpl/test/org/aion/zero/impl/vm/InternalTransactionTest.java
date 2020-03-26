@@ -403,7 +403,7 @@ public class InternalTransactionTest {
         assertTrue(result.getLeft().isSuccessful());
         nonce = nonce.add(BigInteger.ONE);
 
-        bc.set040ForkNumber(1000);
+        bc.forkUtility.enable040Fork(1000);
 
         // ======================
         // DEPLOY Failed
@@ -431,7 +431,7 @@ public class InternalTransactionTest {
         assertEquals("reverted", result.getRight().getReceipts().get(0).getError());
         nonce = nonce.add(BigInteger.ONE);
 
-        bc.set040ForkNumber(0);
+        bc.forkUtility.enable040Fork(0);
         // ======================
         // DEPLOY
         // ======================

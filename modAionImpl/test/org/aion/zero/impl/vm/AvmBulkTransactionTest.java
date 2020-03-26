@@ -351,7 +351,7 @@ public class AvmBulkTransactionTest {
     @Test
     public void importBlockWithContractAndCallsForBothVMsOnTopOfAddressesWithBalance() {
         // Enable Fork040 to be able to deploy the contract on FVM.
-        blockchain.set040ForkNumber(1L);
+        blockchain.forkUtility.enable040Fork(1L);
 
         BigInteger initialNonce = getNonce(deployerKey);
         // Two transactions will be made to add balance to the expected contract addresses.
@@ -415,7 +415,7 @@ public class AvmBulkTransactionTest {
     @Test
     public void importBlockWithContractAndCallsForFvmOnTopOfAddressWithBalanceBeforeFork040() {
         // Disable Fork040.
-        blockchain.set040ForkNumber(Long.MAX_VALUE);
+        blockchain.forkUtility.disable040Fork();
 
         BigInteger initialNonce = getNonce(deployerKey);
         // One transaction will be made to add balance to the expected contract address before the contract deployment.
@@ -465,7 +465,7 @@ public class AvmBulkTransactionTest {
     @Test
     public void importBlockWithContractAndCallsForFvmOnTopOfAddressWithBalanceAfterFork040() {
         // Enable Fork040 to be able to deploy the contract on FVM.
-        blockchain.set040ForkNumber(1L);
+        blockchain.forkUtility.enable040Fork(1L);
 
         BigInteger initialNonce = getNonce(deployerKey);
         // One transaction will be made to add balance to the expected contract address before the contract deployment.
