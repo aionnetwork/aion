@@ -19,7 +19,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.junit.After;
@@ -35,7 +34,7 @@ public class TaskConnectPeersTest {
 
     @Mock private INodeMgr nodeMgr;
 
-    @Mock private IP2pMgr p2pMgr;
+    @Mock private P2pMgr p2pMgr;
 
     @Mock private BlockingQueue<MsgOut> sendMsgQue;
 
@@ -139,7 +138,7 @@ public class TaskConnectPeersTest {
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, rhs);
         assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
@@ -156,7 +155,7 @@ public class TaskConnectPeersTest {
     public void testRun1() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, rhs);
         assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
@@ -196,7 +195,7 @@ public class TaskConnectPeersTest {
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
@@ -234,7 +233,7 @@ public class TaskConnectPeersTest {
     public void testRunException2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp =
-                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
+                new TaskConnectPeers(p2pLOG, p2pMgr, atb, nodeMgr, 128, selector, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);

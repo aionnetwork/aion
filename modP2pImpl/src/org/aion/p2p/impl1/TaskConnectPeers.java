@@ -5,12 +5,11 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 import org.slf4j.Logger;
 
@@ -22,20 +21,18 @@ public class TaskConnectPeers implements Runnable {
     private final Logger p2pLOG;
     private final INodeMgr nodeMgr;
     private final int maxActiveNodes;
-    private final IP2pMgr mgr;
+    private final P2pMgr mgr;
     private final AtomicBoolean start;
-    private final BlockingQueue<MsgOut> sendMsgQue;
     private final Selector selector;
     private final ReqHandshake1 cachedReqHS;
 
     public TaskConnectPeers(
             final Logger p2pLOG,
-            final IP2pMgr _mgr,
+            final P2pMgr _mgr,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
             final int _maxActiveNodes,
             final Selector _selector,
-            final BlockingQueue<MsgOut> _sendMsgQue,
             final ReqHandshake1 _cachedReqHS) {
 
         this.p2pLOG = p2pLOG;
@@ -44,7 +41,6 @@ public class TaskConnectPeers implements Runnable {
         this.maxActiveNodes = _maxActiveNodes;
         this.mgr = _mgr;
         this.selector = _selector;
-        this.sendMsgQue = _sendMsgQue;
         this.cachedReqHS = _cachedReqHS;
     }
 
@@ -115,12 +111,7 @@ public class TaskConnectPeers implements Runnable {
                                     node.getIpStr());
                         }
 
-                        boolean added = this.sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), this.cachedReqHS, Dest.OUTBOUND));
-                        if (!added) {
-                            p2pLOG.warn("Message not added to the send queue due to exceeded capacity: msg={} for node={}", cachedReqHS, node.getIdShort());
-                        }
-                        // node.peerMetric.decFailedCount();
-
+                        mgr.send(node.getIdHash(), node.getIdShort(), this.cachedReqHS, Dest.OUTBOUND);
                     } else {
                         if (p2pLOG.isDebugEnabled()) {
                             p2pLOG.debug(
