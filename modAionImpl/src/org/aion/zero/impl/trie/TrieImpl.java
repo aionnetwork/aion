@@ -518,18 +518,6 @@ public class TrieImpl implements Trie {
     //        }
     //    }
 
-    // Returns a copy of this trie
-    public TrieImpl copy() {
-        synchronized (cache) {
-            TrieImpl trie = new TrieImpl(this.cache.getDb(), this.root);
-            for (ByteArrayWrapper key : this.cache.getNodes().keySet()) {
-                Node node = this.cache.getNodes().get(key);
-                trie.cache.getNodes().put(key, node.copy());
-            }
-            return trie;
-        }
-    }
-
     /** ****************************** Utility functions * ***************************** */
     // Created an array of empty elements of required length
     private static Object[] emptyStringSlice(int l) {

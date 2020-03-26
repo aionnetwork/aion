@@ -850,18 +850,6 @@ public class TrieTest {
         assertArrayEquals(rootHash1, rootHash2);
     }
 
-    @Test
-    public void testTrieCopy() {
-        TrieImpl trie = new TrieImpl(null);
-        trie.update("doe", "reindeer");
-        TrieImpl trie2 = trie.copy();
-        assertNotEquals(
-                trie.hashCode(),
-                trie2.hashCode()); // avoid possibility that its just a reference copy
-        assertEquals(Hex.toHexString(trie.getRootHash()), Hex.toHexString(trie2.getRootHash()));
-        assertTrue(trie.equals(trie2));
-    }
-
     /** Trie updates taken from real blockchain use with sample accounts. */
     private Map<ByteArrayWrapper, byte[]> getSampleTrieUpdates() {
         Map<ByteArrayWrapper, byte[]> data = new HashMap<>();
