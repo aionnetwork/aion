@@ -1498,7 +1498,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> transactionSummaries = summary.getSummaries();
         List<AionTxReceipt> receipts = summary.getReceipts();
 
-        if (!isValidBlock(block, transactionSummaries, receipts, forkUtility.isNonceForkActive(block.getNumber()), LOG)) {
+        if (!isValidBlock(block, transactionSummaries, receipts, isException(block.getNumber()), LOG)) {
             track.rollback();
             return Pair.of(null, null);
         }
@@ -1545,6 +1545,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return Pair.of(summary, null);
+    }
+
+    /**
+     * Checks if the block is exempt from the transaction rejection check and requires a different logic for the energy used for rejected transactions.
+     *
+     * @param blockNumber the block being validated and checked for exception status
+     * @return {@code true} if the blocks is exempt from some validations, {@code false} otherwise
+     */
+    private boolean isException(long blockNumber) {
+        return (blockNumber == 4735401L || blockNumber == 4735403L || blockNumber == 4735405L) // list of exempt blocks on the main chain
+                && getBlockByNumber(0).getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"));
     }
 
     @Override
@@ -1842,7 +1853,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 forkUtility.isUnityForkActive(block.getNumber()));
 
                 // Check for rejected transaction already included in the chain.
-                if ((block.getNumber() == 4735401L || block.getNumber() == 4735403L || block.getNumber() == 4735405L) && getBlockByNumber(0).getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"))) {
+                if (isException(block.getNumber())) {
                     for (AionTxExecSummary summary : executionSummaries) {
                         if (summary.isRejected()) {
                             AionTxReceipt receipt = summary.getReceipt();

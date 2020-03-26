@@ -33,7 +33,6 @@ public class BlockDetailsValidatorTest {
 
     @Mock Block mockBlock;
     @Mock BlockHeader mockBlockHeader;
-    @Mock ForkUtility mockForkUtility;
     @Mock AionTxExecSummary mockTxExecSummary;
     @Mock AionTxReceipt mockTxReceipt;
     @Mock AionTransaction mockTransaction;
@@ -55,14 +54,13 @@ public class BlockDetailsValidatorTest {
         when(mockBlock.getReceiptsRoot()).thenReturn(ConstantUtil.EMPTY_TRIE_HASH);
         when(mockBlock.getLogBloom()).thenReturn(new byte[Bloom.SIZE]);
         when(mockBlockHeader.getEnergyConsumed()).thenReturn(0L);
-        when(mockForkUtility.isNonceForkActive(2L)).thenReturn(true);
 
         Truth.assertThat(
             isValidBlock(
                 mockBlock,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isTrue();
 
@@ -74,7 +72,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
 
@@ -87,7 +85,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
 
@@ -102,7 +100,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+               false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
     }
@@ -112,9 +110,8 @@ public class BlockDetailsValidatorTest {
         byte[] receiptTrieEncoded = new byte[32];
         Arrays.fill(receiptTrieEncoded, (byte) 1);
 
-        long hardFork = 2L;
-        // The block has rejected transaction before the nonce hard fork
-        when(mockBlock.getNumber()).thenReturn(hardFork - 1);
+        // The block initially has rejected transaction
+        when(mockBlock.getNumber()).thenReturn(1L);
         when(mockBlock.getHeader()).thenReturn(mockBlockHeader);
         when(mockBlock.getLogBloom()).thenReturn(new byte[Bloom.SIZE]);
         when(mockBlockHeader.getEnergyConsumed())
@@ -124,8 +121,6 @@ public class BlockDetailsValidatorTest {
         when(mockTxReceipt.getEnergyUsed()).thenReturn((long) Constants.NRG_TRANSACTION_DEFAULT);
         when(mockTxReceipt.getReceiptTrieEncoded()).thenReturn(receiptTrieEncoded);
         when(mockTxReceipt.getBloomFilter()).thenReturn(new Bloom());
-        when(mockForkUtility.isNonceForkActive(hardFork - 1)).thenReturn(false);
-        when(mockForkUtility.isNonceForkActive(hardFork)).thenReturn(true);
 
         List<AionTxExecSummary> summaryList = new ArrayList<>();
         summaryList.add(mockTxExecSummary);
@@ -140,18 +135,18 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 summaryList,
                 receiptList,
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                true,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isTrue();
 
         // The block has rejected transaction after nonce hard fork active
-        when(mockBlock.getNumber()).thenReturn(hardFork);
+        when(mockBlock.getNumber()).thenReturn(2L);
         Truth.assertThat(
             isValidBlock(
                 mockBlock,
                 summaryList,
                 receiptList,
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
     }
@@ -161,10 +156,8 @@ public class BlockDetailsValidatorTest {
         byte[] receiptTrieEncoded = new byte[32];
         Arrays.fill(receiptTrieEncoded, (byte) 1);
 
-        long hardFork = 2L;
-
         // The block has invalid total energy use in the block header
-        when(mockBlock.getNumber()).thenReturn(hardFork);
+        when(mockBlock.getNumber()).thenReturn(2L);
         when(mockBlock.getHeader()).thenReturn(mockBlockHeader);
         when(mockBlock.getLogBloom()).thenReturn(new byte[Bloom.SIZE]);
         when(mockBlockHeader.getEnergyConsumed())
@@ -176,7 +169,6 @@ public class BlockDetailsValidatorTest {
                 .thenReturn((long) Constants.NRG_TRANSACTION_DEFAULT);
         when(mockTxReceipt.getReceiptTrieEncoded()).thenReturn(receiptTrieEncoded);
         when(mockTxReceipt.getBloomFilter()).thenReturn(new Bloom());
-        when(mockForkUtility.isNonceForkActive(hardFork)).thenReturn(true);
 
         List<AionTxExecSummary> summaryList = new ArrayList<>();
         summaryList.add(mockTxExecSummary);
@@ -191,7 +183,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 summaryList,
                 receiptList,
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
     }
@@ -201,10 +193,8 @@ public class BlockDetailsValidatorTest {
         byte[] receiptTrieEncoded = new byte[32];
         Arrays.fill(receiptTrieEncoded, (byte) 1);
 
-        long hardFork = 2L;
-
         // The block has invalid receipt root in the block header
-        when(mockBlock.getNumber()).thenReturn(hardFork);
+        when(mockBlock.getNumber()).thenReturn(2L);
         when(mockBlock.getHeader()).thenReturn(mockBlockHeader);
         when(mockBlock.getLogBloom()).thenReturn(new byte[Bloom.SIZE]);
         when(mockBlockHeader.getEnergyConsumed())
@@ -217,7 +207,6 @@ public class BlockDetailsValidatorTest {
         when(mockTxReceipt.getReceiptTrieEncoded()).thenReturn(receiptTrieEncoded);
         when(mockTxReceipt.getBloomFilter()).thenReturn(new Bloom());
         when(mockTxReceipt.getTransaction()).thenReturn(mockTransaction);
-        when(mockForkUtility.isNonceForkActive(hardFork)).thenReturn(true);
 
         List<AionTxExecSummary> summaryList = new ArrayList<>();
         summaryList.add(mockTxExecSummary);
@@ -231,7 +220,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 summaryList,
                 receiptList,
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
     }
@@ -244,10 +233,8 @@ public class BlockDetailsValidatorTest {
         byte[] txBloom = new byte[Bloom.SIZE];
         Arrays.fill(txBloom, (byte) 1);
 
-        long hardFork = 2L;
-
         // The block has invalid receipt root in the block header
-        when(mockBlock.getNumber()).thenReturn(hardFork);
+        when(mockBlock.getNumber()).thenReturn(2L);
         when(mockBlock.getHeader()).thenReturn(mockBlockHeader);
         when(mockBlock.getLogBloom()).thenReturn(new byte[Bloom.SIZE]);
         when(mockBlockHeader.getEnergyConsumed())
@@ -260,7 +247,6 @@ public class BlockDetailsValidatorTest {
         when(mockTxReceipt.getReceiptTrieEncoded()).thenReturn(receiptTrieEncoded);
         when(mockTxReceipt.getBloomFilter()).thenReturn(new Bloom(txBloom));
         when(mockTxReceipt.getTransaction()).thenReturn(mockTransaction);
-        when(mockForkUtility.isNonceForkActive(hardFork)).thenReturn(true);
 
         List<AionTxExecSummary> summaryList = new ArrayList<>();
         summaryList.add(mockTxExecSummary);
@@ -275,7 +261,7 @@ public class BlockDetailsValidatorTest {
                 mockBlock,
                 summaryList,
                 receiptList,
-                mockForkUtility.isNonceForkActive(mockBlock.getNumber()),
+                false,
                 AionLoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)))
             .isFalse();
     }

@@ -38,22 +38,18 @@ public class BlockDetailsValidator {
         }
     }
 
-    private static boolean hasRejectedTransaction(boolean nonceForkActive, long blockNumber, List<AionTxExecSummary> summaries, Logger log) {
+    private static boolean hasRejectedTransaction(long blockNumber, List<AionTxExecSummary> summaries, Logger log) {
 
         boolean hasRejectedTransaction = false;
-        if (nonceForkActive) {
-            for (AionTxExecSummary summary : summaries) {
-                if (summary.isRejected()) {
-                    log.warn(
+        for (AionTxExecSummary summary : summaries) {
+            if (summary.isRejected()) {
+                log.warn(
                         "Invalid block#{}: contained reject transaction: Tx[{}] Receipt[{}]",
                         blockNumber,
                         summary.getTransaction(),
                         summary.getReceipt());
-                    hasRejectedTransaction = true;
-                }
+                hasRejectedTransaction = true;
             }
-        } else {
-            log.debug("The nonce fork is not active, block#{}", blockNumber);
         }
 
         return hasRejectedTransaction;
@@ -97,17 +93,17 @@ public class BlockDetailsValidator {
      * @param block given block to validate it.
      * @param summaries the summaries of the executed transactions
      * @param receipts the receipts of the executed transactions
-     * @param nonceForkActive the status of the nonce fork
+     * @param skipRejectionTest boolean flag applied to main chain blocks that have already been accepted with rejected transactions
      * @param log the logger instance for printing log
      * @return the boolean value represent the validate result
      */
-    public static boolean isValidBlock(Block block, List<AionTxExecSummary> summaries, List<AionTxReceipt> receipts, boolean nonceForkActive, Logger log) {
+    public static boolean isValidBlock(Block block, List<AionTxExecSummary> summaries, List<AionTxReceipt> receipts, boolean skipRejectionTest, Logger log) {
         Objects.requireNonNull(block);
         Objects.requireNonNull(summaries);
         Objects.requireNonNull(receipts);
         Objects.requireNonNull(log);
 
-        return !hasRejectedTransaction(nonceForkActive, block.getNumber(), summaries, log)
+        return (skipRejectionTest ? true : !hasRejectedTransaction(block.getNumber(), summaries, log))
                 && isValidEnergyUsed(block.getHeader().getEnergyConsumed(), summaries, block.getNumber(), log)
                 && isReceiptRootMatched(block.getReceiptsRoot(), receipts, block.getNumber(), log)
                 && isBloomFilterMatched(block.getLogBloom(), receipts, block.getNumber(), log);
