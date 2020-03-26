@@ -219,6 +219,17 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     }
 
     /**
+     * Returns {@code true} only if the specified account has non-empty storage associated with it. Otherwise {@code false}.
+     *
+     * @param address The account address.
+     * @return whether the account has non-empty storage or not.
+     */
+    @Override
+    public boolean hasStorage(AionAddress address) {
+        return this.repository.hasStorage(address);
+    }
+
+    /**
      * Returns {@code true} only if the specified address has state associated with it.
      *
      * @param address The account address.
