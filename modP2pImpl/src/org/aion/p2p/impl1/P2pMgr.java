@@ -17,9 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Ctrl;
@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 
 /** @author Chris p2p://{uuid}@{ip}:{port} */
 public final class P2pMgr implements IP2pMgr {
-    private static final int PERIOD_SHOW_STATUS = 10000;
+    private static final int DELAY_SHOW_P2P_STATUS = 10; // in seconds
     private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int TIMEOUT_MSG_READ = 10000;
@@ -163,7 +163,7 @@ public final class P2pMgr implements IP2pMgr {
         try {
             selector = Selector.open();
 
-            scheduledWorkers = new ScheduledThreadPoolExecutor(2);
+            scheduledWorkers = Executors.newScheduledThreadPool(3);
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
@@ -229,9 +229,13 @@ public final class P2pMgr implements IP2pMgr {
             }
 
             if (p2pLOG.isInfoEnabled()) {
-                Thread threadStatus = new Thread(getStatusInstance(), "p2p-ts");
-                threadStatus.setPriority(Thread.NORM_PRIORITY);
-                threadStatus.start();
+                scheduledWorkers.scheduleWithFixedDelay(
+                        () -> {
+                            Thread.currentThread().setName("p2p-status");
+                            p2pLOG.info(nodeMgr.dumpNodeInfo(selfShortId, p2pLOG.isDebugEnabled()));
+                            p2pLOG.debug("receive queue[{}] send queue[{}]", receiveMsgQue.size(), sendMsgQue.size());
+                        },
+                        DELAY_SHOW_P2P_STATUS, DELAY_SHOW_P2P_STATUS, TimeUnit.SECONDS);
             }
 
             if (!syncSeedsOnly) {
@@ -476,10 +480,6 @@ public final class P2pMgr implements IP2pMgr {
 
     private TaskReceive getReceiveInstance() {
         return new TaskReceive(p2pLOG, surveyLog, start, receiveMsgQue, handlers);
-    }
-
-    private TaskStatus getStatusInstance() {
-        return new TaskStatus(p2pLOG, surveyLog, start, nodeMgr, selfShortId, sendMsgQue, receiveMsgQue);
     }
 
     private TaskClear getClearInstance() {
