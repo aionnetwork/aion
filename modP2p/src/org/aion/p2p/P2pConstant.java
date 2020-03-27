@@ -14,8 +14,5 @@ public class P2pConstant {
             READ_MAX_RATE = 1,
 
             // max p2p in package capped for tx broadcast.
-            READ_MAX_RATE_TXBC = 20,
-
-            // write queue timeout
-            WRITE_MSG_TIMEOUT = 5000;
+            READ_MAX_RATE_TXBC = 20;
 }
