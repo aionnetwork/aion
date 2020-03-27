@@ -37,14 +37,6 @@ import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
-import org.aion.p2p.impl1.tasks.MsgIn;
-import org.aion.p2p.impl1.tasks.MsgOut;
-import org.aion.p2p.impl1.tasks.TaskClear;
-import org.aion.p2p.impl1.tasks.TaskConnectPeers;
-import org.aion.p2p.impl1.tasks.TaskInbound;
-import org.aion.p2p.impl1.tasks.TaskReceive;
-import org.aion.p2p.impl1.tasks.TaskSend;
-import org.aion.p2p.impl1.tasks.TaskStatus;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 

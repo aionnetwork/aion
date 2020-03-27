@@ -1,4 +1,4 @@
-package org.aion.p2p.impl1.tasks;
+package org.aion.p2p.impl1;
 
 /** An incoming message. */
 public class MsgIn {

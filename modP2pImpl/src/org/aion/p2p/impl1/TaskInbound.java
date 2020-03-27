@@ -1,4 +1,4 @@
-package org.aion.p2p.impl1.tasks;
+package org.aion.p2p.impl1;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,7 +29,6 @@ import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
 import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
-import org.aion.p2p.impl1.P2pException;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 import org.slf4j.Logger;
 

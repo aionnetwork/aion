@@ -1,4 +1,4 @@
-package org.aion.p2p.impl1.tasks;
+package org.aion.p2p.impl1;
 
 import static org.aion.p2p.Header.LEN;
 import static org.junit.Assert.assertArrayEquals;
@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.UUID;
 import org.aion.p2p.Header;
-import org.aion.p2p.impl1.tasks.ChannelBuffer.RouteStatus;
+import org.aion.p2p.impl1.ChannelBuffer.RouteStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
