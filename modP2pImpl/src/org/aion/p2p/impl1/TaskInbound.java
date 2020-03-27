@@ -290,7 +290,7 @@ public class TaskInbound implements Runnable {
     private int readMsg(SelectionKey _sk, ByteBuffer _readBuf, int _cnt) throws IOException {
         ChannelBuffer cb = (ChannelBuffer) _sk.attachment();
         if (cb == null) {
-            throw new P2pException("attachment is null");
+            throw new IOException("attachment is null");
         }
 
         int readCnt;
