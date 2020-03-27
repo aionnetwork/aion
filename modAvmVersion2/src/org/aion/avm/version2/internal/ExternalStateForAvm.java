@@ -67,6 +67,17 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
         this.repositoryCache.saveVmType(address, InternalVmType.AVM);
     }
 
+    /**
+     * Returns {@code true} only if the specified account has non-empty storage associated with it. Otherwise {@code false}.
+     *
+     * @param address The account address.
+     * @return whether the account has non-empty storage or not.
+     */
+    @Override
+    public boolean hasStorage(AionAddress address) {
+        return this.repositoryCache.hasStorage(address);
+    }
+
     @Override
     public boolean hasAccountState(AionAddress address) {
         return this.repositoryCache.hasAccountState(address);
