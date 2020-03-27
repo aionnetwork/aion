@@ -46,6 +46,8 @@ public final class P2pMgr implements IP2pMgr {
     private static final int DELAY_CLEAR_PEERS = 10; // in seconds
     private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
+    private static final int DELAY_CONNECT_OUTBOUND = 1; // in seconds
+    private static final int TIMEOUT_OUTBOUND_CONNECT = 10000; // in milliseconds
     private static final int TIMEOUT_MSG_READ = 10000;
 
     private static final int OFFER_TIMEOUT = 100; // in milliseconds
@@ -164,7 +166,7 @@ public final class P2pMgr implements IP2pMgr {
         try {
             selector = Selector.open();
 
-            scheduledWorkers = Executors.newScheduledThreadPool(4);
+            scheduledWorkers = Executors.newScheduledThreadPool(5);
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
@@ -254,9 +256,7 @@ public final class P2pMgr implements IP2pMgr {
                     },
                     DELAY_CLEAR_PEERS, DELAY_CLEAR_PEERS, TimeUnit.SECONDS);
 
-            Thread thrdConn = new Thread(getConnectPeersInstance(), "p2p-conn");
-            thrdConn.setPriority(Thread.NORM_PRIORITY);
-            thrdConn.start();
+            scheduledWorkers.scheduleWithFixedDelay(() -> connectPeers(), DELAY_CONNECT_OUTBOUND, DELAY_CONNECT_OUTBOUND, TimeUnit.SECONDS);
         } catch (SocketException e) {
             p2pLOG.error("tcp-server-socket-exception.", e);
         } catch (IOException e) {
@@ -294,7 +294,7 @@ public final class P2pMgr implements IP2pMgr {
         send(nodeId, displayId, message, Dest.ACTIVE);
     }
 
-    void send(int nodeId, String displayId, final Msg message, Dest peerList) {
+    private void send(int nodeId, String displayId, final Msg message, Dest peerList) {
         try {
             boolean added = sendMsgQue.offer(new MsgOut(nodeId, displayId, message, peerList), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
             if (!added) {
@@ -490,15 +490,74 @@ public final class P2pMgr implements IP2pMgr {
         return new TaskReceive(p2pLOG, surveyLog, start, receiveMsgQue, handlers);
     }
 
-    private TaskConnectPeers getConnectPeersInstance() {
-        return new TaskConnectPeers(
-                p2pLOG,
-                this,
-                this.start,
-                this.nodeMgr,
-                this.maxActiveNodes,
-                this.selector,
-                cachedReqHandshake1);
+    private void connectPeers() {
+        Thread.currentThread().setName("p2p-peer");
+
+        INode node;
+        try {
+            if (nodeMgr.activeNodesSize() >= maxActiveNodes) {
+                p2pLOG.warn("tcp-connect-peer pass max-active-nodes.");
+                return;
+            }
+
+            node = nodeMgr.tempNodesTake();
+            if (node == null) {
+                p2pLOG.debug("no temp node can take.");
+                return;
+            }
+
+            if (node.getIfFromBootList()) {
+                nodeMgr.addTempNode(node);
+            }
+        } catch (Exception e) {
+            p2pLOG.debug("tcp-Exception.", e);
+            return;
+        }
+        int nodeIdHash = node.getIdHash();
+        if (nodeMgr.notAtOutboundList(nodeIdHash) && nodeMgr.notActiveNode(nodeIdHash)) {
+            int _port = node.getPort();
+            SocketChannel channel = null;
+            try {
+                channel = SocketChannel.open();
+                channel.socket().connect(new InetSocketAddress(node.getIpStr(), _port), TIMEOUT_OUTBOUND_CONNECT);
+                configChannel(channel);
+
+                if (channel.isConnected()) {
+                    p2pLOG.debug("success-connect node-id={} ip={}", node.getIdShort(), node.getIpStr());
+
+                    channel.configureBlocking(false);
+                    SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
+                    ChannelBuffer rb = new ChannelBuffer(p2pLOG);
+                    rb.setDisplayId(node.getIdShort());
+                    rb.setNodeIdHash(nodeIdHash);
+                    sk.attach(rb);
+
+                    node.refreshTimestamp();
+                    node.setChannel(channel);
+                    nodeMgr.addOutboundNode(node);
+
+                    p2pLOG.debug("prepare-request-handshake -> id={} ip={}", node.getIdShort(), node.getIpStr());
+
+                    send(node.getIdHash(), node.getIdShort(), cachedReqHandshake1, Dest.OUTBOUND);
+                } else {
+                    p2pLOG.debug("fail-connect node-id -> id={} ip={}", node.getIdShort(), node.getIpStr());
+
+                    channel.close();
+                    // node.peerMetric.incFailedCount();
+                }
+            } catch (Exception e) {
+                p2pLOG.debug("connect-outbound exception -> id=" + node.getIdShort() + " ip=" + node.getIpStr(), e);
+                p2pLOG.trace("close channel {}", node.toString());
+
+                if (channel != null) {
+                    try {
+                        channel.close();
+                    } catch (IOException e1) {
+                        p2pLOG.debug("TaskConnectPeers close exception.", e1);
+                    }
+                }
+            }
+        }
     }
 
     private ReqHandshake1 getReqHandshake1Instance(List<Short> versions) {
