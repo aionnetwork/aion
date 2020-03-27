@@ -3,11 +3,12 @@ package org.aion.zero.impl.trie;
 import static org.aion.crypto.HashUtil.h256;
 
 import org.aion.db.impl.ByteArrayKeyValueStore;
+import org.aion.util.bytes.ByteUtil;
 
 public class SecureTrie extends TrieImpl implements Trie {
 
     public SecureTrie(ByteArrayKeyValueStore db) {
-        this(db, "");
+        this(db, ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     public SecureTrie(ByteArrayKeyValueStore db, Object root) {

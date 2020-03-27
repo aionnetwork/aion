@@ -30,6 +30,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.scan.CollectFullSetOfNodes;
@@ -77,7 +78,7 @@ public class TrieImpl implements Trie {
     private ReentrantLock lock;
 
     public TrieImpl(ByteArrayKeyValueStore db) {
-        this(db, "");
+        this(db, ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     public TrieImpl(ByteArrayKeyValueStore db, Object root) {
@@ -236,8 +237,7 @@ public class TrieImpl implements Trie {
 
     private byte[] getRootHashInner() {
         if (root == null
-            || (root instanceof byte[] && ((byte[]) root).length == 0)
-            || (root instanceof String && "".equals(root))) {
+            || (root instanceof byte[] && ((byte[]) root).length == 0)) {
             return ConstantUtil.EMPTY_TRIE_HASH;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();
@@ -265,7 +265,7 @@ public class TrieImpl implements Trie {
                     node = v;
                     keypos += k.length;
                 } else {
-                    return "";
+                    return ByteUtil.EMPTY_BYTE_ARRAY;
                 }
             } else {
                 node = currentNode.get(key[keypos]).asObj();
@@ -320,9 +320,9 @@ public class TrieImpl implements Trie {
 
                 // Expand the 2 length slice to a 17 length slice
                 // Create two nodes to putToCache into the new 17 length node
-                Object oldNode = this.insert("", copyOfRange(k, matchingLength + 1, k.length), v);
+                Object oldNode = this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(k, matchingLength + 1, k.length), v);
                 Object newNode =
-                        this.insert("", copyOfRange(key, matchingLength + 1, key.length), value);
+                        this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
                 Object[] scaledSlice = emptyStringSlice(17);
@@ -371,7 +371,7 @@ public class TrieImpl implements Trie {
     private Object delete(Object node, byte[] key) {
 
         if (key.length == 0 || isEmptyNode(node)) {
-            return "";
+            return ByteUtil.EMPTY_BYTE_ARRAY;
         }
 
         // New node
@@ -388,7 +388,7 @@ public class TrieImpl implements Trie {
 
             // Matching key pair (ie. there's already an object with this key)
             if (Arrays.equals(k, key)) {
-                return "";
+                return ByteUtil.EMPTY_BYTE_ARRAY;
             } else if (Arrays.equals(copyOfRange(key, 0, k.length), k)) {
                 Object hash = this.delete(v, copyOfRange(key, k.length, key.length));
                 Value child = this.getNode(hash);
@@ -414,7 +414,7 @@ public class TrieImpl implements Trie {
 
             byte amount = -1;
             for (byte i = 0; i < LIST_SIZE; i++) {
-                if (itemList[i] != "") {
+                if (itemList[i] != ByteUtil.EMPTY_BYTE_ARRAY) {
                     if (amount == -1) {
                         amount = i;
                     } else {
@@ -545,7 +545,7 @@ public class TrieImpl implements Trie {
     private static Object[] emptyStringSlice(int l) {
         Object[] slice = new Object[l];
         for (int i = 0; i < l; i++) {
-            slice[i] = "";
+            slice[i] = ByteUtil.EMPTY_BYTE_ARRAY;
         }
         return slice;
     }
