@@ -325,7 +325,7 @@ public class TrieImpl implements Trie {
                         this.insert("", copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
-                Object[] scaledSlice = emptyStringSlice(17);
+                Object[] scaledSlice = emptyStringSlice(LIST_SIZE);
 
                 // Set the copied and new node
                 scaledSlice[k[matchingLength]] = oldNode;
@@ -471,7 +471,7 @@ public class TrieImpl implements Trie {
         byte[] keyBytes = val.asBytes();
         if (keyBytes.length == 0) {
             return val;
-        } else if (keyBytes.length < 32) {
+        } else if (keyBytes.length < ByteUtil.EMPTY_WORD.length) {
             return new Value(keyBytes);
         }
         return this.cache.get(keyBytes);
@@ -480,7 +480,7 @@ public class TrieImpl implements Trie {
     private Object putToCache(Object node) {
         Value value = new Value(node);
         byte[] enc = value.encode();
-        if (enc.length >= 32) {
+        if (enc.length >= ByteUtil.EMPTY_WORD.length) {
             byte[] sha = HashUtil.h256(value.encode());
             this.cache.put(ByteArrayWrapper.wrap(sha), value);
             return sha;
@@ -670,10 +670,10 @@ public class TrieImpl implements Trie {
             for (int i = 0; i < valsList.size(); ++i) {
 
                 byte[] val = valsList.get(i).getRLPData();
-                byte[] key = new byte[32];
+                byte[] key = new byte[ByteUtil.EMPTY_WORD.length];
 
                 Value value = Value.fromRlpEncoded(val);
-                System.arraycopy(keysElement.getRLPData(), i * 32, key, 0, 32);
+                System.arraycopy(keysElement.getRLPData(), i * ByteUtil.EMPTY_WORD.length, key, 0, ByteUtil.EMPTY_WORD.length);
                 cache.getNodes().put(wrap(key), new Node(value));
             }
 
@@ -953,7 +953,7 @@ public class TrieImpl implements Trie {
     private void appendHashes(byte[] bytes, ArrayList<byte[]> hashes) {
         Value node;
 
-        if (bytes.length == 32) {
+        if (bytes.length == ByteUtil.EMPTY_WORD.length) {
             // it's considered a hashCode/key according to Value.isHashCode()
             node = new Value(bytes);
         } else {
