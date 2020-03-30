@@ -574,8 +574,7 @@ public final class P2pMgr implements IP2pMgr {
                 this.start,
                 this.nodeMgr,
                 this.handlers,
-                cachedResHandshake1,
-                this.receiveMsgQue);
+                cachedResHandshake1);
     }
 
     private TaskReceive getReceiveInstance() {
@@ -683,6 +682,26 @@ public final class P2pMgr implements IP2pMgr {
             sk.attach(new ChannelBuffer(p2pLOG));
             this.nodeMgr.addInboundNode(node);
             p2pLOG.debug("new-connection {}:{}", ip, port);
+        }
+    }
+
+    private static final int OFFER_TIMEOUT = 100; // in milliseconds
+
+    void handleKernelMessage(int nodeIdHash, int route, final byte[] msgBytes) {
+        INode node = nodeMgr.getActiveNode(nodeIdHash);
+        if (node != null) {
+            String nodeDisplayId = node.getIdShort();
+            node.refreshTimestamp();
+            try {
+                boolean added = receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, route, msgBytes), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
+                if (!added) {
+                    p2pLOG.warn("Message not added to the receive queue due to exceeded capacity: msg={} from node={}", msgBytes, node.getIdShort());
+                }
+            } catch (InterruptedException e) {
+                p2pLOG.error("Interrupted while attempting to add the received message to the processing queue:", e);
+            }
+        } else {
+            p2pLOG.debug("handleKernelMsg can't find hash{}", nodeIdHash);
         }
     }
 }
