@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -39,13 +37,10 @@ public class TaskInbound implements Runnable {
     private final Map<Integer, List<Handler>> handlers;
     private final AtomicBoolean start;
     private final ResHandshake1 cachedResHandshake1;
-    private final BlockingQueue<MsgIn> receiveMsgQue;
 
     // used to impose a low limit to this type of messages
     private static final int ACT_BROADCAST_BLOCK = 7;
     private static final int CTRL_SYNC = 1;
-
-    private static final int OFFER_TIMEOUT = 100; // in milliseconds
 
     // used when survey logging
     private static final long MIN_DURATION = 60_000_000_000L; // 60 seconds
@@ -59,8 +54,7 @@ public class TaskInbound implements Runnable {
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
             final Map<Integer, List<Handler>> _handlers,
-            final ResHandshake1 _cachedResHandshake1,
-            final BlockingQueue<MsgIn> _receiveMsgQue) {
+            final ResHandshake1 _cachedResHandshake1) {
 
         this.p2pLOG = p2pLOG;
         this.surveyLog = surveyLog;
@@ -70,7 +64,6 @@ public class TaskInbound implements Runnable {
         this.nodeMgr = _nodeMgr;
         this.handlers = _handlers;
         this.cachedResHandshake1 = _cachedResHandshake1;
-        this.receiveMsgQue = _receiveMsgQue;
     }
 
     @Override
@@ -328,7 +321,7 @@ public class TaskInbound implements Runnable {
                             return;
                         }
 
-                        handleKernelMsg(_cb.getNodeIdHash(), h.getRoute(), bodyBytes);
+                        mgr.handleKernelMessage(_cb.getNodeIdHash(), h.getRoute(), bodyBytes);
                         break;
                     default:
                         if (p2pLOG.isDebugEnabled()) {
@@ -507,46 +500,4 @@ public class TaskInbound implements Runnable {
             nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
         }
     }
-
-    /**
-     * @param _nodeIdHash int
-     * @param _route int
-     * @param _msgBytes byte[]
-     */
-    private void handleKernelMsg(int _nodeIdHash, int _route, final byte[] _msgBytes) {
-        INode node = nodeMgr.getActiveNode(_nodeIdHash);
-        if (node != null) {
-            int nodeIdHash = node.getIdHash();
-            String nodeDisplayId = node.getIdShort();
-            node.refreshTimestamp();
-            try {
-                boolean added = receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, _route, _msgBytes), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
-                if (!added) {
-                    p2pLOG.warn("Message not added to the receive queue due to exceeded capacity: msg={} from node={}", _msgBytes, node.getIdShort());
-                }
-            } catch (InterruptedException e) {
-                p2pLOG.error("Interrupted while attempting to add the received message to the processing queue:", e);
-            }
-        } else {
-            p2pLOG.debug("handleKernelMsg can't find hash{}", _nodeIdHash);
-        }
-    }
-
-    //    private String getReadOverflowMsg(int prevCnt, int cnt) {
-    //        return "IO readBuffer overflow!  suppose readBuffer:" + prevCnt + " real left:" + cnt;
-    //    }
-    //
-    //    private String getRouteMsg(short ver, byte ctrl, byte act, int count, String idStr) {
-    //        return "<p2p over-called-route=" + ver + "-" + ctrl + "-" + act + " calls=" + count
-    //            + " node=" + idStr + ">";
-    //    }
-    //
-    //    private String getUnregRouteMsg(short ver, byte ctrl, byte act, String idStr) {
-    //        return "<p2p unregistered-route=" + ver + "-" + ctrl + "-" + act + " node=" + idStr +
-    // ">";
-    //    }
-    //
-    //    private String getInvalRouteMsg(short ver, byte ctrl, byte act, String idStr) {
-    //        return "<p2p invalid-route=" + ver + "-" + ctrl + "-" + act + " node=" + idStr + ">";
-    //    }
 }
