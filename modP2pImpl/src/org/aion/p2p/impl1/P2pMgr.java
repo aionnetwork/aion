@@ -651,4 +651,38 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
     }
+
+    void acceptConnection(ServerSocketChannel _channel) throws IOException {
+        if (this.nodeMgr.activeNodesSize() >= getMaxActiveNodes()) {
+            return;
+        }
+        SocketChannel channel = _channel.accept();
+        if (channel != null) {
+            configChannel(channel);
+
+            String ip = channel.socket().getInetAddress().getHostAddress();
+
+            if (isSyncSeedsOnly() && this.nodeMgr.isSeedIp(ip)) {
+                channel.close();
+                return;
+            }
+
+            int port = channel.socket().getPort();
+            INode node;
+            try {
+                node = this.nodeMgr.allocNode(ip, port);
+            } catch (IllegalArgumentException e) {
+                p2pLOG.error("illegal ip / port : {} {}", ip, port);
+                channel.close();
+                return;
+            }
+            p2pLOG.trace("new-node : {}", node.toString());
+
+            node.setChannel(channel);
+            SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
+            sk.attach(new ChannelBuffer(p2pLOG));
+            this.nodeMgr.addInboundNode(node);
+            p2pLOG.debug("new-connection {}:{}", ip, port);
+        }
+    }
 }

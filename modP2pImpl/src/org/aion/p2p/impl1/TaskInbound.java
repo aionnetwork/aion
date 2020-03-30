@@ -20,7 +20,6 @@ import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
@@ -29,13 +28,12 @@ import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
 import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
-import org.aion.p2p.impl1.P2pMgr.Dest;
 import org.slf4j.Logger;
 
 public class TaskInbound implements Runnable {
 
     private final Logger p2pLOG, surveyLog;
-    private final IP2pMgr mgr;
+    private final P2pMgr mgr;
     private final Selector selector;
     private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
@@ -56,7 +54,7 @@ public class TaskInbound implements Runnable {
     public TaskInbound(
             final Logger p2pLOG,
             final Logger surveyLog,
-            final IP2pMgr _mgr,
+            final P2pMgr _mgr,
             final Selector _selector,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
@@ -117,7 +115,7 @@ public class TaskInbound implements Runnable {
                         }
 
                         if (key.isAcceptable()) {
-                            accept((ServerSocketChannel) key.channel());
+                            mgr.acceptConnection((ServerSocketChannel) key.channel());
                         }
 
                         if (key.isReadable()) {
@@ -156,46 +154,6 @@ public class TaskInbound implements Runnable {
         surveyLog.debug("TaskInbound: process incoming msg, duration = {} ns.", processTime);
 
         p2pLOG.info("p2p-pi shutdown");
-    }
-
-    private void accept(ServerSocketChannel _channel) throws Exception {
-        if (this.nodeMgr.activeNodesSize() >= this.mgr.getMaxActiveNodes()) {
-            return;
-        }
-        SocketChannel channel = _channel.accept();
-        if (channel != null) {
-            this.mgr.configChannel(channel);
-
-            String ip = channel.socket().getInetAddress().getHostAddress();
-
-            if (this.mgr.isSyncSeedsOnly() && this.nodeMgr.isSeedIp(ip)) {
-                channel.close();
-                return;
-            }
-
-            int port = channel.socket().getPort();
-            INode node;
-            try {
-                node = this.nodeMgr.allocNode(ip, port);
-            } catch (IllegalArgumentException e) {
-                p2pLOG.error("illegal ip / port : {} {}", ip, port);
-                channel.close();
-                return;
-            }
-
-            if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("new-node : {}", node.toString());
-            }
-
-            node.setChannel(channel);
-            SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
-            sk.attach(new ChannelBuffer(p2pLOG));
-            this.nodeMgr.addInboundNode(node);
-
-            if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug("new-connection {}:{}", ip, port);
-            }
-        }
     }
 
     private int readHeader(final ChannelBuffer _cb, final ByteBuffer _readBuf, int cnt) {
