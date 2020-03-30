@@ -704,4 +704,13 @@ public final class P2pMgr implements IP2pMgr {
             p2pLOG.debug("handleKernelMsg can't find hash{}", nodeIdHash);
         }
     }
+
+    void handleHandshakeResponse(int nodeIdHash, String binaryVersion) {
+        INode node = nodeMgr.getOutboundNode(nodeIdHash);
+        if (node != null && node.getPeerMetric().notBan()) {
+            node.refreshTimestamp();
+            node.setBinaryVersion(binaryVersion);
+            nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
+        }
+    }
 }

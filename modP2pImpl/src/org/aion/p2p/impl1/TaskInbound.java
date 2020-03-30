@@ -391,8 +391,7 @@ public class TaskInbound implements Runnable {
                     if (_msgBytes.length > ResHandshake.LEN) {
                         ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes, p2pLOG);
                         if (resHandshake1 != null && resHandshake1.getSuccess()) {
-                            handleResHandshake(
-                                    rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
+                            mgr.handleHandshakeResponse(rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
                         }
                     }
                 }
@@ -489,15 +488,6 @@ public class TaskInbound implements Runnable {
                     p2pLOG.debug("handshake-rule-fail");
                 }
             }
-        }
-    }
-
-    private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        INode node = nodeMgr.getOutboundNode(_nodeIdHash);
-        if (node != null && node.getPeerMetric().notBan()) {
-            node.refreshTimestamp();
-            node.setBinaryVersion(_binaryVersion);
-            nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
         }
     }
 }
