@@ -7,8 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +34,6 @@ public class TaskInbound implements Runnable {
     private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
     private final AtomicBoolean start;
-    private final ResHandshake1 cachedResHandshake1;
 
     // used to impose a low limit to this type of messages
     private static final int ACT_BROADCAST_BLOCK = 7;
@@ -53,8 +50,7 @@ public class TaskInbound implements Runnable {
             final Selector _selector,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
-            final Map<Integer, List<Handler>> _handlers,
-            final ResHandshake1 _cachedResHandshake1) {
+            final Map<Integer, List<Handler>> _handlers) {
 
         this.p2pLOG = p2pLOG;
         this.surveyLog = surveyLog;
@@ -63,7 +59,6 @@ public class TaskInbound implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.handlers = _handlers;
-        this.cachedResHandshake1 = _cachedResHandshake1;
     }
 
     @Override
@@ -375,7 +370,7 @@ public class TaskInbound implements Runnable {
                 if (_msgBytes.length > ReqHandshake.LEN) {
                     ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(_msgBytes, p2pLOG);
                     if (reqHandshake1 != null) {
-                        handleReqHandshake(
+                        mgr.handleHandshakeRequest(
                                 rb,
                                 _sk.channel().hashCode(),
                                 reqHandshake1.getNodeId(),
@@ -435,59 +430,6 @@ public class TaskInbound implements Runnable {
                     p2pLOG.debug("unknown-route act={}", _act);
                 }
                 break;
-        }
-    }
-
-    /**
-     * @param _buffer ChannelBuffer
-     * @param _channelHash int
-     * @param _nodeId byte[]
-     * @param _netId int
-     * @param _port int
-     * @param _revision byte[]
-     *     <p>Construct node info after handshake request success
-     */
-    private void handleReqHandshake(
-            final ChannelBuffer _buffer,
-            int _channelHash,
-            final byte[] _nodeId,
-            int _netId,
-            int _port,
-            final byte[] _revision) {
-        INode node = nodeMgr.getInboundNode(_channelHash);
-        if (node != null && node.getPeerMetric().notBan()) {
-            if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug(
-                        "netId={}, nodeId={} port={} rev={}",
-                        _netId,
-                        new String(_nodeId),
-                        _port,
-                        _revision);
-            }
-
-            if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("node {}", node.toString());
-            }
-            if (mgr.isCorrectNetwork(_netId)) {
-                _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));
-                _buffer.setDisplayId(new String(Arrays.copyOfRange(_nodeId, 0, 6)));
-                node.setId(_nodeId);
-                node.setPort(_port);
-
-                // handshake 1
-                if (_revision != null) {
-                    String binaryVersion;
-                    binaryVersion = new String(_revision, StandardCharsets.UTF_8);
-                    node.setBinaryVersion(binaryVersion);
-                    nodeMgr.movePeerToActive(_channelHash, "inbound");
-                    mgr.send(node.getIdHash(), node.getIdShort(), cachedResHandshake1);
-                }
-
-            } else {
-                if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("handshake-rule-fail");
-                }
-            }
         }
     }
 }

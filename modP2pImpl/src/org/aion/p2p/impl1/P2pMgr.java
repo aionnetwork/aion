@@ -10,6 +10,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -573,8 +574,7 @@ public final class P2pMgr implements IP2pMgr {
                 this.selector,
                 this.start,
                 this.nodeMgr,
-                this.handlers,
-                cachedResHandshake1);
+                this.handlers);
     }
 
     private TaskReceive getReceiveInstance() {
@@ -711,6 +711,36 @@ public final class P2pMgr implements IP2pMgr {
             node.refreshTimestamp();
             node.setBinaryVersion(binaryVersion);
             nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
+        }
+    }
+
+    /**
+     * Constructs node info after handshake request success.
+     */
+    void handleHandshakeRequest(final ChannelBuffer buffer, int channelHash, final byte[] nodeId, int netId, int port, final byte[] revision) {
+        INode node = nodeMgr.getInboundNode(channelHash);
+        if (node != null && node.getPeerMetric().notBan()) {
+            p2pLOG.debug("netId={}, nodeId={} port={} rev={}", netId, new String(nodeId), port, revision);
+
+            p2pLOG.trace("node {}", node.toString());
+            if (isCorrectNetwork(netId)) {
+                buffer.setNodeIdHash(Arrays.hashCode(nodeId));
+                buffer.setDisplayId(new String(Arrays.copyOfRange(nodeId, 0, 6)));
+                node.setId(nodeId);
+                node.setPort(port);
+
+                // handshake 1
+                if (revision != null) {
+                    String binaryVersion;
+                    binaryVersion = new String(revision, StandardCharsets.UTF_8);
+                    node.setBinaryVersion(binaryVersion);
+                    nodeMgr.movePeerToActive(channelHash, "inbound");
+                    send(node.getIdHash(), node.getIdShort(), cachedResHandshake1);
+                }
+
+            } else {
+                p2pLOG.debug("handshake-rule-fail");
+            }
         }
     }
 }
