@@ -88,7 +88,7 @@ public class TaskInbound implements Runnable {
                                 p2pLOG.error("inbound exception: attachment is null");
                                 continue;
                             }
-                            readBuffer(key, cb, readBuf);
+                            mgr.readBuffer(key, cb, readBuf);
                         }
                     } catch (Exception e) {
                         this.mgr.closeSocket(
@@ -118,68 +118,5 @@ public class TaskInbound implements Runnable {
         surveyLog.debug("TaskInbound: process incoming msg, duration = {} ns.", processTime);
 
         p2pLOG.info("p2p-pi shutdown");
-    }
-
-
-    private void readBuffer(final SelectionKey _sk, final ChannelBuffer _cb, final ByteBuffer _readBuf) throws IOException {
-
-        _readBuf.rewind();
-
-        SocketChannel sc = (SocketChannel) _sk.channel();
-
-        int r;
-        int cnt = 0;
-        do {
-            r = sc.read(_readBuf);
-            cnt += r;
-        } while (r > 0);
-
-        if (cnt < 1) {
-            return;
-        }
-
-        int remainBufAll = _cb.getBuffRemain() + cnt;
-        ByteBuffer bufferAll = calBuffer(_cb, _readBuf, cnt);
-
-        do {
-            r = mgr.readMsg(_sk, bufferAll, remainBufAll);
-            if (remainBufAll == r) {
-                break;
-            } else {
-                remainBufAll = r;
-            }
-        } while (r > 0);
-
-        _cb.setBuffRemain(r);
-
-        if (r != 0) {
-            // there are no perfect cycling buffer in jdk
-            // yet.
-            // simply just buff move for now.
-            // @TODO: looking for more efficient way.
-
-            int currPos = bufferAll.position();
-            _cb.setRemainBuffer(new byte[r]);
-            bufferAll.position(currPos - r);
-            bufferAll.get(_cb.getRemainBuffer());
-        }
-
-        _readBuf.rewind();
-    }
-
-    private static ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
-        ByteBuffer r;
-        if (_cb.getBuffRemain() != 0) {
-            byte[] alreadyRead = new byte[_cnt];
-            _readBuf.position(0);
-            _readBuf.get(alreadyRead);
-            r = ByteBuffer.allocate(_cb.getBuffRemain() + _cnt);
-            r.put(_cb.getRemainBuffer());
-            r.put(alreadyRead);
-        } else {
-            r = _readBuf;
-        }
-
-        return r;
     }
 }
