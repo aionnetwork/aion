@@ -9,7 +9,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.Header;
 import org.aion.p2p.P2pConstant;
 import org.slf4j.Logger;
 
@@ -121,50 +120,8 @@ public class TaskInbound implements Runnable {
         p2pLOG.info("p2p-pi shutdown");
     }
 
-    private int readHeader(final ChannelBuffer _cb, final ByteBuffer _readBuf, int cnt) {
 
-        if (cnt < Header.LEN) {
-            return cnt;
-        }
-
-        int origPos = _readBuf.position();
-
-        int startP = origPos - cnt;
-
-        _readBuf.position(startP);
-
-        _cb.readHead(_readBuf);
-
-        _readBuf.position(origPos);
-
-        return cnt - Header.LEN;
-    }
-
-    private int readBody(final ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
-
-        int bodyLen = _cb.getHeader().getLen();
-
-        // some msg have nobody.
-        if (bodyLen == 0) {
-            _cb.body = new byte[0];
-            return _cnt;
-        }
-
-        if (_cnt < bodyLen) {
-            return _cnt;
-        }
-
-        int origPos = _readBuf.position();
-        int startP = origPos - _cnt;
-        _readBuf.position(startP);
-        _cb.readBody(_readBuf);
-        _readBuf.position(origPos);
-        return _cnt - bodyLen;
-    }
-
-    private void readBuffer(
-            final SelectionKey _sk, final ChannelBuffer _cb, final ByteBuffer _readBuf)
-            throws Exception {
+    private void readBuffer(final SelectionKey _sk, final ChannelBuffer _cb, final ByteBuffer _readBuf) throws IOException {
 
         _readBuf.rewind();
 
@@ -185,7 +142,7 @@ public class TaskInbound implements Runnable {
         ByteBuffer bufferAll = calBuffer(_cb, _readBuf, cnt);
 
         do {
-            r = readMsg(_sk, bufferAll, remainBufAll);
+            r = mgr.readMsg(_sk, bufferAll, remainBufAll);
             if (remainBufAll == r) {
                 break;
             } else {
@@ -210,33 +167,7 @@ public class TaskInbound implements Runnable {
         _readBuf.rewind();
     }
 
-    private int readMsg(SelectionKey _sk, ByteBuffer _readBuf, int _cnt) throws IOException {
-        ChannelBuffer cb = (ChannelBuffer) _sk.attachment();
-        if (cb == null) {
-            throw new IOException("attachment is null");
-        }
-
-        int readCnt;
-        if (cb.isHeaderNotCompleted()) {
-            readCnt = readHeader(cb, _readBuf, _cnt);
-        } else {
-            readCnt = _cnt;
-        }
-
-        if (cb.isBodyNotCompleted()) {
-            readCnt = readBody(cb, _readBuf, readCnt);
-        }
-
-        if (cb.isBodyNotCompleted()) {
-            return readCnt;
-        }
-
-        mgr.handleMessage(_sk, cb);
-
-        return readCnt;
-    }
-
-    private ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
+    private static ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
         ByteBuffer r;
         if (_cb.getBuffRemain() != 0) {
             byte[] alreadyRead = new byte[_cnt];
