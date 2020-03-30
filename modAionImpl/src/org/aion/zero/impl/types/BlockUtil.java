@@ -30,6 +30,7 @@ import org.slf4j.Logger;
  */
 public final class BlockUtil {
     private static final Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+    private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private BlockUtil() {
         throw new IllegalStateException("This utility class is not meant to be instantiated.");
@@ -94,13 +95,13 @@ public final class BlockUtil {
             List<AionTransaction> txs = parseTransactions(transactionsRLP);
             if (type[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                 A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), genLog)) {
+                if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), syncLog)) {
                     return null;
                 }
                 return new AionBlock(miningHeader, txs);
             } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), genLog)) {
+                if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), syncLog)) {
                     return null;
                 }
                 return new StakingBlock(stakingHeader, txs);
@@ -108,7 +109,7 @@ public final class BlockUtil {
                 return null;
             }
         } catch (Exception e) {
-            genLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
+            syncLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
             return null;
         }
     }
@@ -132,7 +133,7 @@ public final class BlockUtil {
             RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
             RLPList transactions = (RLPList) items.get(0);
             List<AionTransaction> txs = parseTransactions(transactions);
-            if (!BlockDetailsValidator.isValidTxTrieRoot(header.getTxTrieRoot(), txs, header.getNumber(), genLog)) {
+            if (!BlockDetailsValidator.isValidTxTrieRoot(header.getTxTrieRoot(), txs, header.getNumber(), syncLog)) {
                 return null;
             }
             if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
@@ -143,7 +144,7 @@ public final class BlockUtil {
                 return null;
             }
         } catch (Exception e) {
-            genLog.warn("Unable to decode block with header " + header, e);
+            syncLog.warn("Unable to decode block with header " + header, e);
             return null;
         }
     }
@@ -174,7 +175,7 @@ public final class BlockUtil {
                 return null;
             }
         } catch (Exception e) {
-            genLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
+            syncLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
             return null;
         }
     }

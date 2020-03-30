@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.BlockUtil;
@@ -124,11 +125,19 @@ public class BlockDetailsValidator {
 
         byte[] calculatedTxTrie =  BlockUtil.calcTxTrieRoot(transactionList);
         if (!Arrays.equals(headerTxTrieRoot, calculatedTxTrie)) {
-            log.warn(
-                "Invalid block#{}: calculated tx trie root[{}] doesn't match with the header tx trie root[{}]",
-                blockNumber,
-                ByteUtil.toHexString(calculatedTxTrie),
-                ByteUtil.toHexString(headerTxTrieRoot));
+            if (log.getName().equals(LogEnum.SYNC.name())) {
+                log.debug(
+                    "Invalid block#{}: calculated tx trie root[{}] doesn't match with the header tx trie root[{}]",
+                    blockNumber,
+                    ByteUtil.toHexString(calculatedTxTrie),
+                    ByteUtil.toHexString(headerTxTrieRoot));
+            } else {
+                log.warn(
+                    "Invalid block#{}: calculated tx trie root[{}] doesn't match with the header tx trie root[{}]",
+                    blockNumber,
+                    ByteUtil.toHexString(calculatedTxTrie),
+                    ByteUtil.toHexString(headerTxTrieRoot));
+            }
             return false;
         } else {
             return true;

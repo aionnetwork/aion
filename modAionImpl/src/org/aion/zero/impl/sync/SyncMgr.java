@@ -330,7 +330,7 @@ public final class SyncMgr {
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(headerIt.next(), bodyIt.next());
             if (block == null) {
-                log.warn("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
+                log.debug("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
                 break;
             } else {
                 blocks.add(block);
