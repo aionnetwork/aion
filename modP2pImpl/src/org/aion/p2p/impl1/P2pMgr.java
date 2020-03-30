@@ -687,11 +687,71 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
+    int readMsg(SelectionKey sk, ByteBuffer readBuf, int cnt) throws IOException {
+        ChannelBuffer cb = (ChannelBuffer) sk.attachment();
+        if (cb == null) {
+            throw new IOException("attachment is null");
+        }
+
+        int readCnt;
+        if (cb.isHeaderNotCompleted()) {
+            readCnt = readHeader(cb, readBuf, cnt);
+        } else {
+            readCnt = cnt;
+        }
+
+        if (cb.isBodyNotCompleted()) {
+            readCnt = readBody(cb, readBuf, readCnt);
+        }
+
+        if (cb.isBodyNotCompleted()) {
+            return readCnt;
+        }
+
+        handleMessage(sk, cb);
+
+        return readCnt;
+    }
+
+    private static int readHeader(final ChannelBuffer cb, final ByteBuffer readBuf, int cnt) {
+        if (cnt < Header.LEN) {
+            return cnt;
+        }
+
+        int origPos = readBuf.position();
+        int startP = origPos - cnt;
+        readBuf.position(startP);
+        cb.readHead(readBuf);
+        readBuf.position(origPos);
+        return cnt - Header.LEN;
+    }
+
+    private static int readBody(final ChannelBuffer cb, ByteBuffer readBuf, int cnt) {
+        int bodyLen = cb.getHeader().getLen();
+
+        // some msg have nobody.
+        if (bodyLen == 0) {
+            cb.body = new byte[0];
+            return cnt;
+        }
+
+        if (cnt < bodyLen) {
+            return cnt;
+        }
+
+        int origPos = readBuf.position();
+        int startP = origPos - cnt;
+        readBuf.position(startP);
+        cb.readBody(readBuf);
+        readBuf.position(origPos);
+        return cnt - bodyLen;
+    }
+
     // used to impose a low limit to this type of messages
     private static final int ACT_BROADCAST_BLOCK = 7;
     private static final int CTRL_SYNC = 1;
 
-    void handleMessage(SelectionKey sk, ChannelBuffer cb) {
+    private void handleMessage(SelectionKey sk, ChannelBuffer cb) {
 
         Header h = cb.getHeader();
         byte[] bodyBytes = cb.body;
