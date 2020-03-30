@@ -46,7 +46,7 @@ public class TaskInboundTest {
 
     @Mock private INodeMgr nodeMgr;
 
-    @Mock private IP2pMgr p2pMgr;
+    @Mock private P2pMgr p2pMgr;
 
     @Mock private BlockingQueue<MsgIn> msgInQue;
 
