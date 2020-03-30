@@ -687,7 +687,67 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    int readMsg(SelectionKey sk, ByteBuffer readBuf, int cnt) throws IOException {
+    void readBuffer(final SelectionKey sk, final ChannelBuffer cb, final ByteBuffer readBuf) throws IOException {
+        readBuf.rewind();
+        SocketChannel sc = (SocketChannel) sk.channel();
+
+        int r;
+        int cnt = 0;
+        do {
+            r = sc.read(readBuf);
+            cnt += r;
+        } while (r > 0);
+
+        if (cnt < 1) {
+            return;
+        }
+
+        int remainBufAll = cb.getBuffRemain() + cnt;
+        ByteBuffer bufferAll = calBuffer(cb, readBuf, cnt);
+
+        do {
+            r = readMsg(sk, bufferAll, remainBufAll);
+            if (remainBufAll == r) {
+                break;
+            } else {
+                remainBufAll = r;
+            }
+        } while (r > 0);
+
+        cb.setBuffRemain(r);
+
+        if (r != 0) {
+            // there are no perfect cycling buffer in jdk
+            // yet.
+            // simply just buff move for now.
+            // @TODO: looking for more efficient way.
+
+            int currPos = bufferAll.position();
+            cb.setRemainBuffer(new byte[r]);
+            bufferAll.position(currPos - r);
+            bufferAll.get(cb.getRemainBuffer());
+        }
+
+        readBuf.rewind();
+    }
+
+    private static ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
+        ByteBuffer r;
+        if (_cb.getBuffRemain() != 0) {
+            byte[] alreadyRead = new byte[_cnt];
+            _readBuf.position(0);
+            _readBuf.get(alreadyRead);
+            r = ByteBuffer.allocate(_cb.getBuffRemain() + _cnt);
+            r.put(_cb.getRemainBuffer());
+            r.put(alreadyRead);
+        } else {
+            r = _readBuf;
+        }
+
+        return r;
+    }
+
+    private int readMsg(SelectionKey sk, ByteBuffer readBuf, int cnt) throws IOException {
         ChannelBuffer cb = (ChannelBuffer) sk.attachment();
         if (cb == null) {
             throw new IOException("attachment is null");
