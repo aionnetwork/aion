@@ -576,9 +576,7 @@ public final class P2pMgr implements IP2pMgr {
                 surveyLog,
                 this,
                 this.selector,
-                this.start,
-                this.nodeMgr,
-                this.handlers);
+                this.start);
     }
 
     private TaskReceive getReceiveInstance() {
@@ -689,9 +687,66 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
+    // used to impose a low limit to this type of messages
+    private static final int ACT_BROADCAST_BLOCK = 7;
+    private static final int CTRL_SYNC = 1;
+
+    void handleMessage(SelectionKey sk, ChannelBuffer cb) {
+
+        Header h = cb.getHeader();
+        byte[] bodyBytes = cb.body;
+
+        cb.refreshHeader();
+        cb.refreshBody();
+
+        int maxRequestsPerSecond = 0;
+
+        // TODO: refactor to remove knowledge of sync message types
+        if (h.getCtrl() == CTRL_SYNC && h.getAction() == ACT_BROADCAST_BLOCK) {
+            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE;
+        } else {
+            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE_TXBC;
+        }
+
+        boolean underRC = cb.shouldRoute(h.getRoute(), maxRequestsPerSecond);
+
+        if (!underRC) {
+            p2pLOG.debug("over-called-route={}-{}-{} calls={} node={}", h.getVer(), h.getCtrl(), h.getAction(), cb.getRouteCount(h.getRoute()).count, cb.getDisplayId());
+            return;
+        }
+
+        switch (h.getVer()) {
+            case Ver.V0:
+                switch (h.getCtrl()) {
+                    case Ctrl.NET:
+                        try {
+                            handleP2pMessage(sk, h.getAction(), bodyBytes);
+                        } catch (Exception ex) {
+                            p2pLOG.debug("handle-p2p-msg error.", ex);
+                        }
+                        break;
+                    case Ctrl.SYNC:
+                        if (!handlers.containsKey(h.getRoute())) {
+                            p2pLOG.debug("unregistered-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), cb.getDisplayId());
+                            return;
+                        }
+
+                        handleKernelMessage(cb.getNodeIdHash(), h.getRoute(), bodyBytes);
+                        break;
+                    default:
+                        p2pLOG.debug("invalid-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), cb.getDisplayId());
+                        break;
+                }
+                break;
+            default:
+                p2pLOG.debug("unhandled-ver={} node={}", h.getVer(), cb.getDisplayId());
+                break;
+        }
+    }
+
     private static final int OFFER_TIMEOUT = 100; // in milliseconds
 
-    void handleKernelMessage(int nodeIdHash, int route, final byte[] msgBytes) {
+    private void handleKernelMessage(int nodeIdHash, int route, final byte[] msgBytes) {
         INode node = nodeMgr.getActiveNode(nodeIdHash);
         if (node != null) {
             String nodeDisplayId = node.getIdShort();
@@ -709,7 +764,7 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    void handleP2pMessage(final SelectionKey sk, byte act, final byte[] msgBytes) {
+    private void handleP2pMessage(final SelectionKey sk, byte act, final byte[] msgBytes) {
         ChannelBuffer rb = (ChannelBuffer) sk.attachment();
 
         switch (act) {
