@@ -152,6 +152,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private StakingContractHelper stakingContractHelper = null;
     public final ForkUtility forkUtility;
     public final BeaconHashValidator beaconHashValidator;
+    private final boolean isMainnet;
 
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
@@ -269,6 +270,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.config = config;
         this.repository = repository;
         this.storeInternalTransactions = config.isInternalTransactionStorageEnabled();
+
+        isMainnet = CfgAion.inst().getGenesis().getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"));
 
         /**
          * Because we dont have any hardforks, later on chain configuration must be determined by
@@ -1554,8 +1557,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return {@code true} if the blocks is exempt from some validations, {@code false} otherwise
      */
     private boolean isException(long blockNumber) {
-        return (blockNumber == 4735401L || blockNumber == 4735403L || blockNumber == 4735405L) // list of exempt blocks on the main chain
-                && getBlockByNumber(0).getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"));
+        // list of exempt blocks on the mainnet main chain
+        return isMainnet && (blockNumber == 4735401L || blockNumber == 4735403L || blockNumber == 4735405L);
     }
 
     @Override
