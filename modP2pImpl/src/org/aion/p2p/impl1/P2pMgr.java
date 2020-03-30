@@ -285,8 +285,7 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
 
-        List<Short> supportedVersions = new ArrayList<>(versions);
-        cachedReqHandshake1 = getReqHandshake1Instance(supportedVersions);
+        cachedReqHandshake1 = new ReqHandshake1(selfNodeId, selfChainId, selfIp, selfPort, selfRevision.getBytes(), new ArrayList<>(versions));
     }
 
     @Override
@@ -558,15 +557,5 @@ public final class P2pMgr implements IP2pMgr {
                 }
             }
         }
-    }
-
-    private ReqHandshake1 getReqHandshake1Instance(List<Short> versions) {
-        return new ReqHandshake1(
-                selfNodeId,
-                selfChainId,
-                this.selfIp,
-                this.selfPort,
-                this.selfRevision.getBytes(),
-                versions);
     }
 }
