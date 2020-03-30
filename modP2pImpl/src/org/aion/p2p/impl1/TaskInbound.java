@@ -14,16 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
-import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.comm.Act;
-import org.aion.p2p.impl.zero.msg.ReqHandshake;
-import org.aion.p2p.impl.zero.msg.ReqHandshake1;
-import org.aion.p2p.impl.zero.msg.ResActiveNodes;
-import org.aion.p2p.impl.zero.msg.ResHandshake;
-import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.slf4j.Logger;
 
 public class TaskInbound implements Runnable {
@@ -296,7 +289,7 @@ public class TaskInbound implements Runnable {
                 switch (h.getCtrl()) {
                     case Ctrl.NET:
                         try {
-                            handleP2pMsg(_sk, h.getAction(), bodyBytes);
+                            mgr.handleP2pMessage(_sk, h.getAction(), bodyBytes);
                         } catch (Exception ex) {
                             if (p2pLOG.isDebugEnabled()) {
                                 p2pLOG.debug("handle-p2p-msg error.", ex);
@@ -353,83 +346,5 @@ public class TaskInbound implements Runnable {
         }
 
         return r;
-    }
-
-    /**
-     * @param _sk SelectionKey
-     * @param _act ACT
-     * @param _msgBytes byte[]
-     */
-    private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes)
-            throws InterruptedException {
-
-        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
-
-        switch (_act) {
-            case Act.REQ_HANDSHAKE:
-                if (_msgBytes.length > ReqHandshake.LEN) {
-                    ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(_msgBytes, p2pLOG);
-                    if (reqHandshake1 != null) {
-                        mgr.handleHandshakeRequest(
-                                rb,
-                                _sk.channel().hashCode(),
-                                reqHandshake1.getNodeId(),
-                                reqHandshake1.getNetId(),
-                                reqHandshake1.getPort(),
-                                reqHandshake1.getRevision());
-                    }
-                }
-                break;
-
-            case Act.RES_HANDSHAKE:
-                if (rb.getNodeIdHash() != 0) {
-                    if (_msgBytes.length > ResHandshake.LEN) {
-                        ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes, p2pLOG);
-                        if (resHandshake1 != null && resHandshake1.getSuccess()) {
-                            mgr.handleHandshakeResponse(rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
-                        }
-                    }
-                }
-                break;
-
-            case Act.REQ_ACTIVE_NODES:
-                if (rb.getNodeIdHash() != 0) {
-                    INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
-                    if (node != null) {
-                        ResActiveNodes resActiveNodes = new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList());
-                        mgr.send(node.getIdHash(), node.getIdShort(), resActiveNodes);
-                    }
-                }
-                break;
-
-            case Act.RES_ACTIVE_NODES:
-                if (this.mgr.isSyncSeedsOnly() || rb.getNodeIdHash() == 0) {
-                    break;
-                }
-
-                INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
-                if (node != null) {
-                    node.refreshTimestamp();
-                    ResActiveNodes resActiveNodes = ResActiveNodes.decode(_msgBytes, p2pLOG);
-                    if (resActiveNodes != null) {
-                        List<INode> incomingNodes = resActiveNodes.getNodes();
-                        for (INode incomingNode : incomingNodes) {
-                            if (nodeMgr.tempNodesSize() >= this.mgr.getMaxTempNodes()) {
-                                return;
-                            }
-
-                            if (this.mgr.validateNode(incomingNode)) {
-                                nodeMgr.addTempNode(incomingNode);
-                            }
-                        }
-                    }
-                }
-                break;
-            default:
-                if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("unknown-route act={}", _act);
-                }
-                break;
-        }
     }
 }
