@@ -8,15 +8,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
-import org.aion.p2p.INodeMgr;
 import org.aion.p2p.P2pConstant;
-import org.aion.p2p.Ver;
 import org.slf4j.Logger;
 
 public class TaskInbound implements Runnable {
@@ -24,13 +18,7 @@ public class TaskInbound implements Runnable {
     private final Logger p2pLOG, surveyLog;
     private final P2pMgr mgr;
     private final Selector selector;
-    private final INodeMgr nodeMgr;
-    private final Map<Integer, List<Handler>> handlers;
     private final AtomicBoolean start;
-
-    // used to impose a low limit to this type of messages
-    private static final int ACT_BROADCAST_BLOCK = 7;
-    private static final int CTRL_SYNC = 1;
 
     // used when survey logging
     private static final long MIN_DURATION = 60_000_000_000L; // 60 seconds
@@ -41,17 +29,13 @@ public class TaskInbound implements Runnable {
             final Logger surveyLog,
             final P2pMgr _mgr,
             final Selector _selector,
-            final AtomicBoolean _start,
-            final INodeMgr _nodeMgr,
-            final Map<Integer, List<Handler>> _handlers) {
+            final AtomicBoolean _start) {
 
         this.p2pLOG = p2pLOG;
         this.surveyLog = surveyLog;
         this.mgr = _mgr;
         this.selector = _selector;
         this.start = _start;
-        this.nodeMgr = _nodeMgr;
-        this.handlers = _handlers;
     }
 
     @Override
@@ -247,89 +231,9 @@ public class TaskInbound implements Runnable {
             return readCnt;
         }
 
-        handleMsg(_sk, cb);
+        mgr.handleMessage(_sk, cb);
 
         return readCnt;
-    }
-
-    private void handleMsg(SelectionKey _sk, ChannelBuffer _cb) {
-
-        Header h = _cb.getHeader();
-        byte[] bodyBytes = _cb.body;
-
-        _cb.refreshHeader();
-        _cb.refreshBody();
-
-        int maxRequestsPerSecond = 0;
-
-        // TODO: refactor to remove knowledge of sync message types
-        if (h.getCtrl() == CTRL_SYNC && h.getAction() == ACT_BROADCAST_BLOCK) {
-            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE;
-        } else {
-            maxRequestsPerSecond = P2pConstant.READ_MAX_RATE_TXBC;
-        }
-
-        boolean underRC = _cb.shouldRoute(h.getRoute(), maxRequestsPerSecond);
-
-        if (!underRC) {
-            if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug(
-                        "over-called-route={}-{}-{} calls={} node={}",
-                        h.getVer(),
-                        h.getCtrl(),
-                        h.getAction(),
-                        _cb.getRouteCount(h.getRoute()).count,
-                        _cb.getDisplayId());
-            }
-            return;
-        }
-
-        switch (h.getVer()) {
-            case Ver.V0:
-                switch (h.getCtrl()) {
-                    case Ctrl.NET:
-                        try {
-                            mgr.handleP2pMessage(_sk, h.getAction(), bodyBytes);
-                        } catch (Exception ex) {
-                            if (p2pLOG.isDebugEnabled()) {
-                                p2pLOG.debug("handle-p2p-msg error.", ex);
-                            }
-                        }
-                        break;
-                    case Ctrl.SYNC:
-                        if (!handlers.containsKey(h.getRoute())) {
-                            if (p2pLOG.isDebugEnabled()) {
-                                p2pLOG.debug(
-                                        "unregistered-route={}-{}-{} node={}",
-                                        h.getVer(),
-                                        h.getCtrl(),
-                                        h.getAction(),
-                                        _cb.getDisplayId());
-                            }
-                            return;
-                        }
-
-                        mgr.handleKernelMessage(_cb.getNodeIdHash(), h.getRoute(), bodyBytes);
-                        break;
-                    default:
-                        if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug(
-                                    "invalid-route={}-{}-{} node={}",
-                                    h.getVer(),
-                                    h.getCtrl(),
-                                    h.getAction(),
-                                    _cb.getDisplayId());
-                        }
-                        break;
-                }
-                break;
-            default:
-                if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("unhandled-ver={} node={}", h.getVer(), _cb.getDisplayId());
-                }
-
-                break;
-        }
     }
 
     private ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
