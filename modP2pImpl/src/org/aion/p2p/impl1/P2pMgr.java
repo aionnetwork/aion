@@ -35,10 +35,14 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.TaskUPnPManager;
+import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
+import org.aion.p2p.impl.zero.msg.ReqHandshake;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
+import org.aion.p2p.impl.zero.msg.ResActiveNodes;
+import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
@@ -705,7 +709,70 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    void handleHandshakeResponse(int nodeIdHash, String binaryVersion) {
+    void handleP2pMessage(final SelectionKey sk, byte act, final byte[] msgBytes) {
+        ChannelBuffer rb = (ChannelBuffer) sk.attachment();
+
+        switch (act) {
+            case Act.REQ_HANDSHAKE:
+                if (msgBytes.length > ReqHandshake.LEN) {
+                    ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(msgBytes, p2pLOG);
+                    if (reqHandshake1 != null) {
+                        handleHandshakeRequest(rb, sk.channel().hashCode(), reqHandshake1.getNodeId(), reqHandshake1.getNetId(), reqHandshake1.getPort(), reqHandshake1.getRevision());
+                    }
+                }
+                break;
+
+            case Act.RES_HANDSHAKE:
+                if (rb.getNodeIdHash() != 0) {
+                    if (msgBytes.length > ResHandshake.LEN) {
+                        ResHandshake1 resHandshake1 = ResHandshake1.decode(msgBytes, p2pLOG);
+                        if (resHandshake1 != null && resHandshake1.getSuccess()) {
+                            handleHandshakeResponse(rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
+                        }
+                    }
+                }
+                break;
+
+            case Act.REQ_ACTIVE_NODES:
+                if (rb.getNodeIdHash() != 0) {
+                    INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
+                    if (node != null) {
+                        ResActiveNodes resActiveNodes = new ResActiveNodes(p2pLOG, nodeMgr.getActiveNodesList());
+                        send(node.getIdHash(), node.getIdShort(), resActiveNodes);
+                    }
+                }
+                break;
+
+            case Act.RES_ACTIVE_NODES:
+                if (isSyncSeedsOnly() || rb.getNodeIdHash() == 0) {
+                    break;
+                }
+
+                INode node = nodeMgr.getActiveNode(rb.getNodeIdHash());
+                if (node != null) {
+                    node.refreshTimestamp();
+                    ResActiveNodes resActiveNodes = ResActiveNodes.decode(msgBytes, p2pLOG);
+                    if (resActiveNodes != null) {
+                        List<INode> incomingNodes = resActiveNodes.getNodes();
+                        for (INode incomingNode : incomingNodes) {
+                            if (nodeMgr.tempNodesSize() >= getMaxTempNodes()) {
+                                return;
+                            }
+
+                            if (validateNode(incomingNode)) {
+                                nodeMgr.addTempNode(incomingNode);
+                            }
+                        }
+                    }
+                }
+                break;
+            default:
+                p2pLOG.debug("unknown-route act={}", act);
+                break;
+        }
+    }
+
+    private void handleHandshakeResponse(int nodeIdHash, String binaryVersion) {
         INode node = nodeMgr.getOutboundNode(nodeIdHash);
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
@@ -717,7 +784,7 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * Constructs node info after handshake request success.
      */
-    void handleHandshakeRequest(final ChannelBuffer buffer, int channelHash, final byte[] nodeId, int netId, int port, final byte[] revision) {
+    private void handleHandshakeRequest(final ChannelBuffer buffer, int channelHash, final byte[] nodeId, int netId, int port, final byte[] revision) {
         INode node = nodeMgr.getInboundNode(channelHash);
         if (node != null && node.getPeerMetric().notBan()) {
             p2pLOG.debug("netId={}, nodeId={} port={} rev={}", netId, new String(nodeId), port, revision);
