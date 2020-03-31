@@ -31,10 +31,10 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.TaskRequestActiveNodes;
 import org.aion.p2p.impl.TaskUPnPManager;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.apache.commons.collections4.map.LRUMap;
@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 public final class P2pMgr implements IP2pMgr {
     private static final int DELAY_SHOW_P2P_STATUS = 10; // in seconds
     private static final int DELAY_CLEAR_PEERS = 10; // in seconds
-    private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
+    private static final int DELAY_REQUEST_ACTIVE_NODES = 1; // in seconds
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int DELAY_CONNECT_OUTBOUND = 1; // in seconds
     private static final int TIMEOUT_OUTBOUND_CONNECT = 10000; // in milliseconds
@@ -91,6 +91,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
+    private static final ReqActiveNodes cachedReqActiveNodesMsg = new ReqActiveNodes();
 
     public enum Dest {
         INBOUND,
@@ -242,11 +243,15 @@ public final class P2pMgr implements IP2pMgr {
             }
 
             if (!syncSeedsOnly) {
-                scheduledWorkers.scheduleWithFixedDelay(
-                        new TaskRequestActiveNodes(this, p2pLOG),
-                        5000,
-                        PERIOD_REQUEST_ACTIVE_NODES,
-                        TimeUnit.MILLISECONDS);
+                scheduledWorkers.scheduleWithFixedDelay(() -> {
+                            Thread.currentThread().setName("p2p-reqNodes");
+                            INode node = getRandom();
+                            if (node != null) {
+                                p2pLOG.trace("TaskRequestActiveNodes: {}", node.toString());
+                                send(node.getIdHash(), node.getIdShort(), cachedReqActiveNodesMsg);
+                            }
+                        },
+                        5 * DELAY_REQUEST_ACTIVE_NODES, DELAY_REQUEST_ACTIVE_NODES, TimeUnit.SECONDS);
             }
 
             scheduledWorkers.scheduleWithFixedDelay(
