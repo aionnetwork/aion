@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -414,6 +415,10 @@ public class SyncHeaderRequestManager {
         nextMode = SyncMode.NORMAL;
 
         List<RequestState> availableSet = new ArrayList<>(availablePeerStates.values());
+        if (availableSet.isEmpty()){
+            return Collections.emptyList();
+        }
+
         if (!distantFuture) {
             // make a single request when !distantFuture
             RequestState singleRequest = availableSet.get(random.nextInt(availableSet.size()));
