@@ -19,10 +19,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,8 +64,6 @@ public final class P2pMgr implements IP2pMgr {
 
     public final Logger p2pLOG, surveyLog;
 
-    // IO-bounded threads get max-gain from the double of the availableProcessor number
-    private static final int WORKER = Math.min(Runtime.getRuntime().availableProcessors() * 2, 32);
     private final int SOCKET_RECV_BUFFER = 1024 * 128;
     private final int SOCKET_BACKLOG = 1024;
 
@@ -87,14 +83,6 @@ public final class P2pMgr implements IP2pMgr {
     private ScheduledExecutorService scheduledWorkers;
     private ScheduledExecutorService inboundExecutor;
     private int errTolerance;
-    /*
-     * The size limit was chosen taking into account that:
-     * - in a 2G OOM heap dump the size of this queue reached close to 700_000;
-     * - in normal execution heap dumps the size is close to 0.
-     * The size should be increased if we notice many warning logs that
-     * the queue has reached capacity during execution.
-     */
-    private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>(50_000);
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
@@ -173,8 +161,8 @@ public final class P2pMgr implements IP2pMgr {
     public void run() {
         try {
             selector = Selector.open();
-
-            scheduledWorkers = Executors.newScheduledThreadPool(6);
+            // IO-bounded threads get max-gain from the double of the availableProcessor number
+            scheduledWorkers = Executors.newScheduledThreadPool(Math.min(32, 2 * Runtime.getRuntime().availableProcessors()));
             inboundExecutor = Executors.newSingleThreadScheduledExecutor();
 
             tcpServer = ServerSocketChannel.open();
@@ -220,12 +208,6 @@ public final class P2pMgr implements IP2pMgr {
                         });
             }
 
-            for (int i = 0; i < WORKER; i++) {
-                Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
-                t.setPriority(Thread.NORM_PRIORITY);
-                t.start();
-            }
-
             if (upnpEnable) {
                 scheduledWorkers.scheduleWithFixedDelay(
                         new TaskUPnPManager(p2pLOG, selfPort),
@@ -239,7 +221,6 @@ public final class P2pMgr implements IP2pMgr {
                         () -> {
                             Thread.currentThread().setName("p2p-status");
                             p2pLOG.info(nodeMgr.dumpNodeInfo(selfShortId, p2pLOG.isDebugEnabled()));
-                            p2pLOG.debug("receive queue[{}]", receiveMsgQue.size());
                         },
                         DELAY_SHOW_P2P_STATUS, DELAY_SHOW_P2P_STATUS, TimeUnit.SECONDS);
             }
@@ -632,8 +613,15 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private TaskReceive getReceiveInstance() {
-        return new TaskReceive(p2pLOG, surveyLog, start, receiveMsgQue, handlers);
+    private static void receiveMessage(int nodeId, String displayId, byte[] msg, List<Handler> handlers) {
+        Thread.currentThread().setName("p2p-receive");
+        for (Handler hlr : handlers) {
+            if (hlr == null) {
+                continue;
+            }
+
+            hlr.receive(nodeId, displayId, msg);
+        }
     }
 
     private void connectPeers() {
@@ -917,20 +905,14 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private static final int OFFER_TIMEOUT = 100; // in milliseconds
-
     private void handleKernelMessage(int nodeIdHash, int route, final byte[] msgBytes) {
         INode node = nodeMgr.getActiveNode(nodeIdHash);
         if (node != null) {
             String nodeDisplayId = node.getIdShort();
             node.refreshTimestamp();
-            try {
-                boolean added = receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, route, msgBytes), OFFER_TIMEOUT, TimeUnit.MILLISECONDS);
-                if (!added) {
-                    p2pLOG.warn("Message not added to the receive queue due to exceeded capacity: msg={} from node={}", msgBytes, node.getIdShort());
-                }
-            } catch (InterruptedException e) {
-                p2pLOG.error("Interrupted while attempting to add the received message to the processing queue:", e);
+            List<Handler> hs = handlers.get(route);
+            if (hs != null) {
+                scheduledWorkers.execute(() -> receiveMessage(nodeIdHash, nodeDisplayId, msgBytes, hs));
             }
         } else {
             p2pLOG.debug("handleKernelMsg can't find hash{}", nodeIdHash);
