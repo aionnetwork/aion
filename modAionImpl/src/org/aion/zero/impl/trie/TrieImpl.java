@@ -557,28 +557,26 @@ public class TrieImpl implements Trie {
             throw new RuntimeException("Not found: " + Hex.toHexString(hash));
         }
 
-        if (node.getValue().isList()) {
-            List<Object> siblings = node.getValue().asList();
-            if (siblings.size() == PAIR_SIZE) {
-                Value val = new Value(siblings.get(1));
-                if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                    scanTree(val.asBytes(), scanAction);
-                }
-            } else {
-                for (int j = 0; j < LIST_SIZE; ++j) {
-                    Value val = new Value(siblings.get(j));
-                    if (val.isHashCode()) {
-                        scanTree(val.asBytes(), scanAction);
-                    }
+        if (node.isPair()) {
+            if (node.isExtension()) {
+                scanTree(node.getKey(), scanAction);
+            }
+        } else if (node.isBranch()) {
+            for (int index = 0; index < Node.BRANCH_SIZE; index++) {
+                Value item = node.getBranchItem(index);
+                if (item.isHashCode()) {
+                    scanTree(item.asBytes(), scanAction);
                 }
             }
-            scanAction.doOnNode(hash, node.getValue());
+        } else {
+            return;
         }
+        scanAction.doOnNode(hash, node.getValue());
     }
 
     private void scanTreeLoop(byte[] hash, ScanAction scanAction) {
 
-        ArrayList<byte[]> hashes = new ArrayList<>();
+        List<byte[]> hashes = new ArrayList<>();
         hashes.add(hash);
 
         while (!hashes.isEmpty()) {
@@ -588,25 +586,21 @@ public class TrieImpl implements Trie {
                 throw new RuntimeException("Not found: " + Hex.toHexString(myHash));
             }
 
-            if (node.getValue().isList()) {
-                List<Object> siblings = node.getValue().asList();
-                if (siblings.size() == PAIR_SIZE) {
-                    Value val = new Value(siblings.get(1));
-                    if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                        // scanTree(val.asBytes(), scanAction);
-                        hashes.add(val.asBytes());
-                    }
-                } else {
-                    for (int j = 0; j < LIST_SIZE; ++j) {
-                        Value val = new Value(siblings.get(j));
-                        if (val.isHashCode()) {
-                            // scanTree(val.asBytes(), scanAction);
-                            hashes.add(val.asBytes());
-                        }
+            if (node.isPair()) {
+                if (node.isExtension()) {
+                    hashes.add(node.getKey());
+                }
+            } else if (node.isBranch()) {
+                for (int index = 0; index < Node.BRANCH_SIZE; index++) {
+                    Value item = node.getBranchItem(index);
+                    if (item.isHashCode()) {
+                        hashes.add(item.asBytes());
                     }
                 }
-                scanAction.doOnNode(myHash, node.getValue());
+            } else {
+                continue;
             }
+            scanAction.doOnNode(myHash, node.getValue());
         }
     }
 
@@ -621,7 +615,7 @@ public class TrieImpl implements Trie {
     private void scanTreeDiffLoop(
             byte[] hash, ScanAction scanAction, ByteArrayKeyValueDatabase db) {
 
-        ArrayList<byte[]> hashes = new ArrayList<>();
+        List<byte[]> hashes = new ArrayList<>();
         hashes.add(hash);
 
         while (!hashes.isEmpty()) {
@@ -630,31 +624,27 @@ public class TrieImpl implements Trie {
             if (node == null) {
                 System.out.println("Skipped key. Not found: " + Hex.toHexString(myHash));
             } else {
-                if (node.getValue().isList()) {
-                    List<Object> siblings = node.getValue().asList();
-                    if (siblings.size() == PAIR_SIZE) {
-                        Value val = new Value(siblings.get(1));
-                        if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                            // scanTree(val.asBytes(), scanAction);
-                            byte[] valBytes = val.asBytes();
-                            if (!db.get(valBytes).isPresent()) {
-                                hashes.add(valBytes);
-                            }
+                if (node.isPair()) {
+                    if (node.isExtension()) {
+                        byte[] key = node.getKey();
+                        if (!db.get(key).isPresent()) {
+                            hashes.add(key);
                         }
-                    } else {
-                        for (int j = 0; j < LIST_SIZE; ++j) {
-                            Value val = new Value(siblings.get(j));
-                            if (val.isHashCode()) {
-                                // scanTree(val.asBytes(), scanAction);
-                                byte[] valBytes = val.asBytes();
-                                if (!db.get(valBytes).isPresent()) {
-                                    hashes.add(valBytes);
-                                }
+                    }
+                } else if (node.isBranch()) {
+                    for (int index = 0; index < Node.BRANCH_SIZE; index++) {
+                        Value item = node.getBranchItem(index);
+                        if (item.isHashCode()) {
+                            byte[] key = item.asBytes();
+                            if (!db.get(key).isPresent()) {
+                                hashes.add(key);
                             }
                         }
                     }
-                    scanAction.doOnNode(myHash, node.getValue());
+                } else {
+                    continue;
                 }
+                scanAction.doOnNode(myHash, node.getValue());
             }
         }
     }
@@ -866,41 +856,28 @@ public class TrieImpl implements Trie {
         lock.lock();
         try {
             CollectFullSetOfNodes scanAction = new CollectFullSetOfNodes();
-            ArrayList<byte[]> hashes = new ArrayList<>();
-            Node node;
-
-            appendHashes(keyOrValue, hashes);
+            List<byte[]> hashes = appendHashes(keyOrValue);
 
             int items = hashes.size();
             for (int i = 0; i < items; i++) {
-                byte[] myHash = hashes.get(i);
-
-                node = this.getCache().get(myHash);
+                byte[] hash = hashes.get(i);
+                Node node = this.getCache().get(hash);
                 if (node == null) {
                     // performs action for missing nodes
-                    scanAction.doOnNode(myHash, null);
-                } else {
-                    if (node.getValue().isList()) {
-                        List<Object> siblings = node.getValue().asList();
-                        if (siblings.size() == PAIR_SIZE) {
-                            Value val = new Value(siblings.get(1));
-                            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                                hashes.add(val.asBytes());
-                                items++;
-                            }
-                        } else {
-                            for (int j = 0; j < LIST_SIZE; ++j) {
-                                Value val = new Value(siblings.get(j));
-                                if (val.isHashCode()) {
-                                    hashes.add(val.asBytes());
-                                    items++;
-                                }
-                            }
+                    scanAction.doOnNode(hash, null);
+                } else if (node.isPair() && node.isExtension()) {
+                    hashes.add(node.getKey());
+                    items++;
+                } else if (node.isBranch()) {
+                    for (int index = 0; index < Node.BRANCH_SIZE; index++) {
+                        Value item = node.getBranchItem(index);
+                        if (item.isHashCode()) {
+                            hashes.add(item.asBytes());
+                            items++;
                         }
                     }
                 }
             }
-
             return scanAction.getCollectedHashes();
         } finally {
             lock.unlock();
@@ -912,32 +889,25 @@ public class TrieImpl implements Trie {
         lock.lock();
         try {
             CollectMappings collect = new CollectMappings();
-            ArrayList<byte[]> hashes = new ArrayList<>();
-            Node node;
-
-            appendHashes(keyOrValue, hashes);
+            List<byte[]> hashes = appendHashes(keyOrValue);
 
             int items = hashes.size();
             for (int i = 0; (i < items) && (collect.getSize() < limit); i++) {
                 byte[] myHash = hashes.get(i);
-                node = this.getCache().get(myHash);
+                Node node = this.getCache().get(myHash);
 
                 if (node != null) {
-                    if (node.getValue().isList()) {
-                        List<Object> siblings = node.getValue().asList();
-                        if (siblings.size() == PAIR_SIZE) {
-                            Value val = new Value(siblings.get(1));
-                            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                                hashes.add(val.asBytes());
+                    if (node.isPair()) {
+                        if (node.isExtension()) {
+                            hashes.add(node.getKey());
+                            items++;
+                        }
+                    } else if (node.isBranch()) {
+                        for (int index = 0; index < Node.BRANCH_SIZE; index++) {
+                            Value item = node.getBranchItem(index);
+                            if (item.isHashCode()) {
+                                hashes.add(item.asBytes());
                                 items++;
-                            }
-                        } else {
-                            for (int j = 0; j < LIST_SIZE; ++j) {
-                                Value val = new Value(siblings.get(j));
-                                if (val.isHashCode()) {
-                                    hashes.add(val.asBytes());
-                                    items++;
-                                }
                             }
                         }
                     }
@@ -951,7 +921,8 @@ public class TrieImpl implements Trie {
         }
     }
 
-    private void appendHashes(byte[] bytes, ArrayList<byte[]> hashes) {
+    private List<byte[]> appendHashes(byte[] bytes) {
+        List<byte[]> hashes = new ArrayList<>();
         Value node;
 
         if (bytes.length == ByteUtil.EMPTY_WORD.length) {
@@ -962,7 +933,7 @@ public class TrieImpl implements Trie {
         }
 
         if (node == null) {
-            return;
+            return hashes;
         }
 
         if (node.isHashCode()) {
@@ -983,6 +954,7 @@ public class TrieImpl implements Trie {
                 }
             }
         }
+        return hashes;
     }
 
     @Override
