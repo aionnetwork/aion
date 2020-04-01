@@ -22,6 +22,7 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -621,7 +622,7 @@ public class SyncHeaderRequestManager {
     /**
      * Returns the headers received for the given size. The headers are removed from the internal storage.
      */
-    public List<BlockHeader> matchAndDropHeaders(int peerId, int size) {
+    public List<BlockHeader> matchAndDropHeaders(int peerId, int size, byte[] firstNodeRoot) {
         lock.lock();
 
         try {
@@ -629,8 +630,22 @@ public class SyncHeaderRequestManager {
                 syncLog.debug("<match-headers null for nodeId={} size={}", peerId, size);
                 return null;
             } else {
-                List<BlockHeader> headers = storedHeaders.get(peerId).get(size).removeFirst();
-                syncLog.debug("<match-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
+                List<BlockHeader> headers = null;
+                LinkedList<List<BlockHeader>> allHeaders = storedHeaders.get(peerId).get(size);
+                for (Iterator<List<BlockHeader>> it = allHeaders.iterator(); it.hasNext(); ) {
+                    headers = it.next();
+                    if (Arrays.equals(headers.get(0).getTxTrieRoot(), firstNodeRoot)) {
+                        it.remove();
+                        break;
+                    } else {
+                        // in case the requested headers cannot be found
+                        headers = null;
+                    }
+                }
+
+                if (headers != null) {
+                    syncLog.debug("<match-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
+                }
                 return headers;
             }
         } finally {

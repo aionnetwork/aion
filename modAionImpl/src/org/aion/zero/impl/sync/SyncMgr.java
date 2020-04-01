@@ -394,8 +394,12 @@ public final class SyncMgr {
         log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
         // the requests are made such that the size varies to better map headers to bodies
-        List<BlockHeader> headers = syncHeaderRequestManager.matchAndDropHeaders(_nodeIdHashcode, _bodies.size());
-        if (headers == null) return;
+        byte[] firstNodeRoot = BlockUtil.getTxTrieRootFromUnsafeSource(_bodies.get(0));
+        List<BlockHeader> headers = syncHeaderRequestManager.matchAndDropHeaders(_nodeIdHashcode, _bodies.size(), firstNodeRoot);
+        if (headers == null) {
+            log.debug("<assemble-and-validate-blocks could not match headers for node={} size={} txTrieRoot={}>", _displayId, _bodies.size(), ByteArrayWrapper.wrap(firstNodeRoot));
+            return;
+        }
 
         // assemble batch
         List<Block> blocks = new ArrayList<>(_bodies.size());

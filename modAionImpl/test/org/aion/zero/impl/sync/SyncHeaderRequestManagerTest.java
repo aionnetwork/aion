@@ -2,6 +2,7 @@ package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.CLOSE_OVERLAPPING_BLOCKS;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.FAR_OVERLAPPING_BLOCKS;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.MAX_REQUEST_SIZE;
@@ -166,82 +167,109 @@ public class SyncHeaderRequestManagerTest {
     @Test
     public void test_missingHeaders() {
         // retrieve when nothing was stored for the peer
-        assertThat(srm.matchAndDropHeaders(1, 10)).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isNull();
 
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         srm.storeHeaders(1, list);
 
         // retrieve when nothing was stored for the size
-        assertThat(srm.matchAndDropHeaders(1, 12)).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 12, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
     public void test_receivedHeaderManagement() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list);
 
         // ensure the headers were dropped
-        assertThat(srm.matchAndDropHeaders(1, 10)).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
     public void test_storeThenRetrieveEachWithSameSize() {
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
+        when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
         // removes the stored headers
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list);
 
         List<BlockHeader> list2 = mock(List.class);
         when(list2.size()).thenReturn(10);
+        when(list2.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list2);
         // removes the stored headers
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list2);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list2);
 
         // ensure the headers were dropped
-        assertThat(srm.matchAndDropHeaders(1, 10)).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
     public void test_storeMultipleThenRetrieveAllWithSameSize() {
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
+        when(list.get(0)).thenReturn(header);
         srm.storeHeaders(1, list);
 
         List<BlockHeader> list2 = mock(List.class);
         when(list2.size()).thenReturn(10);
+        when(list2.get(0)).thenReturn(header);
         srm.storeHeaders(1, list2);
 
         // removes the stored headers in the order they were added
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list2);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list2);
 
         // ensure the headers were dropped
-        assertThat(srm.matchAndDropHeaders(1, 10)).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
     public void test_multipleSizeHeaderResponses() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list);
 
         // new wrapper with different size
         List<BlockHeader> list2 = mock(List.class);
         when(list2.size()).thenReturn(12);
+        when(list2.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
         srm.storeHeaders(1, list2);
-        assertThat(srm.matchAndDropHeaders(1, 12)).isEqualTo(list2);
-        assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
+        assertThat(srm.matchAndDropHeaders(1, 12, EMPTY_TRIE_HASH)).isEqualTo(list2);
+        assertThat(srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH)).isEqualTo(list);
+    }
+
+    @Test
+    public void test_missingHeadersTrieRoot() {
+        List<BlockHeader> list = mock(List.class);
+        when(list.size()).thenReturn(10);
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(list.get(0)).thenReturn(header);
+
+        srm.storeHeaders(1, list);
+        assertThat(srm.matchAndDropHeaders(1, 10, new byte[32])).isNull();
     }
 
     @Test
@@ -254,6 +282,9 @@ public class SyncHeaderRequestManagerTest {
     public void test_getHeadersForBodiesRequests() {
         List<BlockHeader> list1 = mock(List.class);
         when(list1.size()).thenReturn(10);
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(list1.get(0)).thenReturn(header);
         List<BlockHeader> list2 = mock(List.class);
         when(list2.size()).thenReturn(10);
         // new wrapper with different size
@@ -268,7 +299,7 @@ public class SyncHeaderRequestManagerTest {
         assertThat(output.get(0)).isEqualTo(list1);
         assertThat(output.get(1)).isEqualTo(list3);
 
-        srm.matchAndDropHeaders(1, 10);
+        srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH);
         output = srm.getHeadersForBodiesRequests(1);
         assertThat(output.size()).isEqualTo(2);
         assertThat(output.get(0)).isEqualTo(list2);
@@ -302,11 +333,14 @@ public class SyncHeaderRequestManagerTest {
     public void testDropHeaders_withEmptyList() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(list.get(0)).thenReturn(header);
 
         // headers stored for size 10
         srm.storeHeaders(1, list);
         // remove the list using the matching method
-        srm.matchAndDropHeaders(1, 10);
+        srm.matchAndDropHeaders(1, 10, EMPTY_TRIE_HASH);
         // attempting to drop the list for size 11
         assertThat(srm.dropHeaders(1, list)).isFalse();
     }

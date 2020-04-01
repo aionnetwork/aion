@@ -17,6 +17,7 @@ import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.valid.BlockDetailsValidator;
@@ -147,6 +148,28 @@ public final class BlockUtil {
             syncLog.warn("Unable to decode block with header " + header, e);
             return null;
         }
+    }
+
+    public static byte[] getTxTrieRootFromUnsafeSource(byte[] bodyBytes) {
+        Objects.requireNonNull(bodyBytes);
+
+        try {
+            RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
+            RLPList transactions = (RLPList) items.get(0);
+            return calcTxTrieRootFromRLP(transactions);
+        } catch (Exception e) {
+            genLog.warn("Unable to decode block body=" + ByteArrayWrapper.wrap(bodyBytes), e);
+            return null;
+        }
+    }
+
+    private static byte[] calcTxTrieRootFromRLP(RLPList txTransactions) {
+        Trie txsState = new TrieImpl(null);
+        for (int i = 0; i < txTransactions.size(); i++) {
+            RLPElement transactionRaw = txTransactions.get(i);
+            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
+        }
+        return txsState.getRootHash();
     }
 
     /**
