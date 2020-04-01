@@ -274,4 +274,64 @@ public class SyncHeaderRequestManagerTest {
         assertThat(output.get(0)).isEqualTo(list2);
         assertThat(output.get(1)).isEqualTo(list3);
     }
+
+    @Test
+    public void testDropHeaders_withMissingPeer() {
+        List<BlockHeader> list = mock(List.class);
+        when(list.size()).thenReturn(10);
+
+        // headers stored for peer 2
+        srm.storeHeaders(2, list);
+        // attempting to drop the list for peer 1
+        assertThat(srm.dropHeaders(1, list)).isFalse();
+    }
+
+    @Test
+    public void testDropHeaders_withMissingSize() {
+        List<BlockHeader> list = mock(List.class);
+        when(list.size()).thenReturn(10);
+
+        // headers stored for size 10
+        srm.storeHeaders(1, list);
+        when(list.size()).thenReturn(11);
+        // attempting to drop the list for size 11
+        assertThat(srm.dropHeaders(1, list)).isFalse();
+    }
+
+    @Test
+    public void testDropHeaders_withEmptyList() {
+        List<BlockHeader> list = mock(List.class);
+        when(list.size()).thenReturn(10);
+
+        // headers stored for size 10
+        srm.storeHeaders(1, list);
+        // remove the list using the matching method
+        srm.matchAndDropHeaders(1, 10);
+        // attempting to drop the list for size 11
+        assertThat(srm.dropHeaders(1, list)).isFalse();
+    }
+
+    @Test
+    public void testDropHeaders_withDifferentList() {
+        List<BlockHeader> list1 = mock(List.class);
+        when(list1.size()).thenReturn(10);
+        List<BlockHeader> list2 = mock(List.class);
+        when(list2.size()).thenReturn(10);
+
+        // list1 stored with size 10
+        srm.storeHeaders(1, list1);
+        // attempting to drop list2 for size 10
+        assertThat(srm.dropHeaders(1, list2)).isFalse();
+    }
+
+    @Test
+    public void testDropHeaders_withExactObject() {
+        List<BlockHeader> list = mock(List.class);
+        when(list.size()).thenReturn(10);
+
+        // list1 stored with size 10
+        srm.storeHeaders(1, list);
+        // attempting to drop list2 for size 10
+        assertThat(srm.dropHeaders(1, list)).isTrue();
+    }
 }

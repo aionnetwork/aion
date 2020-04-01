@@ -639,6 +639,26 @@ public class SyncHeaderRequestManager {
     }
 
     /**
+     * Drop the exact list object from the stored headers using object equality.
+     *
+     * @return {@code true} if the headers existed and were removed from the stored objects
+     */
+    public boolean dropHeaders(int peerId, List<BlockHeader> headers) {
+        lock.lock();
+
+        try {
+            int size = headers.size();
+            if (!storedHeaders.containsKey(peerId) || !storedHeaders.get(peerId).containsKey(size) || storedHeaders.get(peerId).get(size).isEmpty()) {
+                return false;
+            } else {
+                return storedHeaders.get(peerId).get(size).remove(headers);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Sets a peer state to a specific mode. The set state is meaningful only for {@link
      * SyncMode#BACKWARD} and {@link SyncMode#FORWARD} since the other modes are automatically
      * managed.

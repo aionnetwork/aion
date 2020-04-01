@@ -357,7 +357,7 @@ public final class SyncMgr {
                 stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
             } else {
                 // Drop the headers that are already known.
-                syncHeaderRequestManager.matchAndDropHeaders(nodeId, requestHeaders.size());
+                syncHeaderRequestManager.dropHeaders(nodeId, requestHeaders);
                 if (!filtered.isEmpty()) {
                     // Store the subset that is still useful.
                     syncHeaderRequestManager.storeHeaders(nodeId, filtered);
