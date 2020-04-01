@@ -366,7 +366,7 @@ public final class SyncMgr {
         log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
         // the requests are made such that the size varies to better map headers to bodies
-        List<BlockHeader> headers = syncHeaderRequestManager.matchHeaders(_nodeIdHashcode, _bodies.size());
+        List<BlockHeader> headers = syncHeaderRequestManager.matchAndDropHeaders(_nodeIdHashcode, _bodies.size());
         if (headers == null) return;
 
         // assemble batch

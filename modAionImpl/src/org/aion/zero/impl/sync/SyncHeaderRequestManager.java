@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -104,7 +105,7 @@ public class SyncHeaderRequestManager {
     private final Map<Integer, RequestState> bookedPeerStates, availablePeerStates;
 
     // store the headers whose bodies have been requested from corresponding peer
-    private final Map<Integer, Map<Integer, List<BlockHeader>>> storedHeaders;
+    private final Map<Integer, Map<Integer, LinkedList<List<BlockHeader>>>> storedHeaders;
 
     private final Set<Integer> knownActiveNodes;
 
@@ -562,10 +563,19 @@ public class SyncHeaderRequestManager {
         // store the received headers for later matching with bodies
         int size = headers.size();
         if (storedHeaders.containsKey(peerId)) {
-            storedHeaders.get(peerId).put(size, headers);
+            Map<Integer, LinkedList<List<BlockHeader>>> peerList = storedHeaders.get(peerId);
+            if (peerList.containsKey(size)) {
+                peerList.get(size).addLast(headers);
+            } else {
+                LinkedList<List<BlockHeader>> headersList = new LinkedList<>();
+                headersList.addLast(headers);
+                peerList.put(size, headersList);
+            }
         } else {
-            Map<Integer, List<BlockHeader>> peerHeaders = new HashMap<>();
-            peerHeaders.put(size, headers);
+            Map<Integer, LinkedList<List<BlockHeader>>> peerHeaders = new HashMap<>();
+            LinkedList<List<BlockHeader>> headersList = new LinkedList<>();
+            headersList.addLast(headers);
+            peerHeaders.put(size, headersList);
             storedHeaders.put(peerId, peerHeaders);
         }
 
@@ -582,33 +592,24 @@ public class SyncHeaderRequestManager {
         return headers.stream().map(h -> Hex.toHexString(h.getHash()).substring(0, 6) + " #" + h.getNumber()).collect(Collectors.toList());
     }
 
-    /** Returns the headers received for the given size. */
-    public List<BlockHeader> matchHeaders(int peerId, int size) {
+    /**
+     * Returns the headers received for the given size. The headers are removed from the internal storage.
+     */
+    public List<BlockHeader> matchAndDropHeaders(int peerId, int size) {
         lock.lock();
 
         try {
-            return matchHeadersInternal(peerId, size);
+            if (!storedHeaders.containsKey(peerId) || !storedHeaders.get(peerId).containsKey(size) || storedHeaders.get(peerId).get(size).isEmpty()) {
+                syncLog.debug("<match-headers null for nodeId={} size={}", peerId, size);
+                return null;
+            } else {
+                List<BlockHeader> headers = storedHeaders.get(peerId).get(size).removeFirst();
+                syncLog.debug("<match-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
+                return headers;
+            }
         } finally {
             lock.unlock();
         }
-    }
-
-    private List<BlockHeader> matchHeadersInternal(int peerId, int size) {
-        if (!storedHeaders.containsKey(peerId)) {
-            syncLog.debug("<match-headers null for nodeId={}", peerId, size);
-            return null;
-        }
-
-        List<BlockHeader> headers = storedHeaders.get(peerId).remove(size);
-        if (headers != null) {
-            syncLog.debug("<match-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
-        } else {
-            syncLog.debug("<match-headers null for nodeId={} size={}", peerId, size);
-        }
-
-        // these get dropped by a different method call only if correctly matched to bodies
-        // they get overwritten if not used by the next same size response
-        return headers;
     }
 
     /**
