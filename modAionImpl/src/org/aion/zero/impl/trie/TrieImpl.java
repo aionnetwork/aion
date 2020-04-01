@@ -474,7 +474,8 @@ public class TrieImpl implements Trie {
         } else if (keyBytes.length < ByteUtil.EMPTY_WORD.length) {
             return new Value(keyBytes);
         }
-        return this.cache.get(keyBytes);
+        Node nodeFromCache = this.cache.get(keyBytes);
+        return nodeFromCache == null ? null : nodeFromCache.getValue();
     }
 
     private Object putToCache(Object node) {
@@ -482,7 +483,7 @@ public class TrieImpl implements Trie {
         byte[] enc = value.encode();
         if (enc.length >= ByteUtil.EMPTY_WORD.length) {
             byte[] sha = HashUtil.h256(value.encode());
-            this.cache.put(ByteArrayWrapper.wrap(sha), value);
+            this.cache.put(ByteArrayWrapper.wrap(sha), new Node(value, true));
             return sha;
         }
 
@@ -551,13 +552,13 @@ public class TrieImpl implements Trie {
     }
 
     private void scanTree(byte[] hash, ScanAction scanAction) {
-        Value node = this.getCache().get(hash);
+        Node node = this.getCache().get(hash);
         if (node == null) {
             throw new RuntimeException("Not found: " + Hex.toHexString(hash));
         }
 
-        if (node.isList()) {
-            List<Object> siblings = node.asList();
+        if (node.getValue().isList()) {
+            List<Object> siblings = node.getValue().asList();
             if (siblings.size() == PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
                 if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
@@ -571,7 +572,7 @@ public class TrieImpl implements Trie {
                     }
                 }
             }
-            scanAction.doOnNode(hash, node);
+            scanAction.doOnNode(hash, node.getValue());
         }
     }
 
@@ -582,13 +583,13 @@ public class TrieImpl implements Trie {
 
         while (!hashes.isEmpty()) {
             byte[] myHash = hashes.remove(0);
-            Value node = this.getCache().get(myHash);
+            Node node = this.getCache().get(myHash);
             if (node == null) {
                 throw new RuntimeException("Not found: " + Hex.toHexString(myHash));
             }
 
-            if (node.isList()) {
-                List<Object> siblings = node.asList();
+            if (node.getValue().isList()) {
+                List<Object> siblings = node.getValue().asList();
                 if (siblings.size() == PAIR_SIZE) {
                     Value val = new Value(siblings.get(1));
                     if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
@@ -604,7 +605,7 @@ public class TrieImpl implements Trie {
                         }
                     }
                 }
-                scanAction.doOnNode(myHash, node);
+                scanAction.doOnNode(myHash, node.getValue());
             }
         }
     }
@@ -625,12 +626,12 @@ public class TrieImpl implements Trie {
 
         while (!hashes.isEmpty()) {
             byte[] myHash = hashes.remove(0);
-            Value node = this.getCache().get(myHash);
+            Node node = this.getCache().get(myHash);
             if (node == null) {
                 System.out.println("Skipped key. Not found: " + Hex.toHexString(myHash));
             } else {
-                if (node.isList()) {
-                    List<Object> siblings = node.asList();
+                if (node.getValue().isList()) {
+                    List<Object> siblings = node.getValue().asList();
                     if (siblings.size() == PAIR_SIZE) {
                         Value val = new Value(siblings.get(1));
                         if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
@@ -652,7 +653,7 @@ public class TrieImpl implements Trie {
                             }
                         }
                     }
-                    scanAction.doOnNode(myHash, node);
+                    scanAction.doOnNode(myHash, node.getValue());
                 }
             }
         }
@@ -866,7 +867,7 @@ public class TrieImpl implements Trie {
         try {
             CollectFullSetOfNodes scanAction = new CollectFullSetOfNodes();
             ArrayList<byte[]> hashes = new ArrayList<>();
-            Value node;
+            Node node;
 
             appendHashes(keyOrValue, hashes);
 
@@ -879,8 +880,8 @@ public class TrieImpl implements Trie {
                     // performs action for missing nodes
                     scanAction.doOnNode(myHash, null);
                 } else {
-                    if (node.isList()) {
-                        List<Object> siblings = node.asList();
+                    if (node.getValue().isList()) {
+                        List<Object> siblings = node.getValue().asList();
                         if (siblings.size() == PAIR_SIZE) {
                             Value val = new Value(siblings.get(1));
                             if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
@@ -912,7 +913,7 @@ public class TrieImpl implements Trie {
         try {
             CollectMappings collect = new CollectMappings();
             ArrayList<byte[]> hashes = new ArrayList<>();
-            Value node;
+            Node node;
 
             appendHashes(keyOrValue, hashes);
 
@@ -922,8 +923,8 @@ public class TrieImpl implements Trie {
                 node = this.getCache().get(myHash);
 
                 if (node != null) {
-                    if (node.isList()) {
-                        List<Object> siblings = node.asList();
+                    if (node.getValue().isList()) {
+                        List<Object> siblings = node.getValue().asList();
                         if (siblings.size() == PAIR_SIZE) {
                             Value val = new Value(siblings.get(1));
                             if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
@@ -940,7 +941,7 @@ public class TrieImpl implements Trie {
                             }
                         }
                     }
-                    collect.doOnNode(myHash, node);
+                    collect.doOnNode(myHash, node.getValue());
                 }
             }
 

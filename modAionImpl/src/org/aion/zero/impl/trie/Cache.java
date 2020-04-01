@@ -16,7 +16,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.rlp.Value;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
@@ -52,13 +51,13 @@ public class Cache {
      *
      *
      * @param key
-     * @param value the Node which could be a pair-, multi-item Node or single Value
+     * @param node the Node which could be a pair-, multi-item Node or single Value
      * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
-    void put(ByteArrayWrapper key, Value value) {
+    void put(ByteArrayWrapper key, Node node) {
         lock.lock();
         try {
-            this.nodes.put(key, new Node(value, true));
+            this.nodes.put(key, node);
             this.removedNodes.remove(key);
             this.isDirty = true;
         } finally {
@@ -66,22 +65,21 @@ public class Cache {
         }
     }
 
-    public Value get(byte[] key) {
+    public Node get(byte[] key) {
         lock.lock();
         try {
             ByteArrayWrapper wrappedKey = wrap(key);
             Node node = nodes.get(wrappedKey);
             if (node != null) {
                 // cachehits++;
-                return node.getValue();
-            }
-            if (this.dataSource != null) {
+                return node;
+            } else if (this.dataSource != null) {
                 Optional<byte[]> data = this.dataSource.get(key);
                 if (data.isPresent()) {
                     // dbhits++;
-                    Value val = fromRlpEncoded(data.get());
-                    nodes.put(wrappedKey, new Node(val, false));
-                    return val;
+                    node = new Node(fromRlpEncoded(data.get()), false);
+                    nodes.put(wrappedKey, node);
+                    return node;
                 }
             }
 
