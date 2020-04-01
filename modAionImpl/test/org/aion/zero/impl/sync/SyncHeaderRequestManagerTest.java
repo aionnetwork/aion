@@ -9,6 +9,7 @@ import static org.aion.zero.impl.sync.SyncHeaderRequestManager.SWITCH_OVERLAPPIN
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -170,8 +171,7 @@ public class SyncHeaderRequestManagerTest {
 
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
-        HeadersWrapper hw1 = new HeadersWrapper(1, "peer1", list);
-        srm.storeHeaders(1, hw1);
+        srm.storeHeaders(1, list);
 
         // retrieve when nothing was stored for the size
         assertThat(srm.matchHeaders(1, 12)).isNull();
@@ -181,10 +181,9 @@ public class SyncHeaderRequestManagerTest {
     public void test_receivedHeaderManagement() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
-        HeadersWrapper hw1 = new HeadersWrapper(1, "peer1", list);
 
-        srm.storeHeaders(1, hw1);
-        assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw1);
+        srm.storeHeaders(1, list);
+        assertThat(srm.matchHeaders(1, 10)).isEqualTo(list);
 
         // ensure the headers were dropped
         assertThat(srm.matchHeaders(1, 10)).isNull();
@@ -194,15 +193,16 @@ public class SyncHeaderRequestManagerTest {
     public void test_replaceHeaders() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
-        HeadersWrapper hw1 = new HeadersWrapper(1, "peer1", list);
 
-        srm.storeHeaders(1, hw1);
-        assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw1);
+        srm.storeHeaders(1, list);
+        assertThat(srm.matchHeaders(1, 10)).isEqualTo(list);
 
-        // same size wrapper is replaced
-        HeadersWrapper hw2 = new HeadersWrapper(1, "peer1", list);
-        srm.storeHeaders(1, hw2);
-        assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw2);
+        // same size list is replaced
+        List<BlockHeader> list2 = mock(List.class);
+        when(list2.size()).thenReturn(10);
+
+        srm.storeHeaders(1, list2);
+        assertThat(srm.matchHeaders(1, 10)).isEqualTo(list2);
 
         // ensure the headers were dropped
         assertThat(srm.matchHeaders(1, 10)).isNull();
@@ -212,17 +212,15 @@ public class SyncHeaderRequestManagerTest {
     public void test_mutipleSizeHeaderResponses() {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
-        HeadersWrapper hw1 = new HeadersWrapper(1, "peer1", list);
 
-        srm.storeHeaders(1, hw1);
-        assertThat(srm.matchHeaders(1, 10)).isEqualTo(hw1);
+        srm.storeHeaders(1, list);
+        assertThat(srm.matchHeaders(1, 10)).isEqualTo(list);
 
         // new wrapper with different size
         list = mock(List.class);
         when(list.size()).thenReturn(12);
-        HeadersWrapper hw2 = new HeadersWrapper(1, "peer1", list);
 
-        srm.storeHeaders(1, hw2);
-        assertThat(srm.matchHeaders(1, 12)).isEqualTo(hw2);
+        srm.storeHeaders(1, list);
+        assertThat(srm.matchHeaders(1, 12)).isEqualTo(list);
     }
 }

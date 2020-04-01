@@ -283,27 +283,24 @@ public final class SyncMgr {
 
         // NOTE: the filtered headers is still continuous
         if (!filtered.isEmpty()) {
-            syncExecutors.execute(() -> requestBodies(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered)));
+            syncExecutors.execute(() -> requestBodies(_nodeIdHashcode, _displayId, filtered));
         }
     }
 
     /**
      * Requests the bodies associated to the given block headers.
      */
-    private void requestBodies(final HeadersWrapper hw) {
+    private void requestBodies(int nodeId, String displayId, final List<BlockHeader> headers) {
         Thread.currentThread().setName("sync-gb");
         long startTime = System.nanoTime();
-        int idHash = hw.nodeId;
-        String displayId = hw.displayId;
-        List<BlockHeader> headers = hw.headers;
 
         // save headers for matching with bodies
-        syncHeaderRequestManager.storeHeaders(idHash, hw);
+        syncHeaderRequestManager.storeHeaders(nodeId, headers);
 
         // log bodies request before sending the request
-        log.debug("<get-bodies from-num={} to-num={} node={}>", headers.get(0).getNumber(), headers.get(headers.size() - 1).getNumber(), hw.displayId);
+        log.debug("<get-bodies from-num={} to-num={} node={}>", headers.get(0).getNumber(), headers.get(headers.size() - 1).getNumber(), displayId);
 
-        p2pMgr.send(idHash, displayId, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+        p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
         stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
         stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
 
@@ -323,11 +320,10 @@ public final class SyncMgr {
         log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
         // the requests are made such that the size varies to better map headers to bodies
-        HeadersWrapper hw = syncHeaderRequestManager.matchHeaders(_nodeIdHashcode, _bodies.size());
-        if (hw == null) return;
+        List<BlockHeader> headers = syncHeaderRequestManager.matchHeaders(_nodeIdHashcode, _bodies.size());
+        if (headers == null) return;
 
         // assemble batch
-        List<BlockHeader> headers = hw.headers;
         List<Block> blocks = new ArrayList<>(_bodies.size());
         Iterator<BlockHeader> headerIt = headers.iterator();
         Iterator<byte[]> bodyIt = _bodies.iterator();
