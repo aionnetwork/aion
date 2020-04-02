@@ -112,12 +112,12 @@ public class Node {
         return key.isHashCode() && !hasTerminator((byte[]) items.get().get(0));
     }
 
-    public boolean isEmpty() {
-        return value.length() == 0 || (value.isString() && (value.asString().isEmpty()) || value.get(0).isNull());
-    }
-
     public boolean isBytes() {
         return value.isBytes();
+    }
+
+    public boolean isHashCode() {
+        return value.isHashCode();
     }
 
     public byte[] getBytes() {
@@ -168,10 +168,6 @@ public class Node {
     @Override
     public String toString() {
         return "[" + dirty + ", " + value + "]";
-    }
-
-    public byte[] getEncodedValue() {
-        return value.encode();
     }
 
     public byte[] getEncodedValueHash() {

@@ -890,7 +890,7 @@ public class TrieImpl implements Trie {
         }
     }
 
-    private List<byte[]> appendHashes(byte[] bytes) {
+    private static List<byte[]> appendHashes(byte[] bytes) {
         List<byte[]> hashes = new ArrayList<>();
 
         if (bytes == null) {
@@ -905,7 +905,7 @@ public class TrieImpl implements Trie {
             node = new Node(Value.fromRlpEncoded(bytes));
         }
 
-        if (node.getValue().isHashCode()) {
+        if (node.isHashCode()) {
             hashes.add(node.getBytes());
         } else if (node.isPair() && node.isExtension()) {
             hashes.add(node.getKey());
