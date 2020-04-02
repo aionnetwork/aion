@@ -238,7 +238,7 @@ public class Value {
         return value == null;
     }
 
-    private boolean isEmpty() {
+    public boolean isEmpty() {
         decode();
         return isNull() // null
                 || isBytes() && asBytes().length == 0 // empty byte array

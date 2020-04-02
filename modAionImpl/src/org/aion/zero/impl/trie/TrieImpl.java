@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.ConstantUtil;
@@ -82,6 +83,8 @@ public class TrieImpl implements Trie {
     }
 
     public TrieImpl(final Cache cache, Object root) {
+        Objects.requireNonNull(cache);
+        Objects.requireNonNull(root);
         this.cache = cache;
         this.root = root;
         lock = new ReentrantLock();
@@ -483,10 +486,7 @@ public class TrieImpl implements Trie {
     }
 
     private static boolean isEmptyNode(Object node) {
-        Value n = new Value(node);
-        return (node == null
-                || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull()))
-                || n.length() == 0);
+        return new Value(node).isEmpty();
     }
 
     // Simple compare function which compares two tries based on their stateRoot
