@@ -876,10 +876,18 @@ public class BlockchainTestUtils {
                 null);
     }
 
-    public static AionTransaction getFromLargeStorageTransaction(IAvmResourceFactory avmFactory, ECKey caller, byte[] key, BigInteger nonce, AionAddress contract) {
+    /**
+     * Creates a transaction for a call to an AVM contract. Can be used for any method that takes a single byte array as argument.
+     *
+     * For example:
+     * <ul>
+     *     <li>{@link AvmContract#LARGE_STORAGE}: method "getStorage";
+     * </ul>
+     */
+    public static AionTransaction callSimpleAvmContractTransaction(IAvmResourceFactory avmFactory, ECKey caller, BigInteger nonce, AionAddress contract, String methodName, byte[] data) {
         byte[] callBytes = avmFactory.newStreamingEncoder()
-                .encodeOneString("getStorage")
-                .encodeOneByteArray(key)
+                .encodeOneString(methodName)
+                .encodeOneByteArray(data)
                 .getEncoding();
         return AionTransaction.create(
                 caller,
@@ -891,6 +899,19 @@ public class BlockchainTestUtils {
                 NRG_PRICE,
                 TransactionTypes.DEFAULT,
                 null);
+    }
+
+    /**
+     * Creates a transaction for a call to an AVM contract. Can be used for any method that takes a byte array and a long as arguments.
+     *
+     * For example:
+     * <ul>
+     *     <li>{@link AvmContract#DEPLOY_INTERNAL}: methods "deploy" and "deployAndRequireSuccess";
+     * </ul>
+     */
+    public static AionTransaction callSimpleAvmContractTransaction(IAvmResourceFactory avmFactory, ECKey caller, BigInteger nonce, AionAddress contract, String methodName, byte[] data, long value) {
+        byte[] callBytes = avmFactory.newStreamingEncoder().encodeOneString(methodName).encodeOneByteArray(data).encodeOneLong(value).getEncoding();
+        return AionTransaction.create(caller, nonce.toByteArray(), contract, BigInteger.ZERO.toByteArray(), callBytes, LIMIT_CALL, NRG_PRICE, TransactionTypes.DEFAULT, null);
     }
 
     public static AionTransaction deployFvmTickerContractTransaction(ECKey owner, BigInteger nonce) throws IOException {
