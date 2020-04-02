@@ -2,10 +2,12 @@ package org.aion.zero.impl.trie;
 
 import static org.aion.rlp.CompactEncoder.hasTerminator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.rlp.Value;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * A Node in a Merkle Patricia Tree is one of the following:
@@ -45,8 +47,12 @@ public class Node {
     private AtomicReference<List<Object>> items = new AtomicReference<>(null);
     private Value key = null;
 
-    private static final int PAIR_SIZE = 2;
+    static final int PAIR_SIZE = 2;
     static final int BRANCH_SIZE = 17;
+
+    public Node(Object obj) {
+        this(new Value(obj), false);
+    }
 
     public Node(Value val) {
         this(val, false);
@@ -109,6 +115,14 @@ public class Node {
         return value.length() == 0 || (value.isString() && (value.asString().isEmpty()) || value.get(0).isNull());
     }
 
+    public boolean isBytes() {
+        return value.isBytes();
+    }
+
+    public byte[] getBytes() {
+        return value.asBytes();
+    }
+
     public byte[] getEncodedPath() {
         assert isPair();
         return (byte[]) items.get().get(0);
@@ -120,7 +134,17 @@ public class Node {
      * @return the hash of the trie key.
      */
     public byte[] getKey() {
-        return key == null ? null : key.asBytes();
+        if (key == null) {
+            key = new Value(items.get().get(1));
+        }
+        return key.asBytes();
+    }
+
+    public Object getKeyObject() {
+        if (key == null) {
+            key = new Value(items.get().get(1));
+        }
+        return key.asObj();
     }
 
     public Value getBranchItem(int index) {
@@ -129,8 +153,49 @@ public class Node {
         return new Value(items.get().get(index));
     }
 
+    public List<Value> getBranchItems() {
+        assert isBranch();
+        List<Value> branchItems = new ArrayList<>();
+        List<Object> objects = items.get();
+        for (Object obj : objects) {
+            branchItems.add(new Value(obj));
+        }
+
+        return branchItems;
+    }
+
     @Override
     public String toString() {
         return "[" + dirty + ", " + value + "]";
+    }
+
+    public byte[] getEncodedValue() {
+        return value.encode();
+    }
+
+    static Object[] copyNodeObjects(final Node node) {
+        assert node.isBranch();
+
+        Object[] itemList = emptyStringSlice();
+        List<Object> objects = node.getItems();
+
+        for (int index = 0; index < BRANCH_SIZE; index++) {
+            itemList[index] = new Value(objects.get(index)).asObj();
+        }
+
+        return itemList;
+    }
+
+    // Created an array of empty elements of required length
+    static Object[] emptyStringSlice() {
+        Object[] slices = new Object[BRANCH_SIZE];
+        for (int index = 0; index < BRANCH_SIZE; index++) {
+            slices[index] = ByteUtil.EMPTY_BYTE_ARRAY;
+        }
+        return slices;
+    }
+
+    private List<Object> getItems() {
+        return items.get();
     }
 }

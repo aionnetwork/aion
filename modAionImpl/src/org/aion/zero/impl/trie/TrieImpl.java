@@ -2,7 +2,6 @@ package org.aion.zero.impl.trie;
 
 import static java.util.Arrays.copyOfRange;
 import static org.aion.rlp.CompactEncoder.binToNibbles;
-import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
@@ -67,8 +66,6 @@ import org.aion.zero.impl.trie.scan.TraceAllNodes;
  * @since 20.05.2014
  */
 public class TrieImpl implements Trie {
-    private static final byte PAIR_SIZE = 2;
-    private static final byte LIST_SIZE = 17;
     private static final int MAX_SIZE = 20;
 
     private Object root;
@@ -250,25 +247,23 @@ public class TrieImpl implements Trie {
     private Object get(Object node, byte[] key) {
         int keypos = 0;
         while (key.length - keypos != 0 && !isEmptyNode(node)) {
-            Value currentNode = this.getNode(node);
+            Node currentNode = this.getNode(node);
             if (currentNode == null) {
                 return null;
             }
 
-            if (currentNode.length() == PAIR_SIZE) {
-                // Decode the key
-                byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
-                Object v = currentNode.get(1).asObj();
-
-                if (key.length - keypos >= k.length
-                        && Arrays.equals(k, copyOfRange(key, keypos, k.length + keypos))) {
-                    node = v;
-                    keypos += k.length;
+            if (currentNode.isPair()) {
+                byte[] path = unpackToNibbles(currentNode.getEncodedPath());
+                Object value = currentNode.getKeyObject();
+                if (key.length - keypos >= path.length
+                    && Arrays.equals(path, copyOfRange(key, keypos, path.length + keypos))) {
+                    node = value;
+                    keypos += path.length;
                 } else {
                     return ByteUtil.EMPTY_BYTE_ARRAY;
                 }
-            } else {
-                node = currentNode.get(key[keypos]).asObj();
+            } else if (currentNode.isBranch()) {
+                node = currentNode.getBranchItem(key[keypos]).asObj();
                 keypos++;
             }
         }
@@ -291,80 +286,78 @@ public class TrieImpl implements Trie {
             return this.putToCache(newNode);
         }
 
-        Value currentNode = this.getNode(node);
+        Node currentNode = this.getNode(node);
 
         if (currentNode == null) {
             throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
         }
 
-        // Check for "special" 2 slice type node
-        if (currentNode.length() == PAIR_SIZE) {
+        if (currentNode.isPair()) {
             // Decode the key
-            byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
-            Object v = currentNode.get(1).asObj();
+            byte[] path = unpackToNibbles(currentNode.getEncodedPath());
+            Object v = currentNode.getKeyObject();
 
             // Matching key pair (ie. there's already an object with this key)
-            if (Arrays.equals(k, key)) {
+            if (Arrays.equals(path, key)) {
                 Object[] newNode = new Object[] {packNibbles(key), value};
                 return this.putToCache(newNode);
             }
 
             Object newHash;
-            int matchingLength = matchingNibbleLength(key, k);
-            if (matchingLength == k.length) {
+            int matchingLength = matchingNibbleLength(key, path);
+            if (matchingLength == path.length) {
                 // Insert the hash, creating a new node
                 byte[] remainingKeypart = copyOfRange(key, matchingLength, key.length);
                 newHash = this.insert(v, remainingKeypart, value);
-
             } else {
-
                 // Expand the 2 length slice to a 17 length slice
                 // Create two nodes to putToCache into the new 17 length node
-                Object oldNode = this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(k, matchingLength + 1, k.length), v);
+                Object oldNode = this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(path, matchingLength + 1, path.length), v);
                 Object newNode =
-                        this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(key, matchingLength + 1, key.length), value);
+                    this.insert(ByteUtil.EMPTY_BYTE_ARRAY, copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
-                Object[] scaledSlice = emptyStringSlice(LIST_SIZE);
+                Object[] scaledSlice = Node.emptyStringSlice();
 
                 // Set the copied and new node
-                scaledSlice[k[matchingLength]] = oldNode;
+                scaledSlice[path[matchingLength]] = oldNode;
                 scaledSlice[key[matchingLength]] = newNode;
                 newHash = this.putToCache(scaledSlice);
             }
 
-            markRemoved(HashUtil.h256(currentNode.encode()));
+            markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
 
             if (matchingLength == 0) {
                 // End of the chain, return
                 return newHash;
             } else {
                 Object[] newNode =
-                        new Object[] {packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
+                    new Object[] {packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
                 return this.putToCache(newNode);
             }
-        } else {
-
+        } else if (currentNode.isBranch()){
             // Copy the current node over to the new node
-            Object[] newNode = copyNode(currentNode);
+            Object[] newNode = Node.copyNodeObjects(currentNode);
 
             // Replace the first nibble in the key
             newNode[key[0]] =
-                    this.insert(
-                            currentNode.get(key[0]).asObj(),
-                            copyOfRange(key, 1, key.length),
-                            value);
+                this.insert(
+                    currentNode.getBranchItem(key[0]).asObj(),
+                    copyOfRange(key, 1, key.length),
+                    value);
 
             if (!Arrays.equals(
-                    HashUtil.h256(getNode(newNode).encode()),
-                    HashUtil.h256(currentNode.encode()))) {
-                markRemoved(HashUtil.h256(currentNode.encode()));
-                if (!isEmptyNode(currentNode.get(key[0]))) {
-                    markRemoved(currentNode.get(key[0]).asBytes());
+                    HashUtil.h256(getNode(newNode).getEncodedValue()),
+                    HashUtil.h256(currentNode.getEncodedValue()))) {
+                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
+                if (!isEmptyNode(currentNode.getBranchItem(key[0]))) {
+                    markRemoved(currentNode.getBranchItem(key[0]).asBytes());
                 }
             }
 
             return this.putToCache(newNode);
+        } else {
+            throw new RuntimeException("Invalid node type " + currentNode);
         }
     }
 
@@ -375,45 +368,45 @@ public class TrieImpl implements Trie {
         }
 
         // New node
-        Value currentNode = this.getNode(node);
+        Node currentNode = this.getNode(node);
         if (currentNode == null) {
             throw new RuntimeException("Invalid Trie state, missing node " + new Value(node));
         }
 
         // Check for "special" 2 slice type node
-        if (currentNode.length() == PAIR_SIZE) {
+        if (currentNode.isPair()) {
             // Decode the key
-            byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
-            Object v = currentNode.get(1).asObj();
+            byte[] path = unpackToNibbles(currentNode.getEncodedPath());
+            Object value = currentNode.getKeyObject();
 
             // Matching key pair (ie. there's already an object with this key)
-            if (Arrays.equals(k, key)) {
+            if (Arrays.equals(path, key)) {
                 return ByteUtil.EMPTY_BYTE_ARRAY;
-            } else if (Arrays.equals(copyOfRange(key, 0, k.length), k)) {
-                Object hash = this.delete(v, copyOfRange(key, k.length, key.length));
-                Value child = this.getNode(hash);
+            } else if (Arrays.equals(copyOfRange(key, 0, path.length), path)) {
+                Object hash = this.delete(value, copyOfRange(key, path.length, key.length));
+                Node child = this.getNode(hash);
 
                 Object newNode;
-                if (child.length() == PAIR_SIZE) {
-                    byte[] newKey = concatenate(k, unpackToNibbles(child.get(0).asBytes()));
-                    newNode = new Object[] {packNibbles(newKey), child.get(1).asObj()};
+                if (child.isPair()) {
+                    byte[] newKey = concatenate(path, unpackToNibbles(child.getEncodedPath()));
+                    newNode = new Object[] {packNibbles(newKey), child.getKeyObject()};
                 } else {
-                    newNode = new Object[] {currentNode.get(0), hash};
+                    newNode = new Object[] {currentNode.getEncodedPath(), hash};
                 }
-                markRemoved(HashUtil.h256(currentNode.encode()));
+                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
                 return this.putToCache(newNode);
             } else {
                 return node;
             }
         } else {
             // Copy the current node over to a new node
-            Object[] itemList = copyNode(currentNode);
+            Object[] itemList = Node.copyNodeObjects(currentNode);
 
             // Replace the first nibble in the key
             itemList[key[0]] = this.delete(itemList[key[0]], copyOfRange(key, 1, key.length));
 
             byte amount = -1;
-            for (byte i = 0; i < LIST_SIZE; i++) {
+            for (byte i = 0; i < Node.BRANCH_SIZE; i++) {
                 if (itemList[i] != ByteUtil.EMPTY_BYTE_ARRAY) {
                     if (amount == -1) {
                         amount = i;
@@ -427,11 +420,11 @@ public class TrieImpl implements Trie {
             if (amount == 16) {
                 newNode = new Object[] {packNibbles(new byte[] {16}), itemList[amount]};
             } else if (amount >= 0) {
-                Value child = this.getNode(itemList[amount]);
-                if (child.length() == PAIR_SIZE) {
-                    key = concatenate(new byte[] {amount}, unpackToNibbles(child.get(0).asBytes()));
-                    newNode = new Object[] {packNibbles(key), child.get(1).asObj()};
-                } else if (child.length() == LIST_SIZE) {
+                Node child = this.getNode(itemList[amount]);
+                if (child.isPair()) {
+                    key = concatenate(new byte[] {amount}, unpackToNibbles(child.getEncodedPath()));
+                    newNode = new Object[] {packNibbles(key), child.getKeyObject()};
+                } else if (child.isBranch()) {
                     newNode = new Object[] {packNibbles(new byte[] {amount}), itemList[amount]};
                 }
             } else {
@@ -439,9 +432,9 @@ public class TrieImpl implements Trie {
             }
 
             if (!Arrays.equals(
-                    HashUtil.h256(getNode(newNode).encode()),
-                    HashUtil.h256(currentNode.encode()))) {
-                markRemoved(HashUtil.h256(currentNode.encode()));
+                    HashUtil.h256(getNode(newNode).getEncodedValue()),
+                    HashUtil.h256(currentNode.getEncodedValue()))) {
+                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
             }
 
             return this.putToCache(newNode);
@@ -458,24 +451,24 @@ public class TrieImpl implements Trie {
      * Helper method to retrieve the actual node. If the node is not a list and length is > 32 bytes
      * get the actual node from the db.
      */
-    private Value getNode(Object node) {
+    private Node getNode(Object key) {
 
-        Value val = new Value(node);
+        Node node = new Node(key);
 
         // in that case we got a node
         // so no need to encode it
-        if (!val.isBytes()) {
-            return val;
+        if (!node.isBytes()) {
+            return node;
         }
 
-        byte[] keyBytes = val.asBytes();
+        byte[] keyBytes = node.getBytes();
         if (keyBytes.length == 0) {
-            return val;
+            return node;
         } else if (keyBytes.length < ByteUtil.EMPTY_WORD.length) {
-            return new Value(keyBytes);
+            return new Node(new Value(keyBytes));
+        } else {
+            return this.cache.get(keyBytes);
         }
-        Node nodeFromCache = this.cache.get(keyBytes);
-        return nodeFromCache == null ? null : nodeFromCache.getValue();
     }
 
     private Object putToCache(Object node) {
@@ -495,17 +488,6 @@ public class TrieImpl implements Trie {
         return (node == null
                 || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull()))
                 || n.length() == 0);
-    }
-
-    private static Object[] copyNode(Value currentNode) {
-        Object[] itemList = emptyStringSlice(LIST_SIZE);
-        for (int i = 0; i < LIST_SIZE; i++) {
-            Object cpy = currentNode.get(i).asObj();
-            if (cpy != null) {
-                itemList[i] = cpy;
-            }
-        }
-        return itemList;
     }
 
     // Simple compare function which compares two tries based on their stateRoot
@@ -542,14 +524,7 @@ public class TrieImpl implements Trie {
     }
 
     /** ****************************** Utility functions * ***************************** */
-    // Created an array of empty elements of required length
-    private static Object[] emptyStringSlice(int l) {
-        Object[] slice = new Object[l];
-        for (int i = 0; i < l; i++) {
-            slice[i] = ByteUtil.EMPTY_BYTE_ARRAY;
-        }
-        return slice;
-    }
+
 
     private void scanTree(byte[] hash, ScanAction scanAction) {
         Node node = this.getCache().get(hash);
@@ -562,10 +537,9 @@ public class TrieImpl implements Trie {
                 scanTree(node.getKey(), scanAction);
             }
         } else if (node.isBranch()) {
-            for (int index = 0; index < Node.BRANCH_SIZE; index++) {
-                Value item = node.getBranchItem(index);
-                if (item.isHashCode()) {
-                    scanTree(item.asBytes(), scanAction);
+            for (Value value : node.getBranchItems()) {
+                if (value.isHashCode()) {
+                    scanTree(value.asBytes(), scanAction);
                 }
             }
         } else {
@@ -591,10 +565,9 @@ public class TrieImpl implements Trie {
                     hashes.add(node.getKey());
                 }
             } else if (node.isBranch()) {
-                for (int index = 0; index < Node.BRANCH_SIZE; index++) {
-                    Value item = node.getBranchItem(index);
-                    if (item.isHashCode()) {
-                        hashes.add(item.asBytes());
+                for (Value value : node.getBranchItems()) {
+                    if (value.isHashCode()) {
+                        hashes.add(value.asBytes());
                     }
                 }
             } else {
@@ -632,10 +605,9 @@ public class TrieImpl implements Trie {
                         }
                     }
                 } else if (node.isBranch()) {
-                    for (int index = 0; index < Node.BRANCH_SIZE; index++) {
-                        Value item = node.getBranchItem(index);
-                        if (item.isHashCode()) {
-                            byte[] key = item.asBytes();
+                    for (Value value : node.getBranchItems()) {
+                        if (value.isHashCode()) {
+                            byte[] key = value.asBytes();
                             if (!db.get(key).isPresent()) {
                                 hashes.add(key);
                             }
@@ -869,10 +841,9 @@ public class TrieImpl implements Trie {
                     hashes.add(node.getKey());
                     items++;
                 } else if (node.isBranch()) {
-                    for (int index = 0; index < Node.BRANCH_SIZE; index++) {
-                        Value item = node.getBranchItem(index);
-                        if (item.isHashCode()) {
-                            hashes.add(item.asBytes());
+                    for (Value value : node.getBranchItems()) {
+                        if (value.isHashCode()) {
+                            hashes.add(value.asBytes());
                             items++;
                         }
                     }
@@ -903,10 +874,9 @@ public class TrieImpl implements Trie {
                             items++;
                         }
                     } else if (node.isBranch()) {
-                        for (int index = 0; index < Node.BRANCH_SIZE; index++) {
-                            Value item = node.getBranchItem(index);
-                            if (item.isHashCode()) {
-                                hashes.add(item.asBytes());
+                        for (Value value : node.getBranchItems()) {
+                            if (value.isHashCode()) {
+                                hashes.add(value.asBytes());
                                 items++;
                             }
                         }
@@ -923,34 +893,27 @@ public class TrieImpl implements Trie {
 
     private List<byte[]> appendHashes(byte[] bytes) {
         List<byte[]> hashes = new ArrayList<>();
-        Value node;
 
-        if (bytes.length == ByteUtil.EMPTY_WORD.length) {
-            // it's considered a hashCode/key according to Value.isHashCode()
-            node = new Value(bytes);
-        } else {
-            node = Value.fromRlpEncoded(bytes);
-        }
-
-        if (node == null) {
+        if (bytes == null) {
             return hashes;
         }
 
-        if (node.isHashCode()) {
-            hashes.add(node.asBytes());
-        } else if (node.isList()) {
-            List<Object> siblings = node.asList();
-            if (siblings.size() == PAIR_SIZE) {
-                Value val = new Value(siblings.get(1));
-                if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
-                    hashes.add(val.asBytes());
-                }
-            } else {
-                for (int j = 0; j < LIST_SIZE; ++j) {
-                    Value val = new Value(siblings.get(j));
-                    if (val.isHashCode()) {
-                        hashes.add(val.asBytes());
-                    }
+        Node node;
+        if (bytes.length == ByteUtil.EMPTY_WORD.length) {
+            // it's considered a hashCode/key according to Value.isHashCode()
+            node = new Node(new Value(bytes));
+        } else {
+            node = new Node(Value.fromRlpEncoded(bytes));
+        }
+
+        if (node.getValue().isHashCode()) {
+            hashes.add(node.getBytes());
+        } else if (node.isPair() && node.isExtension()) {
+            hashes.add(node.getKey());
+        } else if (node.isBranch()) {
+            for (Value value : node.getBranchItems()) {
+                if (value.isHashCode()) {
+                    hashes.add(value.asBytes());
                 }
             }
         }
