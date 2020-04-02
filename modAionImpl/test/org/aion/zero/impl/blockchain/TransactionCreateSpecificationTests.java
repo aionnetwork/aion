@@ -816,6 +816,419 @@ public class TransactionCreateSpecificationTests {
     }
 
     @Test
+    public void deployInternalAvmContractOnTopOfAddressWithBalanceUsingAvmVersion2_DeployAndRequireSuccess() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version with required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deployAndRequireSuccess", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default balance value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.addBalance(internalContract, BigInteger.TEN);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isFalse();
+        assertThat(result.isRejected()).isFalse();
+        assertThat(result.getReceipt().getError()).isEmpty();
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isFalse();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithBalanceUsingAvmVersion2() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version without required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deploy", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default balance value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.addBalance(internalContract, BigInteger.TEN);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isFalse();
+        assertThat(result.isRejected()).isFalse();
+        assertThat(result.getReceipt().getError()).isEmpty();
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isFalse();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithNonceUsingAvmVersion2_DeployAndRequireSuccess() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version with required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deployAndRequireSuccess", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default nonce value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.setNonce(internalContract, BigInteger.TEN);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isTrue();
+        assertThat(result.getReceipt().getError()).isEqualTo("reverted");
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isTrue();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithNonceUsingAvmVersion2() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version without required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deploy", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default nonce value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.setNonce(internalContract, BigInteger.TEN);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isFalse();
+        assertThat(result.isRejected()).isFalse();
+        assertThat(result.getReceipt().getError()).isEmpty();
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isFalse();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithStorageUsingAvmVersion2_DeployAndRequireSuccess() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version with required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deployAndRequireSuccess", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default storage value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
+        cache.saveVmType(internalContract, InternalVmType.AVM);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isTrue();
+        assertThat(result.getReceipt().getError()).isEqualTo("reverted");
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isTrue();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithStorageUsingAvmVersion2() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version without required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deploy", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default storage value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
+        cache.saveVmType(internalContract, InternalVmType.AVM);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isFalse();
+        assertThat(result.isRejected()).isFalse();
+        assertThat(result.getReceipt().getError()).isEmpty();
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isFalse();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithCodeUsingAvmVersion2_DeployAndRequireSuccess() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version with required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deployAndRequireSuccess", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default code value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
+        cache.saveVmType(internalContract, InternalVmType.AVM);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+        byte[] oldCode = contractState.getCodeHash();
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isTrue();
+        assertThat(result.getReceipt().getError()).isEqualTo("reverted");
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isTrue();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
+    }
+
+    @Test
+    public void deployInternalAvmContractOnTopOfAddressWithCodeUsingAvmVersion2() throws VmFatalException {
+        // Deploy AVM contract.
+        AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.DEPLOY_INTERNAL, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
+
+        Pair<Block, ImportResult> resultImport = BlockchainTestUtils.addMiningBlock(blockchain, blockchain.getBestBlock(), List.of(deployTxAvm));
+        assertThat(resultImport.getRight()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Call AVM contract to deploy new internal AVM contract (version without required success).
+        long internalLimit = 1_000_000;
+        AionTransaction deployInternal = BlockchainTestUtils.callSimpleAvmContractTransaction(resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ONE, contract, "deploy", deployTxAvm.getData(), internalLimit);
+        AionAddress internalContract = new AionAddress(Hex.decode("a0268090998a99666b72cc452b9307438a34341047d9e0d7b92c9207bf413655"));
+        assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
+
+        // Manipulate the repository to have a non-default code value.
+        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        cache.createAccount(internalContract);
+        cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
+        cache.saveVmType(internalContract, InternalVmType.AVM);
+        cache.flush();
+
+        // Check assumptions about contract state.
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+        byte[] oldCode = contractState.getCodeHash();
+
+        // Next, process the deploy transaction with fork040 enabled.
+        AionTxExecSummary result = executeTransaction(deployInternal, true);
+
+        assertThat(result.isFailed()).isFalse();
+        assertThat(result.isRejected()).isFalse();
+        assertThat(result.getReceipt().getError()).isEmpty();
+        assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployInternal.getEnergyLimit()));
+        assertThat(result.getLogs()).isEmpty();
+
+        InternalTransaction itx = result.getInternalTransactions().get(0);
+        assertThat(itx.isCreate).isTrue();
+        assertThat(TxUtil.calculateContractAddress(itx)).isEqualTo(internalContract);
+        assertThat(itx.isRejected).isFalse();
+        assertThat(itx.energyLimit).isEqualTo(internalLimit);
+        assertThat(result.getNrgUsed()).isGreaterThan(BigInteger.valueOf(itx.energyLimit));
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
+    }
+
+    @Test
     public void deployFvmContractOnTopOfAddressWithBalanceBeforeFork040() throws VmFatalException {
         // Deploy FVM contract.
         String contractCode = "0x605060405234156100105760006000fd5b5b600a600060005081909090555060006000505460016000506000600060005054815260100190815260100160002090506000508190909055506064600260005060000160005081909090555060c8600260005060010160005081909090555060026000506001016000505460016000506000600260005060000160005054815260100190815260100160002090506000508190909055505b6100ae565b610184806100bd6000396000f30060506040526000356c01000000000000000000000000900463ffffffff1680631677b0ff14610049578063209652551461007657806362eb702a146100a057610043565b60006000fd5b34156100555760006000fd5b61007460048080359060100190919080359060100190919050506100c4565b005b34156100825760006000fd5b61008a610111565b6040518082815260100191505060405180910390f35b34156100ac5760006000fd5b6100c26004808035906010019091905050610123565b005b8160026000506000016000508190909055508060026000506001016000508190909055508082016001600050600084815260100190815260100160002090506000508190909055505b5050565b60006000600050549050610120565b90565b806000600050819090905550600181016001600050600083815260100190815260100160002090506000508190909055505b505600a165627a7a723058205b6e690d70d3703337452467437dc7c4e863ee4ad34b24cc516e2afa71e334700029";
