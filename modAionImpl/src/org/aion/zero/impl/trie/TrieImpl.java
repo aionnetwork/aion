@@ -419,8 +419,8 @@ public class TrieImpl implements Trie {
             }
 
             Object[] newNode = null;
-            if (amount == 16) {
-                newNode = new Object[] {packNibbles(new byte[] {16}), itemList[amount]};
+            if (amount == Node.BRANCH_SIZE - 1) {
+                newNode = new Object[] {packNibbles(new byte[] {Node.BRANCH_SIZE - 1}), itemList[amount]};
             } else if (amount >= 0) {
                 Node child = this.getNode(itemList[amount]);
                 if (child.isPair()) {
