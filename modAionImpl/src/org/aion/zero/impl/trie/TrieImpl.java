@@ -325,7 +325,7 @@ public class TrieImpl implements Trie {
                 newHash = this.putToCache(scaledSlice);
             }
 
-            markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
+            markRemoved(currentNode.getEncodedValueHash());
 
             if (matchingLength == 0) {
                 // End of the chain, return
@@ -347,9 +347,9 @@ public class TrieImpl implements Trie {
                     value);
 
             if (!Arrays.equals(
-                    HashUtil.h256(getNode(newNode).getEncodedValue()),
-                    HashUtil.h256(currentNode.getEncodedValue()))) {
-                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
+                    getNode(newNode).getEncodedValueHash(),
+                    currentNode.getEncodedValueHash())) {
+                markRemoved(currentNode.getEncodedValueHash());
                 if (!isEmptyNode(currentNode.getBranchItem(key[0]))) {
                     markRemoved(currentNode.getBranchItem(key[0]).asBytes());
                 }
@@ -393,7 +393,7 @@ public class TrieImpl implements Trie {
                 } else {
                     newNode = new Object[] {currentNode.getEncodedPath(), hash};
                 }
-                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
+                markRemoved(currentNode.getEncodedValueHash());
                 return this.putToCache(newNode);
             } else {
                 return node;
@@ -432,9 +432,9 @@ public class TrieImpl implements Trie {
             }
 
             if (!Arrays.equals(
-                    HashUtil.h256(getNode(newNode).getEncodedValue()),
-                    HashUtil.h256(currentNode.getEncodedValue()))) {
-                markRemoved(HashUtil.h256(currentNode.getEncodedValue()));
+                    getNode(newNode).getEncodedValueHash(),
+                    currentNode.getEncodedValueHash())) {
+                markRemoved(currentNode.getEncodedValueHash());
             }
 
             return this.putToCache(newNode);

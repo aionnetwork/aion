@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import org.aion.crypto.HashUtil;
 import org.aion.rlp.Value;
 import org.aion.util.bytes.ByteUtil;
 
@@ -171,6 +172,10 @@ public class Node {
 
     public byte[] getEncodedValue() {
         return value.encode();
+    }
+
+    public byte[] getEncodedValueHash() {
+        return HashUtil.h256(value.encode());
     }
 
     static Object[] copyNodeObjects(final Node node) {
