@@ -4,6 +4,7 @@ import org.aion.avm.core.dappreading.UserlibJarBuilder;
 import org.aion.avm.stub.IContractFactory;
 import org.aion.avm.tooling.deploy.OptimizedJarBuilder;
 import org.aion.avm.userlib.CodeAndArguments;
+import org.aion.avm.version2.contracts.DeployAsInternalTransaction;
 import org.aion.avm.version2.contracts.GenericContract;
 import org.aion.avm.version2.contracts.HelloWorld;
 import org.aion.avm.version2.contracts.InternalTransaction;
@@ -38,6 +39,8 @@ public final class ContractFactory implements IContractFactory {
                 return new CodeAndArguments(getOptimizedDappBytes(MetaTransactionProxy.class), new byte[0]).encodeToBytes();
             case LARGE_STORAGE:
                 return new CodeAndArguments(getOptimizedDappBytes(LargeStorage.class), new byte[0]).encodeToBytes();
+            case DEPLOY_INTERNAL:
+                return new CodeAndArguments(getOptimizedDappBytes(DeployAsInternalTransaction.class), new byte[0]).encodeToBytes();
             default : throw new IllegalStateException("The following contract is not supported by version 2 of the avm: " + contract);
         }
     }

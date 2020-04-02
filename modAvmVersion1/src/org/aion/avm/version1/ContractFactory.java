@@ -8,6 +8,7 @@ import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.avm.userlib.abi.ABIException;
 import org.aion.avm.userlib.abi.ABIToken;
+import org.aion.avm.version1.contracts.DeployAsInternalTransaction;
 import org.aion.avm.version1.contracts.GenericContract;
 import org.aion.avm.version1.contracts.HelloWorld;
 import org.aion.avm.version1.contracts.InternalTransaction;
@@ -37,6 +38,8 @@ public final class ContractFactory implements IContractFactory {
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(GenericContract.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
             case INTERNAL_TRANSACTION:
                 return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(InternalTransaction.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class), new byte[0]).encodeToBytes();
+            case DEPLOY_INTERNAL:
+                return new CodeAndArguments(getOptimizedDappBytes(DeployAsInternalTransaction.class), new byte[0]).encodeToBytes();
             case UNITY_STAKER_REGISTRY:
                 byte[] jar = JarBuilder.buildJarForMainAndClasses(StakerRegistry.class, StakerRegistryEvents.class, StakerStorageObjects.class, StakerRegistryStorage.class);
                 byte[] compiledJar = new OptimizedJarBuilder(false, jar, 1).withUnreachableMethodRemover().withConstantRemover().getOptimizedBytes();
@@ -66,5 +69,14 @@ public final class ContractFactory implements IContractFactory {
                 return JarBuilder.buildJarForMainAndClasses(InternalTransaction.class, ABIEncoder.class, ABIDecoder.class, ABIException.class, ABIToken.class);
             default : throw new IllegalStateException("The following contract is not supported by version 1 of the avm: " + contract);
         }
+    }
+
+    public byte[] getOptimizedDappBytes(Class<?> mainClass, Class<?> ...otherClasses) {
+        byte[] jarBytes = JarBuilder.buildJarForMainAndClassesAndUserlib(mainClass, otherClasses);
+        return new OptimizedJarBuilder(false, jarBytes, 1)
+                .withUnreachableMethodRemover()
+                .withRenamer()
+                .withConstantRemover()
+                .getOptimizedBytes();
     }
 }
