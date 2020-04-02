@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 public class Cache {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    private static final int FLUSH_THRESHOLD = 20;
 
     private ByteArrayKeyValueStore dataSource;
     private Map<ByteArrayWrapper, Node> nodes = new LinkedHashMap<>();
@@ -101,6 +102,10 @@ public class Cache {
         } finally {
             lock.unlock();
         }
+    }
+
+    public void commit() {
+        this.commit(this.shouldFlush());
     }
 
     public void commit(boolean flushCache) {
@@ -226,5 +231,9 @@ public class Cache {
         } finally {
             lock.unlock();
         }
+    }
+
+    private boolean shouldFlush() {
+        return !this.isDirty() || this.getSize() > FLUSH_THRESHOLD;
     }
 }

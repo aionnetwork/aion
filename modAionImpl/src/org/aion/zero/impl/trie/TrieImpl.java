@@ -66,7 +66,6 @@ import org.aion.zero.impl.trie.scan.TraceAllNodes;
  * @since 20.05.2014
  */
 public class TrieImpl implements Trie {
-    private static final int MAX_SIZE = 20;
 
     private Object root;
     private Cache cache;
@@ -507,7 +506,7 @@ public class TrieImpl implements Trie {
     public void sync() {
         lock.lock();
         try {
-            this.cache.commit(!cache.isDirty() || cache.getSize() > MAX_SIZE);
+            this.cache.commit();
         } finally {
             lock.unlock();
         }
