@@ -81,16 +81,16 @@ public class TransactionCreateSpecificationTests {
         AvmTestConfig.supportOnlyAvmVersion1();
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion1, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
-        // Manipulate the repository to have a non-default nonce value.
+        // Manipulate the repository to have a non-default balance value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.addBalance(fvmContract, BigInteger.TEN);
+        cache.createAccount(contract);
+        cache.addBalance(contract, BigInteger.TEN);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
@@ -104,6 +104,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -112,16 +118,16 @@ public class TransactionCreateSpecificationTests {
         AvmTestConfig.supportOnlyAvmVersion1();
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion1, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default nonce value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.setNonce(fvmContract, BigInteger.TEN);
+        cache.createAccount(contract);
+        cache.setNonce(contract, BigInteger.TEN);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
@@ -135,6 +141,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -143,20 +155,21 @@ public class TransactionCreateSpecificationTests {
         AvmTestConfig.supportOnlyAvmVersion1();
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion1, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default storage value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
-        cache.saveVmType(fvmContract, InternalVmType.AVM);
+        cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
+        cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxAvm, true);
@@ -166,6 +179,13 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -174,21 +194,23 @@ public class TransactionCreateSpecificationTests {
         AvmTestConfig.supportOnlyAvmVersion1();
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion1, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
-        // Manipulate the repository to have a non-default storage value.
+        // Manipulate the repository to have a non-default code value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
-        cache.saveVmType(fvmContract, InternalVmType.AVM);
+        cache.createAccount(contract);
+        cache.saveCode(contract, new byte[] {1, 2, 3, 4});
+        cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+        byte[] oldCode = contractState.getCodeHash();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxAvm, true);
@@ -198,22 +220,31 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        // Odd behaviour: the code is not overwritten. Not a problem since AVM Version 1 is no longer used for deployments.
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
     }
 
     @Test
     public void deployAvmContractOnTopOfAddressWithBalanceUsingAvmVersion2() throws VmFatalException {
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
-        // Manipulate the repository to have a non-default nonce value.
+        // Manipulate the repository to have a non-default balance value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.addBalance(fvmContract, BigInteger.TEN);
+        cache.createAccount(contract);
+        cache.addBalance(contract, BigInteger.TEN);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
@@ -227,22 +258,28 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
     public void deployAvmContractOnTopOfAddressWithNonceUsingAvmVersion2() throws VmFatalException {
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default nonce value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.setNonce(fvmContract, BigInteger.TEN);
+        cache.createAccount(contract);
+        cache.setNonce(contract, BigInteger.TEN);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
@@ -255,26 +292,33 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo("Failed: destination address has a non-default state");
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
     public void deployAvmContractOnTopOfAddressWithStorageUsingAvmVersion2() throws VmFatalException {
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default storage value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
-        cache.saveVmType(fvmContract, InternalVmType.AVM);
+        cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
+        cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxAvm, true);
@@ -283,27 +327,35 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo("Failed: destination address has a non-default state");
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
     public void deployAvmContractOnTopOfAddressWithCodeUsingAvmVersion2() throws VmFatalException {
         // Deploy AVM contract.
         AionTransaction deployTxAvm = BlockchainTestUtils.deployAvmContractTransaction(AvmContract.HELLO_WORLD, resourceProvider.factoryForVersion2, SENDER_KEY, BigInteger.ZERO);
-        AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxAvm);
+        AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
-        // Manipulate the repository to have a non-default storage value.
+        // Manipulate the repository to have a non-default code value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
-        cache.createAccount(fvmContract);
-        cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
-        cache.saveVmType(fvmContract, InternalVmType.AVM);
+        cache.createAccount(contract);
+        cache.saveCode(contract, new byte[] {1, 2, 3, 4});
+        cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
 
         // Check assumptions about contract state.
-        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
         assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
+        byte[] oldCode = contractState.getCodeHash();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxAvm, true);
@@ -312,6 +364,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo("Failed: destination address has a non-default state");
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxAvm.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
     }
 
     @Test
@@ -321,7 +379,7 @@ public class TransactionCreateSpecificationTests {
         AionTransaction deployTxFVM = AionTransaction.create(SENDER_KEY, BigInteger.ZERO.toByteArray(), null, BigInteger.ZERO.toByteArray(), ByteUtil.hexStringToBytes(contractCode), 5_000_000L, ENERGY_PRICE, TransactionTypes.DEFAULT, null);
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
-        // Manipulate the repository to have a non-default nonce value.
+        // Manipulate the repository to have a non-default balance value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
@@ -334,13 +392,19 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
 
-        // Next, process the deploy transaction with fork040 enabled.
+        // Next, process the deploy transaction with fork040 disabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, false);
 
         assertThat(result.isFailed()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -363,13 +427,19 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
 
-        // Next, process the deploy transaction with fork040 enabled.
+        // Next, process the deploy transaction with fork040 disabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, false);
 
         assertThat(result.isFailed()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -392,14 +462,21 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
 
-        // Next, process the deploy transaction with fork040 enabled.
+        // Next, process the deploy transaction with fork040 disabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, false);
 
         assertThat(result.isFailed()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -409,7 +486,7 @@ public class TransactionCreateSpecificationTests {
         AionTransaction deployTxFVM = AionTransaction.create(SENDER_KEY, BigInteger.ZERO.toByteArray(), null, BigInteger.ZERO.toByteArray(), ByteUtil.hexStringToBytes(contractCode), 5_000_000L, ENERGY_PRICE, TransactionTypes.DEFAULT, null);
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
-        // Manipulate the repository to have a non-default storage value.
+        // Manipulate the repository to have a non-default code value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
@@ -422,14 +499,21 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldCode = contractState.getCodeHash();
 
-        // Next, process the deploy transaction with fork040 enabled.
+        // Next, process the deploy transaction with fork040 disabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, false);
 
         assertThat(result.isFailed()).isTrue();
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
     }
 
     @Test
@@ -439,7 +523,7 @@ public class TransactionCreateSpecificationTests {
         AionTransaction deployTxFVM = AionTransaction.create(SENDER_KEY, BigInteger.ZERO.toByteArray(), null, BigInteger.ZERO.toByteArray(), ByteUtil.hexStringToBytes(contractCode), 5_000_000L, ENERGY_PRICE, TransactionTypes.DEFAULT, null);
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
-        // Manipulate the repository to have a non-default nonce value.
+        // Manipulate the repository to have a non-default balance value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
@@ -460,6 +544,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEmpty();
         assertThat(result.getNrgUsed()).isLessThan(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -489,6 +579,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -511,6 +607,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isNotEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
+        byte[] oldRoot = contractState.getStateRoot();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, true);
@@ -519,6 +616,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.TEN);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(oldRoot);
+        assertThat(contractState.getCodeHash()).isEqualTo(EMPTY_DATA_HASH);
     }
 
     @Test
@@ -528,7 +631,7 @@ public class TransactionCreateSpecificationTests {
         AionTransaction deployTxFVM = AionTransaction.create(SENDER_KEY, BigInteger.ZERO.toByteArray(), null, BigInteger.ZERO.toByteArray(), ByteUtil.hexStringToBytes(contractCode), 5_000_000L, ENERGY_PRICE, TransactionTypes.DEFAULT, null);
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
-        // Manipulate the repository to have a non-default storage value.
+        // Manipulate the repository to have a non-default code value.
         RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
@@ -541,6 +644,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
         assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
         assertThat(contractState.getCodeHash()).isNotEqualTo(EMPTY_DATA_HASH);
+        byte[] oldCode = contractState.getCodeHash();
 
         // Next, process the deploy transaction with fork040 enabled.
         AionTxExecSummary result = executeTransaction(deployTxFVM, true);
@@ -549,6 +653,12 @@ public class TransactionCreateSpecificationTests {
         assertThat(result.getReceipt().getError()).isEqualTo(FastVmResultCode.FAILURE.toString());
         assertThat(result.getNrgUsed()).isEqualTo(BigInteger.valueOf(deployTxFVM.getEnergyLimit()));
         assertThat(result.getLogs()).isEmpty();
+
+        contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
+        assertThat(contractState.getBalance()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getNonce()).isEqualTo(BigInteger.ZERO);
+        assertThat(contractState.getStateRoot()).isEqualTo(EMPTY_TRIE_HASH);
+        assertThat(contractState.getCodeHash()).isEqualTo(oldCode);
     }
 
     private AionTxExecSummary executeTransaction(AionTransaction transaction, boolean enableFork040) throws VmFatalException {
