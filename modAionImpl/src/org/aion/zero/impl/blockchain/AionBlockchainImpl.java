@@ -336,30 +336,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
         return new A0BCConfig() {
             @Override
-            public AionAddress getCoinbase() {
-                return cfgAion.getGenesis().getCoinbase();
-            }
-
-            @Override
             public byte[] getExtraData() {
                 return cfgAion.getConsensus().getExtraData().getBytes();
             }
 
             @Override
-            public boolean getExitOnBlockConflict() {
-                return true;
-                // return cfgAion.getSync().getExitOnBlockConflict();
-            }
-
-            @Override
             public AionAddress getMinerCoinbase() {
                 return AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress());
-            }
-
-            // TODO: hook up to configuration file
-            @Override
-            public int getFlushInterval() {
-                return 1;
             }
 
             @Override

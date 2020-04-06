@@ -276,28 +276,13 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     this.a0Config == null
                             ? new A0BCConfig() {
                                 @Override
-                                public AionAddress getCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
                                 public byte[] getExtraData() {
                                     return new byte[32];
                                 }
 
                                 @Override
-                                public boolean getExitOnBlockConflict() {
-                                    return false;
-                                }
-
-                                @Override
                                 public AionAddress getMinerCoinbase() {
                                     return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
-                                public int getFlushInterval() {
-                                    return 1;
                                 }
 
                                 @Override
