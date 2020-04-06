@@ -154,7 +154,7 @@ public class AionChainHolder implements ChainHolder {
                             .getAionHub()
                             .getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
             if (blockTemplate == null) {
-                return null;
+                return ByteUtil.EMPTY_BYTE_ARRAY;
             } else {
                 return blockTemplate.getHeader().getMineHash();
             }
