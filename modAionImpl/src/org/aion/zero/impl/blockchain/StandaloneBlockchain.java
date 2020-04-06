@@ -25,6 +25,7 @@ import org.aion.zero.impl.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.forks.ForkUtility;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.valid.BlockHeaderRule;
@@ -80,10 +81,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     protected StandaloneBlockchain(
             final AbstractEnergyStrategyLimit energyLimitStrategy,
+            final ForkUtility forkUtility,
             final ChainConfiguration chainConfig,
             RepositoryConfig repoConfig,
             final IEventMgr eventMgr) {
-        super(new byte[32], AddressUtils.ZERO_ADDRESS, energyLimitStrategy, true, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
+        super(new byte[32], AddressUtils.ZERO_ADDRESS, energyLimitStrategy, true, false, forkUtility, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
     }
 
     public void setGenesis(AionGenesis genesis) {
@@ -112,6 +114,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public static class Builder {
         private AbstractEnergyStrategyLimit energyLimitStrategy;
+        private ForkUtility forkUtility = new ForkUtility();
 
         private boolean enableAvm = false;
 
@@ -184,6 +187,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         public Builder withAccount(ByteArrayWrapper publicKey, AccountState accState) {
             initialState.put(publicKey, accState);
+            return this;
+        }
+
+        public Builder withForks(Properties forkProperties) {
+            this.forkUtility = new ForkUtility(forkProperties, LOG);
             return this;
         }
 
@@ -322,7 +330,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 this.repoConfig = generateRepositoryConfig();
             }
 
-            StandaloneBlockchain bc = new StandaloneBlockchain(this.energyLimitStrategy, this.configuration, this.repoConfig, this.eventMgr);
+            StandaloneBlockchain bc = new StandaloneBlockchain(this.energyLimitStrategy, this.forkUtility, this.configuration, this.repoConfig, this.eventMgr);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {

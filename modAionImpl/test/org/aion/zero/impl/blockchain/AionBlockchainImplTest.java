@@ -40,6 +40,7 @@ public class AionBlockchainImplTest {
             new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
+                .withForks(cfg.getFork().getProperties())
                 .build();
         this.blockchain = bundle.bc;
 
@@ -60,6 +61,7 @@ public class AionBlockchainImplTest {
             new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
+                .withForks(cfg.getFork().getProperties())
                 .build();
         this.blockchain = bundle.bc;
 

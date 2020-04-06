@@ -137,7 +137,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AionBlockchainImpl implements IAionBlockchain {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
+    protected static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
     private static final Logger GEN_LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
     private static final Logger SURVEY_LOG = LoggerFactory.getLogger(LogEnum.SURVEY.name());
     private static final Logger SYNC_LOG = LoggerFactory.getLogger(LogEnum.SYNC.name());
@@ -216,6 +216,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress()),
             getEnergyLimitStrategy(cfgAion),
             cfgAion.getDb().isInternalTxStorageEnabled(),
+            cfgAion.getGenesis().getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823")),
+            new ForkUtility(cfgAion.getFork().getProperties(), LOG),
             AionRepositoryImpl.inst(),
             forTest ? new ChainConfiguration() {
                     /*
@@ -268,12 +270,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param minerCoinbase a 32-bytes address representing the currently set mining coinbase for this particular node, blocks mined with this node will use this as the coinbase
      * @param energyLimitStrategy the selected energy strategy algorithm
      * @param storeInternalTransactions flag indicating the desired behavior for storing internal transactions
+     * @param isMainnet flag indicating if the current network used is the Aion mainnet
+     * @param forkUtility utility for checking when fork updates occur
      */
     protected AionBlockchainImpl(
             final byte[] extraData,
             final AionAddress minerCoinbase,
             final AbstractEnergyStrategyLimit energyLimitStrategy,
             final boolean storeInternalTransactions,
+            final boolean isMainnet,
+            final ForkUtility forkUtility,
             final AionRepositoryImpl repository,
             final ChainConfiguration chainConfig,
             final IEventMgr eventMgr) {
@@ -281,7 +287,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.repository = repository;
         this.storeInternalTransactions = storeInternalTransactions;
 
-        isMainnet = CfgAion.inst().getGenesis().getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"));
+        this.isMainnet = isMainnet;
 
         /**
          * Because we dont have any hardforks, later on chain configuration must be determined by
@@ -319,7 +325,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         this.energyLimitStrategy = energyLimitStrategy;
 
-        this.forkUtility = new ForkUtility(CfgAion.inst().getFork().getProperties(), LOG);
+        this.forkUtility = forkUtility;
 
         // initialize beacon hash validator
         this.beaconHashValidator = new BeaconHashValidator(this, this.forkUtility);
