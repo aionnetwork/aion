@@ -64,11 +64,11 @@ dependencies {
     compile group: 'org.jboss.xnio', name: 'xnio-api', version: '3.3.8.Final'
     compile group: 'io.undertow', name: 'undertow-core', version: '2.0.10.Final'
 
-    compile 'com.fasterxml.jackson.core:jackson-core:2.9.9'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.10.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.3'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.10.3'
     compile 'com.github.everit-org.json-schema:org.everit.json.schema:1.11.1'
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-json-org', version: '2.9.9'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-json-org', version: '2.10.3'
 
 
     testCompile 'junit:junit:4.12'
