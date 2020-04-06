@@ -11,7 +11,7 @@ NODE_PORT="8545"
 NETWORK="amity"
 VERBOSE="false"
 
-java -jar block_signer.jar $SIGNING_ADDRESS_PRIVATE_KEY $COINBASE_ADDRESS $NETWORK $NODE_IP $NODE_PORT $VERBOSE
+java -jar block_signer-1.1.jar $SIGNING_ADDRESS_PRIVATE_KEY $COINBASE_ADDRESS $NETWORK $NODE_IP $NODE_PORT $VERBOSE
 
 echo
 echo "Shutting down the external staker..."
