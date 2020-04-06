@@ -161,7 +161,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     protected ChainConfiguration chainConfiguration;
 
-    private A0BCConfig config;
     private AionRepositoryImpl repository;
     private RepositoryCache<AccountState> track;
     private TransactionStore transactionStore;
@@ -212,7 +211,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * The constructor for the blockchain initialization {@see AionHub}.
      */
     public AionBlockchainImpl(CfgAion cfgAion, IEventMgr eventMgr, boolean forTest) {
-        this(generateBCConfig(cfgAion), AionRepositoryImpl.inst(),
+        this(
+            cfgAion.getConsensus().getExtraData().getBytes(),
+            AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress()),
+            getEnergyLimitStrategy(cfgAion),
+            cfgAion.getDb().isInternalTxStorageEnabled(),
+            AionRepositoryImpl.inst(),
             forTest ? new ChainConfiguration() {
                     /*
                      * Remove the equiHash solution for the simplified
@@ -259,17 +263,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /**
      * The constructor for the public constructor {@see AionBlockchainImpl(CfgAion, IEventMgr, boolean)}
      * and the integrating test class {@see StandaloneBlockchain}
+     *
+     * @param extraData an (up to) 32-byte value representing the currently set extra data for this particular node, blocks mined with this node will use this as extra data
+     * @param minerCoinbase a 32-bytes address representing the currently set mining coinbase for this particular node, blocks mined with this node will use this as the coinbase
+     * @param energyLimitStrategy the selected energy strategy algorithm
+     * @param storeInternalTransactions flag indicating the desired behavior for storing internal transactions
      */
     protected AionBlockchainImpl(
-            final A0BCConfig config,
+            final byte[] extraData,
+            final AionAddress minerCoinbase,
+            final AbstractEnergyStrategyLimit energyLimitStrategy,
+            final boolean storeInternalTransactions,
             final AionRepositoryImpl repository,
             final ChainConfiguration chainConfig,
             final IEventMgr eventMgr) {
 
-        // TODO AKI-318: this specialized class is very cumbersome to maintain; could be replaced with CfgAion
-        this.config = config;
         this.repository = repository;
-        this.storeInternalTransactions = config.isInternalTransactionStorageEnabled();
+        this.storeInternalTransactions = storeInternalTransactions;
 
         isMainnet = CfgAion.inst().getGenesis().getHashWrapper().equals(ByteArrayWrapper.fromHex("30793b4ea012c6d3a58c85c5b049962669369807a98e36807c1b02116417f823"));
 
@@ -288,13 +298,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         this.transactionStore = this.repository.getTransactionStore();
 
-        this.minerCoinbase = this.config.getMinerCoinbase();
+        this.minerCoinbase = minerCoinbase;
         if (minerCoinbase == null) {
             LOG.warn("No miner Coinbase!");
         }
 
         /** Save a copy of the miner extra data */
-        byte[] extraBytes = this.config.getExtraData();
+        byte[] extraBytes = extraData;
         this.minerExtraData =
                 new byte[this.chainConfiguration.getConstants().getMaximumExtraDataSize()];
         if (extraBytes.length < this.chainConfiguration.getConstants().getMaximumExtraDataSize()) {
@@ -307,7 +317,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     0,
                     this.chainConfiguration.getConstants().getMaximumExtraDataSize());
         }
-        this.energyLimitStrategy = config.getEnergyLimitStrategy();
+        this.energyLimitStrategy = energyLimitStrategy;
 
         this.forkUtility = new ForkUtility(CfgAion.inst().getFork().getProperties(), LOG);
 
@@ -318,14 +328,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Helper method for generating the adapter between this class and {@link CfgAion}
-     *
-     * @param cfgAion
-     * @return {@code configuration} instance that directly references the singleton instance of
-     *     cfgAion
+     * Helper method for retrieving the selected energy strategy algorithm
      */
-    private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-
+    private static AbstractEnergyStrategyLimit getEnergyLimitStrategy(CfgAion cfgAion) {
         Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
 
         BigInteger initialSupply = ZERO;
@@ -334,30 +339,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
-        return new A0BCConfig() {
-            @Override
-            public byte[] getExtraData() {
-                return cfgAion.getConsensus().getExtraData().getBytes();
-            }
-
-            @Override
-            public AionAddress getMinerCoinbase() {
-                return AddressUtils.wrapAddress(cfgAion.getConsensus().getMinerAddress());
-            }
-
-            @Override
-            public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
-                return EnergyStrategies.getEnergyStrategy(
-                        cfgAion.getConsensus().getEnergyStrategy().getStrategy(),
-                        cfgAion.getConsensus().getEnergyStrategy(),
-                        config);
-            }
-
-            @Override
-            public boolean isInternalTransactionStorageEnabled() {
-                return CfgAion.inst().getDb().isInternalTxStorageEnabled();
-            }
-        };
+        return EnergyStrategies.getEnergyStrategy(
+                cfgAion.getConsensus().getEnergyStrategy().getStrategy(),
+                cfgAion.getConsensus().getEnergyStrategy(),
+                config);
     }
 
     private static Long monetaryUpdateBlkNum(Properties properties) {

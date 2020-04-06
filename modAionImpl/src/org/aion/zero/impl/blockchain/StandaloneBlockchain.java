@@ -78,16 +78,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             };
 
-    protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig, final IEventMgr eventMgr) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
-    }
-
     protected StandaloneBlockchain(
-            final A0BCConfig config,
+            final AbstractEnergyStrategyLimit energyLimitStrategy,
             final ChainConfiguration chainConfig,
             RepositoryConfig repoConfig,
             final IEventMgr eventMgr) {
-        super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
+        super(new byte[32], AddressUtils.ZERO_ADDRESS, energyLimitStrategy, true, AionRepositoryImpl.createForTesting(repoConfig), chainConfig, eventMgr);
     }
 
     public void setGenesis(AionGenesis genesis) {
@@ -115,7 +111,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     public static class Builder {
-        private A0BCConfig a0Config;
+        private AbstractEnergyStrategyLimit energyLimitStrategy;
 
         private boolean enableAvm = false;
 
@@ -169,11 +165,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         public Builder withRepoConfig(RepositoryConfig config) {
             this.repoConfig = config;
-            return this;
-        }
-
-        public Builder withA0Config(A0BCConfig config) {
-            this.a0Config = config;
             return this;
         }
 
@@ -272,35 +263,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         public Bundle build() {
-            this.a0Config =
-                    this.a0Config == null
-                            ? new A0BCConfig() {
-                                @Override
-                                public byte[] getExtraData() {
-                                    return new byte[32];
-                                }
-
-                                @Override
-                                public AionAddress getMinerCoinbase() {
-                                    return AddressUtils.ZERO_ADDRESS;
-                                }
-
-                                @Override
-                                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
-                                    return new TargetStrategy(
-                                            configuration.getConstants().getEnergyLowerBoundLong(),
-                                            configuration
-                                                    .getConstants()
-                                                    .getEnergyDivisorLimitLong(),
-                                            10_000_000L);
-                                }
-
-                                public boolean isInternalTransactionStorageEnabled() {
-                                    return true;
-                                }
-                            }
-                            : this.a0Config;
-
             if (this.configuration == null) {
                 if (this.validatorType == null) {
                     this.configuration = new ChainConfiguration();
@@ -354,12 +316,13 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             }
 
+            this.energyLimitStrategy = new TargetStrategy(configuration.getConstants().getEnergyLowerBoundLong(), configuration.getConstants().getEnergyDivisorLimitLong(), 10_000_000L);
+
             if (this.repoConfig == null) {
                 this.repoConfig = generateRepositoryConfig();
             }
 
-            StandaloneBlockchain bc =
-                    new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig, this.eventMgr);
+            StandaloneBlockchain bc = new StandaloneBlockchain(this.energyLimitStrategy, this.configuration, this.repoConfig, this.eventMgr);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
