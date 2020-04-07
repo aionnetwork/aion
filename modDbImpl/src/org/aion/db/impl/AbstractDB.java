@@ -129,12 +129,6 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isAutoCommitEnabled() {
-        // autocommit is always enabled when not overwritten by the class
-        return true;
-    }
-
-    @Override
     public PersistenceMethod getPersistenceMethod() {
         // Default to file-based since most of our dbs are that
         return PersistenceMethod.FILE_BASED;

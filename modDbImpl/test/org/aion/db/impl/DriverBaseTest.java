@@ -386,11 +386,6 @@ public class DriverBaseTest {
             db.put(k1, v1);
             assertThat(db.isLocked()).isFalse();
 
-            // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) {
-                db.commit();
-            }
-
             db.close();
             Thread.sleep(100);
 
@@ -407,11 +402,6 @@ public class DriverBaseTest {
             // -------------------------------------------------------------------------------------------
             db.delete(k1);
             assertThat(db.isLocked()).isFalse();
-
-            // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) {
-                db.commit();
-            }
 
             db.close();
             Thread.sleep(100);
@@ -444,11 +434,6 @@ public class DriverBaseTest {
 
             assertThat(db.isLocked()).isFalse();
 
-            // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) {
-                db.commit();
-            }
-
             db.close();
             Thread.sleep(100);
 
@@ -476,11 +461,6 @@ public class DriverBaseTest {
 
             assertThat(db.isLocked()).isFalse();
 
-            // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) {
-                db.commit();
-            }
-
             db.close();
             Thread.sleep(100);
 
@@ -500,11 +480,6 @@ public class DriverBaseTest {
             db.deleteBatch(map.keySet());
 
             assertThat(db.isLocked()).isFalse();
-
-            // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) {
-                db.commit();
-            }
 
             db.close();
             Thread.sleep(100);
@@ -822,108 +797,5 @@ public class DriverBaseTest {
 
         assertThat(db.isEmpty()).isTrue();
         assertThat(db.isLocked()).isFalse();
-    }
-
-    /** Checks that data does not persist without explicit commits. */
-    @Test
-    public void testAutoCommitDisabled() throws InterruptedException {
-        if (db.getPersistenceMethod() != PersistenceMethod.IN_MEMORY && !db.isAutoCommitEnabled()) {
-            // adding data
-            // ---------------------------------------------------------------------------------------------
-            assertThat(db.get(k1).isPresent()).isFalse();
-            db.put(k1, v1);
-            assertThat(db.isLocked()).isFalse();
-
-            db.close();
-            Thread.sleep(100);
-
-            assertThat(db.isClosed()).isTrue();
-            assertThat(db.open()).isTrue();
-
-            // ensure lack of persistence
-            assertThat(db.get(k1).isPresent()).isFalse();
-            assertThat(db.isEmpty()).isTrue();
-            assertThat(db.keys().hasNext()).isFalse();
-            assertThat(db.isLocked()).isFalse();
-
-            // deleting data
-            // -------------------------------------------------------------------------------------------
-            db.put(k1, v1);
-            db.commit();
-            assertThat(db.isLocked()).isFalse();
-
-            db.delete(k1);
-            assertThat(db.isLocked()).isFalse();
-
-            db.close();
-            Thread.sleep(100);
-
-            assertThat(db.isClosed()).isTrue();
-            assertThat(db.open()).isTrue();
-
-            // ensure lack of persistence of delete
-            assertThat(db.get(k1).get()).isEqualTo(v1);
-            assertThat(db.isEmpty()).isFalse();
-            assertThat(count(db.keys())).isEqualTo(1);
-            assertThat(db.isLocked()).isFalse();
-
-            // batch update
-            // --------------------------------------------------------------------------------------------
-            Map<byte[], byte[]> map = new HashMap<>();
-            map.put(k2, v2);
-            map.put(k3, v3);
-            db.putBatch(map);
-
-            List<byte[]> del = new ArrayList<>();
-            del.add(k1);
-            db.deleteBatch(del);
-
-            db.commit();
-            assertThat(db.isLocked()).isFalse();
-
-            map.clear();
-            map.put(k1, v2);
-            map.put(k2, v3);
-            db.putBatch(map);
-
-            del = new ArrayList<>();
-            del.add(k3);
-            db.deleteBatch(del);
-
-            assertThat(db.isLocked()).isFalse();
-
-            db.close();
-            Thread.sleep(100);
-
-            assertThat(db.isClosed()).isTrue();
-            assertThat(db.open()).isTrue();
-
-            // ensure lack of persistence of second update
-            assertThat(db.get(k1).isPresent()).isFalse();
-            assertThat(db.get(k2).get()).isEqualTo(v2);
-            assertThat(db.get(k3).get()).isEqualTo(v3);
-            assertThat(db.isEmpty()).isFalse();
-            assertThat(count(db.keys())).isEqualTo(2);
-            assertThat(db.isLocked()).isFalse();
-
-            // batch delete
-            // --------------------------------------------------------------------------------------------
-            db.deleteBatch(map.keySet());
-            assertThat(db.isLocked()).isFalse();
-
-            db.close();
-            Thread.sleep(100);
-
-            assertThat(db.isClosed()).isTrue();
-            assertThat(db.open()).isTrue();
-
-            // ensure lack of persistence of batch delete
-            assertThat(db.get(k1).isPresent()).isFalse();
-            assertThat(db.get(k2).get()).isEqualTo(v2);
-            assertThat(db.get(k3).get()).isEqualTo(v3);
-            assertThat(db.isEmpty()).isFalse();
-            assertThat(count(db.keys())).isEqualTo(2);
-            assertThat(db.isLocked()).isFalse();
-        }
     }
 }

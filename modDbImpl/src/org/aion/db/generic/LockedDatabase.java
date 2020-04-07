@@ -139,12 +139,6 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isAutoCommitEnabled() {
-        // no locks because the autocommit flag never changes
-        return database.isAutoCommitEnabled();
-    }
-
-    @Override
     public PersistenceMethod getPersistenceMethod() {
         // no locks because the persistence flag never changes
         return database.getPersistenceMethod();

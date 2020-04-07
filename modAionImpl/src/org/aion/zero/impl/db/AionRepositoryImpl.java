@@ -509,14 +509,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
                 LOG.info("flush all databases");
             }
 
-            if (databaseGroup != null) {
-                for (ByteArrayKeyValueDatabase db : databaseGroup) {
-                    if (!db.isAutoCommitEnabled()) {
-                        db.commit();
-                    }
-                }
-            }
-
             if (LOG.isInfoEnabled()) {
                 LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
             }

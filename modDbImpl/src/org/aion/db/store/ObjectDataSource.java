@@ -18,12 +18,7 @@ class ObjectDataSource<V> implements ObjectStore<V> {
         this.serializer = serializer;
     }
 
-    public void commit() {
-        // for write-back type cache only
-        if (!this.src.isAutoCommitEnabled()) {
-            this.src.commit();
-        }
-    }
+    public void commit() { }
 
     public void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);

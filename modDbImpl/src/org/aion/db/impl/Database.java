@@ -105,12 +105,6 @@ public interface Database {
     boolean isLocked();
 
     /**
-     * @return {@code true} if changes are automatically committed to storage, {@code false}
-     *     otherwise
-     */
-    boolean isAutoCommitEnabled();
-
-    /**
      * Indicates the method of persistence this database uses. Whether it's written to disk, only
      * held in memory, or stored inside a database engine's proprietary format.
      *
