@@ -26,26 +26,19 @@ final class CaffeineDataSource<V> extends ObjectDataSource<V> {
                         .build(key -> getFromDatabase(key.toBytes()));
     }
 
-    public void put(byte[] key, V value) {
-        super.put(key, value);
-        cache.put(ByteArrayWrapper.wrap(key), value);
-    }
-
+    @Override
     public void putToBatch(byte[] key, V value) {
         super.putToBatch(key, value);
         cache.put(ByteArrayWrapper.wrap(key), value);
     }
 
+    @Override
     public void deleteInBatch(byte[] key) {
         super.deleteInBatch(key);
         cache.invalidate(ByteArrayWrapper.wrap(key));
     }
 
-    public void delete(byte[] key) {
-        super.delete(key);
-        cache.invalidate(ByteArrayWrapper.wrap(key));
-    }
-
+    @Override
     public V get(byte[] key) {
         // the cache automatically loads the entries it is missing as defined in the constructor
         return cache.get(ByteArrayWrapper.wrap(key));

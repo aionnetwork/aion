@@ -11,22 +11,28 @@ import java.io.Closeable;
 public interface ObjectStore<V> extends Closeable {
     // TODO AKI-352: convert to using ByteArrayWrapper
 
-    /** Adds a key-value entry to the database. */
-    void put(byte[] key, V value);
+    /**
+     * Adds a key-value entry to the database as part of a batch operation.
+     *
+     * @apiNote Requires {@link #flushBatch()} to push the changes to the underlying database.
+     */
+    void putToBatch(byte[] key, V value);
 
-    /** Deletes the object stored at the given key. */
-    void delete(byte[] key);
+    /**
+     * Deletes the object stored at the given key as part of a batch operation.
+     *
+     * @apiNote Requires {@link #flushBatch()} to push the changes to the underlying database.
+     */
+    void deleteInBatch(byte[] key);
 
-    /** Adds a key-value entry to the database as a batch operation. */
-    void putToBatch(byte[] key, V value); // TODO AKI-353: merge with put
+    /** Pushes the current batch changes to the underlying database. */
+    void flushBatch();
 
-    /** Deletes the object stored at the given key as a batch operation. */
-    void deleteInBatch(byte[] key); // TODO AKI-353: merge with delete
-
-    /** Pushes batch changes to the underlying database. */
-    void flushBatch(); // TODO AKI-353: merge with commit
-
-    /** Retrieves the object stored at the given key. */
+    /**
+     * Retrieves the object stored at the given key.
+     *
+     * @apiNote Values that have been added with {@link #putToBatch(byte[], Object)} or deleted with {@link #deleteInBatch(byte[])} are not guaranteed to be retrieved until {@link #flushBatch()} is called.
+     */
     V get(byte[] key);
 
     /** Returns {@code true} to indicate that the database is open, {@code false} otherwise. */

@@ -19,26 +19,19 @@ class LruDataSource<V> extends ObjectDataSource<V> {
         this.cache = new LRUMap<>(cacheSize);
     }
 
-    public void put(byte[] key, V value) {
-        super.put(key, value);
-        cache.put(ByteArrayWrapper.wrap(key), value);
-    }
-
+    @Override
     public void putToBatch(byte[] key, V value) {
         super.putToBatch(key, value);
         cache.put(ByteArrayWrapper.wrap(key), value);
     }
 
+    @Override
     public void deleteInBatch(byte[] key) {
         super.deleteInBatch(key);
         cache.remove(ByteArrayWrapper.wrap(key));
     }
 
-    public void delete(byte[] key) {
-        super.delete(key);
-        cache.remove(ByteArrayWrapper.wrap(key));
-    }
-
+    @Override
     public V get(byte[] key) {
         ByteArrayWrapper wrappedKey = ByteArrayWrapper.wrap(key);
         if (cache.containsKey(wrappedKey)) {

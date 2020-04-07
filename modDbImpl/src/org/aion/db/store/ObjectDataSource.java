@@ -18,28 +18,23 @@ class ObjectDataSource<V> implements ObjectStore<V> {
         this.serializer = serializer;
     }
 
-    public void put(byte[] key, V value) {
-        byte[] bytes = serializer.serialize(value);
-        src.put(key, bytes);
-    }
-
     /** @apiNote Will throw an exception if the given value is {@code null}. */
+    @Override
     public void putToBatch(byte[] key, V value) {
         src.putToBatch(key, serializer.serialize(value));
     }
 
+    @Override
     public void deleteInBatch(byte[] key) {
         src.deleteInBatch(key);
     }
 
+    @Override
     public void flushBatch() {
         src.commitBatch();
     }
 
-    public void delete(byte[] key) {
-        src.delete(key);
-    }
-
+    @Override
     public V get(byte[] key) {
         return getFromDatabase(key);
     }
@@ -61,6 +56,7 @@ class ObjectDataSource<V> implements ObjectStore<V> {
      *
      * @return true if correctly initialized and the data storage is open, false otherwise.
      */
+    @Override
     public boolean isOpen() {
         return src.isOpen();
     }

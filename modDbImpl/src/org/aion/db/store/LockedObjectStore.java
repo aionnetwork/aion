@@ -19,28 +19,6 @@ class LockedObjectStore<V> implements ObjectStore<V> {
     }
 
     @Override
-    public void put(byte[] key, V value) {
-        lock.lock();
-
-        try {
-            source.put(key, value);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public void delete(byte[] key) {
-        lock.lock();
-
-        try {
-            source.delete(key);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
     public void putToBatch(byte[] key, V value) {
         lock.lock();
 
