@@ -91,7 +91,7 @@ pipeline {
             steps {
                 timeout(20) {
                     dir('FunctionalTests') {
-                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '70c4712']]], poll: false
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '764b12d']]], poll: false
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
