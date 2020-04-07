@@ -28,10 +28,12 @@ class DataSourceArray<V> implements ArrayStore<V> {
     @Override
     public void set(long index, V value) {
         if (index <= Integer.MAX_VALUE) {
-            src.put(ByteUtil.intToBytes((int) index), value);
+            src.putToBatch(ByteUtil.intToBytes((int) index), value);
         } else {
-            src.put(ByteUtil.longToBytes(index), value);
+            src.putToBatch(ByteUtil.longToBytes(index), value);
         }
+        // TODO AKI-309: flush in bulk by the repository
+        src.flushBatch();
         if (index >= size()) {
             setSize(index + 1);
         }
@@ -45,10 +47,12 @@ class DataSourceArray<V> implements ArrayStore<V> {
         }
 
         if (index <= Integer.MAX_VALUE) {
-            src.delete(ByteUtil.intToBytes((int) index));
+            src.deleteInBatch(ByteUtil.intToBytes((int) index));
         } else {
-            src.delete(ByteUtil.longToBytes(index));
+            src.deleteInBatch(ByteUtil.longToBytes(index));
         }
+        // TODO AKI-309: flush in bulk by the repository
+        src.flushBatch();
         if (index < size()) {
             setSize(index);
         }
@@ -109,10 +113,12 @@ class DataSourceArray<V> implements ArrayStore<V> {
     private synchronized void setSize(long newSize) {
         size = newSize;
         if (size <= Integer.MAX_VALUE) {
-            db.put(sizeKey, ByteUtil.intToBytes((int) newSize));
+            db.putToBatch(sizeKey, ByteUtil.intToBytes((int) newSize));
         } else {
-            db.put(sizeKey, ByteUtil.longToBytes(newSize));
+            db.putToBatch(sizeKey, ByteUtil.longToBytes(newSize));
         }
+        // TODO AKI-309: flush in bulk by the repository
+        db.commitBatch();
     }
 
     @Override
