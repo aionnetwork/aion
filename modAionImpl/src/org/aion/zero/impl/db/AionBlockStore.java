@@ -223,13 +223,6 @@ public class AionBlockStore {
     }
 
     public void flush() {
-        lock.lock();
-
-        try {
-            index.commit();
-        } finally {
-            lock.unlock();
-        }
     }
 
     public void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain) {

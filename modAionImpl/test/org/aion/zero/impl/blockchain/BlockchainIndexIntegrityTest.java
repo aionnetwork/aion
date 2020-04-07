@@ -165,7 +165,6 @@ public class BlockchainIndexIntegrityTest {
             bi.setTotalDifficulty(bi.getTotalDifficulty().add(BigInteger.TEN));
         }
         index.set(2, infos);
-        index.commit();
 
         AionBlockStore blockStore = repo.getBlockStore();
 

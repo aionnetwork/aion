@@ -19,9 +19,6 @@ public interface ArrayStore<V> extends Closeable {
     /** Removes the object at the given index. */
     void remove(long index);
 
-    /** Pushes changes to the underlying database. */
-    void commit();
-
     /** Retrieves the object stored at the given index. */
     V get(long index);
 

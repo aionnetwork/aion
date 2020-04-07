@@ -26,10 +26,6 @@ class DataSourceArray<V> implements ArrayStore<V> {
     }
 
     @Override
-    public void commit() {
-    }
-
-    @Override
     public void set(long index, V value) {
         if (index <= Integer.MAX_VALUE) {
             src.put(ByteUtil.intToBytes((int) index), value);
