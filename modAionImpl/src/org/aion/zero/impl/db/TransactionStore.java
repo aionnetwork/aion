@@ -101,13 +101,6 @@ public class TransactionStore implements Closeable {
     }
 
     public void commit() {
-        lock.writeLock().lock();
-        try {
-            txInfoSource.commit();
-            aliasSource.commit();
-        } finally {
-            lock.writeLock().unlock();
-        }
     }
 
     @Override

@@ -18,8 +18,6 @@ class ObjectDataSource<V> implements ObjectStore<V> {
         this.serializer = serializer;
     }
 
-    public void commit() { }
-
     public void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);
         src.put(key, bytes);

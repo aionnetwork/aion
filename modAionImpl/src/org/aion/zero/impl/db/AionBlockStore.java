@@ -226,7 +226,6 @@ public class AionBlockStore {
         lock.lock();
 
         try {
-            blocks.commit();
             index.commit();
         } finally {
             lock.unlock();

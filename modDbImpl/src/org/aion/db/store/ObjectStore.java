@@ -17,9 +17,6 @@ public interface ObjectStore<V> extends Closeable {
     /** Deletes the object stored at the given key. */
     void delete(byte[] key);
 
-    /** Pushes changes to the underlying database. */
-    void commit();
-
     /** Adds a key-value entry to the database as a batch operation. */
     void putToBatch(byte[] key, V value); // TODO AKI-353: merge with put
 

@@ -41,17 +41,6 @@ class LockedObjectStore<V> implements ObjectStore<V> {
     }
 
     @Override
-    public void commit() {
-        lock.lock();
-
-        try {
-            source.commit();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
     public void putToBatch(byte[] key, V value) {
         lock.lock();
 
