@@ -268,7 +268,8 @@ public class AionBlockStore {
 
             blockInfos.add(new BlockInfo(block.getHash(), totalDifficulty, mainChain));
 
-            blocks.put(block.getHash(), block);
+            blocks.putToBatch(block.getHash(), block);
+            blocks.flushBatch(); // TODO AKI-309: flush in bulk by the repository
             index.set(block.getNumber(), blockInfos);
         } finally {
             lock.unlock();
@@ -1029,8 +1030,9 @@ public class AionBlockStore {
 
             // deleting incorrect parallel blocks
             for (BlockInfo wrongBlock : levelBlocks) {
-                blocks.delete(wrongBlock.getHash());
+                blocks.deleteInBatch(wrongBlock.getHash());
             }
+            blocks.flushBatch();
 
             // set new block info with total difficulty set to the block's difficulty
             // This value is corrected in the correctTotalDifficulty() step of pruneAndCorrect()
@@ -1374,9 +1376,10 @@ public class AionBlockStore {
                 // delete all the side-chain blocks
                 for (BlockInfo blockInfo : level) {
                     if (!Arrays.equals(currentHash, blockInfo.getHash())) {
-                        blocks.delete(blockInfo.getHash());
+                        blocks.deleteInBatch(blockInfo.getHash());
                     }
                 }
+                blocks.flushBatch();
 
                 // replace all the block info with empty list
                 index.set(block.getNumber(), Collections.emptyList());
@@ -1836,8 +1839,9 @@ public class AionBlockStore {
                 List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(level);
 
                 for (BlockInfo bk_info : currentLevelBlocks) {
-                    blocks.delete(bk_info.getHash());
+                    blocks.deleteInBatch(bk_info.getHash());
                 }
+                blocks.flushBatch();
 
                 index.remove(level--);
             }
