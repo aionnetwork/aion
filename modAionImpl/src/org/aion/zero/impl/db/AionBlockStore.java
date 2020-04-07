@@ -222,9 +222,6 @@ public class AionBlockStore {
         }
     }
 
-    public void flush() {
-    }
-
     public void saveBlock(Block block, BigInteger totalDifficulty, boolean mainChain) {
         if (block == null) {
             throw new NullPointerException("block is null");

@@ -1453,7 +1453,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         } else {
             // revert to block number and flush changes
             blockStore.pruneAndCorrect(log);
-            blockStore.flush();
         }
     }
 
@@ -1673,7 +1672,6 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
 
         // revert to block number and flush changes
         blockStore.revert(nbBlock, log);
-        blockStore.flush();
 
         nbBestBlock = blockStore.getBestBlock().getNumber();
 

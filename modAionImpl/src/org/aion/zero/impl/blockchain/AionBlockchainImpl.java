@@ -1541,12 +1541,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public void flush() {
         repository.flush();
-        try {
-            repository.getBlockStore().flush();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @SuppressWarnings("unused")
