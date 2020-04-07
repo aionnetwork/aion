@@ -1547,7 +1547,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        transactionStore.commit();
     }
 
     @SuppressWarnings("unused")

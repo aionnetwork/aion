@@ -74,8 +74,13 @@ public class TransactionStore implements Closeable {
     }
 
     public void flushBatch() {
-        txInfoSource.flushBatch();
-        aliasSource.flushBatch();
+        lock.writeLock().lock();
+        try {
+            txInfoSource.flushBatch();
+            aliasSource.flushBatch();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public AionTxInfo getTxInfo(byte[] txHash, byte[] blockHash) {
@@ -98,9 +103,6 @@ public class TransactionStore implements Closeable {
         } finally {
             lock.readLock().unlock();
         }
-    }
-
-    public void commit() {
     }
 
     @Override
