@@ -6,20 +6,17 @@ import static org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode.NORMAL;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
-import org.aion.zero.impl.db.AionBlockStore;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.apache.commons.lang3.tuple.Triple;
@@ -32,102 +29,41 @@ import org.slf4j.Logger;
  *
  * @author chris
  */
-final class TaskImportBlocks implements Runnable {
+final class TaskImportBlocks {
 
-    private final AionBlockchainImpl chain;
+    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+    private static final Logger surveyLog = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
 
-    private final AtomicBoolean start;
+    static void importBlocks(final AionBlockchainImpl chain, final SyncStats syncStats, final BlocksWrapper bw, final Map<ByteArrayWrapper, Object> importedBlockHashes, final SyncHeaderRequestManager syncHeaderRequestManager) {
+        Thread.currentThread().setName("sync-ib");
 
-    private final PriorityBlockingQueue<BlocksWrapper> sortedBlocks;
+        long startTime = System.nanoTime();
+        SyncMode syncMode = syncHeaderRequestManager.getSyncMode(bw.nodeId);
+        long duration = System.nanoTime() - startTime;
+        surveyLog.debug("Import Stage 2: wait for peer state, duration = {} ns.", duration);
 
-    private final SyncStats syncStats;
-
-    private final Map<ByteArrayWrapper, Object> importedBlockHashes;
-
-    private final SyncHeaderRequestManager syncHeaderRequestManager;
-
-    private final Logger log;
-    private final Logger surveyLog;
-
-    private long totalImportTime = 0;
-    private long LongImportTimeCount = 0;
-    private long SuperLongImportTimeCount = 0;
-    private long totalImportedBlocks = 0;
-    private long longestImportTime = 0;
-    private long DIVISOR_MS = 1_000_000L;
-
-    TaskImportBlocks(
-            final Logger syncLog,
-            final Logger surveyLog,
-            final AionBlockchainImpl _chain,
-            final AtomicBoolean _start,
-            final SyncStats _syncStats,
-            final PriorityBlockingQueue<BlocksWrapper> sortedBlocks,
-            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
-            final SyncHeaderRequestManager syncHeaderRequestManager) {
-        this.log = syncLog;
-        this.surveyLog = surveyLog;
-        this.chain = _chain;
-        this.start = _start;
-        this.syncStats = _syncStats;
-        this.sortedBlocks = sortedBlocks;
-        this.importedBlockHashes = _importedBlockHashes;
-        this.syncHeaderRequestManager = syncHeaderRequestManager;
-    }
-
-    @Override
-    public void run() {
-        // for runtime survey information
-        long startTime, duration;
-
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-        while (start.get()) {
-            BlocksWrapper bw;
-            try {
-                startTime = System.nanoTime();
-                bw = sortedBlocks.take();
-                duration = System.nanoTime() - startTime;
-                surveyLog.debug("Import Stage 1.B: wait for sorted blocks, duration = {} ns.", duration);
-            } catch (InterruptedException ex) {
-                if (start.get()) {
-                    log.error("Import blocks thread interrupted without shutdown request.", ex);
-                }
-                return;
-            }
+        if (syncMode == null) {
+            // ignoring these blocks
+            log.warn("Peer {} sent blocks that were not requested.", bw.displayId);
+        } else { // the peerState is not null after this
+            startTime = System.nanoTime();
+            List<Block> batch = filterBatch(bw.blocks, chain, importedBlockHashes);
+            duration = System.nanoTime() - startTime;
+            surveyLog.debug("Import Stage 3: filter batch, duration = {} ns.", duration);
 
             startTime = System.nanoTime();
-            SyncMode syncMode = syncHeaderRequestManager.getSyncMode(bw.nodeId);
+            // process batch and update the peer state
+            SyncMode newMode = processBatch(chain, importedBlockHashes, syncStats, syncMode, batch, bw.displayId);
             duration = System.nanoTime() - startTime;
-            surveyLog.debug("Import Stage 2: wait for peer state, duration = {} ns.", duration);
+            surveyLog.debug("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
 
-            if (syncMode == null) {
-                // ignoring these blocks
-                log.warn("Peer {} sent blocks that were not requested.", bw.displayId);
-            } else { // the peerState is not null after this
-                startTime = System.nanoTime();
-                List<Block> batch = filterBatch(bw.blocks, chain, importedBlockHashes);
-                duration = System.nanoTime() - startTime;
-                surveyLog.debug("Import Stage 3: filter batch, duration = {} ns.", duration);
-
-                startTime = System.nanoTime();
-                // process batch and update the peer state
-                SyncMode newMode = processBatch(syncMode, batch, bw.displayId);
-                duration = System.nanoTime() - startTime;
-                surveyLog.debug("Import Stage 4: process received and disk batches, duration = {} ns.", duration);
-
-                // transition to recommended sync mode
-                if (syncMode != newMode) {
-                    syncHeaderRequestManager.runInMode(bw.nodeId, newMode);
-                }
-
-                syncStats.update(getBestBlockNumber());
+            // transition to recommended sync mode
+            if (syncMode != newMode) {
+                syncHeaderRequestManager.runInMode(bw.nodeId, newMode);
             }
-        }
 
-        log.debug(
-                "Thread ["
-                        + Thread.currentThread().getName()
-                        + "] performing block imports was shutdown.");
+            syncStats.update(getBestBlockNumber(chain));
+        }
     }
 
     /**
@@ -168,7 +104,7 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote This method is called only when state is not null. */
-    private SyncMode processBatch(SyncMode syncMode, List<Block> batch, String displayId) {
+    private static SyncMode processBatch(AionBlockchainImpl chain, Map<ByteArrayWrapper, Object> importedBlockHashes, SyncStats syncStats, SyncMode syncMode, List<Block> batch, String displayId) {
         // for runtime survey information
         long startTime, duration;
 
@@ -244,7 +180,7 @@ final class TaskImportBlocks implements Runnable {
             syncStats.updatePeerBlocks(displayId, stored, BlockType.STORED);
 
             // check if it is below the current importable blocks
-            if (firstInBatch.getNumber() <= getBestBlockNumber() + 1) {
+            if (firstInBatch.getNumber() <= getBestBlockNumber(chain) + 1) {
                 duration = System.nanoTime() - startTime;
                 surveyLog.debug("Import Stage 4.A: import received batch, duration = {} ns.", duration);
                 return BACKWARD;
@@ -265,7 +201,7 @@ final class TaskImportBlocks implements Runnable {
         startTime = System.nanoTime();
         // check for stored blocks
         if (first < last) {
-            returnMode = importFromStorage(returnMode, first, last);
+            returnMode = importFromStorage(chain, importedBlockHashes, returnMode, first, last);
         }
         duration = System.nanoTime() - startTime;
         surveyLog.debug("Import Stage 4.B: process all disk batches, duration = {} ns.", duration);
@@ -278,7 +214,7 @@ final class TaskImportBlocks implements Runnable {
      *
      * @return the total number of imported blocks from all iterations
      */
-    private SyncMode importFromStorage(SyncMode givenMode, long first, long last) {
+    private static SyncMode importFromStorage(AionBlockchainImpl chain,Map<ByteArrayWrapper, Object> importedBlockHashes, SyncMode givenMode, long first, long last) {
         // for runtime survey information
         long startTime, duration;
 
@@ -385,7 +321,7 @@ final class TaskImportBlocks implements Runnable {
         return givenMode;
     }
 
-    private long getBestBlockNumber() {
+    private static long getBestBlockNumber(AionBlockchainImpl chain) {
         return chain.getBestBlock() == null ? 0 : chain.getBestBlock().getNumber();
     }
 }
