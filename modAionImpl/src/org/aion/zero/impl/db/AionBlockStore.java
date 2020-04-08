@@ -265,8 +265,8 @@ public class AionBlockStore {
 
             blockInfos.add(new BlockInfo(block.getHash(), totalDifficulty, mainChain));
 
-            blocks.putToBatch(block.getHash(), block);
-            blocks.flushBatch(); // TODO AKI-309: flush in bulk by the repository
+            blocks.put(block.getHash(), block);
+            blocks.commit(); // TODO AKI-309: flush in bulk by the repository
             index.set(block.getNumber(), blockInfos);
         } finally {
             lock.unlock();
@@ -911,7 +911,7 @@ public class AionBlockStore {
                             + "Please reboot your node to trigger automatic database recovery by the kernel.");
                 } else {
                     for (BlockInfo bk_info : currentLevelBlocks) {
-                        blocks.deleteInBatch(bk_info.getHash());
+                        blocks.delete(bk_info.getHash());
                         currentBatchSize++;
                     }
                 }
@@ -919,7 +919,7 @@ public class AionBlockStore {
                 // remove the level
                 index.remove(currentLevel);
                 if (currentBatchSize >= TARGET_BATCH_SIZE) {
-                    blocks.flushBatch();
+                    blocks.commit();
                     if (System.nanoTime() - time > TEN_SEC) {
                         log.info("Progress report: current height=" + currentLevel);
                         time = System.nanoTime();
@@ -928,14 +928,14 @@ public class AionBlockStore {
                 }
                 --currentLevel;
             }
-            blocks.flushBatch();
+            blocks.commit();
 
             log.info("Block store revert COMPLETE.");
             log.warn("Please be aware that the current main chain is the same chain that contained the best block encountered at the start of this operation. "
                     + "To keep this revert operation fast the main chain has not been updated based on existing side chains. The main chain will adjust itself when new blocks are imported.");
         } catch (Exception e) {
             // making sure the blocks get deleted if interrupted
-            blocks.flushBatch();
+            blocks.commit();
         } finally {
             lock.unlock();
         }
@@ -1027,9 +1027,9 @@ public class AionBlockStore {
 
             // deleting incorrect parallel blocks
             for (BlockInfo wrongBlock : levelBlocks) {
-                blocks.deleteInBatch(wrongBlock.getHash());
+                blocks.delete(wrongBlock.getHash());
             }
-            blocks.flushBatch();
+            blocks.commit();
 
             // set new block info with total difficulty set to the block's difficulty
             // This value is corrected in the correctTotalDifficulty() step of pruneAndCorrect()
@@ -1373,10 +1373,10 @@ public class AionBlockStore {
                 // delete all the side-chain blocks
                 for (BlockInfo blockInfo : level) {
                     if (!Arrays.equals(currentHash, blockInfo.getHash())) {
-                        blocks.deleteInBatch(blockInfo.getHash());
+                        blocks.delete(blockInfo.getHash());
                     }
                 }
-                blocks.flushBatch();
+                blocks.commit();
 
                 // replace all the block info with empty list
                 index.set(block.getNumber(), Collections.emptyList());
@@ -1836,9 +1836,9 @@ public class AionBlockStore {
                 List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(level);
 
                 for (BlockInfo bk_info : currentLevelBlocks) {
-                    blocks.deleteInBatch(bk_info.getHash());
+                    blocks.delete(bk_info.getHash());
                 }
-                blocks.flushBatch();
+                blocks.commit();
 
                 index.remove(level--);
             }

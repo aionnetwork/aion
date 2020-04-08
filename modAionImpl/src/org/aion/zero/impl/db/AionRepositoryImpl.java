@@ -668,9 +668,9 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             }
 
             transformedCodeInfo.add(ByteArrayWrapper.wrap(codeHash), avmVersion, transformedCode);
-            transformedCodeSource.putToBatch(address.toByteArray(), transformedCodeInfo);
+            transformedCodeSource.put(address.toByteArray(), transformedCodeInfo);
             // TODO AKI-309: refactor to flush in bulk
-            transformedCodeSource.flushBatch();
+            transformedCodeSource.commit();
         }
         finally {
             rwLock.writeLock().unlock();
@@ -1324,16 +1324,16 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
         if (contract != null) {
             ContractInformation ci = getIndexedContractInformation(contract);
             if (ci == null) {
-                contractInfoSource.putToBatch(contract.toByteArray(), new ContractInformation(codeHash, vmUsed, inceptionBlock, complete));
+                contractInfoSource.put(contract.toByteArray(), new ContractInformation(codeHash, vmUsed, inceptionBlock, complete));
             } else {
                 // update the existing entry to add new information
                 ci.append(codeHash, vmUsed, inceptionBlock, complete);
 
                 // overwrites entry with new value
-                contractInfoSource.putToBatch(contract.toByteArray(), ci);
+                contractInfoSource.put(contract.toByteArray(), ci);
             }
             // TODO AKI-309: refactor to flush in bulk
-            contractInfoSource.flushBatch();
+            contractInfoSource.commit();
         }
     }
 

@@ -20,14 +20,14 @@ class LruDataSource<V> extends ObjectDataSource<V> {
     }
 
     @Override
-    public void putToBatch(byte[] key, V value) {
-        super.putToBatch(key, value);
+    public void put(byte[] key, V value) {
+        super.put(key, value);
         cache.put(ByteArrayWrapper.wrap(key), value);
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
-        super.deleteInBatch(key);
+    public void delete(byte[] key) {
+        super.delete(key);
         cache.remove(ByteArrayWrapper.wrap(key));
     }
 

@@ -28,12 +28,12 @@ class DataSourceArray<V> implements ArrayStore<V> {
     @Override
     public void set(long index, V value) {
         if (index <= Integer.MAX_VALUE) {
-            src.putToBatch(ByteUtil.intToBytes((int) index), value);
+            src.put(ByteUtil.intToBytes((int) index), value);
         } else {
-            src.putToBatch(ByteUtil.longToBytes(index), value);
+            src.put(ByteUtil.longToBytes(index), value);
         }
         // TODO AKI-309: flush in bulk by the repository
-        src.flushBatch();
+        src.commit();
         if (index >= size()) {
             setSize(index + 1);
         }
@@ -47,12 +47,12 @@ class DataSourceArray<V> implements ArrayStore<V> {
         }
 
         if (index <= Integer.MAX_VALUE) {
-            src.deleteInBatch(ByteUtil.intToBytes((int) index));
+            src.delete(ByteUtil.intToBytes((int) index));
         } else {
-            src.deleteInBatch(ByteUtil.longToBytes(index));
+            src.delete(ByteUtil.longToBytes(index));
         }
         // TODO AKI-309: flush in bulk by the repository
-        src.flushBatch();
+        src.commit();
         if (index < size()) {
             setSize(index);
         }

@@ -20,17 +20,17 @@ class ObjectDataSource<V> implements ObjectStore<V> {
 
     /** @apiNote Will throw an exception if the given value is {@code null}. */
     @Override
-    public void putToBatch(byte[] key, V value) {
+    public void put(byte[] key, V value) {
         src.putToBatch(key, serializer.serialize(value));
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         src.deleteInBatch(key);
     }
 
     @Override
-    public void flushBatch() {
+    public void commit() {
         src.commitBatch();
     }
 

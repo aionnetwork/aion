@@ -226,7 +226,7 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
 
         LOG.debug(
                 database.toString()
-                        + " putToBatch(key,value) in "
+                        + " put(key,value) in "
                         + (t2 - t1)
                         + " ns."
                         + "\n\t\t\t\t\tkey = "
@@ -243,7 +243,7 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
 
         LOG.debug(
                 database.toString()
-                        + " deleteInBatch(key) in "
+                        + " delete(key) in "
                         + (t2 - t1)
                         + " ns."
                         + "\n\t\t\t\t\tkey = "

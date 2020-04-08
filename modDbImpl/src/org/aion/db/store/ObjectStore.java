@@ -14,24 +14,24 @@ public interface ObjectStore<V> extends Closeable {
     /**
      * Adds a key-value entry to the database as part of a batch operation.
      *
-     * @apiNote Requires {@link #flushBatch()} to push the changes to the underlying database.
+     * @apiNote Requires {@link #commit()} to push the changes to the underlying database.
      */
-    void putToBatch(byte[] key, V value);
+    void put(byte[] key, V value);
 
     /**
      * Deletes the object stored at the given key as part of a batch operation.
      *
-     * @apiNote Requires {@link #flushBatch()} to push the changes to the underlying database.
+     * @apiNote Requires {@link #commit()} to push the changes to the underlying database.
      */
-    void deleteInBatch(byte[] key);
+    void delete(byte[] key);
 
     /** Pushes the current batch changes to the underlying database. */
-    void flushBatch();
+    void commit();
 
     /**
      * Retrieves the object stored at the given key.
      *
-     * @apiNote Values that have been added with {@link #putToBatch(byte[], Object)} or deleted with {@link #deleteInBatch(byte[])} are not guaranteed to be retrieved until {@link #flushBatch()} is called.
+     * @apiNote Values that have been added with {@link #put(byte[], Object)} or deleted with {@link #delete(byte[])} are not guaranteed to be retrieved until {@link #commit()} is called.
      */
     V get(byte[] key);
 

@@ -43,7 +43,7 @@ public class TransactionStore implements Closeable {
             // overwrites existing entry to update it with/without internal transactions
             // depending on the chosen configuration at block import
             existingInfos.put(tx.blockHash, tx);
-            txInfoSource.putToBatch(txHash, existingInfos);
+            txInfoSource.put(txHash, existingInfos);
         } finally {
             lock.writeLock().unlock();
         }
@@ -65,7 +65,7 @@ public class TransactionStore implements Closeable {
                         existingAliases = new HashSet<>();
                     }
                     existingAliases.add(ByteArrayWrapper.wrap(txHash));
-                    aliasSource.putToBatch(invokableHash, existingAliases);
+                    aliasSource.put(invokableHash, existingAliases);
                 }
             }
         } finally {
@@ -76,8 +76,8 @@ public class TransactionStore implements Closeable {
     public void flushBatch() {
         lock.writeLock().lock();
         try {
-            txInfoSource.flushBatch();
-            aliasSource.flushBatch();
+            txInfoSource.commit();
+            aliasSource.commit();
         } finally {
             lock.writeLock().unlock();
         }
