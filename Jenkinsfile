@@ -25,7 +25,7 @@ pipeline {
         '''.stripIndent()).trim()
     }
 
-    triggers { cron('0 3 * * 6') }
+    triggers { cron('0 3 * * 1-6') }
 
     stages {
         stage('Build') {
@@ -115,7 +115,7 @@ pipeline {
                     dir('pack') {
                         sh('tar xvf oan.tar.bz2')
                         echo "Start amity sync test..."
-                        sh('./oan/aion.sh -n amity e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev fs')
+                        sh('./oan/aion.sh -n amity e port=${P2P_PORT} rpc=off mining=off log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev fs')
                         echo "finished amity sync test..."
                         sh('rm -rf ./oan/amity/*')
 		    }
