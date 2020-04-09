@@ -79,7 +79,8 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         return hasArchive;
     }
 
-    public void put(byte[] key, byte[] value) {
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
         checkNotNull(key);
         checkNotNull(value);
 
@@ -97,7 +98,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
                     incRef(keyW);
 
                     // put to source database.
-                    src.put(key, value);
+                    src.putToBatch(key, value);
 
                 } else {
                     check();
@@ -108,7 +109,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
             } else {
                 // pruning disabled
                 if (value != null) {
-                    src.put(key, value);
+                    src.putToBatch(key, value);
                 } else {
                     check();
                 }
@@ -124,6 +125,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         }
     }
 
+    @Override
     public void delete(byte[] key) {
         checkNotNull(key);
         if (!enabled.get()) {
@@ -301,6 +303,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         }
     }
 
+    @Override
     public Optional<byte[]> get(byte[] key) {
         lock.readLock().lock();
         try {
@@ -313,6 +316,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         }
     }
 
+    @Override
     public Iterator<byte[]> keys() {
         lock.readLock().lock();
         try {
@@ -339,18 +343,32 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        throw new UnsupportedOperationException();
+    public void put(byte[] key, byte[] value) {
+        lock.writeLock().lock();
+
+        try {
+            putToBatch(key, value);
+            src.commit();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public void deleteInBatch(byte[] key) {
-        throw new UnsupportedOperationException();
+        // delete only counts references so we can do the same
+        delete(key);
     }
 
     @Override
     public void commit() {
-        throw new UnsupportedOperationException();
+        lock.writeLock().lock();
+
+        try {
+            src.commit();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
