@@ -356,10 +356,11 @@ public class AvmContractDetails implements StoredContractDetails {
     public void syncStorage() {
         byte[] graph = getObjectGraph();
         if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
-            objectGraphSource.put(objectGraphHash, graph);
+            objectGraphSource.putToBatch(objectGraphHash, graph);
         }
-        objectGraphSource.put(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
-
+        objectGraphSource.putToBatch(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
+        // commit both updates together
+        objectGraphSource.commit();
         storageTrie.sync();
     }
 
