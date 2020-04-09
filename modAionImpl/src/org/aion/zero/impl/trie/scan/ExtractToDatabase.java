@@ -17,7 +17,7 @@ public class ExtractToDatabase implements ScanAction {
 
     @Override
     public void doOnNode(byte[] hash, Value node) {
-        db.put(hash, dummy_value);
+        db.putToBatch(hash, dummy_value);
         count++;
     }
 }

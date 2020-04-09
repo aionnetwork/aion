@@ -1005,6 +1005,7 @@ public class TrieImpl implements Trie {
     public long saveFullStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db) {
         ExtractToDatabase traceAction = new ExtractToDatabase(db);
         traceTrie(stateRoot, traceAction);
+        db.commit();
         return traceAction.count;
     }
 
@@ -1024,6 +1025,7 @@ public class TrieImpl implements Trie {
     public long saveDiffStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db) {
         ExtractToDatabase traceAction = new ExtractToDatabase(db);
         traceDiffTrie(stateRoot, traceAction, db);
+        db.commit();
         return traceAction.count;
     }
 }
