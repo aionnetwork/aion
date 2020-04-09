@@ -155,28 +155,4 @@ public class MockDB extends AbstractDB {
     public void drop() {
         kv.clear();
     }
-
-    public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        boolean success = false;
-
-        try {
-            check();
-
-            // simply do a put, because setting a kv pair to null is same as delete
-            cache.forEach(
-                    (key, value) -> {
-                        if (value == null) {
-                            kv.remove(key);
-                        } else {
-                            kv.put(key, value);
-                        }
-                    });
-
-            success = true;
-        } catch (Exception e) {
-            LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        }
-
-        return success;
-    }
 }

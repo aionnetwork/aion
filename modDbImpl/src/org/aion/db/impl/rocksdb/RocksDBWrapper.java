@@ -427,32 +427,4 @@ public class RocksDBWrapper extends AbstractDB {
             LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
         }
     }
-
-    @Override
-    public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        boolean success = false;
-
-        check();
-
-        // try-with-resources will automatically close to batch object
-
-        try (WriteBatch batch = new WriteBatch()) {
-            for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
-                if (e.getValue() == null) {
-                    batch.delete(e.getKey().toBytes());
-                } else {
-                    batch.put(e.getKey().toBytes(), e.getValue());
-                }
-            }
-
-            // bulk automatic update
-            db.write(writeOptions, batch);
-
-            success = true;
-        } catch (RocksDBException e) {
-            LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        }
-
-        return success;
-    }
 }

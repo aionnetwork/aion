@@ -145,9 +145,6 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
         return false;
     }
 
-    /** Functionality for directly interacting with the heap cache. */
-    public abstract boolean commitCache(Map<ByteArrayWrapper, byte[]> cache);
-
     @Override
     public Optional<byte[]> get(byte[] key) {
         check(key);

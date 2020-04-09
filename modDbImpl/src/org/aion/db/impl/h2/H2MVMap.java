@@ -296,32 +296,6 @@ public class H2MVMap extends AbstractDB {
         }
     }
 
-    // AbstractDB functionality
-    // ----------------------------------------------------------------------------------------
-
-    public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        boolean success = false;
-
-        try {
-            check();
-
-            // doesn't actually have functionality for batch operations
-            for (Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
-                if (e.getValue() == null) {
-                    map.remove(e.getKey().toBytes());
-                } else {
-                    map.put(e.getKey().toBytes(), e.getValue());
-                }
-            }
-
-            success = true;
-        } catch (Exception e) {
-            LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        }
-
-        return success;
-    }
-
     /**
      * Compact the database file, that is, compact blocks that have a low fill rate, and move chunks
      * next to each other. This will typically shrink the database file. Changes are flushed to the

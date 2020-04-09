@@ -327,17 +327,6 @@ public class MongoDB extends AbstractDB {
     }
 
     @Override
-    public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        check();
-        check(cache.keySet().stream().map(k -> k.toBytes()).collect(Collectors.toList()));
-
-        WriteBatch edits = new WriteBatch().addEditsWrapper(cache);
-        WriteBatchResult result = doBulkWrite(edits);
-
-        return result.matchedExpectation(edits);
-    }
-
-    @Override
     protected byte[] getInternal(byte[] k) {
         BsonDocument document =
                 this.collection

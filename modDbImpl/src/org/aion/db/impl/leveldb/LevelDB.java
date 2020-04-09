@@ -426,36 +426,4 @@ public class LevelDB extends AbstractDB {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
     }
-
-    // AbstractDB functionality
-    // ----------------------------------------------------------------------------------------
-
-    public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        boolean success = false;
-
-        check();
-
-        // try-with-resources will automatically close the batch object
-        try (WriteBatch batch = db.createWriteBatch()) {
-            // add put and delete operations to batch
-            for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
-                if (e.getValue() == null) {
-                    batch.delete(e.getKey().toBytes());
-                } else {
-                    batch.put(e.getKey().toBytes(), e.getValue());
-                }
-            }
-
-            // bulk atomic update
-            db.write(batch);
-
-            success = true;
-        } catch (DBException e) {
-            LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        } catch (IOException e) {
-            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
-        }
-
-        return success;
-    }
 }
