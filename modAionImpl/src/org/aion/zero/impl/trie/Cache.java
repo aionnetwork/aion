@@ -84,15 +84,6 @@ public class Cache {
         return null;
     }
 
-    public synchronized void delete(byte[] key) {
-        ByteArrayWrapper wrappedKey = wrap(key);
-        this.nodes.remove(wrappedKey);
-
-        if (dataSource != null) {
-            this.dataSource.delete(key);
-        }
-    }
-
     public synchronized void commit(boolean flushCache) {
         // Don't try to commit if it isn't dirty
         if ((dataSource == null) || !this.isDirty) {
