@@ -5,17 +5,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.ByteArrayWrapper;
 
 public class XorDataSource implements ByteArrayKeyValueStore {
     private final ByteArrayKeyValueStore source;
     private final byte[] subKey;
+    private final boolean propagateDeletions;
 
-    public XorDataSource(ByteArrayKeyValueStore source, byte[] subKey) {
+    public XorDataSource(ByteArrayKeyValueStore source, byte[] subKey, boolean propagateDeletions) {
         this.source = source;
         this.subKey = subKey;
+        this.propagateDeletions = propagateDeletions;
     }
 
     private byte[] convertKey(byte[] key) {
@@ -34,7 +36,9 @@ public class XorDataSource implements ByteArrayKeyValueStore {
 
     @Override
     public void delete(byte[] key) {
-        source.delete(convertKey(key));
+        if (propagateDeletions) {
+            source.delete(convertKey(key));
+        }
     }
 
     @Override
@@ -79,12 +83,6 @@ public class XorDataSource implements ByteArrayKeyValueStore {
         source.putBatch(converted);
     }
 
-    public void updateBatch(Map<ByteArrayWrapper, byte[]> rows, boolean erasure) {
-        // not supported
-        throw new UnsupportedOperationException(
-                "ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
-    }
-
     @Override
     public void close() throws Exception {
         source.close();
@@ -92,10 +90,12 @@ public class XorDataSource implements ByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
-        // NOTE: implementing this method will cause a break in consensus
-        // due to the fact that the serialized storage must have old roots
-        // to enable reverting to a different state for the account in case of a fork
-        // TODO remove this black magic :P
+        if (propagateDeletions) {
+            for (byte[] k : keys) {
+                source.deleteInBatch(convertKey(k));
+            }
+            source.commit();
+        }
     }
 
     @Override
@@ -105,22 +105,23 @@ public class XorDataSource implements ByteArrayKeyValueStore {
 
     @Override
     public boolean isEmpty() {
-        // TODO Auto-generated method stub
-        return false;
+        return source.isEmpty();
     }
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
-        throw new UnsupportedOperationException();
+        source.putToBatch(convertKey(key), value);
     }
 
     @Override
     public void deleteInBatch(byte[] key) {
-        throw new UnsupportedOperationException();
+        if (propagateDeletions) {
+            source.deleteInBatch(convertKey(key));
+        }
     }
 
     @Override
     public void commit() {
-        throw new UnsupportedOperationException();
+        source.commit();
     }
 }

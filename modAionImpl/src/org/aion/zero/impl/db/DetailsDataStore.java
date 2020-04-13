@@ -48,7 +48,8 @@ public class DetailsDataStore {
      * @return the external storage data source associated with the given contract address
      */
     private ByteArrayKeyValueStore createStorageSource(AionAddress address) {
-        return new XorDataSource(storageDSPrune, h256(("details-storage/" + address.toString()).getBytes()));
+        // NOTE: The consensus-correct Trie use for contracts requires not pushing deletions via the XorDataSource.
+        return new XorDataSource(storageDSPrune, h256(("details-storage/" + address.toString()).getBytes()), false);
     }
 
     /**
@@ -59,7 +60,7 @@ public class DetailsDataStore {
      * @return the object graph data source associated with the given contract address
      */
     private ByteArrayKeyValueStore createGraphSource(AionAddress address) {
-        return new XorDataSource(graphSrc, h256(("details-graph/" + address.toString()).getBytes()));
+        return new XorDataSource(graphSrc, h256(("details-graph/" + address.toString()).getBytes()), true);
     }
 
     /**

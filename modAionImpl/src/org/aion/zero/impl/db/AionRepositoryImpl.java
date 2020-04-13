@@ -1213,7 +1213,7 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             byte[] subKey = h256(("details-storage/" + contract.toString()).getBytes());
 
             ByteArrayKeyValueStore db =
-                    new XorDataSource(selectDatabase(DatabaseType.STORAGE), subKey);
+                    new XorDataSource(selectDatabase(DatabaseType.STORAGE), subKey, false);
 
             Trie trie = new SecureTrie(db);
             Map<ByteArrayWrapper, byte[]> refs = trie.getReferencedTrieNodes(value, limit);
