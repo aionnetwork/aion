@@ -276,7 +276,7 @@ public class PendingBlockStore implements Closeable {
             int stored = addBlockRange(first, blockRange);
 
             // save data to disk
-            indexSource.commitBatch();
+            indexSource.commit();
             levelSource.commit();
             queueSource.commit();
 
@@ -543,7 +543,7 @@ public class PendingBlockStore implements Closeable {
             }
 
             // push changed to disk
-            indexSource.commitBatch();
+            indexSource.commit();
             queueSource.commit();
             levelSource.commit();
 

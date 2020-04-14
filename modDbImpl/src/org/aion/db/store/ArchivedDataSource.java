@@ -74,8 +74,8 @@ public class ArchivedDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void commitBatch() {
-        data.commitBatch();
+    public void commit() {
+        data.commit();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ArchivedDataSource implements ByteArrayKeyValueStore {
             // will check if archived
             deleteInBatch(key);
         }
-        commitBatch();
+        commit();
     }
 
     @Override

@@ -53,16 +53,6 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean commit() {
-        long t1 = System.nanoTime();
-        boolean cmt = database.commit();
-        long t2 = System.nanoTime();
-
-        LOG.debug(database.toString() + " commit() in " + (t2 - t1) + " ns.");
-        return cmt;
-    }
-
-    @Override
     public void compact() {
         long t1 = System.nanoTime();
         database.compact();
@@ -251,12 +241,12 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
         long t1 = System.nanoTime();
-        database.commitBatch();
+        database.commit();
         long t2 = System.nanoTime();
 
-        LOG.debug(database.toString() + " commitBatch() in " + (t2 - t1) + " ns.");
+        LOG.debug(database.toString() + " commit() in " + (t2 - t1) + " ns.");
     }
 
     @Override

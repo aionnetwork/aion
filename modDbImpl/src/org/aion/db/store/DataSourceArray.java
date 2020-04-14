@@ -118,7 +118,7 @@ class DataSourceArray<V> implements ArrayStore<V> {
             db.putToBatch(sizeKey, ByteUtil.longToBytes(newSize));
         }
         // TODO AKI-309: flush in bulk by the repository
-        db.commitBatch();
+        db.commit();
     }
 
     @Override

@@ -58,14 +58,6 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean commit() {
-        // not implemented since we always commit the changes to the database for this
-        // implementation
-        throw new UnsupportedOperationException(
-                "Only automatic commits are supported by " + this.toString());
-    }
-
-    @Override
     public void compact() {
         LOG.warn("Compact not supported by " + this.toString() + ".");
     }

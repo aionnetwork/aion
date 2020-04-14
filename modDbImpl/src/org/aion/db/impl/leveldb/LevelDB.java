@@ -368,7 +368,9 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
+        check();
+
         if (batch != null) {
             try {
                 db.write(batch);

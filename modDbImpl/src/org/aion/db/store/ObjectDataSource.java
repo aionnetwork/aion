@@ -31,7 +31,7 @@ class ObjectDataSource<V> implements ObjectStore<V> {
 
     @Override
     public void commit() {
-        src.commitBatch();
+        src.commit();
     }
 
     @Override

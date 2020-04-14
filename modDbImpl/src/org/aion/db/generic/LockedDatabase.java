@@ -68,21 +68,6 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean commit() {
-        // acquire write lock
-        lock.writeLock().lock();
-
-        try {
-            return database.commit();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
     public void compact() {
         // acquire write lock
         lock.writeLock().lock();
@@ -316,12 +301,12 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
         // acquire write lock
         lock.writeLock().lock();
 
         try {
-            database.commitBatch();
+            database.commit();
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw e;

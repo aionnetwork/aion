@@ -380,7 +380,7 @@ public class MongoDB extends AbstractDB {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
         check();
 
         if (this.batch != null) {

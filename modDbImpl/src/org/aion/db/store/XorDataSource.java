@@ -120,7 +120,7 @@ public class XorDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
         throw new UnsupportedOperationException();
     }
 }

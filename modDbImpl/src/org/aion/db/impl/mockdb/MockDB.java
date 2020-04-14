@@ -120,7 +120,9 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
+        check();
+
         // nothing to do since batch operations are not supported
     }
 

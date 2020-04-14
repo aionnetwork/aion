@@ -119,8 +119,11 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
     /**
      * Pushes updates made using {@link #putToBatch(Object, Object)} and {@link
      * #deleteInBatch(Object)} to the underlying data source.
+     * All changes since the last commit will be made permanent.
+     *
+     * @throws RuntimeException if the underlying data store is closed
      */
-    void commitBatch();
+    void commit();
 
     /**
      * Puts or updates the data store with the given <i>key-value</i> pairs, as follows:

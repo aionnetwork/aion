@@ -44,18 +44,6 @@ public interface Database {
      */
     void close();
 
-    /**
-     * Makes all changes made since the previous commit/rollback permanent and releases any database
-     * locks currently held by this Connection object. This method should be used only when
-     * auto-commit mode has been disabled.
-     *
-     * @return {@code true} if the changes were successfully committed to storage, {@code false} if
-     *     the changes could not be committed to storage
-     * @throws RuntimeException if the data store is closed
-     * @implNote Returns {@code true} with no other effect when auto-commit is already enabled.
-     */
-    boolean commit();
-
     /** Reduce the size of the database when possible. */
     void compact();
 

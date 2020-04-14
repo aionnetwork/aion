@@ -377,7 +377,9 @@ public class RocksDBWrapper extends AbstractDB {
     }
 
     @Override
-    public void commitBatch() {
+    public void commit() {
+        check();
+
         if (batch != null) {
             try {
                 db.write(writeOptions, batch);
