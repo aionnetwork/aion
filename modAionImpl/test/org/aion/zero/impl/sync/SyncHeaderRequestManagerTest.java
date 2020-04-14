@@ -243,4 +243,35 @@ public class SyncHeaderRequestManagerTest {
         assertThat(srm.matchAndDropHeaders(1, 12)).isEqualTo(list2);
         assertThat(srm.matchAndDropHeaders(1, 10)).isEqualTo(list);
     }
+
+    @Test
+    public void test_getHeadersForBodiesRequests_withoutPeerId() {
+        List<List<BlockHeader>> output = srm.getHeadersForBodiesRequests(1);
+        assertThat(output).isEmpty();
+    }
+
+    @Test
+    public void test_getHeadersForBodiesRequests() {
+        List<BlockHeader> list1 = mock(List.class);
+        when(list1.size()).thenReturn(10);
+        List<BlockHeader> list2 = mock(List.class);
+        when(list2.size()).thenReturn(10);
+        // new wrapper with different size
+        List<BlockHeader> list3 = mock(List.class);
+        when(list3.size()).thenReturn(12);
+
+        srm.storeHeaders(1, list1);
+        srm.storeHeaders(1, list2);
+        srm.storeHeaders(1, list3);
+        List<List<BlockHeader>> output = srm.getHeadersForBodiesRequests(1);
+        assertThat(output.size()).isEqualTo(2);
+        assertThat(output.get(0)).isEqualTo(list1);
+        assertThat(output.get(1)).isEqualTo(list3);
+
+        srm.matchAndDropHeaders(1, 10);
+        output = srm.getHeadersForBodiesRequests(1);
+        assertThat(output.size()).isEqualTo(2);
+        assertThat(output.get(0)).isEqualTo(list2);
+        assertThat(output.get(1)).isEqualTo(list3);
+    }
 }

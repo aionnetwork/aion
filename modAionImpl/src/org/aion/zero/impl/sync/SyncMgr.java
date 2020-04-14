@@ -2,6 +2,7 @@ package org.aion.zero.impl.sync;
 
 import static org.aion.util.string.StringUtils.getNodeIdShort;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,11 +69,12 @@ public final class SyncMgr {
 
     private final NetworkStatus networkStatus = new NetworkStatus();
 
-    private SyncHeaderRequestManager syncHeaderRequestManager;
+    @VisibleForTesting
+    SyncHeaderRequestManager syncHeaderRequestManager;
 
     // store the hashes of blocks which have been successfully imported
-    private final Map<ByteArrayWrapper, Object> importedBlockHashes =
-            Collections.synchronizedMap(new LRUMap<>(4096));
+    @VisibleForTesting
+    final Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
     private AionBlockchainImpl chain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
@@ -329,26 +331,39 @@ public final class SyncMgr {
 
         // NOTE: the filtered headers is still continuous
         if (!filtered.isEmpty()) {
-            syncExecutors.execute(() -> requestBodies(_nodeIdHashcode, _displayId, filtered));
+            // save headers for future bodies requests and matching with bodies
+            syncHeaderRequestManager.storeHeaders(_nodeIdHashcode, filtered);
+            syncExecutors.execute(() -> requestBodies(_nodeIdHashcode, _displayId));
         }
     }
 
     /**
      * Requests the bodies associated to the given block headers.
      */
-    private void requestBodies(int nodeId, String displayId, final List<BlockHeader> headers) {
+    @VisibleForTesting
+    void requestBodies(int nodeId, String displayId) {
         Thread.currentThread().setName("sync-gb");
         long startTime = System.nanoTime();
 
-        // save headers for matching with bodies
-        syncHeaderRequestManager.storeHeaders(nodeId, headers);
-
-        // log bodies request before sending the request
-        log.debug("<get-bodies from-num={} to-num={} node={}>", headers.get(0).getNumber(), headers.get(headers.size() - 1).getNumber(), displayId);
-
-        p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
-        stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
-        stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
+        List<List<BlockHeader>> forRequests = syncHeaderRequestManager.getHeadersForBodiesRequests(nodeId);
+        for (List<BlockHeader> requestHeaders : forRequests) {
+            // Filter headers again in case the blockchain has advanced while this task was waiting to be executed.
+            List<BlockHeader> filtered = requestHeaders.stream().filter(h -> !importedBlockHashes.containsKey(ByteArrayWrapper.wrap(h.getHash()))).collect(Collectors.toList());
+            if (filtered.size() == requestHeaders.size()) {
+                // Log bodies request before sending the request.
+                log.debug("<get-bodies from-num={} to-num={} node={}>", requestHeaders.get(0).getNumber(), requestHeaders.get(requestHeaders.size() - 1).getNumber(), displayId);
+                p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(requestHeaders.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+                stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
+                stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
+            } else {
+                // Drop the headers that are already known.
+                syncHeaderRequestManager.matchAndDropHeaders(nodeId, requestHeaders.size());
+                if (!filtered.isEmpty()) {
+                    // Store the subset that is still useful.
+                    syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                }
+            }
+        }
 
         long duration = System.nanoTime() - startTime;
         survey_log.debug("TaskGetBodies: make request, duration = {} ns.", duration);

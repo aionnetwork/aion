@@ -593,6 +593,32 @@ public class SyncHeaderRequestManager {
     }
 
     /**
+     * Returns a list of {@link List<BlockHeader>} of different size for making bodies requests.
+     *
+     * @param peerId the peer to make the requests to
+     * @return a list of {@link List<BlockHeader>} of different size for making bodies requests
+     */
+    public List<List<BlockHeader>> getHeadersForBodiesRequests(int peerId) {
+        lock.lock();
+
+        try {
+            if (!storedHeaders.containsKey(peerId)) {
+                return Collections.emptyList();
+            } else {
+                List<List<BlockHeader>> headersOfDifferentSizes = new ArrayList<>();
+                for (LinkedList<List<BlockHeader>> list : storedHeaders.get(peerId).values()) {
+                    if (!list.isEmpty()) {
+                        headersOfDifferentSizes.add(list.getFirst());
+                    }
+                }
+                return headersOfDifferentSizes;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Returns the headers received for the given size. The headers are removed from the internal storage.
      */
     public List<BlockHeader> matchAndDropHeaders(int peerId, int size) {
