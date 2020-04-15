@@ -34,6 +34,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.aion.zero.impl.sync.statistics.BlockType;
@@ -349,9 +350,21 @@ public final class SyncMgr {
         for (List<BlockHeader> requestHeaders : forRequests) {
             // Filter headers again in case the blockchain has advanced while this task was waiting to be executed.
             List<BlockHeader> filtered = requestHeaders.stream().filter(h -> !importedBlockHashes.containsKey(ByteArrayWrapper.wrap(h.getHash()))).collect(Collectors.toList());
+            // Check the peer state and discard blocks that are under the current best (in case the hashes already dropped from the above map).
+            // This check is only applicable for SyncMode.NORMAL because the other sync modes deal with side chains.
+            long currentBest = chain.getBestBlock() == null ? 0L : chain.getBestBlock().getNumber();
+            long firstInBatch = requestHeaders.get(0).getNumber();
+            if (syncHeaderRequestManager.getSyncMode(nodeId) == SyncMode.NORMAL && firstInBatch <= currentBest) {
+                // remove all blocks in the batch that are under the current best
+                for (Iterator<BlockHeader> it = filtered.iterator(); it.hasNext(); ) {
+                    if (it.next().getNumber() <= currentBest) {
+                        it.remove();
+                    }
+                }
+            }
             if (filtered.size() == requestHeaders.size()) {
                 // Log bodies request before sending the request.
-                log.debug("<get-bodies from-num={} to-num={} node={}>", requestHeaders.get(0).getNumber(), requestHeaders.get(requestHeaders.size() - 1).getNumber(), displayId);
+                log.debug("<get-bodies from-num={} to-num={} node={}>", firstInBatch, requestHeaders.get(requestHeaders.size() - 1).getNumber(), displayId);
                 p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(requestHeaders.stream().map(k -> k.getHash()).collect(Collectors.toList())));
                 stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
                 stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);

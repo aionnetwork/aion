@@ -13,13 +13,17 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +41,7 @@ public class SyncMgrTest {
     AionBlockchainImpl chain;
     @Mock
     Block bestBlock;
+    long bestBlockNumber = 100L;
     @Mock
     IP2pMgr p2pMgr;
     @Mock
@@ -48,7 +53,7 @@ public class SyncMgrTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         when(chain.getBestBlock()).thenReturn(bestBlock);
-        when(bestBlock.getNumber()).thenReturn(100L);
+        when(bestBlock.getNumber()).thenReturn(bestBlockNumber);
         syncMgr = new SyncMgr(chain, p2pMgr, evtMgr, false, Collections.emptySet(), 10);
     }
 
@@ -149,6 +154,60 @@ public class SyncMgrTest {
         // ensure that 1 request was sent
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
         assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1)).isNull();
+    }
+
+    @Test
+    public void testRequestBodies_withFilteringOnBlockNumber() {
+        BlockHeader header = mock(BlockHeader.class);
+        when(header.getNumber()).thenReturn(bestBlockNumber);
+        byte[] hash = Hex.decode("6fd8dae3304a9864f460ec7aec21bc94e14e34876e5dddd0a74d9c68ac7bc9ed");
+        when(header.getHash()).thenReturn(hash);
+        List<BlockHeader> list = new ArrayList<>();
+        list.add(header);
+        INode peer1 = mock(INode.class);
+        when(peer1.getIdHash()).thenReturn(1);
+        when(peer1.getIdShort()).thenReturn("peer1");
+        when(peer1.getBestBlockNumber()).thenReturn(2 * bestBlockNumber);
+        // ensure that peer1 exists in the syncHeaderRequestManager
+        syncMgr.syncHeaderRequestManager.assertUpdateActiveNodes(Map.of(1, peer1), null, null, Set.of(1), Set.of(1), 2 * bestBlockNumber);
+        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.runInMode(1, SyncMode.NORMAL);
+
+        syncMgr.requestBodies(1, "peer1");
+
+        // ensure that 1 request was sent
+        verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1)).isNull();
+    }
+
+    @Test
+    public void testRequestBodies_withFilteringOnBlockNumberAndRemainingHeaders() {
+        BlockHeader header1 = mock(BlockHeader.class);
+        when(header1.getNumber()).thenReturn(bestBlockNumber);
+        byte[] hash1 = Hex.decode("6fd8dae3304a9864f460ec7aec21bc94e14e34876e5dddd0a74d9c68ac7bc9ed");
+        when(header1.getHash()).thenReturn(hash1);
+        BlockHeader header2 = mock(BlockHeader.class);
+        when(header2.getNumber()).thenReturn(bestBlockNumber + 1);
+        byte[] hash2 = Hex.decode("f2652dde61042e9306dce95ecdc41a1be2be7eb374f19427aef2a79101b471ea");
+        when(header2.getHash()).thenReturn(hash2);
+        List<BlockHeader> list = new ArrayList<>();
+        list.add(header1);
+        list.add(header2);
+
+        INode peer1 = mock(INode.class);
+        when(peer1.getIdHash()).thenReturn(1);
+        when(peer1.getIdShort()).thenReturn("peer1");
+        when(peer1.getBestBlockNumber()).thenReturn(2 * bestBlockNumber);
+        // ensure that peer1 exists in the syncHeaderRequestManager
+        syncMgr.syncHeaderRequestManager.assertUpdateActiveNodes(Map.of(1, peer1), null, null, Set.of(1), Set.of(1), 2 * bestBlockNumber);
+        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.runInMode(1, SyncMode.NORMAL);
+
+        syncMgr.requestBodies(1, "peer1");
+
+        // ensure that 1 request was sent
+        verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1)).contains(header2);
     }
 
     @Test
