@@ -894,7 +894,8 @@ public final class AionPendingStateImpl implements IPendingState {
                     LOGGER_VM,
                     BlockCachingContext.PENDING,
                     bestBlk.getNumber(),
-                    blockchain.forkUtility.isUnityForkActive(currentBlockNumber));
+                    blockchain.forkUtility.isUnityForkActive(currentBlockNumber),
+                    blockchain.forkUtility.isSignatureSwapForkActive(currentBlockNumber));
         } catch (VmFatalException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(SystemExitCodes.FATAL_VM_ERROR);

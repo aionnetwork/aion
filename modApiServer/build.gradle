@@ -45,7 +45,7 @@ dependencies {
     compile project(':modCrypto')
 
     compile project(':modAionImpl')
-    compile files("${rootProject.projectDir}/lib/fastvm-4d55b49.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-9f1f780.jar")
     compile project(':modMcf')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')

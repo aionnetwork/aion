@@ -368,6 +368,7 @@ public class TransactionExecutorTest {
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
                 block.getNumber() - 1,
+                false,
                 false);
     }
 }

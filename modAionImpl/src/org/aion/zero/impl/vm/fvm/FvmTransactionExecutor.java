@@ -72,7 +72,8 @@ public final class FvmTransactionExecutor {
             boolean isLocalCall,
             boolean fork040enabled,
             long initialBlockEnergyLimit,
-            boolean unityForkEnabled)
+            boolean unityForkEnabled,
+            boolean signatureSwapForkEnabled)
             throws VmFatalException {
 
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
@@ -91,7 +92,8 @@ public final class FvmTransactionExecutor {
                         blockNumber,
                         blockTimestamp,
                         blockNrgLimit,
-                        unityForkEnabled);
+                        unityForkEnabled,
+                        signatureSwapForkEnabled);
 
         // Process the results of the transactions.
         for (AionTransaction transaction : transactions) {

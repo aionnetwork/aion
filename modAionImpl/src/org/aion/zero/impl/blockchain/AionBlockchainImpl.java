@@ -1767,7 +1767,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 getPostExecutionWorkForGeneratePreBlock(repository),
                                 BlockCachingContext.PENDING,
                                 bestBlock.getNumber(),
-                                forkUtility.isUnityForkActive(block.getNumber()));
+                                forkUtility.isUnityForkActive(block.getNumber()),
+                                forkUtility.isSignatureSwapForkActive(block.getNumber()));
 
                 for (AionTxExecSummary summary : executionSummaries) {
                     if (!summary.isRejected()) {
@@ -1823,7 +1824,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                 getPostExecutionWorkForApplyBlock(repository),
                                 executionTypeForAVM,
                                 cachedBlockNumberForAVM,
-                                forkUtility.isUnityForkActive(block.getNumber()));
+                                forkUtility.isUnityForkActive(block.getNumber()),
+                                forkUtility.isSignatureSwapForkActive(block.getNumber()));
 
                 // Check for rejected transaction already included in the chain.
                 if (isException(block.getNumber())) {

@@ -58,6 +58,7 @@ public final class BulkExecutor {
      * @param cachedBlockNumber represents a main chain block that is common to the current main
      *     chain and the block that is about to be imported used for cache retrieval (AVM specific
      *     parameter)
+     * @param signatureSwapForkEnabled the flag represents the current signature swap consensus status.
      */
     public static List<AionTxExecSummary> executeAllTransactionsInBlock(
             byte[] blockDifficulty,
@@ -75,7 +76,8 @@ public final class BulkExecutor {
             PostExecutionWork postExecutionWork,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber,
-            boolean unityForkEnabled)
+            boolean unityForkEnabled,
+            boolean signatureSwapForkEnabled)
             throws VmFatalException {
 
         if (blockDifficulty == null) {
@@ -113,7 +115,8 @@ public final class BulkExecutor {
                 fork040Enable,
                 blockCachingContext,
                 cachedBlockNumber,
-                unityForkEnabled);
+                unityForkEnabled,
+                signatureSwapForkEnabled);
     }
 
     /**
@@ -153,7 +156,8 @@ public final class BulkExecutor {
             Logger logger,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber,
-            boolean unityforkEnabled)
+            boolean unityforkEnabled,
+            boolean signatureSwapForkEnabled)
             throws VmFatalException {
 
         if (blockDifficulty == null) {
@@ -185,7 +189,8 @@ public final class BulkExecutor {
                         fork040Enable,
                         blockCachingContext,
                         cachedBlockNumber,
-                        unityforkEnabled)
+                        unityforkEnabled,
+                        signatureSwapForkEnabled)
                 .get(0);
     }
 
@@ -206,7 +211,8 @@ public final class BulkExecutor {
             boolean fork040enabled,
             BlockCachingContext blockCachingContext,
             long cachedBlockNumber,
-            boolean unityForkEnabled)
+            boolean unityForkEnabled,
+            boolean signatureSwapForkEnabled)
             throws VmFatalException {
         List<AionTxExecSummary> allSummaries = new ArrayList<>();
 
@@ -256,7 +262,8 @@ public final class BulkExecutor {
                                 isLocalCall,
                                 blockRemainingEnergy,
                                 fork040enabled,
-                                unityForkEnabled);
+                                unityForkEnabled,
+                                signatureSwapForkEnabled);
             } else if (transactionIsPrecompiledContractCall(firstTransactionInNextBatch)) {
                 currentBatchOfSummaries =
                         executeNextBatchOfPrecompiledTransactions(
@@ -367,7 +374,8 @@ public final class BulkExecutor {
             boolean isLocalCall,
             long blockRemainingEnergy,
             boolean fork040enabled,
-            boolean unityForkEnabled)
+            boolean unityForkEnabled,
+            boolean signatureSwapForkEnabled)
             throws VmFatalException {
 
         // Grab the next batch of fvm transactions to execute.
@@ -393,7 +401,8 @@ public final class BulkExecutor {
                 isLocalCall,
                 fork040enabled,
                 blockRemainingEnergy,
-                unityForkEnabled);
+                unityForkEnabled,
+                signatureSwapForkEnabled);
     }
 
     /**

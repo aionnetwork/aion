@@ -132,6 +132,7 @@ public class AionImpl implements IAionChain {
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
             boolean unityForkEnabled = false;
+            boolean signatureSwapForkEnabled = ((AionBlockchainImpl)aionHub.getBlockchain()).forkUtility.isSignatureSwapForkActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),
@@ -148,7 +149,8 @@ public class AionImpl implements IAionChain {
                             LOG_VM,
                             BlockCachingContext.CALL,
                             block.getNumber(),
-                            unityForkEnabled)
+                            unityForkEnabled,
+                            signatureSwapForkEnabled)
                     .getReceipt()
                     .getEnergyUsed();
         } catch (VmFatalException e) {
@@ -172,6 +174,7 @@ public class AionImpl implements IAionChain {
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
             boolean unityForkEnabled = false;
+            boolean signatureSwapForkEnabled = ((AionBlockchainImpl)aionHub.getBlockchain()).forkUtility.isSignatureSwapForkActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),
@@ -188,7 +191,8 @@ public class AionImpl implements IAionChain {
                             LOG_VM,
                             BlockCachingContext.CALL,
                             block.getNumber(),
-                            unityForkEnabled)
+                            unityForkEnabled,
+                            signatureSwapForkEnabled)
                     .getReceipt();
         } catch (VmFatalException e) {
             LOG_GEN.error("Shutdown due to a VM fatal error.", e);

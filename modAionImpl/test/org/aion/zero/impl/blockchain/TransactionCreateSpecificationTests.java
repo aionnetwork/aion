@@ -1539,6 +1539,7 @@ public class TransactionCreateSpecificationTests {
                 getPostExecutionWorkForGeneratePreBlock(blockchain.getRepository()),
                 BlockCachingContext.PENDING,
                 block.getNumber(),
+                false,
                 false);
 
         return list.get(0);

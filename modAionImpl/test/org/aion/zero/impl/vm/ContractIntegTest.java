@@ -176,6 +176,7 @@ public class ContractIntegTest {
                         LOGGER_VM,
                         BlockCachingContext.PENDING,
                         block.getNumber() - 1,
+                        false,
                         false);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -1934,6 +1935,7 @@ public class ContractIntegTest {
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
                 block.getNumber() - 1,
+                false,
                 false);
     }
 
@@ -2031,6 +2033,7 @@ public class ContractIntegTest {
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
                 block.getNumber() - 1,
+                false,
                 false);
 
         if (txType == TransactionTypes.DEFAULT) {
@@ -2150,6 +2153,7 @@ public class ContractIntegTest {
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
                 block.getNumber() - 1,
+                false,
                 false);
 
         if (txType == TransactionTypes.DEFAULT) {

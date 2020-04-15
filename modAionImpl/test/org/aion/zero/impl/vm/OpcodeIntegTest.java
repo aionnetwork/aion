@@ -858,6 +858,7 @@ public class OpcodeIntegTest {
                 LOGGER_VM,
                 BlockCachingContext.PENDING,
                 block.getNumber() - 1,
+                false,
                 false);
     }
 }
