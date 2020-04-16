@@ -132,7 +132,7 @@ public class AionImpl implements IAionChain {
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
             boolean unityForkEnabled = false;
-            boolean signatureSwapForkEnabled = ((AionBlockchainImpl)aionHub.getBlockchain()).forkUtility.isSignatureSwapForkActive(block.getNumber());
+            boolean signatureSwapForkEnabled = aionHub.isForkSignatureSwapActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),
@@ -174,7 +174,7 @@ public class AionImpl implements IAionChain {
             boolean fork040enabled = false;
             boolean checkBlockEnergyLimit = false;
             boolean unityForkEnabled = false;
-            boolean signatureSwapForkEnabled = ((AionBlockchainImpl)aionHub.getBlockchain()).forkUtility.isSignatureSwapForkActive(block.getNumber());
+            boolean signatureSwapForkEnabled = aionHub.isForkSignatureSwapActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                             block.getDifficulty(),

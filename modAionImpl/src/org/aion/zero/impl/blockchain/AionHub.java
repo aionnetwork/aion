@@ -494,4 +494,8 @@ public class AionHub {
                 });
         }
     }
+
+    public boolean isForkSignatureSwapActive(long blockNumber) {
+        return this.blockchain.forkUtility.isSignatureSwapForkActive(blockNumber);
+    }
 }
