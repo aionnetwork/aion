@@ -54,6 +54,16 @@ public class ForkUtility {
 
             enableNonceFork(maybeNonceFork.get());
         }
+
+        Optional<Long> maybeSignatureSwapFork = loadSignatureSwapForkNumberFromConfig(properties);
+        if (maybeSignatureSwapFork.isPresent()) {
+            if (maybeSignatureSwapFork.get() < 2) {
+                log.warn("The fork1.7 block number cannot be less than 2, set the fork number to 2");
+                maybeSignatureSwapFork = Optional.of(2L);
+            }
+
+            enableSignatureSwapFork(maybeSignatureSwapFork.get());
+        }
     }
 
     /**
@@ -130,6 +140,28 @@ public class ForkUtility {
         this.nonceForkEnabled = true;
     }
 
+    // variable used by the signature swap fork
+    private boolean signatureSwapForkEnabled = false;
+    private long signatureSwapForkBlockHeight = Long.MAX_VALUE;
+
+    /**
+     * Returns a boolean value indicating if the signature swap fork is active for the given context (block
+     * number). We want the fork block itself to be a PoW block subject to the old pre-Unity rules,
+     * so we use a strict greater than comparison.
+     *
+     * @return {@code true} if the signature swap fork fork is active for the given context (block number), {@code
+     *     false} otherwise
+     */
+    public boolean isSignatureSwapForkActive(long contextBlockNumber) {
+        return signatureSwapForkEnabled && (contextBlockNumber >= signatureSwapForkBlockHeight);
+    }
+
+    public void enableSignatureSwapFork(long signatureSwapForkBlockHeight) {
+        Preconditions.checkArgument(signatureSwapForkBlockHeight >= 2, "Invalid fork1.7 block number: must be >= 2");
+        this.signatureSwapForkBlockHeight = signatureSwapForkBlockHeight;
+        this.signatureSwapForkEnabled = true;
+    }
+
     @VisibleForTesting
     public void disableNonceFork() {
         this.nonceForkBlockHeight = Long.MAX_VALUE;
@@ -198,6 +230,21 @@ public class ForkUtility {
             return Optional.empty();
         } else {
             return Optional.of(Long.valueOf(fork040Setting));
+        }
+    }
+
+    /**
+     * Determine fork 1.7 fork number from Aion Config.
+     *
+     * @return 1.7 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork1.7" present in the config, but not parseable
+     */
+    private static Optional<Long> loadSignatureSwapForkNumberFromConfig(Properties properties) {
+        String signatureSwapFork = properties.getProperty("fork1.7");
+        if(signatureSwapFork == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Long.valueOf(signatureSwapFork));
         }
     }
 }
