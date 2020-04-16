@@ -14,8 +14,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.util.types.ByteArrayWrapper;
 import org.junit.After;
@@ -30,7 +30,7 @@ public class JournalPruneDataSourceTest {
 
     private static final String dbName = "TestDB";
     public static final Logger log = LoggerFactory.getLogger("DB");
-    private static final ByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName, log);
+    private static final MockDB source_db = DatabaseFactory.connect(dbName, log);
     private static JournalPruneDataSource db;
 
     private static final byte[] k1 = "key1".getBytes();
@@ -1355,8 +1355,8 @@ public class JournalPruneDataSourceTest {
     public void pruningTest_woStoredLevel() {
         db.setPruneEnabled(true);
 
-        source_db.put(k2, v2);
-        source_db.put(k3, v3);
+        source_db.putAndCommit(k2, v2);
+        source_db.putAndCommit(k3, v3);
 
         // block 2
         db.put(k2, v3);

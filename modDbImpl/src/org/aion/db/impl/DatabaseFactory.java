@@ -190,7 +190,7 @@ public abstract class DatabaseFactory {
     }
 
     /** @return A mock database. */
-    public static ByteArrayKeyValueDatabase connect(String dbName, Logger log) {
+    public static MockDB connect(String dbName, Logger log) {
         return new MockDB(dbName, log);
     }
 

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.store.ArrayStore;
 import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
@@ -63,10 +64,10 @@ public class BlockchainIndexIntegrityTest {
         chain.getRepository().flush();
 
         AionRepositoryImpl repo = chain.getRepository();
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // deleting the genesis index
-        indexDatabase.delete(ByteUtil.intToBytes(0));
+        indexDatabase.deleteAndCommit(ByteUtil.intToBytes(0));
 
         AionBlockStore blockStore = repo.getBlockStore();
 
@@ -105,10 +106,10 @@ public class BlockchainIndexIntegrityTest {
         chain.getRepository().flush();
 
         AionRepositoryImpl repo = chain.getRepository();
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // deleting the level 2 index
-        indexDatabase.delete(ByteUtil.intToBytes(2));
+        indexDatabase.deleteAndCommit(ByteUtil.intToBytes(2));
 
         AionBlockStore blockStore = repo.getBlockStore();
 

@@ -10,6 +10,7 @@ import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
@@ -83,13 +84,13 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        MockDB database = (MockDB) repo.getStateDatabase();
 
         // 1: direct recovery call
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -109,7 +110,7 @@ public class BlockchainDataRecoveryTest {
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -161,13 +162,13 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        MockDB database = (MockDB) repo.getStateDatabase();
 
         // 1: direct recovery call
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -187,7 +188,7 @@ public class BlockchainDataRecoveryTest {
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -241,7 +242,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        MockDB database = (MockDB) repo.getStateDatabase();
 
         // 1: direct recovery call
 
@@ -253,7 +254,7 @@ public class BlockchainDataRecoveryTest {
         }
 
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -273,7 +274,7 @@ public class BlockchainDataRecoveryTest {
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -366,17 +367,18 @@ public class BlockchainDataRecoveryTest {
 
         // delete middle block from db
         Block middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
-        repo.getBlockDatabase().delete(middle.getHash());
+        MockDB database = (MockDB) repo.getBlockDatabase();
+        database.deleteAndCommit(middle.getHash());
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        database = (MockDB) repo.getStateDatabase();
 
         // 1: direct recovery call
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -395,7 +397,7 @@ public class BlockchainDataRecoveryTest {
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -478,7 +480,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -489,7 +491,7 @@ public class BlockchainDataRecoveryTest {
             // saving the data for checking recovery
             deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -523,7 +525,7 @@ public class BlockchainDataRecoveryTest {
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -632,7 +634,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
         // delete index entries from the database
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -643,7 +645,7 @@ public class BlockchainDataRecoveryTest {
             // saving the data for checking recovery
             deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -684,7 +686,7 @@ public class BlockchainDataRecoveryTest {
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -756,7 +758,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -767,7 +769,7 @@ public class BlockchainDataRecoveryTest {
             // saving the data for checking recovery
             deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -801,7 +803,7 @@ public class BlockchainDataRecoveryTest {
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -936,7 +938,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -948,7 +950,7 @@ public class BlockchainDataRecoveryTest {
             // saving the data for checking recovery
             deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -983,7 +985,7 @@ public class BlockchainDataRecoveryTest {
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -1081,10 +1083,11 @@ public class BlockchainDataRecoveryTest {
 
         // delete middle block from db
         Block middle = chain.getBlockByNumber(NUMBER_OF_BLOCKS / 2);
-        repo.getBlockDatabase().delete(middle.getHash());
+        MockDB database = (MockDB) repo.getBlockDatabase();
+        database.deleteAndCommit(middle.getHash());
 
         // delete index entries from the database
-        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        MockDB indexDatabase = (MockDB) repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -1095,7 +1098,7 @@ public class BlockchainDataRecoveryTest {
             // saving the data for checking recovery
             deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }
@@ -1117,7 +1120,7 @@ public class BlockchainDataRecoveryTest {
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // deleting the block info
-            indexDatabase.delete(indexKey);
+            indexDatabase.deleteAndCommit(indexKey);
             // ensure that the index was corrupted
             assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
         }

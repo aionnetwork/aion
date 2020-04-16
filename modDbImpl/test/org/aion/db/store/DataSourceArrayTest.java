@@ -46,7 +46,7 @@ public class DataSourceArrayTest {
                 }
             };
 
-    private static ByteArrayKeyValueDatabase db;
+    private static MockDB db;
     private static ArrayStore<String> testStore;
 
     private static final Random random = new Random();
@@ -346,7 +346,7 @@ public class DataSourceArrayTest {
         testStore.set(10L, value);
 
         // drop key to imply db failure
-        db.delete(DataSourceArray.sizeKey);
+        db.deleteAndCommit(DataSourceArray.sizeKey);
         assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isFalse();
 
         // close should save the key
@@ -369,7 +369,7 @@ public class DataSourceArrayTest {
         testStore.set(10L, value);
 
         // drop key to imply db failure
-        db.delete(DataSourceArray.sizeKey);
+        db.deleteAndCommit(DataSourceArray.sizeKey);
         assertThat(db.get(DataSourceArray.sizeKey).isPresent()).isFalse();
 
         // adding another entry should save the key

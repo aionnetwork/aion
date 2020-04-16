@@ -23,6 +23,7 @@ import org.aion.base.TransactionTypeRule;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
@@ -450,7 +451,7 @@ public class BlockchainForkingTest {
         assertThat(bc.tryToConnect(slowerBlockDescendant.block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // corrupt the parent for the fast block descendant
-        bc.getRepository().getStateDatabase().delete(fasterSecondBlock.block.getStateRoot());
+        ((MockDB) bc.getRepository().getStateDatabase()).deleteAndCommit(fasterSecondBlock.block.getStateRoot());
         assertThat(bc.getRepository().isValidRoot(fasterSecondBlock.block.getStateRoot()))
                 .isFalse();
 

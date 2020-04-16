@@ -1000,7 +1000,7 @@ public class TrieTest {
                                 "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
-            mockDB.delete(key.toBytes());
+            mockDB.deleteAndCommit(key.toBytes());
         }
 
         trie = new TrieImpl(mockDB);
@@ -1037,7 +1037,7 @@ public class TrieTest {
                                 "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab")));
 
         for (ByteArrayWrapper key : expected) {
-            mockDB.delete(key.toBytes());
+            mockDB.deleteAndCommit(key.toBytes());
         }
 
         trie = new TrieImpl(mockDB);

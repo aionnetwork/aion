@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
@@ -170,11 +171,11 @@ public class AionHubTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        MockDB database = (MockDB) repo.getStateDatabase();
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -249,11 +250,11 @@ public class AionHubTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        MockDB database = (MockDB) repo.getStateDatabase();
 
         repo.flush();
         for (byte[] key : statesToDelete) {
-            database.delete(key);
+            database.deleteAndCommit(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
 
@@ -263,8 +264,9 @@ public class AionHubTest {
 
         // Also, missing the block DB
         blocksToImport.remove(0);
+        database = (MockDB) repo.getBlockDatabase();
         for (AionBlock b : blocksToImport) {
-            repo.getBlockDatabase().delete(b.getHash());
+            database.deleteAndCommit(b.getHash());
         }
         repo.flush();
 

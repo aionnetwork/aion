@@ -1,5 +1,6 @@
 package org.aion.db.impl.mockdb;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +80,22 @@ public class MockDB extends AbstractDB {
     public boolean isEmpty() {
         check();
         return kv.isEmpty();
+    }
+
+    /**
+     * Used for direct updates of the database during unit tests.
+     */
+    @VisibleForTesting
+    public void putAndCommit(byte[] key, byte[] value) {
+        kv.put(ByteArrayWrapper.wrap(key), value);
+    }
+
+    /**
+     * Used for direct updates of the database during unit tests.
+     */
+    @VisibleForTesting
+    public void deleteAndCommit(byte[] key) {
+        kv.remove(ByteArrayWrapper.wrap(key));
     }
 
     @Override

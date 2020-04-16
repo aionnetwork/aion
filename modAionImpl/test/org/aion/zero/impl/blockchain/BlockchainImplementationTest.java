@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.aion.base.AionTransaction;
 import org.aion.crypto.ECKey;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
@@ -629,7 +630,7 @@ public class BlockchainImplementationTest {
         byte[] bestHash = best.getHash();
 
         // delete the block from the db
-        chain.getRepository().getBlockDatabase().delete(bestHash);
+        ((MockDB) chain.getRepository().getBlockDatabase()).deleteAndCommit(bestHash);
 
         Pair<ByteArrayWrapper, Long> pair = chain.findMissingAncestor(best);
         assertThat(pair.getLeft()).isEqualTo(ByteArrayWrapper.wrap(bestHash));
@@ -650,7 +651,7 @@ public class BlockchainImplementationTest {
         byte[] parentHash = best.getParentHash();
 
         // delete the block from the db
-        chain.getRepository().getBlockDatabase().delete(parentHash);
+        ((MockDB) chain.getRepository().getBlockDatabase()).deleteAndCommit(parentHash);
 
         Pair<ByteArrayWrapper, Long> pair = chain.findMissingAncestor(best);
         assertThat(pair.getLeft()).isEqualTo(ByteArrayWrapper.wrap(parentHash));
@@ -728,7 +729,7 @@ public class BlockchainImplementationTest {
         Block best = chain.getBestBlock();
 
         // delete the block from the db
-        chain.getRepository().getBlockDatabase().delete(best.getHash());
+        ((MockDB) chain.getRepository().getBlockDatabase()).deleteAndCommit(best.getHash());
 
         assertThat(chain.tryFastImport(best)).isEqualTo(FastImportResult.NO_CHILD);
     }
@@ -746,7 +747,7 @@ public class BlockchainImplementationTest {
 
         // save then delete the block from the db
         Block block = chain.getBlockByHash(best.getParentHash());
-        chain.getRepository().getBlockDatabase().delete(best.getParentHash());
+        ((MockDB) chain.getRepository().getBlockDatabase()).deleteAndCommit(best.getParentHash());
 
         assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.IMPORTED);
         assertThat(chain.getRepository().getBlockDatabase().get(best.getParentHash()))
