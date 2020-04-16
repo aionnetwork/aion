@@ -129,9 +129,9 @@ public class AionImpl implements IAionChain {
             // Booleans moved out here so their meaning is explicit.
             boolean isLocalCall = true;
             boolean incrementSenderNonce = true;
-            boolean fork040enabled = false;
+            boolean fork040enabled = aionHub.isFork040Active(block.getNumber());
             boolean checkBlockEnergyLimit = false;
-            boolean unityForkEnabled = false;
+            boolean unityForkEnabled = aionHub.isForkUnityActive(block.getNumber());
             boolean signatureSwapForkEnabled = aionHub.isForkSignatureSwapActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(
@@ -171,9 +171,9 @@ public class AionImpl implements IAionChain {
             // Booleans moved out here so their meaning is explicit.
             boolean isLocalCall = true;
             boolean incrementSenderNonce = true;
-            boolean fork040enabled = false;
+            boolean fork040enabled = aionHub.isFork040Active(block.getNumber());
             boolean checkBlockEnergyLimit = false;
-            boolean unityForkEnabled = false;
+            boolean unityForkEnabled = aionHub.isForkUnityActive(block.getNumber());
             boolean signatureSwapForkEnabled = aionHub.isForkSignatureSwapActive(block.getNumber());
 
             return BulkExecutor.executeTransactionWithNoPostExecutionWork(

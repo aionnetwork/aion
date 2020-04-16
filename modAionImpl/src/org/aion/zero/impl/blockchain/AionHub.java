@@ -498,4 +498,12 @@ public class AionHub {
     public boolean isForkSignatureSwapActive(long blockNumber) {
         return this.blockchain.forkUtility.isSignatureSwapForkActive(blockNumber);
     }
+
+    public boolean isFork040Active(long blockNumber) {
+        return this.blockchain.forkUtility.is040ForkActive(blockNumber);
+    }
+
+    public boolean isForkUnityActive(long blockNumber) {
+        return this.blockchain.forkUtility.isUnityForkActive(blockNumber);
+    }
 }
