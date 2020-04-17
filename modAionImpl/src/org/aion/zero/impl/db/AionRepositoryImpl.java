@@ -1273,7 +1273,7 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
             }
         }
 
-        db.putToBatch(key, value);
+        db.put(key, value);
         db.commit();
         return TrieNodeResult.IMPORTED;
     }

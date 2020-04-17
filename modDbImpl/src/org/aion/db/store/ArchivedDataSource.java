@@ -44,17 +44,17 @@ public class ArchivedDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         // the data store will check for nulls
         // null value will trigger exceptions
-        data.putToBatch(key, value);
+        data.put(key, value);
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         // deleted key only if not archived
         if (!archive.get(key).isPresent()) {
-            data.deleteInBatch(key);
+            data.delete(key);
         }
     }
 
@@ -67,7 +67,7 @@ public class ArchivedDataSource implements ByteArrayKeyValueStore {
     public void deleteBatch(Collection<byte[]> keys) {
         for (byte[] key : keys) {
             // will check if archived
-            deleteInBatch(key);
+            delete(key);
         }
         commit();
     }

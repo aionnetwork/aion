@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +22,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
-import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
 /**
@@ -356,9 +354,9 @@ public class AvmContractDetails implements StoredContractDetails {
     public void syncStorage() {
         byte[] graph = getObjectGraph();
         if (!Arrays.equals(graph, EMPTY_BYTE_ARRAY)) {
-            objectGraphSource.putToBatch(objectGraphHash, graph);
+            objectGraphSource.put(objectGraphHash, graph);
         }
-        objectGraphSource.putToBatch(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
+        objectGraphSource.put(computeAvmStorageHash(), RLP.encodeList(RLP.encodeElement(storageTrie.getRootHash()), RLP.encodeElement(objectGraphHash)));
         // commit both updates together
         objectGraphSource.commit();
         storageTrie.sync();

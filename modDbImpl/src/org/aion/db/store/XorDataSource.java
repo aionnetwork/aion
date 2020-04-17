@@ -79,7 +79,7 @@ public class XorDataSource implements ByteArrayKeyValueStore {
     public void deleteBatch(Collection<byte[]> keys) {
         if (propagateDeletions) {
             for (byte[] k : keys) {
-                source.deleteInBatch(convertKey(k));
+                source.delete(convertKey(k));
             }
             source.commit();
         }
@@ -96,14 +96,14 @@ public class XorDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        source.putToBatch(convertKey(key), value);
+    public void put(byte[] key, byte[] value) {
+        source.put(convertKey(key), value);
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         if (propagateDeletions) {
-            source.deleteInBatch(convertKey(key));
+            source.delete(convertKey(key));
         }
     }
 

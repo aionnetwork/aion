@@ -80,7 +80,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         checkNotNull(key);
         checkNotNull(value);
 
@@ -98,7 +98,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
                     incRef(keyW);
 
                     // put to source database.
-                    src.putToBatch(key, value);
+                    src.put(key, value);
 
                 } else {
                     check();
@@ -109,7 +109,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
             } else {
                 // pruning disabled
                 if (value != null) {
-                    src.putToBatch(key, value);
+                    src.put(key, value);
                 } else {
                     check();
                 }
@@ -126,7 +126,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         checkNotNull(key);
         if (!enabled.get()) {
             check();

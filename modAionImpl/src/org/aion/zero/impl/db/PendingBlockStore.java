@@ -330,7 +330,7 @@ public class PendingBlockStore implements Closeable {
         levelSource.put(levelKey, levelData);
 
         // index block with queue hash
-        indexSource.putToBatch(first.getHash(), currentQueueHash);
+        indexSource.put(first.getHash(), currentQueueHash);
         int stored = 1;
 
         // add element to queue
@@ -356,7 +356,7 @@ public class PendingBlockStore implements Closeable {
             }
 
             // index block to current queue
-            indexSource.putToBatch(current.getHash(), currentQueueHash);
+            indexSource.put(current.getHash(), currentQueueHash);
 
             // append block to queue
             currentQueue.add(current);
@@ -509,7 +509,7 @@ public class PendingBlockStore implements Closeable {
                 // delete imported blocks
                 for (Block b : blocks.get(q)) {
                     // delete index
-                    indexSource.deleteInBatch(b.getHash());
+                    indexSource.delete(b.getHash());
                 }
 
                 // delete queue

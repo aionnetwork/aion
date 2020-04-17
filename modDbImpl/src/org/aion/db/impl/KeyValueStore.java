@@ -61,9 +61,9 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      *           or underlying data store.
      *       <li>Updates the entry in the cache when the key-value pair already exists.
      *     </ol>
-     *     To delete a key one must explicitly call {@link #deleteInBatch(Object)}.
+     *     To delete a key one must explicitly call {@link #delete(Object)}.
      */
-    void putToBatch(KeyT key, ValueT value);
+    void put(KeyT key, ValueT value);
 
     /**
      * Deletes a key from the data store. The changes are cached until {@link #commit()} is called.
@@ -74,11 +74,11 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
-    void deleteInBatch(KeyT key);
+    void delete(KeyT key);
 
     /**
-     * Pushes updates made using {@link #putToBatch(Object, Object)} and {@link
-     * #deleteInBatch(Object)} to the underlying data source.
+     * Pushes updates made using {@link #put(Object, Object)} and {@link
+     * #delete(Object)} to the underlying data source.
      * All changes since the last commit will be made permanent.
      *
      * @throws RuntimeException if the underlying data store is closed

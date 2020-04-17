@@ -357,7 +357,7 @@ public class DriverBenchmarkTest {
             for (long i = 0; i < numEntries; i++) {
                 long k = (order == Order.SEQUENTIAL) ? i : random.nextInt(numEntries);
                 byte[] key = formatNumber(k);
-                db.putToBatch(key, generator.generate(valueSize));
+                db.put(key, generator.generate(valueSize));
                 byteCount += valueSize + key.length;
                 finishedSingleOp();
             }

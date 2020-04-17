@@ -117,7 +117,7 @@ public class ConcurrencyTest {
     private void addThread4PutToBatch(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
-                    db.putToBatch(key.getBytes(), DatabaseTestUtils.randomBytes(32));
+                    db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
                     if (DISPLAY_MESSAGES) {
                         System.out.println(Thread.currentThread().getName() + ": " + key + " ADDED TO BATCH");
                     }
@@ -128,7 +128,7 @@ public class ConcurrencyTest {
             List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
-                    db.deleteInBatch(key.getBytes());
+                    db.delete(key.getBytes());
                     if (DISPLAY_MESSAGES) {
                         System.out.println(Thread.currentThread().getName() + ": " + key + " DELETED IN BATCH");
                     }
@@ -353,7 +353,7 @@ public class ConcurrencyTest {
         for (int i = 0; i < CONCURRENT_THREADS; i++) {
             String keyStr = "key-" + i;
             // add the keys to the database
-            db.putToBatch(keyStr.getBytes(), keyStr.getBytes());
+            db.put(keyStr.getBytes(), keyStr.getBytes());
 
             // add threads for deleting the keys
             addThread4DeleteInBatch(threads, db, keyStr);

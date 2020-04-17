@@ -225,12 +225,12 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         // acquire write lock
         lock.writeLock().lock();
 
         try {
-            database.putToBatch(key, value);
+            database.put(key, value);
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw e;
@@ -244,12 +244,12 @@ public class LockedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         // acquire write lock
         lock.writeLock().lock();
 
         try {
-            database.deleteInBatch(key);
+            database.delete(key);
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw e;

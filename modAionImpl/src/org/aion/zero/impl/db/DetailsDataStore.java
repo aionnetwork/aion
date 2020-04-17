@@ -114,7 +114,7 @@ public class DetailsDataStore {
     public synchronized void update(AionAddress key, StoredContractDetails contractDetails) {
         // Put into cache.
         byte[] rawDetails = contractDetails.getEncoded();
-        detailsSrc.putToBatch(key.toByteArray(), rawDetails);
+        detailsSrc.put(key.toByteArray(), rawDetails);
         detailsSrc.commit(); // TODO AKI-309: flush in bulk by the repository
         contractDetails.syncStorage();
     }

@@ -113,7 +113,7 @@ public class AccessWithExceptionTest {
         }
 
         // attempt put on closed db
-        db.putToBatch(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -129,7 +129,7 @@ public class AccessWithExceptionTest {
         }
 
         // attempt delete on closed db
-        db.deleteInBatch(DatabaseTestUtils.randomBytes(32));
+        db.delete(DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -236,7 +236,7 @@ public class AccessWithExceptionTest {
         }
 
         // attempt put with null key
-        db.putToBatch(null, DatabaseTestUtils.randomBytes(32));
+        db.put(null, DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = NullPointerException.class)
@@ -252,7 +252,7 @@ public class AccessWithExceptionTest {
         }
 
         // attempt put with null key
-        db.putToBatch(DatabaseTestUtils.randomBytes(32), null);
+        db.put(DatabaseTestUtils.randomBytes(32), null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -268,7 +268,7 @@ public class AccessWithExceptionTest {
         }
 
         // attempt delete with null key
-        db.deleteInBatch(null);
+        db.delete(null);
     }
 
     @Test(expected = NullPointerException.class)

@@ -155,7 +155,7 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
     protected abstract byte[] getInternal(byte[] key);
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         check(key);
         check(value);
         check();
@@ -165,7 +165,7 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
 
     /**
      * Database specific put to batch functionality, without locking or integrity checks required.
-     * Locking and checks are applied in {@link #putToBatch(byte[], byte[])}.
+     * Locking and checks are applied in {@link #put(byte[], byte[])}.
      *
      * @param key the key for the new entry
      * @param value the value for the new entry
@@ -173,7 +173,7 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
     protected abstract void putToBatchInternal(byte[] key, byte[] value);
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         check(key);
         check();
 
@@ -182,7 +182,7 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
 
     /**
      * Database specific delete in batch functionality, without locking or integrity checks
-     * required. Locking and checks are applied in {@link #deleteInBatch(byte[])}.
+     * required. Locking and checks are applied in {@link #delete(byte[])}.
      *
      * @param key the key for the new entry
      */

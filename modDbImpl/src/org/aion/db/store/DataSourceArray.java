@@ -113,9 +113,9 @@ class DataSourceArray<V> implements ArrayStore<V> {
     private synchronized void setSize(long newSize) {
         size = newSize;
         if (size <= Integer.MAX_VALUE) {
-            db.putToBatch(sizeKey, ByteUtil.intToBytes((int) newSize));
+            db.put(sizeKey, ByteUtil.intToBytes((int) newSize));
         } else {
-            db.putToBatch(sizeKey, ByteUtil.longToBytes(newSize));
+            db.put(sizeKey, ByteUtil.longToBytes(newSize));
         }
         // TODO AKI-309: flush in bulk by the repository
         db.commit();

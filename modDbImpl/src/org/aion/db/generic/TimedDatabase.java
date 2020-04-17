@@ -177,9 +177,9 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         long t1 = System.nanoTime();
-        database.putToBatch(key, value);
+        database.put(key, value);
         long t2 = System.nanoTime();
 
         LOG.debug(
@@ -194,9 +194,9 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void deleteInBatch(byte[] key) {
+    public void delete(byte[] key) {
         long t1 = System.nanoTime();
-        database.deleteInBatch(key);
+        database.delete(key);
         long t2 = System.nanoTime();
 
         LOG.debug(
