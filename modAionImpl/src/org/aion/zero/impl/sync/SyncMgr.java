@@ -294,7 +294,7 @@ public final class SyncMgr {
             log.debug("<validate-headers: received start-block={} list-size={} node={}>", headers.get(0).getNumber(), headers.size(), displayId);
 
             // Filter out imported block headers and keep the ones that should need bodies requests.
-            List<BlockHeader> filtered = new ArrayList<>();
+            LinkedList<BlockHeader> filtered = new LinkedList<>();
             // Separate blocks that do not have bodies and can be imported directly.
             final List<Block> emptyPrefixBlocks = new ArrayList<>();
             BlockHeader prev = null;
@@ -341,6 +341,30 @@ public final class SyncMgr {
             // Dispatch continuous list of blocks to import.
             if (!emptyPrefixBlocks.isEmpty()) {
                 syncExecutors.execute(() -> filterBlocks(new BlocksWrapper(nodeId, displayId, emptyPrefixBlocks)));
+            }
+
+            // Can directly process the empty blocks at the end of the list as well.
+            LinkedList emptySuffixBlocks = new LinkedList<>();
+            for (Iterator<BlockHeader> it = filtered.descendingIterator(); it.hasNext(); ) {
+                BlockHeader current = it.next();
+                if (Arrays.equals(current.getTxTrieRoot(), EMPTY_TRIE_HASH)) {
+                    Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(current, EMPTY_BLOCK_BODY);
+                    if (block == null) {
+                        log.debug("<assemble-and-validate-blocks failed to assemble empty block with hash={}>", ByteArrayWrapper.wrap(current.getHash()));
+                        break;
+                    } else {
+                        emptySuffixBlocks.addFirst(block);
+                        it.remove();
+                    }
+                } else {
+                    // Exit the for loop because the suffix section of empty blocks is finished.
+                    break;
+                }
+            }
+
+            // Dispatch continuous list of blocks to import.
+            if (!emptySuffixBlocks.isEmpty()) {
+                syncExecutors.execute(() -> filterBlocks(new BlocksWrapper(nodeId, displayId, emptySuffixBlocks)));
             }
 
             // Request bodies for the remaining headers (which are still a sequential list).
