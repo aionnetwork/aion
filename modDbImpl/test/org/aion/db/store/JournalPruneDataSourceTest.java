@@ -67,7 +67,8 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(false);
 
         assertThat(db.get(k1).isPresent()).isFalse();
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
 
         // ensure no cached values
@@ -108,20 +109,24 @@ public class JournalPruneDataSourceTest {
 
         // insert
         assertThat(db.get(k1).isPresent()).isFalse();
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
 
         // update
-        db.put(k1, v2);
+        db.putToBatch(k1, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
 
         // direct delete
-        db.put(k2, v2);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
         assertThat(source_db.get(k2).isPresent()).isTrue();
 
@@ -138,8 +143,9 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).isPresent()).isFalse();
         assertThat(db.get(k2).isPresent()).isFalse();
         assertThat(db.get(k3).isPresent()).isFalse();
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
 
         assertThat(v1).isEqualTo(db.get(k1).get());
         assertThat(v2).isEqualTo(db.get(k2).get());
@@ -172,11 +178,13 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(false);
 
         // ensure existence
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isTrue();
 
         // delete not propagated
-        db.delete(k1);
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
 
@@ -225,15 +233,17 @@ public class JournalPruneDataSourceTest {
         assertThat(count(keys)).isEqualTo(0);
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
         assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
 
         assertThat(count(db.keys())).isEqualTo(2);
@@ -276,18 +286,21 @@ public class JournalPruneDataSourceTest {
         assertThat(db.isEmpty()).isTrue();
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
         assertThat(db.isEmpty()).isFalse();
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
         assertThat(db.isEmpty()).isFalse();
-        db.delete(k1);
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.isEmpty()).isFalse();
 
         // checking after putBatch
@@ -320,7 +333,8 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         assertThat(db.get(k1).isPresent()).isFalse();
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
 
         // ensure cached values
@@ -371,20 +385,24 @@ public class JournalPruneDataSourceTest {
 
         // insert
         assertThat(db.get(k1).isPresent()).isFalse();
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
 
         // update
-        db.put(k1, v2);
+        db.putToBatch(k1, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
 
         // direct delete
-        db.put(k2, v2);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
         assertThat(source_db.get(k2).isPresent()).isTrue();
 
@@ -406,8 +424,9 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).isPresent()).isFalse();
         assertThat(db.get(k2).isPresent()).isFalse();
         assertThat(db.get(k3).isPresent()).isFalse();
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
 
         assertThat(v1).isEqualTo(db.get(k1).get());
         assertThat(v2).isEqualTo(db.get(k2).get());
@@ -445,11 +464,13 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         // ensure existence
-        db.put(k1, v1);
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isTrue();
 
         // delete not propagated
-        db.delete(k1);
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
 
@@ -510,15 +531,17 @@ public class JournalPruneDataSourceTest {
         assertThat(count(keys)).isEqualTo(0);
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
         assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
 
         assertThat(count(db.keys())).isEqualTo(2);
@@ -557,18 +580,21 @@ public class JournalPruneDataSourceTest {
         assertThat(db.isEmpty()).isTrue();
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
         assertThat(db.isEmpty()).isFalse();
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isTrue();
         assertThat(db.isEmpty()).isFalse();
-        db.delete(k1);
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.isEmpty()).isFalse();
 
         // checking after putBatch
@@ -611,7 +637,8 @@ public class JournalPruneDataSourceTest {
     @Test(expected = RuntimeException.class)
     public void testIsEmpty_wClosedDatabase_wInsertedKeys() {
         db.setPruneEnabled(true);
-        db.put(randomBytes(32), randomBytes(32));
+        db.putToBatch(randomBytes(32), randomBytes(32));
+        db.commit();
 
         source_db.close();
         assertThat(source_db.isOpen()).isFalse();
@@ -645,7 +672,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt put on closed db
-        db.put(randomBytes(32), randomBytes(32));
+        db.putToBatch(randomBytes(32), randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -654,7 +681,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt put on closed db
-        db.put(randomBytes(32), null);
+        db.putToBatch(randomBytes(32), null);
     }
 
     @Test(expected = RuntimeException.class)
@@ -664,7 +691,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt delete on closed db
-        db.delete(randomBytes(32));
+        db.deleteInBatch(randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -674,7 +701,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt delete on closed db
-        db.delete(randomBytes(32));
+        db.deleteInBatch(randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -734,7 +761,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         // attempt put with null key
-        db.put(null, randomBytes(32));
+        db.putToBatch(null, randomBytes(32));
     }
 
     @Test(expected = NullPointerException.class)
@@ -742,7 +769,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         // attempt put with null key
-        db.put(randomBytes(32), null);
+        db.putToBatch(randomBytes(32), null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -750,7 +777,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         // attempt delete with null key
-        db.delete(null);
+        db.deleteInBatch(null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -846,7 +873,8 @@ public class JournalPruneDataSourceTest {
     private void addThread_Put(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
                 () -> {
-                    db.put(key.getBytes(), randomBytes(32));
+                    db.putToBatch(key.getBytes(), randomBytes(32));
+                    db.commit();
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
                                 Thread.currentThread().getName() + ": " + key + " ADDED");
@@ -857,7 +885,8 @@ public class JournalPruneDataSourceTest {
     private void addThread_Delete(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
                 () -> {
-                    db.delete(key.getBytes());
+                    db.deleteInBatch(key.getBytes());
+                    db.commit();
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
                                 Thread.currentThread().getName() + ": " + key + " DELETED");
@@ -1166,9 +1195,10 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         // block 0
-        db.put(k1, v1);
-        db.put(k2, v2);
-        db.put(k3, v3);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.putToBatch(k3, v3);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
         assertThat(db.getDeletedKeysCount()).isEqualTo(0);
         db.storeBlockChanges(b0, 0);
@@ -1179,8 +1209,9 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
 
         // block 1
-        db.put(k4, v4);
-        db.delete(k2);
+        db.putToBatch(k4, v4);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         db.storeBlockChanges(b1, 1);
@@ -1190,8 +1221,9 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k4).get()).isEqualTo(v4);
 
         // block 2
-        db.put(k2, v3);
-        db.delete(k3);
+        db.putToBatch(k2, v3);
+        db.deleteInBatch(k3);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         db.storeBlockChanges(b2, 2);
@@ -1201,9 +1233,10 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k3).isPresent()).isTrue();
 
         // block 3
-        db.put(k5, v5);
-        db.put(k6, v6);
-        db.delete(k2);
+        db.putToBatch(k5, v5);
+        db.putToBatch(k6, v6);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         db.storeBlockChanges(b3, 3);
@@ -1359,8 +1392,9 @@ public class JournalPruneDataSourceTest {
         source_db.putAndCommit(k3, v3);
 
         // block 2
-        db.put(k2, v3);
-        db.delete(k3);
+        db.putToBatch(k2, v3);
+        db.deleteInBatch(k3);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         db.storeBlockChanges(b2, 2);
@@ -1370,9 +1404,10 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k3).isPresent()).isTrue();
 
         // block 3
-        db.put(k5, v5);
-        db.put(k6, v6);
-        db.delete(k2);
+        db.putToBatch(k5, v5);
+        db.putToBatch(k6, v6);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         db.storeBlockChanges(b3, 3);
@@ -1416,9 +1451,10 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         // block b0
-        db.put(k1, v1);
-        db.put(k2, v2);
-        db.put(k3, v3);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.putToBatch(k3, v3);
+        db.commit();
         db.storeBlockChanges(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
 
@@ -1428,9 +1464,10 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
 
         // block b1
-        db.put(k4, v4);
-        db.put(k1, v2);
-        db.delete(k2);
+        db.putToBatch(k4, v4);
+        db.putToBatch(k1, v2);
+        db.deleteInBatch(k2);
+        db.commit();
         db.storeBlockChanges(b1, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(2);
 
@@ -1441,11 +1478,12 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k4).get()).isEqualTo(v4);
 
         // block b2
-        db.put(k5, v5);
-        db.delete(k3);
-        db.put(k2, v3);
-        db.put(k1, v4);
-        db.put(k4, v6);
+        db.putToBatch(k5, v5);
+        db.deleteInBatch(k3);
+        db.putToBatch(k2, v3);
+        db.putToBatch(k1, v4);
+        db.putToBatch(k4, v6);
+        db.commit();
         db.storeBlockChanges(b2, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
 
@@ -1457,10 +1495,11 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k5).get()).isEqualTo(v5);
 
         // block b3 : note same level as block b2
-        db.put(k6, v6);
-        db.delete(k4);
-        db.put(k2, v4);
-        db.put(k1, v3);
+        db.putToBatch(k6, v6);
+        db.deleteInBatch(k4);
+        db.putToBatch(k2, v4);
+        db.putToBatch(k1, v3);
+        db.commit();
         db.storeBlockChanges(b3, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(4);
 
@@ -1501,9 +1540,10 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         // block b0
-        db.put(k1, v1);
-        db.put(k2, v2);
-        db.put(k3, v3);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.putToBatch(k3, v3);
+        db.commit();
         db.storeBlockChanges(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
 
@@ -1513,9 +1553,10 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
 
         // block b1
-        db.put(k4, v4);
-        db.put(k1, v2);
-        db.delete(k2);
+        db.putToBatch(k4, v4);
+        db.putToBatch(k1, v2);
+        db.deleteInBatch(k2);
+        db.commit();
         db.storeBlockChanges(b1, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(2);
 
@@ -1526,10 +1567,11 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k4).get()).isEqualTo(v4);
 
         // block b2 : note same level as block b1
-        db.put(k5, v5);
-        db.delete(k3);
-        db.put(k2, v3);
-        db.put(k1, v4);
+        db.putToBatch(k5, v5);
+        db.deleteInBatch(k3);
+        db.putToBatch(k2, v3);
+        db.putToBatch(k1, v4);
+        db.commit();
         db.storeBlockChanges(b2, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
 
@@ -1541,9 +1583,10 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k5).get()).isEqualTo(v5);
 
         // block b3
-        db.put(k6, v6);
-        db.put(k2, v4);
-        db.put(k1, v3);
+        db.putToBatch(k6, v6);
+        db.putToBatch(k2, v4);
+        db.putToBatch(k1, v3);
+        db.commit();
         db.storeBlockChanges(b3, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(4);
 

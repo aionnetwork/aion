@@ -37,21 +37,6 @@ public class ArchivedDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
-        // the data store will check for nulls
-        // null value will trigger exceptions
-        data.put(key, value);
-    }
-
-    @Override
-    public void delete(byte[] key) {
-        // delete key only if not archived
-        if (!archive.get(key).isPresent()) {
-            data.delete(key);
-        }
-    }
-
-    @Override
     public void putBatch(Map<byte[], byte[]> batch) {
         // the data store will check for nulls
         // null values will trigger exceptions

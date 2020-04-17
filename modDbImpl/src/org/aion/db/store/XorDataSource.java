@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.util.bytes.ByteUtil;
 
@@ -27,18 +26,6 @@ public class XorDataSource implements ByteArrayKeyValueStore {
     @Override
     public Optional<byte[]> get(byte[] key) {
         return source.get(convertKey(key));
-    }
-
-    @Override
-    public void put(byte[] key, byte[] value) {
-        source.put(convertKey(key), value);
-    }
-
-    @Override
-    public void delete(byte[] key) {
-        if (propagateDeletions) {
-            source.delete(convertKey(key));
-        }
     }
 
     @Override

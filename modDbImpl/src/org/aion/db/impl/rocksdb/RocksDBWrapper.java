@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.aion.db.impl.AbstractDB;
-import org.aion.util.types.ByteArrayWrapper;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.BloomFilter;
 import org.rocksdb.CompactionPriority;
@@ -314,24 +313,6 @@ public class RocksDBWrapper extends AbstractDB {
         return null;
     }
 
-    @Override
-    public void putInternal(byte[] key, byte[] value) {
-        try {
-            db.put(key, value);
-        } catch (RocksDBException e) {
-            LOG.error("Unable to put / update key " + Arrays.toString(key) + ". " + e);
-        }
-    }
-
-    @Override
-    public void deleteInternal(byte[] key) {
-        try {
-            db.delete(key);
-        } catch (RocksDBException e) {
-            LOG.error("Unable to delete key " + Arrays.toString(key) + ". " + e);
-        }
-    }
-
     private WriteBatch batch = null;
 
     @Override
@@ -344,14 +325,7 @@ public class RocksDBWrapper extends AbstractDB {
             batch.put(key, value);
         } catch (RocksDBException e) {
             LOG.error("Unable to perform put to batch operation on " + this.toString() + ".", e);
-        } finally {
-            // attempting to write directly since batch operation didn't work
-            putInternal(key, value);
-            try {
-                batch.close();
-            } finally {
-                batch = null;
-            }
+            throw new RuntimeException(e);
         }
     }
 
@@ -365,14 +339,7 @@ public class RocksDBWrapper extends AbstractDB {
             batch.delete(key);
         } catch (RocksDBException e) {
             LOG.error("Unable to perform delete in batch operation on " + this.toString() + ".", e);
-        } finally {
-            // attempting to write directly since batch operation didn't work
-            deleteInternal(key);
-            try {
-                batch.close();
-            } finally {
-                batch = null;
-            }
+            throw new RuntimeException(e);
         }
     }
 

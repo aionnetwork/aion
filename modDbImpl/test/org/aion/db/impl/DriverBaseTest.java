@@ -383,7 +383,8 @@ public class DriverBaseTest {
             // adding data
             // ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
-            db.put(k1, v1);
+            db.putToBatch(k1, v1);
+            db.commit();
             assertThat(db.isLocked()).isFalse();
 
             db.close();
@@ -400,7 +401,8 @@ public class DriverBaseTest {
 
             // deleting data
             // -------------------------------------------------------------------------------------------
-            db.delete(k1);
+            db.deleteInBatch(k1);
+            db.commit();
             assertThat(db.isLocked()).isFalse();
 
             db.close();
@@ -501,8 +503,8 @@ public class DriverBaseTest {
     public void testPut() {
         assertThat(db.get(k1).isPresent()).isFalse();
 
-        db.put(k1, v1);
-
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
 
         // ensure unlocked
@@ -530,18 +532,18 @@ public class DriverBaseTest {
     public void testUpdate() {
         // ensure existence
         assertThat(db.get(k1).isPresent()).isFalse();
-        db.put(k1, v1);
-
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(v1).isEqualTo(db.get(k1).get());
 
         // check after update
-        db.put(k1, v2);
-
+        db.putToBatch(k1, v2);
+        db.commit();
         assertThat(v2).isEqualTo(db.get(k1).get());
 
         // check after direct delete
-        db.delete(k1);
-
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isFalse();
 
         // ensure unlocked
@@ -554,9 +556,9 @@ public class DriverBaseTest {
         assertThat(db.get(k1).isPresent()).isFalse();
         assertThat(db.get(k2).isPresent()).isFalse();
         assertThat(db.get(k3).isPresent()).isFalse();
-        db.put(k1, v1);
-        db.put(k2, v2);
-
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(v1).isEqualTo(db.get(k1).get());
         assertThat(v2).isEqualTo(db.get(k2).get());
 
@@ -581,13 +583,13 @@ public class DriverBaseTest {
     @Test
     public void testDelete() {
         // ensure existence
-        db.put(k1, v1);
-
+        db.putToBatch(k1, v1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isTrue();
 
         // check presence after delete
-        db.delete(k1);
-
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.get(k1).isPresent()).isFalse();
 
         // ensure unlocked
@@ -655,8 +657,9 @@ public class DriverBaseTest {
         if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             int repeat = 1_000_000;
             for (int i = 0; i < repeat; i++) {
-                db.put(String.format("%c%09d", 'a' + i % 26, i).getBytes(), "test".getBytes());
+                db.putToBatch(String.format("%c%09d", 'a' + i % 26, i).getBytes(), "test".getBytes());
             }
+            db.commit();
             // estimate
             long est = db.approximateSize();
             long count = FileUtils.getDirectorySizeBytes(db.getPath().get());
@@ -678,8 +681,9 @@ public class DriverBaseTest {
         assertThat(keys.hasNext()).isFalse();
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
@@ -700,7 +704,8 @@ public class DriverBaseTest {
         assertThat(countOut).isEqualTo(0);
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isFalse();
 
         keys = db.keys();
@@ -759,8 +764,9 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
 
         // checking after put
-        db.put(k1, v1);
-        db.put(k2, v2);
+        db.putToBatch(k1, v1);
+        db.putToBatch(k2, v2);
+        db.commit();
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
@@ -768,14 +774,15 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
 
         // checking after delete
-        db.delete(k2);
+        db.deleteInBatch(k2);
+        db.commit();
         assertThat(db.get(k2).isPresent()).isFalse();
 
         assertThat(db.isEmpty()).isFalse();
         assertThat(db.isLocked()).isFalse();
 
-        db.delete(k1);
-
+        db.deleteInBatch(k1);
+        db.commit();
         assertThat(db.isEmpty()).isTrue();
         assertThat(db.isLocked()).isFalse();
 

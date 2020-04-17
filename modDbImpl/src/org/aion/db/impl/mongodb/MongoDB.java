@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
@@ -339,20 +338,6 @@ public class MongoDB extends AbstractDB {
         } else {
             return document.getBinary(MongoConstants.VALUE_FIELD_NAME).getData();
         }
-    }
-
-    @Override
-    public void putInternal(byte[] key, byte[] value) {
-        // Write this single edit in as a batch
-        WriteBatch edits = new WriteBatch().addEdit(key, value);
-        doBulkWrite(edits);
-    }
-
-    @Override
-    public void deleteInternal(byte[] key) {
-        // Write this single edit in as a batch
-        WriteBatch edits = new WriteBatch().addEdit(key, null);
-        doBulkWrite(edits);
     }
 
     @Override

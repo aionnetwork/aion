@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**
@@ -154,40 +153,6 @@ public abstract class AbstractDB implements ByteArrayKeyValueDatabase {
      * @return the value stored in the database for the give key
      */
     protected abstract byte[] getInternal(byte[] key);
-
-    @Override
-    public void put(byte[] key, byte[] value) {
-        check(key);
-        check(value);
-        check();
-
-        putInternal(key, value);
-    }
-
-    /**
-     * Database specific put functionality, without locking or integrity checks required. Locking
-     * and checks are applied in {@link #put(byte[], byte[])}.
-     *
-     * @param key the key for the new entry
-     * @param value the value for the new entry
-     */
-    protected abstract void putInternal(byte[] key, byte[] value);
-
-    @Override
-    public void delete(byte[] key) {
-        check(key);
-        check();
-
-        deleteInternal(key);
-    }
-
-    /**
-     * Database specific delete functionality, without locking or integrity checks required. Locking
-     * and checks are applied in {@link #delete(byte[])}.
-     *
-     * @param key the key for the new entry
-     */
-    protected abstract void deleteInternal(byte[] key);
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {

@@ -226,16 +226,6 @@ public class H2MVMap extends AbstractDB {
     }
 
     @Override
-    public void putInternal(byte[] key, byte[] value) {
-        map.put(key, value);
-    }
-
-    @Override
-    public void deleteInternal(byte[] key) {
-        map.remove(key);
-    }
-
-    @Override
     public void putToBatchInternal(byte[] key, byte[] value) {
         writeBatch.put(ByteArrayWrapper.wrap(key), value);
     }

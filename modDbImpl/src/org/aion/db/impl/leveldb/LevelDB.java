@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Map;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.SystemExitCodes;
-import org.aion.util.types.ByteArrayWrapper;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.CompressionType;
 import org.iq80.leveldb.DB;
@@ -338,16 +337,6 @@ public class LevelDB extends AbstractDB {
             // will throw the exception if the repair did not work
             return db.get(k);
         }
-    }
-
-    @Override
-    public void putInternal(byte[] key, byte[] value) {
-        db.put(key, value);
-    }
-
-    @Override
-    public void deleteInternal(byte[] key) {
-        db.delete(key);
     }
 
     @Override

@@ -162,38 +162,6 @@ public class TimedDatabase implements ByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
-        long t1 = System.nanoTime();
-        database.put(key, value);
-        long t2 = System.nanoTime();
-
-        LOG.debug(
-                database.toString()
-                        + " put(key,value) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null")
-                        + "\n\t\t\t\t\tvalue = "
-                        + (value != null ? Hex.toHexString(value) : "null"));
-    }
-
-    @Override
-    public void delete(byte[] key) {
-        long t1 = System.nanoTime();
-        database.delete(key);
-        long t2 = System.nanoTime();
-
-        LOG.debug(
-                database.toString()
-                        + " delete(key) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null"));
-    }
-
-    @Override
     public void putBatch(Map<byte[], byte[]> keyValuePairs) {
         long t1 = System.nanoTime();
         database.putBatch(keyValuePairs);

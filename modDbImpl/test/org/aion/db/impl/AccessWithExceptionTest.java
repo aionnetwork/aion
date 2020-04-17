@@ -102,38 +102,6 @@ public class AccessWithExceptionTest {
 
     @Test(expected = RuntimeException.class)
     @Parameters(method = "databaseInstanceDefinitions")
-    public void testPutWithClosedDatabase(Properties dbDef) {
-        // create database
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.isOpen()).isFalse();
-
-        if (VERBOSE) {
-            System.out.println(db.toString());
-        }
-
-        // attempt put on closed db
-        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
-    }
-
-    @Test(expected = RuntimeException.class)
-    @Parameters(method = "databaseInstanceDefinitions")
-    public void testDeleteWithClosedDatabase(Properties dbDef) {
-        // create database
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.isOpen()).isFalse();
-
-        if (VERBOSE) {
-            System.out.println(db.toString());
-        }
-
-        // attempt delete on closed db
-        db.delete(DatabaseTestUtils.randomBytes(32));
-    }
-
-    @Test(expected = RuntimeException.class)
-    @Parameters(method = "databaseInstanceDefinitions")
     public void testPutToBatchWithClosedDatabase(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
@@ -257,38 +225,6 @@ public class AccessWithExceptionTest {
 
     @Test(expected = NullPointerException.class)
     @Parameters(method = "databaseInstanceDefinitions")
-    public void testPutWithNullKey(Properties dbDef) {
-        // create database
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.open()).isTrue();
-
-        if (VERBOSE) {
-            System.out.println(db.toString());
-        }
-
-        // attempt put with null key
-        db.put(null, DatabaseTestUtils.randomBytes(32));
-    }
-
-    @Test(expected = NullPointerException.class)
-    @Parameters(method = "databaseInstanceDefinitions")
-    public void testPutWithNullValue(Properties dbDef) {
-        // create database
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.open()).isTrue();
-
-        if (VERBOSE) {
-            System.out.println(db.toString());
-        }
-
-        // attempt put with null key
-        db.put(DatabaseTestUtils.randomBytes(32), null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    @Parameters(method = "databaseInstanceDefinitions")
     public void testPutToBatchWithNullKey(Properties dbDef) {
         // create database
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
@@ -317,22 +253,6 @@ public class AccessWithExceptionTest {
 
         // attempt put with null key
         db.putToBatch(DatabaseTestUtils.randomBytes(32), null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    @Parameters(method = "databaseInstanceDefinitions")
-    public void testDeleteWithNullKey(Properties dbDef) {
-        // create database
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.open()).isTrue();
-
-        if (VERBOSE) {
-            System.out.println(db.toString());
-        }
-
-        // attempt delete with null key
-        db.delete(null);
     }
 
     @Test(expected = NullPointerException.class)

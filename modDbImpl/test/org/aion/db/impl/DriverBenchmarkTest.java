@@ -357,10 +357,11 @@ public class DriverBenchmarkTest {
             for (long i = 0; i < numEntries; i++) {
                 long k = (order == Order.SEQUENTIAL) ? i : random.nextInt(numEntries);
                 byte[] key = formatNumber(k);
-                db.put(key, generator.generate(valueSize));
+                db.putToBatch(key, generator.generate(valueSize));
                 byteCount += valueSize + key.length;
                 finishedSingleOp();
             }
+            db.commit();
         } else // batch insert
         {
             for (int i = 0; i < numEntries; i += entriesPerBatch) {

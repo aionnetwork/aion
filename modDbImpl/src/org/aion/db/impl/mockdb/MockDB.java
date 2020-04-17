@@ -116,16 +116,6 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public void putInternal(byte[] key, byte[] value) {
-        kv.put(ByteArrayWrapper.wrap(key), value);
-    }
-
-    @Override
-    public void deleteInternal(byte[] key) {
-        kv.remove(ByteArrayWrapper.wrap(key));
-    }
-
-    @Override
     public void putToBatchInternal(byte[] key, byte[] value) {
         writeBatch.put(ByteArrayWrapper.wrap(key), value);
     }

@@ -114,29 +114,6 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Put(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
-        threads.add(
-                () -> {
-                    db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
-                    if (DISPLAY_MESSAGES) {
-                        System.out.println(
-                                Thread.currentThread().getName() + ": " + key + " ADDED");
-                    }
-                });
-    }
-
-    private void addThread4Delete(
-            List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
-        threads.add(
-                () -> {
-                    db.delete(key.getBytes());
-                    if (DISPLAY_MESSAGES) {
-                        System.out.println(
-                                Thread.currentThread().getName() + ": " + key + " DELETED");
-                    }
-                });
-    }
-
     private void addThread4PutToBatch(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
@@ -263,41 +240,35 @@ public class ConcurrencyTest {
         }
 
         for (int i = 0; i < threadSetCount; i++) {
-            // 1. thread that checks empty
+            // thread that checks empty
             addThread4IsEmpty(threads, db);
 
-            // 2. thread that gets keys
+            // thread that gets keys
             addThread4Keys(threads, db);
 
             String keyStr = "key-" + i + ".";
 
-            // 3. thread that gets entry
+            // thread that gets entry
             addThread4Get(threads, db, keyStr);
 
-            // 4. thread that puts entry
-            addThread4Put(threads, db, keyStr);
-
-            // 5. thread that deletes entry
-            addThread4Delete(threads, db, keyStr);
-
-            // 6. thread that puts entries
+            // thread that puts entries
             addThread4PutBatch(threads, db, keyStr);
 
-            // 7. thread that deletes entry
+            // thread that deletes entry
             addThread4DeleteBatch(threads, db, keyStr);
 
-            // 8. thread that checks size
+            // thread that checks size
             addThread4Size(threads, db);
 
             keyStr = "batch-key-" + i + ".";
 
-            // 9. thread that puts entry to batch
+            // thread that puts entry to batch
             addThread4PutToBatch(threads, db, keyStr);
 
-            // 10. thread that deletes entry in batch
+            // thread that deletes entry in batch
             addThread4DeleteInBatch(threads, db, keyStr);
 
-            // 11. thread that commits current batch
+            // thread that commits current batch
             addThread4Commit(threads, db);
         }
 
@@ -306,32 +277,6 @@ public class ConcurrencyTest {
 
         // check that db is unlocked after updates
         assertThat(db.isLocked()).isFalse();
-
-        // ensuring close
-        db.close();
-        assertThat(db.isClosed()).isTrue();
-    }
-
-    @Test
-    @Parameters(method = "databaseInstanceDefinitions")
-    public void testConcurrentPut(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
-        dbDef.setProperty(ENABLE_LOCKING, "true");
-        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
-        assertThat(db.open()).isTrue();
-
-        // create distinct threads with
-        List<Runnable> threads = new ArrayList<>();
-
-        for (int i = 0; i < CONCURRENT_THREADS; i++) {
-            addThread4Put(threads, db, "key-" + i);
-        }
-
-        // run threads
-        assertConcurrent("Testing put(...) ", threads, TIME_OUT);
-
-        // check that all values were added
-        assertThat(count(db.keys())).isEqualTo(CONCURRENT_THREADS);
 
         // ensuring close
         db.close();
@@ -453,27 +398,21 @@ public class ConcurrencyTest {
         for (int i = 0; i < threadSetCount; i++) {
             String keyStr = "key-" + i + ".";
 
-            // 1. thread that puts entry
-            addThread4Put(threads, db, keyStr);
-
-            // 2. thread that deletes entry
-            addThread4Delete(threads, db, keyStr);
-
-            // 3. thread that puts entries
+            // thread that puts entries
             addThread4PutBatch(threads, db, keyStr);
 
-            // 4. thread that deletes entry
+            // thread that deletes entry
             addThread4DeleteBatch(threads, db, keyStr);
 
             keyStr = "batch-key-" + i + ".";
 
-            // 5. thread that puts entry to batch
+            // thread that puts entry to batch
             addThread4PutToBatch(threads, db, keyStr);
 
-            // 6. thread that deletes entry in batch
+            // thread that deletes entry in batch
             addThread4DeleteInBatch(threads, db, keyStr);
 
-            // 7. thread that commits current batch
+            // thread that commits current batch
             addThread4Commit(threads, db);
         }
 

@@ -126,7 +126,7 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
     }
 
     @Override
-    public void delete(byte[] key) {
+    public void deleteInBatch(byte[] key) {
         checkNotNull(key);
         if (!enabled.get()) {
             check();
@@ -340,24 +340,6 @@ public class JournalPruneDataSource implements ByteArrayKeyValueStore {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-
-    @Override
-    public void put(byte[] key, byte[] value) {
-        lock.writeLock().lock();
-
-        try {
-            putToBatch(key, value);
-            src.commit();
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
-    public void deleteInBatch(byte[] key) {
-        // delete only counts references so we can do the same
-        delete(key);
     }
 
     @Override

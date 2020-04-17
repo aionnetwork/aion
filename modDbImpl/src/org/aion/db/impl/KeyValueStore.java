@@ -47,43 +47,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
     Optional<ValueT> get(KeyT key);
 
     /**
-     * Stores or updates a value at the corresponding key. Makes no guarantees about when the value
-     * is actually inserted into the underlying data store.
-     *
-     * @param key the key for the new entry
-     * @param value the value for the new entry
-     * @throws RuntimeException if the underlying data store is closed
-     * @throws NullPointerException if either the key or the value is {@code null}
-     * @implNote The choice of when to push the changes to the data store is left up to the
-     *     implementation.
-     * @apiNote Put must have the following properties:
-     *     <ol>
-     *       <li>Creates a new entry in the cache, if the key-value pair does not exist in the cache
-     *           or underlying data store.
-     *       <li>Updates the entry in the cache when the key-value pair already exists.
-     *     </ol>
-     *     To delete a key one must explicitly call {@link #delete(Object)}.
-     */
-    void put(KeyT key, ValueT value);
-
-    /**
-     * Deletes a key from the data store. Makes no guarantees about when the value is actually
-     * deleted from the underlying data store.
-     *
-     * @param key the key of the entry to be deleted
-     * @throws RuntimeException if the underlying data store is closed
-     * @throws NullPointerException if the key is {@code null}
-     * @implNote The choice of when to push the changes to the data store is left up to the
-     *     implementation.
-     */
-    void delete(KeyT key);
-
-    /**
-     * Stores or updates a value at the corresponding key. The changes are cached until {@link
-     * #commitBatch()} is called.
-     *
-     * <p>May delegate to calling {@link #put(Object, Object)} if batch functionality fails or is
-     * not implemented.
+     * Stores or updates a value at the corresponding key. The changes are cached until {@link #commit()} is called.
      *
      * @param key the key for the new entry
      * @param value the value for the new entry
@@ -102,11 +66,7 @@ public interface KeyValueStore<KeyT, ValueT> extends AutoCloseable {
     void putToBatch(KeyT key, ValueT value);
 
     /**
-     * Deletes a key from the data store. The changes are cached until {@link #commitBatch()} is
-     * called.
-     *
-     * <p>May delegate to calling {@link #delete(Object)} if batch functionality fails or is not
-     * implemented.
+     * Deletes a key from the data store. The changes are cached until {@link #commit()} is called.
      *
      * @param key the key of the entry to be deleted
      * @throws RuntimeException if the underlying data store is closed
