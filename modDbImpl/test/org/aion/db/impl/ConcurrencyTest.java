@@ -137,6 +137,37 @@ public class ConcurrencyTest {
                 });
     }
 
+    private void addThread4PutToBatch(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
+        threads.add(
+                () -> {
+                    db.putToBatch(key.getBytes(), DatabaseTestUtils.randomBytes(32));
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(Thread.currentThread().getName() + ": " + key + " ADDED TO BATCH");
+                    }
+                });
+    }
+
+    private void addThread4DeleteInBatch(
+            List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
+        threads.add(
+                () -> {
+                    db.deleteInBatch(key.getBytes());
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(Thread.currentThread().getName() + ": " + key + " DELETED IN BATCH");
+                    }
+                });
+    }
+
+    private void addThread4Commit(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
+        threads.add(
+                () -> {
+                    db.commit();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(Thread.currentThread().getName() + ": BATCH COMMITTED");
+                    }
+                });
+    }
+
     private void addThread4PutBatch(
             List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
@@ -257,6 +288,17 @@ public class ConcurrencyTest {
 
             // 8. thread that checks size
             addThread4Size(threads, db);
+
+            keyStr = "batch-key-" + i + ".";
+
+            // 9. thread that puts entry to batch
+            addThread4PutToBatch(threads, db, keyStr);
+
+            // 10. thread that deletes entry in batch
+            addThread4DeleteInBatch(threads, db, keyStr);
+
+            // 11. thread that commits current batch
+            addThread4Commit(threads, db);
         }
 
         // run threads and check for exceptions
@@ -298,6 +340,36 @@ public class ConcurrencyTest {
 
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
+    public void testConcurrentPutToBatch(Properties dbDef) throws InterruptedException {
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(ENABLE_LOCKING, "true");
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
+        assertThat(db.open()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        for (int i = 0; i < CONCURRENT_THREADS; i++) {
+            addThread4PutToBatch(threads, db, "key-" + i);
+            addThread4Commit(threads, db);
+        }
+
+        // run threads
+        assertConcurrent("Testing put(...) ", threads, TIME_OUT);
+
+        // commit any lingering updates
+        db.commit();
+
+        // check that all values were added
+        assertThat(count(db.keys())).isEqualTo(CONCURRENT_THREADS);
+
+        // ensuring close
+        db.close();
+        assertThat(db.isClosed()).isTrue();
+    }
+
+    @Test
+    @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
@@ -316,6 +388,45 @@ public class ConcurrencyTest {
 
         // check that all values were added
         assertThat(count(db.keys())).isEqualTo(3 * CONCURRENT_THREADS);
+
+        // ensuring close
+        db.close();
+        assertThat(db.isClosed()).isTrue();
+    }
+
+    @Test
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testConcurrentDeleteInBatch(Properties dbDef) throws InterruptedException {
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(ENABLE_LOCKING, "true");
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef, log);
+        assertThat(db.open()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        for (int i = 0; i < CONCURRENT_THREADS; i++) {
+            String keyStr = "key-" + i;
+            // add the keys to the database
+            db.putToBatch(keyStr.getBytes(), keyStr.getBytes());
+
+            // add threads for deleting the keys
+            addThread4DeleteInBatch(threads, db, keyStr);
+            addThread4Commit(threads, db);
+        }
+        // save the added keys
+        db.commit();
+        // check that all values were added
+        assertThat(count(db.keys())).isEqualTo(CONCURRENT_THREADS);
+
+        // run threads
+        assertConcurrent("Testing put(...) ", threads, TIME_OUT);
+
+        // commit any lingering updates
+        db.commit();
+
+        // check that all values were removed
+        assertThat(count(db.keys())).isEqualTo(0);
 
         // ensuring close
         db.close();
@@ -353,6 +464,17 @@ public class ConcurrencyTest {
 
             // 4. thread that deletes entry
             addThread4DeleteBatch(threads, db, keyStr);
+
+            keyStr = "batch-key-" + i + ".";
+
+            // 5. thread that puts entry to batch
+            addThread4PutToBatch(threads, db, keyStr);
+
+            // 6. thread that deletes entry in batch
+            addThread4DeleteInBatch(threads, db, keyStr);
+
+            // 7. thread that commits current batch
+            addThread4Commit(threads, db);
         }
 
         // run threads and check for exceptions
