@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.aion.db.impl.AbstractDB;
 import org.aion.db.impl.PersistenceMethod;
 import org.aion.util.types.ByteArrayWrapper;
@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 public class MockDB extends AbstractDB {
 
     protected Map<ByteArrayWrapper, byte[]> kv;
+    private Map<ByteArrayWrapper, byte[]> writeBatch = new HashMap<>();
 
     public MockDB(String name, Logger log) {
         super(name, log);
@@ -109,21 +110,29 @@ public class MockDB extends AbstractDB {
 
     @Override
     public void putToBatchInternal(byte[] key, byte[] value) {
-        // same as put since batch operations are not supported
-        putInternal(key, value);
+        writeBatch.put(ByteArrayWrapper.wrap(key), value);
     }
 
     @Override
     public void deleteInBatchInternal(byte[] key) {
-        // same as put since batch operations are not supported
-        deleteInternal(key);
+        writeBatch.put(ByteArrayWrapper.wrap(key), null);
     }
 
     @Override
     public void commit() {
         check();
-
-        // nothing to do since batch operations are not supported
+        if (!writeBatch.isEmpty()) {
+            // move to permanent storage
+            for (Entry<ByteArrayWrapper, byte[]> e : writeBatch.entrySet()) {
+                if (e.getValue() == null) {
+                    kv.remove(e.getKey());
+                } else {
+                    kv.put(e.getKey(), e.getValue());
+                }
+            }
+            // clear current batch
+            writeBatch.clear();
+        }
     }
 
     @Override
