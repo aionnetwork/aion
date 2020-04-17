@@ -2,7 +2,6 @@ package org.aion.db.impl;
 
 import java.util.Properties;
 import org.aion.db.generic.LockedDatabase;
-import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.generic.TimedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
@@ -61,7 +60,8 @@ public abstract class DatabaseFactory {
 
             // first check for locking
             if (enableLocking) {
-                db = connectWithLocks(info, log);
+                // If enabled, the topmost database will be the one enforcing the locking functionality.
+                db = new LockedDatabase(connectBasic(info, log), log);
             } else {
                 db = connectBasic(info, log);
             }
@@ -72,20 +72,6 @@ public abstract class DatabaseFactory {
             return new TimedDatabase(db, log);
         } else {
             return db;
-        }
-    }
-
-    /**
-     * If enabled, the topmost database will be the one enforcing the locking functionality.
-     *
-     * @return A database implementation with read-write locks.
-     */
-    private static ByteArrayKeyValueDatabase connectWithLocks(Properties info, Logger log) {
-        DBVendor vendor = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
-        if (vendor == DBVendor.LEVELDB || vendor == DBVendor.ROCKSDB) {
-            return new SpecialLockedDatabase(connectBasic(info, log), log);
-        } else {
-            return new LockedDatabase(connectBasic(info, log), log);
         }
     }
 

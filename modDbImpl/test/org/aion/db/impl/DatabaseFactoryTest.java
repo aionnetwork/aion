@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.util.Properties;
 import org.aion.db.generic.LockedDatabase;
-import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
@@ -91,8 +90,7 @@ public class DatabaseFactoryTest {
 
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName())
-                .isEqualTo(SpecialLockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(LevelDB.class.getSimpleName());
 
         // ROCKSDB
@@ -100,8 +98,7 @@ public class DatabaseFactoryTest {
 
         db = DatabaseFactory.connect(props, log);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName())
-                .isEqualTo(SpecialLockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(RocksDBWrapper.class.getSimpleName());
 
         // H2
