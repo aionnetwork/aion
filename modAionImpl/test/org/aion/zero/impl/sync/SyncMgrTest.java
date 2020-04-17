@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import org.aion.util.TestResources;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.types.MiningBlockHeader;
@@ -360,6 +362,40 @@ public class SyncMgrTest {
 
         // Check that the sequential subset of headers was stored.
         assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, importedBlocks.size(), importedBlocks.get(0).getTxTrieRootWrapper())).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.size(), headers.get(0).getTxTrieRootWrapper())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.size(), newHeaders.get(0).getTxTrieRootWrapper());
+        assertThat(stored.size()).isEqualTo(newHeaders.size());
+        assertThat(stored).containsAllIn(newHeaders);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withEmptyPrefixBlocks() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        BlockchainTestUtils
+        // Make the first two blocks appear empty.
+        List<BlockHeader> emptyPrefixBlocks = new ArrayList<>();
+        BlockHeader bh = spy(consecutiveHeaders.get(0));
+        when(bh.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
+        emptyPrefixBlocks.add(bh);
+        bh = spy(consecutiveHeaders.get(1));
+        when(bh.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
+        emptyPrefixBlocks.add(bh);
+
+        List<BlockHeader> newHeaders = new ArrayList<>();
+        newHeaders.add(consecutiveHeaders.get(2));
+        newHeaders.add(consecutiveHeaders.get(3));
+        newHeaders.add(consecutiveHeaders.get(4));
+        List<BlockHeader> headers = new ArrayList<>();
+        headers.addAll(emptyPrefixBlocks);
+        headers.addAll(newHeaders);
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, headers);
+        verify(p2pMgr, never()).errCheck(nodeId, displayId);
+
+        // Check that the sequential subset of headers was stored.
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, emptyPrefixBlocks.size(), emptyPrefixBlocks.get(0).getTxTrieRootWrapper())).isNull();
         assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.size(), headers.get(0).getTxTrieRootWrapper())).isNull();
         List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.size(), newHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(newHeaders.size());
