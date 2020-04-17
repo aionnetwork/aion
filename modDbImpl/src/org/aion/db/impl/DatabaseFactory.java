@@ -27,12 +27,8 @@ public abstract class DatabaseFactory {
         public static final String DB_NAME = "db_name";
         public static final String DB_PATH = "db_path";
 
-        public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
         public static final String ENABLE_DB_CACHE = "enable_db_cache";
         public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
-
-        public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
-        public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
 
         public static final String ENABLE_LOCKING = "enable_locking";
 

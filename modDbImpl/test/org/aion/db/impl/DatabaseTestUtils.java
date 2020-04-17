@@ -51,10 +51,6 @@ public class DatabaseTestUtils {
         List<Object> parameters = new ArrayList<>();
 
         sharedProps.setProperty(Props.ENABLE_LOCKING, disabled);
-        // the following parameters are irrelevant
-        sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, enabled);
-        sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, "0");
-        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, disabled);
 
         // all vendor options
         for (DBVendor vendor : vendors) {
