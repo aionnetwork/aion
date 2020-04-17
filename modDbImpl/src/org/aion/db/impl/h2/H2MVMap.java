@@ -2,6 +2,7 @@ package org.aion.db.impl.h2;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,6 +37,7 @@ public class H2MVMap extends AbstractDB {
 
     private MVStore store;
     private MVMap<byte[], byte[]> map; // MVMap implements ConcurrentMap
+    private Map<ByteArrayWrapper, byte[]> writeBatch = new HashMap<>();
 
     public H2MVMap(String name, String path, Logger log, boolean enableDbCache, boolean enableDbCompression) {
         super(name, path, log, enableDbCache, enableDbCompression);
@@ -235,21 +237,29 @@ public class H2MVMap extends AbstractDB {
 
     @Override
     public void putToBatchInternal(byte[] key, byte[] value) {
-        // same as put since batch operations are not supported
-        putInternal(key, value);
+        writeBatch.put(ByteArrayWrapper.wrap(key), value);
     }
 
     @Override
     public void deleteInBatchInternal(byte[] key) {
-        // same as put since batch operations are not supported
-        deleteInternal(key);
+        writeBatch.put(ByteArrayWrapper.wrap(key), null);
     }
 
     @Override
     public void commit() {
         check();
-
-        // nothing to do since batch operations are not supported
+        if (!writeBatch.isEmpty()) {
+            // move to permanent storage
+            for (Entry<ByteArrayWrapper, byte[]> e : writeBatch.entrySet()) {
+                if (e.getValue() == null) {
+                    map.remove(e.getKey().toBytes());
+                } else {
+                    map.put(e.getKey().toBytes(), e.getValue());
+                }
+            }
+            // clear current batch
+            writeBatch.clear();
+        }
     }
 
     /**
