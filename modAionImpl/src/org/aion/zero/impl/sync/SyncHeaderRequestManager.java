@@ -117,6 +117,13 @@ public class SyncHeaderRequestManager {
     /** Used to randomly select peers to request headers from. */
     Random random;
 
+    /**
+     * Statistic data on the size of the list of stored headers when requesting a match.
+     *
+     * Useful in deciding whether the current data structure ({@link LinkedList}) is adequate or if faster access is required.
+     */
+    private SizeStats storedHeadersListSizeAtMatchRequest = new SizeStats();
+
     public SyncHeaderRequestManager(Logger syncLog, Logger surveyLog) {
         Objects.requireNonNull(syncLog);
         Objects.requireNonNull(surveyLog);
@@ -631,6 +638,12 @@ public class SyncHeaderRequestManager {
             } else {
                 List<BlockHeader> headers = null;
                 LinkedList<List<BlockHeader>> allHeaders = storedHeaders.get(peerId).get(size);
+
+                // Record statistics on the size of the list of saved headers.
+                storedHeadersListSizeAtMatchRequest.record(allHeaders.size());
+                surveyLog.info("<match-headers size statistics: {}>", storedHeadersListSizeAtMatchRequest.toString());
+
+                // Iterate from the end of the list because that's where requested headers go.
                 for (Iterator<List<BlockHeader>> it = allHeaders.iterator(); it.hasNext(); ) {
                     headers = it.next();
                     if (firstNodeRoot.equals(headers.get(0).getTxTrieRootWrapper())) {
@@ -792,6 +805,27 @@ public class SyncHeaderRequestManager {
                     return true;
                 }
             }
+        }
+    }
+
+    private class SizeStats {
+
+        private long count = 0;
+        private double average = 0;
+        private int min = Integer.MAX_VALUE;
+        private int max = Integer.MIN_VALUE;
+
+        private void record(int value) {
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+            double sum = average * count + value;
+            count++;
+            average = sum / count;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("min=%d avg=%.0f max=%d count=%d", min, average, max, count);
         }
     }
 }
