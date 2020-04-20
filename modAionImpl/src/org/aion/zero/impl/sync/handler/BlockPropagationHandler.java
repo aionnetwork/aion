@@ -163,7 +163,7 @@ public class BlockPropagationHandler {
                         result);
             }
         } else {
-            result = this.blockchain.tryToConnect(block);
+            result = this.blockchain.tryToConnect(new BlockWrapper(block));
 
             long t2 = System.currentTimeMillis();
             if (result.isStored()) {
