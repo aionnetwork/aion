@@ -775,16 +775,21 @@ public final class AionPendingStateImpl implements IPendingState {
                     tx.getSenderAddress().toString(),
                     Hex.toHexString(tx.getTransactionHash()));
 
-                AionTxReceipt receipt;
+                AionTxReceipt receipt = null;
                 if (receipts != null) {
                     receipt = receipts.get(cnt);
                 } else {
                     AionTxInfo info = getTransactionInfo(tx.getTransactionHash(), block.getHash());
-                    receipt = info.getReceipt();
+                    if (info != null) {
+                        receipt = info.getReceipt();
+                    }
                 }
 
                 removeBackupDBPendingTx(tx.getTransactionHash());
-                fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
+
+                if (receipt != null) {
+                    fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
+                }
 
                 cnt++;
             }
@@ -797,12 +802,17 @@ public final class AionPendingStateImpl implements IPendingState {
 
     private AionTxInfo getTransactionInfo(byte[] txHash, byte[] blockHash) {
         AionTxInfo info = blockchain.getTransactionStore().getTxInfo(txHash, blockHash);
-        AionTransaction tx =
+        if (info != null) {
+            AionTransaction tx =
                 blockchain
-                        .getBlockByHash(info.getBlockHash())
-                        .getTransactionsList()
-                        .get(info.getIndex());
-        info.setTransaction(tx);
+                    .getBlockByHash(info.getBlockHash())
+                    .getTransactionsList()
+                    .get(info.getIndex());
+            info.setTransaction(tx);
+        } else {
+            LOGGER_TX.warn("Cannot find the txInfo in the TxStore txHash[{}] blockHash[{}]", ByteUtil.toHexString(txHash), ByteUtil.toHexString(blockHash));
+        }
+
         return info;
     }
 
