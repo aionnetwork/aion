@@ -831,6 +831,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public static boolean enableFullSyncCheck = false;
     public static boolean reachedFullSync = false;
 
+    @VisibleForTesting
     public ImportResult tryToConnect(final Block block) {
         return tryToConnect(new BlockWrapper(block));
     }
