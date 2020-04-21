@@ -409,9 +409,35 @@ public final class SyncMgr {
             } else {
                 // Drop the headers that are already known.
                 syncHeaderRequestManager.dropHeaders(nodeId, requestHeaders);
+
                 if (!filtered.isEmpty()) {
-                    // Store the subset that is still useful.
-                    syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                    // Can directly process the empty blocks at the beginning of the list as well.
+                    List emptyBlocks = new ArrayList();
+                    for (Iterator<BlockHeader> it = filtered.iterator(); it.hasNext(); ) {
+                        BlockHeader current = it.next();
+                        if (Arrays.equals(current.getTxTrieRoot(), EMPTY_TRIE_HASH)) {
+                            Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(current, EMPTY_BLOCK_BODY);
+                            if (block == null) {
+                                log.debug("<assemble-and-validate-blocks failed to assemble empty block with hash={}>", ByteArrayWrapper.wrap(current.getHash()));
+                                break;
+                            } else {
+                                emptyBlocks.add(block);
+                                it.remove();
+                            }
+                        } else {
+                            // Exit the for loop because the prefix section of empty blocks is finished.
+                            break;
+                        }
+                    }
+                    // Dispatch continuous list of blocks to import.
+                    if (!emptyBlocks.isEmpty()) {
+                        syncExecutors.execute(() -> filterBlocks(new BlocksWrapper(nodeId, displayId, emptyBlocks)));
+                    }
+
+                    if (!filtered.isEmpty()) {
+                        // Store the subset that is still useful.
+                        syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                    }
                 }
             }
         }
