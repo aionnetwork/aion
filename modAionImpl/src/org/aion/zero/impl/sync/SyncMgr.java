@@ -431,9 +431,10 @@ public final class SyncMgr {
         if (_bodies == null) return;
         log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
-        // the requests are made such that the size varies to better map headers to bodies
+        // The bodies are matched using the tx trie root.
+        // Since the requested bodies always start with non-empty blocks, the tx trie root is unique in 99.99% of cases.
         ByteArrayWrapper firstNodeRoot = ByteArrayWrapper.wrap(BlockUtil.getTxTrieRootFromUnsafeSource(_bodies.get(0)));
-        List<BlockHeader> headers = syncHeaderRequestManager.matchAndDropHeaders(_nodeIdHashcode, _bodies.size(), firstNodeRoot);
+        List<BlockHeader> headers = syncHeaderRequestManager.matchAndDropHeaders(_nodeIdHashcode, firstNodeRoot);
         if (headers == null) {
             log.debug("<assemble-and-validate-blocks could not match headers for node={} size={} txTrieRoot={}>", _displayId, _bodies.size(), firstNodeRoot);
             return;

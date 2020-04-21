@@ -105,7 +105,7 @@ public class SyncHeaderRequestManager {
     private final Map<Integer, RequestState> bookedPeerStates, availablePeerStates;
 
     // store the headers whose bodies have been requested from corresponding peer
-    private final Map<Integer, Map<Integer, LinkedList<List<BlockHeader>>>> storedHeaders;
+    private final Map<Integer, List<List<BlockHeader>>> storedHeaders;
 
     private final Set<Integer> knownActiveNodes;
 
@@ -558,41 +558,21 @@ public class SyncHeaderRequestManager {
         lock.lock();
 
         try {
-            storeHeadersInternal(peerId, headers);
+            Objects.requireNonNull(headers);
+
+            // store the received headers for later matching with bodies
+            storedHeaders.computeIfAbsent(peerId, v -> new ArrayList<>());
+            storedHeaders.get(peerId).add(headers);
+
+            // headers were received so the peer is available for further requests
+            if (bookedPeerStates.containsKey(peerId) && bookedPeerStates.get(peerId).tryMakeAvailable()) {
+                availablePeerStates.put(peerId, bookedPeerStates.remove(peerId));
+            }
+
+            syncLog.debug("<save-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
         } finally {
             lock.unlock();
         }
-    }
-
-    private void storeHeadersInternal(int peerId, List<BlockHeader> headers) {
-        Objects.requireNonNull(headers);
-
-        // store the received headers for later matching with bodies
-        int size = headers.size();
-        if (storedHeaders.containsKey(peerId)) {
-            Map<Integer, LinkedList<List<BlockHeader>>> peerList = storedHeaders.get(peerId);
-            if (peerList.containsKey(size)) {
-                peerList.get(size).addLast(headers);
-            } else {
-                LinkedList<List<BlockHeader>> headersList = new LinkedList<>();
-                headersList.addLast(headers);
-                peerList.put(size, headersList);
-            }
-        } else {
-            Map<Integer, LinkedList<List<BlockHeader>>> peerHeaders = new HashMap<>();
-            LinkedList<List<BlockHeader>> headersList = new LinkedList<>();
-            headersList.addLast(headers);
-            peerHeaders.put(size, headersList);
-            storedHeaders.put(peerId, peerHeaders);
-        }
-
-        // headers were received so the peer is available for further requests
-        if (bookedPeerStates.containsKey(peerId)
-                && bookedPeerStates.get(peerId).tryMakeAvailable()) {
-            availablePeerStates.put(peerId, bookedPeerStates.remove(peerId));
-        }
-
-        syncLog.debug("<save-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
     }
 
     private static List<String> printHeaders(List<BlockHeader> headers) {
@@ -612,13 +592,7 @@ public class SyncHeaderRequestManager {
             if (!storedHeaders.containsKey(peerId)) {
                 return Collections.emptyList();
             } else {
-                List<List<BlockHeader>> headersOfDifferentSizes = new ArrayList<>();
-                for (LinkedList<List<BlockHeader>> list : storedHeaders.get(peerId).values()) {
-                    if (!list.isEmpty()) {
-                        headersOfDifferentSizes.add(list.getFirst());
-                    }
-                }
-                return headersOfDifferentSizes;
+                return new ArrayList<>(storedHeaders.get(peerId));
             }
         } finally {
             lock.unlock();
@@ -628,16 +602,16 @@ public class SyncHeaderRequestManager {
     /**
      * Returns the headers received for the given size. The headers are removed from the internal storage.
      */
-    public List<BlockHeader> matchAndDropHeaders(int peerId, int size, ByteArrayWrapper firstNodeRoot) {
+    public List<BlockHeader> matchAndDropHeaders(int peerId, ByteArrayWrapper firstNodeRoot) {
         lock.lock();
 
         try {
-            if (!storedHeaders.containsKey(peerId) || !storedHeaders.get(peerId).containsKey(size) || storedHeaders.get(peerId).get(size).isEmpty()) {
-                syncLog.debug("<match-headers null for nodeId={} size={}", peerId, size);
+            if (!storedHeaders.containsKey(peerId) || storedHeaders.get(peerId).isEmpty()) {
+                syncLog.debug("<match-headers null for nodeId={} size={}", peerId, firstNodeRoot);
                 return null;
             } else {
                 List<BlockHeader> headers = null;
-                LinkedList<List<BlockHeader>> allHeaders = storedHeaders.get(peerId).get(size);
+                List<List<BlockHeader>> allHeaders = storedHeaders.get(peerId);
 
                 // Record statistics on the size of the list of saved headers.
                 storedHeadersListSizeAtMatchRequest.record(allHeaders.size());
@@ -674,11 +648,10 @@ public class SyncHeaderRequestManager {
         lock.lock();
 
         try {
-            int size = headers.size();
-            if (!storedHeaders.containsKey(peerId) || !storedHeaders.get(peerId).containsKey(size) || storedHeaders.get(peerId).get(size).isEmpty()) {
+            if (!storedHeaders.containsKey(peerId) || storedHeaders.get(peerId).isEmpty()) {
                 return false;
             } else {
-                return storedHeaders.get(peerId).get(size).remove(headers);
+                return storedHeaders.get(peerId).remove(headers);
             }
         } finally {
             lock.unlock();

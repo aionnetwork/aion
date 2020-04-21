@@ -94,36 +94,7 @@ public class SyncMgrTest {
         // ensure that 1 request was sent
         verify(p2pMgr, times(1)).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
         // the list is still stored
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isEqualTo(list);
-    }
-
-    @Test
-    public void testRequestBodies_withOneRequestFromMultipleOptions() {
-        BlockHeader header1 = mock(BlockHeader.class);
-        when(header1.getNumber()).thenReturn(101L);
-        byte[] hash1 = Hex.decode("6fd8dae3304a9864f460ec7aec21bc94e14e34876e5dddd0a74d9c68ac7bc9ed");
-        when(header1.getHash()).thenReturn(hash1);
-        when(header1.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
-        List<BlockHeader> list1 = new ArrayList<>();
-        list1.add(header1);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list1);
-
-        BlockHeader header2 = mock(BlockHeader.class);
-        when(header2.getNumber()).thenReturn(102L);
-        byte[] hash2 = Hex.decode("f2652dde61042e9306dce95ecdc41a1be2be7eb374f19427aef2a79101b471ea");
-        when(header2.getHash()).thenReturn(hash2);
-        when(header2.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
-        List<BlockHeader> list2 = new ArrayList<>();
-        list2.add(header2);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list2);
-
-        syncMgr.requestBodies(1, "peer1");
-
-        // ensure that 1 request was sent
-        verify(p2pMgr, times(1)).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
-        // both lists are still stored and can be retrieved in order
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isEqualTo(list1);
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isEqualTo(list2);
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).isEqualTo(list);
     }
 
     @Test
@@ -143,17 +114,16 @@ public class SyncMgrTest {
         when(header2.getHash()).thenReturn(hash2);
         when(header2.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list2 = new ArrayList<>();
-        list2.add(header1);
         list2.add(header2);
         syncMgr.syncHeaderRequestManager.storeHeaders(1, list2);
 
         syncMgr.requestBodies(1, "peer1");
 
-        // ensure that 1 request was sent
+        // ensure that 2 requests were sent
         verify(p2pMgr, times(2)).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
         // both lists are still stored and can be retrieved in order
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isEqualTo(list1);
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 2, EMPTY_TRIE_HASH)).isEqualTo(list2);
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).isEqualTo(list1);
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).isEqualTo(list2);
     }
 
     @Test
@@ -172,7 +142,7 @@ public class SyncMgrTest {
 
         // ensure that 1 request was sent
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
@@ -197,7 +167,7 @@ public class SyncMgrTest {
 
         // ensure that 1 request was sent
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).isNull();
     }
 
     @Test
@@ -229,7 +199,7 @@ public class SyncMgrTest {
 
         // ensure that 1 request was sent
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).contains(header2);
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).contains(header2);
     }
 
     @Test
@@ -256,7 +226,7 @@ public class SyncMgrTest {
         // ensure that 1 request was sent
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
         // a subset of the list is re-added for future requests
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).contains(header2);
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, EMPTY_TRIE_HASH)).contains(header2);
     }
 
     @Test
@@ -288,7 +258,7 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).errCheck(nodeId, displayId);
 
         // Check that all the headers were stored.
-        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, consecutiveHeaders.size(), consecutiveHeaders.get(0).getTxTrieRootWrapper());
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, consecutiveHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(consecutiveHeaders.size());
         assertThat(stored).containsAllIn(consecutiveHeaders);
     }
@@ -309,8 +279,8 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).errCheck(nodeId, displayId);
 
         // Check that the sequential subset of headers was stored.
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, nonSequentialHeaders.size(), nonSequentialHeaders.get(0).getTxTrieRootWrapper())).isNull();
-        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.size(), sequentialHeaders.get(0).getTxTrieRootWrapper());
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, nonSequentialHeaders.get(0).getTxTrieRootWrapper())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(sequentialHeaders.size());
         assertThat(stored).containsAllIn(sequentialHeaders);
         assertThat(stored).doesNotContain(outOfOrder);
@@ -333,8 +303,8 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).errCheck(nodeId, displayId);
 
         // Check that the sequential subset of headers was stored.
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, invalidHeaderList.size(), invalidHeaderList.get(0).getTxTrieRootWrapper())).isNull();
-        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.size(), sequentialHeaders.get(0).getTxTrieRootWrapper());
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, invalidHeaderList.get(0).getTxTrieRootWrapper())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(sequentialHeaders.size());
         assertThat(stored).containsAllIn(sequentialHeaders);
     }
@@ -361,9 +331,9 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).errCheck(nodeId, displayId);
 
         // Check that the sequential subset of headers was stored.
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, importedBlocks.size(), importedBlocks.get(0).getTxTrieRootWrapper())).isNull();
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.size(), headers.get(0).getTxTrieRootWrapper())).isNull();
-        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.size(), newHeaders.get(0).getTxTrieRootWrapper());
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, importedBlocks.get(0).getTxTrieRootWrapper())).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId,  headers.get(0).getTxTrieRootWrapper())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(newHeaders.size());
         assertThat(stored).containsAllIn(newHeaders);
     }
