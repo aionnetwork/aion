@@ -2610,7 +2610,7 @@ public class ApiWeb3Aion extends ApiAion {
                 && !JSONObject.NULL.equals(soln)
                 && !JSONObject.NULL.equals(hdrHash)) {
             // Grab copy of best block
-            AionBlock bestBlock = (AionBlock) ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
+            AionBlock bestBlock = ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
             if (bestBlock != null) {
                 try {
                     bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
@@ -2626,14 +2626,14 @@ public class ApiWeb3Aion extends ApiAion {
                 ImportResult importResult = AionImpl.inst().addNewBlock(bestBlock);
                 if (importResult.isSuccessful()) {
                     LOG.info(
-                            "block submitted via api <num={}, hash={}, diff={}, tx={}>",
+                            "mining block submitted via api <num={}, hash={}, diff={}, tx={}>",
                             bestBlock.getNumber(),
                             bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
                             bestBlock.getHeader().getDifficultyBI().toString(),
                             bestBlock.getTransactionsList().size());
                 } else {
                     LOG.info(
-                            "Unable to submit block via api <num={}, hash={}, diff={}, tx={}>",
+                            "Unable to submit mining block via api <num={}, hash={}, diff={}, tx={}>",
                             bestBlock.getNumber(),
                             bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
                             bestBlock.getHeader().getDifficultyBI().toString(),

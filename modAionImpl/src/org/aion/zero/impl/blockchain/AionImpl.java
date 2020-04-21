@@ -102,6 +102,8 @@ public class AionImpl implements IAionChain {
                     .getBlockchain()
                     .tryToConnect(new BlockWrapper(block, true, false, false, false));
 
+            LOG_GEN.debug("ImportResult:{} new block:{}", importResult, block);
+
             if (importResult == ImportResult.IMPORTED_BEST) {
                 this.aionHub.getPropHandler().propagateNewBlock(block);
             }
@@ -152,6 +154,7 @@ public class AionImpl implements IAionChain {
         lock.lock();
         try {
             Block best = getBlockchain().getBestBlock();
+            LOG_GEN.debug("getStakingBlockTemplate best:{}", best);
             if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
                 return null;
             } else {

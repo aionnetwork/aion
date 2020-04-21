@@ -551,6 +551,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
         this.bestBlock = repository.getBlockStore().getBlockByHashWithInfo(bestBlockHash);
+        LOG.debug("pushState bestBlock:{}", bestBlock);
 
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
             bestMiningBlock = (AionBlock) bestBlock;            
