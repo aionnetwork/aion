@@ -401,11 +401,7 @@ public final class SyncMgr {
                 }
             }
             if (filtered.size() == requestHeaders.size()) {
-                // Log bodies request before sending the request.
-                log.debug("<get-bodies from-num={} to-num={} node={}>", firstInBatch, requestHeaders.get(requestHeaders.size() - 1).getNumber(), displayId);
-                p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(requestHeaders.stream().map(k -> k.getHash()).collect(Collectors.toList())));
-                stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
-                stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
+                dispatchBodiedRequestToP2p(nodeId, displayId, requestHeaders);
             } else {
                 // Drop the headers that are already known.
                 syncHeaderRequestManager.dropHeaders(nodeId, requestHeaders);
@@ -437,6 +433,7 @@ public final class SyncMgr {
                     if (!filtered.isEmpty()) {
                         // Store the subset that is still useful.
                         syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                        dispatchBodiedRequestToP2p(nodeId, displayId, filtered);
                     }
                 }
             }
@@ -444,6 +441,14 @@ public final class SyncMgr {
 
         long duration = System.nanoTime() - startTime;
         survey_log.debug("TaskGetBodies: make request, duration = {} ns.", duration);
+    }
+
+    private void dispatchBodiedRequestToP2p(int nodeId, String displayId, List<BlockHeader> requestHeaders) {
+        // Log bodies request before sending the request.
+        log.debug("<get-bodies from-num={} to-num={} node={}>", requestHeaders.get(0).getNumber(), requestHeaders.get(requestHeaders.size() - 1).getNumber(), displayId);
+        p2pMgr.send(nodeId, displayId, new ReqBlocksBodies(requestHeaders.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+        stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
+        stats.updateRequestTime(displayId, System.nanoTime(), RequestType.BODIES);
     }
 
     /**
