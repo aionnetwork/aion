@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.TransactionTypeRule;
@@ -22,7 +21,6 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
@@ -50,8 +48,6 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
-import org.aion.zero.impl.types.BlockContext;
-import org.aion.zero.impl.types.StakingBlock;
 import org.slf4j.Logger;
 
 public class AionHub {
@@ -90,8 +86,6 @@ public class AionHub {
      * A "cached" block that represents our local best block when the application is first booted.
      */
     private volatile Block startingBlock;
-
-    private ReentrantLock blockTemplateLock;
 
     public AionHub(PendingTxCallback pendingTxCallback, NetworkBestBlockCallback networkBestBlockCallback, TransactionBroadcastCallback transactionBroadcastCallback) {
         initializeHub(CfgAion.inst(), null, pendingTxCallback, networkBestBlockCallback,
@@ -203,8 +197,6 @@ public class AionHub {
             this.pow = new AionPoW();
             this.pow.init(blockchain, mempool, eventMgr, syncMgr);
         }
-
-        blockTemplateLock = new ReentrantLock();
 
         SelfNodeStatusCallback callback = new SelfNodeStatusCallback(p2pMgr);
         callback.updateBlockStatus(blockchain.getBestBlock().getNumber(), blockchain.getBestBlock().getHash(), blockchain.getTotalDifficulty());
@@ -389,54 +381,6 @@ public class AionHub {
         }
     }
 
-    // Returns a new template if a better parent block to mine on is found, or if the system time
-    // is ahead of the oldBlockTemplate
-    // Returns null if we're waiting on a Staking block, or if creating a new block template failed for some reason
-    public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
-        blockTemplateLock.lock();
-        try {
-            if (blockchain.isUnityForkEnabledAtNextBlock() && blockchain.getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
-                return null;
-            } else {
-                BlockContext context;
-                Block bestBlock = blockchain.getBestBlock();
-                byte[] bestBlockHash = bestBlock.getHash();
-
-                if (oldBlockTemplate == null
-                        || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())
-                        || (systemTime > oldBlockTemplate.block.getTimestamp() && blockchain.isUnityForkEnabledAtNextBlock())) {
-
-                    TransactionSortedSet txSortSet = new TransactionSortedSet();
-                    txSortSet.addAll(mempool.getPendingTransactions());
-
-                    context =
-                            blockchain.createNewMiningBlockContext(
-                                    bestBlock, new ArrayList<>(txSortSet), false);
-                } else {
-                    context = oldBlockTemplate;
-                }
-                return context;
-            }
-        } finally {
-            blockTemplateLock.unlock();
-        }
-    }
-    
-    // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
-    public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
-        blockTemplateLock.lock();
-        try {
-            Block best = blockchain.getBestBlock();
-            if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
-                return null;
-            } else {
-                return blockchain.createStakingBlockTemplate(best, mempool.getPendingTransactions(), signingPublicKey, newSeed, coinbase);
-            }
-        } finally {
-            blockTemplateLock.unlock();
-        }
-    }
-
     public void enableUnityFork(long unityForkNumber) {
         this.blockchain.forkUtility.enableUnityFork(unityForkNumber);
     }
@@ -478,7 +422,7 @@ public class AionHub {
 
     }
 
-    private class TransactionSortedSet extends TreeSet<AionTransaction> {
+    static class TransactionSortedSet extends TreeSet<AionTransaction> {
 
         TransactionSortedSet() {
             super(

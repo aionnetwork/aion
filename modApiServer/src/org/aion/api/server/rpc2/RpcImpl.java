@@ -61,7 +61,7 @@ public class RpcImpl implements Rpc {
             throw new NullReturnRpcException("the given coinbase has invalid length");
         }
 
-        StakingBlock template = ac.getAionHub().getStakingBlockTemplate(newSeed, signingPublicKey, coinbase);
+        StakingBlock template = ac.getStakingBlockTemplate(newSeed, signingPublicKey, coinbase);
         
         if (template == null) {
             throw new NullReturnRpcException("GetStakingBlockTemplate failed!");

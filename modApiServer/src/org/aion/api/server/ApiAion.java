@@ -168,7 +168,7 @@ public abstract class ApiAion extends Api {
 
     //TODO: AKI-441: Should this method be synchronized? Should currentTemplate be volatile?
     protected BlockContext getBlockTemplate() {
-        currentTemplate = ac.getAionHub().getNewMiningBlockTemplate(currentTemplate, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        currentTemplate = ac.getNewMiningBlockTemplate(currentTemplate, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         return currentTemplate;
     }
 

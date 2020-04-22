@@ -1,30 +1,36 @@
 package org.aion.zero.impl.blockchain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.aion.zero.impl.types.PendingTxDetails;
-import org.aion.zero.impl.vm.common.VmFatalException;
+import java.util.concurrent.locks.ReentrantLock;
+import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.base.AccountState;
-import org.aion.zero.impl.core.ImportResult;
+import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.SystemExitCodes;
+import org.aion.zero.impl.blockchain.AionHub.TransactionSortedSet;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.tx.TxCollector;
+import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.PendingTxDetails;
+import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
-import org.aion.zero.impl.SystemExitCodes;
-import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.tx.TxCollector;
-import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.vm.common.VmFatalException;
 import org.slf4j.Logger;
 
 public class AionImpl implements IAionChain {
@@ -43,6 +49,8 @@ public class AionImpl implements IAionChain {
     private EquihashMiner equihashMiner;
 
     private List<BlockchainCallbackInterface> blockchainCallbackInterfaces = Collections.synchronizedList(new ArrayList<>());
+
+    private ReentrantLock lock;
 
     private AionImpl(boolean forTest) {
         this.cfg = CfgAion.inst();
@@ -69,6 +77,8 @@ public class AionImpl implements IAionChain {
                         + ">");
 
         collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
+
+        lock = new ReentrantLock();
     }
 
     public static AionImpl inst() {
@@ -84,17 +94,78 @@ public class AionImpl implements IAionChain {
         return aionHub.getBlockchain();
     }
 
-    public synchronized ImportResult addNewBlock(Block block) {
-        ImportResult importResult =
+    public ImportResult addNewBlock(Block block) {
+        lock.lock();
+        try {
+            ImportResult importResult =
                 this.aionHub
-                        .getBlockchain()
-                        .tryToConnect(new BlockWrapper(block, true, false, false, false));
+                    .getBlockchain()
+                    .tryToConnect(new BlockWrapper(block, true, false, false, false));
 
-        if (importResult == ImportResult.IMPORTED_BEST) {
-            this.aionHub.getPropHandler().propagateNewBlock(block);
+            if (importResult == ImportResult.IMPORTED_BEST) {
+                this.aionHub.getPropHandler().propagateNewBlock(block);
+            }
+
+            return importResult;
+        } finally{
+            lock.unlock();
         }
+    }
 
-        return importResult;
+    // Returns a new template if a better parent block to mine on is found, or if the system time
+    // is ahead of the oldBlockTemplate
+    // Returns null if we're waiting on a Staking block, or if creating a new block template failed for some reason
+    @Override
+    public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
+        lock.lock();
+        try {
+            if (getBlockchain().isUnityForkEnabledAtNextBlock() && getBlockchain().getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
+                return null;
+            } else {
+                BlockContext context;
+                Block bestBlock = getBlockchain().getBestBlock();
+                byte[] bestBlockHash = bestBlock.getHash();
+
+                if (oldBlockTemplate == null
+                    || !Arrays.equals(bestBlockHash, oldBlockTemplate.block.getParentHash())
+                    || (systemTime > oldBlockTemplate.block.getTimestamp() && getBlockchain().isUnityForkEnabledAtNextBlock())) {
+
+                    TransactionSortedSet txSortSet = new TransactionSortedSet();
+                    txSortSet.addAll(getAionHub().getPendingState().getPendingTransactions());
+
+                    context =
+                        getBlockchain().createNewMiningBlockContext(
+                            bestBlock, new ArrayList<>(txSortSet), false);
+                } else {
+                    context = oldBlockTemplate;
+                }
+                return context;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
+    @Override
+    public StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase) {
+        lock.lock();
+        try {
+            Block best = getBlockchain().getBestBlock();
+            if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
+                return null;
+            } else {
+                return getBlockchain()
+                    .createStakingBlockTemplate(
+                        best,
+                        getAionHub().getPendingState().getPendingTransactions(),
+                        signingPublicKey,
+                        newSeed,
+                        coinbase);
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
