@@ -46,7 +46,7 @@ public final class A0BlockHeader implements BlockHeader {
     private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {A0BlockHeader.sealType.getSealId()});
 
     /** The SHA3 256-bit hash of the parent block, in its entirety */
-    private final byte[] parentHash;
+    private final ByteArrayWrapper parentHash;
 
     /**
      * The 256-bit address to which all fees collected from the successful mining of this block be
@@ -124,7 +124,7 @@ public final class A0BlockHeader implements BlockHeader {
         this.stateRoot = builder.stateRoot;
         this.txTrieRoot = builder.txTrieRoot;
         this.receiptTrieRoot = builder.receiptTrieRoot;
-        this.parentHash = builder.parentHash;
+        this.parentHash = ByteArrayWrapper.wrap(builder.parentHash);
         this.logsBloom = builder.logsBloom;
         this.difficulty = builder.difficulty;
         this.number = builder.number;
@@ -634,7 +634,7 @@ public final class A0BlockHeader implements BlockHeader {
         obj.putOpt("version", oneByteToHexString(sealType.getSealId())); // Legacy object for the pool
         obj.putOpt("sealType", oneByteToHexString(sealType.getSealId()));
         obj.putOpt("number", toHexString(longToBytes(number)));
-        obj.putOpt("parentHash", toHexString(parentHash));
+        obj.putOpt("parentHash", parentHash.toString());
         obj.putOpt("coinBase", toHexString(coinbase.toByteArray()));
         obj.putOpt("stateRoot", toHexString(stateRoot));
         obj.putOpt("txTrieRoot", toHexString(txTrieRoot));
@@ -651,7 +651,12 @@ public final class A0BlockHeader implements BlockHeader {
 
     @Override
     public byte[] getParentHash() {
-        return parentHash.clone();
+        return parentHash.toBytes();
+    }
+
+    @Override
+    public ByteArrayWrapper getParentHashWrapper() {
+        return parentHash;
     }
 
     public AionAddress getCoinbase() {
@@ -731,7 +736,7 @@ public final class A0BlockHeader implements BlockHeader {
         return merge(
             new byte[] {sealType.getSealId()},
             longToBytes(number),
-            parentHash,
+            parentHash.toBytes(),
             coinbase.toByteArray(),
             stateRoot,
             txTrieRoot,
@@ -765,7 +770,7 @@ public final class A0BlockHeader implements BlockHeader {
     @Override
     public byte[] getEncoded() {
         byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-        byte[] parentHash = RLP.encodeElement(this.parentHash);
+        byte[] parentHash = RLP.encodeElement(this.parentHash.toBytes());
         byte[] coinbase = RLP.encodeElement(this.coinbase.toByteArray());
         byte[] stateRoot = RLP.encodeElement(this.stateRoot);
         byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
@@ -812,9 +817,9 @@ public final class A0BlockHeader implements BlockHeader {
                 + number
                 + "\n"
                 + "  parentHash="
-                + toHexString(parentHash)
+                + parentHash
                 + "  parentHash: "
-                + parentHash.length
+                + parentHash.length()
                 + "\n"
                 + "  coinbase="
                 + coinbase.toString()

@@ -41,6 +41,7 @@ public interface BlockHeader {
     int MAX_DIFFICULTY_LENGTH = 16;
 
     byte[] getParentHash();
+    ByteArrayWrapper getParentHashWrapper();
 
     byte[] getExtraData();
 
