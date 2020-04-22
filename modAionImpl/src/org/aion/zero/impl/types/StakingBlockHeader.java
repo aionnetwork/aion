@@ -11,6 +11,7 @@ import org.aion.util.bytes.ByteUtil;
 
 import java.math.BigInteger;
 import org.aion.util.types.AddressUtils;
+import org.aion.util.types.ByteArrayWrapper;
 import org.json.JSONObject;
 
 import static org.aion.util.bytes.ByteUtil.*;
@@ -112,7 +113,7 @@ public class StakingBlockHeader  implements BlockHeader {
      */
     private final byte[] signature;
 
-    private byte[] headerHash;
+    private ByteArrayWrapper headerHash;
 
     public static final int SIG_LENGTH = 64;
     public static final int SEED_LENGTH = 64;
@@ -796,18 +797,27 @@ public class StakingBlockHeader  implements BlockHeader {
     @Override
     public byte[] getHash() {
         if (headerHash == null) {
-            headerHash = HashUtil.h256(getEncoded());
+            headerHash = ByteArrayWrapper.wrap(HashUtil.h256(getEncoded()));
         }
 
-        return headerHash.clone();
+        return headerHash.toBytes();
+    }
+
+    @Override
+    public ByteArrayWrapper getHashWrapper() {
+        if (headerHash == null) {
+            headerHash = ByteArrayWrapper.wrap(HashUtil.h256(getEncoded()));
+        }
+
+        return headerHash;
     }
 
     @Override
     public String toString() {
         return "  hash="
-            + toHexString(getHash())
+            + getHashWrapper()
             + "  Length: "
-            + getHash().length
+            + getHashWrapper().length()
             + "\n"
             + "  sealType="
             + Integer.toHexString(sealType.getSealId())

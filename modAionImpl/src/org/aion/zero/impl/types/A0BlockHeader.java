@@ -16,6 +16,7 @@ import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
+import org.aion.util.types.ByteArrayWrapper;
 import org.json.JSONObject;
 import org.spongycastle.util.BigIntegers;
 
@@ -113,7 +114,7 @@ public final class A0BlockHeader implements BlockHeader {
     // (1344 in 200-9, 1408 in 210,9)
     private final byte[] solution; // The equihash solution in compressed format
 
-    private byte[] headerHash;
+    private ByteArrayWrapper headerHash;
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
@@ -746,10 +747,19 @@ public final class A0BlockHeader implements BlockHeader {
     @Override
     public byte[] getHash() {
         if (headerHash == null) {
-            headerHash = HashUtil.h256(getEncoded());
+            headerHash = ByteArrayWrapper.wrap(HashUtil.h256(getEncoded()));
         }
 
-        return headerHash.clone();
+        return headerHash.toBytes();
+    }
+
+    @Override
+    public ByteArrayWrapper getHashWrapper() {
+        if (headerHash == null) {
+            headerHash = ByteArrayWrapper.wrap(HashUtil.h256(getEncoded()));
+        }
+
+        return headerHash;
     }
 
     @Override
@@ -790,9 +800,9 @@ public final class A0BlockHeader implements BlockHeader {
     @Override
     public String toString() {
         return "  hash="
-                + toHexString(getHash())
+                + getHashWrapper()
                 + "  Length: "
-                + getHash().length
+                + getHashWrapper().length()
                 + "\n"
                 + "  sealType="
                 + Integer.toHexString(sealType.getSealId())

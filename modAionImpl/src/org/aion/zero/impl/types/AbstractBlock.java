@@ -22,7 +22,6 @@ public abstract class AbstractBlock implements Block {
     List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
 
     // used to reduce the number of times we create equal wrapper objects
-    private ByteArrayWrapper hashWrapper;
     private ByteArrayWrapper parentHashWrapper;
 
     @Override
@@ -110,10 +109,7 @@ public abstract class AbstractBlock implements Block {
      */
     @Override
     public ByteArrayWrapper getHashWrapper() {
-        if (hashWrapper == null) {
-            hashWrapper = ByteArrayWrapper.wrap(getHash());
-        }
-        return hashWrapper;
+        return getHeader().getHashWrapper();
     }
 
     /**

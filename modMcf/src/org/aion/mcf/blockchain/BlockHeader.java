@@ -2,6 +2,7 @@ package org.aion.mcf.blockchain;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
+import org.aion.util.types.ByteArrayWrapper;
 
 /**
  * The block header interface for cross-module usage purpose.
@@ -44,6 +45,7 @@ public interface BlockHeader {
     byte[] getExtraData();
 
     byte[] getHash();
+    ByteArrayWrapper getHashWrapper();
 
     byte[] getEncoded();
 
