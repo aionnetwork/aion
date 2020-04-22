@@ -16,16 +16,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
+import org.aion.util.TestResources;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
+import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.AionBlock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -56,6 +63,9 @@ public class SyncMgrTest {
         when(chain.getBestBlock()).thenReturn(bestBlock);
         when(bestBlock.getNumber()).thenReturn(bestBlockNumber);
         syncMgr = new SyncMgr(chain, p2pMgr, evtMgr, false, Collections.emptySet(), 10);
+
+        // Setup desired log levels.
+        AionLoggerFactory.initAll(Map.of(LogEnum.SYNC, LogLevel.DEBUG));
     }
 
     @Test
@@ -245,5 +255,114 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).send(anyInt(), anyString(), any(ReqBlocksBodies.class));
         // a subset of the list is re-added for future requests
         assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(1, 1, EMPTY_TRIE_HASH)).contains(header2);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withNullHeaders() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, null);
+        verify(p2pMgr, times(1)).errCheck(nodeId, displayId);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withEmptyHeaders() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, Collections.emptyList());
+        verify(p2pMgr, times(1)).errCheck(nodeId, displayId);
+    }
+
+    private static final List<BlockHeader> consecutiveHeaders = TestResources.consecutiveBlocks(20).stream().map(b -> b.getHeader()).collect(Collectors.toList());
+
+    @Test
+    public void testValidateAndAddHeaders_withCorrectHeaders() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, consecutiveHeaders);
+        verify(p2pMgr, never()).errCheck(nodeId, displayId);
+
+        // Check that all the headers were stored.
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, consecutiveHeaders.size(), consecutiveHeaders.get(0).getTxTrieRoot());
+        assertThat(stored.size()).isEqualTo(consecutiveHeaders.size());
+        assertThat(stored).containsAllIn(consecutiveHeaders);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withNonSequentialHeaders() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        List<BlockHeader> sequentialHeaders = new ArrayList<>();
+        sequentialHeaders.add(consecutiveHeaders.get(0));
+        sequentialHeaders.add(consecutiveHeaders.get(1));
+        BlockHeader outOfOrder = consecutiveHeaders.get(3);
+        List<BlockHeader> nonSequentialHeaders = new ArrayList<>(sequentialHeaders);
+        nonSequentialHeaders.add(outOfOrder);
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, nonSequentialHeaders);
+        verify(p2pMgr, never()).errCheck(nodeId, displayId);
+
+        // Check that the sequential subset of headers was stored.
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, nonSequentialHeaders.size(), nonSequentialHeaders.get(0).getTxTrieRoot())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.size(), sequentialHeaders.get(0).getTxTrieRoot());
+        assertThat(stored.size()).isEqualTo(sequentialHeaders.size());
+        assertThat(stored).containsAllIn(sequentialHeaders);
+        assertThat(stored).doesNotContain(outOfOrder);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withInvalidHeader() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        List<BlockHeader> sequentialHeaders = new ArrayList<>();
+        sequentialHeaders.add(consecutiveHeaders.get(0));
+        sequentialHeaders.add(consecutiveHeaders.get(1));
+        // Break energy consumed rule.
+        List<BlockHeader> invalidHeaderList = new ArrayList<>(sequentialHeaders);
+        assertThat(consecutiveHeaders.get(2).getEnergyConsumed()).isGreaterThan(0L);
+        invalidHeaderList.add(A0BlockHeader.Builder.newInstance().withHeader((A0BlockHeader) consecutiveHeaders.get(2)).withEnergyConsumed(0L).build());
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, invalidHeaderList);
+        verify(p2pMgr, never()).errCheck(nodeId, displayId);
+
+        // Check that the sequential subset of headers was stored.
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, invalidHeaderList.size(), invalidHeaderList.get(0).getTxTrieRoot())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, sequentialHeaders.size(), sequentialHeaders.get(0).getTxTrieRoot());
+        assertThat(stored.size()).isEqualTo(sequentialHeaders.size());
+        assertThat(stored).containsAllIn(sequentialHeaders);
+    }
+
+    @Test
+    public void testValidateAndAddHeaders_withImportedBlocks() {
+        int nodeId = 1;
+        String displayId = "peer1";
+
+        List<BlockHeader> importedBlocks = new ArrayList<>();
+        importedBlocks.add(consecutiveHeaders.get(0));
+        importedBlocks.add(consecutiveHeaders.get(1));
+        syncMgr.importedBlockHashes.put(importedBlocks.get(0).getHashWrapper(), true);
+        syncMgr.importedBlockHashes.put(importedBlocks.get(1).getHashWrapper(), true);
+        List<BlockHeader> newHeaders = new ArrayList<>();
+        newHeaders.add(consecutiveHeaders.get(2));
+        newHeaders.add(consecutiveHeaders.get(3));
+        newHeaders.add(consecutiveHeaders.get(4));
+        List<BlockHeader> headers = new ArrayList<>();
+        headers.addAll(importedBlocks);
+        headers.addAll(newHeaders);
+
+        syncMgr.validateAndAddHeaders(nodeId, displayId, headers);
+        verify(p2pMgr, never()).errCheck(nodeId, displayId);
+
+        // Check that the sequential subset of headers was stored.
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, importedBlocks.size(), importedBlocks.get(0).getTxTrieRoot())).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.size(), headers.get(0).getTxTrieRoot())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.size(), newHeaders.get(0).getTxTrieRoot());
+        assertThat(stored.size()).isEqualTo(newHeaders.size());
+        assertThat(stored).containsAllIn(newHeaders);
     }
 }

@@ -236,7 +236,7 @@ public class AionHub {
         cbs.add(new ResStatusHandler(syncLOG, surveyLOG, p2pMgr, syncMgr));
         boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
         cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
-        cbs.add(new ResBlocksHeadersHandler(syncLOG, surveyLOG, syncMgr, p2pMgr));
+        cbs.add(new ResBlocksHeadersHandler(syncLOG, surveyLOG, syncMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLOG, blockchain, syncMgr, p2pMgr, inSyncOnlyMode));
         cbs.add(new ResBlocksBodiesHandler(syncLOG, surveyLOG, syncMgr, p2pMgr));
         cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));

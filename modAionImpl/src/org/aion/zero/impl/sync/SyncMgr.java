@@ -5,7 +5,6 @@ import static org.aion.util.string.StringUtils.getNodeIdShort;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,7 +28,6 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.zero.impl.config.StatsType;
 import org.aion.p2p.IP2pMgr;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
@@ -275,66 +273,53 @@ public final class SyncMgr {
     }
 
     /**
-     * @param _nodeIdHashcode int
-     * @param _displayId String
-     * @param _headers List validate headers batch and add batch to imported headers
+     * Validate the received batch of block headers, dispatch a request for the matching bodies and save the headers for
+     * assembling the blocks when the bodies are received.
+     *
+     * @param nodeId the identifier of the peer that sent the block headers
+     * @param displayId the display identifier for the peer that sent the block headers
+     * @param headers the block headers received from the peer
      */
-    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, List<BlockHeader> _headers) {
-        if (_headers == null || _headers.isEmpty()) {
-            return;
-        }
+    public void validateAndAddHeaders(int nodeId, String displayId, List<BlockHeader> headers) {
+        if (headers == null || headers.isEmpty()) {
+            p2pMgr.errCheck(nodeId, displayId);
+            log.error("<validate-headers: received empty/null headers from node={}>", displayId);
+        } else {
+            log.debug("<validate-headers: received start-block={} list-size={} node={}>", headers.get(0).getNumber(), headers.size(), displayId);
 
-        if (log.isDebugEnabled()) {
-            log.debug(
-                    "<incoming-headers from={} size={} node={}>",
-                    _headers.get(0).getNumber(),
-                    _headers.size(),
-                    _displayId);
-        }
+            // Filter imported block headers.
+            List<BlockHeader> filtered = new ArrayList<>();
+            BlockHeader prev = null;
+            for (BlockHeader current : headers) {
+                // Stop validating this batch if any invalidated header. Keep and import the valid ones.
+                if (!blockHeaderValidator.validate(current, log)) {
+                    log.debug("<validate-headers: received invalid header number={} hash={}>", current.getNumber(), current.getHashWrapper());
+                    // Print header to allow debugging.
+                    log.trace("<validate-headers: received invalid header {}>", current.toString());
+                    break;
+                }
 
-        // filter imported block headers
-        List<BlockHeader> filtered = new ArrayList<>();
-        BlockHeader prev = null;
-        for (BlockHeader current : _headers) {
+                // Break if non-sequential blocks.
+                if (prev != null && (current.getNumber() != (prev.getNumber() + 1) || !current.getParentHashWrapper().equals(prev.getHashWrapper()))) {
+                    log.debug("<validate-headers: received non-sequential block headers node={} block-number={} expected-number={} parent-hash={} previous-hash={}>",
+                            displayId, current.getNumber(), prev.getNumber() + 1, current.getParentHashWrapper(), prev.getHashWrapper());
+                    break;
+                }
 
-            // ignore this batch if any invalidated header
-            if (!this.blockHeaderValidator.validate(current, log)) {
-                log.debug(
-                        "<invalid-header num={} hash={}>", current.getNumber(), current.getHash());
+                // Check for already imported blocks.
+                if (!importedBlockHashes.containsKey(current.getHashWrapper())) {
+                    filtered.add(current);
+                }
 
-                // Print header to allow debugging
-                log.debug("Invalid header: {}", current.toString());
-
-                return;
+                prev = current;
             }
 
-            // break if not consisting
-            if (prev != null
-                    && (current.getNumber() != (prev.getNumber() + 1)
-                            || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
-                log.debug(
-                        "<inconsistent-block-headers from={}, num={}, prev+1={}, p_hash={}, prev={}>",
-                        _displayId,
-                        current.getNumber(),
-                        prev.getNumber() + 1,
-                        ByteUtil.toHexString(current.getParentHash()),
-                        ByteUtil.toHexString(prev.getHash()));
-                return;
+            // Request bodies for the remaining headers (which are still a sequential list).
+            if (!filtered.isEmpty()) {
+                // Save headers for future bodies requests and matching with the received bodies.
+                syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                syncExecutors.execute(() -> requestBodies(nodeId, displayId));
             }
-
-            // add if not cached
-            if (!importedBlockHashes.containsKey(ByteArrayWrapper.wrap(current.getHash()))) {
-                filtered.add(current);
-            }
-
-            prev = current;
-        }
-
-        // NOTE: the filtered headers is still continuous
-        if (!filtered.isEmpty()) {
-            // save headers for future bodies requests and matching with bodies
-            syncHeaderRequestManager.storeHeaders(_nodeIdHashcode, filtered);
-            syncExecutors.execute(() -> requestBodies(_nodeIdHashcode, _displayId));
         }
     }
 
