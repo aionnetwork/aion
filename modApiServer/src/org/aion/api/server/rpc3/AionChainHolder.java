@@ -150,9 +150,7 @@ public class AionChainHolder implements ChainHolder {
         if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
         else {
             StakingBlock blockTemplate =
-                    this.chain
-                            .getAionHub()
-                            .getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
+                    this.chain.getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
             if (blockTemplate == null) {
                 return ByteUtil.EMPTY_BYTE_ARRAY;
             } else {
@@ -169,9 +167,7 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public synchronized BlockContext getBlockTemplate() {
-        return currentTemplate.updateAndGet(bc -> this.chain
-            .getAionHub()
-            .getNewMiningBlockTemplate(bc,
+        return currentTemplate.updateAndGet(bc -> this.chain.getNewMiningBlockTemplate(bc,
                 TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
     }
 

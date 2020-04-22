@@ -4,9 +4,9 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 
 public interface UnityChain {
@@ -25,12 +25,14 @@ public interface UnityChain {
 
     byte[] getSeed();
 
-    Block createStakingBlockTemplate(
+    StakingBlock createStakingBlockTemplate(
         Block parent,
         List<AionTransaction> pendingTransactions,
         byte[] publicKey,
         byte[] seed,
         byte[] coinbase);
+
+    BlockContext createNewMiningBlockContext(Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime);
 
     StakingBlock getCachingStakingBlockTemplate(byte[] hash);
 

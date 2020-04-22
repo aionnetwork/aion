@@ -7,6 +7,8 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.Repository;
 import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.StakingBlock;
 
 /** Aion chain interface. */
 public interface IAionChain  {
@@ -34,6 +36,9 @@ public interface IAionChain  {
 
     long estimateTxNrg(AionTransaction tx, Block block);
 
+    // Returns null if we're waiting on a Mining block, or if creating a new block template failed for some reason
+    StakingBlock getStakingBlockTemplate(byte[] newSeed, byte[] signingPublicKey, byte[] coinbase);
+
     EquihashMiner getBlockMiner();
 
     Optional<Long> getInitialStartingBlockNumber();
@@ -43,4 +48,6 @@ public interface IAionChain  {
     Optional<Long> getNetworkBestBlockNumber();
 
     void setApiServiceCallback(BlockchainCallbackInterface blockchainCallbackForApiServer);
+
+    BlockContext getNewMiningBlockTemplate(BlockContext currentTemplate, long toSeconds);
 }

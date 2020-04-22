@@ -1153,6 +1153,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @see #createNewMiningBlockContext(Block, List, boolean)
      * @return a context with new mining block
      */
+    @Override
     public BlockContext createNewMiningBlockContext(
         Block parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         lock.lock();
