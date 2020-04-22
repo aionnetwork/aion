@@ -59,7 +59,7 @@ public class StakingBlockHeader  implements BlockHeader {
      * in the transaction list portion, the trie is populate by [key, val] --> [rlp(index),
      * rlp(tx_recipe)] of the block
      */
-    private final byte[] txTrieRoot;
+    private final ByteArrayWrapper txTrieRoot;
     /**
      * The SHA3 256-bit hash of the root node of the trie structure populated with each transaction
      * recipe in the transaction recipes list portion, the trie is populate by [key, val] -->
@@ -127,7 +127,7 @@ public class StakingBlockHeader  implements BlockHeader {
     public StakingBlockHeader(StakingBlockHeader.Builder builder) {
         this.coinbase = builder.coinbase;
         this.stateRoot = builder.stateRoot;
-        this.txTrieRoot = builder.txTrieRoot;
+        this.txTrieRoot = ByteArrayWrapper.wrap(builder.txTrieRoot);
         this.receiptTrieRoot = builder.receiptTrieRoot;
         this.parentHash = ByteArrayWrapper.wrap(builder.parentHash);
         this.logsBloom = builder.logsBloom;
@@ -148,7 +148,7 @@ public class StakingBlockHeader  implements BlockHeader {
         byte[] parentHash = RLP.encodeElement(this.parentHash.toBytes());
         byte[] coinbase = RLP.encodeElement(this.coinbase.toByteArray());
         byte[] stateRoot = RLP.encodeElement(this.stateRoot);
-        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
+        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot.toBytes());
         byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
         byte[] difficulty = RLP.encodeElement(this.difficulty);
@@ -688,7 +688,7 @@ public class StakingBlockHeader  implements BlockHeader {
         obj.putOpt("parentHash", parentHash.toString());
         obj.putOpt("coinBase", toHexString(coinbase.toByteArray()));
         obj.putOpt("stateRoot", toHexString(stateRoot));
-        obj.putOpt("txTrieRoot", toHexString(txTrieRoot));
+        obj.putOpt("txTrieRoot", txTrieRoot.toString());
         obj.putOpt("receiptTrieRoot", toHexString(receiptTrieRoot));
         obj.putOpt("logsBloom", toHexString(logsBloom));
         obj.putOpt("difficulty", toHexString(difficulty));
@@ -720,7 +720,12 @@ public class StakingBlockHeader  implements BlockHeader {
 
     @Override
     public byte[] getTxTrieRoot() {
-        return txTrieRoot.clone();
+        return txTrieRoot.toBytes();
+    }
+
+    @Override
+    public ByteArrayWrapper getTxTrieRootWrapper() {
+        return txTrieRoot;
     }
 
     public byte[] getReceiptsRoot() {
@@ -789,7 +794,7 @@ public class StakingBlockHeader  implements BlockHeader {
             parentHash.toBytes(),
             coinbase.toByteArray(),
             stateRoot,
-            txTrieRoot,
+            txTrieRoot.toBytes(),
             receiptTrieRoot,
             logsBloom,
             difficulty,
@@ -847,9 +852,9 @@ public class StakingBlockHeader  implements BlockHeader {
             + stateRoot.length
             + "\n"
             + "  txTrieHash="
-            + toHexString(txTrieRoot)
+            + txTrieRoot
             + "  txTrieRoot: "
-            + txTrieRoot.length
+            + txTrieRoot.length()
             + "\n"
             + "  receiptsTrieHash="
             + toHexString(receiptTrieRoot)

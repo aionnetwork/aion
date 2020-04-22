@@ -70,4 +70,5 @@ public interface BlockHeader {
     BlockSealType getSealType();
 
     byte[] getTxTrieRoot();
+    ByteArrayWrapper getTxTrieRootWrapper();
 }
