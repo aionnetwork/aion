@@ -214,7 +214,7 @@ public class RPCMethods implements RPCServerMethods {
                         serializeTxDetails(txInfoList, block),
                         null,
                         null,
-                        ByteArray.wrap(((StakingBlock) block).getHeader().getSeed()),
+                        ByteArray.wrap(((StakingBlock) block).getHeader().getSeedOrProof()),
                         ByteArray.wrap(((StakingBlock) block).getHeader().getSignature()),
                         ByteArray.wrap(((StakingBlock) block).getHeader().getSigningPublicKey()),
                         previousBlock == null

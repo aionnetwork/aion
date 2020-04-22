@@ -5,12 +5,10 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts
 import static org.aion.zero.impl.types.A0BlockHeader.NONCE_LENGTH;
 import static org.aion.zero.impl.types.A0BlockHeader.SOLUTIONSIZE;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
@@ -92,7 +90,7 @@ public class BlockEncodeTest {
         assertThat(actual.getHash()).isEqualTo(expected.getHash());
         assertThat(actual.getParentHash()).isEqualTo(expected.getParentHash());
         assertThat(actual.getNumber()).isEqualTo(expected.getNumber());
-        assertThat(actual.getSeed()).isEqualTo(expected.getSeed());
+        assertThat(actual.getSeedOrProof()).isEqualTo(expected.getSeedOrProof());
         assertThat(actual.getSignature()).isEqualTo(expected.getSignature());
         assertThat(actual.getSigningPublicKey()).isEqualTo(expected.getSigningPublicKey());
         assertThat(actual.getExtraData()).isEqualTo(expected.getExtraData());

@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.json.JSONObject;
+import org.libsodium.jni.Sodium;
 
 import static org.aion.util.bytes.ByteUtil.*;
 import static org.aion.util.time.TimeUtils.longToDateTime;
@@ -35,7 +36,7 @@ public class StakingBlockHeader  implements BlockHeader {
     private static final int RLP_BH_NRG_CONSUMED = 10;
     private static final int RLP_BH_NRG_LIMIT = 11;
     private static final int RLP_BH_TIMESTAMP = 12;
-    private static final int RLP_BH_SEED = 13;
+    private static final int RLP_BH_SEED_OR_PROOF = 13;
     private static final int RLP_BH_SIGNATURE = 14;
     private static final int RLP_BH_SIGNING_PUBLICKEY = 15;
     private static final BlockSealType sealType = BlockSealType.SEAL_POS_BLOCK;
@@ -100,10 +101,10 @@ public class StakingBlockHeader  implements BlockHeader {
     /** The hash of block template for signing */
     private byte[] mineHashBytes;
     /**
-     * The seed of this block. It should be a verifiable signature of the seed of the previous PoS
+     * The seed of this block. It should be a verifiable signature of the seed/proof of the previous PoS
      * block.
      */
-    private final byte[] seed;
+    private final byte[] seedOrProof;
 
     private final byte[] signingPublicKey;
 
@@ -117,10 +118,12 @@ public class StakingBlockHeader  implements BlockHeader {
 
     public static final int SIG_LENGTH = 64;
     public static final int SEED_LENGTH = 64;
+    public static final int PROOF_LENGTH = Sodium.crypto_vrf_proofbytes();
     public static final int PUBKEY_LENGTH = 32;
     
     public static final byte[] GENESIS_SEED = new byte[SEED_LENGTH];
     public static final byte[] DEFAULT_SIGNATURE = new byte[SIG_LENGTH];
+    public static final byte[] DEFAULT_PROOF = new byte[PROOF_LENGTH];
     /**
      * private constructor. use builder to construct the header class.
      */
@@ -137,7 +140,7 @@ public class StakingBlockHeader  implements BlockHeader {
         this.extraData = builder.extraData;
         this.energyConsumed = builder.energyConsumed;
         this.energyLimit = builder.energyLimit;
-        this.seed = builder.seed;
+        this.seedOrProof = builder.seedOrProof;
         this.signature = builder.signature;
         this.signingPublicKey = builder.pubkey;
     }
@@ -156,7 +159,7 @@ public class StakingBlockHeader  implements BlockHeader {
         byte[] energyConsumed = RLP.encodeBigInteger(BigInteger.valueOf(this.energyConsumed));
         byte[] energyLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.energyLimit));
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
-        byte[] seed = RLP.encodeElement(this.seed);
+        byte[] seedOrProof = RLP.encodeElement(this.seedOrProof);
         byte[] signature = RLP.encodeElement(this.signature);
         byte[] signingPublicKey = RLP.encodeElement(this.signingPublicKey);
         return RLP.encodeList(
@@ -173,14 +176,14 @@ public class StakingBlockHeader  implements BlockHeader {
                 energyConsumed,
                 energyLimit,
                 timestamp,
-                seed,
+                seedOrProof,
                 signature,
                 signingPublicKey);
     }
 
 
-    public byte[] getSeed() {
-        return seed.clone();
+    public byte[] getSeedOrProof() {
+        return seedOrProof.clone();
     }
 
     public byte[] getSignature() {
@@ -198,7 +201,7 @@ public class StakingBlockHeader  implements BlockHeader {
      */
     public byte[] getMineHash() {
         if (mineHashBytes == null) {
-            mineHashBytes = HashUtil.h256(merge(getHeaderForMining(), seed));
+            mineHashBytes = HashUtil.h256(merge(getHeaderForMining(), seedOrProof));
         }
         return mineHashBytes.clone();
     }
@@ -217,7 +220,7 @@ public class StakingBlockHeader  implements BlockHeader {
         protected byte[] extraData;
         protected long energyConsumed;
         protected long energyLimit;
-        protected byte[] seed;
+        protected byte[] seedOrProof;
         protected byte[] signature;
         protected byte[] pubkey;
 
@@ -460,9 +463,25 @@ public class StakingBlockHeader  implements BlockHeader {
                     throw new IllegalArgumentException("invalid seed length");
                 }
             }
-            this.seed = seed;
+            this.seedOrProof = seed;
             return this;
         }
+
+        public Builder withProof(byte[] proof) {
+            if (isFromUnsafeSource) {
+                if (proof == null) {
+                    throw new NullPointerException("proof cannot be null");
+                }
+
+                if (proof.length != PROOF_LENGTH) {
+                    throw new IllegalArgumentException("invalid proof length");
+                }
+            }
+
+            this.seedOrProof = proof;
+            return this;
+        }
+
 
         public Builder withSignature(byte[] signature) {
             if (isFromUnsafeSource) {
@@ -531,7 +550,17 @@ public class StakingBlockHeader  implements BlockHeader {
             withEnergyConsumed(rlpHeader.get(RLP_BH_NRG_CONSUMED).getRLPData());
             withEnergyLimit(rlpHeader.get(RLP_BH_NRG_LIMIT).getRLPData());
             withTimestamp(rlpHeader.get(RLP_BH_TIMESTAMP).getRLPData());
-            withSeed(rlpHeader.get(RLP_BH_SEED).getRLPData());
+            byte[] data = rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData();
+            if (data == null) {
+                throw new IllegalArgumentException("the seed or proof data is missing");
+            } else if (data.length == SEED_LENGTH) {
+                withSeed(rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData());
+            } else if (data.length == PROOF_LENGTH) {
+                withProof(rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData());
+            } else {
+                throw new IllegalArgumentException("incorrect seed or proof length");
+            }
+
             withSignature(rlpHeader.get(RLP_BH_SIGNATURE).getRLPData());
             withSigningPublicKey(rlpHeader.get(RLP_BH_SIGNING_PUBLICKEY).getRLPData());
 
@@ -572,8 +601,8 @@ public class StakingBlockHeader  implements BlockHeader {
                 throw new NullPointerException("the header extraData is null");
             }
 
-            if (seed == null) {
-                throw new NullPointerException("the header seed is null");
+            if (seedOrProof == null) {
+                throw new NullPointerException("the header seed or proof is null");
             }
 
             if (signature == null) {
@@ -612,7 +641,7 @@ public class StakingBlockHeader  implements BlockHeader {
             energyConsumed = header.getEnergyConsumed();
             energyLimit = header.getEnergyLimit();
             timestamp = header.getTimestamp();
-            seed = header.getSeed();
+            seedOrProof = header.getSeedOrProof();
             signature = header.getSignature();
             pubkey = header.getSigningPublicKey();
 
@@ -670,8 +699,13 @@ public class StakingBlockHeader  implements BlockHeader {
         }
 
         public Builder withDefaultSeed() {
-            seed = new byte[SEED_LENGTH];
+            seedOrProof = new byte[SEED_LENGTH];
             return  this;
+        }
+
+        public Builder withDefaultProof() {
+            seedOrProof = DEFAULT_PROOF;
+            return this;
         }
     }
 
@@ -696,6 +730,13 @@ public class StakingBlockHeader  implements BlockHeader {
         obj.putOpt("energyConsumed", toHexString(longToBytes(energyConsumed)));
         obj.putOpt("energyLimit", toHexString(longToBytes(energyLimit)));
         obj.putOpt("timestamp", toHexString(longToBytes(timestamp)));
+        if (seedOrProof.length == SEED_LENGTH) {
+            obj.putOpt("seed", toHexString(seedOrProof));
+        } else if (seedOrProof.length == PROOF_LENGTH) {
+            obj.putOpt("proof", toHexString(seedOrProof));
+        } else {
+            obj.putOpt("seedOrProofError", toHexString(seedOrProof));
+        }
 
         return obj;
     }
@@ -881,8 +922,8 @@ public class StakingBlockHeader  implements BlockHeader {
             + longToDateTime(timestamp)
             + ")"
             + "\n"
-            + "  seed="
-            + toHexString(seed)
+            + (seedOrProof.length == SEED_LENGTH ? "  seed=" : "  proof=")
+            + toHexString(seedOrProof)
             + "\n"
             + "  signature="
             + toHexString(signature)

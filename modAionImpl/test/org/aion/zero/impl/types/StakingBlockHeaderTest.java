@@ -69,7 +69,7 @@ public class StakingBlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSignature()).isEqualTo(SIGNATURE);
-        assertThat(header.getSeed()).isEqualTo(SEED);
+        assertThat(header.getSeedOrProof()).isEqualTo(SEED);
         assertThat(header.getSigningPublicKey()).isEqualTo(SIGNINGPUBKEY);
         assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
     }
@@ -108,7 +108,7 @@ public class StakingBlockHeaderTest {
         assertThat(header.getNumber()).isEqualTo(NUMBER);
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
-        assertThat(header.getSeed()).isEqualTo(new byte[64]);
+        assertThat(header.getSeedOrProof()).isEqualTo(new byte[64]);
         assertThat(header.getSigningPublicKey()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getSignature()).isEqualTo(new byte[64]);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
@@ -152,7 +152,7 @@ public class StakingBlockHeaderTest {
         assertThat(reconstructed.getEnergyConsumed()).isEqualTo(header.getEnergyConsumed());
         assertThat(reconstructed.getEnergyLimit()).isEqualTo(header.getEnergyLimit());
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
-        assertThat(reconstructed.getSeed()).isEqualTo(header.getSeed());
+        assertThat(reconstructed.getSeedOrProof()).isEqualTo(header.getSeedOrProof());
         assertThat(reconstructed.getSignature()).isEqualTo(header.getSignature());
         assertThat(reconstructed.getSigningPublicKey()).isEqualTo(header.getSigningPublicKey());
         assertThat(reconstructed.getStateRoot()).isEqualTo(header.getStateRoot());

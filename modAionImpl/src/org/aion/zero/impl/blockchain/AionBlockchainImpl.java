@@ -1288,7 +1288,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 newDiff = calculateFirstPoSDifficultyAtBlock(parent);
             } else if (forkUtility.isNonceForkBlock(parentHdr.getNumber())) {
                 BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
-                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
+                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeedOrProof();
                 newDiff = calculateFirstPoSDifficultyAtBlock(parent);
                 forkUtility.setNonceForkResetDiff(newDiff);
             } else {
@@ -1296,7 +1296,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 Objects.requireNonNull(blockFamily[0]);
                 BlockHeader parentStakingBlock = blockFamily[0].getHeader();
                 BlockHeader parentStakingBlocksParent = blockFamily[1].getHeader();
-                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
+                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeedOrProof();
                 newDiff = chainConfiguration.getUnityDifficultyCalculator().calculateDifficulty(parentStakingBlock, parentStakingBlocksParent);
             }
         } else {
@@ -1322,7 +1322,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 BlockHeader parentStakingBlock = getParent(parentHdr).getHeader();
 
                 // retrieve components
-                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeed();
+                parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeedOrProof();
                 byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey)).toByteArray();;
                 byte[] powMineHash = ((AionBlock) parent).getHeader().getMineHash();
                 byte[] powNonce = ((AionBlock) parent).getNonce();

@@ -2920,7 +2920,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + ByteUtil.toHexString(td.toByteArray())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(b.getHeader().getSeed())
+                + ByteUtil.toHexString(b.getHeader().getSeedOrProof())
                 + "',"
                 + "'"
                 + ByteUtil.toHexString(b.getHeader().getSignature())

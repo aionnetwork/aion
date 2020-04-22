@@ -10,8 +10,8 @@ public class StakingSeedRule implements GreatGrandParentDependantBlockHeaderRule
 
     private boolean validateInner(
             StakingBlockHeader header, StakingBlockHeader dependency, List<RuleError> errors) {
-        byte[] oldSeed = dependency.getSeed();
-        byte[] newSeed = header.getSeed();
+        byte[] oldSeed = dependency.getSeedOrProof();
+        byte[] newSeed = header.getSeedOrProof();
         byte[] pk = header.getSigningPublicKey();
 
         if (!ECKeyEd25519.verify(oldSeed, newSeed, pk)) {

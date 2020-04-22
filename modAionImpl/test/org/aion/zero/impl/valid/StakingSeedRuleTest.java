@@ -36,10 +36,10 @@ public class StakingSeedRuleTest {
     @Test
     public void testValidateWithValidSeed() {
       byte[] newSeed = key.sign(oldSeed).getSignature();
-      when(mockHeader.getSeed()).thenReturn(newSeed);
+      when(mockHeader.getSeedOrProof()).thenReturn(newSeed);
       when(mockHeader.getSigningPublicKey()).thenReturn(key.getPubKey());
 
-      when(mockGrandParentHeader.getSeed()).thenReturn(oldSeed);
+      when(mockGrandParentHeader.getSeedOrProof()).thenReturn(oldSeed);
       List<RuleError> errors = new LinkedList<>();
       // generate output
       boolean actual = new StakingSeedRule().validate(mockGrandParentHeader, mockParentHeader, mockHeader, errors);
@@ -55,10 +55,10 @@ public class StakingSeedRuleTest {
         byte[] newSeed = new byte[64];
         new Random().nextBytes(newSeed);
 
-        when(mockHeader.getSeed()).thenReturn(newSeed);
+        when(mockHeader.getSeedOrProof()).thenReturn(newSeed);
         when(mockHeader.getSigningPublicKey()).thenReturn(key.getPubKey());
 
-        when(mockGrandParentHeader.getSeed()).thenReturn(oldSeed);
+        when(mockGrandParentHeader.getSeedOrProof()).thenReturn(oldSeed);
         List<RuleError> errors = new LinkedList<>();
         // generate output
         boolean actual = new StakingSeedRule().validate(mockGrandParentHeader, mockParentHeader, mockHeader, errors);

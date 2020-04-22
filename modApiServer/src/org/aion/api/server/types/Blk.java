@@ -14,6 +14,7 @@ import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.StakingBlockHeader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -65,7 +66,15 @@ public class Blk {
             obj.put("size", new NumericalValue(miningBlock.size()).toHexString());
         } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK){
             StakingBlock stakingBlock = (StakingBlock) block;
-            obj.put("seed", StringUtils.toJsonHex(stakingBlock.getHeader().getSeed()));
+            byte[] seedOrProof = stakingBlock.getHeader().getSeedOrProof();
+            if (seedOrProof.length == StakingBlockHeader.SEED_LENGTH) {
+                obj.put("seed", StringUtils.toJsonHex(seedOrProof));
+            } else if (seedOrProof.length == StakingBlockHeader.PROOF_LENGTH) {
+                obj.put("proof", StringUtils.toJsonHex(seedOrProof));
+            } else {
+                obj.put("seedOrProofError", StringUtils.toJsonHex(seedOrProof));
+            }
+
             obj.put("signature", StringUtils.toJsonHex(stakingBlock.getHeader().getSignature()));
             obj.put("publicKey", StringUtils.toJsonHex(stakingBlock.getHeader().getSigningPublicKey()));
             obj.put("size", new NumericalValue(stakingBlock.size()).toHexString());
@@ -184,7 +193,15 @@ public class Blk {
             obj.put("size", block.size());
         } else if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK){
             StakingBlock block = (StakingBlock) genericBlock;
-            obj.put("seed", StringUtils.toJsonHex(block.getHeader().getSeed()));
+            byte[] seedOrProof = block.getHeader().getSeedOrProof();
+            if (seedOrProof.length == StakingBlockHeader.SEED_LENGTH) {
+                obj.put("seed", StringUtils.toJsonHex(seedOrProof));
+            } else if (seedOrProof.length == StakingBlockHeader.PROOF_LENGTH) {
+                obj.put("proof", StringUtils.toJsonHex(seedOrProof));
+            } else {
+                obj.put("seedOrProofError", StringUtils.toJsonHex(seedOrProof));
+            }
+
             obj.put("signature", StringUtils.toJsonHex(block.getHeader().getSignature()));
             obj.put("publicKey", StringUtils.toJsonHex(block.getHeader().getSigningPublicKey()));
             obj.put("size", block.size());
@@ -235,7 +252,15 @@ public class Blk {
             obj.put("size", miningBlock.size());
         } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK){
             StakingBlock stakingBlock = (StakingBlock) block;
-            obj.put("seed", StringUtils.toJsonHex(stakingBlock.getHeader().getSeed()));
+            byte[] seedOrProof = stakingBlock.getHeader().getSeedOrProof();
+            if (seedOrProof.length == StakingBlockHeader.SEED_LENGTH) {
+                obj.put("seed", StringUtils.toJsonHex(seedOrProof));
+            } else if (seedOrProof.length == StakingBlockHeader.PROOF_LENGTH) {
+                obj.put("proof", StringUtils.toJsonHex(seedOrProof));
+            } else {
+                obj.put("seedOrProofError", StringUtils.toJsonHex(seedOrProof));
+            }
+
             obj.put("signature", StringUtils.toJsonHex(stakingBlock.getHeader().getSignature()));
             obj.put("publicKey", StringUtils.toJsonHex(stakingBlock.getHeader().getSigningPublicKey()));
             obj.put("size", stakingBlock.size());

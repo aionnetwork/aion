@@ -241,7 +241,7 @@ public class StakingBlock extends AbstractBlock {
     }
 
     public byte[] getSeed() {
-        return this.header.getSeed();
+        return this.header.getSeedOrProof();
     }
 
     @Override

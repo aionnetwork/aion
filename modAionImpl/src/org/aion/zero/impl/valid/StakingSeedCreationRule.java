@@ -8,7 +8,6 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
@@ -29,7 +28,7 @@ public class StakingSeedCreationRule implements GreatGrandParentDependantBlockHe
 
     public boolean validateInner(StakingBlockHeader stakingParent, A0BlockHeader miningParent, StakingBlockHeader current, List<RuleError> errors) {
         // retrieve components
-        byte[] parentSeed = stakingParent.getSeed();
+        byte[] parentSeed = stakingParent.getSeedOrProof();
         byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(current.getSigningPublicKey())).toByteArray();
         byte[] powMineHash = miningParent.getMineHash();
         byte[] powNonce = miningParent.getNonce();
@@ -49,7 +48,7 @@ public class StakingSeedCreationRule implements GreatGrandParentDependantBlockHe
         System.arraycopy(hash1, 0, expectedSeed, 0, hash1.length);
         System.arraycopy(hash2, 0, expectedSeed, hash1.length, hash2.length);
 
-        byte[] newSeed = current.getSeed();
+        byte[] newSeed = current.getSeedOrProof();
 
         if (!Arrays.equals(expectedSeed, newSeed)) {
             BlockHeaderValidatorUtil.addError(formatError(expectedSeed, newSeed), this.getClass(), errors);

@@ -88,6 +88,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.StakingBlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -2340,7 +2341,15 @@ public class ApiWeb3Aion extends ApiAion {
             blk.put("solution", StringUtils.toJsonHex(powBlock.getHeader().getSolution()));
         } else if(isPosBlock(block)){
             StakingBlock posBlock = (StakingBlock) block;
-            blk.put("seed", StringUtils.toJsonHex(posBlock.getHeader().getSeed()));
+            byte[] seedOrProof = posBlock.getHeader().getSeedOrProof();
+            if (seedOrProof.length == StakingBlockHeader.SEED_LENGTH) {
+                blk.put("seed", StringUtils.toJsonHex(seedOrProof));
+            } else if (seedOrProof.length == StakingBlockHeader.PROOF_LENGTH) {
+                blk.put("proof", StringUtils.toJsonHex(seedOrProof));
+            } else {
+                blk.put("seedOrProofError", StringUtils.toJsonHex(seedOrProof));
+            }
+
             blk.put("publicKey", StringUtils.toJsonHex(posBlock.getHeader().getSigningPublicKey()));
             blk.put("signature", StringUtils.toJsonHex(posBlock.getHeader().getSignature()));
         }
