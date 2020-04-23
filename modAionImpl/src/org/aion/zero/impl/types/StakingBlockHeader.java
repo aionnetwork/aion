@@ -3,6 +3,7 @@ package org.aion.zero.impl.types;
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
+import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -13,7 +14,6 @@ import java.math.BigInteger;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.json.JSONObject;
-import org.libsodium.jni.Sodium;
 
 import static org.aion.util.bytes.ByteUtil.*;
 import static org.aion.util.time.TimeUtils.longToDateTime;
@@ -118,7 +118,7 @@ public class StakingBlockHeader  implements BlockHeader {
 
     public static final int SIG_LENGTH = 64;
     public static final int SEED_LENGTH = 64;
-    public static final int PROOF_LENGTH = Sodium.crypto_vrf_proofbytes();
+    public static final int PROOF_LENGTH = VRF_Ed25519.PROOF_BYTES;
     public static final int PUBKEY_LENGTH = 32;
     
     public static final byte[] GENESIS_SEED = new byte[SEED_LENGTH];

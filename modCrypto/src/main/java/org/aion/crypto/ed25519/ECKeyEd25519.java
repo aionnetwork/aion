@@ -17,9 +17,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class ECKeyEd25519 implements ECKey {
 
-    protected static int PUBKEY_BYTES;
-    protected static int SECKEY_BYTES;
-    protected static int SIG_BYTES;
+    public final static int PUBKEY_BYTES;
+    public final static int SECKEY_BYTES;
+    public final static int SIG_BYTES;
 
     /**
      * Indicates the first type of accounts that we have a normal account, this is shared by both
