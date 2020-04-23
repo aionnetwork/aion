@@ -76,7 +76,7 @@ task compileNative(type:Exec) {
         "./build/native/equi_miner.h", 
         "./build/native/equiMiner.cpp", 
         "-L${dirWorkspace}/native/linux/sodium", 
-        "-lsodium", 
+        "-lsodiumjni",
         "-o", 
         "${dirNative}/linux/equihash/equiMiner.so", 
         "-Wl,-rpath,${dirNative}/linux/sodium"
