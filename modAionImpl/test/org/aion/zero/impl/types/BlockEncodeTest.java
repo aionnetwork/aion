@@ -123,7 +123,7 @@ public class BlockEncodeTest {
         BlockchainTestUtils.generateRandomUnityChain(blockchain, resourceProvider, unityForkNumber + 2, 1, accounts, deployerKey, 60);
 
         // get the top block from the generated chain
-        AionBlock miningBlock = (AionBlock) blockchain.getBestBlock();
+        MiningBlock miningBlock = (MiningBlock) blockchain.getBestBlock();
         assertThat(miningBlock.getHeader().getSealType()).isEqualTo(BlockSealType.SEAL_POW_BLOCK);
 
         byte[] solution = new byte[SOLUTIONSIZE];
@@ -135,7 +135,7 @@ public class BlockEncodeTest {
         miningBlock.seal(nonce, solution);
 
         // used to check the encode/decode correctness
-        AionBlock decodedBlock = (AionBlock) BlockUtil.newBlockFromRlp(miningBlock.getEncoded());
+        MiningBlock decodedBlock = (MiningBlock) BlockUtil.newBlockFromRlp(miningBlock.getEncoded());
         assertThat(decodedBlock).isNotNull();
 
         // verify header equality

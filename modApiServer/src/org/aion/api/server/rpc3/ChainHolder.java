@@ -5,7 +5,7 @@ import java.util.List;
 import org.aion.base.AccountState;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
@@ -103,7 +103,7 @@ public interface ChainHolder {
     /**
      * @return the last pow block sealed
      */
-    AionBlock getBestPOWBlock();
+    MiningBlock getBestPOWBlock();
 
     /**
      * @return the last pos block sealed

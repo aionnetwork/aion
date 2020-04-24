@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
-import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -27,7 +26,7 @@ import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -155,7 +154,7 @@ public class AionHubTest {
 
         // second half of blocks will miss the state root
         List<byte[]> statesToDelete = new ArrayList<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs =
                     BlockchainTestUtils.generateTransactions(
@@ -227,7 +226,7 @@ public class AionHubTest {
 
         // second half of blocks will miss the state root
         List<byte[]> statesToDelete = new ArrayList<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs =
                     BlockchainTestUtils.generateTransactions(
@@ -265,7 +264,7 @@ public class AionHubTest {
         // Also, missing the block DB
         blocksToImport.remove(0);
         database = (MockDB) repo.getBlockDatabase();
-        for (AionBlock b : blocksToImport) {
+        for (MiningBlock b : blocksToImport) {
             database.deleteAndCommit(b.getHash());
         }
         repo.flush();

@@ -22,8 +22,8 @@ import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.zero.impl.vm.TestResourceProvider;
@@ -225,7 +225,7 @@ public class BlockchainTestUtils {
     }
 
     private static Pair<Block, ImportResult> addMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, long time, byte[] extraData) {
-        AionBlock block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
+        MiningBlock block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
 
         MiningBlockHeader newBlockHeader = MiningBlockHeader.Builder.newInstance().withHeader(block.getHeader()).withExtraData(extraData).build();
         block.updateHeader(newBlockHeader);

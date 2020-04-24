@@ -13,16 +13,16 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
 /** */
-public class AionBlock extends AbstractBlock {
+public class MiningBlock extends AbstractBlock {
 
     /* Private */
     private MiningBlockHeader header;
 
     /* Constructors */
-    private AionBlock() {}
+    private MiningBlock() {}
 
     // copy constructor
-    public AionBlock(AionBlock block) {
+    public MiningBlock(MiningBlock block) {
         if (block == null) {
             throw  new NullPointerException("Block is null");
         }
@@ -36,8 +36,8 @@ public class AionBlock extends AbstractBlock {
      *
      * @return A new empty block.
      */
-    public static AionBlock newEmptyBlock() {
-        return new AionBlock(
+    public static MiningBlock newEmptyBlock() {
+        return new MiningBlock(
                 MiningBlockHeader.Builder.newInstance()
                         .withDefaultParentHash()
                         .withDefaultCoinbase()
@@ -58,7 +58,7 @@ public class AionBlock extends AbstractBlock {
      *
      * @implNote do not use this construction path for unsafe sources
      */
-    public AionBlock(MiningBlockHeader header, List<AionTransaction> transactionsList) {
+    public MiningBlock(MiningBlockHeader header, List<AionTransaction> transactionsList) {
         if (header == null) {
             throw new NullPointerException("header is null");
         }
@@ -73,7 +73,7 @@ public class AionBlock extends AbstractBlock {
     }
 
     @VisibleForTesting
-    public AionBlock(
+    public MiningBlock(
             byte[] parentHash,
             AionAddress coinbase,
             byte[] logsBloom,
@@ -122,7 +122,7 @@ public class AionBlock extends AbstractBlock {
      * the fields as incorrect
      * @see AionGenesis
      */
-    protected AionBlock(
+    protected MiningBlock(
             byte[] parentHash,
             AionAddress coinbase,
             byte[] logsBloom,
@@ -381,7 +381,7 @@ public class AionBlock extends AbstractBlock {
             return false;
         }
 
-        AionBlock block = (AionBlock) o;
+        MiningBlock block = (MiningBlock) o;
         return Arrays.equals(getEncoded(), block.getEncoded());
     }
 

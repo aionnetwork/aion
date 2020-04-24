@@ -25,7 +25,7 @@ import org.aion.zero.impl.config.CfgDb.Names;
 import org.aion.zero.impl.config.CfgDb.Props;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -148,7 +148,7 @@ public class BlockchainPruningTest {
                 txs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository());
                 // Seal the block with a frequent staker.
                 ECKey staker = mainStakers.get((i + j) % mainStakers.size());
-                if (nextBlock instanceof AionBlock) {
+                if (nextBlock instanceof MiningBlock) {
                     nextBlock = BlockchainTestUtils.generateNextStakingBlock(chain, nextBlock, txs, staker);
                 } else {
                     nextBlock = BlockchainTestUtils.generateNextMiningBlock(chain, nextBlock, txs);
@@ -295,7 +295,7 @@ public class BlockchainPruningTest {
             scTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), sideParent);
 
             // Seal the block with a frequent staker.
-            if (mainParent instanceof AionBlock && sideParent instanceof AionBlock) {
+            if (mainParent instanceof MiningBlock && sideParent instanceof MiningBlock) {
                 mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, mainStakers.get(0));
                 sideBlock = BlockchainTestUtils.generateNextStakingBlock(chain, sideParent, scTxs, mainStakers.get(1));
             } else {
@@ -442,7 +442,7 @@ public class BlockchainPruningTest {
                 txs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository());
                 // Seal the block with a frequent staker.
                 ECKey staker = mainStakers.get((i + j) % mainStakers.size());
-                if (nextBlock instanceof AionBlock) {
+                if (nextBlock instanceof MiningBlock) {
                     nextBlock = BlockchainTestUtils.generateNextStakingBlock(chain, nextBlock, txs, staker);
                 } else {
                     nextBlock = BlockchainTestUtils.generateNextMiningBlock(chain, nextBlock, txs);
@@ -496,7 +496,7 @@ public class BlockchainPruningTest {
             System.out.format(
                     "Block #%2d [%s] hash=%s parent=%s txs=%3d time=%d diff=%24d td=%24d root=%s trie-size=%4d %n",
                     block.getNumber(),
-                    block instanceof AionBlock ? "M" : "S",
+                    block instanceof MiningBlock ? "M" : "S",
                     block.getShortHash(),
                     block.getParentHashWrapper().toString().substring(0, 6),
                     block.getTransactionsList().size(),

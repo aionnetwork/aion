@@ -10,7 +10,6 @@ import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.util.TestResources;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

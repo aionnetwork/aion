@@ -31,8 +31,8 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -53,7 +53,7 @@ public class AionPoW {
     // This value is the time of the last "full update" of the block template, that is, the last time
     // we created a fresh block from createNewBlockTemplate()
     private AtomicLong lastUpdate = new AtomicLong(0);
-    private AionBlock latestBlockTemplate;
+    private MiningBlock latestBlockTemplate;
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
@@ -185,7 +185,7 @@ public class AionPoW {
                         Hex.toHexString(blockchain.getBestBlock().getHash()));
             }
 
-            AionBlock block = solution.getBlock();
+            MiningBlock block = solution.getBlock();
             if (!Arrays.equals(block.getHeader().getNonce(), new byte[32])
                     && !(block.getHeader().getNonce().length == 0)) {
                 // block has been processed
@@ -255,7 +255,7 @@ public class AionPoW {
 
                 List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-                AionBlock newBlock;
+                MiningBlock newBlock;
                 try {
                     newBlock = blockchain.createNewMiningBlock(bestBlock, txs, false);
                 } catch (Exception e) {
@@ -281,7 +281,7 @@ public class AionPoW {
     private synchronized void updateTimestamp(long systemTime) {
         if (!shutDown.get() && systemTime > latestBlockTemplate.getTimestamp()) {
             MiningBlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
-            AionBlock newBlock = new AionBlock(newHeader, latestBlockTemplate.getTransactionsList());
+            MiningBlock newBlock = new MiningBlock(newHeader, latestBlockTemplate.getTransactionsList());
             
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));

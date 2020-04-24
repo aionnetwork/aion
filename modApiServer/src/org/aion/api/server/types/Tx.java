@@ -3,7 +3,6 @@ package org.aion.api.server.types;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.List;
-import java.util.Objects;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.base.TxUtil;
@@ -12,7 +11,6 @@ import org.aion.types.InternalTransaction;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
 import org.json.JSONArray;

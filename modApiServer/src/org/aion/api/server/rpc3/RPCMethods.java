@@ -39,7 +39,7 @@ import org.aion.rpc.types.RPCTypes.ValidateAddressResult;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
@@ -179,8 +179,8 @@ public class RPCMethods implements RPCServerMethods {
                         ByteArray.wrap(block.getTxTrieRoot()),
                         blkReward,
                         serializeTxDetails(txInfoList, block),
-                        ByteArray.wrap(((AionBlock) block).getNonce()),
-                        ByteArray.wrap(((AionBlock) block).getHeader().getSolution()),
+                        ByteArray.wrap(((MiningBlock) block).getNonce()),
+                        ByteArray.wrap(((MiningBlock) block).getHeader().getSolution()),
                         null,
                         null,
                         null,
@@ -333,7 +333,7 @@ public class RPCMethods implements RPCServerMethods {
     @Override
     public BlockTemplate getBlockTemplate() {
         BlockContext context = chainHolder.getBlockTemplate();
-        AionBlock block = context.block;
+        MiningBlock block = context.block;
         return new BlockTemplate(ByteArray.wrap(block.getParentHash()), block.getNumber(), block.getHeader().getPowBoundaryBI(), ByteArray.wrap(block.getHeader().getMineHash()), context.baseBlockReward, context.transactionFee);
     }
 

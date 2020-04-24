@@ -41,8 +41,8 @@ import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -186,7 +186,7 @@ public class MiningRPCImplTest {
     @Test
     public void testTimestampInSubmitSolution(){
 
-        AionBlock blockWithRightTimestamp = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+        MiningBlock blockWithRightTimestamp = new MiningBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
             , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
             , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]
@@ -225,7 +225,7 @@ public class MiningRPCImplTest {
 
 
         // Now we test current timestamp + 1 (for testing the clock drift)
-        AionBlock blockWithRightTimestamp1 = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+        MiningBlock blockWithRightTimestamp1 = new MiningBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
             , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
             , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]
@@ -253,7 +253,7 @@ public class MiningRPCImplTest {
         assertTrue(submissionResult.result);
 
         // Now we test the future block timestamp (timestamp + 2)
-        AionBlock blockWithFutureTimestamp = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+        MiningBlock blockWithFutureTimestamp = new MiningBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
             , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
             , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]

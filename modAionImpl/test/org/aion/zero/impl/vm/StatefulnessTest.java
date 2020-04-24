@@ -17,7 +17,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
@@ -258,7 +258,7 @@ public class StatefulnessTest {
 
     private AionTxReceipt sendTransactions(AionTransaction... transactions) {
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block =
+        MiningBlock block =
                 this.blockchain.createBlock(
                         parentBlock,
                         Arrays.asList(transactions),

@@ -24,7 +24,7 @@ import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -900,7 +900,7 @@ public class FvmBalanceTransferConsensusTest {
             AionTransaction transaction, int numNonRejectedTransactions) {
         Block parentBlock = this.blockchain.getRepository().getBestBlock();
         List<AionTransaction> transactions = Collections.singletonList(transaction);
-        AionBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
+        MiningBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());

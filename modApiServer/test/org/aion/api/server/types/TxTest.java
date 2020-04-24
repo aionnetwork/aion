@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.AionTransaction;
@@ -19,9 +18,8 @@ import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -62,8 +60,8 @@ public class TxTest {
         txReceipt.setTransaction(transaction);
         txReceipt.setNrgUsed(txNrgUsed);
 
-        AionBlock block =
-                new AionBlock(
+        MiningBlock block =
+                new MiningBlock(
                         parentHash,
                         coinBase,
                         bloom,
@@ -117,8 +115,8 @@ public class TxTest {
         txReceiptWithLog.setTransaction(transactionWithLog);
         txReceiptWithLog.setNrgUsed(txNrgUsed);
 
-        AionBlock blockWithLog =
-            new AionBlock(
+        MiningBlock blockWithLog =
+            new MiningBlock(
                 parentHash,
                 coinBase,
                 bloom,

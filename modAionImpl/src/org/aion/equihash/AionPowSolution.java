@@ -1,6 +1,6 @@
 package org.aion.equihash;
 
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 
 /**
  * This class encapsulates a valid solution for the given block. This class allows solutions to be
@@ -10,18 +10,18 @@ import org.aion.zero.impl.types.AionBlock;
  */
 public class AionPowSolution {
 
-    private final AionBlock block;
+    private final MiningBlock block;
     private final byte[] nonce;
     private final byte[] solution;
 
-    public AionPowSolution(AionBlock block, byte[] nonce, byte[] solution) {
+    public AionPowSolution(MiningBlock block, byte[] nonce, byte[] solution) {
 
         this.block = block;
         this.nonce = nonce;
         this.solution = solution;
     }
 
-    public AionBlock getBlock() {
+    public MiningBlock getBlock() {
         return block;
     }
 

@@ -28,6 +28,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.forks.ForkUtility;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.valid.BlockHeaderRule;
 import org.aion.zero.impl.valid.BlockHeaderValidator;
 import org.aion.util.types.DataWord;
@@ -41,7 +42,6 @@ import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
@@ -484,7 +484,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     /** Uses the createNewMiningBlockInternal functionality to avoid time-stamping issues. */
-    public AionBlock createBlock(
+    public MiningBlock createBlock(
             Block parent,
             List<AionTransaction> txs,
             boolean waitUntilBlockTime,
@@ -501,7 +501,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     /** create a testing mining block and the block template*/
-    public AionBlock createBlockAndBlockTemplate(
+    public MiningBlock createBlockAndBlockTemplate(
         Block parent,
         List<AionTransaction> txs,
         boolean waitUntilBlockTime,
@@ -517,7 +517,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         BlockContext context = createNewMiningBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds);
 
         if (context != null) {
-            AionBlock block = context.block;
+            MiningBlock block = context.block;
 
             boolean newblock = miningBlockTemplate.put(ByteArrayWrapper.wrap(block.getHash()), block) == null;
             return newblock ? block : null;

@@ -11,7 +11,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.types.AionAddress;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -39,7 +39,7 @@ public class BlkTest {
         long nrgConsumed = 0L;
         long nrgLimit = 0;
         BigInteger totalDifficulty = BigInteger.valueOf(20);
-        AionBlock block = new AionBlock(parentHash,
+        MiningBlock block = new MiningBlock(parentHash,
             coinBase,
             bloom,
             difficulty,
@@ -84,7 +84,7 @@ public class BlkTest {
         JSONArray array = (JSONArray) blkObject.get("transactions");
         assertTrue(array.isEmpty());
 
-        block = new AionBlock(parentHash,
+        block = new MiningBlock(parentHash,
             coinBase,
             bloom,
             difficulty,
@@ -104,7 +104,7 @@ public class BlkTest {
             Collections.emptyList(), null, totalDifficulty, BigInteger.valueOf(1).pow(18));
         assertEquals(blkObject.get("blockTime"), 0);
 
-        block = new AionBlock(parentHash,
+        block = new MiningBlock(parentHash,
             coinBase,
             bloom,
             difficulty,

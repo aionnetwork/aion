@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.util.TestResources;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -359,7 +359,7 @@ public class EquihashSolutionsGenerationTest210_9 {
 
     @Test
     @Parameters(method = "blocks")
-    public void testMine_wBlockData(AionBlock block) {
+    public void testMine_wBlockData(MiningBlock block) {
 
         MiningBlockHeader header = block.getHeader();
 

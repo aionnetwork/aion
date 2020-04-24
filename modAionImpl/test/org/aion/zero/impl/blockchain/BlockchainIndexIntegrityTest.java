@@ -21,7 +21,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionBlockStore.BlockInfo;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -133,7 +133,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
+            MiningBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -189,7 +189,7 @@ public class BlockchainIndexIntegrityTest {
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             bestBlock = chain.getBestBlock();
-            AionBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
+            MiningBlock next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 

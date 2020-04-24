@@ -18,8 +18,8 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.BlockUtil;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -238,7 +238,7 @@ public class PendingBlockStoreTest {
         // 3. test with multiple queues
 
         // create side chain
-        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
+        MiningBlock altBlock = (MiningBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         MiningBlockHeader newHeader = MiningBlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         assertThat(altBlock.equals(first)).isFalse();
@@ -296,7 +296,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
+        MiningBlock altBlock = (MiningBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         MiningBlockHeader newHeader = MiningBlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();
@@ -337,7 +337,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
+        MiningBlock altBlock = (MiningBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         MiningBlockHeader newHeader = MiningBlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();
@@ -376,7 +376,7 @@ public class PendingBlockStoreTest {
         pb.addBlockRange(blocks);
 
         // add second queue
-        AionBlock altBlock = (AionBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
+        MiningBlock altBlock = (MiningBlock) BlockUtil.newBlockFromRlp(first.getEncoded());
         MiningBlockHeader newHeader = MiningBlockHeader.Builder.newInstance().withHeader(altBlock.getHeader()).withExtraData("random".getBytes()).build();
         altBlock.updateHeader(newHeader);
         List<Block> sideChain = new ArrayList<>();

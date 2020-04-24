@@ -20,8 +20,8 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -90,7 +90,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getParentHash()).isEqualTo(bc.getGenesis().getHash());
     }
 
@@ -121,7 +121,7 @@ public class BlockchainIntegrationTest {
                         energyPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
         assertThat(block.getTxTrieRoot()).isEqualTo(ConstantUtil.EMPTY_TRIE_HASH);
@@ -159,7 +159,7 @@ public class BlockchainIntegrationTest {
                         energyPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(1);
         assertThat(block.getTransactionsList().get(0)).isEqualTo(tx);
@@ -211,7 +211,7 @@ public class BlockchainIntegrationTest {
                         TransactionTypes.DEFAULT, null);
 
         // create a new block containing a single transaction (tx)
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         // import the block to our blockchain
         ImportResult connection = bc.tryToConnect(block);
@@ -247,7 +247,7 @@ public class BlockchainIntegrationTest {
                         energyPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block =
+        MiningBlock block =
                 blockchain.createNewMiningBlock(
                         blockchain.getGenesis(), Arrays.asList(contractDeploymentTx), true);
 
@@ -290,7 +290,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain bc = bundle.bc;
 
         // store this as the best block,
-        AionBlock block = bundle.bc.createNewMiningBlock(bc.getGenesis(), Collections.emptyList(), true);
+        MiningBlock block = bundle.bc.createNewMiningBlock(bc.getGenesis(), Collections.emptyList(), true);
         byte[] block1Hash = block.getHash();
 
         // now modify this block to have a different value after connecting
@@ -310,7 +310,7 @@ public class BlockchainIntegrationTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // now try creating a new block
-        AionBlock newBlock =
+        MiningBlock newBlock =
                 bundle.bc.createNewMiningBlock(bundle.bc.getBestBlock(), Collections.emptyList(), true);
 
         // gets the first main-chain block

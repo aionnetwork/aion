@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ public class BlockchainRewardTest {
                         .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         ImportResult res = bc.tryToConnect(block);
         assertThat(res).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -39,7 +39,7 @@ public class BlockchainRewardTest {
 
         // first block already sealed
         for (int i = 2; i < 99999; i++) {
-            AionBlock b = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+            MiningBlock b = bc.createNewMiningBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
             ImportResult r = bc.tryToConnect(b);
             assertThat(r).isEqualTo(ImportResult.IMPORTED_BEST);
 

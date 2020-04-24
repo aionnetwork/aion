@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -30,7 +31,6 @@ import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
@@ -103,7 +103,7 @@ public class OldTxExecutorTest {
                 nrgPrice,
                 TransactionTypes.DEFAULT, null);
 
-        AionBlock block = createDummyBlock();
+        MiningBlock block = createDummyBlock();
 
         AionRepositoryImpl repo = blockchain.getRepository();
         RepositoryCache cache = repo.startTracking();
@@ -149,7 +149,7 @@ public class OldTxExecutorTest {
                 nrgPrice,
                 TransactionTypes.DEFAULT, null);
 
-        AionBlock block = createDummyBlock();
+        MiningBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache<AccountState> repo = repoTop.startTracking();
@@ -193,7 +193,7 @@ public class OldTxExecutorTest {
                         nrgPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block = createDummyBlock();
+        MiningBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache repo = repoTop.startTracking();
@@ -236,7 +236,7 @@ public class OldTxExecutorTest {
                         nrgPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block = createDummyBlock();
+        MiningBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
         RepositoryCache repo = repoTop.startTracking();
@@ -249,7 +249,7 @@ public class OldTxExecutorTest {
         assertEquals(TxUtil.calculateTransactionCost(tx), receipt.getEnergyUsed());
     }
 
-    private static AionBlock createDummyBlock() {
+    private static MiningBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[256];
@@ -265,7 +265,7 @@ public class OldTxExecutorTest {
         byte[] solutions = new byte[1408];
 
         // TODO: set a dummy limit of 5000000 for now
-        return new AionBlock(
+        return new MiningBlock(
                 parentHash,
                 new AionAddress(coinbase),
                 logsBloom,

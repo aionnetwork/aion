@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -50,7 +51,6 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
@@ -60,7 +60,7 @@ import org.slf4j.Logger;
 
 public class Benchmark {
 
-    private static AionBlock block = createDummyBlock();
+    private static MiningBlock block = createDummyBlock();
     private static AionRepositoryImpl db = AionRepositoryImpl.inst();
     private static RepositoryCache<AccountState> repo = db.startTracking();
 
@@ -266,7 +266,7 @@ public class Benchmark {
         System.out.println("flush                 : " + timeFlush + " ms");
     }
 
-    private static AionBlock createDummyBlock() {
+    private static MiningBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
         byte[] coinbase = RandomUtils.nextBytes(AionAddress.LENGTH);
         byte[] logsBloom = new byte[0];
@@ -282,7 +282,7 @@ public class Benchmark {
         byte[] solutions = new byte[0];
 
         // TODO: set a dummy limit of 5000000 for now
-        return new AionBlock(
+        return new MiningBlock(
                 parentHash,
                 new AionAddress(coinbase),
                 logsBloom,

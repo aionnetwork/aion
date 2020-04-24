@@ -5,7 +5,7 @@ import java.util.List;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 
@@ -36,7 +36,7 @@ public interface UnityChain {
 
     StakingBlock getCachingStakingBlockTemplate(byte[] hash);
 
-    AionBlock getCachingMiningBlockTemplate(byte[] hash);
+    MiningBlock getCachingMiningBlockTemplate(byte[] hash);
 
     ImportResult tryToConnect(Block block);
 
@@ -48,7 +48,7 @@ public interface UnityChain {
 
     StakingBlock getBestStakingBlock();
 
-    AionBlock getBestMiningBlock();
+    MiningBlock getBestMiningBlock();
 
     boolean isUnityForkEnabledAtNextBlock();
 

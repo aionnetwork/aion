@@ -29,7 +29,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.db.DetailsDataStore;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.db.MockRepositoryConfig;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -163,7 +163,7 @@ public class BlockchainAccountStateBenchmark {
         //        // send a total of 100 bundles,
         //        // given the rate we're sending this should give us
         //        // a 400,000 accounts (not counting the 10 pre-generated for us)
-        //        AionBlock previousBlock = bc.genesis;
+        //        MiningBlock previousBlock = bc.genesis;
         //        for (int i = 0; i < 10; i++) {
         //            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
         //        }
@@ -171,8 +171,8 @@ public class BlockchainAccountStateBenchmark {
 
     private static final byte[] ZERO_BYTE = new byte[0];
 
-    private static AionBlock createBundleAndCheck(
-            StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+    private static MiningBlock createBundleAndCheck(
+            StandaloneBlockchain bc, ECKey key, MiningBlock parentBlock) {
         BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
@@ -193,7 +193,7 @@ public class BlockchainAccountStateBenchmark {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
+        MiningBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
         assertThat(block.getTransactionsList().size()).isEqualTo(400);
         // clear the trie
         bc.getRepository().flush();
@@ -221,7 +221,7 @@ public class BlockchainAccountStateBenchmark {
             ECKey senderKey = bundle.privateKeys.get(0);
 
             // deploy contract
-            Pair<AionBlock, byte[]> res = createContract(bc, senderKey, bc.getGenesis());
+            Pair<MiningBlock, byte[]> res = createContract(bc, senderKey, bc.getGenesis());
             bc.tryToConnect(res.getLeft());
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
             assertThat(info.getReceipt().isValid()).isTrue();
@@ -244,8 +244,8 @@ public class BlockchainAccountStateBenchmark {
         }
     }
 
-    private static Pair<AionBlock, byte[]> createContract(
-            StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+    private static Pair<MiningBlock, byte[]> createContract(
+            StandaloneBlockchain bc, ECKey key, MiningBlock parentBlock) {
         BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
 
         // deploy
@@ -260,12 +260,12 @@ public class BlockchainAccountStateBenchmark {
                         energyPrice,
                         TransactionTypes.DEFAULT, null);
 
-        AionBlock block =
+        MiningBlock block =
                 bc.createNewMiningBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
     }
 
-    private static AionBlock createContractBundle(
+    private static MiningBlock createContractBundle(
             final StandaloneBlockchain bc,
             final ECKey key,
             final Block parentBlock,
@@ -273,7 +273,7 @@ public class BlockchainAccountStateBenchmark {
         return createContractBundle(bc, key, parentBlock, contractAddress, 133);
     }
 
-    private static AionBlock createContractBundle(
+    private static MiningBlock createContractBundle(
             final StandaloneBlockchain bc,
             final ECKey key,
             final Block parentBlock,
@@ -300,7 +300,7 @@ public class BlockchainAccountStateBenchmark {
             accountNonce = accountNonce.add(BigInteger.ONE);
         }
 
-        AionBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
+        MiningBlock block = bc.createNewMiningBlock(parentBlock, transactions, true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(repeat);
 
@@ -326,7 +326,7 @@ public class BlockchainAccountStateBenchmark {
             int r = random.nextInt(bundle.privateKeys.size());
             ECKey key = bundle.privateKeys.get(r);
             // deploy contract
-            Pair<AionBlock, byte[]> res = createContract(bc, key, bc.getGenesis());
+            Pair<MiningBlock, byte[]> res = createContract(bc, key, bc.getGenesis());
             bc.tryToConnect(res.getLeft());
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
             assertNotNull(info);

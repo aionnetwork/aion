@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.BlockUtil;
 
@@ -105,7 +105,7 @@ public class TestResources {
     public static List<MiningBlockHeader> blockHeaders() {
         List<MiningBlockHeader> parameters = new ArrayList<>();
 
-        for (AionBlock block : blocks()) {
+        for (MiningBlock block : blocks()) {
             parameters.add(block.getHeader());
         }
 
@@ -113,11 +113,11 @@ public class TestResources {
     }
 
     /** @return a set of blocks to be used for testing. */
-    public static List<AionBlock> blocks() {
-        List<AionBlock> parameters = new ArrayList<>();
+    public static List<MiningBlock> blocks() {
+        List<MiningBlock> parameters = new ArrayList<>();
 
         for (byte[] rawData : rawBlockData(rawDataFileWithRandomBlocks)) {
-            parameters.add((AionBlock) BlockUtil.newBlockFromRlp(rawData));
+            parameters.add((MiningBlock) BlockUtil.newBlockFromRlp(rawData));
         }
 
         return parameters;

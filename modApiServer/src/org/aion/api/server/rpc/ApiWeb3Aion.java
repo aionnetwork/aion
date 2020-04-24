@@ -73,6 +73,7 @@ import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
@@ -83,7 +84,6 @@ import org.aion.zero.impl.config.CfgConsensusUnity;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.NodeWrapper;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
@@ -1492,7 +1492,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     // default block for pending transactions
-    private static final AionBlock defaultBlock = AionBlock.newEmptyBlock();
+    private static final MiningBlock defaultBlock = MiningBlock.newEmptyBlock();
 
     public RpcMsg priv_getPendingTransactions(Object _params) {
         boolean fullTx = ((JSONArray) _params).optBoolean(0, false);
@@ -2336,7 +2336,7 @@ public class ApiWeb3Aion extends ApiAion {
         blk.put("sealType", StringUtils.toJsonHex(block.getHeader().getSealType().getSealId()));
 
         if (isPowBlock(block)) {
-            AionBlock powBlock = (AionBlock) block;
+            MiningBlock powBlock = (MiningBlock) block;
             blk.put("nonce", StringUtils.toJsonHex(powBlock.getNonce()));
             blk.put("solution", StringUtils.toJsonHex(powBlock.getHeader().getSolution()));
         } else if(isPosBlock(block)){
@@ -2619,7 +2619,7 @@ public class ApiWeb3Aion extends ApiAion {
                 && !JSONObject.NULL.equals(soln)
                 && !JSONObject.NULL.equals(hdrHash)) {
             // Grab copy of best block
-            AionBlock bestBlock = ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
+            MiningBlock bestBlock = ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
             if (bestBlock != null) {
                 try {
                     bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
@@ -2703,7 +2703,7 @@ public class ApiWeb3Aion extends ApiAion {
     private class MinerStatsView {
 
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
-        Map<byte[], AionBlock> blocks;
+        Map<byte[], MiningBlock> blocks;
         private JSONObject response;
         private int qSize;
         private byte[] miner;
@@ -2737,7 +2737,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             int blkTimesAccumulated = 0;
             Long lastBlkTimestamp = null;
-            AionBlock b = null;
+            MiningBlock b = null;
 
             try {
                 // index 0 = latest block
@@ -2813,8 +2813,8 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             // evict data as necessary
-            LinkedList<Map.Entry<byte[], AionBlock>> tempStack = new LinkedList<>();
-            tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
+            LinkedList<Map.Entry<byte[], MiningBlock>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), (MiningBlock) blk));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
 
             /*
@@ -2837,7 +2837,7 @@ public class ApiWeb3Aion extends ApiAion {
                 // we need to check the seal type since the parent block could be a pos block
                 if (blk.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
                     //filter out POS blocks
-                    tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
+                    tempStack.push(Map.entry(blk.getHash(), (MiningBlock) blk));
                     itr++;
                 }
                 /*
@@ -2858,9 +2858,9 @@ public class ApiWeb3Aion extends ApiAion {
             // empty out the stack into the queue
             while (!tempStack.isEmpty()) {
                 // add to the queue
-                Entry<byte[], AionBlock> element = tempStack.pop();
+                Entry<byte[], MiningBlock> element = tempStack.pop();
                 byte[] hash = element.getKey();
-                AionBlock blkObj = element.getValue();
+                MiningBlock blkObj = element.getValue();
 
                 hashQueue.push(hash);
                 blocks.put(hash, blkObj);

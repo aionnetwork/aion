@@ -21,7 +21,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -207,7 +207,7 @@ public class ConsensusTest {
         List<AionTransaction> transactions = Collections.singletonList(deployTransaction);
 
         // Run the transaction.
-        AionBlock block = blockchain.createNewMiningBlock(parentBlock, transactions, false);
+        MiningBlock block = blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());

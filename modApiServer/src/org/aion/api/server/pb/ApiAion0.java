@@ -66,7 +66,7 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.pendingState.PendingTransactionState;
 import org.aion.zero.impl.sync.NodeWrapper;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
@@ -2586,7 +2586,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             Block genericBlock, List<ByteString> al, BigInteger td) {
 
         if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            AionBlock blk = (AionBlock) genericBlock;
+            MiningBlock blk = (MiningBlock) genericBlock;
             return Message.rsp_getBlock
                 .newBuilder()
                 .setParentHash(ByteString.copyFrom(blk.getParentHash()))
@@ -2642,7 +2642,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             .map(
                 blk -> {
                     if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                        AionBlock b = (AionBlock) blk;
+                        MiningBlock b = (MiningBlock) blk;
                         return Message.t_Block
                             .newBuilder()
                             .setBlockNumber(b.getNumber())
@@ -2698,7 +2698,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             Block block, long blocktime) {
 
         if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            AionBlock b = (AionBlock) block;
+            MiningBlock b = (MiningBlock) block;
             return Message.t_BlockDetail
                 .newBuilder()
                 .setBlockNumber(b.getNumber())
@@ -2835,7 +2835,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
          */
 
         if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-            AionBlock b = (AionBlock) block;
+            MiningBlock b = (MiningBlock) block;
             return b.getNumber()
                 + ","
                 + "'"
@@ -3036,7 +3036,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 blk -> {
                     Message.t_BlockDetail.Builder builder;
                     if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                        AionBlock b = (AionBlock) blk;
+                        MiningBlock b = (MiningBlock) blk;
                         builder =
                             Message.t_BlockDetail.newBuilder()
                                 .setBlockNumber(b.getNumber())

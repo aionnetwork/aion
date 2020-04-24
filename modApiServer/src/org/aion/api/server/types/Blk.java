@@ -11,7 +11,7 @@ import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
@@ -60,7 +60,7 @@ public class Blk {
         obj.put("mainChain", block.isMainChain() ? "true" : "false");
 
         if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            AionBlock miningBlock = (AionBlock) block;
+            MiningBlock miningBlock = (MiningBlock) block;
             obj.put("nonce", StringUtils.toJsonHex(miningBlock.getNonce()));
             obj.put("solution", StringUtils.toJsonHex(miningBlock.getHeader().getSolution()));
             obj.put("size", new NumericalValue(miningBlock.size()).toHexString());
@@ -187,7 +187,7 @@ public class Blk {
 
 
         if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            AionBlock block = (AionBlock) genericBlock;
+            MiningBlock block = (MiningBlock) genericBlock;
             obj.put("nonce", StringUtils.toJsonHex(block.getHeader().getNonce()));
             obj.put("solution", StringUtils.toJsonHex(block.getHeader().getSolution()));
             obj.put("size", block.size());
@@ -246,7 +246,7 @@ public class Blk {
         obj.put("mainChain", block.isMainChain() ? "true" : "false");
 
         if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            AionBlock miningBlock = (AionBlock) block;
+            MiningBlock miningBlock = (MiningBlock) block;
             obj.put("nonce", StringUtils.toJsonHex(miningBlock.getHeader().getNonce()));
             obj.put("solution", StringUtils.toJsonHex(miningBlock.getHeader().getSolution()));
             obj.put("size", miningBlock.size());

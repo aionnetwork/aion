@@ -10,7 +10,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**

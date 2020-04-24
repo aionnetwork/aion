@@ -18,7 +18,7 @@ import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rpc.errors.RPCExceptions.FailedToComputeMetricsRPCException;
 import org.aion.rpc.types.RPCTypes;
 import org.aion.types.AionAddress;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
@@ -26,7 +26,7 @@ public class MinerStatisticsCalculator {
 
     private final ChainHolder chainHolder;
     private final int size;
-    private final Deque<AionBlock> aionBlockCache;
+    private final Deque<MiningBlock> aionBlockCache;
     private final Map<AionAddress, RPCTypes.MinerStats> statsHistory;
     private final int blockTimeCount;
     private static final Logger logger= AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -44,20 +44,20 @@ public class MinerStatisticsCalculator {
         Block block = chainHolder.getBestPOWBlock();
         if (aionBlockCache.isEmpty()) {//lazy population of the block history list
             int i = 1;
-            aionBlockCache.addFirst((AionBlock) block);
+            aionBlockCache.addFirst((MiningBlock) block);
             while (i < size) {
                 block = chainHolder.getBlockByHash(block.getHeader().getParentHash());
                 if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                    aionBlockCache.addLast((AionBlock) block);
+                    aionBlockCache.addLast((MiningBlock) block);
                     i++;
                 }
             }
             return true;
         } else if (!Arrays.equals(aionBlockCache.peek().getHash(), block.getHash())) {
             statsHistory.clear();
-            Deque<AionBlock> blockStack = new LinkedList<>(); // We're using a stack so that
+            Deque<MiningBlock> blockStack = new LinkedList<>(); // We're using a stack so that
                                                               // the ordering of the block history can be enforced
-            blockStack.push((AionBlock) block);
+            blockStack.push((MiningBlock) block);
             aionBlockCache.removeLast();
 
             int i = 1;// we start at 1 because the stack contains 1 element
@@ -71,7 +71,7 @@ public class MinerStatisticsCalculator {
                 block = chainHolder.getBlockByHash(block.getHeader().getParentHash());
                 //skip any POS blocks
                 if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                    blockStack.push((AionBlock) block);
+                    blockStack.push((MiningBlock) block);
                     aionBlockCache.removeLast();
                     i++;
                 }
@@ -100,10 +100,10 @@ public class MinerStatisticsCalculator {
             long blockCount = 0;
             try {
                 int i = 0;
-                Iterator<AionBlock> iterator = aionBlockCache.iterator();
+                Iterator<MiningBlock> iterator = aionBlockCache.iterator();
 
                 while (iterator.hasNext() && i < this.blockTimeCount) {
-                    AionBlock block = iterator.next();
+                    MiningBlock block = iterator.next();
                     totalDifficulty =
                             totalDifficulty.add(
                                     block.getDifficultyBI()); // accumulate the difficulty

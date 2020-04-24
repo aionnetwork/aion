@@ -84,13 +84,13 @@ import org.aion.zero.impl.forks.ForkUtility;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.trie.TrieNodeResult;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.types.GenesisStakingBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.types.StakingBlock;
@@ -164,7 +164,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private TransactionStore transactionStore;
     private Block bestBlock;
     private StakingBlock bestStakingBlock;
-    private AionBlock bestMiningBlock;
+    private MiningBlock bestMiningBlock;
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
      * #getBestBlock()}), this is done because {@link #bestBlock} can slip into temporarily
@@ -198,7 +198,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final boolean storeInternalTransactions;
     //TODO : [unity] find the proper number for chaching the template.
     final Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
-    final Map<ByteArrayWrapper, AionBlock> miningBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
+    final Map<ByteArrayWrapper, MiningBlock> miningBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
 
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;
@@ -553,7 +553,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         LOG.debug("pushState bestBlock:{}", bestBlock);
 
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            bestMiningBlock = (AionBlock) bestBlock;            
+            bestMiningBlock = (MiningBlock) bestBlock;
             if (forkUtility.isUnityForkActive(bestBlock.getNumber())) {
                 bestStakingBlock = (StakingBlock) getBlockByHash(bestBlock.getParentHash());
             } else {
@@ -561,7 +561,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
             bestStakingBlock = (StakingBlock) bestBlock;
-            bestMiningBlock = (AionBlock) getBlockByHash(bestBlock.getParentHash());
+            bestMiningBlock = (MiningBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
             throw new IllegalStateException("Invalid best block data!");
         }
@@ -684,16 +684,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public AionBlock getBestMiningBlock() {
+    public MiningBlock getBestMiningBlock() {
         return bestMiningBlock;
     }
 
     //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
     private void loadBestMiningBlock() {
         if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-            bestMiningBlock = (AionBlock) bestBlock;
+            bestMiningBlock = (MiningBlock) bestBlock;
         } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
-            bestMiningBlock = (AionBlock) getBlockByHash(bestBlock.getParentHash());
+            bestMiningBlock = (MiningBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
             throw new IllegalStateException("Invalid block type");
         }
@@ -1132,7 +1132,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new block
      * @return new block
      */
-    public AionBlock createNewMiningBlock(
+    public MiningBlock createNewMiningBlock(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime) {
         lock.lock();
         try {
@@ -1190,7 +1190,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parentHdr);
 
-        AionBlock block;
+        MiningBlock block;
 
         try {
             MiningBlockHeader.Builder headerBuilder =
@@ -1209,7 +1209,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     .withDefaultNonce()
                     .withDefaultSolution();
 
-            block = new AionBlock(headerBuilder.build(), txs);
+            block = new MiningBlock(headerBuilder.build(), txs);
         } catch (Exception e) {
             LOG.error("Construct new mining block header exception:", e);
             return null;
@@ -1345,8 +1345,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     // retrieve components
                     parentSeed = ((StakingBlockHeader) parentStakingBlock).getSeedOrProof();
                     byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(signingPublicKey)).toByteArray();;
-                    byte[] powMineHash = ((AionBlock) parent).getHeader().getMineHash();
-                    byte[] powNonce = ((AionBlock) parent).getNonce();
+                    byte[] powMineHash = ((MiningBlock) parent).getHeader().getMineHash();
+                    byte[] powNonce = ((MiningBlock) parent).getNonce();
                     int lastIndex = parentSeed.length + signerAddress.length + powMineHash.length + powNonce.length;
                     byte[] concatenated = new byte[lastIndex + 1];
                     System.arraycopy(parentSeed, 0, concatenated, 0, parentSeed.length);
@@ -2036,8 +2036,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         lock.lock();
         try {
             bestBlock = block;
-            if (bestBlock instanceof AionBlock) {
-                bestMiningBlock = (AionBlock) bestBlock;
+            if (bestBlock instanceof MiningBlock) {
+                bestMiningBlock = (MiningBlock) bestBlock;
             } else if (bestBlock instanceof StakingBlock) {
                 bestStakingBlock = (StakingBlock) bestBlock;
             } else {
@@ -2274,8 +2274,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 if (bestBlock == null) {
                     bestBlock = repo.getBestBlock();
 
-                    if (bestBlock instanceof AionBlock) {
-                        bestMiningBlock = (AionBlock) bestBlock;
+                    if (bestBlock instanceof MiningBlock) {
+                        bestMiningBlock = (MiningBlock) bestBlock;
                     } else if (bestBlock instanceof StakingBlock) {
                         bestStakingBlock = (StakingBlock) bestBlock;
                     } else {
@@ -2351,7 +2351,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private class State {
         AionRepositoryImpl savedRepo = repository;
         Block savedBest = bestBlock;
-        AionBlock savedBestMining = bestMiningBlock;
+        MiningBlock savedBestMining = bestMiningBlock;
         StakingBlock savedBestStaking = bestStakingBlock;
         BigInteger td = totalDifficulty.get();
     }
@@ -2486,7 +2486,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public AionBlock getCachingMiningBlockTemplate(byte[] hash) {
+    public MiningBlock getCachingMiningBlockTemplate(byte[] hash) {
         if (hash == null) {
             throw new NullPointerException("The given hash is null");//
         }
@@ -2634,7 +2634,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             setBestBlock(bestBlock);
             if (bestBlock instanceof StakingBlock) {
                 loadBestMiningBlock();
-            } else if (bestBlock instanceof AionBlock) {
+            } else if (bestBlock instanceof MiningBlock) {
                 loadBestStakingBlock();
             } else {
                 throw new IllegalStateException();

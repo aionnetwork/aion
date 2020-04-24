@@ -28,6 +28,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.blockchain.UnityChain;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -40,7 +41,6 @@ import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
@@ -162,7 +162,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
-    public AionBlock getBestMiningBlock() {
+    public MiningBlock getBestMiningBlock() {
         return this.ac.getBlockchain().getBestMiningBlock();
     }
 
@@ -195,7 +195,7 @@ public abstract class ApiAion extends Api {
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return Map.entry(
-                    new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()),
+                    new MiningBlock(genBlk.getHeader(), genBlk.getTransactionsList()),
                     genBlk.getDifficultyBI());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");

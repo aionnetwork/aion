@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -49,7 +50,6 @@ import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.base.AionTxExecSummary;
@@ -352,7 +352,7 @@ public class TransactionExecutorTest {
     private AionTxExecSummary executeTransaction(
             RepositoryCache repo, BlockContext context, AionTransaction transaction)
             throws VmFatalException {
-        AionBlock block = context.block;
+        MiningBlock block = context.block;
         return BulkExecutor.executeTransactionWithNoPostExecutionWork(
                 block.getDifficulty(),
                 block.getNumber(),

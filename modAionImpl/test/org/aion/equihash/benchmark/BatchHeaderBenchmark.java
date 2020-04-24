@@ -7,7 +7,7 @@
 // import org.aion.zero.impl.valid.BlockHeaderValidator;
 // import org.aion.zero.impl.AionBlockchainImpl;
 // import org.aion.zero.impl.blockchain.ChainConfiguration;
-// import org.aion.zero.impl.types.AionBlock;
+// import org.aion.zero.impl.types.MiningBlock;
 // import org.aion.zero.types.MiningBlockHeader;
 // import org.junit.Test;
 //

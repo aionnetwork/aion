@@ -25,7 +25,7 @@ import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.slf4j.Logger;
 
 /** @author Ross Kitsis (ross@nuco.io) */
@@ -37,7 +37,7 @@ public class EquihashMiner {
 
     private boolean isMining;
 
-    private volatile AionBlock miningBlock;
+    private volatile MiningBlock miningBlock;
 
     public static final String VERSION = "0.1.0";
 
@@ -72,7 +72,7 @@ public class EquihashMiner {
                 if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
                         && e.getCallbackType()
                                 == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
-                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
+                    EquihashMiner.this.onBlockTemplate((MiningBlock) e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
@@ -167,7 +167,7 @@ public class EquihashMiner {
 
     /** Keeps mining until the thread is interrupted */
     private void mine() {
-        AionBlock block;
+        MiningBlock block;
         byte[] nonce;
         while (!Thread.currentThread().isInterrupted()) {
             if ((block = miningBlock) == null) {
@@ -195,7 +195,7 @@ public class EquihashMiner {
     }
 
     /** Restart the mining process when a new block template is received. */
-    private void onBlockTemplate(AionBlock block) {
+    private void onBlockTemplate(MiningBlock block) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("onBlockTemplate(): {}", toHexString(block.getHash()));
         }

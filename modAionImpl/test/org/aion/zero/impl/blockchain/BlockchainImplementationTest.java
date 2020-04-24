@@ -21,7 +21,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.MockRepositoryConfig;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,7 +72,7 @@ public class BlockchainImplementationTest {
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
-        AionBlock importBlock, sidechainBlock;
+        MiningBlock importBlock, sidechainBlock;
         List<AionTransaction> txs;
 
         // creating (height) blocks
@@ -224,7 +224,7 @@ public class BlockchainImplementationTest {
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
-        AionBlock block;
+        MiningBlock block;
         List<AionTransaction> txs;
 
         // creating (height) blocks
@@ -273,7 +273,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock genesis = chain.getGenesis();
+        MiningBlock genesis = chain.getGenesis();
         byte[] genesisHash = genesis.getHash();
 
         int qty;
@@ -377,7 +377,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock genesis = chain.getGenesis();
+        MiningBlock genesis = chain.getGenesis();
         Block best = chain.getBestBlock();
 
         assertThat(best.getNumber()).isGreaterThan(0L);
@@ -503,7 +503,7 @@ public class BlockchainImplementationTest {
         // populate chain at random
         generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
 
-        AionBlock genesis = chain.getGenesis();
+        MiningBlock genesis = chain.getGenesis();
         Block best = chain.getBestBlock();
 
         assertThat(best.getNumber()).isGreaterThan(0L);
@@ -698,7 +698,7 @@ public class BlockchainImplementationTest {
                         .withDefaultReceiptTrieRoot()
                         .withDefaultStateRoot();
 
-        AionBlock block = new AionBlock(headerBuilder.build(), Collections.emptyList());
+        MiningBlock block = new MiningBlock(headerBuilder.build(), Collections.emptyList());
 
         assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.INVALID_BLOCK);
     }

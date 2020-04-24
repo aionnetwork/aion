@@ -26,7 +26,7 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
@@ -189,7 +189,7 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public boolean submitBlock(byte[] nonce, byte[] solution, byte[] headerHash) {
-        AionBlock bestPowBlock = this.chain.getBlockchain().getCachingMiningBlockTemplate(headerHash);
+        MiningBlock bestPowBlock = this.chain.getBlockchain().getCachingMiningBlockTemplate(headerHash);
         if (bestPowBlock == null) {
             return false; // cannot seal a block that does not exist
         } else {
@@ -294,7 +294,7 @@ public class AionChainHolder implements ChainHolder {
     }
 
     @Override
-    public AionBlock getBestPOWBlock() {
+    public MiningBlock getBestPOWBlock() {
         return this.chain.getBlockchain().getBestMiningBlock();
     }
 

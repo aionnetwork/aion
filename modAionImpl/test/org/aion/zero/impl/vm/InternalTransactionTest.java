@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.vm.common.VmFatalException;
 import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
@@ -49,7 +50,6 @@ import org.aion.zero.impl.vm.common.BlockCachingContext;
 import org.aion.zero.impl.vm.common.BulkExecutor;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxExecSummary;
@@ -393,7 +393,7 @@ public class InternalTransactionTest {
 
         Block parentBlock = bc.getBestBlock();
 
-        AionBlock newBlock =
+        MiningBlock newBlock =
                 bc.createBlock(
                         parentBlock,
                         Collections.singletonList(tx),
@@ -478,7 +478,7 @@ public class InternalTransactionTest {
             throws VmFatalException {
         RepositoryCache cache = bc.getRepository().startTracking();
 
-        AionBlock block = context.block;
+        MiningBlock block = context.block;
         AionTxExecSummary summary =
                 BulkExecutor.executeTransactionWithNoPostExecutionWork(
                         block.getDifficulty(),

@@ -61,7 +61,7 @@ public final class BlockUtil {
             byte[] sealType = header.get(0).getRLPData();
             if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
                 MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance().withRlpList(header).build();
-                return new AionBlock(miningHeader, txs);
+                return new MiningBlock(miningHeader, txs);
             } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance().withRlpList(header).build();
                 return new StakingBlock(stakingHeader, txs);
@@ -99,7 +99,7 @@ public final class BlockUtil {
                 if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), syncLog)) {
                     return null;
                 }
-                return new AionBlock(miningHeader, txs);
+                return new MiningBlock(miningHeader, txs);
             } else if (type[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
                 if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), syncLog)) {
@@ -138,7 +138,7 @@ public final class BlockUtil {
                 return null;
             }
             if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                return new AionBlock((MiningBlockHeader) header, txs);
+                return new MiningBlock((MiningBlockHeader) header, txs);
             } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                 return new StakingBlock((StakingBlockHeader) header, txs);
             } else {

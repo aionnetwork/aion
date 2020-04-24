@@ -18,7 +18,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 
-public class AionGenesis extends AionBlock {
+public class AionGenesis extends MiningBlock {
     /**
      * Make this value constant for now, in the future we may move this to a more configuration
      * position, this indicates the address at which the storage rows are to be stored

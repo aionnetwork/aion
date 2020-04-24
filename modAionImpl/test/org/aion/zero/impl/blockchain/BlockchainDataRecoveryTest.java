@@ -20,8 +20,8 @@ import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -70,7 +70,7 @@ public class BlockchainDataRecoveryTest {
 
         // second half of blocks will miss the state root
         List<byte[]> statesToDelete = new ArrayList<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -118,7 +118,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // state missing before import
             assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -148,7 +148,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
         List<byte[]> statesToDelete = new ArrayList<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -196,7 +196,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // state missing before import
             assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -229,7 +229,7 @@ public class BlockchainDataRecoveryTest {
 
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -282,7 +282,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // state missing before import
             assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -350,7 +350,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
         List<byte[]> statesToDelete = new ArrayList<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -405,7 +405,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // state missing before import
             assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -427,7 +427,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(chain.tryToConnect(middle)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // checking only failed blocks from before
             if (block.getNumber() > middle.getNumber()) {
                 // state missing before import
@@ -467,7 +467,7 @@ public class BlockchainDataRecoveryTest {
 
         // second half of blocks will miss the index
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -534,7 +534,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -605,8 +605,8 @@ public class BlockchainDataRecoveryTest {
 
         // building chains; sidechain will have missing index
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
-        List<AionBlock> blocksToImportMainChain = new ArrayList<>();
-        List<AionBlock> blocksToImportSideChain = new ArrayList<>();
+        List<MiningBlock> blocksToImportMainChain = new ArrayList<>();
+        List<MiningBlock> blocksToImportSideChain = new ArrayList<>();
         for (int i = 0; i < EVEN_NUMBER_OF_BLOCKS / 2 - 1; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(mainChainBlock, txs, true, time / 10000L);
@@ -692,7 +692,7 @@ public class BlockchainDataRecoveryTest {
         }
 
         // call the recovery functionality indirectly for main chain
-        for (AionBlock block : blocksToImportMainChain) {
+        for (MiningBlock block : blocksToImportMainChain) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -705,7 +705,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(mainChainBlock.getHash(), mainChainBlock.getNumber())).isTrue();
 
         // call the recovery functionality indirectly for side chain
-        for (AionBlock block : blocksToImportSideChain) {
+        for (MiningBlock block : blocksToImportSideChain) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -745,7 +745,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -812,7 +812,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -851,7 +851,7 @@ public class BlockchainDataRecoveryTest {
         List<AionTransaction> txs;
 
         long time = System.currentTimeMillis();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -892,7 +892,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -925,7 +925,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -994,7 +994,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -1066,7 +1066,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         long time = System.currentTimeMillis();
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
-        List<AionBlock> blocksToImport = new ArrayList<>();
+        List<MiningBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewMiningBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
@@ -1129,7 +1129,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // index missing before import
             assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
             assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
@@ -1151,7 +1151,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(chain.tryToConnect(middle)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // call the recovery functionality indirectly
-        for (AionBlock block : blocksToImport) {
+        for (MiningBlock block : blocksToImport) {
             // checking only failed blocks from before
             if (block.getNumber() > middle.getNumber()) {
                 // index missing before import

@@ -9,7 +9,7 @@ import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.base.AionTxReceipt;
 import org.json.JSONArray;
@@ -125,7 +125,7 @@ public final class TxRecpt {
 
     public TxRecpt(
             AionTxReceipt receipt,
-            AionBlock block,
+            MiningBlock block,
             Integer txIndex,
             Long cumulativeNrgUsed,
             boolean isMainchain) {

@@ -22,7 +22,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -105,7 +105,7 @@ public class MetaTransactionTest {
                 TransactionTypes.DEFAULT,
                 null);
 
-        AionBlock block2 =
+        MiningBlock block2 =
             blockchain.createBlock(
                 blockchain.getBestBlock(), Collections.singletonList(metaTx), false, blockchain.getBestBlock().getTimestamp());
 
@@ -147,7 +147,7 @@ public class MetaTransactionTest {
                 TransactionTypes.DEFAULT,
                 null);
 
-        AionBlock block2 =
+        MiningBlock block2 =
             blockchain.createBlock(
                 blockchain.getBestBlock(), Collections.singletonList(metaTx), false, blockchain.getBestBlock().getTimestamp());
 
@@ -181,7 +181,7 @@ public class MetaTransactionTest {
                 TransactionTypes.DEFAULT,
                 null);
 
-        AionBlock block3 =
+        MiningBlock block3 =
             blockchain.createBlock(
                 blockchain.getBestBlock(), Collections.singletonList(metaTx2), false, blockchain.getBestBlock().getTimestamp());
 
@@ -209,7 +209,7 @@ public class MetaTransactionTest {
                 TransactionTypes.AVM_CREATE_CODE,
                 null);
 
-        AionBlock block =
+        MiningBlock block =
             blockchain.createBlock(
                 blockchain.getBestBlock(), Collections.singletonList(contractDeploymentTx), false, blockchain.getBestBlock().getTimestamp());
 
@@ -237,7 +237,7 @@ public class MetaTransactionTest {
         Block parentBlock = blockchain.getBestBlock();
 
         while (parentBlock.getNumber() < height) {
-            AionBlock block = blockchain.createBlock(parentBlock, new ArrayList<>(), false, parentBlock.getTimestamp());
+            MiningBlock block = blockchain.createBlock(parentBlock, new ArrayList<>(), false, parentBlock.getTimestamp());
             Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block);
             Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
 

@@ -8,7 +8,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -18,7 +18,7 @@ public interface IAionBlockchain extends UnityChain {
 
     AionTxInfo getTransactionInfo(byte[] hash);
 
-    AionBlock createNewMiningBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+    MiningBlock createNewMiningBlock(Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     BlockContext createNewMiningBlockContext(
             Block parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);

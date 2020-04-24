@@ -21,7 +21,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.util.TestResources;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.BlockUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -291,8 +291,8 @@ public class AionBlockStoreTest {
     @Test
     public void testRollback() {
 
-        AionBlock blk1 =
-                new AionBlock(
+        MiningBlock blk1 =
+                new MiningBlock(
                         new byte[32],
                         AddressUtils.ZERO_ADDRESS,
                         new byte[256],
@@ -308,8 +308,8 @@ public class AionBlockStoreTest {
                         new byte[1408],
                         1,
                         1);
-        AionBlock blk2 =
-                new AionBlock(
+        MiningBlock blk2 =
+                new MiningBlock(
                         new byte[32],
                         AddressUtils.ZERO_ADDRESS,
                         new byte[256],

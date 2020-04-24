@@ -21,7 +21,7 @@ import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain.Bundle;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.base.AionTxReceipt;
@@ -102,7 +102,7 @@ public class BalanceTransferConsensusTest {
 
         // Process the transaction.
         Block parentBlock = this.blockchain.getRepository().getBestBlock();
-        AionBlock block =
+        MiningBlock block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
@@ -151,7 +151,7 @@ public class BalanceTransferConsensusTest {
 
         // Process the transaction.
         Block parentBlock = this.blockchain.getRepository().getBestBlock();
-        AionBlock block =
+        MiningBlock block =
                 this.blockchain.createNewMiningBlock(
                         parentBlock, Collections.singletonList(transaction), true);
         Pair<ImportResult, AionBlockSummary> results =
@@ -340,7 +340,7 @@ public class BalanceTransferConsensusTest {
     private Pair<ImportResult, AionBlockSummary> processTransactions(
             List<AionTransaction> transactions, int numNonRejectedTransactions) {
         Block parentBlock = this.blockchain.getRepository().getBestBlock();
-        AionBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
+        MiningBlock block = this.blockchain.createNewMiningBlock(parentBlock, transactions, false);
         Pair<ImportResult, AionBlockSummary> results =
                 this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, results.getLeft());

@@ -45,7 +45,7 @@ import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
@@ -68,7 +68,7 @@ public class OpsRPCImplTest {
 
     @Before
     public void setup() {
-        emptyPowBlock = AionBlock.newEmptyBlock();
+        emptyPowBlock = MiningBlock.newEmptyBlock();
         emptyPowBlock.setMainChain();
         AionTxReceipt receipt = new AionTxReceipt();
         ECKey ecKey = ECKeyFac.inst().create();

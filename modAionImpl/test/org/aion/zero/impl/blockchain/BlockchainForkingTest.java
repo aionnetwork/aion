@@ -36,8 +36,8 @@ import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockUtil;
@@ -90,8 +90,8 @@ public class BlockchainForkingTest {
         StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain bc = b.bc;
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
-        AionBlock sameBlock = (AionBlock) BlockUtil.newBlockFromRlp(block.getEncoded());
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        MiningBlock sameBlock = (MiningBlock) BlockUtil.newBlockFromRlp(block.getEncoded());
 
         ImportResult firstRes = bc.tryToConnect(block);
 
@@ -143,11 +143,11 @@ public class BlockchainForkingTest {
 
         StandaloneBlockchain bc = b.bc;
         Block bestBlock = bc.getBestBlock();
-        AionBlock standardBlock =
+        MiningBlock standardBlock =
                 bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         ChainConfiguration cc = new ChainConfiguration();
-        AionBlock higherDifficultyBlock = new AionBlock(standardBlock);
+        MiningBlock higherDifficultyBlock = new MiningBlock(standardBlock);
         MiningBlockHeader newBlockHeader =
                 MiningBlockHeader.Builder.newInstance()
                         .withHeader(higherDifficultyBlock.getHeader())
@@ -275,7 +275,7 @@ public class BlockchainForkingTest {
         // generate three blocks, on the third block we get flexibility
         // for what difficulties can occur
 
-        AionBlock firstBlock =
+        MiningBlock firstBlock =
                 bc.createNewMiningBlockInternal(
                                 bc.getGenesis(), Collections.emptyList(), true, time / 1000L)
                         .block;
@@ -287,7 +287,7 @@ public class BlockchainForkingTest {
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
 
         // now connect the second block
-        AionBlock secondBlock =
+        MiningBlock secondBlock =
                 bc.createNewMiningBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
         assertThat(bc.tryToConnect(secondBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -298,10 +298,10 @@ public class BlockchainForkingTest {
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.MAINCHAIN);
 
         // now on the third block, we diverge with one block having higher TD than the other
-        AionBlock fasterSecondBlock =
+        MiningBlock fasterSecondBlock =
                 bc.createNewMiningBlockInternal(secondBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
-        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
+        MiningBlock slowerSecondBlock = new MiningBlock(fasterSecondBlock);
 
         MiningBlockHeader newBlockHeader =
             MiningBlockHeader.Builder.newInstance()
@@ -326,11 +326,11 @@ public class BlockchainForkingTest {
 
         time += 100;
 
-        AionBlock fastBlockDescendant =
+        MiningBlock fastBlockDescendant =
                 bc.createNewMiningBlockInternal(
                                 fasterSecondBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
-        AionBlock slowerBlockDescendant =
+        MiningBlock slowerBlockDescendant =
                 bc.createNewMiningBlockInternal(
                                 slowerSecondBlock,
                                 Collections.emptyList(),
@@ -365,7 +365,7 @@ public class BlockchainForkingTest {
         assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant);
 
         // ensuring that the caching is correct for the nest block to be added
-        AionBlock switchBlock =
+        MiningBlock switchBlock =
                 bc.createNewMiningBlockInternal(
                                 fastBlockDescendant, Collections.emptyList(), true, time / 1000L)
                         .block;
@@ -378,7 +378,7 @@ public class BlockchainForkingTest {
         assertThat(cacheContext.getRight()).isEqualTo(BlockCachingContext.SWITCHING_MAINCHAIN);
 
         // ensuring that the caching is correct for the nest block to be added
-        AionBlock lastBlock =
+        MiningBlock lastBlock =
                 bc.createNewMiningBlockInternal(switchBlock, Collections.emptyList(), true, time / 1000L)
                         .block;
 
@@ -419,7 +419,7 @@ public class BlockchainForkingTest {
         BlockContext fasterSecondBlock =
                 bc.createNewMiningBlockInternal(
                         secondBlock.block, Collections.emptyList(), true, time / 1000L);
-        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
+        MiningBlock slowerSecondBlock = new MiningBlock(fasterSecondBlock.block);
 
         MiningBlockHeader newBlockHeader =
             MiningBlockHeader.Builder.newInstance()
@@ -470,14 +470,14 @@ public class BlockchainForkingTest {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
         StandaloneBlockchain bc = b.bc;
-        AionBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        MiningBlock block = bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         assertThat(bc.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // check that the returned block is the first block
         assertThat(bc.getBestBlock() == block).isTrue();
 
-        AionBlock invalidBlock =
+        MiningBlock invalidBlock =
                 bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         MiningBlockHeader newBlockHeader =
@@ -532,7 +532,7 @@ public class BlockchainForkingTest {
         ECKey sender = accounts.remove(0);
         AionTransaction deployTx = deployContract(sender);
 
-        AionBlock block =
+        MiningBlock block =
                 sourceChain.createNewMiningBlockInternal(
                                 sourceChain.genesis, Arrays.asList(deployTx), true, time / 10_000L)
                         .block;
@@ -570,7 +570,7 @@ public class BlockchainForkingTest {
 
         // create a slow / fast block distinction
         AionTransaction callTx = callSetValue2(sender, contract, 5, 6, BigInteger.ONE);
-        AionBlock fastBlock =
+        MiningBlock fastBlock =
                 sourceChain.createNewMiningBlockInternal(
                                 sourceChain.getBestBlock(),
                                 Arrays.asList(callTx),
@@ -579,8 +579,8 @@ public class BlockchainForkingTest {
                         .block;
 
         callTx = callSetValue2(sender, contract, 1, 9, BigInteger.ONE);
-        AionBlock slowBlock =
-                new AionBlock(
+        MiningBlock slowBlock =
+                new MiningBlock(
                         sourceChain.createNewMiningBlockInternal(
                                         sourceChain.getBestBlock(),
                                         Arrays.asList(callTx),
@@ -608,13 +608,13 @@ public class BlockchainForkingTest {
         // the second block gets a higher total difficulty
         callTx = callSetValue(sender, contract, 5, BigInteger.TWO);
 
-        AionBlock lowBlock =
+        MiningBlock lowBlock =
                 testChain.createNewMiningBlockInternal(
                                 slowBlock, Arrays.asList(callTx), true, time / 10_000L + 101)
                         .block;
 
         callTx = callSetValue(sender, contract, 9, BigInteger.TWO);
-        AionBlock highBlock =
+        MiningBlock highBlock =
                 sourceChain.createNewMiningBlockInternal(
                                 fastBlock, Arrays.asList(callTx), true, time / 10_000L)
                         .block;
@@ -762,7 +762,7 @@ public class BlockchainForkingTest {
         IAvmResourceFactory resourceFactory = resourceProvider.factoryForVersion1;
 
         // blocks to be built
-        AionBlock block, fastBlock, slowBlock, lowBlock, highBlock;
+        MiningBlock block, fastBlock, slowBlock, lowBlock, highBlock;
 
         // transactions used in blocks
         AionTransaction deployOnAVM, deployOnFVM, callTxOnFVM;
@@ -818,7 +818,7 @@ public class BlockchainForkingTest {
 
         deployOnFVM = deployContract(sender);
         slowBlock =
-                new AionBlock(
+                new MiningBlock(
                         sourceChain.createNewMiningBlockInternal(
                                         sourceChain.getBestBlock(),
                                         Arrays.asList(deployOnFVM),

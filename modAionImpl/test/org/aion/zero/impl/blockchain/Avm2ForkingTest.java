@@ -16,7 +16,7 @@ import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
@@ -118,25 +118,25 @@ public class Avm2ForkingTest {
                 TransactionTypes.DEFAULT,
                 null);
 
-        AionBlock block1a = blockchain.createBlock(blockchain.genesis, Collections.singletonList(tx1a), false, 0);
+        MiningBlock block1a = blockchain.createBlock(blockchain.genesis, Collections.singletonList(tx1a), false, 0);
         Pair<ImportResult, AionBlockSummary> connectResult = blockchain.tryToConnectAndFetchSummary(block1a);
         AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         assertTrue(receipt.isSuccessful());
         
-        AionBlock block2a = blockchain.createBlock(blockchain.getBestBlock(), Collections.singletonList(tx2a), false, 0);
+        MiningBlock block2a = blockchain.createBlock(blockchain.getBestBlock(), Collections.singletonList(tx2a), false, 0);
         connectResult = blockchain.tryToConnectAndFetchSummary(block2a);
         receipt = connectResult.getRight().getReceipts().get(0);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         assertFalse(receipt.isSuccessful());
 
-        AionBlock block1b = blockchain.createBlock(blockchain.genesis, Collections.singletonList(tx1b), false, 0);
+        MiningBlock block1b = blockchain.createBlock(blockchain.genesis, Collections.singletonList(tx1b), false, 0);
         connectResult = blockchain.tryToConnectAndFetchSummary(block1b);
         receipt = connectResult.getRight().getReceipts().get(0);
         assertEquals(ImportResult.IMPORTED_NOT_BEST, connectResult.getLeft());
         assertTrue(receipt.isSuccessful());
 
-        AionBlock block2b = blockchain.createBlock(block1b, Collections.singletonList(tx2b), false, 0);
+        MiningBlock block2b = blockchain.createBlock(block1b, Collections.singletonList(tx2b), false, 0);
         connectResult = blockchain.tryToConnectAndFetchSummary(block2b);
         receipt = connectResult.getRight().getReceipts().get(0);
         assertEquals(ImportResult.IMPORTED_NOT_BEST, connectResult.getLeft());

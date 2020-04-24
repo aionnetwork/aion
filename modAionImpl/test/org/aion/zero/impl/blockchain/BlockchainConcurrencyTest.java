@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.junit.Test;
 
 public class BlockchainConcurrencyTest {
@@ -36,7 +36,7 @@ public class BlockchainConcurrencyTest {
                         int count = 0;
 
                         List<AionTransaction> txList = Collections.emptyList();
-                        AionBlock block =
+                        MiningBlock block =
                             null;
                         try {
                             block = bc.createNewMiningBlock(bc.genesis, Collections.emptyList(), false);

@@ -14,7 +14,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -70,7 +70,7 @@ public class MultiVersionAvmTest {
         AionTransaction transactionForVersion1 = makeHelloWorldDeployTransaction(AvmVersion.VERSION_1, BigInteger.ZERO);
 
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion1), false, parentBlock.getTimestamp());
+        MiningBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion1), false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
 
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
@@ -107,7 +107,7 @@ public class MultiVersionAvmTest {
         AionTransaction transactionForVersion1 = makeHelloWorldCallTransaction(AvmVersion.VERSION_1, BigInteger.ONE, contractForVersion1);
 
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion1), false, parentBlock.getTimestamp());
+        MiningBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transactionForVersion1), false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
 
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
@@ -144,7 +144,7 @@ public class MultiVersionAvmTest {
         AionTransaction transaction = makeTransactionHashContract(BigInteger.ZERO);
 
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());
+        MiningBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
 
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
@@ -186,7 +186,7 @@ public class MultiVersionAvmTest {
         Block parentBlock = this.blockchain.getBestBlock();
 
         while (parentBlock.getNumber() < height) {
-            AionBlock block = this.blockchain.createBlock(parentBlock, new ArrayList<>(), false, parentBlock.getTimestamp());
+            MiningBlock block = this.blockchain.createBlock(parentBlock, new ArrayList<>(), false, parentBlock.getTimestamp());
             Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
             Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
 
@@ -198,7 +198,7 @@ public class MultiVersionAvmTest {
         AionTransaction transaction = makeHelloWorldDeployTransaction(version, nonce);
 
         Block parentBlock = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());
+        MiningBlock block = this.blockchain.createBlock(parentBlock, Collections.singletonList(transaction), false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
 
         Assert.assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
