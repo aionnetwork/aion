@@ -1618,17 +1618,32 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
 
-            return unityParentBlockHeaderValidator.validate(header, parentBlock.getHeader(), LOG, stake)
-                    && (forkUtility.isNonceForkActive(header.getNumber())
-                            ? (nonceSeedValidator.validate(grandparentBlock.getHeader(), parentBlock.getHeader(), header, LOG)
-                                    && (forkUtility.isNonceForkBlock(header.getNumber() - 1)
-                                            ? header.getDifficultyBI().equals(forkUtility.getNonceForkResetDiff())
-                                            : nonceSeedDifficultyValidator.validate(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header, LOG)))
-                            : unityGreatGrandParentBlockHeaderValidator.validate(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header, LOG));
+            boolean result = unityParentBlockHeaderValidator.validate(header, parentBlock.getHeader(), LOG, stake);
+            if (result) {
+                if (forkUtility.isSignatureSwapForkActive(header.getNumber())) {
+                    result = vrfProofValidator.validate(parentBlock.getHeader(), grandparentBlock.getHeader(), header, LOG)
+                                && difficultyValidateAfterSeedNonceFork(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header);
+                } else if (forkUtility.isNonceForkActive(header.getNumber())) {
+                    result = nonceSeedValidator.validate(grandparentBlock.getHeader(), parentBlock.getHeader(), header, LOG)
+                                && difficultyValidateAfterSeedNonceFork(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header);
+                } else {
+                    result = unityGreatGrandParentBlockHeaderValidator.validate(grandparentBlock.getHeader(), greatGrandparentBlock.getHeader(), header, LOG);
+                }
+            }
+
+            return result;
         } else {
             LOG.debug("Invalid header seal type!");
             return false;
 
+        }
+    }
+
+    private boolean difficultyValidateAfterSeedNonceFork(BlockHeader grandparent, BlockHeader greatGrandparent, BlockHeader current) {
+        if (forkUtility.isNonceForkBlock(current.getNumber() - 1)) {
+            return current.getDifficultyBI().equals(forkUtility.getNonceForkResetDiff());
+        } else {
+            return nonceSeedDifficultyValidator.validate(grandparent, greatGrandparent, current, LOG);
         }
     }
 
