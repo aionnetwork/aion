@@ -22,7 +22,6 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -622,7 +621,7 @@ public class SyncHeaderRequestManager {
     /**
      * Returns the headers received for the given size. The headers are removed from the internal storage.
      */
-    public List<BlockHeader> matchAndDropHeaders(int peerId, int size, byte[] firstNodeRoot) {
+    public List<BlockHeader> matchAndDropHeaders(int peerId, int size, ByteArrayWrapper firstNodeRoot) {
         lock.lock();
 
         try {
@@ -634,7 +633,7 @@ public class SyncHeaderRequestManager {
                 LinkedList<List<BlockHeader>> allHeaders = storedHeaders.get(peerId).get(size);
                 for (Iterator<List<BlockHeader>> it = allHeaders.iterator(); it.hasNext(); ) {
                     headers = it.next();
-                    if (Arrays.equals(headers.get(0).getTxTrieRoot(), firstNodeRoot)) {
+                    if (firstNodeRoot.equals(headers.get(0).getTxTrieRootWrapper())) {
                         it.remove();
                         break;
                     } else {

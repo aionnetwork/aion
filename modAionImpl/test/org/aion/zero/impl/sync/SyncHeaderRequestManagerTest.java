@@ -2,7 +2,6 @@ package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.CLOSE_OVERLAPPING_BLOCKS;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.FAR_OVERLAPPING_BLOCKS;
 import static org.aion.zero.impl.sync.SyncHeaderRequestManager.MAX_REQUEST_SIZE;
@@ -16,8 +15,10 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.ConstantUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
+import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,8 @@ import org.slf4j.LoggerFactory;
  * @author Alexandra Roatis
  */
 public class SyncHeaderRequestManagerTest {
+
+    private static final ByteArrayWrapper EMPTY_TRIE_HASH = ByteArrayWrapper.wrap(ConstantUtil.EMPTY_TRIE_HASH);
 
     Logger syncLog, surveyLog;
     SyncHeaderRequestManager srm;
@@ -182,7 +185,7 @@ public class SyncHeaderRequestManagerTest {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
@@ -195,7 +198,7 @@ public class SyncHeaderRequestManagerTest {
     @Test
     public void test_storeThenRetrieveEachWithSameSize() {
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         when(list.get(0)).thenReturn(header);
@@ -219,7 +222,7 @@ public class SyncHeaderRequestManagerTest {
     @Test
     public void test_storeMultipleThenRetrieveAllWithSameSize() {
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         when(list.get(0)).thenReturn(header);
@@ -243,7 +246,7 @@ public class SyncHeaderRequestManagerTest {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
@@ -265,11 +268,11 @@ public class SyncHeaderRequestManagerTest {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         when(list.get(0)).thenReturn(header);
 
         srm.storeHeaders(1, list);
-        assertThat(srm.matchAndDropHeaders(1, 10, new byte[32])).isNull();
+        assertThat(srm.matchAndDropHeaders(1, 10, ByteArrayWrapper.wrap(new byte[32]))).isNull();
     }
 
     @Test
@@ -283,7 +286,7 @@ public class SyncHeaderRequestManagerTest {
         List<BlockHeader> list1 = mock(List.class);
         when(list1.size()).thenReturn(10);
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         when(list1.get(0)).thenReturn(header);
         List<BlockHeader> list2 = mock(List.class);
         when(list2.size()).thenReturn(10);
@@ -334,7 +337,7 @@ public class SyncHeaderRequestManagerTest {
         List<BlockHeader> list = mock(List.class);
         when(list.size()).thenReturn(10);
         BlockHeader header = mock(BlockHeader.class);
-        when(header.getTxTrieRoot()).thenReturn(EMPTY_TRIE_HASH);
+        when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         when(list.get(0)).thenReturn(header);
 
         // headers stored for size 10
