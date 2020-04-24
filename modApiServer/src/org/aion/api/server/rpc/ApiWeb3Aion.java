@@ -73,7 +73,7 @@ import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -2677,7 +2677,7 @@ public class ApiWeb3Aion extends ApiAion {
                 int bnInt = Integer.decode(bnStr);
                 Block block =  getBlockRaw(bnInt);
                 if (block != null && isPowBlock(block)) {
-                    A0BlockHeader header = (A0BlockHeader) block.getHeader();
+                    MiningBlockHeader header = (MiningBlockHeader) block.getHeader();
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));

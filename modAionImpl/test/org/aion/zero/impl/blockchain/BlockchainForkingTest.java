@@ -31,13 +31,12 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
-import org.aion.util.biginteger.BIUtil;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractInformation;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.BlockContext;
@@ -149,8 +148,8 @@ public class BlockchainForkingTest {
 
         ChainConfiguration cc = new ChainConfiguration();
         AionBlock higherDifficultyBlock = new AionBlock(standardBlock);
-        A0BlockHeader newBlockHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withHeader(higherDifficultyBlock.getHeader())
                         .withTimestamp(bestBlock.getTimestamp() + 1)
                         .build();
@@ -164,7 +163,7 @@ public class BlockchainForkingTest {
         assertThat(difficulty).isGreaterThan(standardBlock.getDifficultyBI());
 
         newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(higherDifficultyBlock.getHeader())
                 .withDifficulty(difficulty.toByteArray())
                 .build();
@@ -304,8 +303,8 @@ public class BlockchainForkingTest {
                         .block;
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(slowerSecondBlock.getHeader())
                 .withTimestamp(time / 1000L + 100)
                 .build();
@@ -422,8 +421,8 @@ public class BlockchainForkingTest {
                         secondBlock.block, Collections.emptyList(), true, time / 1000L);
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(slowerSecondBlock.getHeader())
                 .withTimestamp(time / 1000L + 100)
                 .build();
@@ -481,8 +480,8 @@ public class BlockchainForkingTest {
         AionBlock invalidBlock =
                 bc.createNewMiningBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(invalidBlock.getHeader())
                 .withDifficulty(BigInteger.ONE.toByteArray())
                 .build();
@@ -589,8 +588,8 @@ public class BlockchainForkingTest {
                                         time / 10_000L)
                                 .block);
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(slowBlock.getHeader())
                 .withTimestamp(time / 10_000L + 100)
                 .build();
@@ -827,8 +826,8 @@ public class BlockchainForkingTest {
                                         time / 10_000L)
                                 .block);
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(slowBlock.getHeader())
                 .withTimestamp(time / 10_000L + 100)
                 .build();

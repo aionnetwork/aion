@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -15,7 +15,8 @@ import org.mockito.MockitoAnnotations;
 
 public class AionPOWRuleTest {
 
-    @Mock A0BlockHeader mockHeader;
+    @Mock
+    MiningBlockHeader mockHeader;
 
     @Before
     public void before() {

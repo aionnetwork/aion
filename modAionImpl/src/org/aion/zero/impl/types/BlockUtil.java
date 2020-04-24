@@ -60,7 +60,7 @@ public final class BlockUtil {
             List<AionTransaction> txs = parseTransactions((RLPList) block.get(1));
             byte[] sealType = header.get(0).getRLPData();
             if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance().withRlpList(header).build();
+                MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance().withRlpList(header).build();
                 return new AionBlock(miningHeader, txs);
             } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance().withRlpList(header).build();
@@ -95,7 +95,7 @@ public final class BlockUtil {
             RLPList transactionsRLP = (RLPList) rlpList.get(1);
             List<AionTransaction> txs = parseTransactions(transactionsRLP);
             if (type[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                A0BlockHeader miningHeader = A0BlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+                MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
                 if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), syncLog)) {
                     return null;
                 }
@@ -138,7 +138,7 @@ public final class BlockUtil {
                 return null;
             }
             if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
-                return new AionBlock((A0BlockHeader) header, txs);
+                return new AionBlock((MiningBlockHeader) header, txs);
             } else if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
                 return new StakingBlock((StakingBlockHeader) header, txs);
             } else {
@@ -191,7 +191,7 @@ public final class BlockUtil {
         try {
             byte[] sealType = rlpList.get(0).getRLPData();
             if (sealType[0] == BlockSealType.SEAL_POW_BLOCK.getSealId()) {
-                return A0BlockHeader.Builder.newInstance(true).withRlpList(rlpList).build();
+                return MiningBlockHeader.Builder.newInstance(true).withRlpList(rlpList).build();
             } else if (sealType[0] == BlockSealType.SEAL_POS_BLOCK.getSealId()) {
                 return StakingBlockHeader.Builder.newInstance(true).withRlpList(rlpList).build();
             } else {

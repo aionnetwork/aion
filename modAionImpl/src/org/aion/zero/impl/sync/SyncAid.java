@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 
 /**
  * @author chris SyncAid is created to achive 2 tasks on sync process 1. maintain particially
@@ -19,13 +19,13 @@ public class SyncAid {
     /** group of partially trusted nodes based on same common header */
     class Chain {
 
-        List<A0BlockHeader> commonHeaders;
+        List<MiningBlockHeader> commonHeaders;
 
         /**
-         * List<A0BlockHeader> of each entry contains headers starting from next block headers from
+         * List<MiningBlockHeader> of each entry contains headers starting from next block headers from
          * common header
          */
-        Map<Integer, List<A0BlockHeader>> nodes = new HashMap<>();
+        Map<Integer, List<MiningBlockHeader>> nodes = new HashMap<>();
     }
 
     /** minimum block headers required to prove to be added to group as partially trusted nodes */
@@ -52,7 +52,7 @@ public class SyncAid {
      * @param _nodeId int
      * @param _latestHeaders List
      */
-    public void update(int _nodeId, final List<A0BlockHeader> _latestHeaders) {
+    public void update(int _nodeId, final List<MiningBlockHeader> _latestHeaders) {
 
         if (candicates.containsKey(_nodeId))
 

@@ -9,7 +9,7 @@ import java.util.List;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -21,9 +21,9 @@ import org.mockito.MockitoAnnotations;
  * @author Jay Tseng
  */
 public class DifficultyRuleTest {
-    private A0BlockHeader grandParentHeader;
-    private A0BlockHeader parentHeader;
-    private A0BlockHeader currentHeader;
+    private MiningBlockHeader grandParentHeader;
+    private MiningBlockHeader parentHeader;
+    private MiningBlockHeader currentHeader;
     @Mock ChainConfiguration mockChainCfg;
     @Mock IDifficultyCalculator mockDiffCalculator;
 
@@ -34,7 +34,7 @@ public class DifficultyRuleTest {
         MockitoAnnotations.initMocks(this);
 
         grandParentHeader =
-            A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader.Builder.newInstance()
                 .withNumber(1)
                 .withDefaultParentHash()
                 .withDefaultCoinbase()
@@ -52,7 +52,7 @@ public class DifficultyRuleTest {
                 .build();
 
         parentHeader =
-            A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader.Builder.newInstance()
                 .withNumber(2)
                 .withDefaultParentHash()
                 .withDefaultCoinbase()
@@ -78,7 +78,7 @@ public class DifficultyRuleTest {
     public void testInvalidDifficultyLength() {
 
         currentHeader =
-            A0BlockHeader.Builder.newInstance(true)
+            MiningBlockHeader.Builder.newInstance(true)
                 .withNumber(3)
                 .withDefaultParentHash()
                 .withDefaultCoinbase()
@@ -114,7 +114,7 @@ public class DifficultyRuleTest {
     public void testDifficultyLength() {
 
         currentHeader =
-            A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader.Builder.newInstance()
                 .withNumber(3)
                 .withDefaultParentHash()
                 .withDefaultCoinbase()

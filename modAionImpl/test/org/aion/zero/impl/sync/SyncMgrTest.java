@@ -30,7 +30,7 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -325,7 +325,7 @@ public class SyncMgrTest {
         // Break energy consumed rule.
         List<BlockHeader> invalidHeaderList = new ArrayList<>(sequentialHeaders);
         assertThat(consecutiveHeaders.get(2).getEnergyConsumed()).isGreaterThan(0L);
-        invalidHeaderList.add(A0BlockHeader.Builder.newInstance().withHeader((A0BlockHeader) consecutiveHeaders.get(2)).withEnergyConsumed(0L).build());
+        invalidHeaderList.add(MiningBlockHeader.Builder.newInstance().withHeader((MiningBlockHeader) consecutiveHeaders.get(2)).withEnergyConsumed(0L).build());
 
         syncMgr.validateAndAddHeaders(nodeId, displayId, invalidHeaderList);
         verify(p2pMgr, never()).errCheck(nodeId, displayId);

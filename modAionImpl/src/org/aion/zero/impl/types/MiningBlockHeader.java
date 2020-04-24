@@ -25,7 +25,7 @@ import org.spongycastle.util.BigIntegers;
  *
  * @author Ross
  */
-public final class A0BlockHeader implements BlockHeader {
+public final class MiningBlockHeader implements BlockHeader {
 
     private static final int RPL_BH_SEALTYPE = 0;
     private static final int RLP_BH_NUMBER = 1;
@@ -43,7 +43,7 @@ public final class A0BlockHeader implements BlockHeader {
     private static final int RLP_BH_NONCE = 13;
     private static final int RLP_BH_SOLUTION = 14;
     private static final BlockSealType sealType = BlockSealType.SEAL_POW_BLOCK;
-    private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {A0BlockHeader.sealType.getSealId()});
+    private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {MiningBlockHeader.sealType.getSealId()});
 
     /** The SHA3 256-bit hash of the parent block, in its entirety */
     private final ByteArrayWrapper parentHash;
@@ -119,7 +119,7 @@ public final class A0BlockHeader implements BlockHeader {
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
 
-    public A0BlockHeader(A0BlockHeader.Builder builder) {
+    public MiningBlockHeader(MiningBlockHeader.Builder builder) {
         this.coinbase = builder.coinbase;
         this.stateRoot = builder.stateRoot;
         this.txTrieRoot = ByteArrayWrapper.wrap(builder.txTrieRoot);
@@ -140,7 +140,7 @@ public final class A0BlockHeader implements BlockHeader {
     /**
      * Returns a new header that is identical to this one, except with a different timestamp
      */    
-    public A0BlockHeader updateTimestamp(long newTimestamp) {
+    public MiningBlockHeader updateTimestamp(long newTimestamp) {
         return Builder.newInstance()
                 .withHeader(this)
                 .withTimestamp(newTimestamp)
@@ -497,7 +497,7 @@ public final class A0BlockHeader implements BlockHeader {
             return this;
         }
 
-        public A0BlockHeader build() {
+        public MiningBlockHeader build() {
             // Formalize the data
             if (parentHash == null) {
                 throw new NullPointerException("the header parentHash is null");
@@ -547,10 +547,10 @@ public final class A0BlockHeader implements BlockHeader {
                 throw new IllegalArgumentException("the header energyConsumed can not lower than 0");
             }
 
-            return new A0BlockHeader(this);
+            return new MiningBlockHeader(this);
         }
 
-        public Builder withHeader(A0BlockHeader header) {
+        public Builder withHeader(MiningBlockHeader header) {
             if (header == null) {
                 throw new NullPointerException();
             }

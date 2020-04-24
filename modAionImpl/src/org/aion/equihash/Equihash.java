@@ -11,7 +11,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.file.NativeLoader;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.slf4j.Logger;
 
 /**
@@ -77,8 +77,8 @@ public class Equihash {
      */
     public AionPowSolution mine(AionBlock block, byte[] nonce) {
 
-        A0BlockHeader updateHeader =
-                A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
+        MiningBlockHeader updateHeader =
+                MiningBlockHeader.Builder.newInstance().withHeader(block.getHeader()).build();
 
         byte[] inputBytes = updateHeader.getMineHash();
 

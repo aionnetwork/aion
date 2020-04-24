@@ -1,7 +1,7 @@
 package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.types.A0BlockHeader.Builder.EMPTY_BLOOM;
+import static org.aion.zero.impl.types.MiningBlockHeader.Builder.EMPTY_BLOOM;
 
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;

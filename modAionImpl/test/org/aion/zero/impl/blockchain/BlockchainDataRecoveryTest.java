@@ -20,7 +20,7 @@ import org.aion.zero.impl.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.AfterClass;
@@ -593,8 +593,8 @@ public class BlockchainDataRecoveryTest {
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewMiningBlockInternal(sideChainBlock, txs, true, time / 10000L);
 
-        A0BlockHeader newHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withHeader(context.block.getHeader())
                         .withExtraData("other".getBytes()).build();
 

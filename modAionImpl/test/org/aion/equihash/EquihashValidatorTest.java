@@ -8,7 +8,7 @@ import java.util.Arrays;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.util.TestResources;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -1613,7 +1613,7 @@ public class EquihashValidatorTest {
 
     @Test
     @Parameters(method = "blockHeaders")
-    public void testIsValidSolution_wBlockData(A0BlockHeader blockHeader) {
+    public void testIsValidSolution_wBlockData(MiningBlockHeader blockHeader) {
 
         byte[] solution = blockHeader.getSolution();
         byte[] header = blockHeader.getMineHash();

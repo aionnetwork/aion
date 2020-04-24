@@ -22,7 +22,7 @@ import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
@@ -227,7 +227,7 @@ public class BlockchainTestUtils {
     private static Pair<Block, ImportResult> addMiningBlock(StandaloneBlockchain chain, Block parent, List<AionTransaction> txs, long time, byte[] extraData) {
         AionBlock block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
 
-        A0BlockHeader newBlockHeader = A0BlockHeader.Builder.newInstance().withHeader(block.getHeader()).withExtraData(extraData).build();
+        MiningBlockHeader newBlockHeader = MiningBlockHeader.Builder.newInstance().withHeader(block.getHeader()).withExtraData(extraData).build();
         block.updateHeader(newBlockHeader);
 
         ImportResult result = chain.tryToConnect(block);
@@ -814,9 +814,9 @@ public class BlockchainTestUtils {
         long time = System.currentTimeMillis();
         block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
 
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
-                .withHeader((A0BlockHeader) block.getHeader())
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
+                .withHeader((MiningBlockHeader) block.getHeader())
                 .withExtraData(String.valueOf(time).getBytes())
                 .build();
         block.updateHeader(newBlockHeader);
@@ -846,9 +846,9 @@ public class BlockchainTestUtils {
 
         long time = System.currentTimeMillis();
         block = chain.createNewMiningBlockInternal(parent, txs, true, time / TEN_THOUSAND_MS).block;
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
-                .withHeader((A0BlockHeader) block.getHeader())
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
+                .withHeader((MiningBlockHeader) block.getHeader())
                 .withExtraData(String.valueOf(time).getBytes())
                 .build();
         block.updateHeader(newBlockHeader);

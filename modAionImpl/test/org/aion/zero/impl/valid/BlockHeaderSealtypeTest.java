@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +15,8 @@ import org.mockito.MockitoAnnotations;
 
 public class BlockHeaderSealtypeTest {
 
-    @Mock A0BlockHeader mockMiningHeader;
+    @Mock
+    MiningBlockHeader mockMiningHeader;
     @Mock StakingBlockHeader mockStakingHeader;
 
     @Before

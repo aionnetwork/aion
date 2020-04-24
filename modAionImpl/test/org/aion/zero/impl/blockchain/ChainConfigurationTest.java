@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -13,7 +13,8 @@ import org.mockito.MockitoAnnotations;
 
 public class ChainConfigurationTest {
 
-    @Mock A0BlockHeader header;
+    @Mock
+    MiningBlockHeader header;
 
     @Before
     public void before() {
@@ -32,11 +33,11 @@ public class ChainConfigurationTest {
             0, 0, 0, 0, 0, 0, 0
         };
         // setup mock
-        //        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
+        //        MiningBlockHeader.Builder builder = MiningBlockHeader.Builder.newInstance();
         //        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
         //        builder.withNonce(nonce);
         //        builder.withTimestamp(12345678910L);
-        //        A0BlockHeader header = builder.build();
+        //        MiningBlockHeader header = builder.build();
         //
         //        // Static header bytes (portion of header which does not change per equihash
         // iteration)
@@ -70,7 +71,7 @@ public class ChainConfigurationTest {
         //        header.setSolution(compressedSolution);
         //
         //        ChainConfiguration chainConfig = new ChainConfiguration();
-        //        BlockHeaderValidator<A0BlockHeader> blockHeaderValidator =
+        //        BlockHeaderValidator<MiningBlockHeader> blockHeaderValidator =
         // chainConfig.createBlockHeaderValidator();
         //        blockHeaderValidator.validate(header, log);
     }

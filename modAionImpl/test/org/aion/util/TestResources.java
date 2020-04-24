@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.BlockUtil;
 
 /** @author Alexandra Roatis */
@@ -102,8 +102,8 @@ public class TestResources {
     }
 
     /** @return a set of block headers to be used for testing. */
-    public static List<A0BlockHeader> blockHeaders() {
-        List<A0BlockHeader> parameters = new ArrayList<>();
+    public static List<MiningBlockHeader> blockHeaders() {
+        List<MiningBlockHeader> parameters = new ArrayList<>();
 
         for (AionBlock block : blocks()) {
             parameters.add(block.getHeader());

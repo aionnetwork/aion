@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Random;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.valid.EnergyLimitRule;
-import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.valid.RuleError;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +26,9 @@ public class TargettedEnergyLimitStrategyTest {
                     config.getConstants().getEnergyDivisorLimitLong(),
                     config.getConstants().getEnergyLowerBoundLong());
 
-    @Mock private A0BlockHeader parentHeader;
+    @Mock private MiningBlockHeader parentHeader;
 
-    @Mock private A0BlockHeader header;
+    @Mock private MiningBlockHeader header;
 
     @Before
     public void before() {

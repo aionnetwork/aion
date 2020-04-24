@@ -23,7 +23,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.junit.AfterClass;
@@ -99,8 +99,8 @@ public class BlockchainConcurrentImportTest {
 
             block = sourceChain.createNewMiningBlockInternal(parent, txs, true, time / 10000L).block;
 
-            A0BlockHeader newBlockHeader =
-                    A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader newBlockHeader =
+                    MiningBlockHeader.Builder.newInstance()
                             .withHeader(block.getHeader())
                             .withExtraData(String.valueOf(i).getBytes())
                             .build();
@@ -292,8 +292,8 @@ public class BlockchainConcurrentImportTest {
                         try {
                             block = _chain.createNewMiningBlock(_parent, txs, true);
 
-                            A0BlockHeader newBlockHeader =
-                                A0BlockHeader.Builder.newInstance()
+                            MiningBlockHeader newBlockHeader =
+                                MiningBlockHeader.Builder.newInstance()
                                     .withHeader(block.getHeader())
                                     .withExtraData(String.valueOf(_id).getBytes())
                                     .build();
@@ -372,8 +372,8 @@ public class BlockchainConcurrentImportTest {
                         try {
                             block = _chain.createNewMiningBlock(_parent, txs, true);
 
-                            A0BlockHeader newBlockHeader =
-                                A0BlockHeader.Builder.newInstance()
+                            MiningBlockHeader newBlockHeader =
+                                MiningBlockHeader.Builder.newInstance()
                                     .withHeader(block.getHeader())
                                     .withExtraData(String.valueOf(_id).getBytes())
                                     .build();

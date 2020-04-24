@@ -4,18 +4,18 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 
 /** Checks proof value against its boundary for the block header */
 public class AionPOWRule implements BlockHeaderRule {
 
     @Override
     public boolean validate(BlockHeader header, List<RuleError> errors) {
-        A0BlockHeader minedHeader = (A0BlockHeader) header;
+        MiningBlockHeader minedHeader = (MiningBlockHeader) header;
         return (validate(minedHeader, errors));
     }
     
-    public boolean validate(A0BlockHeader header, List<RuleError> errors) {
+    public boolean validate(MiningBlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
 
         byte[] hdrBytes = header.getMineHash();

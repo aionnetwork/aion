@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +16,8 @@ import org.mockito.MockitoAnnotations;
 @RunWith(Parameterized.class)
 public class ClampedDecayingEnergyLimitTest {
 
-    @Mock A0BlockHeader mockHeader;
+    @Mock
+    MiningBlockHeader mockHeader;
 
     private static final long energyLimitDivisor = 1024L;
     private static final long energyLowerBound = 5000L;

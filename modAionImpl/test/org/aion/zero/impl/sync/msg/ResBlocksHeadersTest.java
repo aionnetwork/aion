@@ -9,16 +9,16 @@ import java.util.List;
 
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;
 
 public class ResBlocksHeadersTest {
 
-    private static A0BlockHeader bh1;
+    private static MiningBlockHeader bh1;
 
     static {
         // replace with well-formed header
-        A0BlockHeader.Builder builder = A0BlockHeader.Builder.newInstance();
+        MiningBlockHeader.Builder builder = MiningBlockHeader.Builder.newInstance();
         bh1 =
                 builder.withNumber(1)
                         .withDifficulty(ByteUtil.intToBytes(1))
@@ -41,9 +41,9 @@ public class ResBlocksHeadersTest {
     public void testHeader() {
 
         byte[] dd = bh1.getEncoded();
-        A0BlockHeader bh2;
+        MiningBlockHeader bh2;
         try {
-            bh2 = A0BlockHeader.Builder.newInstance().withRlpEncodedData(dd).build();
+            bh2 = MiningBlockHeader.Builder.newInstance().withRlpEncodedData(dd).build();
         } catch (Exception e) {
             System.out.println(e.toString());
             e.printStackTrace();

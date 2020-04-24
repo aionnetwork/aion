@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Random;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.valid.EnergyLimitRule;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.valid.RuleError;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,9 +53,11 @@ public class GeneralEnergyLimitTests {
 
     AbstractEnergyStrategyLimit strategy;
 
-    @Mock A0BlockHeader mockHeader;
+    @Mock
+    MiningBlockHeader mockHeader;
 
-    @Mock A0BlockHeader currHeader;
+    @Mock
+    MiningBlockHeader currHeader;
 
     @Before
     public void before() {

@@ -20,7 +20,7 @@ import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionBlockStore.BlockInfo;
 import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -139,8 +139,8 @@ public class BlockchainIndexIntegrityTest {
 
             // adding side chain
             next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
-            A0BlockHeader newBlockHeader =
-                    A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader newBlockHeader =
+                    MiningBlockHeader.Builder.newInstance()
                             .withHeader(next.getHeader())
                             .withExtraData("other".getBytes())
                             .build();
@@ -195,8 +195,8 @@ public class BlockchainIndexIntegrityTest {
 
             // adding side chain
             next = chain.createNewMiningBlock(bestBlock, Collections.emptyList(), true);
-            A0BlockHeader newBlockHeader =
-                    A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader newBlockHeader =
+                    MiningBlockHeader.Builder.newInstance()
                             .withHeader(next.getHeader())
                             .withExtraData("other".getBytes())
                             .build();

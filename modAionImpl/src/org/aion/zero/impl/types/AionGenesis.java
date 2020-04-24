@@ -35,7 +35,7 @@ public class AionGenesis extends AionBlock {
      */
 
     /**
-     * Corresponds to {@link A0BlockHeader#getParentHash()}, for purposes of the genesis
+     * Corresponds to {@link MiningBlockHeader#getParentHash()}, for purposes of the genesis
      * blocks, this value could reference something arbitrary. We have chosen to arbitrarily set it
      * to a silly phrase.
      */
@@ -44,20 +44,20 @@ public class AionGenesis extends AionBlock {
                     "0000000000000000000000000000000000000000000000000000000000000000");
 
     /**
-     * Corresponds to {@link A0BlockHeader#getCoinbase()} that mined the first block. For
+     * Corresponds to {@link MiningBlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
     static final AionAddress GENESIS_COINBASE = AddressUtils.ZERO_ADDRESS;
 
     /**
-     * Corresponds to {@link A0BlockHeader#getLogsBloom()} indicates the logsBloom of the
+     * Corresponds to {@link MiningBlockHeader#getLogsBloom()} indicates the logsBloom of the
      * genesis block, because no transactions are included in this block. It defaults to empty.
      */
     static final byte[] GENESIS_LOGSBLOOM = new byte[256];
 
     /**
-     * Corresponds to {@link A0BlockHeader#getDifficulty()} and {@link
-     * A0BlockHeader#getDifficultyBI()}. This value represents the initial difficulty of the
+     * Corresponds to {@link MiningBlockHeader#getDifficulty()} and {@link
+     * MiningBlockHeader#getDifficultyBI()}. This value represents the initial difficulty of the
      * network, a very important value to set. It is not necessarily important to correctly set this
      * value as it will rise to based on the network hashing power.
      *
@@ -73,25 +73,25 @@ public class AionGenesis extends AionBlock {
             ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1024));
 
     /**
-     * Corresponds to {@link A0BlockHeader#getNumber()} the number. This is pretty self
+     * Corresponds to {@link MiningBlockHeader#getNumber()} the number. This is pretty self
      * explanatory.
      */
     private static final long GENESIS_NUMBER = 0;
 
     /**
-     * Corresponds to {@link A0BlockHeader#getTimestamp()} the timestamp that the block was
+     * Corresponds to {@link MiningBlockHeader#getTimestamp()} the timestamp that the block was
      * forged. In terms of the genesis, we arbitrarily set it to 0.
      */
     static final long GENESIS_TIMESTAMP = 0;
 
     /**
-     * Corresponds to {@link A0BlockHeader#getNonce()} nonce of the block, we arbitrarily set
+     * Corresponds to {@link MiningBlockHeader#getNonce()} nonce of the block, we arbitrarily set
      * this to 0 for now
      */
     private static final byte[] GENESIS_NONCE = new byte[32];
 
     /**
-     * Corresponds to {@link A0BlockHeader#getEnergyLimit()} sets the initial energy limit. We will
+     * Corresponds to {@link MiningBlockHeader#getEnergyLimit()} sets the initial energy limit. We will
      * set this to an accept (but low) value to ensure the network is not strained from the start.
      *
      * <p>Previously, this was set to a low value, but for the test net we would like to stress the

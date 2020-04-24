@@ -20,7 +20,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.ContractInformation;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.base.AionTxReceipt;
@@ -298,8 +298,8 @@ public class BlockchainIntegrationTest {
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now modify the block in some way
-        A0BlockHeader newBlockHeader =
-            A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader newBlockHeader =
+            MiningBlockHeader.Builder.newInstance()
                 .withHeader(block.getHeader())
                 .withExtraData("other block".getBytes())
                 .build();

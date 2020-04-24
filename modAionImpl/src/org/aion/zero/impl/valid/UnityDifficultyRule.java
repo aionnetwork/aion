@@ -7,8 +7,6 @@ import java.util.List;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.IDifficultyCalculator;
-import org.aion.zero.impl.types.A0BlockHeader;
-import org.aion.zero.impl.types.StakingBlockHeader;
 
 public class UnityDifficultyRule implements GreatGrandParentDependantBlockHeaderRule {
 

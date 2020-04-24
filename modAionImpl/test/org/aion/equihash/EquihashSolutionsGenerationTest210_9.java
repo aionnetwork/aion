@@ -10,7 +10,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.util.TestResources;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -361,7 +361,7 @@ public class EquihashSolutionsGenerationTest210_9 {
     @Parameters(method = "blocks")
     public void testMine_wBlockData(AionBlock block) {
 
-        A0BlockHeader header = block.getHeader();
+        MiningBlockHeader header = block.getHeader();
 
         Equihash spy = spy(new Equihash(n, k));
 

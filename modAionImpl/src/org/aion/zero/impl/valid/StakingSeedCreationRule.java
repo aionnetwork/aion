@@ -8,7 +8,7 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 
 public class StakingSeedCreationRule implements GreatGrandParentDependantBlockHeaderRule {
@@ -23,10 +23,10 @@ public class StakingSeedCreationRule implements GreatGrandParentDependantBlockHe
 
     @Override
     public boolean validate(BlockHeader stakingParent, BlockHeader miningParent, BlockHeader current, List<RuleError> errors) {
-        return validateInner((StakingBlockHeader) stakingParent, (A0BlockHeader) miningParent, (StakingBlockHeader) current, errors);
+        return validateInner((StakingBlockHeader) stakingParent, (MiningBlockHeader) miningParent, (StakingBlockHeader) current, errors);
     }
 
-    public boolean validateInner(StakingBlockHeader stakingParent, A0BlockHeader miningParent, StakingBlockHeader current, List<RuleError> errors) {
+    public boolean validateInner(StakingBlockHeader stakingParent, MiningBlockHeader miningParent, StakingBlockHeader current, List<RuleError> errors) {
         // retrieve components
         byte[] parentSeed = stakingParent.getSeedOrProof();
         byte[] signerAddress = new AionAddress(AddressSpecs.computeA0Address(current.getSigningPublicKey())).toByteArray();

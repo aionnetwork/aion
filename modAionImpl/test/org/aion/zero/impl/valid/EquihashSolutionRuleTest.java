@@ -6,7 +6,7 @@
 // import org.aion.equihash.Equihash;
 // import org.aion.equihash.OptimizedEquiValidator;
 // import org.aion.zero.impl.valid.EquihashSolutionRule;
-// import org.aion.zero.types.A0BlockHeader;
+// import org.aion.zero.types.MiningBlockHeader;
 // import org.junit.Before;
 // import org.junit.Test;
 // import org.mockito.MockitoAnnotations;
@@ -39,7 +39,7 @@
 // unpaddedNonceBytes.length);
 //        System.out.println(new ByteArrayWrapper(nonceBytes));
 //
-//        A0BlockHeader header = A0BlockHeader.Builder.newInstance().build();
+//        MiningBlockHeader header = MiningBlockHeader.Builder.newInstance().build();
 //        header.setNonce(nonceBytes);
 //        byte[] headerBytes = header.getHeaderBytes(true);
 //

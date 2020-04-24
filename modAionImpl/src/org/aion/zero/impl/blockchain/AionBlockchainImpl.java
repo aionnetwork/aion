@@ -84,7 +84,6 @@ import org.aion.zero.impl.forks.ForkUtility;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.trie.TrieNodeResult;
-import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionGenesis;
@@ -92,6 +91,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.types.GenesisStakingBlock;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
@@ -1193,8 +1193,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionBlock block;
 
         try {
-            A0BlockHeader.Builder headerBuilder =
-                A0BlockHeader.Builder.newInstance()
+            MiningBlockHeader.Builder headerBuilder =
+                MiningBlockHeader.Builder.newInstance()
                     .withParentHash(parent.getHash())
                     .withCoinbase(minerCoinbase)
                     .withNumber(parentHdr.getNumber() + 1)
@@ -2121,7 +2121,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param blockNumber Identifier of start block, by number
      * @param limit Maximum number of headers in return
-     * @return {@link A0BlockHeader}'s list or empty list if none found
+     * @return {@link MiningBlockHeader}'s list or empty list if none found
      */
     @Override
     public List<BlockHeader> getListOfHeadersStartFrom(long blockNumber, int limit) {

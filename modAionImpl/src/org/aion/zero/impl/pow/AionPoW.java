@@ -31,7 +31,7 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -280,7 +280,7 @@ public class AionPoW {
     /** Creates a new block template. */
     private synchronized void updateTimestamp(long systemTime) {
         if (!shutDown.get() && systemTime > latestBlockTemplate.getTimestamp()) {
-            A0BlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
+            MiningBlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
             AionBlock newBlock = new AionBlock(newHeader, latestBlockTemplate.getTransactionsList());
             
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);

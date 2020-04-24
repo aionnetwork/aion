@@ -22,7 +22,7 @@ import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.db.MockRepositoryConfig;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -682,8 +682,8 @@ public class BlockchainImplementationTest {
         generateRandomChainWithoutTransactions(chain, 1, 1);
 
         Block parent = chain.getBestBlock();
-        A0BlockHeader.Builder headerBuilder =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader.Builder headerBuilder =
+                MiningBlockHeader.Builder.newInstance()
                         .withParentHash(parent.getHash())
                         .withCoinbase(parent.getCoinbase())
                         .withNumber(parent.getNumber() + 1)

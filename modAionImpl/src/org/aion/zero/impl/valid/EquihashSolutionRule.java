@@ -3,9 +3,9 @@ package org.aion.zero.impl.valid;
 import java.util.List;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 
-/** Checks if {@link A0BlockHeader#getSolution()} is a valid Equihash solution. */
+/** Checks if {@link MiningBlockHeader#getSolution()} is a valid Equihash solution. */
 public class EquihashSolutionRule implements BlockHeaderRule {
 
     private OptimizedEquiValidator validator;
@@ -16,11 +16,11 @@ public class EquihashSolutionRule implements BlockHeaderRule {
 
     @Override
     public boolean validate(BlockHeader header, List<RuleError> errors) {
-        A0BlockHeader minedHeader = (A0BlockHeader) header;
+        MiningBlockHeader minedHeader = (MiningBlockHeader) header;
         return (validate(minedHeader, errors));
     }
 
-    public boolean validate(A0BlockHeader header, List<RuleError> errors) {
+    public boolean validate(MiningBlockHeader header, List<RuleError> errors) {
         if (!validator.isValidSolutionNative(
                 header.getSolution(), header.getMineHash(), header.getNonce())) {
             BlockHeaderValidatorUtil.addError("Invalid solution", this.getClass(), errors);

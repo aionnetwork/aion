@@ -8,7 +8,7 @@
 // import org.aion.zero.impl.AionBlockchainImpl;
 // import org.aion.zero.impl.blockchain.ChainConfiguration;
 // import org.aion.zero.impl.types.AionBlock;
-// import org.aion.zero.types.A0BlockHeader;
+// import org.aion.zero.types.MiningBlockHeader;
 // import org.junit.Test;
 //
 // import java.io.BufferedReader;
@@ -26,7 +26,7 @@
 //    public void benchTime() {
 //        try {
 //
-//            List<A0BlockHeader> hdrs = new ArrayList<>();
+//            List<MiningBlockHeader> hdrs = new ArrayList<>();
 //            OptimizedEquiValidator ov = new OptimizedEquiValidator(210,9);
 //            ChainConfiguration chainConfig = new ChainConfiguration();
 //            AionBlockchainImpl chain = AionBlockchainImpl.inst();
@@ -70,7 +70,7 @@
 //                    long energyLimit = Long.decode(contents[13]);
 //
 //
-//                    A0BlockHeader newHdr = new A0BlockHeader(parentHash, coinBase, logsBloom,
+//                    MiningBlockHeader newHdr = new MiningBlockHeader(parentHash, coinBase, logsBloom,
 //                            diff, number, timestamp, extraData, nonce, solution, energyConsumed,
 //                            energyLimit);
 //
@@ -87,7 +87,7 @@
 //
 //                        //Sequential processing
 //                        start = System.nanoTime();
-//                        for (A0BlockHeader hdr : hdrs) {
+//                        for (MiningBlockHeader hdr : hdrs) {
 //
 //                            isValidSeq &= blockHeaderValidator.validate(hdr);
 //                        }

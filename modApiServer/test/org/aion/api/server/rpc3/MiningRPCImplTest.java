@@ -41,7 +41,7 @@ import org.aion.rpc.types.RPCTypesConverter.VoidParamsConverter;
 import org.aion.util.types.AddressUtils;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Before;
 import org.junit.Test;
@@ -186,17 +186,17 @@ public class MiningRPCImplTest {
     @Test
     public void testTimestampInSubmitSolution(){
 
-        AionBlock blockWithRightTimestamp = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+        AionBlock blockWithRightTimestamp = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
-            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
-            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]
             , 0
             , (System.currentTimeMillis() / 1000)
             , new byte[0]
             , new byte[1]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , new ArrayList<>()
             , equihashSolution.toBytes()
             , 0
@@ -225,17 +225,17 @@ public class MiningRPCImplTest {
 
 
         // Now we test current timestamp + 1 (for testing the clock drift)
-        AionBlock blockWithRightTimestamp1 = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+        AionBlock blockWithRightTimestamp1 = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
-            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
-            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]
             , 0
             , (System.currentTimeMillis() / 1000) + 1
             , new byte[0]
             , new byte[1]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , new ArrayList<>()
             , equihashSolution.toBytes()
             , 0
@@ -253,17 +253,17 @@ public class MiningRPCImplTest {
         assertTrue(submissionResult.result);
 
         // Now we test the future block timestamp (timestamp + 2)
-        AionBlock blockWithFutureTimestamp = new AionBlock(new byte[A0BlockHeader.HASH_BYTE_SIZE]
+        AionBlock blockWithFutureTimestamp = new AionBlock(new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , AddressUtils.ZERO_ADDRESS
-            , new byte[A0BlockHeader.BLOOM_BYTE_SIZE]
-            , new byte[A0BlockHeader.MAX_DIFFICULTY_LENGTH]
+            , new byte[MiningBlockHeader.BLOOM_BYTE_SIZE]
+            , new byte[MiningBlockHeader.MAX_DIFFICULTY_LENGTH]
             , 0
             , (System.currentTimeMillis() / 1000) + 2
             , new byte[0]
             , new byte[1]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
-            , new byte[A0BlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
+            , new byte[MiningBlockHeader.HASH_BYTE_SIZE]
             , new ArrayList<>()
             , equihashSolution.toBytes()
             , 0

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.api.BlockConstants;
-import org.aion.zero.impl.types.A0BlockHeader;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;
 
 /** Tests for {@link EnergyLimitRule} */
@@ -22,8 +22,8 @@ public class EnergyLimitRuleTest {
                 new EnergyLimitRule(
                         constants.getEnergyDivisorLimitLong(), constants.getEnergyLowerBoundLong());
 
-        A0BlockHeader parentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader parentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL)
                         .withNumber(1)
                         .withDefaultParentHash()
@@ -42,8 +42,8 @@ public class EnergyLimitRuleTest {
 
         long boundShiftLimit = INITIAL_VAL / DIVISOR;
 
-        A0BlockHeader upperCurrentBlock =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader upperCurrentBlock =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL + boundShiftLimit)
                         .withNumber(1)
                         .withDefaultParentHash()
@@ -68,8 +68,8 @@ public class EnergyLimitRuleTest {
         assertThat(errors).isEmpty();
         errors.clear();
 
-        A0BlockHeader invalidCurrentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader invalidCurrentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL + boundShiftLimit + 1)
                         .withNumber(1)
                         .withDefaultParentHash()
@@ -92,8 +92,8 @@ public class EnergyLimitRuleTest {
         errors.clear();
 
         // lower bound
-        A0BlockHeader lowerCurrentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader lowerCurrentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL - boundShiftLimit)
                         .withNumber(1)
                         .withDefaultParentHash()
@@ -115,8 +115,8 @@ public class EnergyLimitRuleTest {
         assertThat(errors).isEmpty();
         errors.clear();
 
-        A0BlockHeader invalidLowerCurrentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader invalidLowerCurrentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(INITIAL_VAL - boundShiftLimit - 1)
                         .withNumber(1)
                         .withDefaultParentHash()
@@ -143,8 +143,8 @@ public class EnergyLimitRuleTest {
     public void testEnergyLimitLowerBound() {
         final long INITIAL_VAL = 0l;
 
-        A0BlockHeader parentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader parentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(0l)
                         .withDefaultExtraData()
                         .withDefaultCoinbase()
@@ -161,8 +161,8 @@ public class EnergyLimitRuleTest {
                         .withNumber(1)
                         .build();
 
-        A0BlockHeader currentHeader =
-                A0BlockHeader.Builder.newInstance()
+        MiningBlockHeader currentHeader =
+                MiningBlockHeader.Builder.newInstance()
                         .withEnergyLimit(1l)
                         .withDefaultExtraData()
                         .withDefaultCoinbase()
