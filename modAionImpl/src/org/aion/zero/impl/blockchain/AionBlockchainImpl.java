@@ -2441,9 +2441,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    /**
+     * @implNote The staking block seed has different returns base on the blockchain fork period.
+     * 1. Before the unity fork, the first seed of the staking block will be the genesis seed.
+     * 2. When the block reached the signature swap fork block, this call will return the previous seed of the best staking block,
+     *    and extend to the vrf proof length (80 bytes).
+     * 3. Others, this call will return the seed/proof of the current best staking block.
+     */
     public byte[] getSeed() {
         if (null == bestStakingBlock) {
             return GENESIS_SEED;
+        } else if (forkUtility.isSignatureSwapForkBlock(bestStakingBlock.getNumber() + 2)) {
+            byte[] genesisProof = new byte[StakingBlockHeader.PROOF_LENGTH];
+            System.arraycopy(bestStakingBlock.getSeed(), 0, genesisProof, 0, StakingBlockHeader.SEED_LENGTH);
+            return genesisProof;
         } else {
             return bestStakingBlock.getSeed();
         }

@@ -156,6 +156,10 @@ public class ForkUtility {
         return signatureSwapForkEnabled && (contextBlockNumber >= signatureSwapForkBlockHeight);
     }
 
+    public boolean isSignatureSwapForkBlock(long contextBlockNumber) {
+        return signatureSwapForkEnabled && (contextBlockNumber == signatureSwapForkBlockHeight);
+    }
+
     public void enableSignatureSwapFork(long signatureSwapForkBlockHeight) {
         Preconditions.checkArgument(signatureSwapForkBlockHeight >= 2, "Invalid fork1.7 block number: must be >= 2");
         this.signatureSwapForkBlockHeight = signatureSwapForkBlockHeight;
