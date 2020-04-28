@@ -922,14 +922,25 @@ public class StakingBlockHeader  implements BlockHeader {
             + longToDateTime(timestamp)
             + ")"
             + "\n"
-            + (seedOrProof.length == SEED_LENGTH ? "  seed=" : "  proof=")
-            + toHexString(seedOrProof)
-            + "\n"
+            + formatSeedOrProof(seedOrProof)
             + "  signature="
             + toHexString(signature)
             + "\n"
             + "  signingPublicKey="
             + toHexString(signingPublicKey)
             + "\n";
+    }
+
+    private static String formatSeedOrProof(byte[] seedOrProof) {
+        String prefix;
+        if (seedOrProof.length == SEED_LENGTH) {
+            prefix = "  seed=";
+        } else if (seedOrProof.length == PROOF_LENGTH) {
+            prefix = "  proof=";
+        } else {
+            prefix = " invalid seed or proof=";
+        }
+
+        return prefix + toHexString(seedOrProof) + "\n";
     }
 }
