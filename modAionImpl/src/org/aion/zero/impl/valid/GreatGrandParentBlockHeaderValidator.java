@@ -22,16 +22,26 @@ public class GreatGrandParentBlockHeaderValidator {
 
     public boolean validate(BlockHeader grandParent, BlockHeader greatGrandParent, BlockHeader current, Logger logger) {
         if (grandParent == null) {
+            List<String> headers =
+                List.of(
+                    "grandParent-null",
+                    "greatGrandParent-" + (greatGrandParent == null ? "null" : greatGrandParent.toString()),
+                    "current-" + (current == null ? "null" : current.toString()));
             RuleError err = new RuleError(this.getClass(),"the input grandParent header is null");
             BlockHeaderValidatorUtil.logErrors(
-                    logger, this.getClass().getSimpleName(), Collections.singletonList(err));
+                    logger, this.getClass().getSimpleName(), Collections.singletonList(err), headers);
             return false;
         }
 
         if (current == null) {
+            List<String> headers =
+                List.of(
+                    "grandParent-" + grandParent.toString(),
+                    "greatGrandParent-" + (greatGrandParent == null ? "null" : greatGrandParent.toString()),
+                    "current-null");
             RuleError err = new RuleError(this.getClass(),"the input header is null");
             BlockHeaderValidatorUtil.logErrors(
-                    logger, this.getClass().getSimpleName(), Collections.singletonList(err));
+                    logger, this.getClass().getSimpleName(), Collections.singletonList(err), headers);
             return false;
         }
 
@@ -44,8 +54,13 @@ public class GreatGrandParentBlockHeaderValidator {
             for (GreatGrandParentDependantBlockHeaderRule rule : rules) {
                 if (!rule.validate(grandParent, greatGrandParent, current, errors)) {
                     if (logger != null) {
+                        List<String> headers =
+                            List.of(
+                                "grandParent-" + grandParent.toString(),
+                                "greatGrandParent-" + (greatGrandParent == null ? "null" : greatGrandParent.toString()),
+                                "current-" + current.toString());
                         BlockHeaderValidatorUtil.logErrors(
-                                logger, this.getClass().getSimpleName(), errors);
+                                logger, this.getClass().getSimpleName(), errors, headers);
                     }
                     return false;
                 }

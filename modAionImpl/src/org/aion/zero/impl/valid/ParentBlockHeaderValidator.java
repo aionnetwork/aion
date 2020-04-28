@@ -27,16 +27,18 @@ public class ParentBlockHeaderValidator {
     public boolean validate(
             BlockHeader header, BlockHeader parent, Logger logger, Object extraArg) {
         if (header == null) {
+            List<String> headers = List.of("current-null", "parent-" + (parent == null ? "null" : parent.toString()));
             RuleError err = new RuleError(this.getClass(),"the input header is null");
             BlockHeaderValidatorUtil.logErrors(
-                    logger, this.getClass().getSimpleName(), Collections.singletonList(err));
+                    logger, this.getClass().getSimpleName(), Collections.singletonList(err), headers);
             return false;
         }
 
         if (parent == null) {
+            List<String> headers = List.of("current-" + header.toString(), "parent-null");
             RuleError err = new RuleError(this.getClass(),"the input parent header is null");
             BlockHeaderValidatorUtil.logErrors(
-                    logger, this.getClass().getSimpleName(), Collections.singletonList(err));
+                    logger, this.getClass().getSimpleName(), Collections.singletonList(err), headers);
             return false;
         }
 
@@ -46,11 +48,13 @@ public class ParentBlockHeaderValidator {
             return false;
         } else {
             List<RuleError> errors = new LinkedList<>();
+
             for (DependentBlockHeaderRule rule : rules) {
                 if (!rule.validate(header, parent, errors, extraArg)) {
+                    List<String> headers = List.of("current-" + header.toString(), "parent-" + parent.toString());
                     if (logger != null) {
                         BlockHeaderValidatorUtil.logErrors(
-                                logger, this.getClass().getSimpleName(), errors);
+                                logger, this.getClass().getSimpleName(), errors, headers);
                     }
                     return false;
                 }

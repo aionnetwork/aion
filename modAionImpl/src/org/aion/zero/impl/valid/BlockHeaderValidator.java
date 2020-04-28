@@ -24,7 +24,7 @@ public class BlockHeaderValidator {
         if (header == null) {
             RuleError err = new RuleError(this.getClass(),"the input header is null");
             BlockHeaderValidatorUtil.logErrors(
-                    logger, this.getClass().getSimpleName(), Collections.singletonList(err));
+                    logger, this.getClass().getSimpleName(), Collections.singletonList(err), Collections.EMPTY_LIST);
             return false;
         }
 
@@ -36,8 +36,9 @@ public class BlockHeaderValidator {
             for (BlockHeaderRule rule : rules) {
                 if (!rule.validate(header, errors)) {
                     if (logger != null) {
+                        List<String> headerString = List.of(header.toString());
                         BlockHeaderValidatorUtil.logErrors(
-                                logger, this.getClass().getSimpleName(), errors);
+                                logger, this.getClass().getSimpleName(), errors, headerString);
                     }
                     return false;
                 }
