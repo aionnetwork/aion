@@ -16,7 +16,7 @@ public class VRF_Ed25519 {
     }
 
     public final static int PROOF_BYTES;
-    private final static int PROOF_HASH_BYTES;
+    public final static int PROOF_HASH_BYTES;
 
 
     public static byte[] generateProof(byte[] message, byte[] sk) {
@@ -50,5 +50,18 @@ public class VRF_Ed25519 {
 
         int result = Sodium.crypto_vrf_verify(hash, publicKey, proof, message, message.length);
         return result == 0;
+    }
+
+    public static byte[] generateProofHash(byte[] proof) {
+        Objects.requireNonNull(proof);
+
+        if (proof.length != PROOF_BYTES) {
+            throw new IllegalArgumentException("Invalid proof length:" + proof.length);
+        }
+
+        byte[] proofHash = new byte[PROOF_HASH_BYTES];
+        Sodium.crypto_vrf_proof_to_hash(proofHash, proof);
+
+        return proofHash;
     }
 }
