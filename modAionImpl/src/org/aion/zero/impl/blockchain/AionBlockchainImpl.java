@@ -145,7 +145,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final int DIFFICULTY_BYTES = 16;
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private final BlockHeaderValidator headerValidator;
-    private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator;
+    private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator, vrfProofValidator;
     private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator, nonceSeedDifficultyValidator;;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
@@ -301,6 +301,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         unityGreatGrandParentBlockHeaderValidator = chainConfiguration.createUnityGreatGrandParentHeaderValidator();
         nonceSeedDifficultyValidator = chainConfiguration.createNonceSeedDifficultyValidator();
         nonceSeedValidator = chainConfiguration.createNonceSeedValidator();
+        vrfProofValidator = chainConfiguration.createVRFValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
 

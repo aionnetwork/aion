@@ -41,6 +41,7 @@ import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.impl.valid.UnityDifficultyRule;
+import org.aion.zero.impl.valid.VRFProofRule;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the
@@ -251,5 +252,15 @@ public class ChainConfiguration {
 
     public IDifficultyCalculator getUnityDifficultyCalculator() {
         return unityDifficultyCalculator;
+    }
+
+    public GrandParentBlockHeaderValidator createVRFValidator() {
+        List<GrandParentDependantBlockHeaderRule> posRules =
+            Collections.singletonList(new VRFProofRule());
+
+        Map<BlockSealType, List<GrandParentDependantBlockHeaderRule>> vrfProofRules = new EnumMap<>(BlockSealType.class);
+        vrfProofRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+
+        return new GrandParentBlockHeaderValidator(vrfProofRules);
     }
 }
