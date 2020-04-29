@@ -1311,7 +1311,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionAddress coinbaseAddress = new AionAddress(coinbase);
         if (signingPublicKey != null) { // Create block template for the external stakers.
             if (forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1)) {
-                if (!VRF_Ed25519.verify(parentSeed, newSeed, signingPublicKey)) {
+                byte[] parentSeedHash = VRF_Ed25519.generateProofHash(parentSeed);
+                if (!VRF_Ed25519.verify(parentSeedHash, newSeed, signingPublicKey)) {
                     LOG.debug(
                         "Seed verification failed! previousProof:{} newProof:{} pKey:{}",
                         ByteUtil.toHexString(parentSeed),

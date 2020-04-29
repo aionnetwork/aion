@@ -5,6 +5,7 @@ import static java.lang.Long.max;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
+import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.util.math.FixedPoint;
@@ -55,7 +56,12 @@ public class StakingBlockTimeStampRule implements DependentBlockHeaderRule {
         long timeStamp = header.getTimestamp();
         BigInteger blockDifficulty = header.getDifficultyBI();
 
-        BigInteger dividend = new BigInteger(1, HashUtil.h256(((StakingBlockHeader) header).getSeedOrProof()));
+        byte[] seed = ((StakingBlockHeader) header).getSeedOrProof();
+        if (seed.length == StakingBlockHeader.PROOF_LENGTH) {
+            seed = VRF_Ed25519.generateProofHash(seed);
+        }
+
+        BigInteger dividend = new BigInteger(1, HashUtil.h256(seed));
         
         FixedPoint logDifference = logBoundary.subtract(LogApproximator.log(dividend));
 

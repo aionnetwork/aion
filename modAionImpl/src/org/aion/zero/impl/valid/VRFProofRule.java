@@ -29,10 +29,17 @@ public class VRFProofRule implements GrandParentDependantBlockHeaderRule {
                 errors);
             return false;
         } else {
-            byte[] message = ((StakingBlockHeader)grandParent).getSeedOrProof();
+            boolean isValid;
             byte[] publicKey = ((StakingBlockHeader)current).getSigningPublicKey();
+            byte[] message = ((StakingBlockHeader)grandParent).getSeedOrProof();
+            // The parent staking block of the first vrf proof block
+            if (message.length == StakingBlockHeader.SEED_LENGTH) {
+                isValid = VRF_Ed25519.verify(message, proof, publicKey);
+            } else {
+                byte[] hash = VRF_Ed25519.generateProofHash(message);
+                isValid = VRF_Ed25519.verify(hash, proof, publicKey);
+            }
 
-            boolean isValid = VRF_Ed25519.verify(message, proof, publicKey);
             if (!isValid) {
                 BlockHeaderValidatorUtil.addError(
                     "vrf verify failed, msg:"

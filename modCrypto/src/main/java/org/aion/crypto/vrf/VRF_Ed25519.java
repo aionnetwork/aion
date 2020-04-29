@@ -32,6 +32,13 @@ public class VRF_Ed25519 {
         return proof;
     }
 
+    /**
+     * The VRF verify function return the result base on the message, the proof of the message and the signing public key.
+     * @param message
+     * @param proof
+     * @param publicKey
+     * @return true if the result is zero, others return false (the native lib return is -1)
+     */
     public static boolean verify(byte[] message, byte[] proof, byte[] publicKey) {
         Objects.requireNonNull(message);
         Objects.requireNonNull(proof);
@@ -48,6 +55,7 @@ public class VRF_Ed25519 {
         byte[] hash = new byte[PROOF_HASH_BYTES];
         Sodium.crypto_vrf_proof_to_hash(hash, proof);
 
+        //Verify a proof per draft section 5.3. Return 0 on success, -1 on failure.
         int result = Sodium.crypto_vrf_verify(hash, publicKey, proof, message, message.length);
         return result == 0;
     }
