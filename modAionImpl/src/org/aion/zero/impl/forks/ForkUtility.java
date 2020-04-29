@@ -58,7 +58,7 @@ public class ForkUtility {
         Optional<Long> maybeSignatureSwapFork = loadSignatureSwapForkNumberFromConfig(properties);
         if (maybeSignatureSwapFork.isPresent()) {
             if (maybeSignatureSwapFork.get() < 2) {
-                log.warn("The fork1.7 block number cannot be less than 2, set the fork number to 2");
+                log.warn("The fork1.6 block number cannot be less than 2, set the fork number to 2");
                 maybeSignatureSwapFork = Optional.of(2L);
             }
 
@@ -161,7 +161,7 @@ public class ForkUtility {
     }
 
     public void enableSignatureSwapFork(long signatureSwapForkBlockHeight) {
-        Preconditions.checkArgument(signatureSwapForkBlockHeight >= 2, "Invalid fork1.7 block number: must be >= 2");
+        Preconditions.checkArgument(signatureSwapForkBlockHeight >= 2, "Invalid fork1.6 block number: must be >= 2");
         this.signatureSwapForkBlockHeight = signatureSwapForkBlockHeight;
         this.signatureSwapForkEnabled = true;
     }
@@ -238,13 +238,13 @@ public class ForkUtility {
     }
 
     /**
-     * Determine fork 1.7 fork number from Aion Config.
+     * Determine fork 1.6 fork number from Aion Config.
      *
-     * @return 1.7 fork number, if configured; {@link Optional#empty()} otherwise.
-     * @throws NumberFormatException if "fork1.7" present in the config, but not parseable
+     * @return 1.6 fork number, if configured; {@link Optional#empty()} otherwise.
+     * @throws NumberFormatException if "fork1.6" present in the config, but not parseable
      */
     private static Optional<Long> loadSignatureSwapForkNumberFromConfig(Properties properties) {
-        String signatureSwapFork = properties.getProperty("fork1.7");
+        String signatureSwapFork = properties.getProperty("fork1.6");
         if(signatureSwapFork == null) {
             return Optional.empty();
         } else {
