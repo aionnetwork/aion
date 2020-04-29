@@ -2452,7 +2452,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public byte[] getSeed() {
         if (null == bestStakingBlock) {
             return GENESIS_SEED;
-        } else if (forkUtility.isSignatureSwapForkBlock(bestStakingBlock.getNumber() + 2)) {
+        } else if (forkUtility.isSignatureSwapForkBlock(bestStakingBlock.getNumber())) {
             byte[] genesisProof = new byte[StakingBlockHeader.PROOF_LENGTH];
             System.arraycopy(bestStakingBlock.getSeed(), 0, genesisProof, 0, StakingBlockHeader.SEED_LENGTH);
             return genesisProof;

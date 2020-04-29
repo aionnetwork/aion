@@ -157,7 +157,7 @@ public class ForkUtility {
     }
 
     public boolean isSignatureSwapForkBlock(long contextBlockNumber) {
-        return signatureSwapForkEnabled && (contextBlockNumber == signatureSwapForkBlockHeight);
+        return signatureSwapForkEnabled && ((contextBlockNumber + 2) == signatureSwapForkBlockHeight);
     }
 
     public void enableSignatureSwapFork(long signatureSwapForkBlockHeight) {
