@@ -20,7 +20,6 @@ def getCommitHash = { ->
 }
 
 dependencies {
-    compile files("${rootProject.projectDir}/lib/fastvm-4d55b49.jar")
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")
     compile 'com.google.guava:guava:25.1-jre'
     testCompile 'junit:junit:4.12'

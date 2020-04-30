@@ -10,7 +10,6 @@ module aion.mcf {
     requires core;
     requires aion.types;
     requires aion.base;
-    requires aion.fastvm;
     requires commons.lang3;
     requires org.json;
 
