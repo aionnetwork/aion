@@ -16,6 +16,7 @@ import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.types.AionAddress;
@@ -473,9 +474,19 @@ public class BlockchainTestUtils {
                 ? StakingBlockHeader.GENESIS_SEED
                 : ((StakingBlock) chain.getBlockByHash(parent.getParentHash())).getSeed();
 
+        // SignatureSchemeSwap check
+        byte[] newSeedOrProof;
+        if (chain.forkUtility.isSignatureSwapForkBlock(parent.getNumber() - 1)) {
+            newSeedOrProof = VRF_Ed25519.generateProof(parentSeed, producer.getPrivKeyBytes());
+        } else if (chain.forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1)) {
+            byte[] hash = VRF_Ed25519.generateProofHash(parentSeed);
+            newSeedOrProof = VRF_Ed25519.generateProof(hash, producer.getPrivKeyBytes());
+        } else {
+            newSeedOrProof = producer.sign(parentSeed).getSignature();
+        }
+
         // create staking block
-        byte[] newSeed = producer.sign(parentSeed).getSignature();
-        StakingBlock block = chain.createStakingBlockTemplate(parent, transactions, producer.getPubKey(), newSeed, new AionAddress(producer.getAddress()).toByteArray());
+        StakingBlock block = chain.createStakingBlockTemplate(parent, transactions, producer.getPubKey(), newSeedOrProof, new AionAddress(producer.getAddress()).toByteArray());
 
         if (block == null) {
             return null;
