@@ -7,21 +7,17 @@ import static java.util.Collections.emptyList;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
-
-import java.util.EnumMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-import org.aion.crypto.vrf.VRF_Ed25519;
-import org.aion.log.LogUtil;
-import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
-import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
-import org.aion.zero.impl.core.IDifficultyCalculator;
 import static org.aion.zero.impl.core.ImportResult.EXIST;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.aion.zero.impl.core.ImportResult.INVALID_BLOCK;
 import static org.aion.zero.impl.core.ImportResult.NO_PARENT;
+import static org.aion.zero.impl.types.BlockUtil.calcReceiptsTrie;
+import static org.aion.zero.impl.types.BlockUtil.calcTxTrieRoot;
+import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidBlock;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidStateRoot;
+import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidTxTrieRoot;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -31,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,32 +36,21 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.zero.impl.sync.DatabaseType;
-import org.aion.zero.impl.types.AionGenesis;
-import org.aion.zero.impl.types.GenesisStakingBlock;
-
-import static org.aion.zero.impl.types.BlockUtil.calcReceiptsTrie;
-import static org.aion.zero.impl.types.BlockUtil.calcTxTrieRoot;
-import static org.aion.zero.impl.types.StakingBlockHeader.GENESIS_SEED;
-import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidBlock;
-import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidStateRoot;
-import static org.aion.zero.impl.valid.BlockDetailsValidator.isValidTxTrieRoot;
-
-import org.aion.zero.impl.valid.AionExtraDataRule;
-import org.aion.zero.impl.valid.BlockHeaderRule;
-import org.aion.zero.impl.valid.BlockHeaderValidator;
-import org.aion.zero.impl.valid.EnergyConsumedRule;
-import org.aion.zero.impl.valid.HeaderSealTypeRule;
-import org.aion.zero.impl.vm.common.PostExecutionLogic;
-import org.aion.zero.impl.vm.common.PostExecutionWork;
-import org.aion.zero.impl.vm.common.VmFatalException;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxExecSummary;
+import org.aion.base.AionTxReceipt;
+import org.aion.base.Bloom;
 import org.aion.base.ConstantUtil;
+import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.db.impl.SystemExitCodes;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -72,49 +58,60 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
-import org.aion.zero.impl.core.FastImportResult;
-import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.db.TransactionStore;
-import org.aion.zero.impl.forks.ForkUtility;
-import org.aion.zero.impl.trie.TrieNodeResult;
-import org.aion.zero.impl.types.BlockContext;
-import org.aion.zero.impl.types.BlockIdentifier;
-import org.aion.zero.impl.types.StakingBlock;
-import org.aion.zero.impl.valid.BeaconHashValidator;
-import org.aion.zero.impl.types.StakingBlockHeader;
-import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
-import org.aion.zero.impl.valid.GreatGrandParentBlockHeaderValidator;
-import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
-import org.aion.base.TransactionTypeRule;
-import org.aion.base.Bloom;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.utils.HeapDumper;
-import org.aion.zero.impl.vm.common.BlockCachingContext;
-import org.aion.zero.impl.vm.common.BulkExecutor;
+import org.aion.zero.impl.blockchain.AionHub.BestBlockImportCallback;
+import org.aion.zero.impl.blockchain.AionHub.SelfNodeStatusCallback;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.FastImportResult;
+import org.aion.zero.impl.core.IDifficultyCalculator;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.TransactionStore;
+import org.aion.zero.impl.forks.ForkUtility;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.trie.TrieNodeResult;
+import org.aion.zero.impl.types.A0BlockHeader;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.BlockIdentifier;
+import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.RetValidPreBlock;
+import org.aion.zero.impl.types.StakingBlock;
+import org.aion.zero.impl.types.StakingBlockHeader;
+import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.BeaconHashValidator;
+import org.aion.zero.impl.valid.BlockHeaderRule;
+import org.aion.zero.impl.valid.BlockHeaderValidator;
+import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.GrandParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.GreatGrandParentBlockHeaderValidator;
+import org.aion.zero.impl.valid.HeaderSealTypeRule;
+import org.aion.zero.impl.valid.ParentBlockHeaderValidator;
 import org.aion.zero.impl.valid.StakingDeltaCalculator;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
-import org.aion.zero.impl.types.A0BlockHeader;
-import org.aion.base.AionTxExecSummary;
-import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.vm.common.BlockCachingContext;
+import org.aion.zero.impl.vm.common.BulkExecutor;
+import org.aion.zero.impl.vm.common.PostExecutionLogic;
+import org.aion.zero.impl.vm.common.PostExecutionWork;
+import org.aion.zero.impl.vm.common.VmFatalException;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -147,7 +144,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
     private final BlockHeaderValidator headerValidator;
     private final GrandParentBlockHeaderValidator preUnityGrandParentBlockHeaderValidator, vrfProofValidator;
-    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator, nonceSeedDifficultyValidator;;
+    private final GreatGrandParentBlockHeaderValidator unityGreatGrandParentBlockHeaderValidator, nonceSeedValidator, nonceSeedDifficultyValidator;
     private final ParentBlockHeaderValidator preUnityParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator unityParentBlockHeaderValidator;
     private StakingContractHelper stakingContractHelper = null;
@@ -1305,14 +1302,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new IllegalStateException("Invalid block type");
         }
 
-
         long newTimestamp;
 
         AionAddress coinbaseAddress = new AionAddress(coinbase);
         if (signingPublicKey != null) { // Create block template for the external stakers.
+            byte[] proofHash = null;
             if (forkUtility.isSignatureSwapForkBlock(parent.getNumber()-1)) {
-                byte[] parentSeedHash = parentSeed;
-                if (!VRF_Ed25519.verify(parentSeedHash, newSeed, signingPublicKey)) {
+                if (!VRF_Ed25519.verify(parentSeed, newSeed, signingPublicKey)) {
                     LOG.debug(
                         "Seed verification failed! previousProof:{} newProof:{} pKey:{}",
                         ByteUtil.toHexString(parentSeed),
@@ -1320,6 +1316,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ByteUtil.toHexString(signingPublicKey));
                     return null;
                 }
+                proofHash = VRF_Ed25519.generateProofHash(newSeed);
             } else if (forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1)) {
                 byte[] parentSeedHash = VRF_Ed25519.generateProofHash(parentSeed);
                 if (!VRF_Ed25519.verify(parentSeedHash, newSeed, signingPublicKey)) {
@@ -1330,6 +1327,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         ByteUtil.toHexString(signingPublicKey));
                     return null;
                 }
+                proofHash = VRF_Ed25519.generateProofHash(newSeed);
             } else {
                 if (!ECKeyEd25519.verify(parentSeed, newSeed, signingPublicKey)) {
                     LOG.debug(
@@ -1385,7 +1383,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            long newDelta = StakingDeltaCalculator.calculateDelta(sealedSeed, newDiff, stakes);
+            long newDelta =
+                    StakingDeltaCalculator.calculateDelta(
+                            proofHash == null ? sealedSeed : proofHash, newDiff, stakes);
 
             newTimestamp =
                     Long.max(
@@ -2414,14 +2414,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            if (forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1)) {
+            if (forkUtility.isSignatureSwapForkBlock(parent.getNumber() + 1)) {
+                if (newSeed.length != StakingBlockHeader.SEED_LENGTH) {
+                    LOG.error("createStakingBlockTemplate failed, invalid proof length. block#{}", parent.getNumber() + 1);
+                    return null;
+                }
+            } else if (forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1)) {
                 if (newSeed.length != StakingBlockHeader.PROOF_LENGTH) {
-                    LOG.error("createStakingBlockTemplate failed, invalid proof length.");
+                    LOG.error("createStakingBlockTemplate failed, invalid proof length. block#{}", parent.getNumber() + 1);
                     return null;
                 }
             } else {
                 if (newSeed.length != StakingBlockHeader.SEED_LENGTH) {
-                    LOG.error("createStakingBlockTemplate failed, invalid seed length.");
+                    LOG.error("createStakingBlockTemplate failed, invalid seed length. block#{}", parent.getNumber() + 1);
                     return null;
                 }
             }
