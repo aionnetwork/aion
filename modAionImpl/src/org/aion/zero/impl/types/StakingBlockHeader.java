@@ -463,6 +463,11 @@ public class StakingBlockHeader  implements BlockHeader {
                     throw new IllegalArgumentException("invalid seed length");
                 }
             }
+
+            if (seedOrProof != null) {
+                throw new IllegalStateException("the seed has been assigned");
+            }
+
             this.seedOrProof = seed;
             return this;
         }
@@ -476,6 +481,10 @@ public class StakingBlockHeader  implements BlockHeader {
                 if (proof.length != PROOF_LENGTH) {
                     throw new IllegalArgumentException("invalid proof length");
                 }
+            }
+
+            if (seedOrProof != null) {
+                throw new IllegalStateException("the proof has been assigned");
             }
 
             this.seedOrProof = proof;
