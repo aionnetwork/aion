@@ -14,7 +14,7 @@ import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.rpc.errors.RPCExceptions;
 import org.aion.rpc.errors.RPCExceptions.BlockTemplateNotFoundRPCException;
 import org.aion.rpc.errors.RPCExceptions.FailedToSealBlockRPCException;
@@ -154,7 +154,7 @@ public class RPCMethods implements RPCServerMethods {
             }
             if (block.getHeader()
                     .getSealType()
-                    .equals(BlockSealType.SEAL_POW_BLOCK)) // return a block based on the seal type
+                    .equals(Seal.PROOF_OF_WORK)) // return a block based on the seal type
             return new BlockDetails(
                         block.getNumber(),
                         ByteArray.wrap(block.getHash()),

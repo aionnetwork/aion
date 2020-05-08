@@ -16,7 +16,7 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -220,7 +220,7 @@ public class AionChainHolder implements ChainHolder {
         ImportResult result = ((AionImpl) chain).addNewBlock(block);
         logger.info(
             "{} block {} to the blockchain DB <num={}, hash={}, diff={}, tx={}>",
-            block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK ? "mining" : "staking",
+            block.getHeader().getSealType() == Seal.PROOF_OF_WORK ? "mining" : "staking",
             result.isSuccessful() ? "sealed" : "cannot seal",
             block.getNumber(),
             block.getShortHash(),
@@ -312,7 +312,7 @@ public class AionChainHolder implements ChainHolder {
         //log that the block was sealed
         logger.info(
             "{} block submitted via api <num={}, hash={}, diff={}, tx={}>",
-            block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "Mining": "Staking",
+            block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK) ? "Mining": "Staking",
             block.getNumber(),
             block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
             block.getHeader().getDifficultyBI().toString(),
@@ -323,7 +323,7 @@ public class AionChainHolder implements ChainHolder {
         //log that the block could not be sealed
         logger.debug(
             "Unable to submit {} block via api <num={}, hash={}, diff={}, tx={}>",
-            block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK) ? "mining": "staking",
+            block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK) ? "mining": "staking",
             block.getNumber(),
             block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
             block.getHeader().getDifficultyBI().toString(),

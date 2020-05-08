@@ -10,14 +10,14 @@ import org.aion.util.types.ByteArrayWrapper;
  */
 public interface BlockHeader {
 
-    enum BlockSealType {
-        SEAL_NA((byte) 0),
-        SEAL_POW_BLOCK((byte) 1),
-        SEAL_POS_BLOCK((byte) 2);
+    enum Seal {
+        NOT_APPLICABLE((byte) 0),
+        PROOF_OF_WORK((byte) 1),
+        PROOF_OF_STAKE((byte) 2);
 
         final byte sealId;
 
-        BlockSealType(byte sealId) {
+        Seal(byte sealId) {
             this.sealId = sealId;
         }
 
@@ -25,13 +25,13 @@ public interface BlockHeader {
             return sealId;
         }
 
-        public static BlockSealType byteToSealType(byte id) {
-            if (id == SEAL_POW_BLOCK.sealId) {
-                return SEAL_POW_BLOCK;
-            } else if (id == SEAL_POS_BLOCK.sealId) {
-                return SEAL_POS_BLOCK;
+        public static Seal byteToSealType(byte id) {
+            if (id == PROOF_OF_WORK.sealId) {
+                return PROOF_OF_WORK;
+            } else if (id == PROOF_OF_STAKE.sealId) {
+                return PROOF_OF_STAKE;
             } else {
-                return SEAL_NA;
+                return NOT_APPLICABLE;
             }
         }
     }
@@ -67,7 +67,7 @@ public interface BlockHeader {
 
     byte[] getMineHash();
 
-    BlockSealType getSealType();
+    Seal getSealType();
 
     byte[] getTxTrieRoot();
     ByteArrayWrapper getTxTrieRootWrapper();

@@ -18,7 +18,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -346,7 +346,7 @@ public class BlockchainTestUtils {
                 // create and import post-unity block
                 Pair<Block, ImportResult> importPair;
 
-                if (parent.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                if (parent.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
                     importPair = addMiningBlock(chain, parent, txs, time, String.valueOf(i).getBytes());
                 } else {
                     importPair = addStakingBlock(chain, parent, txs, stakers.get(rand.nextInt(stakers.size())));

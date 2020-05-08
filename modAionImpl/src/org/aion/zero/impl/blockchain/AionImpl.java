@@ -15,7 +15,7 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
@@ -121,7 +121,7 @@ public class AionImpl implements IAionChain {
     public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
         lock.lock();
         try {
-            if (getBlockchain().isUnityForkEnabledAtNextBlock() && getBlockchain().getBestBlock().getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
+            if (getBlockchain().isUnityForkEnabledAtNextBlock() && getBlockchain().getBestBlock().getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                 return null;
             } else {
                 BlockContext context;
@@ -155,7 +155,7 @@ public class AionImpl implements IAionChain {
         try {
             Block best = getBlockchain().getBestBlock();
             LOG_GEN.debug("getStakingBlockTemplate best:{}", best);
-            if (best.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POS_BLOCK) {
+            if (best.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
                 return null;
             } else {
                 return getBlockchain()

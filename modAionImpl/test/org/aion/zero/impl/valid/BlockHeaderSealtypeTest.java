@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.junit.Before;
@@ -26,8 +26,8 @@ public class BlockHeaderSealtypeTest {
 
     @Test
     public void testSupportedVersion() {
-        when(mockMiningHeader.getSealType()).thenReturn(BlockSealType.SEAL_POW_BLOCK);
-        when(mockStakingHeader.getSealType()).thenReturn(BlockSealType.SEAL_POS_BLOCK);
+        when(mockMiningHeader.getSealType()).thenReturn(Seal.PROOF_OF_WORK);
+        when(mockStakingHeader.getSealType()).thenReturn(Seal.PROOF_OF_STAKE);
 
         List<RuleError> errors = new ArrayList<>();
 
@@ -46,8 +46,8 @@ public class BlockHeaderSealtypeTest {
 
     @Test
     public void testUnsupportedVersion() {
-        when(mockMiningHeader.getSealType()).thenReturn(BlockSealType.SEAL_NA);
-        when(mockStakingHeader.getSealType()).thenReturn(BlockSealType.SEAL_NA);
+        when(mockMiningHeader.getSealType()).thenReturn(Seal.NOT_APPLICABLE);
+        when(mockStakingHeader.getSealType()).thenReturn(Seal.NOT_APPLICABLE);
 
         List<RuleError> errors = new ArrayList<>();
 

@@ -1,8 +1,8 @@
 package org.aion.zero.impl.valid;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.blockchain.BlockHeader.BlockSealType.SEAL_POS_BLOCK;
-import static org.aion.mcf.blockchain.BlockHeader.BlockSealType.SEAL_POW_BLOCK;
+import static org.aion.mcf.blockchain.BlockHeader.Seal.PROOF_OF_STAKE;
+import static org.aion.mcf.blockchain.BlockHeader.Seal.PROOF_OF_WORK;
 import static org.mockito.Mockito.when;
 
 import java.util.LinkedList;
@@ -35,8 +35,8 @@ public class ParentOppositeTypeRuleTest {
     @Test
     public void testValid() {
         // define return value for method getSealType()
-        when(mockChildBH.getSealType()).thenReturn(SEAL_POW_BLOCK);
-        when(mockParentBH.getSealType()).thenReturn(SEAL_POS_BLOCK);
+        when(mockChildBH.getSealType()).thenReturn(PROOF_OF_WORK);
+        when(mockParentBH.getSealType()).thenReturn(PROOF_OF_STAKE);
         List<RuleError> errors = new LinkedList<>();
 
         // generate output
@@ -53,8 +53,8 @@ public class ParentOppositeTypeRuleTest {
     @Test
     public void testInvalid() {
         // define return value for method getSealType()
-        when(mockChildBH.getSealType()).thenReturn(SEAL_POS_BLOCK);
-        when(mockParentBH.getSealType()).thenReturn(SEAL_POS_BLOCK);
+        when(mockChildBH.getSealType()).thenReturn(PROOF_OF_STAKE);
+        when(mockParentBH.getSealType()).thenReturn(PROOF_OF_STAKE);
         List<RuleError> errors = new LinkedList<>();
 
         // generate output
@@ -64,8 +64,8 @@ public class ParentOppositeTypeRuleTest {
         assertThat(actual).isFalse();
 
         // redefine return value for method getSealType()
-        when(mockChildBH.getSealType()).thenReturn(SEAL_POW_BLOCK);
-        when(mockParentBH.getSealType()).thenReturn(SEAL_POW_BLOCK);
+        when(mockChildBH.getSealType()).thenReturn(PROOF_OF_WORK);
+        when(mockParentBH.getSealType()).thenReturn(PROOF_OF_WORK);
         
 
         // regenerate output

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.rpc.errors.RPCExceptions.FailedToComputeMetricsRPCException;
 import org.aion.rpc.types.RPCTypes;
 import org.aion.types.AionAddress;
@@ -47,7 +47,7 @@ public class MinerStatisticsCalculator {
             aionBlockCache.addFirst((MiningBlock) block);
             while (i < size) {
                 block = chainHolder.getBlockByHash(block.getHeader().getParentHash());
-                if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                if (block.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                     aionBlockCache.addLast((MiningBlock) block);
                     i++;
                 }
@@ -70,7 +70,7 @@ public class MinerStatisticsCalculator {
                             aionBlockCache.peekFirst().getHash())) {
                 block = chainHolder.getBlockByHash(block.getHeader().getParentHash());
                 //skip any POS blocks
-                if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                if (block.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                     blockStack.push((MiningBlock) block);
                     aionBlockCache.removeLast();
                     i++;

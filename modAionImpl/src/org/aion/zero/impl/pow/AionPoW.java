@@ -1,6 +1,5 @@
 package org.aion.zero.impl.pow;
 
-import org.aion.mcf.blockchain.BlockHeader;
 import static org.aion.zero.impl.core.ImportResult.IMPORTED_BEST;
 
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.pendingState.IPendingState;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.util.conversions.Hex;
@@ -247,7 +247,7 @@ public class AionPoW {
             Block bestBlock =
                     blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
             
-            if (blockchain.isUnityForkEnabledAtNextBlock() && bestBlock.getHeader().getSealType() == BlockHeader.BlockSealType.SEAL_POW_BLOCK) {
+            if (blockchain.isUnityForkEnabledAtNextBlock() && bestBlock.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                 return;
             } else {
 

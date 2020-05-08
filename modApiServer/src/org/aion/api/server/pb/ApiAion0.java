@@ -48,7 +48,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
@@ -2585,7 +2585,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private Message.rsp_getBlock getRsp_getBlock(
             Block genericBlock, List<ByteString> al, BigInteger td) {
 
-        if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        if (genericBlock.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
             MiningBlock blk = (MiningBlock) genericBlock;
             return Message.rsp_getBlock
                 .newBuilder()
@@ -2608,7 +2608,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setSize(blk.size())
                 .setTotalDifficulty(ByteString.copyFrom(td.toByteArray()))
                 .build();
-        } else if (genericBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        } else if (genericBlock.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
             StakingBlock blk = (StakingBlock) genericBlock;
             return Message.rsp_getBlock
                 .newBuilder()
@@ -2641,7 +2641,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             .filter(Objects::nonNull)
             .map(
                 blk -> {
-                    if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                    if (blk.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                         MiningBlock b = (MiningBlock) blk;
                         return Message.t_Block
                             .newBuilder()
@@ -2663,7 +2663,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
                             .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()))
                             .build();
-                    } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                    } else if (blk.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
                         StakingBlock b = (StakingBlock) blk;
                         return Message.t_Block
                             .newBuilder()
@@ -2697,7 +2697,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private Message.t_BlockDetail.Builder getBlockDetailsObj(
             Block block, long blocktime) {
 
-        if (block.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        if (block.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
             MiningBlock b = (MiningBlock) block;
             return Message.t_BlockDetail
                 .newBuilder()
@@ -2719,7 +2719,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
                 .setTotalDifficulty(ByteString.copyFrom(b.getTotalDifficulty().toByteArray()))
                 .setBlockTime(blocktime);
-        } else if (block.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        } else if (block.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
             StakingBlock b = (StakingBlock) block;
             // The JavaAPI has no plan to support the staking block shape in the short term.
             // Therefore, we just expose the data fields base on the current API protocol.
@@ -2834,7 +2834,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             block_time bigint(64));
          */
 
-        if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+        if (block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
             MiningBlock b = (MiningBlock) block;
             return b.getNumber()
                 + ","
@@ -2885,7 +2885,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + b.getTransactionsList().size()
                 + ","
                 + blocktime;
-        } else if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+        } else if (block.getHeader().getSealType().equals(Seal.PROOF_OF_STAKE)) {
             StakingBlock b = (StakingBlock) block;
             return b.getNumber()
                 + ","
@@ -3035,7 +3035,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             .map(
                 blk -> {
                     Message.t_BlockDetail.Builder builder;
-                    if (blk.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+                    if (blk.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
                         MiningBlock b = (MiningBlock) blk;
                         builder =
                             Message.t_BlockDetail.newBuilder()
@@ -3056,7 +3056,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 .setSize(b.size())
                                 .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
                                 .setTotalDifficulty(ByteString.copyFrom(blk.getTotalDifficulty().toByteArray()));
-                    } else if (blk.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+                    } else if (blk.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
                         StakingBlock b = (StakingBlock) blk;
                         builder =
                             Message.t_BlockDetail.newBuilder()

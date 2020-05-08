@@ -42,7 +42,7 @@ public final class MiningBlockHeader implements BlockHeader {
     private static final int RLP_BH_TIMESTAMP = 12;
     private static final int RLP_BH_NONCE = 13;
     private static final int RLP_BH_SOLUTION = 14;
-    private static final BlockSealType sealType = BlockSealType.SEAL_POW_BLOCK;
+    private static final Seal sealType = Seal.PROOF_OF_WORK;
     private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {MiningBlockHeader.sealType.getSealId()});
 
     /** The SHA3 256-bit hash of the parent block, in its entirety */
@@ -447,7 +447,7 @@ public final class MiningBlockHeader implements BlockHeader {
                     throw new IllegalArgumentException("Invalid Sealtype data length");
                 }
 
-                if (sealType[0] != BlockSealType.SEAL_POW_BLOCK.getSealId()) {
+                if (sealType[0] != Seal.PROOF_OF_WORK.getSealId()) {
                     throw new IllegalArgumentException("Invalid Seal type");
                 }
             }
@@ -723,7 +723,7 @@ public final class MiningBlockHeader implements BlockHeader {
     }
 
     @Override
-    public BlockSealType getSealType() {
+    public Seal getSealType() {
         return sealType;
     }
 

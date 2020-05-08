@@ -28,7 +28,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -1197,7 +1197,7 @@ public class BlockchainForkingTest {
 
         // finalize transfer and verify
         AionTransaction tx = BlockchainTestUtils.generateTransferFinalizeTransactions(firstChain, firstChain.getBestBlock(), resourceProvider, stakersOnBothChains.get(1), 0L);
-        assertThat(firstChain.getBestBlock().getHeader().getSealType()).isEqualTo(BlockSealType.SEAL_POS_BLOCK);
+        assertThat(firstChain.getBestBlock().getHeader().getSealType()).isEqualTo(Seal.PROOF_OF_STAKE);
         Block finalizeTransferBlock = BlockchainTestUtils.generateNextMiningBlock(firstChain, firstChain.getBestBlock(), List.of(tx));
         result = firstChain.tryToConnectAndFetchSummary(finalizeTransferBlock);
         assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);

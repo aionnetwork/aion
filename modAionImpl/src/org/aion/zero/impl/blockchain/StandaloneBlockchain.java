@@ -18,7 +18,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.config.CfgPrune;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.zero.impl.config.PruneConfig;
@@ -307,9 +307,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                                     .getMaximumExtraDataSize()),
                                                     new EnergyConsumedRule());
 
-                                    Map<BlockSealType, List<BlockHeaderRule>> unityRules = new EnumMap<>(BlockSealType.class);
-                                    unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-                                    unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+                                    Map<Seal, List<BlockHeaderRule>> unityRules = new EnumMap<>(Seal.class);
+                                    unityRules.put(Seal.PROOF_OF_WORK, powRules);
+                                    unityRules.put(Seal.PROOF_OF_STAKE, posRules);
 
                                     return new BlockHeaderValidator(unityRules);
                                 }

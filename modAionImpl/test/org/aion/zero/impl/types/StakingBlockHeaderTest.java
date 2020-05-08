@@ -7,8 +7,8 @@ import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.rlp.RLP;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
@@ -75,7 +75,7 @@ public class StakingBlockHeaderTest {
         assertThat(header.getSignature()).isEqualTo(SIGNATURE);
         assertThat(header.getSeedOrProof()).isEqualTo(SEED);
         assertThat(header.getSigningPublicKey()).isEqualTo(SIGNINGPUBKEY);
-        assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
+        assertThat(header.getSealType().equals(Seal.PROOF_OF_WORK));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class StakingBlockHeaderTest {
         assertThat(header.getSigningPublicKey()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getSignature()).isEqualTo(new byte[64]);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
-        assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
+        assertThat(header.getSealType().equals(Seal.PROOF_OF_WORK));
         assertThat(header.getLogsBloom()).isEqualTo(EMPTY_BLOOM);
     }
 
@@ -228,7 +228,7 @@ public class StakingBlockHeaderTest {
         byte[] seedOrProof = RLP.encodeElement(new byte[StakingBlockHeader.PROOF_LENGTH + 1]);
         byte[] signature = RLP.encodeElement(SIGNATURE);
         byte[] signingPublicKey = RLP.encodeElement(SIGNINGPUBKEY);
-        byte[] sealType = RLP.encodeElement(new byte[] {BlockSealType.SEAL_POS_BLOCK.getSealId()});
+        byte[] sealType = RLP.encodeElement(new byte[] {Seal.PROOF_OF_STAKE.getSealId()});
 
         byte[] rlpEncoded =  RLP.encodeList(
             sealType,

@@ -3,7 +3,7 @@ package org.aion.zero.impl.types;
 import static com.google.common.truth.Truth.assertThat;
 
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class MiningBlockHeaderTest {
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
-        assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
+        assertThat(header.getSealType().equals(Seal.PROOF_OF_WORK));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class MiningBlockHeaderTest {
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
-        assertThat(header.getSealType().equals(BlockSealType.SEAL_POW_BLOCK));
+        assertThat(header.getSealType().equals(Seal.PROOF_OF_WORK));
     }
 
     // Test is a self referencing

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.vm.AvmPathManager;
@@ -78,7 +78,7 @@ public class BlockEncodeTest {
 
         // get the top block from the generated chain
         StakingBlock stakingBlock = (StakingBlock) blockchain.getBestBlock();
-        assertThat(stakingBlock.getHeader().getSealType()).isEqualTo(BlockSealType.SEAL_POS_BLOCK);
+        assertThat(stakingBlock.getHeader().getSealType()).isEqualTo(Seal.PROOF_OF_STAKE);
 
         // used to check the encode/decode correctness
         StakingBlock decodedBlock = (StakingBlock) BlockUtil.newBlockFromRlp(stakingBlock.getEncoded());
@@ -124,7 +124,7 @@ public class BlockEncodeTest {
 
         // get the top block from the generated chain
         MiningBlock miningBlock = (MiningBlock) blockchain.getBestBlock();
-        assertThat(miningBlock.getHeader().getSealType()).isEqualTo(BlockSealType.SEAL_POW_BLOCK);
+        assertThat(miningBlock.getHeader().getSealType()).isEqualTo(Seal.PROOF_OF_WORK);
 
         byte[] solution = new byte[SOLUTIONSIZE];
         solution[0] = (byte) 6;

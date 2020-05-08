@@ -4,7 +4,7 @@ import static org.aion.util.biginteger.BIUtil.max;
 
 import java.math.BigInteger;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.util.math.FixedPoint;
 
@@ -26,7 +26,7 @@ public class UnityBlockDiffCalculator {
 
         BigInteger pd = grandParent.getDifficultyBI();
 
-        if (grandParent.isGenesis() && grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        if (grandParent.isGenesis() && grandParent.getSealType() == Seal.PROOF_OF_STAKE) {
             // this is the first PoS block, its difficulty is taken from the GenesisStakingBlock
             return pd;
         } else {
@@ -48,9 +48,9 @@ public class UnityBlockDiffCalculator {
                 }
             }
 
-            if (grandParent.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            if (grandParent.getSealType() == Seal.PROOF_OF_STAKE) {
                 return max(constants.getMinimumStakingDifficulty(), newDiff);
-            } else if (grandParent.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            } else if (grandParent.getSealType() == Seal.PROOF_OF_WORK) {
                 return max(constants.getMinimumMiningDifficulty(), newDiff);
             } else {
                 throw new IllegalStateException("Invalid block seal type!");

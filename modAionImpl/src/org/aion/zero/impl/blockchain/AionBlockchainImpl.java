@@ -61,7 +61,7 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
@@ -244,10 +244,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                                 this.getConstants().getMaximumExtraDataSize()),
                                         new EnergyConsumedRule());
 
-                        Map<BlockSealType, List<BlockHeaderRule>> unityRules =
-                                new EnumMap<>(BlockSealType.class);
-                        unityRules.put(BlockSealType.SEAL_POW_BLOCK, powRules);
-                        unityRules.put(BlockSealType.SEAL_POS_BLOCK, posRules);
+                        Map<Seal, List<BlockHeaderRule>> unityRules =
+                                new EnumMap<>(Seal.class);
+                        unityRules.put(Seal.PROOF_OF_WORK, powRules);
+                        unityRules.put(Seal.PROOF_OF_STAKE, posRules);
 
                         return new BlockHeaderValidator(unityRules);
                     }
@@ -552,14 +552,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.bestBlock = repository.getBlockStore().getBlockByHashWithInfo(bestBlockHash);
         LOG.debug("pushState bestBlock:{}", bestBlock);
 
-        if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
             bestMiningBlock = (MiningBlock) bestBlock;
             if (forkUtility.isUnityForkActive(bestBlock.getNumber())) {
                 bestStakingBlock = (StakingBlock) getBlockByHash(bestBlock.getParentHash());
             } else {
                 bestStakingBlock = null;
             }
-        } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        } else if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
             bestStakingBlock = (StakingBlock) bestBlock;
             bestMiningBlock = (MiningBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
@@ -690,9 +690,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     //TODO : [unity] redesign the blockstore datastucture can read the staking/mining block directly.
     private void loadBestMiningBlock() {
-        if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
             bestMiningBlock = (MiningBlock) bestBlock;
-        } else if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        } else if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
             bestMiningBlock = (MiningBlock) getBlockByHash(bestBlock.getParentHash());
         } else {
             throw new IllegalStateException("Invalid block type");
@@ -703,7 +703,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long bestBlockNumber = bestBlock.getNumber();
 
         if (bestStakingBlock == null && forkUtility.isUnityForkActive(bestBlockNumber)) {
-            if (bestBlock.getHeader().getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+            if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_STAKE) {
                 bestStakingBlock = (StakingBlock) bestBlock;
             } else {
                 bestStakingBlock = (StakingBlock) getBlockByHash(bestBlock.getParentHash());
@@ -1223,7 +1223,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // We want the fork block itself to be a PoW block subject to the old pre-Unity rules, 
         // so we use a strict greater than here
         if (forkUtility.isUnityForkActive(block.getNumber())) {
-            if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+            if (parentHdr.getSealType() == Seal.PROOF_OF_WORK) {
                 LOG.warn("Tried to create 2 PoW blocks in a row");
                 return null;
             } else {
@@ -1276,10 +1276,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         byte[] parentSeed;
         BigInteger newDiff;
 
-        if (parentHdr.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        if (parentHdr.getSealType() == Seal.PROOF_OF_STAKE) {
             LOG.warn("Tried to create 2 PoS blocks in a row");
             return null;
-        } else if (parentHdr.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        } else if (parentHdr.getSealType() == Seal.PROOF_OF_WORK) {
 
             if (forkUtility.isUnityForkBlock(parentHdr.getNumber())) {
                 // this is the first PoS block, use all zeroes as seed, and totalStake / 10 as difficulty
@@ -1601,7 +1601,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Block grandparentBlock = threeGenParents[1];
         Block greatGrandparentBlock = threeGenParents[2];
 
-        if (header.getSealType() == BlockSealType.SEAL_POW_BLOCK) {
+        if (header.getSealType() == Seal.PROOF_OF_WORK) {
             if (forkUtility.isUnityForkActive(header.getNumber())) {
                 if (grandparentBlock == null || greatGrandparentBlock == null) {
                     return false;
@@ -1613,7 +1613,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return preUnityParentBlockHeaderValidator.validate(header, parentBlock.getHeader(), LOG, null) &&
                         preUnityGrandParentBlockHeaderValidator.validate(parentBlock.getHeader(), grandparentBlock == null ? null : grandparentBlock.getHeader(), header, LOG);
             }
-        } else  if (header.getSealType() == BlockSealType.SEAL_POS_BLOCK) {
+        } else  if (header.getSealType() == Seal.PROOF_OF_STAKE) {
             if (!forkUtility.isUnityForkActive(header.getNumber())) {
                 LOG.warn("Trying to import a Staking block when the Unity fork is not active.");
                 return false;

@@ -39,7 +39,7 @@ public class StakingBlockHeader  implements BlockHeader {
     private static final int RLP_BH_SEED_OR_PROOF = 13;
     private static final int RLP_BH_SIGNATURE = 14;
     private static final int RLP_BH_SIGNING_PUBLICKEY = 15;
-    private static final BlockSealType sealType = BlockSealType.SEAL_POS_BLOCK;
+    private static final Seal sealType = Seal.PROOF_OF_STAKE;
     private static final byte[] rlpEncodedSealType = RLP.encodeElement(new byte[] {StakingBlockHeader.sealType.getSealId()});
 
     /** The SHA3 256-bit hash of the parent block, in its entirety */
@@ -823,7 +823,7 @@ public class StakingBlockHeader  implements BlockHeader {
     }
 
     @Override
-    public BlockSealType getSealType() {
+    public Seal getSealType() {
         return sealType;
     }
 

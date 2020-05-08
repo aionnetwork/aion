@@ -50,7 +50,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.config.CfgApi;
@@ -2835,7 +2835,7 @@ public class ApiWeb3Aion extends ApiAion {
 
                 blk = getBlockByHash(blk.getParentHash());
                 // we need to check the seal type since the parent block could be a pos block
-                if (blk.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
+                if (blk.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
                     //filter out POS blocks
                     tempStack.push(Map.entry(blk.getHash(), (MiningBlock) blk));
                     itr++;
@@ -3000,11 +3000,11 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     private  boolean isPowBlock(Block block){
-        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK);
+        return block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK);
     }
 
     private boolean isPosBlock(Block block){
-        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK);
+        return block.getHeader().getSealType().equals(Seal.PROOF_OF_STAKE);
     }
 
     public void shutdown() {

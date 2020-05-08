@@ -5,15 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */
 public class ParentBlockHeaderValidator {
 
-    private Map<BlockSealType, List<DependentBlockHeaderRule>> chainRules;
+    private Map<Seal, List<DependentBlockHeaderRule>> chainRules;
 
-    public ParentBlockHeaderValidator(Map<BlockSealType, List<DependentBlockHeaderRule>> rules) {
+    public ParentBlockHeaderValidator(Map<Seal, List<DependentBlockHeaderRule>> rules) {
         if (rules == null) {
             throw new NullPointerException();
         }
