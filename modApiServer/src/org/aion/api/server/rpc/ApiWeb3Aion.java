@@ -2,6 +2,8 @@ package org.aion.api.server.rpc;
 
 import static java.util.stream.Collectors.toList;
 import static org.aion.api.server.types.FltrLg.BLOCKS_QUERY_MAX;
+import static org.aion.mcf.blockchain.BlockHeader.BlockSealType.SEAL_POS_BLOCK;
+import static org.aion.mcf.blockchain.BlockHeader.BlockSealType.SEAL_POW_BLOCK;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
 import static org.aion.util.types.HexConvert.hexStringToBytes;
@@ -50,7 +52,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.mcf.blockchain.BlockHeader.BlockSealType;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.config.CfgApi;
@@ -2690,11 +2691,11 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(obj);
     }
 
-    // always gets the latest 20 blocks and transactions
+    // Always gets the latest N PoW blocks and N PoS blocks
     private class MinerStatsView {
 
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
-        Map<byte[], AionBlock> blocks;
+        Map<byte[], Block> blocks;
         private JSONObject response;
         private int qSize;
         private byte[] miner;
@@ -2728,7 +2729,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             int blkTimesAccumulated = 0;
             Long lastBlkTimestamp = null;
-            AionBlock b = null;
+            Block b = null;
 
             try {
                 // index 0 = latest block
@@ -2738,26 +2739,34 @@ public class ApiWeb3Aion extends ApiAion {
                     byte[] hash = (byte[]) li.next();
                     b = blocks.get(hash);
 
-                    if (i == 0) {
-                        lastDifficulty = b.getDifficultyBI();
-                    }
-
-                    // only accumulate block times over the last 32 blocks
+                    // only accumulate block times over the last STRATUM_BLKTIME_INCLUDED_COUNT blocks
                     if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
-                        if (lastBlkTimestamp != null) {
+                        if (b.getHeader().getSealType().equals(SEAL_POS_BLOCK) && lastBlkTimestamp != null) {
                             //                            System.out.println("blocktime for [" +
                             // b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
-                            blkTimeAccumulator += lastBlkTimestamp - b.getTimestamp();
+                            blkTimeAccumulator += lastBlkTimestamp - b.getTimestamp(); // delta = PoW block timestamp - PoS block timestamp
                             blkTimesAccumulated++;
                         }
-                        lastBlkTimestamp = b.getTimestamp();
+
+                        if (b.getHeader().getSealType().equals(SEAL_POW_BLOCK)) {
+                            lastBlkTimestamp = b.getTimestamp();
+                        }
                     }
 
-                    if (Arrays.equals(b.getCoinbase().toByteArray(), miner)) {
-                        minedByMiner++;
-                    }
+                    if (b.getHeader().getSealType().equals(SEAL_POW_BLOCK)) {
+                        // Note latest PoW block's difficulty
+                        if (lastDifficulty == BigInteger.ZERO) {
+                            lastDifficulty = b.getDifficultyBI();
+                        }
+                        
+                        // Count PoW blocks mined by this miner
+                        if (Arrays.equals(b.getCoinbase().toByteArray(), miner)) {
+                            minedByMiner++;
+                        }
 
-                    i++;
+                        // Increment PoW index
+                        i++;
+                    }
                 }
 
                 double blkTime = 0L;
@@ -2804,8 +2813,8 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             // evict data as necessary
-            LinkedList<Map.Entry<byte[], AionBlock>> tempStack = new LinkedList<>();
-            tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
+            LinkedList<Map.Entry<byte[], Block>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), blk));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
 
             /*
@@ -2821,16 +2830,12 @@ public class ApiWeb3Aion extends ApiAion {
             */
 
             while (!Arrays.equals(hashQueue.peekFirst(), blk.getParentHash())
-                    && itr < qSize
+                    && itr < (qSize * 2) // Update (qSize) PoW blocks and (qSize) PoS blocks
                     && blk.getNumber() > 2) {
 
                 blk = getBlockByHash(blk.getParentHash());
-                // we need to check the seal type since the parent block could be a pos block
-                if (blk.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK)) {
-                    //filter out POS blocks
-                    tempStack.push(Map.entry(blk.getHash(), (AionBlock) blk));
-                    itr++;
-                }
+                tempStack.push(Map.entry(blk.getHash(), blk));
+                itr++;
                 /*
                 System.out.println("blkNum: " + blk.getNumber() +
                         " parentHash: " + StringUtils.toJsonHex(blk.getParentHash()) +
@@ -2843,16 +2848,17 @@ public class ApiWeb3Aion extends ApiAion {
                 byte[] tailHash = hashQueue.pollLast();
                 if (tailHash != null) {
                     blocks.remove(tailHash);
+                } else {
+                    break;
                 }
             }
 
             // empty out the stack into the queue
             while (!tempStack.isEmpty()) {
                 // add to the queue
-                Entry<byte[], AionBlock> element = tempStack.pop();
+                Entry<byte[], Block> element = tempStack.pop();
                 byte[] hash = element.getKey();
-                AionBlock blkObj = element.getValue();
-
+                Block blkObj = element.getValue();
                 hashQueue.push(hash);
                 blocks.put(hash, blkObj);
             }
@@ -2991,11 +2997,11 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     private  boolean isPowBlock(Block block){
-        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POW_BLOCK);
+        return block.getHeader().getSealType().equals(SEAL_POW_BLOCK);
     }
 
     private boolean isPosBlock(Block block){
-        return block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK);
+        return block.getHeader().getSealType().equals(SEAL_POS_BLOCK);
     }
 
     public void shutdown() {
