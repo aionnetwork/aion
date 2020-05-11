@@ -121,11 +121,11 @@ public class AionImpl implements IAionChain {
     public BlockContext getNewMiningBlockTemplate(BlockContext oldBlockTemplate, long systemTime) {
         lock.lock();
         try {
-            if (getBlockchain().isUnityForkEnabledAtNextBlock() && getBlockchain().getBestBlock().getHeader().getSealType() == Seal.PROOF_OF_WORK) {
+            Block bestBlock = getBlockchain().getBestBlock();
+            if (getBlockchain().isUnityForkEnabledAtNextBlock() && bestBlock.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
                 return null;
             } else {
                 BlockContext context;
-                Block bestBlock = getBlockchain().getBestBlock();
                 byte[] bestBlockHash = bestBlock.getHash();
 
                 if (oldBlockTemplate == null
